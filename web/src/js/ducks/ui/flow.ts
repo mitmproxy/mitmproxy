@@ -9,6 +9,7 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              SET_TAB                        = "UI_FLOWVIEW_SET_TAB",
              START_EDIT                     = 'UI_FLOWVIEW_START_EDIT',
              UPDATE_EDIT                    = 'UI_FLOWVIEW_UPDATE_EDIT',
+             ABORT_EDIT                     = 'UI_FLOWVIEW_ABORT_EDIT',
              UPLOAD_CONTENT                 = 'UI_FLOWVIEW_UPLOAD_CONTENT',
              SET_SHOW_FULL_CONTENT          = 'UI_SET_SHOW_FULL_CONTENT',
              SET_CONTENT_VIEW_DESCRIPTION   = "UI_SET_CONTENT_VIEW_DESCRIPTION",
@@ -59,6 +60,12 @@ const reducer: Reducer<UiFlowState> = (state = defaultState, action): UiFlowStat
                 modifiedFlow: _.merge({}, state.modifiedFlow, action.update)
             }
 
+        case ABORT_EDIT:
+            return {
+                ...state,
+                modifiedFlow: undefined
+            }
+
         case flowsActions.SELECT:
             return {
                 ...state,
@@ -72,7 +79,7 @@ const reducer: Reducer<UiFlowState> = (state = defaultState, action): UiFlowStat
             // There is no explicit "stop edit" event.
             // We stop editing when we receive an update for
             // the currently edited flow from the server
-            if (action.data.id === state.modifiedFlow.id) {
+            if (action.data.id === state.modifiedFlow?.id) {
                 return {
                     ...state,
                     modifiedFlow: undefined,
@@ -162,5 +169,10 @@ export function setContent(content){
 }
 
 export function stopEdit(flow, modifiedFlow) {
-    return flowsActions.update(flow, getDiff(flow, modifiedFlow))
+    let diff = getDiff(flow, modifiedFlow)
+    if (Object.values(diff).some(x => x !== undefined)) {
+        return flowsActions.update(flow, diff)
+    } else {
+        return {type: ABORT_EDIT}
+    }
 }

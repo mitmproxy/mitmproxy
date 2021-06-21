@@ -9,7 +9,7 @@ import ContentView from '../ContentView'
 import ContentViewOptions from '../ContentView/ContentViewOptions'
 import ValidateEditor from '../ValueEditor/ValidateEditor'
 import ValueEditor from '../ValueEditor/ValueEditor'
-import HideInStatic from '../common/HideInStatic'
+import HideInStaticx from '../common/HideInStatic'
 
 import Headers from './Headers'
 import { startEdit, updateEdit } from '../../ducks/ui/flow'
@@ -114,7 +114,7 @@ export class Request extends Component {
                         type='trailers'
                     />
                 </article>
-                <HideInStatic>
+                <HideInStaticx>
                 {!noContent &&
                     <footer>
                         <ContentViewOptions
@@ -124,7 +124,7 @@ export class Request extends Component {
                             uploadContent={content => uploadContent(flow, content, "request")}/>
                     </footer>
                 }
-                </HideInStatic>
+                </HideInStaticx>
             </section>
         )
     }
@@ -166,7 +166,7 @@ export class Response extends Component {
                         type='trailers'
                     />
                 </article>
-                <HideInStatic>
+                <HideInStaticx>
                 {!noContent &&
                     <footer >
                         <ContentViewOptions
@@ -176,7 +176,7 @@ export class Response extends Component {
                             readonly={!isEdit}/>
                     </footer>
                 }
-                </HideInStatic>
+                </HideInStaticx>
             </section>
         )
     }

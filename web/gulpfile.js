@@ -6,6 +6,7 @@ const cleanCSS = require('gulp-clean-css');
 const notify = require("gulp-notify");
 const compilePeg = require("gulp-peg");
 const plumber = require("gulp-plumber");
+const replace = require('gulp-replace');
 const sourcemaps = require('gulp-sourcemaps');
 const through = require("through2");
 
@@ -83,6 +84,7 @@ function peg() {
     return gulp.src(peg_src, {base: "src/"})
         .pipe(plumber(handleError))
         .pipe(compilePeg())
+        .pipe(replace('module.exports = ', 'export default '))
         .pipe(gulp.dest("src/"));
 }
 

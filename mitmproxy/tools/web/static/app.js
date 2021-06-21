@@ -1104,9 +1104,9 @@
             return dispatcher.useState(initialState);
           }
           __name(useState4, "useState");
-          function useReducer3(reducer8, initialArg, init) {
+          function useReducer3(reducer9, initialArg, init) {
             var dispatcher = resolveDispatcher();
-            return dispatcher.useReducer(reducer8, initialArg, init);
+            return dispatcher.useReducer(reducer9, initialArg, init);
           }
           __name(useReducer3, "useReducer");
           function useRef4(initialValue) {
@@ -2560,11 +2560,11 @@
       if (true) {
         (function() {
           "use strict";
-          var React57 = require_react();
+          var React58 = require_react();
           var _assign = require_object_assign();
           var Scheduler = require_scheduler();
           var tracing = require_tracing();
-          var ReactSharedInternals = React57.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+          var ReactSharedInternals = React58.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
           function warn(format2) {
             {
               for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -2599,7 +2599,7 @@
             }
           }
           __name(printWarning, "printWarning");
-          if (!React57) {
+          if (!React58) {
             {
               throw Error("ReactDOM was loaded before React. Make sure you load the React package before loading ReactDOM.");
             }
@@ -3868,7 +3868,7 @@
           var didWarnInvalidChild = false;
           function flattenChildren(children) {
             var content = "";
-            React57.Children.forEach(children, function(child) {
+            React58.Children.forEach(children, function(child) {
               if (child == null) {
                 return;
               }
@@ -3880,7 +3880,7 @@
           function validateProps(element, props) {
             {
               if (typeof props.children === "object" && props.children !== null) {
-                React57.Children.forEach(props.children, function(child) {
+                React58.Children.forEach(props.children, function(child) {
                   if (child == null) {
                     return;
                   }
@@ -4342,7 +4342,7 @@
             var warnedForNaNValue = false;
             var warnedForInfinityValue = false;
             var camelize = /* @__PURE__ */ __name(function(string) {
-              return string.replace(hyphenPattern, function(_11, character) {
+              return string.replace(hyphenPattern, function(_12, character) {
                 return character.toUpperCase();
               });
             }, "camelize");
@@ -10998,9 +10998,9 @@
                 while (dependency !== null) {
                   if (dependency.context === context && (dependency.observedBits & changedBits) !== 0) {
                     if (fiber.tag === ClassComponent) {
-                      var update5 = createUpdate(NoTimestamp, pickArbitraryLane(renderLanes2));
-                      update5.tag = ForceUpdate;
-                      enqueueUpdate(fiber, update5);
+                      var update4 = createUpdate(NoTimestamp, pickArbitraryLane(renderLanes2));
+                      update4.tag = ForceUpdate;
+                      enqueueUpdate(fiber, update4);
                     }
                     fiber.lanes = mergeLanes(fiber.lanes, renderLanes2);
                     var alternate = fiber.alternate;
@@ -11138,7 +11138,7 @@
           }
           __name(cloneUpdateQueue, "cloneUpdateQueue");
           function createUpdate(eventTime, lane) {
-            var update5 = {
+            var update4 = {
               eventTime,
               lane,
               tag: UpdateState,
@@ -11146,10 +11146,10 @@
               callback: null,
               next: null
             };
-            return update5;
+            return update4;
           }
           __name(createUpdate, "createUpdate");
-          function enqueueUpdate(fiber, update5) {
+          function enqueueUpdate(fiber, update4) {
             var updateQueue = fiber.updateQueue;
             if (updateQueue === null) {
               return;
@@ -11157,12 +11157,12 @@
             var sharedQueue = updateQueue.shared;
             var pending = sharedQueue.pending;
             if (pending === null) {
-              update5.next = update5;
+              update4.next = update4;
             } else {
-              update5.next = pending.next;
-              pending.next = update5;
+              update4.next = pending.next;
+              pending.next = update4;
             }
-            sharedQueue.pending = update5;
+            sharedQueue.pending = update4;
             {
               if (currentlyProcessingQueue === sharedQueue && !didWarnUpdateInsideUpdate) {
                 error("An update (setState, replaceState, or forceUpdate) was scheduled from inside an update function. Update functions should be pure, with zero side-effects. Consider using componentDidUpdate or a callback.");
@@ -11181,14 +11181,14 @@
                 var newLast = null;
                 var firstBaseUpdate = queue.firstBaseUpdate;
                 if (firstBaseUpdate !== null) {
-                  var update5 = firstBaseUpdate;
+                  var update4 = firstBaseUpdate;
                   do {
                     var clone = {
-                      eventTime: update5.eventTime,
-                      lane: update5.lane,
-                      tag: update5.tag,
-                      payload: update5.payload,
-                      callback: update5.callback,
+                      eventTime: update4.eventTime,
+                      lane: update4.lane,
+                      tag: update4.tag,
+                      payload: update4.payload,
+                      callback: update4.callback,
                       next: null
                     };
                     if (newLast === null) {
@@ -11197,8 +11197,8 @@
                       newLast.next = clone;
                       newLast = clone;
                     }
-                    update5 = update5.next;
-                  } while (update5 !== null);
+                    update4 = update4.next;
+                  } while (update4 !== null);
                   if (newLast === null) {
                     newFirst = newLast = capturedUpdate;
                   } else {
@@ -11228,10 +11228,10 @@
             queue.lastBaseUpdate = capturedUpdate;
           }
           __name(enqueueCapturedUpdate, "enqueueCapturedUpdate");
-          function getStateFromUpdate(workInProgress2, queue, update5, prevState, nextProps, instance) {
-            switch (update5.tag) {
+          function getStateFromUpdate(workInProgress2, queue, update4, prevState, nextProps, instance) {
+            switch (update4.tag) {
               case ReplaceState: {
-                var payload = update5.payload;
+                var payload = update4.payload;
                 if (typeof payload === "function") {
                   {
                     enterDisallowedContextReadInDEV();
@@ -11256,7 +11256,7 @@
                 workInProgress2.flags = workInProgress2.flags & ~ShouldCapture | DidCapture;
               }
               case UpdateState: {
-                var _payload = update5.payload;
+                var _payload = update4.payload;
                 var partialState;
                 if (typeof _payload === "function") {
                   {
@@ -11330,17 +11330,17 @@
               var newBaseState = null;
               var newFirstBaseUpdate = null;
               var newLastBaseUpdate = null;
-              var update5 = firstBaseUpdate;
+              var update4 = firstBaseUpdate;
               do {
-                var updateLane = update5.lane;
-                var updateEventTime = update5.eventTime;
+                var updateLane = update4.lane;
+                var updateEventTime = update4.eventTime;
                 if (!isSubsetOfLanes(renderLanes2, updateLane)) {
                   var clone = {
                     eventTime: updateEventTime,
                     lane: updateLane,
-                    tag: update5.tag,
-                    payload: update5.payload,
-                    callback: update5.callback,
+                    tag: update4.tag,
+                    payload: update4.payload,
+                    callback: update4.callback,
                     next: null
                   };
                   if (newLastBaseUpdate === null) {
@@ -11355,27 +11355,27 @@
                     var _clone = {
                       eventTime: updateEventTime,
                       lane: NoLane,
-                      tag: update5.tag,
-                      payload: update5.payload,
-                      callback: update5.callback,
+                      tag: update4.tag,
+                      payload: update4.payload,
+                      callback: update4.callback,
                       next: null
                     };
                     newLastBaseUpdate = newLastBaseUpdate.next = _clone;
                   }
-                  newState = getStateFromUpdate(workInProgress2, queue, update5, newState, props, instance);
-                  var callback = update5.callback;
+                  newState = getStateFromUpdate(workInProgress2, queue, update4, newState, props, instance);
+                  var callback = update4.callback;
                   if (callback !== null) {
                     workInProgress2.flags |= Callback;
                     var effects = queue.effects;
                     if (effects === null) {
-                      queue.effects = [update5];
+                      queue.effects = [update4];
                     } else {
-                      effects.push(update5);
+                      effects.push(update4);
                     }
                   }
                 }
-                update5 = update5.next;
-                if (update5 === null) {
+                update4 = update4.next;
+                if (update4 === null) {
                   pendingQueue = queue.shared.pending;
                   if (pendingQueue === null) {
                     break;
@@ -11383,7 +11383,7 @@
                     var _lastPendingUpdate = pendingQueue;
                     var _firstPendingUpdate = _lastPendingUpdate.next;
                     _lastPendingUpdate.next = null;
-                    update5 = _firstPendingUpdate;
+                    update4 = _firstPendingUpdate;
                     queue.lastBaseUpdate = _lastPendingUpdate;
                     queue.shared.pending = null;
                   }
@@ -11438,7 +11438,7 @@
           __name(commitUpdateQueue, "commitUpdateQueue");
           var fakeInternalInstance = {};
           var isArray = Array.isArray;
-          var emptyRefsObject = new React57.Component().refs;
+          var emptyRefsObject = new React58.Component().refs;
           var didWarnAboutStateAssignmentForComponent;
           var didWarnAboutUninitializedState;
           var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
@@ -11520,46 +11520,46 @@
               var fiber = get(inst);
               var eventTime = requestEventTime();
               var lane = requestUpdateLane(fiber);
-              var update5 = createUpdate(eventTime, lane);
-              update5.payload = payload;
+              var update4 = createUpdate(eventTime, lane);
+              update4.payload = payload;
               if (callback !== void 0 && callback !== null) {
                 {
                   warnOnInvalidCallback(callback, "setState");
                 }
-                update5.callback = callback;
+                update4.callback = callback;
               }
-              enqueueUpdate(fiber, update5);
+              enqueueUpdate(fiber, update4);
               scheduleUpdateOnFiber(fiber, lane, eventTime);
             },
             enqueueReplaceState: function(inst, payload, callback) {
               var fiber = get(inst);
               var eventTime = requestEventTime();
               var lane = requestUpdateLane(fiber);
-              var update5 = createUpdate(eventTime, lane);
-              update5.tag = ReplaceState;
-              update5.payload = payload;
+              var update4 = createUpdate(eventTime, lane);
+              update4.tag = ReplaceState;
+              update4.payload = payload;
               if (callback !== void 0 && callback !== null) {
                 {
                   warnOnInvalidCallback(callback, "replaceState");
                 }
-                update5.callback = callback;
+                update4.callback = callback;
               }
-              enqueueUpdate(fiber, update5);
+              enqueueUpdate(fiber, update4);
               scheduleUpdateOnFiber(fiber, lane, eventTime);
             },
             enqueueForceUpdate: function(inst, callback) {
               var fiber = get(inst);
               var eventTime = requestEventTime();
               var lane = requestUpdateLane(fiber);
-              var update5 = createUpdate(eventTime, lane);
-              update5.tag = ForceUpdate;
+              var update4 = createUpdate(eventTime, lane);
+              update4.tag = ForceUpdate;
               if (callback !== void 0 && callback !== null) {
                 {
                   warnOnInvalidCallback(callback, "forceUpdate");
                 }
-                update5.callback = callback;
+                update4.callback = callback;
               }
-              enqueueUpdate(fiber, update5);
+              enqueueUpdate(fiber, update4);
               scheduleUpdateOnFiber(fiber, lane, eventTime);
             }
           };
@@ -13469,7 +13469,7 @@
             return typeof action === "function" ? action(state) : action;
           }
           __name(basicStateReducer, "basicStateReducer");
-          function mountReducer(reducer8, initialArg, init) {
+          function mountReducer(reducer9, initialArg, init) {
             var hook = mountWorkInProgressHook();
             var initialState;
             if (init !== void 0) {
@@ -13481,14 +13481,14 @@
             var queue = hook.queue = {
               pending: null,
               dispatch: null,
-              lastRenderedReducer: reducer8,
+              lastRenderedReducer: reducer9,
               lastRenderedState: initialState
             };
             var dispatch = queue.dispatch = dispatchAction.bind(null, currentlyRenderingFiber$1, queue);
             return [hook.memoizedState, dispatch];
           }
           __name(mountReducer, "mountReducer");
-          function updateReducer(reducer8, initialArg, init) {
+          function updateReducer(reducer9, initialArg, init) {
             var hook = updateWorkInProgressHook();
             var queue = hook.queue;
             if (!(queue !== null)) {
@@ -13496,7 +13496,7 @@
                 throw Error("Should have a queue. This is likely a bug in React. Please file an issue.");
               }
             }
-            queue.lastRenderedReducer = reducer8;
+            queue.lastRenderedReducer = reducer9;
             var current2 = currentHook;
             var baseQueue = current2.baseQueue;
             var pendingQueue = queue.pending;
@@ -13521,15 +13521,15 @@
               var newBaseState = null;
               var newBaseQueueFirst = null;
               var newBaseQueueLast = null;
-              var update5 = first;
+              var update4 = first;
               do {
-                var updateLane = update5.lane;
+                var updateLane = update4.lane;
                 if (!isSubsetOfLanes(renderLanes, updateLane)) {
                   var clone = {
                     lane: updateLane,
-                    action: update5.action,
-                    eagerReducer: update5.eagerReducer,
-                    eagerState: update5.eagerState,
+                    action: update4.action,
+                    eagerReducer: update4.eagerReducer,
+                    eagerState: update4.eagerState,
                     next: null
                   };
                   if (newBaseQueueLast === null) {
@@ -13544,22 +13544,22 @@
                   if (newBaseQueueLast !== null) {
                     var _clone = {
                       lane: NoLane,
-                      action: update5.action,
-                      eagerReducer: update5.eagerReducer,
-                      eagerState: update5.eagerState,
+                      action: update4.action,
+                      eagerReducer: update4.eagerReducer,
+                      eagerState: update4.eagerState,
                       next: null
                     };
                     newBaseQueueLast = newBaseQueueLast.next = _clone;
                   }
-                  if (update5.eagerReducer === reducer8) {
-                    newState = update5.eagerState;
+                  if (update4.eagerReducer === reducer9) {
+                    newState = update4.eagerState;
                   } else {
-                    var action = update5.action;
-                    newState = reducer8(newState, action);
+                    var action = update4.action;
+                    newState = reducer9(newState, action);
                   }
                 }
-                update5 = update5.next;
-              } while (update5 !== null && update5 !== first);
+                update4 = update4.next;
+              } while (update4 !== null && update4 !== first);
               if (newBaseQueueLast === null) {
                 newBaseState = newState;
               } else {
@@ -13577,7 +13577,7 @@
             return [hook.memoizedState, dispatch];
           }
           __name(updateReducer, "updateReducer");
-          function rerenderReducer(reducer8, initialArg, init) {
+          function rerenderReducer(reducer9, initialArg, init) {
             var hook = updateWorkInProgressHook();
             var queue = hook.queue;
             if (!(queue !== null)) {
@@ -13585,19 +13585,19 @@
                 throw Error("Should have a queue. This is likely a bug in React. Please file an issue.");
               }
             }
-            queue.lastRenderedReducer = reducer8;
+            queue.lastRenderedReducer = reducer9;
             var dispatch = queue.dispatch;
             var lastRenderPhaseUpdate = queue.pending;
             var newState = hook.memoizedState;
             if (lastRenderPhaseUpdate !== null) {
               queue.pending = null;
               var firstRenderPhaseUpdate = lastRenderPhaseUpdate.next;
-              var update5 = firstRenderPhaseUpdate;
+              var update4 = firstRenderPhaseUpdate;
               do {
-                var action = update5.action;
-                newState = reducer8(newState, action);
-                update5 = update5.next;
-              } while (update5 !== firstRenderPhaseUpdate);
+                var action = update4.action;
+                newState = reducer9(newState, action);
+                update4 = update4.next;
+              } while (update4 !== firstRenderPhaseUpdate);
               if (!objectIs(newState, hook.memoizedState)) {
                 markWorkInProgressReceivedUpdate();
               }
@@ -14114,7 +14114,7 @@
             }
             var eventTime = requestEventTime();
             var lane = requestUpdateLane(fiber);
-            var update5 = {
+            var update4 = {
               lane,
               action,
               eagerReducer: null,
@@ -14123,12 +14123,12 @@
             };
             var pending = queue.pending;
             if (pending === null) {
-              update5.next = update5;
+              update4.next = update4;
             } else {
-              update5.next = pending.next;
-              pending.next = update5;
+              update4.next = pending.next;
+              pending.next = update4;
             }
-            queue.pending = update5;
+            queue.pending = update4;
             var alternate = fiber.alternate;
             if (fiber === currentlyRenderingFiber$1 || alternate !== null && alternate === currentlyRenderingFiber$1) {
               didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
@@ -14144,8 +14144,8 @@
                   try {
                     var currentState = queue.lastRenderedState;
                     var eagerState = lastRenderedReducer(currentState, action);
-                    update5.eagerReducer = lastRenderedReducer;
-                    update5.eagerState = eagerState;
+                    update4.eagerReducer = lastRenderedReducer;
+                    update4.eagerState = eagerState;
                     if (objectIs(eagerState, currentState)) {
                       return;
                     }
@@ -14244,13 +14244,13 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 mountHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
                 try {
-                  return mountReducer(reducer8, initialArg, init);
+                  return mountReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14338,13 +14338,13 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 updateHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
                 try {
-                  return mountReducer(reducer8, initialArg, init);
+                  return mountReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14432,13 +14432,13 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 updateHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
                 try {
-                  return updateReducer(reducer8, initialArg, init);
+                  return updateReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14526,13 +14526,13 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 updateHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
                 try {
-                  return rerenderReducer(reducer8, initialArg, init);
+                  return rerenderReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14627,14 +14627,14 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 warnInvalidHookAccess();
                 mountHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
                 try {
-                  return mountReducer(reducer8, initialArg, init);
+                  return mountReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14736,14 +14736,14 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 warnInvalidHookAccess();
                 updateHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
                 try {
-                  return updateReducer(reducer8, initialArg, init);
+                  return updateReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -14845,14 +14845,14 @@
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
               },
-              useReducer: function(reducer8, initialArg, init) {
+              useReducer: function(reducer9, initialArg, init) {
                 currentHookNameInDev = "useReducer";
                 warnInvalidHookAccess();
                 updateHookTypesDev();
                 var prevDispatcher = ReactCurrentDispatcher$1.current;
                 ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
                 try {
-                  return rerenderReducer(reducer8, initialArg, init);
+                  return rerenderReducer(reducer9, initialArg, init);
                 } finally {
                   ReactCurrentDispatcher$1.current = prevDispatcher;
                 }
@@ -16973,33 +16973,33 @@
           __name(logCapturedError, "logCapturedError");
           var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
           function createRootErrorUpdate(fiber, errorInfo, lane) {
-            var update5 = createUpdate(NoTimestamp, lane);
-            update5.tag = CaptureUpdate;
-            update5.payload = {
+            var update4 = createUpdate(NoTimestamp, lane);
+            update4.tag = CaptureUpdate;
+            update4.payload = {
               element: null
             };
             var error2 = errorInfo.value;
-            update5.callback = function() {
+            update4.callback = function() {
               onUncaughtError(error2);
               logCapturedError(fiber, errorInfo);
             };
-            return update5;
+            return update4;
           }
           __name(createRootErrorUpdate, "createRootErrorUpdate");
           function createClassErrorUpdate(fiber, errorInfo, lane) {
-            var update5 = createUpdate(NoTimestamp, lane);
-            update5.tag = CaptureUpdate;
+            var update4 = createUpdate(NoTimestamp, lane);
+            update4.tag = CaptureUpdate;
             var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
             if (typeof getDerivedStateFromError === "function") {
               var error$1 = errorInfo.value;
-              update5.payload = function() {
+              update4.payload = function() {
                 logCapturedError(fiber, errorInfo);
                 return getDerivedStateFromError(error$1);
               };
             }
             var inst = fiber.stateNode;
             if (inst !== null && typeof inst.componentDidCatch === "function") {
-              update5.callback = /* @__PURE__ */ __name(function callback() {
+              update4.callback = /* @__PURE__ */ __name(function callback() {
                 {
                   markFailedErrorBoundaryForHotReloading(fiber);
                 }
@@ -17021,11 +17021,11 @@
                 }
               }, "callback");
             } else {
-              update5.callback = function() {
+              update4.callback = function() {
                 markFailedErrorBoundaryForHotReloading(fiber);
               };
             }
-            return update5;
+            return update4;
           }
           __name(createClassErrorUpdate, "createClassErrorUpdate");
           function attachPingListener(root2, wakeable, lanes) {
@@ -17086,9 +17086,9 @@
                       if (currentSourceFiber === null) {
                         sourceFiber.tag = IncompleteClassComponent;
                       } else {
-                        var update5 = createUpdate(NoTimestamp, SyncLane);
-                        update5.tag = ForceUpdate;
-                        enqueueUpdate(sourceFiber, update5);
+                        var update4 = createUpdate(NoTimestamp, SyncLane);
+                        update4.tag = ForceUpdate;
+                        enqueueUpdate(sourceFiber, update4);
                       }
                     }
                     sourceFiber.lanes = mergeLanes(sourceFiber.lanes, SyncLane);
@@ -19327,8 +19327,8 @@
           var onUncaughtError = prepareToThrowUncaughtError;
           function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error2) {
             var errorInfo = createCapturedValue(error2, sourceFiber);
-            var update5 = createRootErrorUpdate(rootFiber, errorInfo, SyncLane);
-            enqueueUpdate(rootFiber, update5);
+            var update4 = createRootErrorUpdate(rootFiber, errorInfo, SyncLane);
+            enqueueUpdate(rootFiber, update4);
             var eventTime = requestEventTime();
             var root2 = markUpdateLaneFromFiberToRoot(rootFiber, SyncLane);
             if (root2 !== null) {
@@ -19353,8 +19353,8 @@
                 var instance = fiber.stateNode;
                 if (typeof ctor.getDerivedStateFromError === "function" || typeof instance.componentDidCatch === "function" && !isAlreadyFailedLegacyErrorBoundary(instance)) {
                   var errorInfo = createCapturedValue(error2, sourceFiber);
-                  var update5 = createClassErrorUpdate(fiber, errorInfo, SyncLane);
-                  enqueueUpdate(fiber, update5);
+                  var update4 = createClassErrorUpdate(fiber, errorInfo, SyncLane);
+                  enqueueUpdate(fiber, update4);
                   var eventTime = requestEventTime();
                   var root2 = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
                   if (root2 !== null) {
@@ -19877,12 +19877,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           }
           __name(markFailedErrorBoundaryForHotReloading, "markFailedErrorBoundaryForHotReloading");
-          var scheduleRefresh = /* @__PURE__ */ __name(function(root2, update5) {
+          var scheduleRefresh = /* @__PURE__ */ __name(function(root2, update4) {
             {
               if (resolveFamily === null) {
                 return;
               }
-              var staleFamilies = update5.staleFamilies, updatedFamilies = update5.updatedFamilies;
+              var staleFamilies = update4.staleFamilies, updatedFamilies = update4.updatedFamilies;
               flushPassiveEffects();
               flushSync(function() {
                 scheduleFibersWithFamiliesRecursively(root2.current, updatedFamilies, staleFamilies);
@@ -20669,8 +20669,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 error("Render methods should be a pure function of props and state; triggering nested component updates from render is not allowed. If necessary, trigger nested updates in componentDidUpdate.\n\nCheck the render method of %s.", getComponentName(current.type) || "Unknown");
               }
             }
-            var update5 = createUpdate(eventTime, lane);
-            update5.payload = {
+            var update4 = createUpdate(eventTime, lane);
+            update4.payload = {
               element
             };
             callback = callback === void 0 ? null : callback;
@@ -20680,9 +20680,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                   error("render(...): Expected the last optional `callback` argument to be a function. Instead received: %s.", callback);
                 }
               }
-              update5.callback = callback;
+              update4.callback = callback;
             }
-            enqueueUpdate(current$1, update5);
+            enqueueUpdate(current$1, update4);
             scheduleUpdateOnFiber(current$1, lane, eventTime);
             return lane;
           }
@@ -21321,9 +21321,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/react-is/cjs/react-is.development.js
+  // node_modules/react-redux/node_modules/react-is/cjs/react-is.development.js
   var require_react_is_development = __commonJS({
-    "node_modules/react-is/cjs/react-is.development.js"(exports) {
+    "node_modules/react-redux/node_modules/react-is/cjs/react-is.development.js"(exports) {
       "use strict";
       if (true) {
         (function() {
@@ -21490,9 +21490,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/react-is/index.js
+  // node_modules/react-redux/node_modules/react-is/index.js
   var require_react_is = __commonJS({
-    "node_modules/react-is/index.js"(exports, module) {
+    "node_modules/react-redux/node_modules/react-is/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -21502,18 +21502,18 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/prop-types/lib/ReactPropTypesSecret.js
+  // node_modules/react-redux/node_modules/prop-types/lib/ReactPropTypesSecret.js
   var require_ReactPropTypesSecret = __commonJS({
-    "node_modules/prop-types/lib/ReactPropTypesSecret.js"(exports, module) {
+    "node_modules/react-redux/node_modules/prop-types/lib/ReactPropTypesSecret.js"(exports, module) {
       "use strict";
       var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
       module.exports = ReactPropTypesSecret;
     }
   });
 
-  // node_modules/prop-types/checkPropTypes.js
+  // node_modules/react-redux/node_modules/prop-types/checkPropTypes.js
   var require_checkPropTypes = __commonJS({
-    "node_modules/prop-types/checkPropTypes.js"(exports, module) {
+    "node_modules/react-redux/node_modules/prop-types/checkPropTypes.js"(exports, module) {
       "use strict";
       var printWarning = /* @__PURE__ */ __name(function() {
       }, "printWarning");
@@ -21572,9 +21572,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/prop-types/factoryWithTypeCheckers.js
+  // node_modules/react-redux/node_modules/prop-types/factoryWithTypeCheckers.js
   var require_factoryWithTypeCheckers = __commonJS({
-    "node_modules/prop-types/factoryWithTypeCheckers.js"(exports, module) {
+    "node_modules/react-redux/node_modules/prop-types/factoryWithTypeCheckers.js"(exports, module) {
       "use strict";
       var ReactIs = require_react_is();
       var assign = require_object_assign();
@@ -22020,9 +22020,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/prop-types/index.js
+  // node_modules/react-redux/node_modules/prop-types/index.js
   var require_prop_types = __commonJS({
-    "node_modules/prop-types/index.js"(exports, module) {
+    "node_modules/react-redux/node_modules/prop-types/index.js"(exports, module) {
       if (true) {
         ReactIs = require_react_is();
         throwOnDirectAccess = true;
@@ -22035,11 +22035,192 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
+  // node_modules/hoist-non-react-statics/node_modules/react-is/cjs/react-is.development.js
+  var require_react_is_development2 = __commonJS({
+    "node_modules/hoist-non-react-statics/node_modules/react-is/cjs/react-is.development.js"(exports) {
+      "use strict";
+      if (true) {
+        (function() {
+          "use strict";
+          var hasSymbol = typeof Symbol === "function" && Symbol.for;
+          var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 60103;
+          var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 60106;
+          var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 60107;
+          var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for("react.strict_mode") : 60108;
+          var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 60114;
+          var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 60109;
+          var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 60110;
+          var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for("react.async_mode") : 60111;
+          var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for("react.concurrent_mode") : 60111;
+          var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for("react.forward_ref") : 60112;
+          var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for("react.suspense") : 60113;
+          var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for("react.suspense_list") : 60120;
+          var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115;
+          var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116;
+          var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 60121;
+          var REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117;
+          var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118;
+          var REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
+          function isValidElementType2(type) {
+            return typeof type === "string" || typeof type === "function" || type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === "object" && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE || type.$$typeof === REACT_SCOPE_TYPE || type.$$typeof === REACT_BLOCK_TYPE);
+          }
+          __name(isValidElementType2, "isValidElementType");
+          function typeOf(object) {
+            if (typeof object === "object" && object !== null) {
+              var $$typeof = object.$$typeof;
+              switch ($$typeof) {
+                case REACT_ELEMENT_TYPE:
+                  var type = object.type;
+                  switch (type) {
+                    case REACT_ASYNC_MODE_TYPE:
+                    case REACT_CONCURRENT_MODE_TYPE:
+                    case REACT_FRAGMENT_TYPE:
+                    case REACT_PROFILER_TYPE:
+                    case REACT_STRICT_MODE_TYPE:
+                    case REACT_SUSPENSE_TYPE:
+                      return type;
+                    default:
+                      var $$typeofType = type && type.$$typeof;
+                      switch ($$typeofType) {
+                        case REACT_CONTEXT_TYPE:
+                        case REACT_FORWARD_REF_TYPE:
+                        case REACT_LAZY_TYPE:
+                        case REACT_MEMO_TYPE:
+                        case REACT_PROVIDER_TYPE:
+                          return $$typeofType;
+                        default:
+                          return $$typeof;
+                      }
+                  }
+                case REACT_PORTAL_TYPE:
+                  return $$typeof;
+              }
+            }
+            return void 0;
+          }
+          __name(typeOf, "typeOf");
+          var AsyncMode = REACT_ASYNC_MODE_TYPE;
+          var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
+          var ContextConsumer = REACT_CONTEXT_TYPE;
+          var ContextProvider = REACT_PROVIDER_TYPE;
+          var Element2 = REACT_ELEMENT_TYPE;
+          var ForwardRef = REACT_FORWARD_REF_TYPE;
+          var Fragment = REACT_FRAGMENT_TYPE;
+          var Lazy = REACT_LAZY_TYPE;
+          var Memo = REACT_MEMO_TYPE;
+          var Portal = REACT_PORTAL_TYPE;
+          var Profiler = REACT_PROFILER_TYPE;
+          var StrictMode = REACT_STRICT_MODE_TYPE;
+          var Suspense = REACT_SUSPENSE_TYPE;
+          var hasWarnedAboutDeprecatedIsAsyncMode = false;
+          function isAsyncMode(object) {
+            {
+              if (!hasWarnedAboutDeprecatedIsAsyncMode) {
+                hasWarnedAboutDeprecatedIsAsyncMode = true;
+                console["warn"]("The ReactIs.isAsyncMode() alias has been deprecated, and will be removed in React 17+. Update your code to use ReactIs.isConcurrentMode() instead. It has the exact same API.");
+              }
+            }
+            return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
+          }
+          __name(isAsyncMode, "isAsyncMode");
+          function isConcurrentMode(object) {
+            return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
+          }
+          __name(isConcurrentMode, "isConcurrentMode");
+          function isContextConsumer2(object) {
+            return typeOf(object) === REACT_CONTEXT_TYPE;
+          }
+          __name(isContextConsumer2, "isContextConsumer");
+          function isContextProvider(object) {
+            return typeOf(object) === REACT_PROVIDER_TYPE;
+          }
+          __name(isContextProvider, "isContextProvider");
+          function isElement2(object) {
+            return typeof object === "object" && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+          }
+          __name(isElement2, "isElement");
+          function isForwardRef(object) {
+            return typeOf(object) === REACT_FORWARD_REF_TYPE;
+          }
+          __name(isForwardRef, "isForwardRef");
+          function isFragment(object) {
+            return typeOf(object) === REACT_FRAGMENT_TYPE;
+          }
+          __name(isFragment, "isFragment");
+          function isLazy(object) {
+            return typeOf(object) === REACT_LAZY_TYPE;
+          }
+          __name(isLazy, "isLazy");
+          function isMemo(object) {
+            return typeOf(object) === REACT_MEMO_TYPE;
+          }
+          __name(isMemo, "isMemo");
+          function isPortal(object) {
+            return typeOf(object) === REACT_PORTAL_TYPE;
+          }
+          __name(isPortal, "isPortal");
+          function isProfiler(object) {
+            return typeOf(object) === REACT_PROFILER_TYPE;
+          }
+          __name(isProfiler, "isProfiler");
+          function isStrictMode(object) {
+            return typeOf(object) === REACT_STRICT_MODE_TYPE;
+          }
+          __name(isStrictMode, "isStrictMode");
+          function isSuspense(object) {
+            return typeOf(object) === REACT_SUSPENSE_TYPE;
+          }
+          __name(isSuspense, "isSuspense");
+          exports.AsyncMode = AsyncMode;
+          exports.ConcurrentMode = ConcurrentMode;
+          exports.ContextConsumer = ContextConsumer;
+          exports.ContextProvider = ContextProvider;
+          exports.Element = Element2;
+          exports.ForwardRef = ForwardRef;
+          exports.Fragment = Fragment;
+          exports.Lazy = Lazy;
+          exports.Memo = Memo;
+          exports.Portal = Portal;
+          exports.Profiler = Profiler;
+          exports.StrictMode = StrictMode;
+          exports.Suspense = Suspense;
+          exports.isAsyncMode = isAsyncMode;
+          exports.isConcurrentMode = isConcurrentMode;
+          exports.isContextConsumer = isContextConsumer2;
+          exports.isContextProvider = isContextProvider;
+          exports.isElement = isElement2;
+          exports.isForwardRef = isForwardRef;
+          exports.isFragment = isFragment;
+          exports.isLazy = isLazy;
+          exports.isMemo = isMemo;
+          exports.isPortal = isPortal;
+          exports.isProfiler = isProfiler;
+          exports.isStrictMode = isStrictMode;
+          exports.isSuspense = isSuspense;
+          exports.isValidElementType = isValidElementType2;
+          exports.typeOf = typeOf;
+        })();
+      }
+    }
+  });
+
+  // node_modules/hoist-non-react-statics/node_modules/react-is/index.js
+  var require_react_is2 = __commonJS({
+    "node_modules/hoist-non-react-statics/node_modules/react-is/index.js"(exports, module) {
+      "use strict";
+      if (false) {
+        module.exports = null;
+      } else {
+        module.exports = require_react_is_development2();
+      }
+    }
+  });
+
   // node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js
   var require_hoist_non_react_statics_cjs = __commonJS({
     "node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js"(exports, module) {
       "use strict";
-      var reactIs = require_react_is();
+      var reactIs = require_react_is2();
       var REACT_STATICS = {
         childContextTypes: true,
         contextType: true,
@@ -22122,6 +22303,720 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }
       __name(hoistNonReactStatics, "hoistNonReactStatics");
       module.exports = hoistNonReactStatics;
+    }
+  });
+
+  // node_modules/prop-types/node_modules/react-is/cjs/react-is.development.js
+  var require_react_is_development3 = __commonJS({
+    "node_modules/prop-types/node_modules/react-is/cjs/react-is.development.js"(exports) {
+      "use strict";
+      if (true) {
+        (function() {
+          "use strict";
+          var hasSymbol = typeof Symbol === "function" && Symbol.for;
+          var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 60103;
+          var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 60106;
+          var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 60107;
+          var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for("react.strict_mode") : 60108;
+          var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 60114;
+          var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 60109;
+          var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 60110;
+          var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for("react.async_mode") : 60111;
+          var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for("react.concurrent_mode") : 60111;
+          var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for("react.forward_ref") : 60112;
+          var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for("react.suspense") : 60113;
+          var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for("react.suspense_list") : 60120;
+          var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115;
+          var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116;
+          var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 60121;
+          var REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117;
+          var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118;
+          var REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
+          function isValidElementType2(type) {
+            return typeof type === "string" || typeof type === "function" || type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === "object" && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE || type.$$typeof === REACT_SCOPE_TYPE || type.$$typeof === REACT_BLOCK_TYPE);
+          }
+          __name(isValidElementType2, "isValidElementType");
+          function typeOf(object) {
+            if (typeof object === "object" && object !== null) {
+              var $$typeof = object.$$typeof;
+              switch ($$typeof) {
+                case REACT_ELEMENT_TYPE:
+                  var type = object.type;
+                  switch (type) {
+                    case REACT_ASYNC_MODE_TYPE:
+                    case REACT_CONCURRENT_MODE_TYPE:
+                    case REACT_FRAGMENT_TYPE:
+                    case REACT_PROFILER_TYPE:
+                    case REACT_STRICT_MODE_TYPE:
+                    case REACT_SUSPENSE_TYPE:
+                      return type;
+                    default:
+                      var $$typeofType = type && type.$$typeof;
+                      switch ($$typeofType) {
+                        case REACT_CONTEXT_TYPE:
+                        case REACT_FORWARD_REF_TYPE:
+                        case REACT_LAZY_TYPE:
+                        case REACT_MEMO_TYPE:
+                        case REACT_PROVIDER_TYPE:
+                          return $$typeofType;
+                        default:
+                          return $$typeof;
+                      }
+                  }
+                case REACT_PORTAL_TYPE:
+                  return $$typeof;
+              }
+            }
+            return void 0;
+          }
+          __name(typeOf, "typeOf");
+          var AsyncMode = REACT_ASYNC_MODE_TYPE;
+          var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
+          var ContextConsumer = REACT_CONTEXT_TYPE;
+          var ContextProvider = REACT_PROVIDER_TYPE;
+          var Element2 = REACT_ELEMENT_TYPE;
+          var ForwardRef = REACT_FORWARD_REF_TYPE;
+          var Fragment = REACT_FRAGMENT_TYPE;
+          var Lazy = REACT_LAZY_TYPE;
+          var Memo = REACT_MEMO_TYPE;
+          var Portal = REACT_PORTAL_TYPE;
+          var Profiler = REACT_PROFILER_TYPE;
+          var StrictMode = REACT_STRICT_MODE_TYPE;
+          var Suspense = REACT_SUSPENSE_TYPE;
+          var hasWarnedAboutDeprecatedIsAsyncMode = false;
+          function isAsyncMode(object) {
+            {
+              if (!hasWarnedAboutDeprecatedIsAsyncMode) {
+                hasWarnedAboutDeprecatedIsAsyncMode = true;
+                console["warn"]("The ReactIs.isAsyncMode() alias has been deprecated, and will be removed in React 17+. Update your code to use ReactIs.isConcurrentMode() instead. It has the exact same API.");
+              }
+            }
+            return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
+          }
+          __name(isAsyncMode, "isAsyncMode");
+          function isConcurrentMode(object) {
+            return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
+          }
+          __name(isConcurrentMode, "isConcurrentMode");
+          function isContextConsumer2(object) {
+            return typeOf(object) === REACT_CONTEXT_TYPE;
+          }
+          __name(isContextConsumer2, "isContextConsumer");
+          function isContextProvider(object) {
+            return typeOf(object) === REACT_PROVIDER_TYPE;
+          }
+          __name(isContextProvider, "isContextProvider");
+          function isElement2(object) {
+            return typeof object === "object" && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+          }
+          __name(isElement2, "isElement");
+          function isForwardRef(object) {
+            return typeOf(object) === REACT_FORWARD_REF_TYPE;
+          }
+          __name(isForwardRef, "isForwardRef");
+          function isFragment(object) {
+            return typeOf(object) === REACT_FRAGMENT_TYPE;
+          }
+          __name(isFragment, "isFragment");
+          function isLazy(object) {
+            return typeOf(object) === REACT_LAZY_TYPE;
+          }
+          __name(isLazy, "isLazy");
+          function isMemo(object) {
+            return typeOf(object) === REACT_MEMO_TYPE;
+          }
+          __name(isMemo, "isMemo");
+          function isPortal(object) {
+            return typeOf(object) === REACT_PORTAL_TYPE;
+          }
+          __name(isPortal, "isPortal");
+          function isProfiler(object) {
+            return typeOf(object) === REACT_PROFILER_TYPE;
+          }
+          __name(isProfiler, "isProfiler");
+          function isStrictMode(object) {
+            return typeOf(object) === REACT_STRICT_MODE_TYPE;
+          }
+          __name(isStrictMode, "isStrictMode");
+          function isSuspense(object) {
+            return typeOf(object) === REACT_SUSPENSE_TYPE;
+          }
+          __name(isSuspense, "isSuspense");
+          exports.AsyncMode = AsyncMode;
+          exports.ConcurrentMode = ConcurrentMode;
+          exports.ContextConsumer = ContextConsumer;
+          exports.ContextProvider = ContextProvider;
+          exports.Element = Element2;
+          exports.ForwardRef = ForwardRef;
+          exports.Fragment = Fragment;
+          exports.Lazy = Lazy;
+          exports.Memo = Memo;
+          exports.Portal = Portal;
+          exports.Profiler = Profiler;
+          exports.StrictMode = StrictMode;
+          exports.Suspense = Suspense;
+          exports.isAsyncMode = isAsyncMode;
+          exports.isConcurrentMode = isConcurrentMode;
+          exports.isContextConsumer = isContextConsumer2;
+          exports.isContextProvider = isContextProvider;
+          exports.isElement = isElement2;
+          exports.isForwardRef = isForwardRef;
+          exports.isFragment = isFragment;
+          exports.isLazy = isLazy;
+          exports.isMemo = isMemo;
+          exports.isPortal = isPortal;
+          exports.isProfiler = isProfiler;
+          exports.isStrictMode = isStrictMode;
+          exports.isSuspense = isSuspense;
+          exports.isValidElementType = isValidElementType2;
+          exports.typeOf = typeOf;
+        })();
+      }
+    }
+  });
+
+  // node_modules/prop-types/node_modules/react-is/index.js
+  var require_react_is3 = __commonJS({
+    "node_modules/prop-types/node_modules/react-is/index.js"(exports, module) {
+      "use strict";
+      if (false) {
+        module.exports = null;
+      } else {
+        module.exports = require_react_is_development3();
+      }
+    }
+  });
+
+  // node_modules/prop-types/lib/ReactPropTypesSecret.js
+  var require_ReactPropTypesSecret2 = __commonJS({
+    "node_modules/prop-types/lib/ReactPropTypesSecret.js"(exports, module) {
+      "use strict";
+      var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
+      module.exports = ReactPropTypesSecret;
+    }
+  });
+
+  // node_modules/prop-types/checkPropTypes.js
+  var require_checkPropTypes2 = __commonJS({
+    "node_modules/prop-types/checkPropTypes.js"(exports, module) {
+      "use strict";
+      var printWarning = /* @__PURE__ */ __name(function() {
+      }, "printWarning");
+      if (true) {
+        ReactPropTypesSecret = require_ReactPropTypesSecret2();
+        loggedTypeFailures = {};
+        has = Function.call.bind(Object.prototype.hasOwnProperty);
+        printWarning = /* @__PURE__ */ __name(function(text) {
+          var message = "Warning: " + text;
+          if (typeof console !== "undefined") {
+            console.error(message);
+          }
+          try {
+            throw new Error(message);
+          } catch (x) {
+          }
+        }, "printWarning");
+      }
+      var ReactPropTypesSecret;
+      var loggedTypeFailures;
+      var has;
+      function checkPropTypes(typeSpecs, values, location2, componentName, getStack) {
+        if (true) {
+          for (var typeSpecName in typeSpecs) {
+            if (has(typeSpecs, typeSpecName)) {
+              var error;
+              try {
+                if (typeof typeSpecs[typeSpecName] !== "function") {
+                  var err = Error((componentName || "React class") + ": " + location2 + " type `" + typeSpecName + "` is invalid; it must be a function, usually from the `prop-types` package, but received `" + typeof typeSpecs[typeSpecName] + "`.");
+                  err.name = "Invariant Violation";
+                  throw err;
+                }
+                error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location2, null, ReactPropTypesSecret);
+              } catch (ex) {
+                error = ex;
+              }
+              if (error && !(error instanceof Error)) {
+                printWarning((componentName || "React class") + ": type specification of " + location2 + " `" + typeSpecName + "` is invalid; the type checker function must return `null` or an `Error` but returned a " + typeof error + ". You may have forgotten to pass an argument to the type checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and shape all require an argument).");
+              }
+              if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+                loggedTypeFailures[error.message] = true;
+                var stack = getStack ? getStack() : "";
+                printWarning("Failed " + location2 + " type: " + error.message + (stack != null ? stack : ""));
+              }
+            }
+          }
+        }
+      }
+      __name(checkPropTypes, "checkPropTypes");
+      checkPropTypes.resetWarningCache = function() {
+        if (true) {
+          loggedTypeFailures = {};
+        }
+      };
+      module.exports = checkPropTypes;
+    }
+  });
+
+  // node_modules/prop-types/factoryWithTypeCheckers.js
+  var require_factoryWithTypeCheckers2 = __commonJS({
+    "node_modules/prop-types/factoryWithTypeCheckers.js"(exports, module) {
+      "use strict";
+      var ReactIs = require_react_is3();
+      var assign = require_object_assign();
+      var ReactPropTypesSecret = require_ReactPropTypesSecret2();
+      var checkPropTypes = require_checkPropTypes2();
+      var has = Function.call.bind(Object.prototype.hasOwnProperty);
+      var printWarning = /* @__PURE__ */ __name(function() {
+      }, "printWarning");
+      if (true) {
+        printWarning = /* @__PURE__ */ __name(function(text) {
+          var message = "Warning: " + text;
+          if (typeof console !== "undefined") {
+            console.error(message);
+          }
+          try {
+            throw new Error(message);
+          } catch (x) {
+          }
+        }, "printWarning");
+      }
+      function emptyFunctionThatReturnsNull() {
+        return null;
+      }
+      __name(emptyFunctionThatReturnsNull, "emptyFunctionThatReturnsNull");
+      module.exports = function(isValidElement, throwOnDirectAccess) {
+        var ITERATOR_SYMBOL = typeof Symbol === "function" && Symbol.iterator;
+        var FAUX_ITERATOR_SYMBOL = "@@iterator";
+        function getIteratorFn(maybeIterable) {
+          var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
+          if (typeof iteratorFn === "function") {
+            return iteratorFn;
+          }
+        }
+        __name(getIteratorFn, "getIteratorFn");
+        var ANONYMOUS = "<<anonymous>>";
+        var ReactPropTypes = {
+          array: createPrimitiveTypeChecker("array"),
+          bool: createPrimitiveTypeChecker("boolean"),
+          func: createPrimitiveTypeChecker("function"),
+          number: createPrimitiveTypeChecker("number"),
+          object: createPrimitiveTypeChecker("object"),
+          string: createPrimitiveTypeChecker("string"),
+          symbol: createPrimitiveTypeChecker("symbol"),
+          any: createAnyTypeChecker(),
+          arrayOf: createArrayOfTypeChecker,
+          element: createElementTypeChecker(),
+          elementType: createElementTypeTypeChecker(),
+          instanceOf: createInstanceTypeChecker,
+          node: createNodeChecker(),
+          objectOf: createObjectOfTypeChecker,
+          oneOf: createEnumTypeChecker,
+          oneOfType: createUnionTypeChecker,
+          shape: createShapeTypeChecker,
+          exact: createStrictShapeTypeChecker
+        };
+        function is2(x, y) {
+          if (x === y) {
+            return x !== 0 || 1 / x === 1 / y;
+          } else {
+            return x !== x && y !== y;
+          }
+        }
+        __name(is2, "is");
+        function PropTypeError(message) {
+          this.message = message;
+          this.stack = "";
+        }
+        __name(PropTypeError, "PropTypeError");
+        PropTypeError.prototype = Error.prototype;
+        function createChainableTypeChecker(validate) {
+          if (true) {
+            var manualPropTypeCallCache = {};
+            var manualPropTypeWarningCount = 0;
+          }
+          function checkType(isRequired, props, propName, componentName, location2, propFullName, secret) {
+            componentName = componentName || ANONYMOUS;
+            propFullName = propFullName || propName;
+            if (secret !== ReactPropTypesSecret) {
+              if (throwOnDirectAccess) {
+                var err = new Error("Calling PropTypes validators directly is not supported by the `prop-types` package. Use `PropTypes.checkPropTypes()` to call them. Read more at http://fb.me/use-check-prop-types");
+                err.name = "Invariant Violation";
+                throw err;
+              } else if (typeof console !== "undefined") {
+                var cacheKey = componentName + ":" + propName;
+                if (!manualPropTypeCallCache[cacheKey] && manualPropTypeWarningCount < 3) {
+                  printWarning("You are manually calling a React.PropTypes validation function for the `" + propFullName + "` prop on `" + componentName + "`. This is deprecated and will throw in the standalone `prop-types` package. You may be seeing this warning due to a third-party PropTypes library. See https://fb.me/react-warning-dont-call-proptypes for details.");
+                  manualPropTypeCallCache[cacheKey] = true;
+                  manualPropTypeWarningCount++;
+                }
+              }
+            }
+            if (props[propName] == null) {
+              if (isRequired) {
+                if (props[propName] === null) {
+                  return new PropTypeError("The " + location2 + " `" + propFullName + "` is marked as required " + ("in `" + componentName + "`, but its value is `null`."));
+                }
+                return new PropTypeError("The " + location2 + " `" + propFullName + "` is marked as required in " + ("`" + componentName + "`, but its value is `undefined`."));
+              }
+              return null;
+            } else {
+              return validate(props, propName, componentName, location2, propFullName);
+            }
+          }
+          __name(checkType, "checkType");
+          var chainedCheckType = checkType.bind(null, false);
+          chainedCheckType.isRequired = checkType.bind(null, true);
+          return chainedCheckType;
+        }
+        __name(createChainableTypeChecker, "createChainableTypeChecker");
+        function createPrimitiveTypeChecker(expectedType) {
+          function validate(props, propName, componentName, location2, propFullName, secret) {
+            var propValue = props[propName];
+            var propType = getPropType(propValue);
+            if (propType !== expectedType) {
+              var preciseType = getPreciseType(propValue);
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + preciseType + "` supplied to `" + componentName + "`, expected ") + ("`" + expectedType + "`."));
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createPrimitiveTypeChecker, "createPrimitiveTypeChecker");
+        function createAnyTypeChecker() {
+          return createChainableTypeChecker(emptyFunctionThatReturnsNull);
+        }
+        __name(createAnyTypeChecker, "createAnyTypeChecker");
+        function createArrayOfTypeChecker(typeChecker) {
+          function validate(props, propName, componentName, location2, propFullName) {
+            if (typeof typeChecker !== "function") {
+              return new PropTypeError("Property `" + propFullName + "` of component `" + componentName + "` has invalid PropType notation inside arrayOf.");
+            }
+            var propValue = props[propName];
+            if (!Array.isArray(propValue)) {
+              var propType = getPropType(propValue);
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected an array."));
+            }
+            for (var i = 0; i < propValue.length; i++) {
+              var error = typeChecker(propValue, i, componentName, location2, propFullName + "[" + i + "]", ReactPropTypesSecret);
+              if (error instanceof Error) {
+                return error;
+              }
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createArrayOfTypeChecker, "createArrayOfTypeChecker");
+        function createElementTypeChecker() {
+          function validate(props, propName, componentName, location2, propFullName) {
+            var propValue = props[propName];
+            if (!isValidElement(propValue)) {
+              var propType = getPropType(propValue);
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected a single ReactElement."));
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createElementTypeChecker, "createElementTypeChecker");
+        function createElementTypeTypeChecker() {
+          function validate(props, propName, componentName, location2, propFullName) {
+            var propValue = props[propName];
+            if (!ReactIs.isValidElementType(propValue)) {
+              var propType = getPropType(propValue);
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected a single ReactElement type."));
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createElementTypeTypeChecker, "createElementTypeTypeChecker");
+        function createInstanceTypeChecker(expectedClass) {
+          function validate(props, propName, componentName, location2, propFullName) {
+            if (!(props[propName] instanceof expectedClass)) {
+              var expectedClassName = expectedClass.name || ANONYMOUS;
+              var actualClassName = getClassName(props[propName]);
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + actualClassName + "` supplied to `" + componentName + "`, expected ") + ("instance of `" + expectedClassName + "`."));
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createInstanceTypeChecker, "createInstanceTypeChecker");
+        function createEnumTypeChecker(expectedValues) {
+          if (!Array.isArray(expectedValues)) {
+            if (true) {
+              if (arguments.length > 1) {
+                printWarning("Invalid arguments supplied to oneOf, expected an array, got " + arguments.length + " arguments. A common mistake is to write oneOf(x, y, z) instead of oneOf([x, y, z]).");
+              } else {
+                printWarning("Invalid argument supplied to oneOf, expected an array.");
+              }
+            }
+            return emptyFunctionThatReturnsNull;
+          }
+          function validate(props, propName, componentName, location2, propFullName) {
+            var propValue = props[propName];
+            for (var i = 0; i < expectedValues.length; i++) {
+              if (is2(propValue, expectedValues[i])) {
+                return null;
+              }
+            }
+            var valuesString = JSON.stringify(expectedValues, /* @__PURE__ */ __name(function replacer(key, value) {
+              var type = getPreciseType(value);
+              if (type === "symbol") {
+                return String(value);
+              }
+              return value;
+            }, "replacer"));
+            return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of value `" + String(propValue) + "` " + ("supplied to `" + componentName + "`, expected one of " + valuesString + "."));
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createEnumTypeChecker, "createEnumTypeChecker");
+        function createObjectOfTypeChecker(typeChecker) {
+          function validate(props, propName, componentName, location2, propFullName) {
+            if (typeof typeChecker !== "function") {
+              return new PropTypeError("Property `" + propFullName + "` of component `" + componentName + "` has invalid PropType notation inside objectOf.");
+            }
+            var propValue = props[propName];
+            var propType = getPropType(propValue);
+            if (propType !== "object") {
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected an object."));
+            }
+            for (var key in propValue) {
+              if (has(propValue, key)) {
+                var error = typeChecker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
+                if (error instanceof Error) {
+                  return error;
+                }
+              }
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createObjectOfTypeChecker, "createObjectOfTypeChecker");
+        function createUnionTypeChecker(arrayOfTypeCheckers) {
+          if (!Array.isArray(arrayOfTypeCheckers)) {
+            true ? printWarning("Invalid argument supplied to oneOfType, expected an instance of array.") : void 0;
+            return emptyFunctionThatReturnsNull;
+          }
+          for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
+            var checker = arrayOfTypeCheckers[i];
+            if (typeof checker !== "function") {
+              printWarning("Invalid argument supplied to oneOfType. Expected an array of check functions, but received " + getPostfixForTypeWarning(checker) + " at index " + i + ".");
+              return emptyFunctionThatReturnsNull;
+            }
+          }
+          function validate(props, propName, componentName, location2, propFullName) {
+            for (var i2 = 0; i2 < arrayOfTypeCheckers.length; i2++) {
+              var checker2 = arrayOfTypeCheckers[i2];
+              if (checker2(props, propName, componentName, location2, propFullName, ReactPropTypesSecret) == null) {
+                return null;
+              }
+            }
+            return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` supplied to " + ("`" + componentName + "`."));
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createUnionTypeChecker, "createUnionTypeChecker");
+        function createNodeChecker() {
+          function validate(props, propName, componentName, location2, propFullName) {
+            if (!isNode(props[propName])) {
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` supplied to " + ("`" + componentName + "`, expected a ReactNode."));
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createNodeChecker, "createNodeChecker");
+        function createShapeTypeChecker(shapeTypes) {
+          function validate(props, propName, componentName, location2, propFullName) {
+            var propValue = props[propName];
+            var propType = getPropType(propValue);
+            if (propType !== "object") {
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type `" + propType + "` " + ("supplied to `" + componentName + "`, expected `object`."));
+            }
+            for (var key in shapeTypes) {
+              var checker = shapeTypes[key];
+              if (!checker) {
+                continue;
+              }
+              var error = checker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
+              if (error) {
+                return error;
+              }
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createShapeTypeChecker, "createShapeTypeChecker");
+        function createStrictShapeTypeChecker(shapeTypes) {
+          function validate(props, propName, componentName, location2, propFullName) {
+            var propValue = props[propName];
+            var propType = getPropType(propValue);
+            if (propType !== "object") {
+              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type `" + propType + "` " + ("supplied to `" + componentName + "`, expected `object`."));
+            }
+            var allKeys = assign({}, props[propName], shapeTypes);
+            for (var key in allKeys) {
+              var checker = shapeTypes[key];
+              if (!checker) {
+                return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` key `" + key + "` supplied to `" + componentName + "`.\nBad object: " + JSON.stringify(props[propName], null, "  ") + "\nValid keys: " + JSON.stringify(Object.keys(shapeTypes), null, "  "));
+              }
+              var error = checker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
+              if (error) {
+                return error;
+              }
+            }
+            return null;
+          }
+          __name(validate, "validate");
+          return createChainableTypeChecker(validate);
+        }
+        __name(createStrictShapeTypeChecker, "createStrictShapeTypeChecker");
+        function isNode(propValue) {
+          switch (typeof propValue) {
+            case "number":
+            case "string":
+            case "undefined":
+              return true;
+            case "boolean":
+              return !propValue;
+            case "object":
+              if (Array.isArray(propValue)) {
+                return propValue.every(isNode);
+              }
+              if (propValue === null || isValidElement(propValue)) {
+                return true;
+              }
+              var iteratorFn = getIteratorFn(propValue);
+              if (iteratorFn) {
+                var iterator = iteratorFn.call(propValue);
+                var step;
+                if (iteratorFn !== propValue.entries) {
+                  while (!(step = iterator.next()).done) {
+                    if (!isNode(step.value)) {
+                      return false;
+                    }
+                  }
+                } else {
+                  while (!(step = iterator.next()).done) {
+                    var entry = step.value;
+                    if (entry) {
+                      if (!isNode(entry[1])) {
+                        return false;
+                      }
+                    }
+                  }
+                }
+              } else {
+                return false;
+              }
+              return true;
+            default:
+              return false;
+          }
+        }
+        __name(isNode, "isNode");
+        function isSymbol(propType, propValue) {
+          if (propType === "symbol") {
+            return true;
+          }
+          if (!propValue) {
+            return false;
+          }
+          if (propValue["@@toStringTag"] === "Symbol") {
+            return true;
+          }
+          if (typeof Symbol === "function" && propValue instanceof Symbol) {
+            return true;
+          }
+          return false;
+        }
+        __name(isSymbol, "isSymbol");
+        function getPropType(propValue) {
+          var propType = typeof propValue;
+          if (Array.isArray(propValue)) {
+            return "array";
+          }
+          if (propValue instanceof RegExp) {
+            return "object";
+          }
+          if (isSymbol(propType, propValue)) {
+            return "symbol";
+          }
+          return propType;
+        }
+        __name(getPropType, "getPropType");
+        function getPreciseType(propValue) {
+          if (typeof propValue === "undefined" || propValue === null) {
+            return "" + propValue;
+          }
+          var propType = getPropType(propValue);
+          if (propType === "object") {
+            if (propValue instanceof Date) {
+              return "date";
+            } else if (propValue instanceof RegExp) {
+              return "regexp";
+            }
+          }
+          return propType;
+        }
+        __name(getPreciseType, "getPreciseType");
+        function getPostfixForTypeWarning(value) {
+          var type = getPreciseType(value);
+          switch (type) {
+            case "array":
+            case "object":
+              return "an " + type;
+            case "boolean":
+            case "date":
+            case "regexp":
+              return "a " + type;
+            default:
+              return type;
+          }
+        }
+        __name(getPostfixForTypeWarning, "getPostfixForTypeWarning");
+        function getClassName(propValue) {
+          if (!propValue.constructor || !propValue.constructor.name) {
+            return ANONYMOUS;
+          }
+          return propValue.constructor.name;
+        }
+        __name(getClassName, "getClassName");
+        ReactPropTypes.checkPropTypes = checkPropTypes;
+        ReactPropTypes.resetWarningCache = checkPropTypes.resetWarningCache;
+        ReactPropTypes.PropTypes = ReactPropTypes;
+        return ReactPropTypes;
+      };
+    }
+  });
+
+  // node_modules/prop-types/index.js
+  var require_prop_types2 = __commonJS({
+    "node_modules/prop-types/index.js"(exports, module) {
+      if (true) {
+        ReactIs = require_react_is3();
+        throwOnDirectAccess = true;
+        module.exports = require_factoryWithTypeCheckers2()(ReactIs.isElement, throwOnDirectAccess);
+      } else {
+        module.exports = null();
+      }
+      var ReactIs;
+      var throwOnDirectAccess;
     }
   });
 
@@ -22866,7 +23761,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(unicodeWords, "unicodeWords");
         var runInContext = /* @__PURE__ */ __name(function runInContext2(context) {
-          context = context == null ? root : _11.defaults(root.Object(), context, _11.pick(root, contextProps));
+          context = context == null ? root : _12.defaults(root.Object(), context, _12.pick(root, contextProps));
           var Array2 = context.Array, Date2 = context.Date, Error2 = context.Error, Function2 = context.Function, Math2 = context.Math, Object2 = context.Object, RegExp2 = context.RegExp, String2 = context.String, TypeError2 = context.TypeError;
           var arrayProto = Array2.prototype, funcProto = Function2.prototype, objectProto = Object2.prototype;
           var coreJsData = context["__core-js_shared__"];
@@ -26948,10 +27843,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return object == null ? true : baseUnset(object, path);
           }
           __name(unset, "unset");
-          function update5(object, path, updater) {
+          function update4(object, path, updater) {
             return object == null ? object : baseUpdate(object, path, castFunction(updater));
           }
-          __name(update5, "update");
+          __name(update4, "update");
           function updateWith(object, path, updater, customizer) {
             customizer = typeof customizer == "function" ? customizer : undefined2;
             return object == null ? object : baseUpdate(object, path, castFunction(updater), customizer);
@@ -27670,7 +28565,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           lodash.unset = unset;
           lodash.unzip = unzip;
           lodash.unzipWith = unzipWith;
-          lodash.update = update5;
+          lodash.update = update4;
           lodash.updateWith = updateWith;
           lodash.values = values;
           lodash.valuesIn = valuesIn;
@@ -28010,17 +28905,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           return lodash;
         }, "runInContext");
-        var _11 = runInContext();
+        var _12 = runInContext();
         if (typeof define == "function" && typeof define.amd == "object" && define.amd) {
-          root._ = _11;
+          root._ = _12;
           define(function() {
-            return _11;
+            return _12;
           });
         } else if (freeModule) {
-          (freeModule.exports = _11)._ = _11;
-          freeExports._ = _11;
+          (freeModule.exports = _12)._ = _12;
+          freeExports._ = _12;
         } else {
-          root._ = _11;
+          root._ = _12;
         }
       }).call(exports);
     }
@@ -28202,2108 +29097,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       isValidHttpVersion = /* @__PURE__ */ __name(function(httpVersion) {
         return isValidHttpVersion_regex.test(httpVersion);
       }, "isValidHttpVersion");
-    }
-  });
-
-  // src/js/filt/filt.js
-  var require_filt = __commonJS({
-    "src/js/filt/filt.js"(exports, module) {
-      module.exports = function() {
-        "use strict";
-        function peg$subclass(child, parent) {
-          function ctor() {
-            this.constructor = child;
-          }
-          __name(ctor, "ctor");
-          ctor.prototype = parent.prototype;
-          child.prototype = new ctor();
-        }
-        __name(peg$subclass, "peg$subclass");
-        function peg$SyntaxError(message, expected, found, location2) {
-          this.message = message;
-          this.expected = expected;
-          this.found = found;
-          this.location = location2;
-          this.name = "SyntaxError";
-          if (typeof Error.captureStackTrace === "function") {
-            Error.captureStackTrace(this, peg$SyntaxError);
-          }
-        }
-        __name(peg$SyntaxError, "peg$SyntaxError");
-        peg$subclass(peg$SyntaxError, Error);
-        function peg$parse(input) {
-          var options = arguments.length > 1 ? arguments[1] : {}, parser = this, peg$FAILED = {}, peg$startRuleFunctions = { start: peg$parsestart }, peg$startRuleFunction = peg$parsestart, peg$c0 = { type: "other", description: "filter expression" }, peg$c1 = /* @__PURE__ */ __name(function(orExpr) {
-            return orExpr;
-          }, "peg$c1"), peg$c2 = { type: "other", description: "whitespace" }, peg$c3 = /^[ \t\n\r]/, peg$c4 = { type: "class", value: "[ \\t\\n\\r]", description: "[ \\t\\n\\r]" }, peg$c5 = { type: "other", description: "control character" }, peg$c6 = /^[|&!()~"]/, peg$c7 = { type: "class", value: '[|&!()~"]', description: '[|&!()~"]' }, peg$c8 = { type: "other", description: "optional whitespace" }, peg$c9 = "|", peg$c10 = { type: "literal", value: "|", description: '"|"' }, peg$c11 = /* @__PURE__ */ __name(function(first, second) {
-            return or(first, second);
-          }, "peg$c11"), peg$c12 = "&", peg$c13 = { type: "literal", value: "&", description: '"&"' }, peg$c14 = /* @__PURE__ */ __name(function(first, second) {
-            return and(first, second);
-          }, "peg$c14"), peg$c15 = "!", peg$c16 = { type: "literal", value: "!", description: '"!"' }, peg$c17 = /* @__PURE__ */ __name(function(expr) {
-            return not(expr);
-          }, "peg$c17"), peg$c18 = "(", peg$c19 = { type: "literal", value: "(", description: '"("' }, peg$c20 = ")", peg$c21 = { type: "literal", value: ")", description: '")"' }, peg$c22 = /* @__PURE__ */ __name(function(expr) {
-            return binding(expr);
-          }, "peg$c22"), peg$c23 = "true", peg$c24 = { type: "literal", value: "true", description: '"true"' }, peg$c25 = /* @__PURE__ */ __name(function() {
-            return trueFilter;
-          }, "peg$c25"), peg$c26 = "false", peg$c27 = { type: "literal", value: "false", description: '"false"' }, peg$c28 = /* @__PURE__ */ __name(function() {
-            return falseFilter;
-          }, "peg$c28"), peg$c29 = "~a", peg$c30 = { type: "literal", value: "~a", description: '"~a"' }, peg$c31 = /* @__PURE__ */ __name(function() {
-            return assetFilter;
-          }, "peg$c31"), peg$c32 = "~b", peg$c33 = { type: "literal", value: "~b", description: '"~b"' }, peg$c34 = /* @__PURE__ */ __name(function(s) {
-            return body(s);
-          }, "peg$c34"), peg$c35 = "~bq", peg$c36 = { type: "literal", value: "~bq", description: '"~bq"' }, peg$c37 = /* @__PURE__ */ __name(function(s) {
-            return requestBody(s);
-          }, "peg$c37"), peg$c38 = "~bs", peg$c39 = { type: "literal", value: "~bs", description: '"~bs"' }, peg$c40 = /* @__PURE__ */ __name(function(s) {
-            return responseBody(s);
-          }, "peg$c40"), peg$c41 = "~c", peg$c42 = { type: "literal", value: "~c", description: '"~c"' }, peg$c43 = /* @__PURE__ */ __name(function(s) {
-            return responseCode(s);
-          }, "peg$c43"), peg$c44 = "~d", peg$c45 = { type: "literal", value: "~d", description: '"~d"' }, peg$c46 = /* @__PURE__ */ __name(function(s) {
-            return domain(s);
-          }, "peg$c46"), peg$c47 = "~dst", peg$c48 = { type: "literal", value: "~dst", description: '"~dst"' }, peg$c49 = /* @__PURE__ */ __name(function(s) {
-            return destination(s);
-          }, "peg$c49"), peg$c50 = "~e", peg$c51 = { type: "literal", value: "~e", description: '"~e"' }, peg$c52 = /* @__PURE__ */ __name(function() {
-            return errorFilter;
-          }, "peg$c52"), peg$c53 = "~h", peg$c54 = { type: "literal", value: "~h", description: '"~h"' }, peg$c55 = /* @__PURE__ */ __name(function(s) {
-            return header(s);
-          }, "peg$c55"), peg$c56 = "~hq", peg$c57 = { type: "literal", value: "~hq", description: '"~hq"' }, peg$c58 = /* @__PURE__ */ __name(function(s) {
-            return requestHeader(s);
-          }, "peg$c58"), peg$c59 = "~hs", peg$c60 = { type: "literal", value: "~hs", description: '"~hs"' }, peg$c61 = /* @__PURE__ */ __name(function(s) {
-            return responseHeader(s);
-          }, "peg$c61"), peg$c62 = "~http", peg$c63 = { type: "literal", value: "~http", description: '"~http"' }, peg$c64 = /* @__PURE__ */ __name(function() {
-            return httpFilter;
-          }, "peg$c64"), peg$c65 = "~m", peg$c66 = { type: "literal", value: "~m", description: '"~m"' }, peg$c67 = /* @__PURE__ */ __name(function(s) {
-            return method(s);
-          }, "peg$c67"), peg$c68 = "~marked", peg$c69 = { type: "literal", value: "~marked", description: '"~marked"' }, peg$c70 = /* @__PURE__ */ __name(function() {
-            return markedFilter;
-          }, "peg$c70"), peg$c71 = "~q", peg$c72 = { type: "literal", value: "~q", description: '"~q"' }, peg$c73 = /* @__PURE__ */ __name(function() {
-            return noResponseFilter;
-          }, "peg$c73"), peg$c74 = "~src", peg$c75 = { type: "literal", value: "~src", description: '"~src"' }, peg$c76 = /* @__PURE__ */ __name(function(s) {
-            return source(s);
-          }, "peg$c76"), peg$c77 = "~s", peg$c78 = { type: "literal", value: "~s", description: '"~s"' }, peg$c79 = /* @__PURE__ */ __name(function() {
-            return responseFilter;
-          }, "peg$c79"), peg$c80 = "~t", peg$c81 = { type: "literal", value: "~t", description: '"~t"' }, peg$c82 = /* @__PURE__ */ __name(function(s) {
-            return contentType(s);
-          }, "peg$c82"), peg$c83 = "~tcp", peg$c84 = { type: "literal", value: "~tcp", description: '"~tcp"' }, peg$c85 = /* @__PURE__ */ __name(function() {
-            return tcpFilter;
-          }, "peg$c85"), peg$c86 = "~tq", peg$c87 = { type: "literal", value: "~tq", description: '"~tq"' }, peg$c88 = /* @__PURE__ */ __name(function(s) {
-            return requestContentType(s);
-          }, "peg$c88"), peg$c89 = "~ts", peg$c90 = { type: "literal", value: "~ts", description: '"~ts"' }, peg$c91 = /* @__PURE__ */ __name(function(s) {
-            return responseContentType(s);
-          }, "peg$c91"), peg$c92 = "~u", peg$c93 = { type: "literal", value: "~u", description: '"~u"' }, peg$c94 = /* @__PURE__ */ __name(function(s) {
-            return url(s);
-          }, "peg$c94"), peg$c95 = "~websocket", peg$c96 = { type: "literal", value: "~websocket", description: '"~websocket"' }, peg$c97 = /* @__PURE__ */ __name(function() {
-            return websocketFilter;
-          }, "peg$c97"), peg$c98 = { type: "other", description: "integer" }, peg$c99 = /^['"]/, peg$c100 = { type: "class", value: `['"]`, description: `['"]` }, peg$c101 = /^[0-9]/, peg$c102 = { type: "class", value: "[0-9]", description: "[0-9]" }, peg$c103 = /* @__PURE__ */ __name(function(digits) {
-            return parseInt(digits.join(""), 10);
-          }, "peg$c103"), peg$c104 = { type: "other", description: "string" }, peg$c105 = '"', peg$c106 = { type: "literal", value: '"', description: '"\\""' }, peg$c107 = /* @__PURE__ */ __name(function(chars) {
-            return chars.join("");
-          }, "peg$c107"), peg$c108 = "'", peg$c109 = { type: "literal", value: "'", description: `"'"` }, peg$c110 = /^["\\]/, peg$c111 = { type: "class", value: '["\\\\]', description: '["\\\\]' }, peg$c112 = { type: "any", description: "any character" }, peg$c113 = /* @__PURE__ */ __name(function(char) {
-            return char;
-          }, "peg$c113"), peg$c114 = "\\", peg$c115 = { type: "literal", value: "\\", description: '"\\\\"' }, peg$c116 = /^['\\]/, peg$c117 = { type: "class", value: "['\\\\]", description: "['\\\\]" }, peg$c118 = /^['"\\]/, peg$c119 = { type: "class", value: `['"\\\\]`, description: `['"\\\\]` }, peg$c120 = "n", peg$c121 = { type: "literal", value: "n", description: '"n"' }, peg$c122 = /* @__PURE__ */ __name(function() {
-            return "\n";
-          }, "peg$c122"), peg$c123 = "r", peg$c124 = { type: "literal", value: "r", description: '"r"' }, peg$c125 = /* @__PURE__ */ __name(function() {
-            return "\r";
-          }, "peg$c125"), peg$c126 = "t", peg$c127 = { type: "literal", value: "t", description: '"t"' }, peg$c128 = /* @__PURE__ */ __name(function() {
-            return "	";
-          }, "peg$c128"), peg$currPos = 0, peg$savedPos = 0, peg$posDetailsCache = [{ line: 1, column: 1, seenCR: false }], peg$maxFailPos = 0, peg$maxFailExpected = [], peg$silentFails = 0, peg$result;
-          if ("startRule" in options) {
-            if (!(options.startRule in peg$startRuleFunctions)) {
-              throw new Error(`Can't start parsing from rule "` + options.startRule + '".');
-            }
-            peg$startRuleFunction = peg$startRuleFunctions[options.startRule];
-          }
-          function text() {
-            return input.substring(peg$savedPos, peg$currPos);
-          }
-          __name(text, "text");
-          function location2() {
-            return peg$computeLocation(peg$savedPos, peg$currPos);
-          }
-          __name(location2, "location");
-          function expected(description) {
-            throw peg$buildException(null, [{ type: "other", description }], input.substring(peg$savedPos, peg$currPos), peg$computeLocation(peg$savedPos, peg$currPos));
-          }
-          __name(expected, "expected");
-          function error(message) {
-            throw peg$buildException(message, null, input.substring(peg$savedPos, peg$currPos), peg$computeLocation(peg$savedPos, peg$currPos));
-          }
-          __name(error, "error");
-          function peg$computePosDetails(pos) {
-            var details = peg$posDetailsCache[pos], p, ch;
-            if (details) {
-              return details;
-            } else {
-              p = pos - 1;
-              while (!peg$posDetailsCache[p]) {
-                p--;
-              }
-              details = peg$posDetailsCache[p];
-              details = {
-                line: details.line,
-                column: details.column,
-                seenCR: details.seenCR
-              };
-              while (p < pos) {
-                ch = input.charAt(p);
-                if (ch === "\n") {
-                  if (!details.seenCR) {
-                    details.line++;
-                  }
-                  details.column = 1;
-                  details.seenCR = false;
-                } else if (ch === "\r" || ch === "\u2028" || ch === "\u2029") {
-                  details.line++;
-                  details.column = 1;
-                  details.seenCR = true;
-                } else {
-                  details.column++;
-                  details.seenCR = false;
-                }
-                p++;
-              }
-              peg$posDetailsCache[pos] = details;
-              return details;
-            }
-          }
-          __name(peg$computePosDetails, "peg$computePosDetails");
-          function peg$computeLocation(startPos, endPos) {
-            var startPosDetails = peg$computePosDetails(startPos), endPosDetails = peg$computePosDetails(endPos);
-            return {
-              start: {
-                offset: startPos,
-                line: startPosDetails.line,
-                column: startPosDetails.column
-              },
-              end: {
-                offset: endPos,
-                line: endPosDetails.line,
-                column: endPosDetails.column
-              }
-            };
-          }
-          __name(peg$computeLocation, "peg$computeLocation");
-          function peg$fail(expected2) {
-            if (peg$currPos < peg$maxFailPos) {
-              return;
-            }
-            if (peg$currPos > peg$maxFailPos) {
-              peg$maxFailPos = peg$currPos;
-              peg$maxFailExpected = [];
-            }
-            peg$maxFailExpected.push(expected2);
-          }
-          __name(peg$fail, "peg$fail");
-          function peg$buildException(message, expected2, found, location3) {
-            function cleanupExpected(expected3) {
-              var i = 1;
-              expected3.sort(function(a, b) {
-                if (a.description < b.description) {
-                  return -1;
-                } else if (a.description > b.description) {
-                  return 1;
-                } else {
-                  return 0;
-                }
-              });
-              while (i < expected3.length) {
-                if (expected3[i - 1] === expected3[i]) {
-                  expected3.splice(i, 1);
-                } else {
-                  i++;
-                }
-              }
-            }
-            __name(cleanupExpected, "cleanupExpected");
-            function buildMessage(expected3, found2) {
-              function stringEscape(s) {
-                function hex(ch) {
-                  return ch.charCodeAt(0).toString(16).toUpperCase();
-                }
-                __name(hex, "hex");
-                return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\x08/g, "\\b").replace(/\t/g, "\\t").replace(/\n/g, "\\n").replace(/\f/g, "\\f").replace(/\r/g, "\\r").replace(/[\x00-\x07\x0B\x0E\x0F]/g, function(ch) {
-                  return "\\x0" + hex(ch);
-                }).replace(/[\x10-\x1F\x80-\xFF]/g, function(ch) {
-                  return "\\x" + hex(ch);
-                }).replace(/[\u0100-\u0FFF]/g, function(ch) {
-                  return "\\u0" + hex(ch);
-                }).replace(/[\u1000-\uFFFF]/g, function(ch) {
-                  return "\\u" + hex(ch);
-                });
-              }
-              __name(stringEscape, "stringEscape");
-              var expectedDescs = new Array(expected3.length), expectedDesc, foundDesc, i;
-              for (i = 0; i < expected3.length; i++) {
-                expectedDescs[i] = expected3[i].description;
-              }
-              expectedDesc = expected3.length > 1 ? expectedDescs.slice(0, -1).join(", ") + " or " + expectedDescs[expected3.length - 1] : expectedDescs[0];
-              foundDesc = found2 ? '"' + stringEscape(found2) + '"' : "end of input";
-              return "Expected " + expectedDesc + " but " + foundDesc + " found.";
-            }
-            __name(buildMessage, "buildMessage");
-            if (expected2 !== null) {
-              cleanupExpected(expected2);
-            }
-            return new peg$SyntaxError(message !== null ? message : buildMessage(expected2, found), expected2, found, location3);
-          }
-          __name(peg$buildException, "peg$buildException");
-          function peg$parsestart() {
-            var s0, s1, s2, s3;
-            peg$silentFails++;
-            s0 = peg$currPos;
-            s1 = peg$parse__();
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parseOrExpr();
-              if (s2 !== peg$FAILED) {
-                s3 = peg$parse__();
-                if (s3 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c1(s2);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c0);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parsestart, "peg$parsestart");
-          function peg$parsews() {
-            var s0, s1;
-            peg$silentFails++;
-            if (peg$c3.test(input.charAt(peg$currPos))) {
-              s0 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s0 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c4);
-              }
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c2);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parsews, "peg$parsews");
-          function peg$parsecc() {
-            var s0, s1;
-            peg$silentFails++;
-            if (peg$c6.test(input.charAt(peg$currPos))) {
-              s0 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s0 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c7);
-              }
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c5);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parsecc, "peg$parsecc");
-          function peg$parse__() {
-            var s0, s1;
-            peg$silentFails++;
-            s0 = [];
-            s1 = peg$parsews();
-            while (s1 !== peg$FAILED) {
-              s0.push(s1);
-              s1 = peg$parsews();
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c8);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parse__, "peg$parse__");
-          function peg$parseOrExpr() {
-            var s0, s1, s2, s3, s4, s5;
-            s0 = peg$currPos;
-            s1 = peg$parseAndExpr();
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parse__();
-              if (s2 !== peg$FAILED) {
-                if (input.charCodeAt(peg$currPos) === 124) {
-                  s3 = peg$c9;
-                  peg$currPos++;
-                } else {
-                  s3 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c10);
-                  }
-                }
-                if (s3 !== peg$FAILED) {
-                  s4 = peg$parse__();
-                  if (s4 !== peg$FAILED) {
-                    s5 = peg$parseOrExpr();
-                    if (s5 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c11(s1, s5);
-                      s0 = s1;
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$parseAndExpr();
-            }
-            return s0;
-          }
-          __name(peg$parseOrExpr, "peg$parseOrExpr");
-          function peg$parseAndExpr() {
-            var s0, s1, s2, s3, s4, s5;
-            s0 = peg$currPos;
-            s1 = peg$parseNotExpr();
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parse__();
-              if (s2 !== peg$FAILED) {
-                if (input.charCodeAt(peg$currPos) === 38) {
-                  s3 = peg$c12;
-                  peg$currPos++;
-                } else {
-                  s3 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c13);
-                  }
-                }
-                if (s3 !== peg$FAILED) {
-                  s4 = peg$parse__();
-                  if (s4 !== peg$FAILED) {
-                    s5 = peg$parseAndExpr();
-                    if (s5 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c14(s1, s5);
-                      s0 = s1;
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              s1 = peg$parseNotExpr();
-              if (s1 !== peg$FAILED) {
-                s2 = [];
-                s3 = peg$parsews();
-                if (s3 !== peg$FAILED) {
-                  while (s3 !== peg$FAILED) {
-                    s2.push(s3);
-                    s3 = peg$parsews();
-                  }
-                } else {
-                  s2 = peg$FAILED;
-                }
-                if (s2 !== peg$FAILED) {
-                  s3 = peg$parseAndExpr();
-                  if (s3 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c14(s1, s3);
-                    s0 = s1;
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-              if (s0 === peg$FAILED) {
-                s0 = peg$parseNotExpr();
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseAndExpr, "peg$parseAndExpr");
-          function peg$parseNotExpr() {
-            var s0, s1, s2, s3;
-            s0 = peg$currPos;
-            if (input.charCodeAt(peg$currPos) === 33) {
-              s1 = peg$c15;
-              peg$currPos++;
-            } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c16);
-              }
-            }
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parse__();
-              if (s2 !== peg$FAILED) {
-                s3 = peg$parseNotExpr();
-                if (s3 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c17(s3);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$parseBindingExpr();
-            }
-            return s0;
-          }
-          __name(peg$parseNotExpr, "peg$parseNotExpr");
-          function peg$parseBindingExpr() {
-            var s0, s1, s2, s3, s4, s5;
-            s0 = peg$currPos;
-            if (input.charCodeAt(peg$currPos) === 40) {
-              s1 = peg$c18;
-              peg$currPos++;
-            } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c19);
-              }
-            }
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parse__();
-              if (s2 !== peg$FAILED) {
-                s3 = peg$parseOrExpr();
-                if (s3 !== peg$FAILED) {
-                  s4 = peg$parse__();
-                  if (s4 !== peg$FAILED) {
-                    if (input.charCodeAt(peg$currPos) === 41) {
-                      s5 = peg$c20;
-                      peg$currPos++;
-                    } else {
-                      s5 = peg$FAILED;
-                      if (peg$silentFails === 0) {
-                        peg$fail(peg$c21);
-                      }
-                    }
-                    if (s5 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c22(s3);
-                      s0 = s1;
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$parseExpr();
-            }
-            return s0;
-          }
-          __name(peg$parseBindingExpr, "peg$parseBindingExpr");
-          function peg$parseExpr() {
-            var s0, s1, s2, s3;
-            s0 = peg$currPos;
-            if (input.substr(peg$currPos, 4) === peg$c23) {
-              s1 = peg$c23;
-              peg$currPos += 4;
-            } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c24);
-              }
-            }
-            if (s1 !== peg$FAILED) {
-              peg$savedPos = s0;
-              s1 = peg$c25();
-            }
-            s0 = s1;
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.substr(peg$currPos, 5) === peg$c26) {
-                s1 = peg$c26;
-                peg$currPos += 5;
-              } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c27);
-                }
-              }
-              if (s1 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c28();
-              }
-              s0 = s1;
-              if (s0 === peg$FAILED) {
-                s0 = peg$currPos;
-                if (input.substr(peg$currPos, 2) === peg$c29) {
-                  s1 = peg$c29;
-                  peg$currPos += 2;
-                } else {
-                  s1 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c30);
-                  }
-                }
-                if (s1 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c31();
-                }
-                s0 = s1;
-                if (s0 === peg$FAILED) {
-                  s0 = peg$currPos;
-                  if (input.substr(peg$currPos, 2) === peg$c32) {
-                    s1 = peg$c32;
-                    peg$currPos += 2;
-                  } else {
-                    s1 = peg$FAILED;
-                    if (peg$silentFails === 0) {
-                      peg$fail(peg$c33);
-                    }
-                  }
-                  if (s1 !== peg$FAILED) {
-                    s2 = [];
-                    s3 = peg$parsews();
-                    if (s3 !== peg$FAILED) {
-                      while (s3 !== peg$FAILED) {
-                        s2.push(s3);
-                        s3 = peg$parsews();
-                      }
-                    } else {
-                      s2 = peg$FAILED;
-                    }
-                    if (s2 !== peg$FAILED) {
-                      s3 = peg$parseStringLiteral();
-                      if (s3 !== peg$FAILED) {
-                        peg$savedPos = s0;
-                        s1 = peg$c34(s3);
-                        s0 = s1;
-                      } else {
-                        peg$currPos = s0;
-                        s0 = peg$FAILED;
-                      }
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                  if (s0 === peg$FAILED) {
-                    s0 = peg$currPos;
-                    if (input.substr(peg$currPos, 3) === peg$c35) {
-                      s1 = peg$c35;
-                      peg$currPos += 3;
-                    } else {
-                      s1 = peg$FAILED;
-                      if (peg$silentFails === 0) {
-                        peg$fail(peg$c36);
-                      }
-                    }
-                    if (s1 !== peg$FAILED) {
-                      s2 = [];
-                      s3 = peg$parsews();
-                      if (s3 !== peg$FAILED) {
-                        while (s3 !== peg$FAILED) {
-                          s2.push(s3);
-                          s3 = peg$parsews();
-                        }
-                      } else {
-                        s2 = peg$FAILED;
-                      }
-                      if (s2 !== peg$FAILED) {
-                        s3 = peg$parseStringLiteral();
-                        if (s3 !== peg$FAILED) {
-                          peg$savedPos = s0;
-                          s1 = peg$c37(s3);
-                          s0 = s1;
-                        } else {
-                          peg$currPos = s0;
-                          s0 = peg$FAILED;
-                        }
-                      } else {
-                        peg$currPos = s0;
-                        s0 = peg$FAILED;
-                      }
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                    if (s0 === peg$FAILED) {
-                      s0 = peg$currPos;
-                      if (input.substr(peg$currPos, 3) === peg$c38) {
-                        s1 = peg$c38;
-                        peg$currPos += 3;
-                      } else {
-                        s1 = peg$FAILED;
-                        if (peg$silentFails === 0) {
-                          peg$fail(peg$c39);
-                        }
-                      }
-                      if (s1 !== peg$FAILED) {
-                        s2 = [];
-                        s3 = peg$parsews();
-                        if (s3 !== peg$FAILED) {
-                          while (s3 !== peg$FAILED) {
-                            s2.push(s3);
-                            s3 = peg$parsews();
-                          }
-                        } else {
-                          s2 = peg$FAILED;
-                        }
-                        if (s2 !== peg$FAILED) {
-                          s3 = peg$parseStringLiteral();
-                          if (s3 !== peg$FAILED) {
-                            peg$savedPos = s0;
-                            s1 = peg$c40(s3);
-                            s0 = s1;
-                          } else {
-                            peg$currPos = s0;
-                            s0 = peg$FAILED;
-                          }
-                        } else {
-                          peg$currPos = s0;
-                          s0 = peg$FAILED;
-                        }
-                      } else {
-                        peg$currPos = s0;
-                        s0 = peg$FAILED;
-                      }
-                      if (s0 === peg$FAILED) {
-                        s0 = peg$currPos;
-                        if (input.substr(peg$currPos, 2) === peg$c41) {
-                          s1 = peg$c41;
-                          peg$currPos += 2;
-                        } else {
-                          s1 = peg$FAILED;
-                          if (peg$silentFails === 0) {
-                            peg$fail(peg$c42);
-                          }
-                        }
-                        if (s1 !== peg$FAILED) {
-                          s2 = [];
-                          s3 = peg$parsews();
-                          if (s3 !== peg$FAILED) {
-                            while (s3 !== peg$FAILED) {
-                              s2.push(s3);
-                              s3 = peg$parsews();
-                            }
-                          } else {
-                            s2 = peg$FAILED;
-                          }
-                          if (s2 !== peg$FAILED) {
-                            s3 = peg$parseIntegerLiteral();
-                            if (s3 !== peg$FAILED) {
-                              peg$savedPos = s0;
-                              s1 = peg$c43(s3);
-                              s0 = s1;
-                            } else {
-                              peg$currPos = s0;
-                              s0 = peg$FAILED;
-                            }
-                          } else {
-                            peg$currPos = s0;
-                            s0 = peg$FAILED;
-                          }
-                        } else {
-                          peg$currPos = s0;
-                          s0 = peg$FAILED;
-                        }
-                        if (s0 === peg$FAILED) {
-                          s0 = peg$currPos;
-                          if (input.substr(peg$currPos, 2) === peg$c44) {
-                            s1 = peg$c44;
-                            peg$currPos += 2;
-                          } else {
-                            s1 = peg$FAILED;
-                            if (peg$silentFails === 0) {
-                              peg$fail(peg$c45);
-                            }
-                          }
-                          if (s1 !== peg$FAILED) {
-                            s2 = [];
-                            s3 = peg$parsews();
-                            if (s3 !== peg$FAILED) {
-                              while (s3 !== peg$FAILED) {
-                                s2.push(s3);
-                                s3 = peg$parsews();
-                              }
-                            } else {
-                              s2 = peg$FAILED;
-                            }
-                            if (s2 !== peg$FAILED) {
-                              s3 = peg$parseStringLiteral();
-                              if (s3 !== peg$FAILED) {
-                                peg$savedPos = s0;
-                                s1 = peg$c46(s3);
-                                s0 = s1;
-                              } else {
-                                peg$currPos = s0;
-                                s0 = peg$FAILED;
-                              }
-                            } else {
-                              peg$currPos = s0;
-                              s0 = peg$FAILED;
-                            }
-                          } else {
-                            peg$currPos = s0;
-                            s0 = peg$FAILED;
-                          }
-                          if (s0 === peg$FAILED) {
-                            s0 = peg$currPos;
-                            if (input.substr(peg$currPos, 4) === peg$c47) {
-                              s1 = peg$c47;
-                              peg$currPos += 4;
-                            } else {
-                              s1 = peg$FAILED;
-                              if (peg$silentFails === 0) {
-                                peg$fail(peg$c48);
-                              }
-                            }
-                            if (s1 !== peg$FAILED) {
-                              s2 = [];
-                              s3 = peg$parsews();
-                              if (s3 !== peg$FAILED) {
-                                while (s3 !== peg$FAILED) {
-                                  s2.push(s3);
-                                  s3 = peg$parsews();
-                                }
-                              } else {
-                                s2 = peg$FAILED;
-                              }
-                              if (s2 !== peg$FAILED) {
-                                s3 = peg$parseStringLiteral();
-                                if (s3 !== peg$FAILED) {
-                                  peg$savedPos = s0;
-                                  s1 = peg$c49(s3);
-                                  s0 = s1;
-                                } else {
-                                  peg$currPos = s0;
-                                  s0 = peg$FAILED;
-                                }
-                              } else {
-                                peg$currPos = s0;
-                                s0 = peg$FAILED;
-                              }
-                            } else {
-                              peg$currPos = s0;
-                              s0 = peg$FAILED;
-                            }
-                            if (s0 === peg$FAILED) {
-                              s0 = peg$currPos;
-                              if (input.substr(peg$currPos, 2) === peg$c50) {
-                                s1 = peg$c50;
-                                peg$currPos += 2;
-                              } else {
-                                s1 = peg$FAILED;
-                                if (peg$silentFails === 0) {
-                                  peg$fail(peg$c51);
-                                }
-                              }
-                              if (s1 !== peg$FAILED) {
-                                peg$savedPos = s0;
-                                s1 = peg$c52();
-                              }
-                              s0 = s1;
-                              if (s0 === peg$FAILED) {
-                                s0 = peg$currPos;
-                                if (input.substr(peg$currPos, 2) === peg$c53) {
-                                  s1 = peg$c53;
-                                  peg$currPos += 2;
-                                } else {
-                                  s1 = peg$FAILED;
-                                  if (peg$silentFails === 0) {
-                                    peg$fail(peg$c54);
-                                  }
-                                }
-                                if (s1 !== peg$FAILED) {
-                                  s2 = [];
-                                  s3 = peg$parsews();
-                                  if (s3 !== peg$FAILED) {
-                                    while (s3 !== peg$FAILED) {
-                                      s2.push(s3);
-                                      s3 = peg$parsews();
-                                    }
-                                  } else {
-                                    s2 = peg$FAILED;
-                                  }
-                                  if (s2 !== peg$FAILED) {
-                                    s3 = peg$parseStringLiteral();
-                                    if (s3 !== peg$FAILED) {
-                                      peg$savedPos = s0;
-                                      s1 = peg$c55(s3);
-                                      s0 = s1;
-                                    } else {
-                                      peg$currPos = s0;
-                                      s0 = peg$FAILED;
-                                    }
-                                  } else {
-                                    peg$currPos = s0;
-                                    s0 = peg$FAILED;
-                                  }
-                                } else {
-                                  peg$currPos = s0;
-                                  s0 = peg$FAILED;
-                                }
-                                if (s0 === peg$FAILED) {
-                                  s0 = peg$currPos;
-                                  if (input.substr(peg$currPos, 3) === peg$c56) {
-                                    s1 = peg$c56;
-                                    peg$currPos += 3;
-                                  } else {
-                                    s1 = peg$FAILED;
-                                    if (peg$silentFails === 0) {
-                                      peg$fail(peg$c57);
-                                    }
-                                  }
-                                  if (s1 !== peg$FAILED) {
-                                    s2 = [];
-                                    s3 = peg$parsews();
-                                    if (s3 !== peg$FAILED) {
-                                      while (s3 !== peg$FAILED) {
-                                        s2.push(s3);
-                                        s3 = peg$parsews();
-                                      }
-                                    } else {
-                                      s2 = peg$FAILED;
-                                    }
-                                    if (s2 !== peg$FAILED) {
-                                      s3 = peg$parseStringLiteral();
-                                      if (s3 !== peg$FAILED) {
-                                        peg$savedPos = s0;
-                                        s1 = peg$c58(s3);
-                                        s0 = s1;
-                                      } else {
-                                        peg$currPos = s0;
-                                        s0 = peg$FAILED;
-                                      }
-                                    } else {
-                                      peg$currPos = s0;
-                                      s0 = peg$FAILED;
-                                    }
-                                  } else {
-                                    peg$currPos = s0;
-                                    s0 = peg$FAILED;
-                                  }
-                                  if (s0 === peg$FAILED) {
-                                    s0 = peg$currPos;
-                                    if (input.substr(peg$currPos, 3) === peg$c59) {
-                                      s1 = peg$c59;
-                                      peg$currPos += 3;
-                                    } else {
-                                      s1 = peg$FAILED;
-                                      if (peg$silentFails === 0) {
-                                        peg$fail(peg$c60);
-                                      }
-                                    }
-                                    if (s1 !== peg$FAILED) {
-                                      s2 = [];
-                                      s3 = peg$parsews();
-                                      if (s3 !== peg$FAILED) {
-                                        while (s3 !== peg$FAILED) {
-                                          s2.push(s3);
-                                          s3 = peg$parsews();
-                                        }
-                                      } else {
-                                        s2 = peg$FAILED;
-                                      }
-                                      if (s2 !== peg$FAILED) {
-                                        s3 = peg$parseStringLiteral();
-                                        if (s3 !== peg$FAILED) {
-                                          peg$savedPos = s0;
-                                          s1 = peg$c61(s3);
-                                          s0 = s1;
-                                        } else {
-                                          peg$currPos = s0;
-                                          s0 = peg$FAILED;
-                                        }
-                                      } else {
-                                        peg$currPos = s0;
-                                        s0 = peg$FAILED;
-                                      }
-                                    } else {
-                                      peg$currPos = s0;
-                                      s0 = peg$FAILED;
-                                    }
-                                    if (s0 === peg$FAILED) {
-                                      s0 = peg$currPos;
-                                      if (input.substr(peg$currPos, 5) === peg$c62) {
-                                        s1 = peg$c62;
-                                        peg$currPos += 5;
-                                      } else {
-                                        s1 = peg$FAILED;
-                                        if (peg$silentFails === 0) {
-                                          peg$fail(peg$c63);
-                                        }
-                                      }
-                                      if (s1 !== peg$FAILED) {
-                                        peg$savedPos = s0;
-                                        s1 = peg$c64();
-                                      }
-                                      s0 = s1;
-                                      if (s0 === peg$FAILED) {
-                                        s0 = peg$currPos;
-                                        if (input.substr(peg$currPos, 2) === peg$c65) {
-                                          s1 = peg$c65;
-                                          peg$currPos += 2;
-                                        } else {
-                                          s1 = peg$FAILED;
-                                          if (peg$silentFails === 0) {
-                                            peg$fail(peg$c66);
-                                          }
-                                        }
-                                        if (s1 !== peg$FAILED) {
-                                          s2 = [];
-                                          s3 = peg$parsews();
-                                          if (s3 !== peg$FAILED) {
-                                            while (s3 !== peg$FAILED) {
-                                              s2.push(s3);
-                                              s3 = peg$parsews();
-                                            }
-                                          } else {
-                                            s2 = peg$FAILED;
-                                          }
-                                          if (s2 !== peg$FAILED) {
-                                            s3 = peg$parseStringLiteral();
-                                            if (s3 !== peg$FAILED) {
-                                              peg$savedPos = s0;
-                                              s1 = peg$c67(s3);
-                                              s0 = s1;
-                                            } else {
-                                              peg$currPos = s0;
-                                              s0 = peg$FAILED;
-                                            }
-                                          } else {
-                                            peg$currPos = s0;
-                                            s0 = peg$FAILED;
-                                          }
-                                        } else {
-                                          peg$currPos = s0;
-                                          s0 = peg$FAILED;
-                                        }
-                                        if (s0 === peg$FAILED) {
-                                          s0 = peg$currPos;
-                                          if (input.substr(peg$currPos, 7) === peg$c68) {
-                                            s1 = peg$c68;
-                                            peg$currPos += 7;
-                                          } else {
-                                            s1 = peg$FAILED;
-                                            if (peg$silentFails === 0) {
-                                              peg$fail(peg$c69);
-                                            }
-                                          }
-                                          if (s1 !== peg$FAILED) {
-                                            peg$savedPos = s0;
-                                            s1 = peg$c70();
-                                          }
-                                          s0 = s1;
-                                          if (s0 === peg$FAILED) {
-                                            s0 = peg$currPos;
-                                            if (input.substr(peg$currPos, 2) === peg$c71) {
-                                              s1 = peg$c71;
-                                              peg$currPos += 2;
-                                            } else {
-                                              s1 = peg$FAILED;
-                                              if (peg$silentFails === 0) {
-                                                peg$fail(peg$c72);
-                                              }
-                                            }
-                                            if (s1 !== peg$FAILED) {
-                                              peg$savedPos = s0;
-                                              s1 = peg$c73();
-                                            }
-                                            s0 = s1;
-                                            if (s0 === peg$FAILED) {
-                                              s0 = peg$currPos;
-                                              if (input.substr(peg$currPos, 4) === peg$c74) {
-                                                s1 = peg$c74;
-                                                peg$currPos += 4;
-                                              } else {
-                                                s1 = peg$FAILED;
-                                                if (peg$silentFails === 0) {
-                                                  peg$fail(peg$c75);
-                                                }
-                                              }
-                                              if (s1 !== peg$FAILED) {
-                                                s2 = [];
-                                                s3 = peg$parsews();
-                                                if (s3 !== peg$FAILED) {
-                                                  while (s3 !== peg$FAILED) {
-                                                    s2.push(s3);
-                                                    s3 = peg$parsews();
-                                                  }
-                                                } else {
-                                                  s2 = peg$FAILED;
-                                                }
-                                                if (s2 !== peg$FAILED) {
-                                                  s3 = peg$parseStringLiteral();
-                                                  if (s3 !== peg$FAILED) {
-                                                    peg$savedPos = s0;
-                                                    s1 = peg$c76(s3);
-                                                    s0 = s1;
-                                                  } else {
-                                                    peg$currPos = s0;
-                                                    s0 = peg$FAILED;
-                                                  }
-                                                } else {
-                                                  peg$currPos = s0;
-                                                  s0 = peg$FAILED;
-                                                }
-                                              } else {
-                                                peg$currPos = s0;
-                                                s0 = peg$FAILED;
-                                              }
-                                              if (s0 === peg$FAILED) {
-                                                s0 = peg$currPos;
-                                                if (input.substr(peg$currPos, 2) === peg$c77) {
-                                                  s1 = peg$c77;
-                                                  peg$currPos += 2;
-                                                } else {
-                                                  s1 = peg$FAILED;
-                                                  if (peg$silentFails === 0) {
-                                                    peg$fail(peg$c78);
-                                                  }
-                                                }
-                                                if (s1 !== peg$FAILED) {
-                                                  peg$savedPos = s0;
-                                                  s1 = peg$c79();
-                                                }
-                                                s0 = s1;
-                                                if (s0 === peg$FAILED) {
-                                                  s0 = peg$currPos;
-                                                  if (input.substr(peg$currPos, 2) === peg$c80) {
-                                                    s1 = peg$c80;
-                                                    peg$currPos += 2;
-                                                  } else {
-                                                    s1 = peg$FAILED;
-                                                    if (peg$silentFails === 0) {
-                                                      peg$fail(peg$c81);
-                                                    }
-                                                  }
-                                                  if (s1 !== peg$FAILED) {
-                                                    s2 = [];
-                                                    s3 = peg$parsews();
-                                                    if (s3 !== peg$FAILED) {
-                                                      while (s3 !== peg$FAILED) {
-                                                        s2.push(s3);
-                                                        s3 = peg$parsews();
-                                                      }
-                                                    } else {
-                                                      s2 = peg$FAILED;
-                                                    }
-                                                    if (s2 !== peg$FAILED) {
-                                                      s3 = peg$parseStringLiteral();
-                                                      if (s3 !== peg$FAILED) {
-                                                        peg$savedPos = s0;
-                                                        s1 = peg$c82(s3);
-                                                        s0 = s1;
-                                                      } else {
-                                                        peg$currPos = s0;
-                                                        s0 = peg$FAILED;
-                                                      }
-                                                    } else {
-                                                      peg$currPos = s0;
-                                                      s0 = peg$FAILED;
-                                                    }
-                                                  } else {
-                                                    peg$currPos = s0;
-                                                    s0 = peg$FAILED;
-                                                  }
-                                                  if (s0 === peg$FAILED) {
-                                                    s0 = peg$currPos;
-                                                    if (input.substr(peg$currPos, 4) === peg$c83) {
-                                                      s1 = peg$c83;
-                                                      peg$currPos += 4;
-                                                    } else {
-                                                      s1 = peg$FAILED;
-                                                      if (peg$silentFails === 0) {
-                                                        peg$fail(peg$c84);
-                                                      }
-                                                    }
-                                                    if (s1 !== peg$FAILED) {
-                                                      peg$savedPos = s0;
-                                                      s1 = peg$c85();
-                                                    }
-                                                    s0 = s1;
-                                                    if (s0 === peg$FAILED) {
-                                                      s0 = peg$currPos;
-                                                      if (input.substr(peg$currPos, 3) === peg$c86) {
-                                                        s1 = peg$c86;
-                                                        peg$currPos += 3;
-                                                      } else {
-                                                        s1 = peg$FAILED;
-                                                        if (peg$silentFails === 0) {
-                                                          peg$fail(peg$c87);
-                                                        }
-                                                      }
-                                                      if (s1 !== peg$FAILED) {
-                                                        s2 = [];
-                                                        s3 = peg$parsews();
-                                                        if (s3 !== peg$FAILED) {
-                                                          while (s3 !== peg$FAILED) {
-                                                            s2.push(s3);
-                                                            s3 = peg$parsews();
-                                                          }
-                                                        } else {
-                                                          s2 = peg$FAILED;
-                                                        }
-                                                        if (s2 !== peg$FAILED) {
-                                                          s3 = peg$parseStringLiteral();
-                                                          if (s3 !== peg$FAILED) {
-                                                            peg$savedPos = s0;
-                                                            s1 = peg$c88(s3);
-                                                            s0 = s1;
-                                                          } else {
-                                                            peg$currPos = s0;
-                                                            s0 = peg$FAILED;
-                                                          }
-                                                        } else {
-                                                          peg$currPos = s0;
-                                                          s0 = peg$FAILED;
-                                                        }
-                                                      } else {
-                                                        peg$currPos = s0;
-                                                        s0 = peg$FAILED;
-                                                      }
-                                                      if (s0 === peg$FAILED) {
-                                                        s0 = peg$currPos;
-                                                        if (input.substr(peg$currPos, 3) === peg$c89) {
-                                                          s1 = peg$c89;
-                                                          peg$currPos += 3;
-                                                        } else {
-                                                          s1 = peg$FAILED;
-                                                          if (peg$silentFails === 0) {
-                                                            peg$fail(peg$c90);
-                                                          }
-                                                        }
-                                                        if (s1 !== peg$FAILED) {
-                                                          s2 = [];
-                                                          s3 = peg$parsews();
-                                                          if (s3 !== peg$FAILED) {
-                                                            while (s3 !== peg$FAILED) {
-                                                              s2.push(s3);
-                                                              s3 = peg$parsews();
-                                                            }
-                                                          } else {
-                                                            s2 = peg$FAILED;
-                                                          }
-                                                          if (s2 !== peg$FAILED) {
-                                                            s3 = peg$parseStringLiteral();
-                                                            if (s3 !== peg$FAILED) {
-                                                              peg$savedPos = s0;
-                                                              s1 = peg$c91(s3);
-                                                              s0 = s1;
-                                                            } else {
-                                                              peg$currPos = s0;
-                                                              s0 = peg$FAILED;
-                                                            }
-                                                          } else {
-                                                            peg$currPos = s0;
-                                                            s0 = peg$FAILED;
-                                                          }
-                                                        } else {
-                                                          peg$currPos = s0;
-                                                          s0 = peg$FAILED;
-                                                        }
-                                                        if (s0 === peg$FAILED) {
-                                                          s0 = peg$currPos;
-                                                          if (input.substr(peg$currPos, 2) === peg$c92) {
-                                                            s1 = peg$c92;
-                                                            peg$currPos += 2;
-                                                          } else {
-                                                            s1 = peg$FAILED;
-                                                            if (peg$silentFails === 0) {
-                                                              peg$fail(peg$c93);
-                                                            }
-                                                          }
-                                                          if (s1 !== peg$FAILED) {
-                                                            s2 = [];
-                                                            s3 = peg$parsews();
-                                                            if (s3 !== peg$FAILED) {
-                                                              while (s3 !== peg$FAILED) {
-                                                                s2.push(s3);
-                                                                s3 = peg$parsews();
-                                                              }
-                                                            } else {
-                                                              s2 = peg$FAILED;
-                                                            }
-                                                            if (s2 !== peg$FAILED) {
-                                                              s3 = peg$parseStringLiteral();
-                                                              if (s3 !== peg$FAILED) {
-                                                                peg$savedPos = s0;
-                                                                s1 = peg$c94(s3);
-                                                                s0 = s1;
-                                                              } else {
-                                                                peg$currPos = s0;
-                                                                s0 = peg$FAILED;
-                                                              }
-                                                            } else {
-                                                              peg$currPos = s0;
-                                                              s0 = peg$FAILED;
-                                                            }
-                                                          } else {
-                                                            peg$currPos = s0;
-                                                            s0 = peg$FAILED;
-                                                          }
-                                                          if (s0 === peg$FAILED) {
-                                                            s0 = peg$currPos;
-                                                            if (input.substr(peg$currPos, 10) === peg$c95) {
-                                                              s1 = peg$c95;
-                                                              peg$currPos += 10;
-                                                            } else {
-                                                              s1 = peg$FAILED;
-                                                              if (peg$silentFails === 0) {
-                                                                peg$fail(peg$c96);
-                                                              }
-                                                            }
-                                                            if (s1 !== peg$FAILED) {
-                                                              peg$savedPos = s0;
-                                                              s1 = peg$c97();
-                                                            }
-                                                            s0 = s1;
-                                                            if (s0 === peg$FAILED) {
-                                                              s0 = peg$currPos;
-                                                              s1 = peg$parseStringLiteral();
-                                                              if (s1 !== peg$FAILED) {
-                                                                peg$savedPos = s0;
-                                                                s1 = peg$c94(s1);
-                                                              }
-                                                              s0 = s1;
-                                                            }
-                                                          }
-                                                        }
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseExpr, "peg$parseExpr");
-          function peg$parseIntegerLiteral() {
-            var s0, s1, s2, s3;
-            peg$silentFails++;
-            s0 = peg$currPos;
-            if (peg$c99.test(input.charAt(peg$currPos))) {
-              s1 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c100);
-              }
-            }
-            if (s1 === peg$FAILED) {
-              s1 = null;
-            }
-            if (s1 !== peg$FAILED) {
-              s2 = [];
-              if (peg$c101.test(input.charAt(peg$currPos))) {
-                s3 = input.charAt(peg$currPos);
-                peg$currPos++;
-              } else {
-                s3 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c102);
-                }
-              }
-              if (s3 !== peg$FAILED) {
-                while (s3 !== peg$FAILED) {
-                  s2.push(s3);
-                  if (peg$c101.test(input.charAt(peg$currPos))) {
-                    s3 = input.charAt(peg$currPos);
-                    peg$currPos++;
-                  } else {
-                    s3 = peg$FAILED;
-                    if (peg$silentFails === 0) {
-                      peg$fail(peg$c102);
-                    }
-                  }
-                }
-              } else {
-                s2 = peg$FAILED;
-              }
-              if (s2 !== peg$FAILED) {
-                if (peg$c99.test(input.charAt(peg$currPos))) {
-                  s3 = input.charAt(peg$currPos);
-                  peg$currPos++;
-                } else {
-                  s3 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c100);
-                  }
-                }
-                if (s3 === peg$FAILED) {
-                  s3 = null;
-                }
-                if (s3 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c103(s2);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c98);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseIntegerLiteral, "peg$parseIntegerLiteral");
-          function peg$parseStringLiteral() {
-            var s0, s1, s2, s3;
-            peg$silentFails++;
-            s0 = peg$currPos;
-            if (input.charCodeAt(peg$currPos) === 34) {
-              s1 = peg$c105;
-              peg$currPos++;
-            } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c106);
-              }
-            }
-            if (s1 !== peg$FAILED) {
-              s2 = [];
-              s3 = peg$parseDoubleStringChar();
-              while (s3 !== peg$FAILED) {
-                s2.push(s3);
-                s3 = peg$parseDoubleStringChar();
-              }
-              if (s2 !== peg$FAILED) {
-                if (input.charCodeAt(peg$currPos) === 34) {
-                  s3 = peg$c105;
-                  peg$currPos++;
-                } else {
-                  s3 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c106);
-                  }
-                }
-                if (s3 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c107(s2);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.charCodeAt(peg$currPos) === 39) {
-                s1 = peg$c108;
-                peg$currPos++;
-              } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c109);
-                }
-              }
-              if (s1 !== peg$FAILED) {
-                s2 = [];
-                s3 = peg$parseSingleStringChar();
-                while (s3 !== peg$FAILED) {
-                  s2.push(s3);
-                  s3 = peg$parseSingleStringChar();
-                }
-                if (s2 !== peg$FAILED) {
-                  if (input.charCodeAt(peg$currPos) === 39) {
-                    s3 = peg$c108;
-                    peg$currPos++;
-                  } else {
-                    s3 = peg$FAILED;
-                    if (peg$silentFails === 0) {
-                      peg$fail(peg$c109);
-                    }
-                  }
-                  if (s3 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c107(s2);
-                    s0 = s1;
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-              if (s0 === peg$FAILED) {
-                s0 = peg$currPos;
-                s1 = peg$currPos;
-                peg$silentFails++;
-                s2 = peg$parsecc();
-                peg$silentFails--;
-                if (s2 === peg$FAILED) {
-                  s1 = void 0;
-                } else {
-                  peg$currPos = s1;
-                  s1 = peg$FAILED;
-                }
-                if (s1 !== peg$FAILED) {
-                  s2 = [];
-                  s3 = peg$parseUnquotedStringChar();
-                  if (s3 !== peg$FAILED) {
-                    while (s3 !== peg$FAILED) {
-                      s2.push(s3);
-                      s3 = peg$parseUnquotedStringChar();
-                    }
-                  } else {
-                    s2 = peg$FAILED;
-                  }
-                  if (s2 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c107(s2);
-                    s0 = s1;
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              }
-            }
-            peg$silentFails--;
-            if (s0 === peg$FAILED) {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c104);
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseStringLiteral, "peg$parseStringLiteral");
-          function peg$parseDoubleStringChar() {
-            var s0, s1, s2;
-            s0 = peg$currPos;
-            s1 = peg$currPos;
-            peg$silentFails++;
-            if (peg$c110.test(input.charAt(peg$currPos))) {
-              s2 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s2 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c111);
-              }
-            }
-            peg$silentFails--;
-            if (s2 === peg$FAILED) {
-              s1 = void 0;
-            } else {
-              peg$currPos = s1;
-              s1 = peg$FAILED;
-            }
-            if (s1 !== peg$FAILED) {
-              if (input.length > peg$currPos) {
-                s2 = input.charAt(peg$currPos);
-                peg$currPos++;
-              } else {
-                s2 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c112);
-                }
-              }
-              if (s2 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c113(s2);
-                s0 = s1;
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.charCodeAt(peg$currPos) === 92) {
-                s1 = peg$c114;
-                peg$currPos++;
-              } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c115);
-                }
-              }
-              if (s1 !== peg$FAILED) {
-                s2 = peg$parseEscapeSequence();
-                if (s2 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c113(s2);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseDoubleStringChar, "peg$parseDoubleStringChar");
-          function peg$parseSingleStringChar() {
-            var s0, s1, s2;
-            s0 = peg$currPos;
-            s1 = peg$currPos;
-            peg$silentFails++;
-            if (peg$c116.test(input.charAt(peg$currPos))) {
-              s2 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s2 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c117);
-              }
-            }
-            peg$silentFails--;
-            if (s2 === peg$FAILED) {
-              s1 = void 0;
-            } else {
-              peg$currPos = s1;
-              s1 = peg$FAILED;
-            }
-            if (s1 !== peg$FAILED) {
-              if (input.length > peg$currPos) {
-                s2 = input.charAt(peg$currPos);
-                peg$currPos++;
-              } else {
-                s2 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c112);
-                }
-              }
-              if (s2 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c113(s2);
-                s0 = s1;
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.charCodeAt(peg$currPos) === 92) {
-                s1 = peg$c114;
-                peg$currPos++;
-              } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c115);
-                }
-              }
-              if (s1 !== peg$FAILED) {
-                s2 = peg$parseEscapeSequence();
-                if (s2 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c113(s2);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseSingleStringChar, "peg$parseSingleStringChar");
-          function peg$parseUnquotedStringChar() {
-            var s0, s1, s2;
-            s0 = peg$currPos;
-            s1 = peg$currPos;
-            peg$silentFails++;
-            s2 = peg$parsews();
-            peg$silentFails--;
-            if (s2 === peg$FAILED) {
-              s1 = void 0;
-            } else {
-              peg$currPos = s1;
-              s1 = peg$FAILED;
-            }
-            if (s1 !== peg$FAILED) {
-              if (input.length > peg$currPos) {
-                s2 = input.charAt(peg$currPos);
-                peg$currPos++;
-              } else {
-                s2 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c112);
-                }
-              }
-              if (s2 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c113(s2);
-                s0 = s1;
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-            return s0;
-          }
-          __name(peg$parseUnquotedStringChar, "peg$parseUnquotedStringChar");
-          function peg$parseEscapeSequence() {
-            var s0, s1;
-            if (peg$c118.test(input.charAt(peg$currPos))) {
-              s0 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s0 = peg$FAILED;
-              if (peg$silentFails === 0) {
-                peg$fail(peg$c119);
-              }
-            }
-            if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.charCodeAt(peg$currPos) === 110) {
-                s1 = peg$c120;
-                peg$currPos++;
-              } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) {
-                  peg$fail(peg$c121);
-                }
-              }
-              if (s1 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c122();
-              }
-              s0 = s1;
-              if (s0 === peg$FAILED) {
-                s0 = peg$currPos;
-                if (input.charCodeAt(peg$currPos) === 114) {
-                  s1 = peg$c123;
-                  peg$currPos++;
-                } else {
-                  s1 = peg$FAILED;
-                  if (peg$silentFails === 0) {
-                    peg$fail(peg$c124);
-                  }
-                }
-                if (s1 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c125();
-                }
-                s0 = s1;
-                if (s0 === peg$FAILED) {
-                  s0 = peg$currPos;
-                  if (input.charCodeAt(peg$currPos) === 116) {
-                    s1 = peg$c126;
-                    peg$currPos++;
-                  } else {
-                    s1 = peg$FAILED;
-                    if (peg$silentFails === 0) {
-                      peg$fail(peg$c127);
-                    }
-                  }
-                  if (s1 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c128();
-                  }
-                  s0 = s1;
-                }
-              }
-            }
-            return s0;
-          }
-          __name(peg$parseEscapeSequence, "peg$parseEscapeSequence");
-          var flowutils = (init_utils(), utils_exports);
-          function or(first, second) {
-            function orFilter() {
-              return first.apply(this, arguments) || second.apply(this, arguments);
-            }
-            __name(orFilter, "orFilter");
-            orFilter.desc = first.desc + " or " + second.desc;
-            return orFilter;
-          }
-          __name(or, "or");
-          function and(first, second) {
-            function andFilter() {
-              return first.apply(this, arguments) && second.apply(this, arguments);
-            }
-            __name(andFilter, "andFilter");
-            andFilter.desc = first.desc + " and " + second.desc;
-            return andFilter;
-          }
-          __name(and, "and");
-          function not(expr) {
-            function notFilter() {
-              return !expr.apply(this, arguments);
-            }
-            __name(notFilter, "notFilter");
-            notFilter.desc = "not " + expr.desc;
-            return notFilter;
-          }
-          __name(not, "not");
-          function binding(expr) {
-            function bindingFilter() {
-              return expr.apply(this, arguments);
-            }
-            __name(bindingFilter, "bindingFilter");
-            bindingFilter.desc = "(" + expr.desc + ")";
-            return bindingFilter;
-          }
-          __name(binding, "binding");
-          function trueFilter(flow) {
-            return true;
-          }
-          __name(trueFilter, "trueFilter");
-          trueFilter.desc = "true";
-          function falseFilter(flow) {
-            return false;
-          }
-          __name(falseFilter, "falseFilter");
-          falseFilter.desc = "false";
-          var ASSET_TYPES = [
-            new RegExp("text/javascript"),
-            new RegExp("application/x-javascript"),
-            new RegExp("application/javascript"),
-            new RegExp("text/css"),
-            new RegExp("image/.*"),
-            new RegExp("application/x-shockwave-flash")
-          ];
-          function assetFilter(flow) {
-            if (flow.response) {
-              var ct = flowutils.ResponseUtils.getContentType(flow.response);
-              var i = ASSET_TYPES.length;
-              while (i--) {
-                if (ASSET_TYPES[i].test(ct)) {
-                  return true;
-                }
-              }
-            }
-            return false;
-          }
-          __name(assetFilter, "assetFilter");
-          assetFilter.desc = "is asset";
-          function responseCode(code) {
-            function responseCodeFilter(flow) {
-              return flow.response && flow.response.status_code === code;
-            }
-            __name(responseCodeFilter, "responseCodeFilter");
-            responseCodeFilter.desc = "resp. code is " + code;
-            return responseCodeFilter;
-          }
-          __name(responseCode, "responseCode");
-          function body(regex) {
-            regex = new RegExp(regex, "i");
-            function bodyFilter(flow) {
-              return true;
-            }
-            __name(bodyFilter, "bodyFilter");
-            bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
-            return bodyFilter;
-          }
-          __name(body, "body");
-          function requestBody(regex) {
-            regex = new RegExp(regex, "i");
-            function requestBodyFilter(flow) {
-              return true;
-            }
-            __name(requestBodyFilter, "requestBodyFilter");
-            requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
-            return requestBodyFilter;
-          }
-          __name(requestBody, "requestBody");
-          function responseBody(regex) {
-            regex = new RegExp(regex, "i");
-            function responseBodyFilter(flow) {
-              return true;
-            }
-            __name(responseBodyFilter, "responseBodyFilter");
-            responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
-            return responseBodyFilter;
-          }
-          __name(responseBody, "responseBody");
-          function domain(regex) {
-            regex = new RegExp(regex, "i");
-            function domainFilter(flow) {
-              return flow.request && (regex.test(flow.request.host) || regex.test(flow.request.pretty_host));
-            }
-            __name(domainFilter, "domainFilter");
-            domainFilter.desc = "domain matches " + regex;
-            return domainFilter;
-          }
-          __name(domain, "domain");
-          function destination(regex) {
-            regex = new RegExp(regex, "i");
-            function destinationFilter(flow) {
-              return !!flow.server_conn.address && regex.test(flow.server_conn.address[0] + ":" + flow.server_conn.address[1]);
-            }
-            __name(destinationFilter, "destinationFilter");
-            destinationFilter.desc = "destination address matches " + regex;
-            return destinationFilter;
-          }
-          __name(destination, "destination");
-          function errorFilter(flow) {
-            return !!flow.error;
-          }
-          __name(errorFilter, "errorFilter");
-          errorFilter.desc = "has error";
-          function header(regex) {
-            regex = new RegExp(regex, "i");
-            function headerFilter(flow) {
-              return flow.request && flowutils.RequestUtils.match_header(flow.request, regex) || flow.response && flowutils.ResponseUtils.match_header(flow.response, regex);
-            }
-            __name(headerFilter, "headerFilter");
-            headerFilter.desc = "header matches " + regex;
-            return headerFilter;
-          }
-          __name(header, "header");
-          function requestHeader(regex) {
-            regex = new RegExp(regex, "i");
-            function requestHeaderFilter(flow) {
-              return flow.request && flowutils.RequestUtils.match_header(flow.request, regex);
-            }
-            __name(requestHeaderFilter, "requestHeaderFilter");
-            requestHeaderFilter.desc = "req. header matches " + regex;
-            return requestHeaderFilter;
-          }
-          __name(requestHeader, "requestHeader");
-          function responseHeader(regex) {
-            regex = new RegExp(regex, "i");
-            function responseHeaderFilter(flow) {
-              return flow.response && flowutils.ResponseUtils.match_header(flow.response, regex);
-            }
-            __name(responseHeaderFilter, "responseHeaderFilter");
-            responseHeaderFilter.desc = "resp. header matches " + regex;
-            return responseHeaderFilter;
-          }
-          __name(responseHeader, "responseHeader");
-          function httpFilter(flow) {
-            return flow.type === "http";
-          }
-          __name(httpFilter, "httpFilter");
-          httpFilter.desc = "is an HTTP Flow";
-          function method(regex) {
-            regex = new RegExp(regex, "i");
-            function methodFilter(flow) {
-              return flow.request && regex.test(flow.request.method);
-            }
-            __name(methodFilter, "methodFilter");
-            methodFilter.desc = "method matches " + regex;
-            return methodFilter;
-          }
-          __name(method, "method");
-          function markedFilter(flow) {
-            return flow.marked;
-          }
-          __name(markedFilter, "markedFilter");
-          markedFilter.desc = "is marked";
-          function noResponseFilter(flow) {
-            return flow.request && !flow.response;
-          }
-          __name(noResponseFilter, "noResponseFilter");
-          noResponseFilter.desc = "has no response";
-          function responseFilter(flow) {
-            return !!flow.response;
-          }
-          __name(responseFilter, "responseFilter");
-          responseFilter.desc = "has response";
-          function source(regex) {
-            regex = new RegExp(regex, "i");
-            function sourceFilter(flow) {
-              return !!flow.client_conn.address && regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
-            }
-            __name(sourceFilter, "sourceFilter");
-            sourceFilter.desc = "source address matches " + regex;
-            return sourceFilter;
-          }
-          __name(source, "source");
-          function contentType(regex) {
-            regex = new RegExp(regex, "i");
-            function contentTypeFilter(flow) {
-              return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request)) || flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
-            }
-            __name(contentTypeFilter, "contentTypeFilter");
-            contentTypeFilter.desc = "content type matches " + regex;
-            return contentTypeFilter;
-          }
-          __name(contentType, "contentType");
-          function tcpFilter(flow) {
-            return flow.type === "tcp";
-          }
-          __name(tcpFilter, "tcpFilter");
-          tcpFilter.desc = "is a TCP Flow";
-          function requestContentType(regex) {
-            regex = new RegExp(regex, "i");
-            function requestContentTypeFilter(flow) {
-              return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
-            }
-            __name(requestContentTypeFilter, "requestContentTypeFilter");
-            requestContentTypeFilter.desc = "req. content type matches " + regex;
-            return requestContentTypeFilter;
-          }
-          __name(requestContentType, "requestContentType");
-          function responseContentType(regex) {
-            regex = new RegExp(regex, "i");
-            function responseContentTypeFilter(flow) {
-              return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
-            }
-            __name(responseContentTypeFilter, "responseContentTypeFilter");
-            responseContentTypeFilter.desc = "resp. content type matches " + regex;
-            return responseContentTypeFilter;
-          }
-          __name(responseContentType, "responseContentType");
-          function url(regex) {
-            regex = new RegExp(regex, "i");
-            function urlFilter(flow) {
-              return flow.request && regex.test(flowutils.RequestUtils.pretty_url(flow.request));
-            }
-            __name(urlFilter, "urlFilter");
-            urlFilter.desc = "url matches " + regex;
-            return urlFilter;
-          }
-          __name(url, "url");
-          function websocketFilter(flow) {
-            return flow.type === "websocket";
-          }
-          __name(websocketFilter, "websocketFilter");
-          websocketFilter.desc = "is a Websocket Flow";
-          peg$result = peg$startRuleFunction();
-          if (peg$result !== peg$FAILED && peg$currPos === input.length) {
-            return peg$result;
-          } else {
-            if (peg$result !== peg$FAILED && peg$currPos < input.length) {
-              peg$fail({ type: "end", description: "end of input" });
-            }
-            throw peg$buildException(null, peg$maxFailExpected, peg$maxFailPos < input.length ? input.charAt(peg$maxFailPos) : null, peg$maxFailPos < input.length ? peg$computeLocation(peg$maxFailPos, peg$maxFailPos + 1) : peg$computeLocation(peg$maxFailPos, peg$maxFailPos));
-          }
-        }
-        __name(peg$parse, "peg$parse");
-        return {
-          SyntaxError: peg$SyntaxError,
-          parse: peg$parse
-        };
-      }();
     }
   });
 
@@ -30491,2013 +29284,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/fbjs/lib/emptyFunction.js
-  var require_emptyFunction = __commonJS({
-    "node_modules/fbjs/lib/emptyFunction.js"(exports, module) {
-      "use strict";
-      function makeEmptyFunction(arg) {
-        return function() {
-          return arg;
-        };
-      }
-      __name(makeEmptyFunction, "makeEmptyFunction");
-      var emptyFunction = /* @__PURE__ */ __name(function emptyFunction2() {
-      }, "emptyFunction");
-      emptyFunction.thatReturns = makeEmptyFunction;
-      emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-      emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-      emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-      emptyFunction.thatReturnsThis = function() {
-        return this;
-      };
-      emptyFunction.thatReturnsArgument = function(arg) {
-        return arg;
-      };
-      module.exports = emptyFunction;
-    }
-  });
-
-  // node_modules/fbjs/lib/invariant.js
-  var require_invariant = __commonJS({
-    "node_modules/fbjs/lib/invariant.js"(exports, module) {
-      "use strict";
-      var validateFormat = /* @__PURE__ */ __name(function validateFormat2(format2) {
-      }, "validateFormat");
-      if (true) {
-        validateFormat = /* @__PURE__ */ __name(function validateFormat2(format2) {
-          if (format2 === void 0) {
-            throw new Error("invariant requires an error message argument");
-          }
-        }, "validateFormat");
-      }
-      function invariant(condition, format2, a, b, c, d, e, f) {
-        validateFormat(format2);
-        if (!condition) {
-          var error;
-          if (format2 === void 0) {
-            error = new Error("Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.");
-          } else {
-            var args = [a, b, c, d, e, f];
-            var argIndex = 0;
-            error = new Error(format2.replace(/%s/g, function() {
-              return args[argIndex++];
-            }));
-            error.name = "Invariant Violation";
-          }
-          error.framesToPop = 1;
-          throw error;
-        }
-      }
-      __name(invariant, "invariant");
-      module.exports = invariant;
-    }
-  });
-
-  // node_modules/fbjs/lib/warning.js
-  var require_warning = __commonJS({
-    "node_modules/fbjs/lib/warning.js"(exports, module) {
-      "use strict";
-      var emptyFunction = require_emptyFunction();
-      var warning3 = emptyFunction;
-      if (true) {
-        printWarning = /* @__PURE__ */ __name(function printWarning2(format2) {
-          for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-            args[_key - 1] = arguments[_key];
-          }
-          var argIndex = 0;
-          var message = "Warning: " + format2.replace(/%s/g, function() {
-            return args[argIndex++];
-          });
-          if (typeof console !== "undefined") {
-            console.error(message);
-          }
-          try {
-            throw new Error(message);
-          } catch (x) {
-          }
-        }, "printWarning");
-        warning3 = /* @__PURE__ */ __name(function warning4(condition, format2) {
-          if (format2 === void 0) {
-            throw new Error("`warning(condition, format, ...args)` requires a warning message argument");
-          }
-          if (format2.indexOf("Failed Composite propType: ") === 0) {
-            return;
-          }
-          if (!condition) {
-            for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-              args[_key2 - 2] = arguments[_key2];
-            }
-            printWarning.apply(void 0, [format2].concat(args));
-          }
-        }, "warning");
-      }
-      var printWarning;
-      module.exports = warning3;
-    }
-  });
-
-  // node_modules/react-codemirror/node_modules/prop-types/lib/ReactPropTypesSecret.js
-  var require_ReactPropTypesSecret2 = __commonJS({
-    "node_modules/react-codemirror/node_modules/prop-types/lib/ReactPropTypesSecret.js"(exports, module) {
-      "use strict";
-      var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
-      module.exports = ReactPropTypesSecret;
-    }
-  });
-
-  // node_modules/react-codemirror/node_modules/prop-types/checkPropTypes.js
-  var require_checkPropTypes2 = __commonJS({
-    "node_modules/react-codemirror/node_modules/prop-types/checkPropTypes.js"(exports, module) {
-      "use strict";
-      if (true) {
-        invariant = require_invariant();
-        warning3 = require_warning();
-        ReactPropTypesSecret = require_ReactPropTypesSecret2();
-        loggedTypeFailures = {};
-      }
-      var invariant;
-      var warning3;
-      var ReactPropTypesSecret;
-      var loggedTypeFailures;
-      function checkPropTypes(typeSpecs, values, location2, componentName, getStack) {
-        if (true) {
-          for (var typeSpecName in typeSpecs) {
-            if (typeSpecs.hasOwnProperty(typeSpecName)) {
-              var error;
-              try {
-                invariant(typeof typeSpecs[typeSpecName] === "function", "%s: %s type `%s` is invalid; it must be a function, usually from the `prop-types` package, but received `%s`.", componentName || "React class", location2, typeSpecName, typeof typeSpecs[typeSpecName]);
-                error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location2, null, ReactPropTypesSecret);
-              } catch (ex) {
-                error = ex;
-              }
-              warning3(!error || error instanceof Error, "%s: type specification of %s `%s` is invalid; the type checker function must return `null` or an `Error` but returned a %s. You may have forgotten to pass an argument to the type checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and shape all require an argument).", componentName || "React class", location2, typeSpecName, typeof error);
-              if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-                loggedTypeFailures[error.message] = true;
-                var stack = getStack ? getStack() : "";
-                warning3(false, "Failed %s type: %s%s", location2, error.message, stack != null ? stack : "");
-              }
-            }
-          }
-        }
-      }
-      __name(checkPropTypes, "checkPropTypes");
-      module.exports = checkPropTypes;
-    }
-  });
-
-  // node_modules/react-codemirror/node_modules/prop-types/factoryWithTypeCheckers.js
-  var require_factoryWithTypeCheckers2 = __commonJS({
-    "node_modules/react-codemirror/node_modules/prop-types/factoryWithTypeCheckers.js"(exports, module) {
-      "use strict";
-      var emptyFunction = require_emptyFunction();
-      var invariant = require_invariant();
-      var warning3 = require_warning();
-      var assign = require_object_assign();
-      var ReactPropTypesSecret = require_ReactPropTypesSecret2();
-      var checkPropTypes = require_checkPropTypes2();
-      module.exports = function(isValidElement, throwOnDirectAccess) {
-        var ITERATOR_SYMBOL = typeof Symbol === "function" && Symbol.iterator;
-        var FAUX_ITERATOR_SYMBOL = "@@iterator";
-        function getIteratorFn(maybeIterable) {
-          var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
-          if (typeof iteratorFn === "function") {
-            return iteratorFn;
-          }
-        }
-        __name(getIteratorFn, "getIteratorFn");
-        var ANONYMOUS = "<<anonymous>>";
-        var ReactPropTypes = {
-          array: createPrimitiveTypeChecker("array"),
-          bool: createPrimitiveTypeChecker("boolean"),
-          func: createPrimitiveTypeChecker("function"),
-          number: createPrimitiveTypeChecker("number"),
-          object: createPrimitiveTypeChecker("object"),
-          string: createPrimitiveTypeChecker("string"),
-          symbol: createPrimitiveTypeChecker("symbol"),
-          any: createAnyTypeChecker(),
-          arrayOf: createArrayOfTypeChecker,
-          element: createElementTypeChecker(),
-          instanceOf: createInstanceTypeChecker,
-          node: createNodeChecker(),
-          objectOf: createObjectOfTypeChecker,
-          oneOf: createEnumTypeChecker,
-          oneOfType: createUnionTypeChecker,
-          shape: createShapeTypeChecker,
-          exact: createStrictShapeTypeChecker
-        };
-        function is2(x, y) {
-          if (x === y) {
-            return x !== 0 || 1 / x === 1 / y;
-          } else {
-            return x !== x && y !== y;
-          }
-        }
-        __name(is2, "is");
-        function PropTypeError(message) {
-          this.message = message;
-          this.stack = "";
-        }
-        __name(PropTypeError, "PropTypeError");
-        PropTypeError.prototype = Error.prototype;
-        function createChainableTypeChecker(validate) {
-          if (true) {
-            var manualPropTypeCallCache = {};
-            var manualPropTypeWarningCount = 0;
-          }
-          function checkType(isRequired, props, propName, componentName, location2, propFullName, secret) {
-            componentName = componentName || ANONYMOUS;
-            propFullName = propFullName || propName;
-            if (secret !== ReactPropTypesSecret) {
-              if (throwOnDirectAccess) {
-                invariant(false, "Calling PropTypes validators directly is not supported by the `prop-types` package. Use `PropTypes.checkPropTypes()` to call them. Read more at http://fb.me/use-check-prop-types");
-              } else if (typeof console !== "undefined") {
-                var cacheKey = componentName + ":" + propName;
-                if (!manualPropTypeCallCache[cacheKey] && manualPropTypeWarningCount < 3) {
-                  warning3(false, "You are manually calling a React.PropTypes validation function for the `%s` prop on `%s`. This is deprecated and will throw in the standalone `prop-types` package. You may be seeing this warning due to a third-party PropTypes library. See https://fb.me/react-warning-dont-call-proptypes for details.", propFullName, componentName);
-                  manualPropTypeCallCache[cacheKey] = true;
-                  manualPropTypeWarningCount++;
-                }
-              }
-            }
-            if (props[propName] == null) {
-              if (isRequired) {
-                if (props[propName] === null) {
-                  return new PropTypeError("The " + location2 + " `" + propFullName + "` is marked as required " + ("in `" + componentName + "`, but its value is `null`."));
-                }
-                return new PropTypeError("The " + location2 + " `" + propFullName + "` is marked as required in " + ("`" + componentName + "`, but its value is `undefined`."));
-              }
-              return null;
-            } else {
-              return validate(props, propName, componentName, location2, propFullName);
-            }
-          }
-          __name(checkType, "checkType");
-          var chainedCheckType = checkType.bind(null, false);
-          chainedCheckType.isRequired = checkType.bind(null, true);
-          return chainedCheckType;
-        }
-        __name(createChainableTypeChecker, "createChainableTypeChecker");
-        function createPrimitiveTypeChecker(expectedType) {
-          function validate(props, propName, componentName, location2, propFullName, secret) {
-            var propValue = props[propName];
-            var propType = getPropType(propValue);
-            if (propType !== expectedType) {
-              var preciseType = getPreciseType(propValue);
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + preciseType + "` supplied to `" + componentName + "`, expected ") + ("`" + expectedType + "`."));
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createPrimitiveTypeChecker, "createPrimitiveTypeChecker");
-        function createAnyTypeChecker() {
-          return createChainableTypeChecker(emptyFunction.thatReturnsNull);
-        }
-        __name(createAnyTypeChecker, "createAnyTypeChecker");
-        function createArrayOfTypeChecker(typeChecker) {
-          function validate(props, propName, componentName, location2, propFullName) {
-            if (typeof typeChecker !== "function") {
-              return new PropTypeError("Property `" + propFullName + "` of component `" + componentName + "` has invalid PropType notation inside arrayOf.");
-            }
-            var propValue = props[propName];
-            if (!Array.isArray(propValue)) {
-              var propType = getPropType(propValue);
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected an array."));
-            }
-            for (var i = 0; i < propValue.length; i++) {
-              var error = typeChecker(propValue, i, componentName, location2, propFullName + "[" + i + "]", ReactPropTypesSecret);
-              if (error instanceof Error) {
-                return error;
-              }
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createArrayOfTypeChecker, "createArrayOfTypeChecker");
-        function createElementTypeChecker() {
-          function validate(props, propName, componentName, location2, propFullName) {
-            var propValue = props[propName];
-            if (!isValidElement(propValue)) {
-              var propType = getPropType(propValue);
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected a single ReactElement."));
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createElementTypeChecker, "createElementTypeChecker");
-        function createInstanceTypeChecker(expectedClass) {
-          function validate(props, propName, componentName, location2, propFullName) {
-            if (!(props[propName] instanceof expectedClass)) {
-              var expectedClassName = expectedClass.name || ANONYMOUS;
-              var actualClassName = getClassName(props[propName]);
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + actualClassName + "` supplied to `" + componentName + "`, expected ") + ("instance of `" + expectedClassName + "`."));
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createInstanceTypeChecker, "createInstanceTypeChecker");
-        function createEnumTypeChecker(expectedValues) {
-          if (!Array.isArray(expectedValues)) {
-            true ? warning3(false, "Invalid argument supplied to oneOf, expected an instance of array.") : void 0;
-            return emptyFunction.thatReturnsNull;
-          }
-          function validate(props, propName, componentName, location2, propFullName) {
-            var propValue = props[propName];
-            for (var i = 0; i < expectedValues.length; i++) {
-              if (is2(propValue, expectedValues[i])) {
-                return null;
-              }
-            }
-            var valuesString = JSON.stringify(expectedValues);
-            return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of value `" + propValue + "` " + ("supplied to `" + componentName + "`, expected one of " + valuesString + "."));
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createEnumTypeChecker, "createEnumTypeChecker");
-        function createObjectOfTypeChecker(typeChecker) {
-          function validate(props, propName, componentName, location2, propFullName) {
-            if (typeof typeChecker !== "function") {
-              return new PropTypeError("Property `" + propFullName + "` of component `" + componentName + "` has invalid PropType notation inside objectOf.");
-            }
-            var propValue = props[propName];
-            var propType = getPropType(propValue);
-            if (propType !== "object") {
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type " + ("`" + propType + "` supplied to `" + componentName + "`, expected an object."));
-            }
-            for (var key in propValue) {
-              if (propValue.hasOwnProperty(key)) {
-                var error = typeChecker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
-                if (error instanceof Error) {
-                  return error;
-                }
-              }
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createObjectOfTypeChecker, "createObjectOfTypeChecker");
-        function createUnionTypeChecker(arrayOfTypeCheckers) {
-          if (!Array.isArray(arrayOfTypeCheckers)) {
-            true ? warning3(false, "Invalid argument supplied to oneOfType, expected an instance of array.") : void 0;
-            return emptyFunction.thatReturnsNull;
-          }
-          for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
-            var checker = arrayOfTypeCheckers[i];
-            if (typeof checker !== "function") {
-              warning3(false, "Invalid argument supplied to oneOfType. Expected an array of check functions, but received %s at index %s.", getPostfixForTypeWarning(checker), i);
-              return emptyFunction.thatReturnsNull;
-            }
-          }
-          function validate(props, propName, componentName, location2, propFullName) {
-            for (var i2 = 0; i2 < arrayOfTypeCheckers.length; i2++) {
-              var checker2 = arrayOfTypeCheckers[i2];
-              if (checker2(props, propName, componentName, location2, propFullName, ReactPropTypesSecret) == null) {
-                return null;
-              }
-            }
-            return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` supplied to " + ("`" + componentName + "`."));
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createUnionTypeChecker, "createUnionTypeChecker");
-        function createNodeChecker() {
-          function validate(props, propName, componentName, location2, propFullName) {
-            if (!isNode(props[propName])) {
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` supplied to " + ("`" + componentName + "`, expected a ReactNode."));
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createNodeChecker, "createNodeChecker");
-        function createShapeTypeChecker(shapeTypes) {
-          function validate(props, propName, componentName, location2, propFullName) {
-            var propValue = props[propName];
-            var propType = getPropType(propValue);
-            if (propType !== "object") {
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type `" + propType + "` " + ("supplied to `" + componentName + "`, expected `object`."));
-            }
-            for (var key in shapeTypes) {
-              var checker = shapeTypes[key];
-              if (!checker) {
-                continue;
-              }
-              var error = checker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
-              if (error) {
-                return error;
-              }
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createShapeTypeChecker, "createShapeTypeChecker");
-        function createStrictShapeTypeChecker(shapeTypes) {
-          function validate(props, propName, componentName, location2, propFullName) {
-            var propValue = props[propName];
-            var propType = getPropType(propValue);
-            if (propType !== "object") {
-              return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` of type `" + propType + "` " + ("supplied to `" + componentName + "`, expected `object`."));
-            }
-            var allKeys = assign({}, props[propName], shapeTypes);
-            for (var key in allKeys) {
-              var checker = shapeTypes[key];
-              if (!checker) {
-                return new PropTypeError("Invalid " + location2 + " `" + propFullName + "` key `" + key + "` supplied to `" + componentName + "`.\nBad object: " + JSON.stringify(props[propName], null, "  ") + "\nValid keys: " + JSON.stringify(Object.keys(shapeTypes), null, "  "));
-              }
-              var error = checker(propValue, key, componentName, location2, propFullName + "." + key, ReactPropTypesSecret);
-              if (error) {
-                return error;
-              }
-            }
-            return null;
-          }
-          __name(validate, "validate");
-          return createChainableTypeChecker(validate);
-        }
-        __name(createStrictShapeTypeChecker, "createStrictShapeTypeChecker");
-        function isNode(propValue) {
-          switch (typeof propValue) {
-            case "number":
-            case "string":
-            case "undefined":
-              return true;
-            case "boolean":
-              return !propValue;
-            case "object":
-              if (Array.isArray(propValue)) {
-                return propValue.every(isNode);
-              }
-              if (propValue === null || isValidElement(propValue)) {
-                return true;
-              }
-              var iteratorFn = getIteratorFn(propValue);
-              if (iteratorFn) {
-                var iterator = iteratorFn.call(propValue);
-                var step;
-                if (iteratorFn !== propValue.entries) {
-                  while (!(step = iterator.next()).done) {
-                    if (!isNode(step.value)) {
-                      return false;
-                    }
-                  }
-                } else {
-                  while (!(step = iterator.next()).done) {
-                    var entry = step.value;
-                    if (entry) {
-                      if (!isNode(entry[1])) {
-                        return false;
-                      }
-                    }
-                  }
-                }
-              } else {
-                return false;
-              }
-              return true;
-            default:
-              return false;
-          }
-        }
-        __name(isNode, "isNode");
-        function isSymbol(propType, propValue) {
-          if (propType === "symbol") {
-            return true;
-          }
-          if (propValue["@@toStringTag"] === "Symbol") {
-            return true;
-          }
-          if (typeof Symbol === "function" && propValue instanceof Symbol) {
-            return true;
-          }
-          return false;
-        }
-        __name(isSymbol, "isSymbol");
-        function getPropType(propValue) {
-          var propType = typeof propValue;
-          if (Array.isArray(propValue)) {
-            return "array";
-          }
-          if (propValue instanceof RegExp) {
-            return "object";
-          }
-          if (isSymbol(propType, propValue)) {
-            return "symbol";
-          }
-          return propType;
-        }
-        __name(getPropType, "getPropType");
-        function getPreciseType(propValue) {
-          if (typeof propValue === "undefined" || propValue === null) {
-            return "" + propValue;
-          }
-          var propType = getPropType(propValue);
-          if (propType === "object") {
-            if (propValue instanceof Date) {
-              return "date";
-            } else if (propValue instanceof RegExp) {
-              return "regexp";
-            }
-          }
-          return propType;
-        }
-        __name(getPreciseType, "getPreciseType");
-        function getPostfixForTypeWarning(value) {
-          var type = getPreciseType(value);
-          switch (type) {
-            case "array":
-            case "object":
-              return "an " + type;
-            case "boolean":
-            case "date":
-            case "regexp":
-              return "a " + type;
-            default:
-              return type;
-          }
-        }
-        __name(getPostfixForTypeWarning, "getPostfixForTypeWarning");
-        function getClassName(propValue) {
-          if (!propValue.constructor || !propValue.constructor.name) {
-            return ANONYMOUS;
-          }
-          return propValue.constructor.name;
-        }
-        __name(getClassName, "getClassName");
-        ReactPropTypes.checkPropTypes = checkPropTypes;
-        ReactPropTypes.PropTypes = ReactPropTypes;
-        return ReactPropTypes;
-      };
-    }
-  });
-
-  // node_modules/react-codemirror/node_modules/prop-types/index.js
-  var require_prop_types2 = __commonJS({
-    "node_modules/react-codemirror/node_modules/prop-types/index.js"(exports, module) {
-      if (true) {
-        REACT_ELEMENT_TYPE = typeof Symbol === "function" && Symbol.for && Symbol.for("react.element") || 60103;
-        isValidElement = /* @__PURE__ */ __name(function(object) {
-          return typeof object === "object" && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-        }, "isValidElement");
-        throwOnDirectAccess = true;
-        module.exports = require_factoryWithTypeCheckers2()(isValidElement, throwOnDirectAccess);
-      } else {
-        module.exports = null();
-      }
-      var REACT_ELEMENT_TYPE;
-      var isValidElement;
-      var throwOnDirectAccess;
-    }
-  });
-
-  // node_modules/react-codemirror/node_modules/classnames/index.js
-  var require_classnames2 = __commonJS({
-    "node_modules/react-codemirror/node_modules/classnames/index.js"(exports, module) {
-      (function() {
-        "use strict";
-        var hasOwn = {}.hasOwnProperty;
-        function classNames() {
-          var classes = [];
-          for (var i = 0; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (!arg)
-              continue;
-            var argType = typeof arg;
-            if (argType === "string" || argType === "number") {
-              classes.push(arg);
-            } else if (Array.isArray(arg)) {
-              classes.push(classNames.apply(null, arg));
-            } else if (argType === "object") {
-              for (var key in arg) {
-                if (hasOwn.call(arg, key) && arg[key]) {
-                  classes.push(key);
-                }
-              }
-            }
-          }
-          return classes.join(" ");
-        }
-        __name(classNames, "classNames");
-        if (typeof module !== "undefined" && module.exports) {
-          module.exports = classNames;
-        } else if (typeof define === "function" && typeof define.amd === "object" && define.amd) {
-          define("classnames", [], function() {
-            return classNames;
-          });
-        } else {
-          window.classNames = classNames;
-        }
-      })();
-    }
-  });
-
-  // node_modules/lodash.debounce/index.js
-  var require_lodash2 = __commonJS({
-    "node_modules/lodash.debounce/index.js"(exports, module) {
-      var FUNC_ERROR_TEXT = "Expected a function";
-      var NAN = 0 / 0;
-      var symbolTag = "[object Symbol]";
-      var reTrim = /^\s+|\s+$/g;
-      var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-      var reIsBinary = /^0b[01]+$/i;
-      var reIsOctal = /^0o[0-7]+$/i;
-      var freeParseInt = parseInt;
-      var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-      var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-      var root = freeGlobal || freeSelf || Function("return this")();
-      var objectProto = Object.prototype;
-      var objectToString = objectProto.toString;
-      var nativeMax = Math.max;
-      var nativeMin = Math.min;
-      var now = /* @__PURE__ */ __name(function() {
-        return root.Date.now();
-      }, "now");
-      function debounce2(func, wait, options) {
-        var lastArgs, lastThis, maxWait, result, timerId, lastCallTime, lastInvokeTime = 0, leading = false, maxing = false, trailing = true;
-        if (typeof func != "function") {
-          throw new TypeError(FUNC_ERROR_TEXT);
-        }
-        wait = toNumber(wait) || 0;
-        if (isObject(options)) {
-          leading = !!options.leading;
-          maxing = "maxWait" in options;
-          maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
-          trailing = "trailing" in options ? !!options.trailing : trailing;
-        }
-        function invokeFunc(time) {
-          var args = lastArgs, thisArg = lastThis;
-          lastArgs = lastThis = void 0;
-          lastInvokeTime = time;
-          result = func.apply(thisArg, args);
-          return result;
-        }
-        __name(invokeFunc, "invokeFunc");
-        function leadingEdge(time) {
-          lastInvokeTime = time;
-          timerId = setTimeout(timerExpired, wait);
-          return leading ? invokeFunc(time) : result;
-        }
-        __name(leadingEdge, "leadingEdge");
-        function remainingWait(time) {
-          var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime, result2 = wait - timeSinceLastCall;
-          return maxing ? nativeMin(result2, maxWait - timeSinceLastInvoke) : result2;
-        }
-        __name(remainingWait, "remainingWait");
-        function shouldInvoke(time) {
-          var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime;
-          return lastCallTime === void 0 || timeSinceLastCall >= wait || timeSinceLastCall < 0 || maxing && timeSinceLastInvoke >= maxWait;
-        }
-        __name(shouldInvoke, "shouldInvoke");
-        function timerExpired() {
-          var time = now();
-          if (shouldInvoke(time)) {
-            return trailingEdge(time);
-          }
-          timerId = setTimeout(timerExpired, remainingWait(time));
-        }
-        __name(timerExpired, "timerExpired");
-        function trailingEdge(time) {
-          timerId = void 0;
-          if (trailing && lastArgs) {
-            return invokeFunc(time);
-          }
-          lastArgs = lastThis = void 0;
-          return result;
-        }
-        __name(trailingEdge, "trailingEdge");
-        function cancel() {
-          if (timerId !== void 0) {
-            clearTimeout(timerId);
-          }
-          lastInvokeTime = 0;
-          lastArgs = lastCallTime = lastThis = timerId = void 0;
-        }
-        __name(cancel, "cancel");
-        function flush() {
-          return timerId === void 0 ? result : trailingEdge(now());
-        }
-        __name(flush, "flush");
-        function debounced() {
-          var time = now(), isInvoking = shouldInvoke(time);
-          lastArgs = arguments;
-          lastThis = this;
-          lastCallTime = time;
-          if (isInvoking) {
-            if (timerId === void 0) {
-              return leadingEdge(lastCallTime);
-            }
-            if (maxing) {
-              timerId = setTimeout(timerExpired, wait);
-              return invokeFunc(lastCallTime);
-            }
-          }
-          if (timerId === void 0) {
-            timerId = setTimeout(timerExpired, wait);
-          }
-          return result;
-        }
-        __name(debounced, "debounced");
-        debounced.cancel = cancel;
-        debounced.flush = flush;
-        return debounced;
-      }
-      __name(debounce2, "debounce");
-      function isObject(value) {
-        var type = typeof value;
-        return !!value && (type == "object" || type == "function");
-      }
-      __name(isObject, "isObject");
-      function isObjectLike(value) {
-        return !!value && typeof value == "object";
-      }
-      __name(isObjectLike, "isObjectLike");
-      function isSymbol(value) {
-        return typeof value == "symbol" || isObjectLike(value) && objectToString.call(value) == symbolTag;
-      }
-      __name(isSymbol, "isSymbol");
-      function toNumber(value) {
-        if (typeof value == "number") {
-          return value;
-        }
-        if (isSymbol(value)) {
-          return NAN;
-        }
-        if (isObject(value)) {
-          var other = typeof value.valueOf == "function" ? value.valueOf() : value;
-          value = isObject(other) ? other + "" : other;
-        }
-        if (typeof value != "string") {
-          return value === 0 ? value : +value;
-        }
-        value = value.replace(reTrim, "");
-        var isBinary = reIsBinary.test(value);
-        return isBinary || reIsOctal.test(value) ? freeParseInt(value.slice(2), isBinary ? 2 : 8) : reIsBadHex.test(value) ? NAN : +value;
-      }
-      __name(toNumber, "toNumber");
-      module.exports = debounce2;
-    }
-  });
-
-  // node_modules/lodash.isequal/index.js
-  var require_lodash3 = __commonJS({
-    "node_modules/lodash.isequal/index.js"(exports, module) {
-      var LARGE_ARRAY_SIZE = 200;
-      var HASH_UNDEFINED = "__lodash_hash_undefined__";
-      var COMPARE_PARTIAL_FLAG = 1;
-      var COMPARE_UNORDERED_FLAG = 2;
-      var MAX_SAFE_INTEGER = 9007199254740991;
-      var argsTag = "[object Arguments]";
-      var arrayTag = "[object Array]";
-      var asyncTag = "[object AsyncFunction]";
-      var boolTag = "[object Boolean]";
-      var dateTag = "[object Date]";
-      var errorTag = "[object Error]";
-      var funcTag = "[object Function]";
-      var genTag = "[object GeneratorFunction]";
-      var mapTag = "[object Map]";
-      var numberTag = "[object Number]";
-      var nullTag = "[object Null]";
-      var objectTag = "[object Object]";
-      var promiseTag = "[object Promise]";
-      var proxyTag = "[object Proxy]";
-      var regexpTag = "[object RegExp]";
-      var setTag = "[object Set]";
-      var stringTag = "[object String]";
-      var symbolTag = "[object Symbol]";
-      var undefinedTag = "[object Undefined]";
-      var weakMapTag = "[object WeakMap]";
-      var arrayBufferTag = "[object ArrayBuffer]";
-      var dataViewTag = "[object DataView]";
-      var float32Tag = "[object Float32Array]";
-      var float64Tag = "[object Float64Array]";
-      var int8Tag = "[object Int8Array]";
-      var int16Tag = "[object Int16Array]";
-      var int32Tag = "[object Int32Array]";
-      var uint8Tag = "[object Uint8Array]";
-      var uint8ClampedTag = "[object Uint8ClampedArray]";
-      var uint16Tag = "[object Uint16Array]";
-      var uint32Tag = "[object Uint32Array]";
-      var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-      var reIsHostCtor = /^\[object .+?Constructor\]$/;
-      var reIsUint = /^(?:0|[1-9]\d*)$/;
-      var typedArrayTags = {};
-      typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
-      typedArrayTags[argsTag] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
-      var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-      var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-      var root = freeGlobal || freeSelf || Function("return this")();
-      var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-      var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-      var moduleExports = freeModule && freeModule.exports === freeExports;
-      var freeProcess = moduleExports && freeGlobal.process;
-      var nodeUtil = function() {
-        try {
-          return freeProcess && freeProcess.binding && freeProcess.binding("util");
-        } catch (e) {
-        }
-      }();
-      var nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
-      function arrayFilter(array, predicate) {
-        var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result = [];
-        while (++index < length) {
-          var value = array[index];
-          if (predicate(value, index, array)) {
-            result[resIndex++] = value;
-          }
-        }
-        return result;
-      }
-      __name(arrayFilter, "arrayFilter");
-      function arrayPush(array, values) {
-        var index = -1, length = values.length, offset2 = array.length;
-        while (++index < length) {
-          array[offset2 + index] = values[index];
-        }
-        return array;
-      }
-      __name(arrayPush, "arrayPush");
-      function arraySome(array, predicate) {
-        var index = -1, length = array == null ? 0 : array.length;
-        while (++index < length) {
-          if (predicate(array[index], index, array)) {
-            return true;
-          }
-        }
-        return false;
-      }
-      __name(arraySome, "arraySome");
-      function baseTimes(n, iteratee) {
-        var index = -1, result = Array(n);
-        while (++index < n) {
-          result[index] = iteratee(index);
-        }
-        return result;
-      }
-      __name(baseTimes, "baseTimes");
-      function baseUnary(func) {
-        return function(value) {
-          return func(value);
-        };
-      }
-      __name(baseUnary, "baseUnary");
-      function cacheHas(cache, key) {
-        return cache.has(key);
-      }
-      __name(cacheHas, "cacheHas");
-      function getValue(object, key) {
-        return object == null ? void 0 : object[key];
-      }
-      __name(getValue, "getValue");
-      function mapToArray(map) {
-        var index = -1, result = Array(map.size);
-        map.forEach(function(value, key) {
-          result[++index] = [key, value];
-        });
-        return result;
-      }
-      __name(mapToArray, "mapToArray");
-      function overArg(func, transform) {
-        return function(arg) {
-          return func(transform(arg));
-        };
-      }
-      __name(overArg, "overArg");
-      function setToArray(set) {
-        var index = -1, result = Array(set.size);
-        set.forEach(function(value) {
-          result[++index] = value;
-        });
-        return result;
-      }
-      __name(setToArray, "setToArray");
-      var arrayProto = Array.prototype;
-      var funcProto = Function.prototype;
-      var objectProto = Object.prototype;
-      var coreJsData = root["__core-js_shared__"];
-      var funcToString = funcProto.toString;
-      var hasOwnProperty = objectProto.hasOwnProperty;
-      var maskSrcKey = function() {
-        var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
-        return uid ? "Symbol(src)_1." + uid : "";
-      }();
-      var nativeObjectToString = objectProto.toString;
-      var reIsNative = RegExp("^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$");
-      var Buffer2 = moduleExports ? root.Buffer : void 0;
-      var Symbol2 = root.Symbol;
-      var Uint8Array2 = root.Uint8Array;
-      var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-      var splice = arrayProto.splice;
-      var symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
-      var nativeGetSymbols = Object.getOwnPropertySymbols;
-      var nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : void 0;
-      var nativeKeys = overArg(Object.keys, Object);
-      var DataView = getNative(root, "DataView");
-      var Map2 = getNative(root, "Map");
-      var Promise2 = getNative(root, "Promise");
-      var Set2 = getNative(root, "Set");
-      var WeakMap2 = getNative(root, "WeakMap");
-      var nativeCreate = getNative(Object, "create");
-      var dataViewCtorString = toSource(DataView);
-      var mapCtorString = toSource(Map2);
-      var promiseCtorString = toSource(Promise2);
-      var setCtorString = toSource(Set2);
-      var weakMapCtorString = toSource(WeakMap2);
-      var symbolProto = Symbol2 ? Symbol2.prototype : void 0;
-      var symbolValueOf = symbolProto ? symbolProto.valueOf : void 0;
-      function Hash(entries) {
-        var index = -1, length = entries == null ? 0 : entries.length;
-        this.clear();
-        while (++index < length) {
-          var entry = entries[index];
-          this.set(entry[0], entry[1]);
-        }
-      }
-      __name(Hash, "Hash");
-      function hashClear() {
-        this.__data__ = nativeCreate ? nativeCreate(null) : {};
-        this.size = 0;
-      }
-      __name(hashClear, "hashClear");
-      function hashDelete(key) {
-        var result = this.has(key) && delete this.__data__[key];
-        this.size -= result ? 1 : 0;
-        return result;
-      }
-      __name(hashDelete, "hashDelete");
-      function hashGet(key) {
-        var data = this.__data__;
-        if (nativeCreate) {
-          var result = data[key];
-          return result === HASH_UNDEFINED ? void 0 : result;
-        }
-        return hasOwnProperty.call(data, key) ? data[key] : void 0;
-      }
-      __name(hashGet, "hashGet");
-      function hashHas(key) {
-        var data = this.__data__;
-        return nativeCreate ? data[key] !== void 0 : hasOwnProperty.call(data, key);
-      }
-      __name(hashHas, "hashHas");
-      function hashSet(key, value) {
-        var data = this.__data__;
-        this.size += this.has(key) ? 0 : 1;
-        data[key] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
-        return this;
-      }
-      __name(hashSet, "hashSet");
-      Hash.prototype.clear = hashClear;
-      Hash.prototype["delete"] = hashDelete;
-      Hash.prototype.get = hashGet;
-      Hash.prototype.has = hashHas;
-      Hash.prototype.set = hashSet;
-      function ListCache(entries) {
-        var index = -1, length = entries == null ? 0 : entries.length;
-        this.clear();
-        while (++index < length) {
-          var entry = entries[index];
-          this.set(entry[0], entry[1]);
-        }
-      }
-      __name(ListCache, "ListCache");
-      function listCacheClear() {
-        this.__data__ = [];
-        this.size = 0;
-      }
-      __name(listCacheClear, "listCacheClear");
-      function listCacheDelete(key) {
-        var data = this.__data__, index = assocIndexOf(data, key);
-        if (index < 0) {
-          return false;
-        }
-        var lastIndex = data.length - 1;
-        if (index == lastIndex) {
-          data.pop();
-        } else {
-          splice.call(data, index, 1);
-        }
-        --this.size;
-        return true;
-      }
-      __name(listCacheDelete, "listCacheDelete");
-      function listCacheGet(key) {
-        var data = this.__data__, index = assocIndexOf(data, key);
-        return index < 0 ? void 0 : data[index][1];
-      }
-      __name(listCacheGet, "listCacheGet");
-      function listCacheHas(key) {
-        return assocIndexOf(this.__data__, key) > -1;
-      }
-      __name(listCacheHas, "listCacheHas");
-      function listCacheSet(key, value) {
-        var data = this.__data__, index = assocIndexOf(data, key);
-        if (index < 0) {
-          ++this.size;
-          data.push([key, value]);
-        } else {
-          data[index][1] = value;
-        }
-        return this;
-      }
-      __name(listCacheSet, "listCacheSet");
-      ListCache.prototype.clear = listCacheClear;
-      ListCache.prototype["delete"] = listCacheDelete;
-      ListCache.prototype.get = listCacheGet;
-      ListCache.prototype.has = listCacheHas;
-      ListCache.prototype.set = listCacheSet;
-      function MapCache(entries) {
-        var index = -1, length = entries == null ? 0 : entries.length;
-        this.clear();
-        while (++index < length) {
-          var entry = entries[index];
-          this.set(entry[0], entry[1]);
-        }
-      }
-      __name(MapCache, "MapCache");
-      function mapCacheClear() {
-        this.size = 0;
-        this.__data__ = {
-          "hash": new Hash(),
-          "map": new (Map2 || ListCache)(),
-          "string": new Hash()
-        };
-      }
-      __name(mapCacheClear, "mapCacheClear");
-      function mapCacheDelete(key) {
-        var result = getMapData(this, key)["delete"](key);
-        this.size -= result ? 1 : 0;
-        return result;
-      }
-      __name(mapCacheDelete, "mapCacheDelete");
-      function mapCacheGet(key) {
-        return getMapData(this, key).get(key);
-      }
-      __name(mapCacheGet, "mapCacheGet");
-      function mapCacheHas(key) {
-        return getMapData(this, key).has(key);
-      }
-      __name(mapCacheHas, "mapCacheHas");
-      function mapCacheSet(key, value) {
-        var data = getMapData(this, key), size = data.size;
-        data.set(key, value);
-        this.size += data.size == size ? 0 : 1;
-        return this;
-      }
-      __name(mapCacheSet, "mapCacheSet");
-      MapCache.prototype.clear = mapCacheClear;
-      MapCache.prototype["delete"] = mapCacheDelete;
-      MapCache.prototype.get = mapCacheGet;
-      MapCache.prototype.has = mapCacheHas;
-      MapCache.prototype.set = mapCacheSet;
-      function SetCache(values) {
-        var index = -1, length = values == null ? 0 : values.length;
-        this.__data__ = new MapCache();
-        while (++index < length) {
-          this.add(values[index]);
-        }
-      }
-      __name(SetCache, "SetCache");
-      function setCacheAdd(value) {
-        this.__data__.set(value, HASH_UNDEFINED);
-        return this;
-      }
-      __name(setCacheAdd, "setCacheAdd");
-      function setCacheHas(value) {
-        return this.__data__.has(value);
-      }
-      __name(setCacheHas, "setCacheHas");
-      SetCache.prototype.add = SetCache.prototype.push = setCacheAdd;
-      SetCache.prototype.has = setCacheHas;
-      function Stack(entries) {
-        var data = this.__data__ = new ListCache(entries);
-        this.size = data.size;
-      }
-      __name(Stack, "Stack");
-      function stackClear() {
-        this.__data__ = new ListCache();
-        this.size = 0;
-      }
-      __name(stackClear, "stackClear");
-      function stackDelete(key) {
-        var data = this.__data__, result = data["delete"](key);
-        this.size = data.size;
-        return result;
-      }
-      __name(stackDelete, "stackDelete");
-      function stackGet(key) {
-        return this.__data__.get(key);
-      }
-      __name(stackGet, "stackGet");
-      function stackHas(key) {
-        return this.__data__.has(key);
-      }
-      __name(stackHas, "stackHas");
-      function stackSet(key, value) {
-        var data = this.__data__;
-        if (data instanceof ListCache) {
-          var pairs = data.__data__;
-          if (!Map2 || pairs.length < LARGE_ARRAY_SIZE - 1) {
-            pairs.push([key, value]);
-            this.size = ++data.size;
-            return this;
-          }
-          data = this.__data__ = new MapCache(pairs);
-        }
-        data.set(key, value);
-        this.size = data.size;
-        return this;
-      }
-      __name(stackSet, "stackSet");
-      Stack.prototype.clear = stackClear;
-      Stack.prototype["delete"] = stackDelete;
-      Stack.prototype.get = stackGet;
-      Stack.prototype.has = stackHas;
-      Stack.prototype.set = stackSet;
-      function arrayLikeKeys(value, inherited) {
-        var isArr = isArray(value), isArg = !isArr && isArguments(value), isBuff = !isArr && !isArg && isBuffer(value), isType = !isArr && !isArg && !isBuff && isTypedArray(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes(value.length, String) : [], length = result.length;
-        for (var key in value) {
-          if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isBuff && (key == "offset" || key == "parent") || isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || isIndex(key, length)))) {
-            result.push(key);
-          }
-        }
-        return result;
-      }
-      __name(arrayLikeKeys, "arrayLikeKeys");
-      function assocIndexOf(array, key) {
-        var length = array.length;
-        while (length--) {
-          if (eq(array[length][0], key)) {
-            return length;
-          }
-        }
-        return -1;
-      }
-      __name(assocIndexOf, "assocIndexOf");
-      function baseGetAllKeys(object, keysFunc, symbolsFunc) {
-        var result = keysFunc(object);
-        return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
-      }
-      __name(baseGetAllKeys, "baseGetAllKeys");
-      function baseGetTag(value) {
-        if (value == null) {
-          return value === void 0 ? undefinedTag : nullTag;
-        }
-        return symToStringTag && symToStringTag in Object(value) ? getRawTag(value) : objectToString(value);
-      }
-      __name(baseGetTag, "baseGetTag");
-      function baseIsArguments(value) {
-        return isObjectLike(value) && baseGetTag(value) == argsTag;
-      }
-      __name(baseIsArguments, "baseIsArguments");
-      function baseIsEqual(value, other, bitmask, customizer, stack) {
-        if (value === other) {
-          return true;
-        }
-        if (value == null || other == null || !isObjectLike(value) && !isObjectLike(other)) {
-          return value !== value && other !== other;
-        }
-        return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
-      }
-      __name(baseIsEqual, "baseIsEqual");
-      function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
-        var objIsArr = isArray(object), othIsArr = isArray(other), objTag = objIsArr ? arrayTag : getTag(object), othTag = othIsArr ? arrayTag : getTag(other);
-        objTag = objTag == argsTag ? objectTag : objTag;
-        othTag = othTag == argsTag ? objectTag : othTag;
-        var objIsObj = objTag == objectTag, othIsObj = othTag == objectTag, isSameTag = objTag == othTag;
-        if (isSameTag && isBuffer(object)) {
-          if (!isBuffer(other)) {
-            return false;
-          }
-          objIsArr = true;
-          objIsObj = false;
-        }
-        if (isSameTag && !objIsObj) {
-          stack || (stack = new Stack());
-          return objIsArr || isTypedArray(object) ? equalArrays(object, other, bitmask, customizer, equalFunc, stack) : equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
-        }
-        if (!(bitmask & COMPARE_PARTIAL_FLAG)) {
-          var objIsWrapped = objIsObj && hasOwnProperty.call(object, "__wrapped__"), othIsWrapped = othIsObj && hasOwnProperty.call(other, "__wrapped__");
-          if (objIsWrapped || othIsWrapped) {
-            var objUnwrapped = objIsWrapped ? object.value() : object, othUnwrapped = othIsWrapped ? other.value() : other;
-            stack || (stack = new Stack());
-            return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack);
-          }
-        }
-        if (!isSameTag) {
-          return false;
-        }
-        stack || (stack = new Stack());
-        return equalObjects(object, other, bitmask, customizer, equalFunc, stack);
-      }
-      __name(baseIsEqualDeep, "baseIsEqualDeep");
-      function baseIsNative(value) {
-        if (!isObject(value) || isMasked(value)) {
-          return false;
-        }
-        var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
-        return pattern.test(toSource(value));
-      }
-      __name(baseIsNative, "baseIsNative");
-      function baseIsTypedArray(value) {
-        return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
-      }
-      __name(baseIsTypedArray, "baseIsTypedArray");
-      function baseKeys(object) {
-        if (!isPrototype(object)) {
-          return nativeKeys(object);
-        }
-        var result = [];
-        for (var key in Object(object)) {
-          if (hasOwnProperty.call(object, key) && key != "constructor") {
-            result.push(key);
-          }
-        }
-        return result;
-      }
-      __name(baseKeys, "baseKeys");
-      function equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
-        var isPartial = bitmask & COMPARE_PARTIAL_FLAG, arrLength = array.length, othLength = other.length;
-        if (arrLength != othLength && !(isPartial && othLength > arrLength)) {
-          return false;
-        }
-        var stacked = stack.get(array);
-        if (stacked && stack.get(other)) {
-          return stacked == other;
-        }
-        var index = -1, result = true, seen = bitmask & COMPARE_UNORDERED_FLAG ? new SetCache() : void 0;
-        stack.set(array, other);
-        stack.set(other, array);
-        while (++index < arrLength) {
-          var arrValue = array[index], othValue = other[index];
-          if (customizer) {
-            var compared = isPartial ? customizer(othValue, arrValue, index, other, array, stack) : customizer(arrValue, othValue, index, array, other, stack);
-          }
-          if (compared !== void 0) {
-            if (compared) {
-              continue;
-            }
-            result = false;
-            break;
-          }
-          if (seen) {
-            if (!arraySome(other, function(othValue2, othIndex) {
-              if (!cacheHas(seen, othIndex) && (arrValue === othValue2 || equalFunc(arrValue, othValue2, bitmask, customizer, stack))) {
-                return seen.push(othIndex);
-              }
-            })) {
-              result = false;
-              break;
-            }
-          } else if (!(arrValue === othValue || equalFunc(arrValue, othValue, bitmask, customizer, stack))) {
-            result = false;
-            break;
-          }
-        }
-        stack["delete"](array);
-        stack["delete"](other);
-        return result;
-      }
-      __name(equalArrays, "equalArrays");
-      function equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
-        switch (tag) {
-          case dataViewTag:
-            if (object.byteLength != other.byteLength || object.byteOffset != other.byteOffset) {
-              return false;
-            }
-            object = object.buffer;
-            other = other.buffer;
-          case arrayBufferTag:
-            if (object.byteLength != other.byteLength || !equalFunc(new Uint8Array2(object), new Uint8Array2(other))) {
-              return false;
-            }
-            return true;
-          case boolTag:
-          case dateTag:
-          case numberTag:
-            return eq(+object, +other);
-          case errorTag:
-            return object.name == other.name && object.message == other.message;
-          case regexpTag:
-          case stringTag:
-            return object == other + "";
-          case mapTag:
-            var convert = mapToArray;
-          case setTag:
-            var isPartial = bitmask & COMPARE_PARTIAL_FLAG;
-            convert || (convert = setToArray);
-            if (object.size != other.size && !isPartial) {
-              return false;
-            }
-            var stacked = stack.get(object);
-            if (stacked) {
-              return stacked == other;
-            }
-            bitmask |= COMPARE_UNORDERED_FLAG;
-            stack.set(object, other);
-            var result = equalArrays(convert(object), convert(other), bitmask, customizer, equalFunc, stack);
-            stack["delete"](object);
-            return result;
-          case symbolTag:
-            if (symbolValueOf) {
-              return symbolValueOf.call(object) == symbolValueOf.call(other);
-            }
-        }
-        return false;
-      }
-      __name(equalByTag, "equalByTag");
-      function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
-        var isPartial = bitmask & COMPARE_PARTIAL_FLAG, objProps = getAllKeys(object), objLength = objProps.length, othProps = getAllKeys(other), othLength = othProps.length;
-        if (objLength != othLength && !isPartial) {
-          return false;
-        }
-        var index = objLength;
-        while (index--) {
-          var key = objProps[index];
-          if (!(isPartial ? key in other : hasOwnProperty.call(other, key))) {
-            return false;
-          }
-        }
-        var stacked = stack.get(object);
-        if (stacked && stack.get(other)) {
-          return stacked == other;
-        }
-        var result = true;
-        stack.set(object, other);
-        stack.set(other, object);
-        var skipCtor = isPartial;
-        while (++index < objLength) {
-          key = objProps[index];
-          var objValue = object[key], othValue = other[key];
-          if (customizer) {
-            var compared = isPartial ? customizer(othValue, objValue, key, other, object, stack) : customizer(objValue, othValue, key, object, other, stack);
-          }
-          if (!(compared === void 0 ? objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack) : compared)) {
-            result = false;
-            break;
-          }
-          skipCtor || (skipCtor = key == "constructor");
-        }
-        if (result && !skipCtor) {
-          var objCtor = object.constructor, othCtor = other.constructor;
-          if (objCtor != othCtor && ("constructor" in object && "constructor" in other) && !(typeof objCtor == "function" && objCtor instanceof objCtor && typeof othCtor == "function" && othCtor instanceof othCtor)) {
-            result = false;
-          }
-        }
-        stack["delete"](object);
-        stack["delete"](other);
-        return result;
-      }
-      __name(equalObjects, "equalObjects");
-      function getAllKeys(object) {
-        return baseGetAllKeys(object, keys, getSymbols);
-      }
-      __name(getAllKeys, "getAllKeys");
-      function getMapData(map, key) {
-        var data = map.__data__;
-        return isKeyable(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
-      }
-      __name(getMapData, "getMapData");
-      function getNative(object, key) {
-        var value = getValue(object, key);
-        return baseIsNative(value) ? value : void 0;
-      }
-      __name(getNative, "getNative");
-      function getRawTag(value) {
-        var isOwn = hasOwnProperty.call(value, symToStringTag), tag = value[symToStringTag];
-        try {
-          value[symToStringTag] = void 0;
-          var unmasked = true;
-        } catch (e) {
-        }
-        var result = nativeObjectToString.call(value);
-        if (unmasked) {
-          if (isOwn) {
-            value[symToStringTag] = tag;
-          } else {
-            delete value[symToStringTag];
-          }
-        }
-        return result;
-      }
-      __name(getRawTag, "getRawTag");
-      var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
-        if (object == null) {
-          return [];
-        }
-        object = Object(object);
-        return arrayFilter(nativeGetSymbols(object), function(symbol) {
-          return propertyIsEnumerable.call(object, symbol);
-        });
-      };
-      var getTag = baseGetTag;
-      if (DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap2 && getTag(new WeakMap2()) != weakMapTag) {
-        getTag = /* @__PURE__ */ __name(function(value) {
-          var result = baseGetTag(value), Ctor = result == objectTag ? value.constructor : void 0, ctorString = Ctor ? toSource(Ctor) : "";
-          if (ctorString) {
-            switch (ctorString) {
-              case dataViewCtorString:
-                return dataViewTag;
-              case mapCtorString:
-                return mapTag;
-              case promiseCtorString:
-                return promiseTag;
-              case setCtorString:
-                return setTag;
-              case weakMapCtorString:
-                return weakMapTag;
-            }
-          }
-          return result;
-        }, "getTag");
-      }
-      function isIndex(value, length) {
-        length = length == null ? MAX_SAFE_INTEGER : length;
-        return !!length && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
-      }
-      __name(isIndex, "isIndex");
-      function isKeyable(value) {
-        var type = typeof value;
-        return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
-      }
-      __name(isKeyable, "isKeyable");
-      function isMasked(func) {
-        return !!maskSrcKey && maskSrcKey in func;
-      }
-      __name(isMasked, "isMasked");
-      function isPrototype(value) {
-        var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto;
-        return value === proto;
-      }
-      __name(isPrototype, "isPrototype");
-      function objectToString(value) {
-        return nativeObjectToString.call(value);
-      }
-      __name(objectToString, "objectToString");
-      function toSource(func) {
-        if (func != null) {
-          try {
-            return funcToString.call(func);
-          } catch (e) {
-          }
-          try {
-            return func + "";
-          } catch (e) {
-          }
-        }
-        return "";
-      }
-      __name(toSource, "toSource");
-      function eq(value, other) {
-        return value === other || value !== value && other !== other;
-      }
-      __name(eq, "eq");
-      var isArguments = baseIsArguments(function() {
-        return arguments;
-      }()) ? baseIsArguments : function(value) {
-        return isObjectLike(value) && hasOwnProperty.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
-      };
-      var isArray = Array.isArray;
-      function isArrayLike(value) {
-        return value != null && isLength(value.length) && !isFunction(value);
-      }
-      __name(isArrayLike, "isArrayLike");
-      var isBuffer = nativeIsBuffer || stubFalse;
-      function isEqual2(value, other) {
-        return baseIsEqual(value, other);
-      }
-      __name(isEqual2, "isEqual");
-      function isFunction(value) {
-        if (!isObject(value)) {
-          return false;
-        }
-        var tag = baseGetTag(value);
-        return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
-      }
-      __name(isFunction, "isFunction");
-      function isLength(value) {
-        return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-      }
-      __name(isLength, "isLength");
-      function isObject(value) {
-        var type = typeof value;
-        return value != null && (type == "object" || type == "function");
-      }
-      __name(isObject, "isObject");
-      function isObjectLike(value) {
-        return value != null && typeof value == "object";
-      }
-      __name(isObjectLike, "isObjectLike");
-      var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedArray;
-      function keys(object) {
-        return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
-      }
-      __name(keys, "keys");
-      function stubArray() {
-        return [];
-      }
-      __name(stubArray, "stubArray");
-      function stubFalse() {
-        return false;
-      }
-      __name(stubFalse, "stubFalse");
-      module.exports = isEqual2;
-    }
-  });
-
-  // node_modules/create-react-class/node_modules/fbjs/lib/emptyObject.js
-  var require_emptyObject = __commonJS({
-    "node_modules/create-react-class/node_modules/fbjs/lib/emptyObject.js"(exports, module) {
-      "use strict";
-      var emptyObject = {};
-      if (true) {
-        Object.freeze(emptyObject);
-      }
-      module.exports = emptyObject;
-    }
-  });
-
-  // node_modules/create-react-class/node_modules/fbjs/lib/invariant.js
-  var require_invariant2 = __commonJS({
-    "node_modules/create-react-class/node_modules/fbjs/lib/invariant.js"(exports, module) {
-      "use strict";
-      var validateFormat = /* @__PURE__ */ __name(function validateFormat2(format2) {
-      }, "validateFormat");
-      if (true) {
-        validateFormat = /* @__PURE__ */ __name(function validateFormat2(format2) {
-          if (format2 === void 0) {
-            throw new Error("invariant requires an error message argument");
-          }
-        }, "validateFormat");
-      }
-      function invariant(condition, format2, a, b, c, d, e, f) {
-        validateFormat(format2);
-        if (!condition) {
-          var error;
-          if (format2 === void 0) {
-            error = new Error("Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.");
-          } else {
-            var args = [a, b, c, d, e, f];
-            var argIndex = 0;
-            error = new Error(format2.replace(/%s/g, function() {
-              return args[argIndex++];
-            }));
-            error.name = "Invariant Violation";
-          }
-          error.framesToPop = 1;
-          throw error;
-        }
-      }
-      __name(invariant, "invariant");
-      module.exports = invariant;
-    }
-  });
-
-  // node_modules/create-react-class/node_modules/fbjs/lib/emptyFunction.js
-  var require_emptyFunction2 = __commonJS({
-    "node_modules/create-react-class/node_modules/fbjs/lib/emptyFunction.js"(exports, module) {
-      "use strict";
-      function makeEmptyFunction(arg) {
-        return function() {
-          return arg;
-        };
-      }
-      __name(makeEmptyFunction, "makeEmptyFunction");
-      var emptyFunction = /* @__PURE__ */ __name(function emptyFunction2() {
-      }, "emptyFunction");
-      emptyFunction.thatReturns = makeEmptyFunction;
-      emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-      emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-      emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-      emptyFunction.thatReturnsThis = function() {
-        return this;
-      };
-      emptyFunction.thatReturnsArgument = function(arg) {
-        return arg;
-      };
-      module.exports = emptyFunction;
-    }
-  });
-
-  // node_modules/create-react-class/node_modules/fbjs/lib/warning.js
-  var require_warning2 = __commonJS({
-    "node_modules/create-react-class/node_modules/fbjs/lib/warning.js"(exports, module) {
-      "use strict";
-      var emptyFunction = require_emptyFunction2();
-      var warning3 = emptyFunction;
-      if (true) {
-        (function() {
-          var printWarning = /* @__PURE__ */ __name(function printWarning2(format2) {
-            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-              args[_key - 1] = arguments[_key];
-            }
-            var argIndex = 0;
-            var message = "Warning: " + format2.replace(/%s/g, function() {
-              return args[argIndex++];
-            });
-            if (typeof console !== "undefined") {
-              console.error(message);
-            }
-            try {
-              throw new Error(message);
-            } catch (x) {
-            }
-          }, "printWarning");
-          warning3 = /* @__PURE__ */ __name(function warning4(condition, format2) {
-            if (format2 === void 0) {
-              throw new Error("`warning(condition, format, ...args)` requires a warning message argument");
-            }
-            if (format2.indexOf("Failed Composite propType: ") === 0) {
-              return;
-            }
-            if (!condition) {
-              for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-                args[_key2 - 2] = arguments[_key2];
-              }
-              printWarning.apply(void 0, [format2].concat(args));
-            }
-          }, "warning");
-        })();
-      }
-      module.exports = warning3;
-    }
-  });
-
-  // node_modules/create-react-class/factory.js
-  var require_factory = __commonJS({
-    "node_modules/create-react-class/factory.js"(exports, module) {
-      "use strict";
-      var _assign = require_object_assign();
-      var emptyObject = require_emptyObject();
-      var _invariant = require_invariant2();
-      if (true) {
-        warning3 = require_warning2();
-      }
-      var warning3;
-      var MIXINS_KEY = "mixins";
-      function identity(fn2) {
-        return fn2;
-      }
-      __name(identity, "identity");
-      var ReactPropTypeLocationNames;
-      if (true) {
-        ReactPropTypeLocationNames = {
-          prop: "prop",
-          context: "context",
-          childContext: "child context"
-        };
-      } else {
-        ReactPropTypeLocationNames = {};
-      }
-      function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
-        var injectedMixins = [];
-        var ReactClassInterface = {
-          mixins: "DEFINE_MANY",
-          statics: "DEFINE_MANY",
-          propTypes: "DEFINE_MANY",
-          contextTypes: "DEFINE_MANY",
-          childContextTypes: "DEFINE_MANY",
-          getDefaultProps: "DEFINE_MANY_MERGED",
-          getInitialState: "DEFINE_MANY_MERGED",
-          getChildContext: "DEFINE_MANY_MERGED",
-          render: "DEFINE_ONCE",
-          componentWillMount: "DEFINE_MANY",
-          componentDidMount: "DEFINE_MANY",
-          componentWillReceiveProps: "DEFINE_MANY",
-          shouldComponentUpdate: "DEFINE_ONCE",
-          componentWillUpdate: "DEFINE_MANY",
-          componentDidUpdate: "DEFINE_MANY",
-          componentWillUnmount: "DEFINE_MANY",
-          updateComponent: "OVERRIDE_BASE"
-        };
-        var RESERVED_SPEC_KEYS = {
-          displayName: function(Constructor, displayName) {
-            Constructor.displayName = displayName;
-          },
-          mixins: function(Constructor, mixins) {
-            if (mixins) {
-              for (var i = 0; i < mixins.length; i++) {
-                mixSpecIntoComponent(Constructor, mixins[i]);
-              }
-            }
-          },
-          childContextTypes: function(Constructor, childContextTypes) {
-            if (true) {
-              validateTypeDef(Constructor, childContextTypes, "childContext");
-            }
-            Constructor.childContextTypes = _assign({}, Constructor.childContextTypes, childContextTypes);
-          },
-          contextTypes: function(Constructor, contextTypes) {
-            if (true) {
-              validateTypeDef(Constructor, contextTypes, "context");
-            }
-            Constructor.contextTypes = _assign({}, Constructor.contextTypes, contextTypes);
-          },
-          getDefaultProps: function(Constructor, getDefaultProps) {
-            if (Constructor.getDefaultProps) {
-              Constructor.getDefaultProps = createMergedResultFunction(Constructor.getDefaultProps, getDefaultProps);
-            } else {
-              Constructor.getDefaultProps = getDefaultProps;
-            }
-          },
-          propTypes: function(Constructor, propTypes) {
-            if (true) {
-              validateTypeDef(Constructor, propTypes, "prop");
-            }
-            Constructor.propTypes = _assign({}, Constructor.propTypes, propTypes);
-          },
-          statics: function(Constructor, statics) {
-            mixStaticSpecIntoComponent(Constructor, statics);
-          },
-          autobind: function() {
-          }
-        };
-        function validateTypeDef(Constructor, typeDef, location2) {
-          for (var propName in typeDef) {
-            if (typeDef.hasOwnProperty(propName)) {
-              if (true) {
-                warning3(typeof typeDef[propName] === "function", "%s: %s type `%s` is invalid; it must be a function, usually from React.PropTypes.", Constructor.displayName || "ReactClass", ReactPropTypeLocationNames[location2], propName);
-              }
-            }
-          }
-        }
-        __name(validateTypeDef, "validateTypeDef");
-        function validateMethodOverride(isAlreadyDefined, name) {
-          var specPolicy = ReactClassInterface.hasOwnProperty(name) ? ReactClassInterface[name] : null;
-          if (ReactClassMixin.hasOwnProperty(name)) {
-            _invariant(specPolicy === "OVERRIDE_BASE", "ReactClassInterface: You are attempting to override `%s` from your class specification. Ensure that your method names do not overlap with React methods.", name);
-          }
-          if (isAlreadyDefined) {
-            _invariant(specPolicy === "DEFINE_MANY" || specPolicy === "DEFINE_MANY_MERGED", "ReactClassInterface: You are attempting to define `%s` on your component more than once. This conflict may be due to a mixin.", name);
-          }
-        }
-        __name(validateMethodOverride, "validateMethodOverride");
-        function mixSpecIntoComponent(Constructor, spec) {
-          if (!spec) {
-            if (true) {
-              var typeofSpec = typeof spec;
-              var isMixinValid = typeofSpec === "object" && spec !== null;
-              if (true) {
-                warning3(isMixinValid, "%s: You're attempting to include a mixin that is either null or not an object. Check the mixins included by the component, as well as any mixins they include themselves. Expected object but got %s.", Constructor.displayName || "ReactClass", spec === null ? null : typeofSpec);
-              }
-            }
-            return;
-          }
-          _invariant(typeof spec !== "function", "ReactClass: You're attempting to use a component class or function as a mixin. Instead, just use a regular object.");
-          _invariant(!isValidElement(spec), "ReactClass: You're attempting to use a component as a mixin. Instead, just use a regular object.");
-          var proto = Constructor.prototype;
-          var autoBindPairs = proto.__reactAutoBindPairs;
-          if (spec.hasOwnProperty(MIXINS_KEY)) {
-            RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
-          }
-          for (var name in spec) {
-            if (!spec.hasOwnProperty(name)) {
-              continue;
-            }
-            if (name === MIXINS_KEY) {
-              continue;
-            }
-            var property = spec[name];
-            var isAlreadyDefined = proto.hasOwnProperty(name);
-            validateMethodOverride(isAlreadyDefined, name);
-            if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
-              RESERVED_SPEC_KEYS[name](Constructor, property);
-            } else {
-              var isReactClassMethod = ReactClassInterface.hasOwnProperty(name);
-              var isFunction = typeof property === "function";
-              var shouldAutoBind = isFunction && !isReactClassMethod && !isAlreadyDefined && spec.autobind !== false;
-              if (shouldAutoBind) {
-                autoBindPairs.push(name, property);
-                proto[name] = property;
-              } else {
-                if (isAlreadyDefined) {
-                  var specPolicy = ReactClassInterface[name];
-                  _invariant(isReactClassMethod && (specPolicy === "DEFINE_MANY_MERGED" || specPolicy === "DEFINE_MANY"), "ReactClass: Unexpected spec policy %s for key %s when mixing in component specs.", specPolicy, name);
-                  if (specPolicy === "DEFINE_MANY_MERGED") {
-                    proto[name] = createMergedResultFunction(proto[name], property);
-                  } else if (specPolicy === "DEFINE_MANY") {
-                    proto[name] = createChainedFunction(proto[name], property);
-                  }
-                } else {
-                  proto[name] = property;
-                  if (true) {
-                    if (typeof property === "function" && spec.displayName) {
-                      proto[name].displayName = spec.displayName + "_" + name;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        __name(mixSpecIntoComponent, "mixSpecIntoComponent");
-        function mixStaticSpecIntoComponent(Constructor, statics) {
-          if (!statics) {
-            return;
-          }
-          for (var name in statics) {
-            var property = statics[name];
-            if (!statics.hasOwnProperty(name)) {
-              continue;
-            }
-            var isReserved = name in RESERVED_SPEC_KEYS;
-            _invariant(!isReserved, 'ReactClass: You are attempting to define a reserved property, `%s`, that shouldn\'t be on the "statics" key. Define it as an instance property instead; it will still be accessible on the constructor.', name);
-            var isInherited = name in Constructor;
-            _invariant(!isInherited, "ReactClass: You are attempting to define `%s` on your component more than once. This conflict may be due to a mixin.", name);
-            Constructor[name] = property;
-          }
-        }
-        __name(mixStaticSpecIntoComponent, "mixStaticSpecIntoComponent");
-        function mergeIntoWithNoDuplicateKeys(one, two) {
-          _invariant(one && two && typeof one === "object" && typeof two === "object", "mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.");
-          for (var key in two) {
-            if (two.hasOwnProperty(key)) {
-              _invariant(one[key] === void 0, "mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the same key: `%s`. This conflict may be due to a mixin; in particular, this may be caused by two getInitialState() or getDefaultProps() methods returning objects with clashing keys.", key);
-              one[key] = two[key];
-            }
-          }
-          return one;
-        }
-        __name(mergeIntoWithNoDuplicateKeys, "mergeIntoWithNoDuplicateKeys");
-        function createMergedResultFunction(one, two) {
-          return /* @__PURE__ */ __name(function mergedResult() {
-            var a = one.apply(this, arguments);
-            var b = two.apply(this, arguments);
-            if (a == null) {
-              return b;
-            } else if (b == null) {
-              return a;
-            }
-            var c = {};
-            mergeIntoWithNoDuplicateKeys(c, a);
-            mergeIntoWithNoDuplicateKeys(c, b);
-            return c;
-          }, "mergedResult");
-        }
-        __name(createMergedResultFunction, "createMergedResultFunction");
-        function createChainedFunction(one, two) {
-          return /* @__PURE__ */ __name(function chainedFunction() {
-            one.apply(this, arguments);
-            two.apply(this, arguments);
-          }, "chainedFunction");
-        }
-        __name(createChainedFunction, "createChainedFunction");
-        function bindAutoBindMethod(component, method) {
-          var boundMethod = method.bind(component);
-          if (true) {
-            boundMethod.__reactBoundContext = component;
-            boundMethod.__reactBoundMethod = method;
-            boundMethod.__reactBoundArguments = null;
-            var componentName = component.constructor.displayName;
-            var _bind = boundMethod.bind;
-            boundMethod.bind = function(newThis) {
-              for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-                args[_key - 1] = arguments[_key];
-              }
-              if (newThis !== component && newThis !== null) {
-                if (true) {
-                  warning3(false, "bind(): React component methods may only be bound to the component instance. See %s", componentName);
-                }
-              } else if (!args.length) {
-                if (true) {
-                  warning3(false, "bind(): You are binding a component method to the component. React does this for you automatically in a high-performance way, so you can safely remove this call. See %s", componentName);
-                }
-                return boundMethod;
-              }
-              var reboundMethod = _bind.apply(boundMethod, arguments);
-              reboundMethod.__reactBoundContext = component;
-              reboundMethod.__reactBoundMethod = method;
-              reboundMethod.__reactBoundArguments = args;
-              return reboundMethod;
-            };
-          }
-          return boundMethod;
-        }
-        __name(bindAutoBindMethod, "bindAutoBindMethod");
-        function bindAutoBindMethods(component) {
-          var pairs = component.__reactAutoBindPairs;
-          for (var i = 0; i < pairs.length; i += 2) {
-            var autoBindKey = pairs[i];
-            var method = pairs[i + 1];
-            component[autoBindKey] = bindAutoBindMethod(component, method);
-          }
-        }
-        __name(bindAutoBindMethods, "bindAutoBindMethods");
-        var IsMountedPreMixin = {
-          componentDidMount: function() {
-            this.__isMounted = true;
-          }
-        };
-        var IsMountedPostMixin = {
-          componentWillUnmount: function() {
-            this.__isMounted = false;
-          }
-        };
-        var ReactClassMixin = {
-          replaceState: function(newState, callback) {
-            this.updater.enqueueReplaceState(this, newState, callback);
-          },
-          isMounted: function() {
-            if (true) {
-              warning3(this.__didWarnIsMounted, "%s: isMounted is deprecated. Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks.", this.constructor && this.constructor.displayName || this.name || "Component");
-              this.__didWarnIsMounted = true;
-            }
-            return !!this.__isMounted;
-          }
-        };
-        var ReactClassComponent = /* @__PURE__ */ __name(function() {
-        }, "ReactClassComponent");
-        _assign(ReactClassComponent.prototype, ReactComponent.prototype, ReactClassMixin);
-        function createClass(spec) {
-          var Constructor = identity(function(props, context, updater) {
-            if (true) {
-              warning3(this instanceof Constructor, "Something is calling a React component directly. Use a factory or JSX instead. See: https://fb.me/react-legacyfactory");
-            }
-            if (this.__reactAutoBindPairs.length) {
-              bindAutoBindMethods(this);
-            }
-            this.props = props;
-            this.context = context;
-            this.refs = emptyObject;
-            this.updater = updater || ReactNoopUpdateQueue;
-            this.state = null;
-            var initialState = this.getInitialState ? this.getInitialState() : null;
-            if (true) {
-              if (initialState === void 0 && this.getInitialState._isMockFunction) {
-                initialState = null;
-              }
-            }
-            _invariant(typeof initialState === "object" && !Array.isArray(initialState), "%s.getInitialState(): must return an object or null", Constructor.displayName || "ReactCompositeComponent");
-            this.state = initialState;
-          });
-          Constructor.prototype = new ReactClassComponent();
-          Constructor.prototype.constructor = Constructor;
-          Constructor.prototype.__reactAutoBindPairs = [];
-          injectedMixins.forEach(mixSpecIntoComponent.bind(null, Constructor));
-          mixSpecIntoComponent(Constructor, IsMountedPreMixin);
-          mixSpecIntoComponent(Constructor, spec);
-          mixSpecIntoComponent(Constructor, IsMountedPostMixin);
-          if (Constructor.getDefaultProps) {
-            Constructor.defaultProps = Constructor.getDefaultProps();
-          }
-          if (true) {
-            if (Constructor.getDefaultProps) {
-              Constructor.getDefaultProps.isReactClassApproved = {};
-            }
-            if (Constructor.prototype.getInitialState) {
-              Constructor.prototype.getInitialState.isReactClassApproved = {};
-            }
-          }
-          _invariant(Constructor.prototype.render, "createClass(...): Class specification must implement a `render` method.");
-          if (true) {
-            warning3(!Constructor.prototype.componentShouldUpdate, "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.", spec.displayName || "A component");
-            warning3(!Constructor.prototype.componentWillRecieveProps, "%s has a method called componentWillRecieveProps(). Did you mean componentWillReceiveProps()?", spec.displayName || "A component");
-          }
-          for (var methodName in ReactClassInterface) {
-            if (!Constructor.prototype[methodName]) {
-              Constructor.prototype[methodName] = null;
-            }
-          }
-          return Constructor;
-        }
-        __name(createClass, "createClass");
-        return createClass;
-      }
-      __name(factory, "factory");
-      module.exports = factory;
-    }
-  });
-
-  // node_modules/create-react-class/index.js
-  var require_create_react_class = __commonJS({
-    "node_modules/create-react-class/index.js"(exports, module) {
-      "use strict";
-      var React57 = require_react();
-      var factory = require_factory();
-      if (typeof React57 === "undefined") {
-        throw Error("create-react-class could not find the React object. If you are using script tags, make sure that React is being loaded before create-react-class.");
-      }
-      var ReactNoopUpdateQueue = new React57.Component().updater;
-      module.exports = factory(React57.Component, React57.isValidElement, ReactNoopUpdateQueue);
-    }
-  });
-
   // node_modules/codemirror/lib/codemirror.js
   var require_codemirror = __commonJS({
     "node_modules/codemirror/lib/codemirror.js"(exports, module) {
       (function(global2, factory) {
-        typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : global2.CodeMirror = factory();
+        typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global2 = global2 || self, global2.CodeMirror = factory());
       })(exports, function() {
         "use strict";
         var userAgent = navigator.userAgent;
@@ -32515,7 +29306,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         var safari = /Apple Computer/.test(navigator.vendor);
         var mac_geMountainLion = /Mac OS X 1\d\D([8-9]|\d\d)\D/.test(userAgent);
         var phantom = /PhantomJS/.test(userAgent);
-        var ios = !edge && /AppleWebKit/.test(userAgent) && /Mobile\/\w+/.test(userAgent);
+        var ios = safari && (/Mobile\/\w+/.test(userAgent) || navigator.maxTouchPoints > 2);
         var android = /Android/.test(userAgent);
         var mobile = ios || android || /webOS|BlackBerry|Opera Mini|Opera Mobi|IEMobile/i.test(userAgent);
         var mac = ios || /Mac/.test(platform);
@@ -32554,10 +29345,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return removeChildren(parent).appendChild(e);
         }
         __name(removeChildrenAndAdd, "removeChildrenAndAdd");
-        function elt(tag, content, className, style) {
+        function elt(tag, content, className2, style) {
           var e = document.createElement(tag);
-          if (className) {
-            e.className = className;
+          if (className2) {
+            e.className = className2;
           }
           if (style) {
             e.style.cssText = style;
@@ -32572,8 +29363,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return e;
         }
         __name(elt, "elt");
-        function eltP(tag, content, className, style) {
-          var e = elt(tag, content, className, style);
+        function eltP(tag, content, className2, style) {
+          var e = elt(tag, content, className2, style);
           e.setAttribute("role", "presentation");
           return e;
         }
@@ -32702,10 +29493,26 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         __name(countColumn, "countColumn");
         var Delayed = /* @__PURE__ */ __name(function() {
           this.id = null;
+          this.f = null;
+          this.time = 0;
+          this.handler = bind(this.onTimeout, this);
         }, "Delayed");
+        Delayed.prototype.onTimeout = function(self2) {
+          self2.id = 0;
+          if (self2.time <= +new Date()) {
+            self2.f();
+          } else {
+            setTimeout(self2.handler, self2.time - +new Date());
+          }
+        };
         Delayed.prototype.set = function(ms, f) {
-          clearTimeout(this.id);
-          this.id = setTimeout(f, ms);
+          this.f = f;
+          var time = +new Date() + ms;
+          if (!this.id || time < this.time) {
+            clearTimeout(this.id);
+            this.id = setTimeout(this.handler, ms);
+            this.time = time;
+          }
         };
         function indexOf(array, elt2) {
           for (var i2 = 0; i2 < array.length; ++i2) {
@@ -32716,13 +29523,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return -1;
         }
         __name(indexOf, "indexOf");
-        var scrollerGap = 30;
+        var scrollerGap = 50;
         var Pass = { toString: function() {
           return "CodeMirror.Pass";
         } };
-        var sel_dontScroll = { scroll: false };
-        var sel_mouse = { origin: "*mouse" };
-        var sel_move = { origin: "+move" };
+        var sel_dontScroll = { scroll: false }, sel_mouse = { origin: "*mouse" }, sel_move = { origin: "+move" };
         function findColumn(string, goal, tabSize) {
           for (var pos = 0, col = 0; ; ) {
             var nextTab = string.indexOf("	", pos);
@@ -32841,66 +29646,642 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         }
         __name(findFirst, "findFirst");
-        function Display(place, doc, input) {
-          var d = this;
-          this.input = input;
-          d.scrollbarFiller = elt("div", null, "CodeMirror-scrollbar-filler");
-          d.scrollbarFiller.setAttribute("cm-not-content", "true");
-          d.gutterFiller = elt("div", null, "CodeMirror-gutter-filler");
-          d.gutterFiller.setAttribute("cm-not-content", "true");
-          d.lineDiv = eltP("div", null, "CodeMirror-code");
-          d.selectionDiv = elt("div", null, null, "position: relative; z-index: 1");
-          d.cursorDiv = elt("div", null, "CodeMirror-cursors");
-          d.measure = elt("div", null, "CodeMirror-measure");
-          d.lineMeasure = elt("div", null, "CodeMirror-measure");
-          d.lineSpace = eltP("div", [d.measure, d.lineMeasure, d.selectionDiv, d.cursorDiv, d.lineDiv], null, "position: relative; outline: none");
-          var lines = eltP("div", [d.lineSpace], "CodeMirror-lines");
-          d.mover = elt("div", [lines], null, "position: relative");
-          d.sizer = elt("div", [d.mover], "CodeMirror-sizer");
-          d.sizerWidth = null;
-          d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerGap + "px; width: 1px;");
-          d.gutters = elt("div", null, "CodeMirror-gutters");
-          d.lineGutter = null;
-          d.scroller = elt("div", [d.sizer, d.heightForcer, d.gutters], "CodeMirror-scroll");
-          d.scroller.setAttribute("tabIndex", "-1");
-          d.wrapper = elt("div", [d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
-          if (ie && ie_version < 8) {
-            d.gutters.style.zIndex = -1;
-            d.scroller.style.paddingRight = 0;
+        function iterateBidiSections(order2, from, to, f) {
+          if (!order2) {
+            return f(from, to, "ltr", 0);
           }
-          if (!webkit && !(gecko && mobile)) {
-            d.scroller.draggable = true;
-          }
-          if (place) {
-            if (place.appendChild) {
-              place.appendChild(d.wrapper);
-            } else {
-              place(d.wrapper);
+          var found = false;
+          for (var i2 = 0; i2 < order2.length; ++i2) {
+            var part = order2[i2];
+            if (part.from < to && part.to > from || from == to && part.to == from) {
+              f(Math.max(part.from, from), Math.min(part.to, to), part.level == 1 ? "rtl" : "ltr", i2);
+              found = true;
             }
           }
-          d.viewFrom = d.viewTo = doc.first;
-          d.reportedViewFrom = d.reportedViewTo = doc.first;
-          d.view = [];
-          d.renderedView = null;
-          d.externalMeasured = null;
-          d.viewOffset = 0;
-          d.lastWrapHeight = d.lastWrapWidth = 0;
-          d.updateLineNumbers = null;
-          d.nativeBarWidth = d.barHeight = d.barWidth = 0;
-          d.scrollbarsClipped = false;
-          d.lineNumWidth = d.lineNumInnerWidth = d.lineNumChars = null;
-          d.alignWidgets = false;
-          d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
-          d.maxLine = null;
-          d.maxLineLength = 0;
-          d.maxLineChanged = false;
-          d.wheelDX = d.wheelDY = d.wheelStartX = d.wheelStartY = null;
-          d.shift = false;
-          d.selForContextMenu = null;
-          d.activeTouch = null;
-          input.init(d);
+          if (!found) {
+            f(from, to, "ltr");
+          }
         }
-        __name(Display, "Display");
+        __name(iterateBidiSections, "iterateBidiSections");
+        var bidiOther = null;
+        function getBidiPartAt(order2, ch, sticky) {
+          var found;
+          bidiOther = null;
+          for (var i2 = 0; i2 < order2.length; ++i2) {
+            var cur = order2[i2];
+            if (cur.from < ch && cur.to > ch) {
+              return i2;
+            }
+            if (cur.to == ch) {
+              if (cur.from != cur.to && sticky == "before") {
+                found = i2;
+              } else {
+                bidiOther = i2;
+              }
+            }
+            if (cur.from == ch) {
+              if (cur.from != cur.to && sticky != "before") {
+                found = i2;
+              } else {
+                bidiOther = i2;
+              }
+            }
+          }
+          return found != null ? found : bidiOther;
+        }
+        __name(getBidiPartAt, "getBidiPartAt");
+        var bidiOrdering = function() {
+          var lowTypes = "bbbbbbbbbtstwsbbbbbbbbbbbbbbssstwNN%%%NNNNNN,N,N1111111111NNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNbbbbbbsbbbbbbbbbbbbbbbbbbbbbbbbbb,N%%%%NNNNLNNNNN%%11NLNNN1LNNNNNLLLLLLLLLLLLLLLLLLLLLLLNLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLN";
+          var arabicTypes = "nnnnnnNNr%%r,rNNmmmmmmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmmmnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmnNmmmmmmrrmmNmmmmrr1111111111";
+          function charType(code) {
+            if (code <= 247) {
+              return lowTypes.charAt(code);
+            } else if (1424 <= code && code <= 1524) {
+              return "R";
+            } else if (1536 <= code && code <= 1785) {
+              return arabicTypes.charAt(code - 1536);
+            } else if (1774 <= code && code <= 2220) {
+              return "r";
+            } else if (8192 <= code && code <= 8203) {
+              return "w";
+            } else if (code == 8204) {
+              return "b";
+            } else {
+              return "L";
+            }
+          }
+          __name(charType, "charType");
+          var bidiRE = /[\u0590-\u05f4\u0600-\u06ff\u0700-\u08ac]/;
+          var isNeutral = /[stwN]/, isStrong = /[LRr]/, countsAsLeft = /[Lb1n]/, countsAsNum = /[1n]/;
+          function BidiSpan(level, from, to) {
+            this.level = level;
+            this.from = from;
+            this.to = to;
+          }
+          __name(BidiSpan, "BidiSpan");
+          return function(str, direction) {
+            var outerType = direction == "ltr" ? "L" : "R";
+            if (str.length == 0 || direction == "ltr" && !bidiRE.test(str)) {
+              return false;
+            }
+            var len = str.length, types = [];
+            for (var i2 = 0; i2 < len; ++i2) {
+              types.push(charType(str.charCodeAt(i2)));
+            }
+            for (var i$12 = 0, prev = outerType; i$12 < len; ++i$12) {
+              var type = types[i$12];
+              if (type == "m") {
+                types[i$12] = prev;
+              } else {
+                prev = type;
+              }
+            }
+            for (var i$22 = 0, cur = outerType; i$22 < len; ++i$22) {
+              var type$1 = types[i$22];
+              if (type$1 == "1" && cur == "r") {
+                types[i$22] = "n";
+              } else if (isStrong.test(type$1)) {
+                cur = type$1;
+                if (type$1 == "r") {
+                  types[i$22] = "R";
+                }
+              }
+            }
+            for (var i$3 = 1, prev$1 = types[0]; i$3 < len - 1; ++i$3) {
+              var type$2 = types[i$3];
+              if (type$2 == "+" && prev$1 == "1" && types[i$3 + 1] == "1") {
+                types[i$3] = "1";
+              } else if (type$2 == "," && prev$1 == types[i$3 + 1] && (prev$1 == "1" || prev$1 == "n")) {
+                types[i$3] = prev$1;
+              }
+              prev$1 = type$2;
+            }
+            for (var i$4 = 0; i$4 < len; ++i$4) {
+              var type$3 = types[i$4];
+              if (type$3 == ",") {
+                types[i$4] = "N";
+              } else if (type$3 == "%") {
+                var end3 = void 0;
+                for (end3 = i$4 + 1; end3 < len && types[end3] == "%"; ++end3) {
+                }
+                var replace = i$4 && types[i$4 - 1] == "!" || end3 < len && types[end3] == "1" ? "1" : "N";
+                for (var j = i$4; j < end3; ++j) {
+                  types[j] = replace;
+                }
+                i$4 = end3 - 1;
+              }
+            }
+            for (var i$5 = 0, cur$1 = outerType; i$5 < len; ++i$5) {
+              var type$4 = types[i$5];
+              if (cur$1 == "L" && type$4 == "1") {
+                types[i$5] = "L";
+              } else if (isStrong.test(type$4)) {
+                cur$1 = type$4;
+              }
+            }
+            for (var i$6 = 0; i$6 < len; ++i$6) {
+              if (isNeutral.test(types[i$6])) {
+                var end$1 = void 0;
+                for (end$1 = i$6 + 1; end$1 < len && isNeutral.test(types[end$1]); ++end$1) {
+                }
+                var before = (i$6 ? types[i$6 - 1] : outerType) == "L";
+                var after = (end$1 < len ? types[end$1] : outerType) == "L";
+                var replace$1 = before == after ? before ? "L" : "R" : outerType;
+                for (var j$1 = i$6; j$1 < end$1; ++j$1) {
+                  types[j$1] = replace$1;
+                }
+                i$6 = end$1 - 1;
+              }
+            }
+            var order2 = [], m;
+            for (var i$7 = 0; i$7 < len; ) {
+              if (countsAsLeft.test(types[i$7])) {
+                var start2 = i$7;
+                for (++i$7; i$7 < len && countsAsLeft.test(types[i$7]); ++i$7) {
+                }
+                order2.push(new BidiSpan(0, start2, i$7));
+              } else {
+                var pos = i$7, at = order2.length, isRTL = direction == "rtl" ? 1 : 0;
+                for (++i$7; i$7 < len && types[i$7] != "L"; ++i$7) {
+                }
+                for (var j$2 = pos; j$2 < i$7; ) {
+                  if (countsAsNum.test(types[j$2])) {
+                    if (pos < j$2) {
+                      order2.splice(at, 0, new BidiSpan(1, pos, j$2));
+                      at += isRTL;
+                    }
+                    var nstart = j$2;
+                    for (++j$2; j$2 < i$7 && countsAsNum.test(types[j$2]); ++j$2) {
+                    }
+                    order2.splice(at, 0, new BidiSpan(2, nstart, j$2));
+                    at += isRTL;
+                    pos = j$2;
+                  } else {
+                    ++j$2;
+                  }
+                }
+                if (pos < i$7) {
+                  order2.splice(at, 0, new BidiSpan(1, pos, i$7));
+                }
+              }
+            }
+            if (direction == "ltr") {
+              if (order2[0].level == 1 && (m = str.match(/^\s+/))) {
+                order2[0].from = m[0].length;
+                order2.unshift(new BidiSpan(0, 0, m[0].length));
+              }
+              if (lst(order2).level == 1 && (m = str.match(/\s+$/))) {
+                lst(order2).to -= m[0].length;
+                order2.push(new BidiSpan(0, len - m[0].length, len));
+              }
+            }
+            return direction == "rtl" ? order2.reverse() : order2;
+          };
+        }();
+        function getOrder(line, direction) {
+          var order2 = line.order;
+          if (order2 == null) {
+            order2 = line.order = bidiOrdering(line.text, direction);
+          }
+          return order2;
+        }
+        __name(getOrder, "getOrder");
+        var noHandlers = [];
+        var on = /* @__PURE__ */ __name(function(emitter, type, f) {
+          if (emitter.addEventListener) {
+            emitter.addEventListener(type, f, false);
+          } else if (emitter.attachEvent) {
+            emitter.attachEvent("on" + type, f);
+          } else {
+            var map2 = emitter._handlers || (emitter._handlers = {});
+            map2[type] = (map2[type] || noHandlers).concat(f);
+          }
+        }, "on");
+        function getHandlers(emitter, type) {
+          return emitter._handlers && emitter._handlers[type] || noHandlers;
+        }
+        __name(getHandlers, "getHandlers");
+        function off(emitter, type, f) {
+          if (emitter.removeEventListener) {
+            emitter.removeEventListener(type, f, false);
+          } else if (emitter.detachEvent) {
+            emitter.detachEvent("on" + type, f);
+          } else {
+            var map2 = emitter._handlers, arr = map2 && map2[type];
+            if (arr) {
+              var index = indexOf(arr, f);
+              if (index > -1) {
+                map2[type] = arr.slice(0, index).concat(arr.slice(index + 1));
+              }
+            }
+          }
+        }
+        __name(off, "off");
+        function signal(emitter, type) {
+          var handlers = getHandlers(emitter, type);
+          if (!handlers.length) {
+            return;
+          }
+          var args = Array.prototype.slice.call(arguments, 2);
+          for (var i2 = 0; i2 < handlers.length; ++i2) {
+            handlers[i2].apply(null, args);
+          }
+        }
+        __name(signal, "signal");
+        function signalDOMEvent(cm, e, override) {
+          if (typeof e == "string") {
+            e = { type: e, preventDefault: function() {
+              this.defaultPrevented = true;
+            } };
+          }
+          signal(cm, override || e.type, cm, e);
+          return e_defaultPrevented(e) || e.codemirrorIgnore;
+        }
+        __name(signalDOMEvent, "signalDOMEvent");
+        function signalCursorActivity(cm) {
+          var arr = cm._handlers && cm._handlers.cursorActivity;
+          if (!arr) {
+            return;
+          }
+          var set = cm.curOp.cursorActivityHandlers || (cm.curOp.cursorActivityHandlers = []);
+          for (var i2 = 0; i2 < arr.length; ++i2) {
+            if (indexOf(set, arr[i2]) == -1) {
+              set.push(arr[i2]);
+            }
+          }
+        }
+        __name(signalCursorActivity, "signalCursorActivity");
+        function hasHandler(emitter, type) {
+          return getHandlers(emitter, type).length > 0;
+        }
+        __name(hasHandler, "hasHandler");
+        function eventMixin(ctor) {
+          ctor.prototype.on = function(type, f) {
+            on(this, type, f);
+          };
+          ctor.prototype.off = function(type, f) {
+            off(this, type, f);
+          };
+        }
+        __name(eventMixin, "eventMixin");
+        function e_preventDefault(e) {
+          if (e.preventDefault) {
+            e.preventDefault();
+          } else {
+            e.returnValue = false;
+          }
+        }
+        __name(e_preventDefault, "e_preventDefault");
+        function e_stopPropagation(e) {
+          if (e.stopPropagation) {
+            e.stopPropagation();
+          } else {
+            e.cancelBubble = true;
+          }
+        }
+        __name(e_stopPropagation, "e_stopPropagation");
+        function e_defaultPrevented(e) {
+          return e.defaultPrevented != null ? e.defaultPrevented : e.returnValue == false;
+        }
+        __name(e_defaultPrevented, "e_defaultPrevented");
+        function e_stop(e) {
+          e_preventDefault(e);
+          e_stopPropagation(e);
+        }
+        __name(e_stop, "e_stop");
+        function e_target(e) {
+          return e.target || e.srcElement;
+        }
+        __name(e_target, "e_target");
+        function e_button(e) {
+          var b = e.which;
+          if (b == null) {
+            if (e.button & 1) {
+              b = 1;
+            } else if (e.button & 2) {
+              b = 3;
+            } else if (e.button & 4) {
+              b = 2;
+            }
+          }
+          if (mac && e.ctrlKey && b == 1) {
+            b = 3;
+          }
+          return b;
+        }
+        __name(e_button, "e_button");
+        var dragAndDrop = function() {
+          if (ie && ie_version < 9) {
+            return false;
+          }
+          var div = elt("div");
+          return "draggable" in div || "dragDrop" in div;
+        }();
+        var zwspSupported;
+        function zeroWidthElement(measure) {
+          if (zwspSupported == null) {
+            var test = elt("span", "\u200B");
+            removeChildrenAndAdd(measure, elt("span", [test, document.createTextNode("x")]));
+            if (measure.firstChild.offsetHeight != 0) {
+              zwspSupported = test.offsetWidth <= 1 && test.offsetHeight > 2 && !(ie && ie_version < 8);
+            }
+          }
+          var node = zwspSupported ? elt("span", "\u200B") : elt("span", "\xA0", null, "display: inline-block; width: 1px; margin-right: -1px");
+          node.setAttribute("cm-text", "");
+          return node;
+        }
+        __name(zeroWidthElement, "zeroWidthElement");
+        var badBidiRects;
+        function hasBadBidiRects(measure) {
+          if (badBidiRects != null) {
+            return badBidiRects;
+          }
+          var txt = removeChildrenAndAdd(measure, document.createTextNode("A\u062EA"));
+          var r0 = range(txt, 0, 1).getBoundingClientRect();
+          var r1 = range(txt, 1, 2).getBoundingClientRect();
+          removeChildren(measure);
+          if (!r0 || r0.left == r0.right) {
+            return false;
+          }
+          return badBidiRects = r1.right - r0.right < 3;
+        }
+        __name(hasBadBidiRects, "hasBadBidiRects");
+        var splitLinesAuto = "\n\nb".split(/\n/).length != 3 ? function(string) {
+          var pos = 0, result = [], l = string.length;
+          while (pos <= l) {
+            var nl = string.indexOf("\n", pos);
+            if (nl == -1) {
+              nl = string.length;
+            }
+            var line = string.slice(pos, string.charAt(nl - 1) == "\r" ? nl - 1 : nl);
+            var rt = line.indexOf("\r");
+            if (rt != -1) {
+              result.push(line.slice(0, rt));
+              pos += rt + 1;
+            } else {
+              result.push(line);
+              pos = nl + 1;
+            }
+          }
+          return result;
+        } : function(string) {
+          return string.split(/\r\n?|\n/);
+        };
+        var hasSelection = window.getSelection ? function(te) {
+          try {
+            return te.selectionStart != te.selectionEnd;
+          } catch (e) {
+            return false;
+          }
+        } : function(te) {
+          var range2;
+          try {
+            range2 = te.ownerDocument.selection.createRange();
+          } catch (e) {
+          }
+          if (!range2 || range2.parentElement() != te) {
+            return false;
+          }
+          return range2.compareEndPoints("StartToEnd", range2) != 0;
+        };
+        var hasCopyEvent = function() {
+          var e = elt("div");
+          if ("oncopy" in e) {
+            return true;
+          }
+          e.setAttribute("oncopy", "return;");
+          return typeof e.oncopy == "function";
+        }();
+        var badZoomedRects = null;
+        function hasBadZoomedRects(measure) {
+          if (badZoomedRects != null) {
+            return badZoomedRects;
+          }
+          var node = removeChildrenAndAdd(measure, elt("span", "x"));
+          var normal = node.getBoundingClientRect();
+          var fromRange = range(node, 0, 1).getBoundingClientRect();
+          return badZoomedRects = Math.abs(normal.left - fromRange.left) > 1;
+        }
+        __name(hasBadZoomedRects, "hasBadZoomedRects");
+        var modes = {}, mimeModes = {};
+        function defineMode(name, mode) {
+          if (arguments.length > 2) {
+            mode.dependencies = Array.prototype.slice.call(arguments, 2);
+          }
+          modes[name] = mode;
+        }
+        __name(defineMode, "defineMode");
+        function defineMIME(mime, spec) {
+          mimeModes[mime] = spec;
+        }
+        __name(defineMIME, "defineMIME");
+        function resolveMode(spec) {
+          if (typeof spec == "string" && mimeModes.hasOwnProperty(spec)) {
+            spec = mimeModes[spec];
+          } else if (spec && typeof spec.name == "string" && mimeModes.hasOwnProperty(spec.name)) {
+            var found = mimeModes[spec.name];
+            if (typeof found == "string") {
+              found = { name: found };
+            }
+            spec = createObj(found, spec);
+            spec.name = found.name;
+          } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+xml$/.test(spec)) {
+            return resolveMode("application/xml");
+          } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+json$/.test(spec)) {
+            return resolveMode("application/json");
+          }
+          if (typeof spec == "string") {
+            return { name: spec };
+          } else {
+            return spec || { name: "null" };
+          }
+        }
+        __name(resolveMode, "resolveMode");
+        function getMode(options, spec) {
+          spec = resolveMode(spec);
+          var mfactory = modes[spec.name];
+          if (!mfactory) {
+            return getMode(options, "text/plain");
+          }
+          var modeObj = mfactory(options, spec);
+          if (modeExtensions.hasOwnProperty(spec.name)) {
+            var exts = modeExtensions[spec.name];
+            for (var prop2 in exts) {
+              if (!exts.hasOwnProperty(prop2)) {
+                continue;
+              }
+              if (modeObj.hasOwnProperty(prop2)) {
+                modeObj["_" + prop2] = modeObj[prop2];
+              }
+              modeObj[prop2] = exts[prop2];
+            }
+          }
+          modeObj.name = spec.name;
+          if (spec.helperType) {
+            modeObj.helperType = spec.helperType;
+          }
+          if (spec.modeProps) {
+            for (var prop$1 in spec.modeProps) {
+              modeObj[prop$1] = spec.modeProps[prop$1];
+            }
+          }
+          return modeObj;
+        }
+        __name(getMode, "getMode");
+        var modeExtensions = {};
+        function extendMode(mode, properties) {
+          var exts = modeExtensions.hasOwnProperty(mode) ? modeExtensions[mode] : modeExtensions[mode] = {};
+          copyObj(properties, exts);
+        }
+        __name(extendMode, "extendMode");
+        function copyState(mode, state) {
+          if (state === true) {
+            return state;
+          }
+          if (mode.copyState) {
+            return mode.copyState(state);
+          }
+          var nstate = {};
+          for (var n in state) {
+            var val = state[n];
+            if (val instanceof Array) {
+              val = val.concat([]);
+            }
+            nstate[n] = val;
+          }
+          return nstate;
+        }
+        __name(copyState, "copyState");
+        function innerMode(mode, state) {
+          var info;
+          while (mode.innerMode) {
+            info = mode.innerMode(state);
+            if (!info || info.mode == mode) {
+              break;
+            }
+            state = info.state;
+            mode = info.mode;
+          }
+          return info || { mode, state };
+        }
+        __name(innerMode, "innerMode");
+        function startState(mode, a1, a2) {
+          return mode.startState ? mode.startState(a1, a2) : true;
+        }
+        __name(startState, "startState");
+        var StringStream = /* @__PURE__ */ __name(function(string, tabSize, lineOracle) {
+          this.pos = this.start = 0;
+          this.string = string;
+          this.tabSize = tabSize || 8;
+          this.lastColumnPos = this.lastColumnValue = 0;
+          this.lineStart = 0;
+          this.lineOracle = lineOracle;
+        }, "StringStream");
+        StringStream.prototype.eol = function() {
+          return this.pos >= this.string.length;
+        };
+        StringStream.prototype.sol = function() {
+          return this.pos == this.lineStart;
+        };
+        StringStream.prototype.peek = function() {
+          return this.string.charAt(this.pos) || void 0;
+        };
+        StringStream.prototype.next = function() {
+          if (this.pos < this.string.length) {
+            return this.string.charAt(this.pos++);
+          }
+        };
+        StringStream.prototype.eat = function(match2) {
+          var ch = this.string.charAt(this.pos);
+          var ok;
+          if (typeof match2 == "string") {
+            ok = ch == match2;
+          } else {
+            ok = ch && (match2.test ? match2.test(ch) : match2(ch));
+          }
+          if (ok) {
+            ++this.pos;
+            return ch;
+          }
+        };
+        StringStream.prototype.eatWhile = function(match2) {
+          var start2 = this.pos;
+          while (this.eat(match2)) {
+          }
+          return this.pos > start2;
+        };
+        StringStream.prototype.eatSpace = function() {
+          var start2 = this.pos;
+          while (/[\s\u00a0]/.test(this.string.charAt(this.pos))) {
+            ++this.pos;
+          }
+          return this.pos > start2;
+        };
+        StringStream.prototype.skipToEnd = function() {
+          this.pos = this.string.length;
+        };
+        StringStream.prototype.skipTo = function(ch) {
+          var found = this.string.indexOf(ch, this.pos);
+          if (found > -1) {
+            this.pos = found;
+            return true;
+          }
+        };
+        StringStream.prototype.backUp = function(n) {
+          this.pos -= n;
+        };
+        StringStream.prototype.column = function() {
+          if (this.lastColumnPos < this.start) {
+            this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
+            this.lastColumnPos = this.start;
+          }
+          return this.lastColumnValue - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
+        };
+        StringStream.prototype.indentation = function() {
+          return countColumn(this.string, null, this.tabSize) - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
+        };
+        StringStream.prototype.match = function(pattern, consume, caseInsensitive) {
+          if (typeof pattern == "string") {
+            var cased = /* @__PURE__ */ __name(function(str) {
+              return caseInsensitive ? str.toLowerCase() : str;
+            }, "cased");
+            var substr = this.string.substr(this.pos, pattern.length);
+            if (cased(substr) == cased(pattern)) {
+              if (consume !== false) {
+                this.pos += pattern.length;
+              }
+              return true;
+            }
+          } else {
+            var match2 = this.string.slice(this.pos).match(pattern);
+            if (match2 && match2.index > 0) {
+              return null;
+            }
+            if (match2 && consume !== false) {
+              this.pos += match2[0].length;
+            }
+            return match2;
+          }
+        };
+        StringStream.prototype.current = function() {
+          return this.string.slice(this.start, this.pos);
+        };
+        StringStream.prototype.hideFirstChars = function(n, inner) {
+          this.lineStart += n;
+          try {
+            return inner();
+          } finally {
+            this.lineStart -= n;
+          }
+        };
+        StringStream.prototype.lookAhead = function(n) {
+          var oracle = this.lineOracle;
+          return oracle && oracle.lookAhead(n);
+        };
+        StringStream.prototype.baseToken = function() {
+          var oracle = this.lineOracle;
+          return oracle && oracle.baseToken(this.pos);
+        };
         function getLine(doc, n) {
           n -= doc.first;
           if (n < 0 || n >= doc.size) {
@@ -33068,8 +30449,303 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return out;
         }
         __name(clipPosArray, "clipPosArray");
-        var sawReadOnlySpans = false;
-        var sawCollapsedSpans = false;
+        var SavedContext = /* @__PURE__ */ __name(function(state, lookAhead) {
+          this.state = state;
+          this.lookAhead = lookAhead;
+        }, "SavedContext");
+        var Context = /* @__PURE__ */ __name(function(doc, state, line, lookAhead) {
+          this.state = state;
+          this.doc = doc;
+          this.line = line;
+          this.maxLookAhead = lookAhead || 0;
+          this.baseTokens = null;
+          this.baseTokenPos = 1;
+        }, "Context");
+        Context.prototype.lookAhead = function(n) {
+          var line = this.doc.getLine(this.line + n);
+          if (line != null && n > this.maxLookAhead) {
+            this.maxLookAhead = n;
+          }
+          return line;
+        };
+        Context.prototype.baseToken = function(n) {
+          if (!this.baseTokens) {
+            return null;
+          }
+          while (this.baseTokens[this.baseTokenPos] <= n) {
+            this.baseTokenPos += 2;
+          }
+          var type = this.baseTokens[this.baseTokenPos + 1];
+          return {
+            type: type && type.replace(/( |^)overlay .*/, ""),
+            size: this.baseTokens[this.baseTokenPos] - n
+          };
+        };
+        Context.prototype.nextLine = function() {
+          this.line++;
+          if (this.maxLookAhead > 0) {
+            this.maxLookAhead--;
+          }
+        };
+        Context.fromSaved = function(doc, saved, line) {
+          if (saved instanceof SavedContext) {
+            return new Context(doc, copyState(doc.mode, saved.state), line, saved.lookAhead);
+          } else {
+            return new Context(doc, copyState(doc.mode, saved), line);
+          }
+        };
+        Context.prototype.save = function(copy) {
+          var state = copy !== false ? copyState(this.doc.mode, this.state) : this.state;
+          return this.maxLookAhead > 0 ? new SavedContext(state, this.maxLookAhead) : state;
+        };
+        function highlightLine(cm, line, context, forceToEnd) {
+          var st = [cm.state.modeGen], lineClasses = {};
+          runMode(cm, line.text, cm.doc.mode, context, function(end3, style) {
+            return st.push(end3, style);
+          }, lineClasses, forceToEnd);
+          var state = context.state;
+          var loop = /* @__PURE__ */ __name(function(o2) {
+            context.baseTokens = st;
+            var overlay = cm.state.overlays[o2], i2 = 1, at = 0;
+            context.state = true;
+            runMode(cm, line.text, overlay.mode, context, function(end3, style) {
+              var start2 = i2;
+              while (at < end3) {
+                var i_end = st[i2];
+                if (i_end > end3) {
+                  st.splice(i2, 1, end3, st[i2 + 1], i_end);
+                }
+                i2 += 2;
+                at = Math.min(end3, i_end);
+              }
+              if (!style) {
+                return;
+              }
+              if (overlay.opaque) {
+                st.splice(start2, i2 - start2, end3, "overlay " + style);
+                i2 = start2 + 2;
+              } else {
+                for (; start2 < i2; start2 += 2) {
+                  var cur = st[start2 + 1];
+                  st[start2 + 1] = (cur ? cur + " " : "") + "overlay " + style;
+                }
+              }
+            }, lineClasses);
+            context.state = state;
+            context.baseTokens = null;
+            context.baseTokenPos = 1;
+          }, "loop");
+          for (var o = 0; o < cm.state.overlays.length; ++o)
+            loop(o);
+          return { styles: st, classes: lineClasses.bgClass || lineClasses.textClass ? lineClasses : null };
+        }
+        __name(highlightLine, "highlightLine");
+        function getLineStyles(cm, line, updateFrontier) {
+          if (!line.styles || line.styles[0] != cm.state.modeGen) {
+            var context = getContextBefore(cm, lineNo(line));
+            var resetState = line.text.length > cm.options.maxHighlightLength && copyState(cm.doc.mode, context.state);
+            var result = highlightLine(cm, line, context);
+            if (resetState) {
+              context.state = resetState;
+            }
+            line.stateAfter = context.save(!resetState);
+            line.styles = result.styles;
+            if (result.classes) {
+              line.styleClasses = result.classes;
+            } else if (line.styleClasses) {
+              line.styleClasses = null;
+            }
+            if (updateFrontier === cm.doc.highlightFrontier) {
+              cm.doc.modeFrontier = Math.max(cm.doc.modeFrontier, ++cm.doc.highlightFrontier);
+            }
+          }
+          return line.styles;
+        }
+        __name(getLineStyles, "getLineStyles");
+        function getContextBefore(cm, n, precise) {
+          var doc = cm.doc, display = cm.display;
+          if (!doc.mode.startState) {
+            return new Context(doc, true, n);
+          }
+          var start2 = findStartLine(cm, n, precise);
+          var saved = start2 > doc.first && getLine(doc, start2 - 1).stateAfter;
+          var context = saved ? Context.fromSaved(doc, saved, start2) : new Context(doc, startState(doc.mode), start2);
+          doc.iter(start2, n, function(line) {
+            processLine(cm, line.text, context);
+            var pos = context.line;
+            line.stateAfter = pos == n - 1 || pos % 5 == 0 || pos >= display.viewFrom && pos < display.viewTo ? context.save() : null;
+            context.nextLine();
+          });
+          if (precise) {
+            doc.modeFrontier = context.line;
+          }
+          return context;
+        }
+        __name(getContextBefore, "getContextBefore");
+        function processLine(cm, text, context, startAt) {
+          var mode = cm.doc.mode;
+          var stream = new StringStream(text, cm.options.tabSize, context);
+          stream.start = stream.pos = startAt || 0;
+          if (text == "") {
+            callBlankLine(mode, context.state);
+          }
+          while (!stream.eol()) {
+            readToken(mode, stream, context.state);
+            stream.start = stream.pos;
+          }
+        }
+        __name(processLine, "processLine");
+        function callBlankLine(mode, state) {
+          if (mode.blankLine) {
+            return mode.blankLine(state);
+          }
+          if (!mode.innerMode) {
+            return;
+          }
+          var inner = innerMode(mode, state);
+          if (inner.mode.blankLine) {
+            return inner.mode.blankLine(inner.state);
+          }
+        }
+        __name(callBlankLine, "callBlankLine");
+        function readToken(mode, stream, state, inner) {
+          for (var i2 = 0; i2 < 10; i2++) {
+            if (inner) {
+              inner[0] = innerMode(mode, state).mode;
+            }
+            var style = mode.token(stream, state);
+            if (stream.pos > stream.start) {
+              return style;
+            }
+          }
+          throw new Error("Mode " + mode.name + " failed to advance stream.");
+        }
+        __name(readToken, "readToken");
+        var Token = /* @__PURE__ */ __name(function(stream, type, state) {
+          this.start = stream.start;
+          this.end = stream.pos;
+          this.string = stream.current();
+          this.type = type || null;
+          this.state = state;
+        }, "Token");
+        function takeToken(cm, pos, precise, asArray) {
+          var doc = cm.doc, mode = doc.mode, style;
+          pos = clipPos(doc, pos);
+          var line = getLine(doc, pos.line), context = getContextBefore(cm, pos.line, precise);
+          var stream = new StringStream(line.text, cm.options.tabSize, context), tokens;
+          if (asArray) {
+            tokens = [];
+          }
+          while ((asArray || stream.pos < pos.ch) && !stream.eol()) {
+            stream.start = stream.pos;
+            style = readToken(mode, stream, context.state);
+            if (asArray) {
+              tokens.push(new Token(stream, style, copyState(doc.mode, context.state)));
+            }
+          }
+          return asArray ? tokens : new Token(stream, style, context.state);
+        }
+        __name(takeToken, "takeToken");
+        function extractLineClasses(type, output) {
+          if (type) {
+            for (; ; ) {
+              var lineClass = type.match(/(?:^|\s+)line-(background-)?(\S+)/);
+              if (!lineClass) {
+                break;
+              }
+              type = type.slice(0, lineClass.index) + type.slice(lineClass.index + lineClass[0].length);
+              var prop2 = lineClass[1] ? "bgClass" : "textClass";
+              if (output[prop2] == null) {
+                output[prop2] = lineClass[2];
+              } else if (!new RegExp("(?:^|\\s)" + lineClass[2] + "(?:$|\\s)").test(output[prop2])) {
+                output[prop2] += " " + lineClass[2];
+              }
+            }
+          }
+          return type;
+        }
+        __name(extractLineClasses, "extractLineClasses");
+        function runMode(cm, text, mode, context, f, lineClasses, forceToEnd) {
+          var flattenSpans = mode.flattenSpans;
+          if (flattenSpans == null) {
+            flattenSpans = cm.options.flattenSpans;
+          }
+          var curStart = 0, curStyle = null;
+          var stream = new StringStream(text, cm.options.tabSize, context), style;
+          var inner = cm.options.addModeClass && [null];
+          if (text == "") {
+            extractLineClasses(callBlankLine(mode, context.state), lineClasses);
+          }
+          while (!stream.eol()) {
+            if (stream.pos > cm.options.maxHighlightLength) {
+              flattenSpans = false;
+              if (forceToEnd) {
+                processLine(cm, text, context, stream.pos);
+              }
+              stream.pos = text.length;
+              style = null;
+            } else {
+              style = extractLineClasses(readToken(mode, stream, context.state, inner), lineClasses);
+            }
+            if (inner) {
+              var mName = inner[0].name;
+              if (mName) {
+                style = "m-" + (style ? mName + " " + style : mName);
+              }
+            }
+            if (!flattenSpans || curStyle != style) {
+              while (curStart < stream.start) {
+                curStart = Math.min(stream.start, curStart + 5e3);
+                f(curStart, curStyle);
+              }
+              curStyle = style;
+            }
+            stream.start = stream.pos;
+          }
+          while (curStart < stream.pos) {
+            var pos = Math.min(stream.pos, curStart + 5e3);
+            f(pos, curStyle);
+            curStart = pos;
+          }
+        }
+        __name(runMode, "runMode");
+        function findStartLine(cm, n, precise) {
+          var minindent, minline, doc = cm.doc;
+          var lim = precise ? -1 : n - (cm.doc.mode.innerMode ? 1e3 : 100);
+          for (var search = n; search > lim; --search) {
+            if (search <= doc.first) {
+              return doc.first;
+            }
+            var line = getLine(doc, search - 1), after = line.stateAfter;
+            if (after && (!precise || search + (after instanceof SavedContext ? after.lookAhead : 0) <= doc.modeFrontier)) {
+              return search;
+            }
+            var indented = countColumn(line.text, null, cm.options.tabSize);
+            if (minline == null || minindent > indented) {
+              minline = search - 1;
+              minindent = indented;
+            }
+          }
+          return minline;
+        }
+        __name(findStartLine, "findStartLine");
+        function retreatFrontier(doc, n) {
+          doc.modeFrontier = Math.min(doc.modeFrontier, n);
+          if (doc.highlightFrontier < n - 10) {
+            return;
+          }
+          var start2 = doc.first;
+          for (var line = n - 1; line > start2; line--) {
+            var saved = getLine(doc, line).stateAfter;
+            if (saved && (!(saved instanceof SavedContext) || line + saved.lookAhead < n)) {
+              start2 = line + 1;
+              break;
+            }
+          }
+          doc.highlightFrontier = Math.min(doc.highlightFrontier, start2);
+        }
+        __name(retreatFrontier, "retreatFrontier");
+        var sawReadOnlySpans = false, sawCollapsedSpans = false;
         function seeReadOnlySpans() {
           sawReadOnlySpans = true;
         }
@@ -33105,8 +30781,16 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return r;
         }
         __name(removeMarkedSpan, "removeMarkedSpan");
-        function addMarkedSpan(line, span) {
-          line.markedSpans = line.markedSpans ? line.markedSpans.concat([span]) : [span];
+        function addMarkedSpan(line, span, op) {
+          var inThisOp = op && window.WeakSet && (op.markedSpans || (op.markedSpans = new WeakSet()));
+          if (inThisOp && inThisOp.has(line.markedSpans)) {
+            line.markedSpans.push(span);
+          } else {
+            line.markedSpans = line.markedSpans ? line.markedSpans.concat([span]) : [span];
+            if (inThisOp) {
+              inThisOp.add(line.markedSpans);
+            }
+          }
           span.marker.attachLine(line);
         }
         __name(addMarkedSpan, "addMarkedSpan");
@@ -33329,8 +31013,21 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return collapsedSpanAtSide(line, false);
         }
         __name(collapsedSpanAtEnd, "collapsedSpanAtEnd");
-        function conflictingCollapsedRange(doc, lineNo$$1, from, to, marker) {
-          var line = getLine(doc, lineNo$$1);
+        function collapsedSpanAround(line, ch) {
+          var sps = sawCollapsedSpans && line.markedSpans, found;
+          if (sps) {
+            for (var i2 = 0; i2 < sps.length; ++i2) {
+              var sp = sps[i2];
+              if (sp.marker.collapsed && (sp.from == null || sp.from < ch) && (sp.to == null || sp.to > ch) && (!found || compareCollapsedMarkers(found, sp.marker) < 0)) {
+                found = sp.marker;
+              }
+            }
+          }
+          return found;
+        }
+        __name(collapsedSpanAround, "collapsedSpanAround");
+        function conflictingCollapsedRange(doc, lineNo2, from, to, marker) {
+          var line = getLine(doc, lineNo2);
           var sps = sawCollapsedSpans && line.markedSpans;
           if (sps) {
             for (var i2 = 0; i2 < sps.length; ++i2) {
@@ -33493,939 +31190,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           });
         }
         __name(findMaxLine, "findMaxLine");
-        function iterateBidiSections(order2, from, to, f) {
-          if (!order2) {
-            return f(from, to, "ltr", 0);
-          }
-          var found = false;
-          for (var i2 = 0; i2 < order2.length; ++i2) {
-            var part = order2[i2];
-            if (part.from < to && part.to > from || from == to && part.to == from) {
-              f(Math.max(part.from, from), Math.min(part.to, to), part.level == 1 ? "rtl" : "ltr", i2);
-              found = true;
-            }
-          }
-          if (!found) {
-            f(from, to, "ltr");
-          }
-        }
-        __name(iterateBidiSections, "iterateBidiSections");
-        var bidiOther = null;
-        function getBidiPartAt(order2, ch, sticky) {
-          var found;
-          bidiOther = null;
-          for (var i2 = 0; i2 < order2.length; ++i2) {
-            var cur = order2[i2];
-            if (cur.from < ch && cur.to > ch) {
-              return i2;
-            }
-            if (cur.to == ch) {
-              if (cur.from != cur.to && sticky == "before") {
-                found = i2;
-              } else {
-                bidiOther = i2;
-              }
-            }
-            if (cur.from == ch) {
-              if (cur.from != cur.to && sticky != "before") {
-                found = i2;
-              } else {
-                bidiOther = i2;
-              }
-            }
-          }
-          return found != null ? found : bidiOther;
-        }
-        __name(getBidiPartAt, "getBidiPartAt");
-        var bidiOrdering = function() {
-          var lowTypes = "bbbbbbbbbtstwsbbbbbbbbbbbbbbssstwNN%%%NNNNNN,N,N1111111111NNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNbbbbbbsbbbbbbbbbbbbbbbbbbbbbbbbbb,N%%%%NNNNLNNNNN%%11NLNNN1LNNNNNLLLLLLLLLLLLLLLLLLLLLLLNLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLN";
-          var arabicTypes = "nnnnnnNNr%%r,rNNmmmmmmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmmmnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmnNmmmmmmrrmmNmmmmrr1111111111";
-          function charType(code) {
-            if (code <= 247) {
-              return lowTypes.charAt(code);
-            } else if (1424 <= code && code <= 1524) {
-              return "R";
-            } else if (1536 <= code && code <= 1785) {
-              return arabicTypes.charAt(code - 1536);
-            } else if (1774 <= code && code <= 2220) {
-              return "r";
-            } else if (8192 <= code && code <= 8203) {
-              return "w";
-            } else if (code == 8204) {
-              return "b";
-            } else {
-              return "L";
-            }
-          }
-          __name(charType, "charType");
-          var bidiRE = /[\u0590-\u05f4\u0600-\u06ff\u0700-\u08ac]/;
-          var isNeutral = /[stwN]/, isStrong = /[LRr]/, countsAsLeft = /[Lb1n]/, countsAsNum = /[1n]/;
-          function BidiSpan(level, from, to) {
-            this.level = level;
-            this.from = from;
-            this.to = to;
-          }
-          __name(BidiSpan, "BidiSpan");
-          return function(str, direction) {
-            var outerType = direction == "ltr" ? "L" : "R";
-            if (str.length == 0 || direction == "ltr" && !bidiRE.test(str)) {
-              return false;
-            }
-            var len = str.length, types = [];
-            for (var i2 = 0; i2 < len; ++i2) {
-              types.push(charType(str.charCodeAt(i2)));
-            }
-            for (var i$12 = 0, prev = outerType; i$12 < len; ++i$12) {
-              var type = types[i$12];
-              if (type == "m") {
-                types[i$12] = prev;
-              } else {
-                prev = type;
-              }
-            }
-            for (var i$22 = 0, cur = outerType; i$22 < len; ++i$22) {
-              var type$1 = types[i$22];
-              if (type$1 == "1" && cur == "r") {
-                types[i$22] = "n";
-              } else if (isStrong.test(type$1)) {
-                cur = type$1;
-                if (type$1 == "r") {
-                  types[i$22] = "R";
-                }
-              }
-            }
-            for (var i$3 = 1, prev$1 = types[0]; i$3 < len - 1; ++i$3) {
-              var type$2 = types[i$3];
-              if (type$2 == "+" && prev$1 == "1" && types[i$3 + 1] == "1") {
-                types[i$3] = "1";
-              } else if (type$2 == "," && prev$1 == types[i$3 + 1] && (prev$1 == "1" || prev$1 == "n")) {
-                types[i$3] = prev$1;
-              }
-              prev$1 = type$2;
-            }
-            for (var i$4 = 0; i$4 < len; ++i$4) {
-              var type$3 = types[i$4];
-              if (type$3 == ",") {
-                types[i$4] = "N";
-              } else if (type$3 == "%") {
-                var end3 = void 0;
-                for (end3 = i$4 + 1; end3 < len && types[end3] == "%"; ++end3) {
-                }
-                var replace = i$4 && types[i$4 - 1] == "!" || end3 < len && types[end3] == "1" ? "1" : "N";
-                for (var j = i$4; j < end3; ++j) {
-                  types[j] = replace;
-                }
-                i$4 = end3 - 1;
-              }
-            }
-            for (var i$5 = 0, cur$1 = outerType; i$5 < len; ++i$5) {
-              var type$4 = types[i$5];
-              if (cur$1 == "L" && type$4 == "1") {
-                types[i$5] = "L";
-              } else if (isStrong.test(type$4)) {
-                cur$1 = type$4;
-              }
-            }
-            for (var i$6 = 0; i$6 < len; ++i$6) {
-              if (isNeutral.test(types[i$6])) {
-                var end$1 = void 0;
-                for (end$1 = i$6 + 1; end$1 < len && isNeutral.test(types[end$1]); ++end$1) {
-                }
-                var before = (i$6 ? types[i$6 - 1] : outerType) == "L";
-                var after = (end$1 < len ? types[end$1] : outerType) == "L";
-                var replace$1 = before == after ? before ? "L" : "R" : outerType;
-                for (var j$1 = i$6; j$1 < end$1; ++j$1) {
-                  types[j$1] = replace$1;
-                }
-                i$6 = end$1 - 1;
-              }
-            }
-            var order2 = [], m;
-            for (var i$7 = 0; i$7 < len; ) {
-              if (countsAsLeft.test(types[i$7])) {
-                var start2 = i$7;
-                for (++i$7; i$7 < len && countsAsLeft.test(types[i$7]); ++i$7) {
-                }
-                order2.push(new BidiSpan(0, start2, i$7));
-              } else {
-                var pos = i$7, at = order2.length;
-                for (++i$7; i$7 < len && types[i$7] != "L"; ++i$7) {
-                }
-                for (var j$2 = pos; j$2 < i$7; ) {
-                  if (countsAsNum.test(types[j$2])) {
-                    if (pos < j$2) {
-                      order2.splice(at, 0, new BidiSpan(1, pos, j$2));
-                    }
-                    var nstart = j$2;
-                    for (++j$2; j$2 < i$7 && countsAsNum.test(types[j$2]); ++j$2) {
-                    }
-                    order2.splice(at, 0, new BidiSpan(2, nstart, j$2));
-                    pos = j$2;
-                  } else {
-                    ++j$2;
-                  }
-                }
-                if (pos < i$7) {
-                  order2.splice(at, 0, new BidiSpan(1, pos, i$7));
-                }
-              }
-            }
-            if (direction == "ltr") {
-              if (order2[0].level == 1 && (m = str.match(/^\s+/))) {
-                order2[0].from = m[0].length;
-                order2.unshift(new BidiSpan(0, 0, m[0].length));
-              }
-              if (lst(order2).level == 1 && (m = str.match(/\s+$/))) {
-                lst(order2).to -= m[0].length;
-                order2.push(new BidiSpan(0, len - m[0].length, len));
-              }
-            }
-            return direction == "rtl" ? order2.reverse() : order2;
-          };
-        }();
-        function getOrder(line, direction) {
-          var order2 = line.order;
-          if (order2 == null) {
-            order2 = line.order = bidiOrdering(line.text, direction);
-          }
-          return order2;
-        }
-        __name(getOrder, "getOrder");
-        var noHandlers = [];
-        var on = /* @__PURE__ */ __name(function(emitter, type, f) {
-          if (emitter.addEventListener) {
-            emitter.addEventListener(type, f, false);
-          } else if (emitter.attachEvent) {
-            emitter.attachEvent("on" + type, f);
-          } else {
-            var map$$1 = emitter._handlers || (emitter._handlers = {});
-            map$$1[type] = (map$$1[type] || noHandlers).concat(f);
-          }
-        }, "on");
-        function getHandlers(emitter, type) {
-          return emitter._handlers && emitter._handlers[type] || noHandlers;
-        }
-        __name(getHandlers, "getHandlers");
-        function off(emitter, type, f) {
-          if (emitter.removeEventListener) {
-            emitter.removeEventListener(type, f, false);
-          } else if (emitter.detachEvent) {
-            emitter.detachEvent("on" + type, f);
-          } else {
-            var map$$1 = emitter._handlers, arr = map$$1 && map$$1[type];
-            if (arr) {
-              var index = indexOf(arr, f);
-              if (index > -1) {
-                map$$1[type] = arr.slice(0, index).concat(arr.slice(index + 1));
-              }
-            }
-          }
-        }
-        __name(off, "off");
-        function signal(emitter, type) {
-          var handlers = getHandlers(emitter, type);
-          if (!handlers.length) {
-            return;
-          }
-          var args = Array.prototype.slice.call(arguments, 2);
-          for (var i2 = 0; i2 < handlers.length; ++i2) {
-            handlers[i2].apply(null, args);
-          }
-        }
-        __name(signal, "signal");
-        function signalDOMEvent(cm, e, override) {
-          if (typeof e == "string") {
-            e = { type: e, preventDefault: function() {
-              this.defaultPrevented = true;
-            } };
-          }
-          signal(cm, override || e.type, cm, e);
-          return e_defaultPrevented(e) || e.codemirrorIgnore;
-        }
-        __name(signalDOMEvent, "signalDOMEvent");
-        function signalCursorActivity(cm) {
-          var arr = cm._handlers && cm._handlers.cursorActivity;
-          if (!arr) {
-            return;
-          }
-          var set = cm.curOp.cursorActivityHandlers || (cm.curOp.cursorActivityHandlers = []);
-          for (var i2 = 0; i2 < arr.length; ++i2) {
-            if (indexOf(set, arr[i2]) == -1) {
-              set.push(arr[i2]);
-            }
-          }
-        }
-        __name(signalCursorActivity, "signalCursorActivity");
-        function hasHandler(emitter, type) {
-          return getHandlers(emitter, type).length > 0;
-        }
-        __name(hasHandler, "hasHandler");
-        function eventMixin(ctor) {
-          ctor.prototype.on = function(type, f) {
-            on(this, type, f);
-          };
-          ctor.prototype.off = function(type, f) {
-            off(this, type, f);
-          };
-        }
-        __name(eventMixin, "eventMixin");
-        function e_preventDefault(e) {
-          if (e.preventDefault) {
-            e.preventDefault();
-          } else {
-            e.returnValue = false;
-          }
-        }
-        __name(e_preventDefault, "e_preventDefault");
-        function e_stopPropagation(e) {
-          if (e.stopPropagation) {
-            e.stopPropagation();
-          } else {
-            e.cancelBubble = true;
-          }
-        }
-        __name(e_stopPropagation, "e_stopPropagation");
-        function e_defaultPrevented(e) {
-          return e.defaultPrevented != null ? e.defaultPrevented : e.returnValue == false;
-        }
-        __name(e_defaultPrevented, "e_defaultPrevented");
-        function e_stop(e) {
-          e_preventDefault(e);
-          e_stopPropagation(e);
-        }
-        __name(e_stop, "e_stop");
-        function e_target(e) {
-          return e.target || e.srcElement;
-        }
-        __name(e_target, "e_target");
-        function e_button(e) {
-          var b = e.which;
-          if (b == null) {
-            if (e.button & 1) {
-              b = 1;
-            } else if (e.button & 2) {
-              b = 3;
-            } else if (e.button & 4) {
-              b = 2;
-            }
-          }
-          if (mac && e.ctrlKey && b == 1) {
-            b = 3;
-          }
-          return b;
-        }
-        __name(e_button, "e_button");
-        var dragAndDrop = function() {
-          if (ie && ie_version < 9) {
-            return false;
-          }
-          var div = elt("div");
-          return "draggable" in div || "dragDrop" in div;
-        }();
-        var zwspSupported;
-        function zeroWidthElement(measure) {
-          if (zwspSupported == null) {
-            var test = elt("span", "\u200B");
-            removeChildrenAndAdd(measure, elt("span", [test, document.createTextNode("x")]));
-            if (measure.firstChild.offsetHeight != 0) {
-              zwspSupported = test.offsetWidth <= 1 && test.offsetHeight > 2 && !(ie && ie_version < 8);
-            }
-          }
-          var node = zwspSupported ? elt("span", "\u200B") : elt("span", "\xA0", null, "display: inline-block; width: 1px; margin-right: -1px");
-          node.setAttribute("cm-text", "");
-          return node;
-        }
-        __name(zeroWidthElement, "zeroWidthElement");
-        var badBidiRects;
-        function hasBadBidiRects(measure) {
-          if (badBidiRects != null) {
-            return badBidiRects;
-          }
-          var txt = removeChildrenAndAdd(measure, document.createTextNode("A\u062EA"));
-          var r0 = range(txt, 0, 1).getBoundingClientRect();
-          var r1 = range(txt, 1, 2).getBoundingClientRect();
-          removeChildren(measure);
-          if (!r0 || r0.left == r0.right) {
-            return false;
-          }
-          return badBidiRects = r1.right - r0.right < 3;
-        }
-        __name(hasBadBidiRects, "hasBadBidiRects");
-        var splitLinesAuto = "\n\nb".split(/\n/).length != 3 ? function(string) {
-          var pos = 0, result = [], l = string.length;
-          while (pos <= l) {
-            var nl = string.indexOf("\n", pos);
-            if (nl == -1) {
-              nl = string.length;
-            }
-            var line = string.slice(pos, string.charAt(nl - 1) == "\r" ? nl - 1 : nl);
-            var rt = line.indexOf("\r");
-            if (rt != -1) {
-              result.push(line.slice(0, rt));
-              pos += rt + 1;
-            } else {
-              result.push(line);
-              pos = nl + 1;
-            }
-          }
-          return result;
-        } : function(string) {
-          return string.split(/\r\n?|\n/);
-        };
-        var hasSelection = window.getSelection ? function(te) {
-          try {
-            return te.selectionStart != te.selectionEnd;
-          } catch (e) {
-            return false;
-          }
-        } : function(te) {
-          var range$$1;
-          try {
-            range$$1 = te.ownerDocument.selection.createRange();
-          } catch (e) {
-          }
-          if (!range$$1 || range$$1.parentElement() != te) {
-            return false;
-          }
-          return range$$1.compareEndPoints("StartToEnd", range$$1) != 0;
-        };
-        var hasCopyEvent = function() {
-          var e = elt("div");
-          if ("oncopy" in e) {
-            return true;
-          }
-          e.setAttribute("oncopy", "return;");
-          return typeof e.oncopy == "function";
-        }();
-        var badZoomedRects = null;
-        function hasBadZoomedRects(measure) {
-          if (badZoomedRects != null) {
-            return badZoomedRects;
-          }
-          var node = removeChildrenAndAdd(measure, elt("span", "x"));
-          var normal = node.getBoundingClientRect();
-          var fromRange = range(node, 0, 1).getBoundingClientRect();
-          return badZoomedRects = Math.abs(normal.left - fromRange.left) > 1;
-        }
-        __name(hasBadZoomedRects, "hasBadZoomedRects");
-        var modes = {};
-        var mimeModes = {};
-        function defineMode(name, mode) {
-          if (arguments.length > 2) {
-            mode.dependencies = Array.prototype.slice.call(arguments, 2);
-          }
-          modes[name] = mode;
-        }
-        __name(defineMode, "defineMode");
-        function defineMIME(mime, spec) {
-          mimeModes[mime] = spec;
-        }
-        __name(defineMIME, "defineMIME");
-        function resolveMode(spec) {
-          if (typeof spec == "string" && mimeModes.hasOwnProperty(spec)) {
-            spec = mimeModes[spec];
-          } else if (spec && typeof spec.name == "string" && mimeModes.hasOwnProperty(spec.name)) {
-            var found = mimeModes[spec.name];
-            if (typeof found == "string") {
-              found = { name: found };
-            }
-            spec = createObj(found, spec);
-            spec.name = found.name;
-          } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+xml$/.test(spec)) {
-            return resolveMode("application/xml");
-          } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+json$/.test(spec)) {
-            return resolveMode("application/json");
-          }
-          if (typeof spec == "string") {
-            return { name: spec };
-          } else {
-            return spec || { name: "null" };
-          }
-        }
-        __name(resolveMode, "resolveMode");
-        function getMode(options, spec) {
-          spec = resolveMode(spec);
-          var mfactory = modes[spec.name];
-          if (!mfactory) {
-            return getMode(options, "text/plain");
-          }
-          var modeObj = mfactory(options, spec);
-          if (modeExtensions.hasOwnProperty(spec.name)) {
-            var exts = modeExtensions[spec.name];
-            for (var prop2 in exts) {
-              if (!exts.hasOwnProperty(prop2)) {
-                continue;
-              }
-              if (modeObj.hasOwnProperty(prop2)) {
-                modeObj["_" + prop2] = modeObj[prop2];
-              }
-              modeObj[prop2] = exts[prop2];
-            }
-          }
-          modeObj.name = spec.name;
-          if (spec.helperType) {
-            modeObj.helperType = spec.helperType;
-          }
-          if (spec.modeProps) {
-            for (var prop$1 in spec.modeProps) {
-              modeObj[prop$1] = spec.modeProps[prop$1];
-            }
-          }
-          return modeObj;
-        }
-        __name(getMode, "getMode");
-        var modeExtensions = {};
-        function extendMode(mode, properties) {
-          var exts = modeExtensions.hasOwnProperty(mode) ? modeExtensions[mode] : modeExtensions[mode] = {};
-          copyObj(properties, exts);
-        }
-        __name(extendMode, "extendMode");
-        function copyState(mode, state) {
-          if (state === true) {
-            return state;
-          }
-          if (mode.copyState) {
-            return mode.copyState(state);
-          }
-          var nstate = {};
-          for (var n in state) {
-            var val = state[n];
-            if (val instanceof Array) {
-              val = val.concat([]);
-            }
-            nstate[n] = val;
-          }
-          return nstate;
-        }
-        __name(copyState, "copyState");
-        function innerMode(mode, state) {
-          var info;
-          while (mode.innerMode) {
-            info = mode.innerMode(state);
-            if (!info || info.mode == mode) {
-              break;
-            }
-            state = info.state;
-            mode = info.mode;
-          }
-          return info || { mode, state };
-        }
-        __name(innerMode, "innerMode");
-        function startState(mode, a1, a2) {
-          return mode.startState ? mode.startState(a1, a2) : true;
-        }
-        __name(startState, "startState");
-        var StringStream = /* @__PURE__ */ __name(function(string, tabSize, lineOracle) {
-          this.pos = this.start = 0;
-          this.string = string;
-          this.tabSize = tabSize || 8;
-          this.lastColumnPos = this.lastColumnValue = 0;
-          this.lineStart = 0;
-          this.lineOracle = lineOracle;
-        }, "StringStream");
-        StringStream.prototype.eol = function() {
-          return this.pos >= this.string.length;
-        };
-        StringStream.prototype.sol = function() {
-          return this.pos == this.lineStart;
-        };
-        StringStream.prototype.peek = function() {
-          return this.string.charAt(this.pos) || void 0;
-        };
-        StringStream.prototype.next = function() {
-          if (this.pos < this.string.length) {
-            return this.string.charAt(this.pos++);
-          }
-        };
-        StringStream.prototype.eat = function(match2) {
-          var ch = this.string.charAt(this.pos);
-          var ok;
-          if (typeof match2 == "string") {
-            ok = ch == match2;
-          } else {
-            ok = ch && (match2.test ? match2.test(ch) : match2(ch));
-          }
-          if (ok) {
-            ++this.pos;
-            return ch;
-          }
-        };
-        StringStream.prototype.eatWhile = function(match2) {
-          var start2 = this.pos;
-          while (this.eat(match2)) {
-          }
-          return this.pos > start2;
-        };
-        StringStream.prototype.eatSpace = function() {
-          var this$1 = this;
-          var start2 = this.pos;
-          while (/[\s\u00a0]/.test(this.string.charAt(this.pos))) {
-            ++this$1.pos;
-          }
-          return this.pos > start2;
-        };
-        StringStream.prototype.skipToEnd = function() {
-          this.pos = this.string.length;
-        };
-        StringStream.prototype.skipTo = function(ch) {
-          var found = this.string.indexOf(ch, this.pos);
-          if (found > -1) {
-            this.pos = found;
-            return true;
-          }
-        };
-        StringStream.prototype.backUp = function(n) {
-          this.pos -= n;
-        };
-        StringStream.prototype.column = function() {
-          if (this.lastColumnPos < this.start) {
-            this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
-            this.lastColumnPos = this.start;
-          }
-          return this.lastColumnValue - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
-        };
-        StringStream.prototype.indentation = function() {
-          return countColumn(this.string, null, this.tabSize) - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
-        };
-        StringStream.prototype.match = function(pattern, consume, caseInsensitive) {
-          if (typeof pattern == "string") {
-            var cased = /* @__PURE__ */ __name(function(str) {
-              return caseInsensitive ? str.toLowerCase() : str;
-            }, "cased");
-            var substr = this.string.substr(this.pos, pattern.length);
-            if (cased(substr) == cased(pattern)) {
-              if (consume !== false) {
-                this.pos += pattern.length;
-              }
-              return true;
-            }
-          } else {
-            var match2 = this.string.slice(this.pos).match(pattern);
-            if (match2 && match2.index > 0) {
-              return null;
-            }
-            if (match2 && consume !== false) {
-              this.pos += match2[0].length;
-            }
-            return match2;
-          }
-        };
-        StringStream.prototype.current = function() {
-          return this.string.slice(this.start, this.pos);
-        };
-        StringStream.prototype.hideFirstChars = function(n, inner) {
-          this.lineStart += n;
-          try {
-            return inner();
-          } finally {
-            this.lineStart -= n;
-          }
-        };
-        StringStream.prototype.lookAhead = function(n) {
-          var oracle = this.lineOracle;
-          return oracle && oracle.lookAhead(n);
-        };
-        StringStream.prototype.baseToken = function() {
-          var oracle = this.lineOracle;
-          return oracle && oracle.baseToken(this.pos);
-        };
-        var SavedContext = /* @__PURE__ */ __name(function(state, lookAhead) {
-          this.state = state;
-          this.lookAhead = lookAhead;
-        }, "SavedContext");
-        var Context = /* @__PURE__ */ __name(function(doc, state, line, lookAhead) {
-          this.state = state;
-          this.doc = doc;
-          this.line = line;
-          this.maxLookAhead = lookAhead || 0;
-          this.baseTokens = null;
-          this.baseTokenPos = 1;
-        }, "Context");
-        Context.prototype.lookAhead = function(n) {
-          var line = this.doc.getLine(this.line + n);
-          if (line != null && n > this.maxLookAhead) {
-            this.maxLookAhead = n;
-          }
-          return line;
-        };
-        Context.prototype.baseToken = function(n) {
-          var this$1 = this;
-          if (!this.baseTokens) {
-            return null;
-          }
-          while (this.baseTokens[this.baseTokenPos] <= n) {
-            this$1.baseTokenPos += 2;
-          }
-          var type = this.baseTokens[this.baseTokenPos + 1];
-          return {
-            type: type && type.replace(/( |^)overlay .*/, ""),
-            size: this.baseTokens[this.baseTokenPos] - n
-          };
-        };
-        Context.prototype.nextLine = function() {
-          this.line++;
-          if (this.maxLookAhead > 0) {
-            this.maxLookAhead--;
-          }
-        };
-        Context.fromSaved = function(doc, saved, line) {
-          if (saved instanceof SavedContext) {
-            return new Context(doc, copyState(doc.mode, saved.state), line, saved.lookAhead);
-          } else {
-            return new Context(doc, copyState(doc.mode, saved), line);
-          }
-        };
-        Context.prototype.save = function(copy) {
-          var state = copy !== false ? copyState(this.doc.mode, this.state) : this.state;
-          return this.maxLookAhead > 0 ? new SavedContext(state, this.maxLookAhead) : state;
-        };
-        function highlightLine(cm, line, context, forceToEnd) {
-          var st = [cm.state.modeGen], lineClasses = {};
-          runMode(cm, line.text, cm.doc.mode, context, function(end3, style) {
-            return st.push(end3, style);
-          }, lineClasses, forceToEnd);
-          var state = context.state;
-          var loop = /* @__PURE__ */ __name(function(o2) {
-            context.baseTokens = st;
-            var overlay = cm.state.overlays[o2], i2 = 1, at = 0;
-            context.state = true;
-            runMode(cm, line.text, overlay.mode, context, function(end3, style) {
-              var start2 = i2;
-              while (at < end3) {
-                var i_end = st[i2];
-                if (i_end > end3) {
-                  st.splice(i2, 1, end3, st[i2 + 1], i_end);
-                }
-                i2 += 2;
-                at = Math.min(end3, i_end);
-              }
-              if (!style) {
-                return;
-              }
-              if (overlay.opaque) {
-                st.splice(start2, i2 - start2, end3, "overlay " + style);
-                i2 = start2 + 2;
-              } else {
-                for (; start2 < i2; start2 += 2) {
-                  var cur = st[start2 + 1];
-                  st[start2 + 1] = (cur ? cur + " " : "") + "overlay " + style;
-                }
-              }
-            }, lineClasses);
-            context.state = state;
-            context.baseTokens = null;
-            context.baseTokenPos = 1;
-          }, "loop");
-          for (var o = 0; o < cm.state.overlays.length; ++o)
-            loop(o);
-          return { styles: st, classes: lineClasses.bgClass || lineClasses.textClass ? lineClasses : null };
-        }
-        __name(highlightLine, "highlightLine");
-        function getLineStyles(cm, line, updateFrontier) {
-          if (!line.styles || line.styles[0] != cm.state.modeGen) {
-            var context = getContextBefore(cm, lineNo(line));
-            var resetState = line.text.length > cm.options.maxHighlightLength && copyState(cm.doc.mode, context.state);
-            var result = highlightLine(cm, line, context);
-            if (resetState) {
-              context.state = resetState;
-            }
-            line.stateAfter = context.save(!resetState);
-            line.styles = result.styles;
-            if (result.classes) {
-              line.styleClasses = result.classes;
-            } else if (line.styleClasses) {
-              line.styleClasses = null;
-            }
-            if (updateFrontier === cm.doc.highlightFrontier) {
-              cm.doc.modeFrontier = Math.max(cm.doc.modeFrontier, ++cm.doc.highlightFrontier);
-            }
-          }
-          return line.styles;
-        }
-        __name(getLineStyles, "getLineStyles");
-        function getContextBefore(cm, n, precise) {
-          var doc = cm.doc, display = cm.display;
-          if (!doc.mode.startState) {
-            return new Context(doc, true, n);
-          }
-          var start2 = findStartLine(cm, n, precise);
-          var saved = start2 > doc.first && getLine(doc, start2 - 1).stateAfter;
-          var context = saved ? Context.fromSaved(doc, saved, start2) : new Context(doc, startState(doc.mode), start2);
-          doc.iter(start2, n, function(line) {
-            processLine(cm, line.text, context);
-            var pos = context.line;
-            line.stateAfter = pos == n - 1 || pos % 5 == 0 || pos >= display.viewFrom && pos < display.viewTo ? context.save() : null;
-            context.nextLine();
-          });
-          if (precise) {
-            doc.modeFrontier = context.line;
-          }
-          return context;
-        }
-        __name(getContextBefore, "getContextBefore");
-        function processLine(cm, text, context, startAt) {
-          var mode = cm.doc.mode;
-          var stream = new StringStream(text, cm.options.tabSize, context);
-          stream.start = stream.pos = startAt || 0;
-          if (text == "") {
-            callBlankLine(mode, context.state);
-          }
-          while (!stream.eol()) {
-            readToken(mode, stream, context.state);
-            stream.start = stream.pos;
-          }
-        }
-        __name(processLine, "processLine");
-        function callBlankLine(mode, state) {
-          if (mode.blankLine) {
-            return mode.blankLine(state);
-          }
-          if (!mode.innerMode) {
-            return;
-          }
-          var inner = innerMode(mode, state);
-          if (inner.mode.blankLine) {
-            return inner.mode.blankLine(inner.state);
-          }
-        }
-        __name(callBlankLine, "callBlankLine");
-        function readToken(mode, stream, state, inner) {
-          for (var i2 = 0; i2 < 10; i2++) {
-            if (inner) {
-              inner[0] = innerMode(mode, state).mode;
-            }
-            var style = mode.token(stream, state);
-            if (stream.pos > stream.start) {
-              return style;
-            }
-          }
-          throw new Error("Mode " + mode.name + " failed to advance stream.");
-        }
-        __name(readToken, "readToken");
-        var Token = /* @__PURE__ */ __name(function(stream, type, state) {
-          this.start = stream.start;
-          this.end = stream.pos;
-          this.string = stream.current();
-          this.type = type || null;
-          this.state = state;
-        }, "Token");
-        function takeToken(cm, pos, precise, asArray) {
-          var doc = cm.doc, mode = doc.mode, style;
-          pos = clipPos(doc, pos);
-          var line = getLine(doc, pos.line), context = getContextBefore(cm, pos.line, precise);
-          var stream = new StringStream(line.text, cm.options.tabSize, context), tokens;
-          if (asArray) {
-            tokens = [];
-          }
-          while ((asArray || stream.pos < pos.ch) && !stream.eol()) {
-            stream.start = stream.pos;
-            style = readToken(mode, stream, context.state);
-            if (asArray) {
-              tokens.push(new Token(stream, style, copyState(doc.mode, context.state)));
-            }
-          }
-          return asArray ? tokens : new Token(stream, style, context.state);
-        }
-        __name(takeToken, "takeToken");
-        function extractLineClasses(type, output) {
-          if (type) {
-            for (; ; ) {
-              var lineClass = type.match(/(?:^|\s+)line-(background-)?(\S+)/);
-              if (!lineClass) {
-                break;
-              }
-              type = type.slice(0, lineClass.index) + type.slice(lineClass.index + lineClass[0].length);
-              var prop2 = lineClass[1] ? "bgClass" : "textClass";
-              if (output[prop2] == null) {
-                output[prop2] = lineClass[2];
-              } else if (!new RegExp("(?:^|s)" + lineClass[2] + "(?:$|s)").test(output[prop2])) {
-                output[prop2] += " " + lineClass[2];
-              }
-            }
-          }
-          return type;
-        }
-        __name(extractLineClasses, "extractLineClasses");
-        function runMode(cm, text, mode, context, f, lineClasses, forceToEnd) {
-          var flattenSpans = mode.flattenSpans;
-          if (flattenSpans == null) {
-            flattenSpans = cm.options.flattenSpans;
-          }
-          var curStart = 0, curStyle = null;
-          var stream = new StringStream(text, cm.options.tabSize, context), style;
-          var inner = cm.options.addModeClass && [null];
-          if (text == "") {
-            extractLineClasses(callBlankLine(mode, context.state), lineClasses);
-          }
-          while (!stream.eol()) {
-            if (stream.pos > cm.options.maxHighlightLength) {
-              flattenSpans = false;
-              if (forceToEnd) {
-                processLine(cm, text, context, stream.pos);
-              }
-              stream.pos = text.length;
-              style = null;
-            } else {
-              style = extractLineClasses(readToken(mode, stream, context.state, inner), lineClasses);
-            }
-            if (inner) {
-              var mName = inner[0].name;
-              if (mName) {
-                style = "m-" + (style ? mName + " " + style : mName);
-              }
-            }
-            if (!flattenSpans || curStyle != style) {
-              while (curStart < stream.start) {
-                curStart = Math.min(stream.start, curStart + 5e3);
-                f(curStart, curStyle);
-              }
-              curStyle = style;
-            }
-            stream.start = stream.pos;
-          }
-          while (curStart < stream.pos) {
-            var pos = Math.min(stream.pos, curStart + 5e3);
-            f(pos, curStyle);
-            curStart = pos;
-          }
-        }
-        __name(runMode, "runMode");
-        function findStartLine(cm, n, precise) {
-          var minindent, minline, doc = cm.doc;
-          var lim = precise ? -1 : n - (cm.doc.mode.innerMode ? 1e3 : 100);
-          for (var search = n; search > lim; --search) {
-            if (search <= doc.first) {
-              return doc.first;
-            }
-            var line = getLine(doc, search - 1), after = line.stateAfter;
-            if (after && (!precise || search + (after instanceof SavedContext ? after.lookAhead : 0) <= doc.modeFrontier)) {
-              return search;
-            }
-            var indented = countColumn(line.text, null, cm.options.tabSize);
-            if (minline == null || minindent > indented) {
-              minline = search - 1;
-              minindent = indented;
-            }
-          }
-          return minline;
-        }
-        __name(findStartLine, "findStartLine");
-        function retreatFrontier(doc, n) {
-          doc.modeFrontier = Math.min(doc.modeFrontier, n);
-          if (doc.highlightFrontier < n - 10) {
-            return;
-          }
-          var start2 = doc.first;
-          for (var line = n - 1; line > start2; line--) {
-            var saved = getLine(doc, line).stateAfter;
-            if (saved && (!(saved instanceof SavedContext) || line + saved.lookAhead < n)) {
-              start2 = line + 1;
-              break;
-            }
-          }
-          doc.highlightFrontier = Math.min(doc.highlightFrontier, start2);
-        }
-        __name(retreatFrontier, "retreatFrontier");
         var Line = /* @__PURE__ */ __name(function(text, markedSpans, estimateHeight2) {
           this.text = text;
           attachMarkedSpans(this, markedSpans);
@@ -34459,8 +31223,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           detachMarkedSpans(line);
         }
         __name(cleanUpLine, "cleanUpLine");
-        var styleToClassCache = {};
-        var styleToClassCacheWithMode = {};
+        var styleToClassCache = {}, styleToClassCacheWithMode = {};
         function interpretTokenStyle(style, options) {
           if (!style || /^\s*$/.test(style)) {
             return null;
@@ -34478,7 +31241,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             pos: 0,
             cm,
             trailingSpace: false,
-            splitSpaces: (ie || webkit) && cm.getOption("lineWrapping")
+            splitSpaces: cm.getOption("lineWrapping")
           };
           lineView.measure = {};
           for (var i2 = 0; i2 <= (lineView.rest ? lineView.rest.length : 0); i2++) {
@@ -34530,7 +31293,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return token;
         }
         __name(defaultSpecialCharPlaceholder, "defaultSpecialCharPlaceholder");
-        function buildToken(builder, text, style, startStyle, endStyle, title, css) {
+        function buildToken(builder, text, style, startStyle, endStyle, css, attributes) {
           if (!text) {
             return;
           }
@@ -34593,7 +31356,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           }
           builder.trailingSpace = displayText.charCodeAt(text.length - 1) == 32;
-          if (style || startStyle || endStyle || mustWrap || css) {
+          if (style || startStyle || endStyle || mustWrap || css || attributes) {
             var fullStyle = style || "";
             if (startStyle) {
               fullStyle += startStyle;
@@ -34602,8 +31365,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               fullStyle += endStyle;
             }
             var token = elt("span", [content], fullStyle, css);
-            if (title) {
-              token.title = title;
+            if (attributes) {
+              for (var attr in attributes) {
+                if (attributes.hasOwnProperty(attr) && attr != "style" && attr != "class") {
+                  token.setAttribute(attr, attributes[attr]);
+                }
+              }
             }
             return builder.content.appendChild(token);
           }
@@ -34627,7 +31394,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(splitSpaces, "splitSpaces");
         function buildTokenBadBidi(inner, order2) {
-          return function(builder, text, style, startStyle, endStyle, title, css) {
+          return function(builder, text, style, startStyle, endStyle, css, attributes) {
             style = style ? style + " cm-force-border" : "cm-force-border";
             var start2 = builder.pos, end3 = start2 + text.length;
             for (; ; ) {
@@ -34639,9 +31406,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 }
               }
               if (part.to >= end3) {
-                return inner(builder, text, style, startStyle, endStyle, title, css);
+                return inner(builder, text, style, startStyle, endStyle, css, attributes);
               }
-              inner(builder, text.slice(0, part.to - start2), style, startStyle, null, title, css);
+              inner(builder, text.slice(0, part.to - start2), style, startStyle, null, css, attributes);
               startStyle = null;
               text = text.slice(part.to - start2);
               start2 = part.to;
@@ -34677,10 +31444,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return;
           }
           var len = allText.length, pos = 0, i2 = 1, text = "", style, css;
-          var nextChange = 0, spanStyle, spanEndStyle, spanStartStyle, title, collapsed;
+          var nextChange = 0, spanStyle, spanEndStyle, spanStartStyle, collapsed, attributes;
           for (; ; ) {
             if (nextChange == pos) {
-              spanStyle = spanEndStyle = spanStartStyle = title = css = "";
+              spanStyle = spanEndStyle = spanStartStyle = css = "";
+              attributes = null;
               collapsed = null;
               nextChange = Infinity;
               var foundBookmarks = [], endStyles = void 0;
@@ -34705,8 +31473,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                   if (m.endStyle && sp.to == nextChange) {
                     (endStyles || (endStyles = [])).push(m.endStyle, sp.to);
                   }
-                  if (m.title && !title) {
-                    title = m.title;
+                  if (m.title) {
+                    (attributes || (attributes = {})).title = m.title;
+                  }
+                  if (m.attributes) {
+                    for (var attr in m.attributes) {
+                      (attributes || (attributes = {}))[attr] = m.attributes[attr];
+                    }
                   }
                   if (m.collapsed && (!collapsed || compareCollapsedMarkers(collapsed.marker, m) < 0)) {
                     collapsed = sp;
@@ -34746,7 +31519,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 var end3 = pos + text.length;
                 if (!collapsed) {
                   var tokenText = end3 > upto ? text.slice(0, upto - pos) : text;
-                  builder.addToken(builder, tokenText, style ? style + spanStyle : spanStyle, spanStartStyle, pos + tokenText.length == nextChange ? spanEndStyle : "", title, css);
+                  builder.addToken(builder, tokenText, style ? style + spanStyle : spanStyle, spanStartStyle, pos + tokenText.length == nextChange ? spanEndStyle : "", css, attributes);
                 }
                 if (end3 >= upto) {
                   text = text.slice(upto - pos);
@@ -34960,6 +31733,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (cm.options.lineNumbers || markers) {
             var wrap$1 = ensureLineWrapped(lineView);
             var gutterWrap = lineView.gutter = elt("div", null, "CodeMirror-gutter-wrapper", "left: " + (cm.options.fixedGutter ? dims.fixedPos : -dims.gutterTotalWidth) + "px");
+            gutterWrap.setAttribute("aria-hidden", "true");
             cm.display.input.setUneditable(gutterWrap);
             wrap$1.insertBefore(gutterWrap, lineView.text);
             if (lineView.line.gutterClass) {
@@ -34969,8 +31743,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               lineView.lineNumber = gutterWrap.appendChild(elt("div", lineNumberFor(cm.options, lineN), "CodeMirror-linenumber CodeMirror-gutter-elt", "left: " + dims.gutterLeft["CodeMirror-linenumbers"] + "px; width: " + cm.display.lineNumInnerWidth + "px"));
             }
             if (markers) {
-              for (var k = 0; k < cm.options.gutters.length; ++k) {
-                var id = cm.options.gutters[k], found = markers.hasOwnProperty(id) && markers[id];
+              for (var k = 0; k < cm.display.gutterSpecs.length; ++k) {
+                var id = cm.display.gutterSpecs[k].className, found = markers.hasOwnProperty(id) && markers[id];
                 if (found) {
                   gutterWrap.appendChild(elt("div", [found], "CodeMirror-gutter-elt", "left: " + dims.gutterLeft[id] + "px; width: " + dims.gutterWidth[id] + "px"));
                 }
@@ -34983,9 +31757,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (lineView.alignable) {
             lineView.alignable = null;
           }
+          var isWidget = classTest("CodeMirror-linewidget");
           for (var node = lineView.node.firstChild, next = void 0; node; node = next) {
             next = node.nextSibling;
-            if (node.className == "CodeMirror-linewidget") {
+            if (isWidget.test(node.className)) {
               lineView.node.removeChild(node);
             }
           }
@@ -35022,7 +31797,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           var wrap = ensureLineWrapped(lineView);
           for (var i2 = 0, ws = line.widgets; i2 < ws.length; ++i2) {
-            var widget = ws[i2], node = elt("div", [widget.node], "CodeMirror-linewidget");
+            var widget = ws[i2], node = elt("div", [widget.node], "CodeMirror-linewidget" + (widget.className ? " " + widget.className : ""));
             if (!widget.handleMouseEvents) {
               node.setAttribute("cm-ignore-events", "true");
             }
@@ -35098,7 +31873,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (display.cachedPaddingH) {
             return display.cachedPaddingH;
           }
-          var e = removeChildrenAndAdd(display.measure, elt("pre", "x"));
+          var e = removeChildrenAndAdd(display.measure, elt("pre", "x", "CodeMirror-line-like"));
           var style = window.getComputedStyle ? window.getComputedStyle(e) : e.currentStyle;
           var data = { left: parseInt(style.paddingLeft), right: parseInt(style.paddingRight) };
           if (!isNaN(data.left) && !isNaN(data.right)) {
@@ -35232,11 +32007,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(measureCharPrepared, "measureCharPrepared");
         var nullRect = { left: 0, right: 0, top: 0, bottom: 0 };
-        function nodeAndOffsetInLineMap(map$$1, ch, bias) {
+        function nodeAndOffsetInLineMap(map2, ch, bias) {
           var node, start2, end3, collapse, mStart, mEnd;
-          for (var i2 = 0; i2 < map$$1.length; i2 += 3) {
-            mStart = map$$1[i2];
-            mEnd = map$$1[i2 + 1];
+          for (var i2 = 0; i2 < map2.length; i2 += 3) {
+            mStart = map2[i2];
+            mEnd = map2[i2 + 1];
             if (ch < mStart) {
               start2 = 0;
               end3 = 1;
@@ -35244,7 +32019,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             } else if (ch < mEnd) {
               start2 = ch - mStart;
               end3 = start2 + 1;
-            } else if (i2 == map$$1.length - 3 || ch == mEnd && map$$1[i2 + 3] > ch) {
+            } else if (i2 == map2.length - 3 || ch == mEnd && map2[i2 + 3] > ch) {
               end3 = mEnd - mStart;
               start2 = end3 - 1;
               if (ch >= mEnd) {
@@ -35252,19 +32027,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
             }
             if (start2 != null) {
-              node = map$$1[i2 + 2];
+              node = map2[i2 + 2];
               if (mStart == mEnd && bias == (node.insertLeft ? "left" : "right")) {
                 collapse = bias;
               }
               if (bias == "left" && start2 == 0) {
-                while (i2 && map$$1[i2 - 2] == map$$1[i2 - 3] && map$$1[i2 - 1].insertLeft) {
-                  node = map$$1[(i2 -= 3) + 2];
+                while (i2 && map2[i2 - 2] == map2[i2 - 3] && map2[i2 - 1].insertLeft) {
+                  node = map2[(i2 -= 3) + 2];
                   collapse = "left";
                 }
               }
               if (bias == "right" && start2 == mEnd - mStart) {
-                while (i2 < map$$1.length - 3 && map$$1[i2 + 3] == map$$1[i2 + 4] && !map$$1[i2 + 5].insertLeft) {
-                  node = map$$1[(i2 += 3) + 2];
+                while (i2 < map2.length - 3 && map2[i2 + 3] == map2[i2 + 4] && !map2[i2 + 5].insertLeft) {
+                  node = map2[(i2 += 3) + 2];
                   collapse = "right";
                 }
               }
@@ -35542,7 +32317,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var pos = Pos(line, ch, sticky);
           pos.xRel = xRel;
           if (outside) {
-            pos.outside = true;
+            pos.outside = outside;
           }
           return pos;
         }
@@ -35551,11 +32326,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var doc = cm.doc;
           y += cm.display.viewOffset;
           if (y < 0) {
-            return PosWithInfo(doc.first, 0, null, true, -1);
+            return PosWithInfo(doc.first, 0, null, -1, -1);
           }
           var lineN = lineAtHeight(doc, y), last = doc.first + doc.size - 1;
           if (lineN > last) {
-            return PosWithInfo(doc.first + doc.size - 1, getLine(doc, last).text.length, null, true, 1);
+            return PosWithInfo(doc.first + doc.size - 1, getLine(doc, last).text.length, null, 1, 1);
           }
           if (x < 0) {
             x = 0;
@@ -35563,13 +32338,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var lineObj = getLine(doc, lineN);
           for (; ; ) {
             var found = coordsCharInner(cm, lineObj, lineN, x, y);
-            var merged = collapsedSpanAtEnd(lineObj);
-            var mergedPos = merged && merged.find(0, true);
-            if (merged && (found.ch > mergedPos.from.ch || found.ch == mergedPos.from.ch && found.xRel > 0)) {
-              lineN = lineNo(lineObj = mergedPos.to.line);
-            } else {
+            var collapsed = collapsedSpanAround(lineObj, found.ch + (found.xRel > 0 || found.outside > 0 ? 1 : 0));
+            if (!collapsed) {
               return found;
             }
+            var rangeEnd = collapsed.find(1);
+            if (rangeEnd.line == lineN) {
+              return rangeEnd;
+            }
+            lineObj = getLine(doc, lineN = rangeEnd.line);
           }
         }
         __name(coordsChar, "coordsChar");
@@ -35597,14 +32374,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return box.bottom <= y ? false : box.top > y ? true : (left2 ? box.left : box.right) > x;
         }
         __name(boxIsAfter, "boxIsAfter");
-        function coordsCharInner(cm, lineObj, lineNo$$1, x, y) {
+        function coordsCharInner(cm, lineObj, lineNo2, x, y) {
           y -= heightAtLine(lineObj);
           var preparedMeasure = prepareMeasureForLine(cm, lineObj);
-          var widgetHeight$$1 = widgetTopHeight(lineObj);
+          var widgetHeight2 = widgetTopHeight(lineObj);
           var begin = 0, end3 = lineObj.text.length, ltr = true;
           var order2 = getOrder(lineObj, cm.doc.direction);
           if (order2) {
-            var part = (cm.options.lineWrapping ? coordsBidiPartWrapped : coordsBidiPart)(cm, lineObj, lineNo$$1, preparedMeasure, order2, x, y);
+            var part = (cm.options.lineWrapping ? coordsBidiPartWrapped : coordsBidiPart)(cm, lineObj, lineNo2, preparedMeasure, order2, x, y);
             ltr = part.level != 1;
             begin = ltr ? part.from : part.to - 1;
             end3 = ltr ? part.to : part.from - 1;
@@ -35612,8 +32389,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var chAround = null, boxAround = null;
           var ch = findFirst(function(ch2) {
             var box = measureCharPrepared(cm, preparedMeasure, ch2);
-            box.top += widgetHeight$$1;
-            box.bottom += widgetHeight$$1;
+            box.top += widgetHeight2;
+            box.bottom += widgetHeight2;
             if (!boxIsAfter(box, x, y, false)) {
               return false;
             }
@@ -35633,24 +32410,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (!ltr && (ch == end3 || ch == begin)) {
               ch++;
             }
-            sticky = ch == 0 ? "after" : ch == lineObj.text.length ? "before" : measureCharPrepared(cm, preparedMeasure, ch - (ltr ? 1 : 0)).bottom + widgetHeight$$1 <= y == ltr ? "after" : "before";
-            var coords = cursorCoords(cm, Pos(lineNo$$1, ch, sticky), "line", lineObj, preparedMeasure);
+            sticky = ch == 0 ? "after" : ch == lineObj.text.length ? "before" : measureCharPrepared(cm, preparedMeasure, ch - (ltr ? 1 : 0)).bottom + widgetHeight2 <= y == ltr ? "after" : "before";
+            var coords = cursorCoords(cm, Pos(lineNo2, ch, sticky), "line", lineObj, preparedMeasure);
             baseX = coords.left;
-            outside = y < coords.top || y >= coords.bottom;
+            outside = y < coords.top ? -1 : y >= coords.bottom ? 1 : 0;
           }
           ch = skipExtendingChars(lineObj.text, ch, 1);
-          return PosWithInfo(lineNo$$1, ch, sticky, outside, x - baseX);
+          return PosWithInfo(lineNo2, ch, sticky, outside, x - baseX);
         }
         __name(coordsCharInner, "coordsCharInner");
-        function coordsBidiPart(cm, lineObj, lineNo$$1, preparedMeasure, order2, x, y) {
+        function coordsBidiPart(cm, lineObj, lineNo2, preparedMeasure, order2, x, y) {
           var index = findFirst(function(i2) {
             var part2 = order2[i2], ltr2 = part2.level != 1;
-            return boxIsAfter(cursorCoords(cm, Pos(lineNo$$1, ltr2 ? part2.to : part2.from, ltr2 ? "before" : "after"), "line", lineObj, preparedMeasure), x, y, true);
+            return boxIsAfter(cursorCoords(cm, Pos(lineNo2, ltr2 ? part2.to : part2.from, ltr2 ? "before" : "after"), "line", lineObj, preparedMeasure), x, y, true);
           }, 0, order2.length - 1);
           var part = order2[index];
           if (index > 0) {
             var ltr = part.level != 1;
-            var start2 = cursorCoords(cm, Pos(lineNo$$1, ltr ? part.from : part.to, ltr ? "after" : "before"), "line", lineObj, preparedMeasure);
+            var start2 = cursorCoords(cm, Pos(lineNo2, ltr ? part.from : part.to, ltr ? "after" : "before"), "line", lineObj, preparedMeasure);
             if (boxIsAfter(start2, x, y, true) && start2.top > y) {
               part = order2[index - 1];
             }
@@ -35697,7 +32474,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return display.cachedTextHeight;
           }
           if (measureText == null) {
-            measureText = elt("pre");
+            measureText = elt("pre", null, "CodeMirror-line-like");
             for (var i2 = 0; i2 < 49; ++i2) {
               measureText.appendChild(document.createTextNode("x"));
               measureText.appendChild(elt("br"));
@@ -35718,7 +32495,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return display.cachedCharWidth;
           }
           var anchor = elt("span", "xxxxxxxxxx");
-          var pre = elt("pre", [anchor]);
+          var pre = elt("pre", [anchor], "CodeMirror-line-like");
           removeChildrenAndAdd(display.measure, pre);
           var rect = anchor.getBoundingClientRect(), width = (rect.right - rect.left) / 10;
           if (width > 2) {
@@ -35731,8 +32508,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var d = cm.display, left2 = {}, width = {};
           var gutterLeft = d.gutters.clientLeft;
           for (var n = d.gutters.firstChild, i2 = 0; n; n = n.nextSibling, ++i2) {
-            left2[cm.options.gutters[i2]] = n.offsetLeft + n.clientLeft + gutterLeft;
-            width[cm.options.gutters[i2]] = n.clientWidth;
+            var id = cm.display.gutterSpecs[i2].className;
+            left2[id] = n.offsetLeft + n.clientLeft + gutterLeft;
+            width[id] = n.clientWidth;
           }
           return {
             fixedPos: compensateForHScroll(d),
@@ -35789,11 +32567,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           try {
             x = e.clientX - space.left;
             y = e.clientY - space.top;
-          } catch (e2) {
+          } catch (e$1) {
             return null;
           }
           var coords = coordsChar(cm, x, y), line;
-          if (forRect && coords.xRel == 1 && (line = getLine(cm.doc, coords.line).text).length == coords.ch) {
+          if (forRect && coords.xRel > 0 && (line = getLine(cm.doc, coords.line).text).length == coords.ch) {
             var colDiff = countColumn(line, line.length, cm.options.tabSize) - line.length;
             coords = Pos(coords.line, Math.max(0, Math.round((x - paddingH(cm.display).left) / charWidth(cm.display)) - colDiff));
           }
@@ -35817,6 +32595,160 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         }
         __name(findViewIndex, "findViewIndex");
+        function regChange(cm, from, to, lendiff) {
+          if (from == null) {
+            from = cm.doc.first;
+          }
+          if (to == null) {
+            to = cm.doc.first + cm.doc.size;
+          }
+          if (!lendiff) {
+            lendiff = 0;
+          }
+          var display = cm.display;
+          if (lendiff && to < display.viewTo && (display.updateLineNumbers == null || display.updateLineNumbers > from)) {
+            display.updateLineNumbers = from;
+          }
+          cm.curOp.viewChanged = true;
+          if (from >= display.viewTo) {
+            if (sawCollapsedSpans && visualLineNo(cm.doc, from) < display.viewTo) {
+              resetView(cm);
+            }
+          } else if (to <= display.viewFrom) {
+            if (sawCollapsedSpans && visualLineEndNo(cm.doc, to + lendiff) > display.viewFrom) {
+              resetView(cm);
+            } else {
+              display.viewFrom += lendiff;
+              display.viewTo += lendiff;
+            }
+          } else if (from <= display.viewFrom && to >= display.viewTo) {
+            resetView(cm);
+          } else if (from <= display.viewFrom) {
+            var cut = viewCuttingPoint(cm, to, to + lendiff, 1);
+            if (cut) {
+              display.view = display.view.slice(cut.index);
+              display.viewFrom = cut.lineN;
+              display.viewTo += lendiff;
+            } else {
+              resetView(cm);
+            }
+          } else if (to >= display.viewTo) {
+            var cut$1 = viewCuttingPoint(cm, from, from, -1);
+            if (cut$1) {
+              display.view = display.view.slice(0, cut$1.index);
+              display.viewTo = cut$1.lineN;
+            } else {
+              resetView(cm);
+            }
+          } else {
+            var cutTop = viewCuttingPoint(cm, from, from, -1);
+            var cutBot = viewCuttingPoint(cm, to, to + lendiff, 1);
+            if (cutTop && cutBot) {
+              display.view = display.view.slice(0, cutTop.index).concat(buildViewArray(cm, cutTop.lineN, cutBot.lineN)).concat(display.view.slice(cutBot.index));
+              display.viewTo += lendiff;
+            } else {
+              resetView(cm);
+            }
+          }
+          var ext = display.externalMeasured;
+          if (ext) {
+            if (to < ext.lineN) {
+              ext.lineN += lendiff;
+            } else if (from < ext.lineN + ext.size) {
+              display.externalMeasured = null;
+            }
+          }
+        }
+        __name(regChange, "regChange");
+        function regLineChange(cm, line, type) {
+          cm.curOp.viewChanged = true;
+          var display = cm.display, ext = cm.display.externalMeasured;
+          if (ext && line >= ext.lineN && line < ext.lineN + ext.size) {
+            display.externalMeasured = null;
+          }
+          if (line < display.viewFrom || line >= display.viewTo) {
+            return;
+          }
+          var lineView = display.view[findViewIndex(cm, line)];
+          if (lineView.node == null) {
+            return;
+          }
+          var arr = lineView.changes || (lineView.changes = []);
+          if (indexOf(arr, type) == -1) {
+            arr.push(type);
+          }
+        }
+        __name(regLineChange, "regLineChange");
+        function resetView(cm) {
+          cm.display.viewFrom = cm.display.viewTo = cm.doc.first;
+          cm.display.view = [];
+          cm.display.viewOffset = 0;
+        }
+        __name(resetView, "resetView");
+        function viewCuttingPoint(cm, oldN, newN, dir) {
+          var index = findViewIndex(cm, oldN), diff, view = cm.display.view;
+          if (!sawCollapsedSpans || newN == cm.doc.first + cm.doc.size) {
+            return { index, lineN: newN };
+          }
+          var n = cm.display.viewFrom;
+          for (var i2 = 0; i2 < index; i2++) {
+            n += view[i2].size;
+          }
+          if (n != oldN) {
+            if (dir > 0) {
+              if (index == view.length - 1) {
+                return null;
+              }
+              diff = n + view[index].size - oldN;
+              index++;
+            } else {
+              diff = n - oldN;
+            }
+            oldN += diff;
+            newN += diff;
+          }
+          while (visualLineNo(cm.doc, newN) != newN) {
+            if (index == (dir < 0 ? 0 : view.length - 1)) {
+              return null;
+            }
+            newN += dir * view[index - (dir < 0 ? 1 : 0)].size;
+            index += dir;
+          }
+          return { index, lineN: newN };
+        }
+        __name(viewCuttingPoint, "viewCuttingPoint");
+        function adjustView(cm, from, to) {
+          var display = cm.display, view = display.view;
+          if (view.length == 0 || from >= display.viewTo || to <= display.viewFrom) {
+            display.view = buildViewArray(cm, from, to);
+            display.viewFrom = from;
+          } else {
+            if (display.viewFrom > from) {
+              display.view = buildViewArray(cm, from, display.viewFrom).concat(display.view);
+            } else if (display.viewFrom < from) {
+              display.view = display.view.slice(findViewIndex(cm, from));
+            }
+            display.viewFrom = from;
+            if (display.viewTo < to) {
+              display.view = display.view.concat(buildViewArray(cm, display.viewTo, to));
+            } else if (display.viewTo > to) {
+              display.view = display.view.slice(0, findViewIndex(cm, to));
+            }
+          }
+          display.viewTo = to;
+        }
+        __name(adjustView, "adjustView");
+        function countDirtyView(cm) {
+          var view = cm.display.view, dirty = 0;
+          for (var i2 = 0; i2 < view.length; i2++) {
+            var lineView = view[i2];
+            if (!lineView.hidden && (!lineView.node || lineView.changes)) {
+              ++dirty;
+            }
+          }
+          return dirty;
+        }
+        __name(countDirtyView, "countDirtyView");
         function updateSelection(cm) {
           cm.display.input.showSelection(cm.display.input.prepareSelection());
         }
@@ -35831,16 +32763,16 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (!primary && i2 == doc.sel.primIndex) {
               continue;
             }
-            var range$$1 = doc.sel.ranges[i2];
-            if (range$$1.from().line >= cm.display.viewTo || range$$1.to().line < cm.display.viewFrom) {
+            var range2 = doc.sel.ranges[i2];
+            if (range2.from().line >= cm.display.viewTo || range2.to().line < cm.display.viewFrom) {
               continue;
             }
-            var collapsed = range$$1.empty();
+            var collapsed = range2.empty();
             if (collapsed || cm.options.showCursorWhenSelecting) {
-              drawSelectionCursor(cm, range$$1.head, curFragment);
+              drawSelectionCursor(cm, range2.head, curFragment);
             }
             if (!collapsed) {
-              drawSelectionRange(cm, range$$1, selFragment);
+              drawSelectionRange(cm, range2, selFragment);
             }
           }
           return result;
@@ -35865,7 +32797,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return a.top - b.top || a.left - b.left;
         }
         __name(cmpCoords, "cmpCoords");
-        function drawSelectionRange(cm, range$$1, output) {
+        function drawSelectionRange(cm, range2, output) {
           var display = cm.display, doc = cm.doc;
           var fragment = document.createDocumentFragment();
           var padding = paddingH(cm.display), leftSide = padding.left;
@@ -35943,7 +32875,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return { start: start2, end: end3 };
           }
           __name(drawForLine, "drawForLine");
-          var sFrom = range$$1.from(), sTo = range$$1.to();
+          var sFrom = range2.from(), sTo = range2.to();
           if (sFrom.line == sTo.line) {
             drawForLine(sFrom.line, sFrom.ch, sTo.ch);
           } else {
@@ -35976,7 +32908,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           display.cursorDiv.style.visibility = "";
           if (cm.options.cursorBlinkRate > 0) {
             display.blinker = setInterval(function() {
-              return display.cursorDiv.style.visibility = (on2 = !on2) ? "" : "hidden";
+              if (!cm.hasFocus()) {
+                onBlur(cm);
+              }
+              display.cursorDiv.style.visibility = (on2 = !on2) ? "" : "hidden";
             }, cm.options.cursorBlinkRate);
           } else if (cm.options.cursorBlinkRate < 0) {
             display.cursorDiv.style.visibility = "hidden";
@@ -35984,9 +32919,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(restartBlink, "restartBlink");
         function ensureFocus(cm) {
-          if (!cm.state.focused) {
+          if (!cm.hasFocus()) {
             cm.display.input.focus();
-            onFocus(cm);
+            if (!cm.state.focused) {
+              onFocus(cm);
+            }
           }
         }
         __name(ensureFocus, "ensureFocus");
@@ -35995,13 +32932,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           setTimeout(function() {
             if (cm.state.delayingBlurEvent) {
               cm.state.delayingBlurEvent = false;
-              onBlur(cm);
+              if (cm.state.focused) {
+                onBlur(cm);
+              }
             }
           }, 100);
         }
         __name(delayBlurEvent, "delayBlurEvent");
         function onFocus(cm, e) {
-          if (cm.state.delayingBlurEvent) {
+          if (cm.state.delayingBlurEvent && !cm.state.draggingText) {
             cm.state.delayingBlurEvent = false;
           }
           if (cm.options.readOnly == "nocursor") {
@@ -36045,7 +32984,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var display = cm.display;
           var prevBottom = display.lineDiv.offsetTop;
           for (var i2 = 0; i2 < display.view.length; i2++) {
-            var cur = display.view[i2], height = void 0;
+            var cur = display.view[i2], wrapping = cm.options.lineWrapping;
+            var height = void 0, width = 0;
             if (cur.hidden) {
               continue;
             }
@@ -36056,11 +32996,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             } else {
               var box = cur.node.getBoundingClientRect();
               height = box.bottom - box.top;
+              if (!wrapping && cur.text.firstChild) {
+                width = cur.text.firstChild.getBoundingClientRect().right - box.left - 1;
+              }
             }
             var diff = cur.line.height - height;
-            if (height < 2) {
-              height = textHeight(display);
-            }
             if (diff > 5e-3 || diff < -5e-3) {
               updateLineHeight(cur.line, height);
               updateWidgetHeight(cur.line);
@@ -36070,13 +33010,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 }
               }
             }
+            if (width > cm.display.sizerWidth) {
+              var chWidth = Math.ceil(width / charWidth(cm.display));
+              if (chWidth > cm.display.maxLineLength) {
+                cm.display.maxLineLength = chWidth;
+                cm.display.maxLine = cur.line;
+                cm.display.maxLineChanged = true;
+              }
+            }
           }
         }
         __name(updateHeightsInViewport, "updateHeightsInViewport");
         function updateWidgetHeight(line) {
           if (line.widgets) {
             for (var i2 = 0; i2 < line.widgets.length; ++i2) {
-              line.widgets[i2].height = line.widgets[i2].node.parentNode.offsetHeight;
+              var w = line.widgets[i2], parent = w.node.parentNode;
+              if (parent) {
+                w.height = parent.offsetHeight;
+              }
             }
           }
         }
@@ -36099,55 +33050,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return { from, to: Math.max(to, from + 1) };
         }
         __name(visibleLines, "visibleLines");
-        function alignHorizontally(cm) {
-          var display = cm.display, view = display.view;
-          if (!display.alignWidgets && (!display.gutters.firstChild || !cm.options.fixedGutter)) {
-            return;
-          }
-          var comp = compensateForHScroll(display) - display.scroller.scrollLeft + cm.doc.scrollLeft;
-          var gutterW = display.gutters.offsetWidth, left2 = comp + "px";
-          for (var i2 = 0; i2 < view.length; i2++) {
-            if (!view[i2].hidden) {
-              if (cm.options.fixedGutter) {
-                if (view[i2].gutter) {
-                  view[i2].gutter.style.left = left2;
-                }
-                if (view[i2].gutterBackground) {
-                  view[i2].gutterBackground.style.left = left2;
-                }
-              }
-              var align = view[i2].alignable;
-              if (align) {
-                for (var j = 0; j < align.length; j++) {
-                  align[j].style.left = left2;
-                }
-              }
-            }
-          }
-          if (cm.options.fixedGutter) {
-            display.gutters.style.left = comp + gutterW + "px";
-          }
-        }
-        __name(alignHorizontally, "alignHorizontally");
-        function maybeUpdateLineNumberWidth(cm) {
-          if (!cm.options.lineNumbers) {
-            return false;
-          }
-          var doc = cm.doc, last = lineNumberFor(cm.options, doc.first + doc.size - 1), display = cm.display;
-          if (last.length != display.lineNumChars) {
-            var test = display.measure.appendChild(elt("div", [elt("div", last)], "CodeMirror-linenumber CodeMirror-gutter-elt"));
-            var innerW = test.firstChild.offsetWidth, padding = test.offsetWidth - innerW;
-            display.lineGutter.style.width = "";
-            display.lineNumInnerWidth = Math.max(innerW, display.lineGutter.offsetWidth - padding) + 1;
-            display.lineNumWidth = display.lineNumInnerWidth + padding;
-            display.lineNumChars = display.lineNumInnerWidth ? last.length : -1;
-            display.lineGutter.style.width = display.lineNumWidth + "px";
-            updateGutterSpace(cm);
-            return true;
-          }
-          return false;
-        }
-        __name(maybeUpdateLineNumberWidth, "maybeUpdateLineNumberWidth");
         function maybeScrollWindow(cm, rect) {
           if (signalDOMEvent(cm, "scrollCursorIntoView")) {
             return;
@@ -36172,8 +33074,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           var rect;
           if (!cm.options.lineWrapping && pos == end3) {
-            pos = pos.ch ? Pos(pos.line, pos.sticky == "before" ? pos.ch - 1 : pos.ch, "after") : pos;
             end3 = pos.sticky == "before" ? Pos(pos.line, pos.ch + 1, "before") : pos;
+            pos = pos.ch ? Pos(pos.line, pos.sticky == "before" ? pos.ch - 1 : pos.ch, "after") : pos;
           }
           for (var limit = 0; limit < 5; limit++) {
             var changed = false;
@@ -36236,8 +33138,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               result.scrollTop = newTop;
             }
           }
-          var screenleft = cm.curOp && cm.curOp.scrollLeft != null ? cm.curOp.scrollLeft : display.scroller.scrollLeft;
-          var screenw = displayWidth(cm) - (cm.options.fixedGutter ? display.gutters.offsetWidth : 0);
+          var gutterSpace = cm.options.fixedGutter ? 0 : display.gutters.offsetWidth;
+          var screenleft = cm.curOp && cm.curOp.scrollLeft != null ? cm.curOp.scrollLeft : display.scroller.scrollLeft - gutterSpace;
+          var screenw = displayWidth(cm) - display.gutters.offsetWidth;
           var tooWide = rect.right - rect.left > screenw;
           if (tooWide) {
             rect.right = rect.left + screenw;
@@ -36245,7 +33148,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (rect.left < 10) {
             result.scrollLeft = 0;
           } else if (rect.left < screenleft) {
-            result.scrollLeft = Math.max(0, rect.left - (tooWide ? 0 : 10));
+            result.scrollLeft = Math.max(0, rect.left + gutterSpace - (tooWide ? 0 : 10));
           } else if (rect.right > screenw + screenleft - 3) {
             result.scrollLeft = rect.right + (tooWide ? 0 : 10) - screenw;
           }
@@ -36278,17 +33181,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         }
         __name(scrollToCoords, "scrollToCoords");
-        function scrollToRange(cm, range$$1) {
+        function scrollToRange(cm, range2) {
           resolveScrollToPos(cm);
-          cm.curOp.scrollToPos = range$$1;
+          cm.curOp.scrollToPos = range2;
         }
         __name(scrollToRange, "scrollToRange");
         function resolveScrollToPos(cm) {
-          var range$$1 = cm.curOp.scrollToPos;
-          if (range$$1) {
+          var range2 = cm.curOp.scrollToPos;
+          if (range2) {
             cm.curOp.scrollToPos = null;
-            var from = estimateCoords(cm, range$$1.from), to = estimateCoords(cm, range$$1.to);
-            scrollToCoordsRange(cm, from, to, range$$1.margin);
+            var from = estimateCoords(cm, range2.from), to = estimateCoords(cm, range2.to);
+            scrollToCoordsRange(cm, from, to, range2.margin);
           }
         }
         __name(resolveScrollToPos, "resolveScrollToPos");
@@ -36317,7 +33220,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(updateScrollTop, "updateScrollTop");
         function setScrollTop(cm, val, forceScroll) {
-          val = Math.min(cm.display.scroller.scrollHeight - cm.display.scroller.clientHeight, val);
+          val = Math.max(0, Math.min(cm.display.scroller.scrollHeight - cm.display.scroller.clientHeight, val));
           if (cm.display.scroller.scrollTop == val && !forceScroll) {
             return;
           }
@@ -36329,7 +33232,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(setScrollTop, "setScrollTop");
         function setScrollLeft(cm, val, isScroller, forceScroll) {
-          val = Math.min(val, cm.display.scroller.scrollWidth - cm.display.scroller.clientWidth);
+          val = Math.max(0, Math.min(val, cm.display.scroller.scrollWidth - cm.display.scroller.clientWidth));
           if ((isScroller ? val == cm.doc.scrollLeft : Math.abs(cm.doc.scrollLeft - val) < 2) && !forceScroll) {
             return;
           }
@@ -36362,6 +33265,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           this.cm = cm;
           var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar");
           var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar");
+          vert.tabIndex = horiz.tabIndex = -1;
           place(vert);
           place(horiz);
           on(vert, "scroll", function() {
@@ -36437,8 +33341,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           bar.style.pointerEvents = "auto";
           function maybeDisable() {
             var box = bar.getBoundingClientRect();
-            var elt$$1 = type == "vert" ? document.elementFromPoint(box.right - 1, (box.top + box.bottom) / 2) : document.elementFromPoint((box.right + box.left) / 2, box.bottom - 1);
-            if (elt$$1 != bar) {
+            var elt2 = type == "vert" ? document.elementFromPoint(box.right - 1, (box.top + box.bottom) / 2) : document.elementFromPoint((box.right + box.left) / 2, box.bottom - 1);
+            if (elt2 != bar) {
               bar.style.pointerEvents = "none";
             } else {
               delay.set(1e3, maybeDisable);
@@ -36538,7 +33442,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             viewChanged: false,
             startHeight: cm.doc.height,
             forceUpdate: false,
-            updateInput: null,
+            updateInput: 0,
             typing: false,
             changeObjs: null,
             cursorActivityHandlers: null,
@@ -36549,19 +33453,22 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             scrollTop: null,
             scrollToPos: null,
             focus: false,
-            id: ++nextOpId
+            id: ++nextOpId,
+            markArrays: null
           };
           pushOperation(cm.curOp);
         }
         __name(startOperation, "startOperation");
         function endOperation(cm) {
           var op = cm.curOp;
-          finishOperation(op, function(group) {
-            for (var i2 = 0; i2 < group.ops.length; i2++) {
-              group.ops[i2].cm.curOp = null;
-            }
-            endOperations(group);
-          });
+          if (op) {
+            finishOperation(op, function(group) {
+              for (var i2 = 0; i2 < group.ops.length; i2++) {
+                group.ops[i2].cm.curOp = null;
+              }
+              endOperations(group);
+            });
+          }
         }
         __name(endOperation, "endOperation");
         function endOperations(group) {
@@ -36743,160 +33650,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           };
         }
         __name(docMethodOp, "docMethodOp");
-        function regChange(cm, from, to, lendiff) {
-          if (from == null) {
-            from = cm.doc.first;
-          }
-          if (to == null) {
-            to = cm.doc.first + cm.doc.size;
-          }
-          if (!lendiff) {
-            lendiff = 0;
-          }
-          var display = cm.display;
-          if (lendiff && to < display.viewTo && (display.updateLineNumbers == null || display.updateLineNumbers > from)) {
-            display.updateLineNumbers = from;
-          }
-          cm.curOp.viewChanged = true;
-          if (from >= display.viewTo) {
-            if (sawCollapsedSpans && visualLineNo(cm.doc, from) < display.viewTo) {
-              resetView(cm);
-            }
-          } else if (to <= display.viewFrom) {
-            if (sawCollapsedSpans && visualLineEndNo(cm.doc, to + lendiff) > display.viewFrom) {
-              resetView(cm);
-            } else {
-              display.viewFrom += lendiff;
-              display.viewTo += lendiff;
-            }
-          } else if (from <= display.viewFrom && to >= display.viewTo) {
-            resetView(cm);
-          } else if (from <= display.viewFrom) {
-            var cut = viewCuttingPoint(cm, to, to + lendiff, 1);
-            if (cut) {
-              display.view = display.view.slice(cut.index);
-              display.viewFrom = cut.lineN;
-              display.viewTo += lendiff;
-            } else {
-              resetView(cm);
-            }
-          } else if (to >= display.viewTo) {
-            var cut$1 = viewCuttingPoint(cm, from, from, -1);
-            if (cut$1) {
-              display.view = display.view.slice(0, cut$1.index);
-              display.viewTo = cut$1.lineN;
-            } else {
-              resetView(cm);
-            }
-          } else {
-            var cutTop = viewCuttingPoint(cm, from, from, -1);
-            var cutBot = viewCuttingPoint(cm, to, to + lendiff, 1);
-            if (cutTop && cutBot) {
-              display.view = display.view.slice(0, cutTop.index).concat(buildViewArray(cm, cutTop.lineN, cutBot.lineN)).concat(display.view.slice(cutBot.index));
-              display.viewTo += lendiff;
-            } else {
-              resetView(cm);
-            }
-          }
-          var ext = display.externalMeasured;
-          if (ext) {
-            if (to < ext.lineN) {
-              ext.lineN += lendiff;
-            } else if (from < ext.lineN + ext.size) {
-              display.externalMeasured = null;
-            }
-          }
-        }
-        __name(regChange, "regChange");
-        function regLineChange(cm, line, type) {
-          cm.curOp.viewChanged = true;
-          var display = cm.display, ext = cm.display.externalMeasured;
-          if (ext && line >= ext.lineN && line < ext.lineN + ext.size) {
-            display.externalMeasured = null;
-          }
-          if (line < display.viewFrom || line >= display.viewTo) {
-            return;
-          }
-          var lineView = display.view[findViewIndex(cm, line)];
-          if (lineView.node == null) {
-            return;
-          }
-          var arr = lineView.changes || (lineView.changes = []);
-          if (indexOf(arr, type) == -1) {
-            arr.push(type);
-          }
-        }
-        __name(regLineChange, "regLineChange");
-        function resetView(cm) {
-          cm.display.viewFrom = cm.display.viewTo = cm.doc.first;
-          cm.display.view = [];
-          cm.display.viewOffset = 0;
-        }
-        __name(resetView, "resetView");
-        function viewCuttingPoint(cm, oldN, newN, dir) {
-          var index = findViewIndex(cm, oldN), diff, view = cm.display.view;
-          if (!sawCollapsedSpans || newN == cm.doc.first + cm.doc.size) {
-            return { index, lineN: newN };
-          }
-          var n = cm.display.viewFrom;
-          for (var i2 = 0; i2 < index; i2++) {
-            n += view[i2].size;
-          }
-          if (n != oldN) {
-            if (dir > 0) {
-              if (index == view.length - 1) {
-                return null;
-              }
-              diff = n + view[index].size - oldN;
-              index++;
-            } else {
-              diff = n - oldN;
-            }
-            oldN += diff;
-            newN += diff;
-          }
-          while (visualLineNo(cm.doc, newN) != newN) {
-            if (index == (dir < 0 ? 0 : view.length - 1)) {
-              return null;
-            }
-            newN += dir * view[index - (dir < 0 ? 1 : 0)].size;
-            index += dir;
-          }
-          return { index, lineN: newN };
-        }
-        __name(viewCuttingPoint, "viewCuttingPoint");
-        function adjustView(cm, from, to) {
-          var display = cm.display, view = display.view;
-          if (view.length == 0 || from >= display.viewTo || to <= display.viewFrom) {
-            display.view = buildViewArray(cm, from, to);
-            display.viewFrom = from;
-          } else {
-            if (display.viewFrom > from) {
-              display.view = buildViewArray(cm, from, display.viewFrom).concat(display.view);
-            } else if (display.viewFrom < from) {
-              display.view = display.view.slice(findViewIndex(cm, from));
-            }
-            display.viewFrom = from;
-            if (display.viewTo < to) {
-              display.view = display.view.concat(buildViewArray(cm, display.viewTo, to));
-            } else if (display.viewTo > to) {
-              display.view = display.view.slice(0, findViewIndex(cm, to));
-            }
-          }
-          display.viewTo = to;
-        }
-        __name(adjustView, "adjustView");
-        function countDirtyView(cm) {
-          var view = cm.display.view, dirty = 0;
-          for (var i2 = 0; i2 < view.length; i2++) {
-            var lineView = view[i2];
-            if (!lineView.hidden && (!lineView.node || lineView.changes)) {
-              ++dirty;
-            }
-          }
-          return dirty;
-        }
-        __name(countDirtyView, "countDirtyView");
         function startWorker(cm, time) {
           if (cm.doc.highlightFrontier < cm.display.viewTo) {
             cm.state.highlight.set(time, bind(highlightWorker, cm));
@@ -36976,9 +33729,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         };
         DisplayUpdate.prototype.finish = function() {
-          var this$1 = this;
           for (var i2 = 0; i2 < this.events.length; i2++) {
-            signal.apply(null, this$1.events[i2]);
+            signal.apply(null, this.events[i2]);
           }
         };
         function maybeClipScrollbars(cm) {
@@ -37018,32 +33770,32 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return;
           }
           snapshot.activeElt.focus();
-          if (snapshot.anchorNode && contains2(document.body, snapshot.anchorNode) && contains2(document.body, snapshot.focusNode)) {
-            var sel = window.getSelection(), range$$1 = document.createRange();
-            range$$1.setEnd(snapshot.anchorNode, snapshot.anchorOffset);
-            range$$1.collapse(false);
+          if (!/^(INPUT|TEXTAREA)$/.test(snapshot.activeElt.nodeName) && snapshot.anchorNode && contains2(document.body, snapshot.anchorNode) && contains2(document.body, snapshot.focusNode)) {
+            var sel = window.getSelection(), range2 = document.createRange();
+            range2.setEnd(snapshot.anchorNode, snapshot.anchorOffset);
+            range2.collapse(false);
             sel.removeAllRanges();
-            sel.addRange(range$$1);
+            sel.addRange(range2);
             sel.extend(snapshot.focusNode, snapshot.focusOffset);
           }
         }
         __name(restoreSelection, "restoreSelection");
-        function updateDisplayIfNeeded(cm, update5) {
+        function updateDisplayIfNeeded(cm, update4) {
           var display = cm.display, doc = cm.doc;
-          if (update5.editorIsHidden) {
+          if (update4.editorIsHidden) {
             resetView(cm);
             return false;
           }
-          if (!update5.force && update5.visible.from >= display.viewFrom && update5.visible.to <= display.viewTo && (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo) && display.renderedView == display.view && countDirtyView(cm) == 0) {
+          if (!update4.force && update4.visible.from >= display.viewFrom && update4.visible.to <= display.viewTo && (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo) && display.renderedView == display.view && countDirtyView(cm) == 0) {
             return false;
           }
           if (maybeUpdateLineNumberWidth(cm)) {
             resetView(cm);
-            update5.dims = getDimensions(cm);
+            update4.dims = getDimensions(cm);
           }
           var end3 = doc.first + doc.size;
-          var from = Math.max(update5.visible.from - cm.options.viewportMargin, doc.first);
-          var to = Math.min(end3, update5.visible.to + cm.options.viewportMargin);
+          var from = Math.max(update4.visible.from - cm.options.viewportMargin, doc.first);
+          var to = Math.min(end3, update4.visible.to + cm.options.viewportMargin);
           if (display.viewFrom < from && from - display.viewFrom < 20) {
             from = Math.max(doc.first, display.viewFrom);
           }
@@ -37054,19 +33806,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             from = visualLineNo(cm.doc, from);
             to = visualLineEndNo(cm.doc, to);
           }
-          var different = from != display.viewFrom || to != display.viewTo || display.lastWrapHeight != update5.wrapperHeight || display.lastWrapWidth != update5.wrapperWidth;
+          var different = from != display.viewFrom || to != display.viewTo || display.lastWrapHeight != update4.wrapperHeight || display.lastWrapWidth != update4.wrapperWidth;
           adjustView(cm, from, to);
           display.viewOffset = heightAtLine(getLine(cm.doc, display.viewFrom));
           cm.display.mover.style.top = display.viewOffset + "px";
           var toUpdate = countDirtyView(cm);
-          if (!different && toUpdate == 0 && !update5.force && display.renderedView == display.view && (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo)) {
+          if (!different && toUpdate == 0 && !update4.force && display.renderedView == display.view && (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo)) {
             return false;
           }
           var selSnapshot = selectionSnapshot(cm);
           if (toUpdate > 4) {
             display.lineDiv.style.display = "none";
           }
-          patchDisplay(cm, display.updateLineNumbers, update5.dims);
+          patchDisplay(cm, display.updateLineNumbers, update4.dims);
           if (toUpdate > 4) {
             display.lineDiv.style.display = "";
           }
@@ -37076,27 +33828,29 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           removeChildren(display.selectionDiv);
           display.gutters.style.height = display.sizer.style.minHeight = 0;
           if (different) {
-            display.lastWrapHeight = update5.wrapperHeight;
-            display.lastWrapWidth = update5.wrapperWidth;
+            display.lastWrapHeight = update4.wrapperHeight;
+            display.lastWrapWidth = update4.wrapperWidth;
             startWorker(cm, 400);
           }
           display.updateLineNumbers = null;
           return true;
         }
         __name(updateDisplayIfNeeded, "updateDisplayIfNeeded");
-        function postUpdateDisplay(cm, update5) {
-          var viewport2 = update5.viewport;
+        function postUpdateDisplay(cm, update4) {
+          var viewport2 = update4.viewport;
           for (var first = true; ; first = false) {
-            if (!first || !cm.options.lineWrapping || update5.oldDisplayWidth == displayWidth(cm)) {
+            if (!first || !cm.options.lineWrapping || update4.oldDisplayWidth == displayWidth(cm)) {
               if (viewport2 && viewport2.top != null) {
                 viewport2 = { top: Math.min(cm.doc.height + paddingVert(cm.display) - displayHeight(cm), viewport2.top) };
               }
-              update5.visible = visibleLines(cm.display, cm.doc, viewport2);
-              if (update5.visible.from >= cm.display.viewFrom && update5.visible.to <= cm.display.viewTo) {
+              update4.visible = visibleLines(cm.display, cm.doc, viewport2);
+              if (update4.visible.from >= cm.display.viewFrom && update4.visible.to <= cm.display.viewTo) {
                 break;
               }
+            } else if (first) {
+              update4.visible = visibleLines(cm.display, cm.doc, viewport2);
             }
-            if (!updateDisplayIfNeeded(cm, update5)) {
+            if (!updateDisplayIfNeeded(cm, update4)) {
               break;
             }
             updateHeightsInViewport(cm);
@@ -37104,26 +33858,26 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             updateSelection(cm);
             updateScrollbars(cm, barMeasure);
             setDocumentHeight(cm, barMeasure);
-            update5.force = false;
+            update4.force = false;
           }
-          update5.signal(cm, "update", cm);
+          update4.signal(cm, "update", cm);
           if (cm.display.viewFrom != cm.display.reportedViewFrom || cm.display.viewTo != cm.display.reportedViewTo) {
-            update5.signal(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
+            update4.signal(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
             cm.display.reportedViewFrom = cm.display.viewFrom;
             cm.display.reportedViewTo = cm.display.viewTo;
           }
         }
         __name(postUpdateDisplay, "postUpdateDisplay");
         function updateDisplaySimple(cm, viewport2) {
-          var update5 = new DisplayUpdate(cm, viewport2);
-          if (updateDisplayIfNeeded(cm, update5)) {
+          var update4 = new DisplayUpdate(cm, viewport2);
+          if (updateDisplayIfNeeded(cm, update4)) {
             updateHeightsInViewport(cm);
-            postUpdateDisplay(cm, update5);
+            postUpdateDisplay(cm, update4);
             var barMeasure = measureForScrollbars(cm);
             updateSelection(cm);
             updateScrollbars(cm, barMeasure);
             setDocumentHeight(cm, barMeasure);
-            update5.finish();
+            update4.finish();
           }
         }
         __name(updateDisplaySimple, "updateDisplaySimple");
@@ -37143,8 +33897,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var view = display.view, lineN = display.viewFrom;
           for (var i2 = 0; i2 < view.length; i2++) {
             var lineView = view[i2];
-            if (lineView.hidden) {
-            } else if (!lineView.node || lineView.node.parentNode != container) {
+            if (lineView.hidden)
+              ;
+            else if (!lineView.node || lineView.node.parentNode != container) {
               var node = buildLineElement(cm, lineView, lineN, dims);
               container.insertBefore(node, cur);
             } else {
@@ -37171,9 +33926,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         }
         __name(patchDisplay, "patchDisplay");
-        function updateGutterSpace(cm) {
-          var width = cm.display.gutters.offsetWidth;
-          cm.display.sizer.style.marginLeft = width + "px";
+        function updateGutterSpace(display) {
+          var width = display.gutters.offsetWidth;
+          display.sizer.style.marginLeft = width + "px";
+          signalLater(display, "gutterChanged", display);
         }
         __name(updateGutterSpace, "updateGutterSpace");
         function setDocumentHeight(cm, measure) {
@@ -37182,34 +33938,168 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           cm.display.gutters.style.height = measure.docHeight + cm.display.barHeight + scrollGap(cm) + "px";
         }
         __name(setDocumentHeight, "setDocumentHeight");
-        function updateGutters(cm) {
-          var gutters = cm.display.gutters, specs = cm.options.gutters;
-          removeChildren(gutters);
-          var i2 = 0;
-          for (; i2 < specs.length; ++i2) {
-            var gutterClass = specs[i2];
-            var gElt = gutters.appendChild(elt("div", null, "CodeMirror-gutter " + gutterClass));
-            if (gutterClass == "CodeMirror-linenumbers") {
-              cm.display.lineGutter = gElt;
-              gElt.style.width = (cm.display.lineNumWidth || 1) + "px";
+        function alignHorizontally(cm) {
+          var display = cm.display, view = display.view;
+          if (!display.alignWidgets && (!display.gutters.firstChild || !cm.options.fixedGutter)) {
+            return;
+          }
+          var comp = compensateForHScroll(display) - display.scroller.scrollLeft + cm.doc.scrollLeft;
+          var gutterW = display.gutters.offsetWidth, left2 = comp + "px";
+          for (var i2 = 0; i2 < view.length; i2++) {
+            if (!view[i2].hidden) {
+              if (cm.options.fixedGutter) {
+                if (view[i2].gutter) {
+                  view[i2].gutter.style.left = left2;
+                }
+                if (view[i2].gutterBackground) {
+                  view[i2].gutterBackground.style.left = left2;
+                }
+              }
+              var align = view[i2].alignable;
+              if (align) {
+                for (var j = 0; j < align.length; j++) {
+                  align[j].style.left = left2;
+                }
+              }
             }
           }
-          gutters.style.display = i2 ? "" : "none";
-          updateGutterSpace(cm);
-        }
-        __name(updateGutters, "updateGutters");
-        function setGuttersForLineNumbers(options) {
-          var found = indexOf(options.gutters, "CodeMirror-linenumbers");
-          if (found == -1 && options.lineNumbers) {
-            options.gutters = options.gutters.concat(["CodeMirror-linenumbers"]);
-          } else if (found > -1 && !options.lineNumbers) {
-            options.gutters = options.gutters.slice(0);
-            options.gutters.splice(found, 1);
+          if (cm.options.fixedGutter) {
+            display.gutters.style.left = comp + gutterW + "px";
           }
         }
-        __name(setGuttersForLineNumbers, "setGuttersForLineNumbers");
-        var wheelSamples = 0;
-        var wheelPixelsPerUnit = null;
+        __name(alignHorizontally, "alignHorizontally");
+        function maybeUpdateLineNumberWidth(cm) {
+          if (!cm.options.lineNumbers) {
+            return false;
+          }
+          var doc = cm.doc, last = lineNumberFor(cm.options, doc.first + doc.size - 1), display = cm.display;
+          if (last.length != display.lineNumChars) {
+            var test = display.measure.appendChild(elt("div", [elt("div", last)], "CodeMirror-linenumber CodeMirror-gutter-elt"));
+            var innerW = test.firstChild.offsetWidth, padding = test.offsetWidth - innerW;
+            display.lineGutter.style.width = "";
+            display.lineNumInnerWidth = Math.max(innerW, display.lineGutter.offsetWidth - padding) + 1;
+            display.lineNumWidth = display.lineNumInnerWidth + padding;
+            display.lineNumChars = display.lineNumInnerWidth ? last.length : -1;
+            display.lineGutter.style.width = display.lineNumWidth + "px";
+            updateGutterSpace(cm.display);
+            return true;
+          }
+          return false;
+        }
+        __name(maybeUpdateLineNumberWidth, "maybeUpdateLineNumberWidth");
+        function getGutters(gutters, lineNumbers) {
+          var result = [], sawLineNumbers = false;
+          for (var i2 = 0; i2 < gutters.length; i2++) {
+            var name = gutters[i2], style = null;
+            if (typeof name != "string") {
+              style = name.style;
+              name = name.className;
+            }
+            if (name == "CodeMirror-linenumbers") {
+              if (!lineNumbers) {
+                continue;
+              } else {
+                sawLineNumbers = true;
+              }
+            }
+            result.push({ className: name, style });
+          }
+          if (lineNumbers && !sawLineNumbers) {
+            result.push({ className: "CodeMirror-linenumbers", style: null });
+          }
+          return result;
+        }
+        __name(getGutters, "getGutters");
+        function renderGutters(display) {
+          var gutters = display.gutters, specs = display.gutterSpecs;
+          removeChildren(gutters);
+          display.lineGutter = null;
+          for (var i2 = 0; i2 < specs.length; ++i2) {
+            var ref = specs[i2];
+            var className2 = ref.className;
+            var style = ref.style;
+            var gElt = gutters.appendChild(elt("div", null, "CodeMirror-gutter " + className2));
+            if (style) {
+              gElt.style.cssText = style;
+            }
+            if (className2 == "CodeMirror-linenumbers") {
+              display.lineGutter = gElt;
+              gElt.style.width = (display.lineNumWidth || 1) + "px";
+            }
+          }
+          gutters.style.display = specs.length ? "" : "none";
+          updateGutterSpace(display);
+        }
+        __name(renderGutters, "renderGutters");
+        function updateGutters(cm) {
+          renderGutters(cm.display);
+          regChange(cm);
+          alignHorizontally(cm);
+        }
+        __name(updateGutters, "updateGutters");
+        function Display(place, doc, input, options) {
+          var d = this;
+          this.input = input;
+          d.scrollbarFiller = elt("div", null, "CodeMirror-scrollbar-filler");
+          d.scrollbarFiller.setAttribute("cm-not-content", "true");
+          d.gutterFiller = elt("div", null, "CodeMirror-gutter-filler");
+          d.gutterFiller.setAttribute("cm-not-content", "true");
+          d.lineDiv = eltP("div", null, "CodeMirror-code");
+          d.selectionDiv = elt("div", null, null, "position: relative; z-index: 1");
+          d.cursorDiv = elt("div", null, "CodeMirror-cursors");
+          d.measure = elt("div", null, "CodeMirror-measure");
+          d.lineMeasure = elt("div", null, "CodeMirror-measure");
+          d.lineSpace = eltP("div", [d.measure, d.lineMeasure, d.selectionDiv, d.cursorDiv, d.lineDiv], null, "position: relative; outline: none");
+          var lines = eltP("div", [d.lineSpace], "CodeMirror-lines");
+          d.mover = elt("div", [lines], null, "position: relative");
+          d.sizer = elt("div", [d.mover], "CodeMirror-sizer");
+          d.sizerWidth = null;
+          d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerGap + "px; width: 1px;");
+          d.gutters = elt("div", null, "CodeMirror-gutters");
+          d.lineGutter = null;
+          d.scroller = elt("div", [d.sizer, d.heightForcer, d.gutters], "CodeMirror-scroll");
+          d.scroller.setAttribute("tabIndex", "-1");
+          d.wrapper = elt("div", [d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
+          if (ie && ie_version < 8) {
+            d.gutters.style.zIndex = -1;
+            d.scroller.style.paddingRight = 0;
+          }
+          if (!webkit && !(gecko && mobile)) {
+            d.scroller.draggable = true;
+          }
+          if (place) {
+            if (place.appendChild) {
+              place.appendChild(d.wrapper);
+            } else {
+              place(d.wrapper);
+            }
+          }
+          d.viewFrom = d.viewTo = doc.first;
+          d.reportedViewFrom = d.reportedViewTo = doc.first;
+          d.view = [];
+          d.renderedView = null;
+          d.externalMeasured = null;
+          d.viewOffset = 0;
+          d.lastWrapHeight = d.lastWrapWidth = 0;
+          d.updateLineNumbers = null;
+          d.nativeBarWidth = d.barHeight = d.barWidth = 0;
+          d.scrollbarsClipped = false;
+          d.lineNumWidth = d.lineNumInnerWidth = d.lineNumChars = null;
+          d.alignWidgets = false;
+          d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
+          d.maxLine = null;
+          d.maxLineLength = 0;
+          d.maxLineChanged = false;
+          d.wheelDX = d.wheelDY = d.wheelStartX = d.wheelStartY = null;
+          d.shift = false;
+          d.selForContextMenu = null;
+          d.activeTouch = null;
+          d.gutterSpecs = getGutters(options.gutters, options.lineNumbers);
+          renderGutters(d);
+          input.init(d);
+        }
+        __name(Display, "Display");
+        var wheelSamples = 0, wheelPixelsPerUnit = null;
         if (ie) {
           wheelPixelsPerUnit = -0.53;
         } else if (gecko) {
@@ -37314,7 +34204,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return this.ranges[this.primIndex];
         };
         Selection.prototype.equals = function(other) {
-          var this$1 = this;
           if (other == this) {
             return true;
           }
@@ -37322,7 +34211,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return false;
           }
           for (var i2 = 0; i2 < this.ranges.length; i2++) {
-            var here = this$1.ranges[i2], there = other.ranges[i2];
+            var here = this.ranges[i2], there = other.ranges[i2];
             if (!equalCursorPos(here.anchor, there.anchor) || !equalCursorPos(here.head, there.head)) {
               return false;
             }
@@ -37330,29 +34219,26 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return true;
         };
         Selection.prototype.deepCopy = function() {
-          var this$1 = this;
           var out = [];
           for (var i2 = 0; i2 < this.ranges.length; i2++) {
-            out[i2] = new Range(copyPos(this$1.ranges[i2].anchor), copyPos(this$1.ranges[i2].head));
+            out[i2] = new Range(copyPos(this.ranges[i2].anchor), copyPos(this.ranges[i2].head));
           }
           return new Selection(out, this.primIndex);
         };
         Selection.prototype.somethingSelected = function() {
-          var this$1 = this;
           for (var i2 = 0; i2 < this.ranges.length; i2++) {
-            if (!this$1.ranges[i2].empty()) {
+            if (!this.ranges[i2].empty()) {
               return true;
             }
           }
           return false;
         };
         Selection.prototype.contains = function(pos, end3) {
-          var this$1 = this;
           if (!end3) {
             end3 = pos;
           }
           for (var i2 = 0; i2 < this.ranges.length; i2++) {
-            var range2 = this$1.ranges[i2];
+            var range2 = this.ranges[i2];
             if (cmp(end3, range2.from()) >= 0 && cmp(pos, range2.to()) <= 0) {
               return i2;
             }
@@ -37372,7 +34258,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         Range.prototype.empty = function() {
           return this.head.line == this.anchor.line && this.head.ch == this.anchor.ch;
         };
-        function normalizeSelection(ranges, primIndex) {
+        function normalizeSelection(cm, ranges, primIndex) {
+          var mayTouch = cm && cm.options.selectionsMayTouch;
           var prim = ranges[primIndex];
           ranges.sort(function(a, b) {
             return cmp(a.from(), b.from());
@@ -37380,7 +34267,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           primIndex = indexOf(ranges, prim);
           for (var i2 = 1; i2 < ranges.length; i2++) {
             var cur = ranges[i2], prev = ranges[i2 - 1];
-            if (cmp(prev.to(), cur.from()) >= 0) {
+            var diff = cmp(prev.to(), cur.from());
+            if (mayTouch && !cur.empty() ? diff > 0 : diff >= 0) {
               var from = minPos(prev.from(), cur.from()), to = maxPos(prev.to(), cur.to());
               var inv = prev.empty() ? cur.from() == cur.head : prev.from() == prev.head;
               if (i2 <= primIndex) {
@@ -37423,7 +34311,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             var range2 = doc.sel.ranges[i2];
             out.push(new Range(adjustForChange(range2.anchor, change), adjustForChange(range2.head, change)));
           }
-          return normalizeSelection(out, doc.sel.primIndex);
+          return normalizeSelection(doc.cm, out, doc.sel.primIndex);
         }
         __name(computeSelAfterChange, "computeSelAfterChange");
         function offsetPos(pos, old, nw) {
@@ -37479,20 +34367,20 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return change.from.ch == 0 && change.to.ch == 0 && lst(change.text) == "" && (!doc.cm || doc.cm.options.wholeLineUpdateBefore);
         }
         __name(isWholeLineUpdate, "isWholeLineUpdate");
-        function updateDoc(doc, change, markedSpans, estimateHeight$$1) {
+        function updateDoc(doc, change, markedSpans, estimateHeight2) {
           function spansFor(n) {
             return markedSpans ? markedSpans[n] : null;
           }
           __name(spansFor, "spansFor");
-          function update5(line, text2, spans) {
-            updateLine(line, text2, spans, estimateHeight$$1);
+          function update4(line, text2, spans) {
+            updateLine(line, text2, spans, estimateHeight2);
             signalLater(line, "change", line, change);
           }
-          __name(update5, "update");
+          __name(update4, "update");
           function linesFor(start2, end3) {
             var result = [];
             for (var i2 = start2; i2 < end3; ++i2) {
-              result.push(new Line(text[i2], spansFor(i2), estimateHeight$$1));
+              result.push(new Line(text[i2], spansFor(i2), estimateHeight2));
             }
             return result;
           }
@@ -37505,7 +34393,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             doc.remove(text.length, doc.size - text.length);
           } else if (isWholeLineUpdate(doc, change)) {
             var added = linesFor(0, text.length - 1);
-            update5(lastLine, lastLine.text, lastSpans);
+            update4(lastLine, lastLine.text, lastSpans);
             if (nlines) {
               doc.remove(from.line, nlines);
             }
@@ -37514,19 +34402,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           } else if (firstLine == lastLine) {
             if (text.length == 1) {
-              update5(firstLine, firstLine.text.slice(0, from.ch) + lastText + firstLine.text.slice(to.ch), lastSpans);
+              update4(firstLine, firstLine.text.slice(0, from.ch) + lastText + firstLine.text.slice(to.ch), lastSpans);
             } else {
               var added$1 = linesFor(1, text.length - 1);
-              added$1.push(new Line(lastText + firstLine.text.slice(to.ch), lastSpans, estimateHeight$$1));
-              update5(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
+              added$1.push(new Line(lastText + firstLine.text.slice(to.ch), lastSpans, estimateHeight2));
+              update4(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
               doc.insert(from.line + 1, added$1);
             }
           } else if (text.length == 1) {
-            update5(firstLine, firstLine.text.slice(0, from.ch) + text[0] + lastLine.text.slice(to.ch), spansFor(0));
+            update4(firstLine, firstLine.text.slice(0, from.ch) + text[0] + lastLine.text.slice(to.ch), spansFor(0));
             doc.remove(from.line + 1, nlines);
           } else {
-            update5(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
-            update5(lastLine, lastText + lastLine.text.slice(to.ch), lastSpans);
+            update4(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
+            update4(lastLine, lastText + lastLine.text.slice(to.ch), lastSpans);
             var added$2 = linesFor(1, text.length - 1);
             if (nlines > 1) {
               doc.remove(from.line + 1, nlines - 1);
@@ -37566,6 +34454,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           estimateLineHeights(cm);
           loadMode(cm);
           setDirectionClass(cm);
+          cm.options.direction = doc.direction;
           if (!cm.options.lineWrapping) {
             findMaxLine(cm);
           }
@@ -37584,14 +34473,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           });
         }
         __name(directionChanged, "directionChanged");
-        function History(startGen) {
+        function History(prev) {
           this.done = [];
           this.undone = [];
-          this.undoDepth = Infinity;
+          this.undoDepth = prev ? prev.undoDepth : Infinity;
           this.lastModTime = this.lastSelTime = 0;
           this.lastOp = this.lastSelOp = null;
           this.lastOrigin = this.lastSelOrigin = null;
-          this.generation = this.maxGeneration = startGen || 1;
+          this.generation = this.maxGeneration = prev ? prev.maxGeneration : 1;
         }
         __name(History, "History");
         function historyChangeFromChange(doc, change) {
@@ -37631,7 +34520,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           hist.undone.length = 0;
           var time = +new Date(), cur;
           var last;
-          if ((hist.lastOp == opId || hist.lastOrigin == change.origin && change.origin && (change.origin.charAt(0) == "+" && doc.cm && hist.lastModTime > time - doc.cm.options.historyEventDelay || change.origin.charAt(0) == "*")) && (cur = lastChangeEvent(hist, hist.lastOp == opId))) {
+          if ((hist.lastOp == opId || hist.lastOrigin == change.origin && change.origin && (change.origin.charAt(0) == "+" && hist.lastModTime > time - (doc.cm ? doc.cm.options.historyEventDelay : 500) || change.origin.charAt(0) == "*")) && (cur = lastChangeEvent(hist, hist.lastOp == opId))) {
             last = lst(cur.changes);
             if (cmp(change.from, change.to) == 0 && cmp(change.from, last.to) == 0) {
               last.to = changeEnd(change);
@@ -37819,14 +34708,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           for (var i2 = 0; i2 < doc.sel.ranges.length; i2++) {
             out[i2] = extendRange(doc.sel.ranges[i2], heads[i2], null, extend);
           }
-          var newSel = normalizeSelection(out, doc.sel.primIndex);
+          var newSel = normalizeSelection(doc.cm, out, doc.sel.primIndex);
           setSelection(doc, newSel, options);
         }
         __name(extendSelections, "extendSelections");
         function replaceOneSelection(doc, i2, range2, options) {
           var ranges = doc.sel.ranges.slice(0);
           ranges[i2] = range2;
-          setSelection(doc, normalizeSelection(ranges, doc.sel.primIndex), options);
+          setSelection(doc, normalizeSelection(doc.cm, ranges, doc.sel.primIndex), options);
         }
         __name(replaceOneSelection, "replaceOneSelection");
         function setSimpleSelection(doc, anchor, head, options) {
@@ -37837,10 +34726,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var obj = {
             ranges: sel.ranges,
             update: function(ranges) {
-              var this$1 = this;
               this.ranges = [];
               for (var i2 = 0; i2 < ranges.length; i2++) {
-                this$1.ranges[i2] = new Range(clipPos(doc, ranges[i2].anchor), clipPos(doc, ranges[i2].head));
+                this.ranges[i2] = new Range(clipPos(doc, ranges[i2].anchor), clipPos(doc, ranges[i2].head));
               }
             },
             origin: options && options.origin
@@ -37850,7 +34738,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             signal(doc.cm, "beforeSelectionChange", doc.cm, obj);
           }
           if (obj.ranges != sel.ranges) {
-            return normalizeSelection(obj.ranges, obj.ranges.length - 1);
+            return normalizeSelection(doc.cm, obj.ranges, obj.ranges.length - 1);
           } else {
             return sel;
           }
@@ -37877,7 +34765,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           var bias = options && options.bias || (cmp(sel.primary().head, doc.sel.primary().head) < 0 ? -1 : 1);
           setSelectionInner(doc, skipAtomicInSelection(doc, sel, bias, true));
-          if (!(options && options.scroll === false) && doc.cm) {
+          if (!(options && options.scroll === false) && doc.cm && doc.cm.getOption("readOnly") != "nocursor") {
             ensureCursorVisible(doc.cm);
           }
         }
@@ -37888,7 +34776,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           doc.sel = sel;
           if (doc.cm) {
-            doc.cm.curOp.updateInput = doc.cm.curOp.selectionChanged = true;
+            doc.cm.curOp.updateInput = 1;
+            doc.cm.curOp.selectionChanged = true;
             signalCursorActivity(doc.cm);
           }
           signalLater(doc, "cursorActivity", doc);
@@ -37912,7 +34801,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               out[i2] = new Range(newAnchor, newHead);
             }
           }
-          return out ? normalizeSelection(out, sel.primIndex) : sel;
+          return out ? normalizeSelection(doc.cm, out, sel.primIndex) : sel;
         }
         __name(skipAtomicInSelection, "skipAtomicInSelection");
         function skipAtomicInner(doc, pos, oldPos, dir, mayClear) {
@@ -37920,7 +34809,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (line.markedSpans) {
             for (var i2 = 0; i2 < line.markedSpans.length; ++i2) {
               var sp = line.markedSpans[i2], m = sp.marker;
-              if ((sp.from == null || (m.inclusiveLeft ? sp.from <= pos.ch : sp.from < pos.ch)) && (sp.to == null || (m.inclusiveRight ? sp.to >= pos.ch : sp.to > pos.ch))) {
+              var preventCursorLeft = "selectLeft" in m ? !m.selectLeft : m.inclusiveLeft;
+              var preventCursorRight = "selectRight" in m ? !m.selectRight : m.inclusiveRight;
+              if ((sp.from == null || (preventCursorLeft ? sp.from <= pos.ch : sp.from < pos.ch)) && (sp.to == null || (preventCursorRight ? sp.to >= pos.ch : sp.to > pos.ch))) {
                 if (mayClear) {
                   signal(m, "beforeCursorEnter");
                   if (m.explicitlyCleared) {
@@ -37937,7 +34828,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 }
                 if (oldPos) {
                   var near = m.find(dir < 0 ? 1 : -1), diff = void 0;
-                  if (dir < 0 ? m.inclusiveRight : m.inclusiveLeft) {
+                  if (dir < 0 ? preventCursorRight : preventCursorLeft) {
                     near = movePos(doc, near, -dir, near && near.line == pos.line ? line : null);
                   }
                   if (near && near.line == pos.line && (diff = cmp(near, oldPos)) && (dir < 0 ? diff < 0 : diff > 0)) {
@@ -37945,7 +34836,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                   }
                 }
                 var far = m.find(dir < 0 ? -1 : 1);
-                if (dir < 0 ? m.inclusiveLeft : m.inclusiveRight) {
+                if (dir < 0 ? preventCursorLeft : preventCursorRight) {
                   far = movePos(doc, far, dir, far.line == pos.line ? line : null);
                 }
                 return far ? skipAtomicInner(doc, far, pos, dir, mayClear) : null;
@@ -37987,7 +34878,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           cm.setSelection(Pos(cm.firstLine(), 0), Pos(cm.lastLine()), sel_dontScroll);
         }
         __name(selectAll, "selectAll");
-        function filterChange(doc, change, update5) {
+        function filterChange(doc, change, update4) {
           var obj = {
             canceled: false,
             from: change.from,
@@ -37998,7 +34889,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               return obj.canceled = true;
             }
           };
-          if (update5) {
+          if (update4) {
             obj.update = function(from, to, text, origin) {
               if (from) {
                 obj.from = clipPos(doc, from);
@@ -38019,6 +34910,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             signal(doc.cm, "beforeChange", doc.cm, obj);
           }
           if (obj.canceled) {
+            if (doc.cm) {
+              doc.cm.curOp.updateInput = 2;
+            }
             return null;
           }
           return { from: obj.from, to: obj.to, text: obj.text, origin: obj.origin };
@@ -38067,7 +34961,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(makeChangeInner, "makeChangeInner");
         function makeChangeFromHistory(doc, type, allowSelectionOnly) {
-          if (doc.cm && doc.cm.state.suppressEdits && !allowSelectionOnly) {
+          var suppress = doc.cm && doc.cm.state.suppressEdits;
+          if (suppress && !allowSelectionOnly) {
             return;
           }
           var hist = doc.history, event, selAfter = doc.sel;
@@ -38092,6 +34987,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 return;
               }
               selAfter = event;
+            } else if (suppress) {
+              source.push(event);
+              return;
             } else {
               break;
             }
@@ -38186,6 +35084,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             updateDoc(doc, change, spans);
           }
           setSelectionNoUndo(doc, selAfter, sel_dontScroll);
+          if (doc.cantEdit && skipAtomic(doc, Pos(doc.firstLine(), 0))) {
+            doc.cantEdit = false;
+          }
         }
         __name(makeChangeSingleDoc, "makeChangeSingleDoc");
         function makeChangeSingleDocInEditor(cm, change, spans) {
@@ -38248,12 +35149,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(makeChangeSingleDocInEditor, "makeChangeSingleDocInEditor");
         function replaceRange(doc, code, from, to, origin) {
+          var assign;
           if (!to) {
             to = from;
           }
           if (cmp(to, from) < 0) {
-            var assign;
-            assign = [to, from], from = assign[0], to = assign[1], assign;
+            assign = [to, from], from = assign[0], to = assign[1];
           }
           if (typeof code == "string") {
             code = doc.splitLines(code);
@@ -38324,60 +35225,55 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(changeLine, "changeLine");
         function LeafChunk(lines) {
-          var this$1 = this;
           this.lines = lines;
           this.parent = null;
           var height = 0;
           for (var i2 = 0; i2 < lines.length; ++i2) {
-            lines[i2].parent = this$1;
+            lines[i2].parent = this;
             height += lines[i2].height;
           }
           this.height = height;
         }
         __name(LeafChunk, "LeafChunk");
         LeafChunk.prototype = {
-          chunkSize: /* @__PURE__ */ __name(function chunkSize() {
+          chunkSize: function() {
             return this.lines.length;
-          }, "chunkSize"),
-          removeInner: /* @__PURE__ */ __name(function removeInner(at, n) {
-            var this$1 = this;
+          },
+          removeInner: function(at, n) {
             for (var i2 = at, e = at + n; i2 < e; ++i2) {
-              var line = this$1.lines[i2];
-              this$1.height -= line.height;
+              var line = this.lines[i2];
+              this.height -= line.height;
               cleanUpLine(line);
               signalLater(line, "delete");
             }
             this.lines.splice(at, n);
-          }, "removeInner"),
-          collapse: /* @__PURE__ */ __name(function collapse(lines) {
+          },
+          collapse: function(lines) {
             lines.push.apply(lines, this.lines);
-          }, "collapse"),
-          insertInner: /* @__PURE__ */ __name(function insertInner(at, lines, height) {
-            var this$1 = this;
+          },
+          insertInner: function(at, lines, height) {
             this.height += height;
             this.lines = this.lines.slice(0, at).concat(lines).concat(this.lines.slice(at));
             for (var i2 = 0; i2 < lines.length; ++i2) {
-              lines[i2].parent = this$1;
+              lines[i2].parent = this;
             }
-          }, "insertInner"),
-          iterN: /* @__PURE__ */ __name(function iterN(at, n, op) {
-            var this$1 = this;
+          },
+          iterN: function(at, n, op) {
             for (var e = at + n; at < e; ++at) {
-              if (op(this$1.lines[at])) {
+              if (op(this.lines[at])) {
                 return true;
               }
             }
-          }, "iterN")
+          }
         };
         function BranchChunk(children) {
-          var this$1 = this;
           this.children = children;
           var size = 0, height = 0;
           for (var i2 = 0; i2 < children.length; ++i2) {
             var ch = children[i2];
             size += ch.chunkSize();
             height += ch.height;
-            ch.parent = this$1;
+            ch.parent = this;
           }
           this.size = size;
           this.height = height;
@@ -38385,20 +35281,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(BranchChunk, "BranchChunk");
         BranchChunk.prototype = {
-          chunkSize: /* @__PURE__ */ __name(function chunkSize() {
+          chunkSize: function() {
             return this.size;
-          }, "chunkSize"),
-          removeInner: /* @__PURE__ */ __name(function removeInner(at, n) {
-            var this$1 = this;
+          },
+          removeInner: function(at, n) {
             this.size -= n;
             for (var i2 = 0; i2 < this.children.length; ++i2) {
-              var child = this$1.children[i2], sz = child.chunkSize();
+              var child = this.children[i2], sz = child.chunkSize();
               if (at < sz) {
                 var rm = Math.min(n, sz - at), oldHeight = child.height;
                 child.removeInner(at, rm);
-                this$1.height -= oldHeight - child.height;
+                this.height -= oldHeight - child.height;
                 if (sz == rm) {
-                  this$1.children.splice(i2--, 1);
+                  this.children.splice(i2--, 1);
                   child.parent = null;
                 }
                 if ((n -= rm) == 0) {
@@ -38415,19 +35310,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               this.children = [new LeafChunk(lines)];
               this.children[0].parent = this;
             }
-          }, "removeInner"),
-          collapse: /* @__PURE__ */ __name(function collapse(lines) {
-            var this$1 = this;
+          },
+          collapse: function(lines) {
             for (var i2 = 0; i2 < this.children.length; ++i2) {
-              this$1.children[i2].collapse(lines);
+              this.children[i2].collapse(lines);
             }
-          }, "collapse"),
-          insertInner: /* @__PURE__ */ __name(function insertInner(at, lines, height) {
-            var this$1 = this;
+          },
+          insertInner: function(at, lines, height) {
             this.size += lines.length;
             this.height += height;
             for (var i2 = 0; i2 < this.children.length; ++i2) {
-              var child = this$1.children[i2], sz = child.chunkSize();
+              var child = this.children[i2], sz = child.chunkSize();
               if (at <= sz) {
                 child.insertInner(at, lines, height);
                 if (child.lines && child.lines.length > 50) {
@@ -38435,18 +35328,18 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                   for (var pos = remaining; pos < child.lines.length; ) {
                     var leaf = new LeafChunk(child.lines.slice(pos, pos += 25));
                     child.height -= leaf.height;
-                    this$1.children.splice(++i2, 0, leaf);
-                    leaf.parent = this$1;
+                    this.children.splice(++i2, 0, leaf);
+                    leaf.parent = this;
                   }
                   child.lines = child.lines.slice(0, remaining);
-                  this$1.maybeSpill();
+                  this.maybeSpill();
                 }
                 break;
               }
               at -= sz;
             }
-          }, "insertInner"),
-          maybeSpill: /* @__PURE__ */ __name(function maybeSpill() {
+          },
+          maybeSpill: function() {
             if (this.children.length <= 10) {
               return;
             }
@@ -38468,11 +35361,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               sibling.parent = me.parent;
             } while (me.children.length > 10);
             me.parent.maybeSpill();
-          }, "maybeSpill"),
-          iterN: /* @__PURE__ */ __name(function iterN(at, n, op) {
-            var this$1 = this;
+          },
+          iterN: function(at, n, op) {
             for (var i2 = 0; i2 < this.children.length; ++i2) {
-              var child = this$1.children[i2], sz = child.chunkSize();
+              var child = this.children[i2], sz = child.chunkSize();
               if (at < sz) {
                 var used = Math.min(n, sz - at);
                 if (child.iterN(at, used, op)) {
@@ -38486,14 +35378,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 at -= sz;
               }
             }
-          }, "iterN")
+          }
         };
         var LineWidget = /* @__PURE__ */ __name(function(doc, node, options) {
-          var this$1 = this;
           if (options) {
             for (var opt in options) {
               if (options.hasOwnProperty(opt)) {
-                this$1[opt] = options[opt];
+                this[opt] = options[opt];
               }
             }
           }
@@ -38501,13 +35392,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           this.node = node;
         }, "LineWidget");
         LineWidget.prototype.clear = function() {
-          var this$1 = this;
           var cm = this.doc.cm, ws = this.line.widgets, line = this.line, no = lineNo(line);
           if (no == null || !ws) {
             return;
           }
           for (var i2 = 0; i2 < ws.length; ++i2) {
-            if (ws[i2] == this$1) {
+            if (ws[i2] == this) {
               ws.splice(i2--, 1);
             }
           }
@@ -38532,7 +35422,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (!diff) {
             return;
           }
-          updateLineHeight(line, line.height + diff);
+          if (!lineIsHidden(this.doc, line)) {
+            updateLineHeight(line, line.height + diff);
+          }
           if (cm) {
             runInOp(cm, function() {
               cm.curOp.forceUpdate = true;
@@ -38559,7 +35451,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (widget.insertAt == null) {
               widgets.push(widget);
             } else {
-              widgets.splice(Math.min(widgets.length - 1, Math.max(0, widget.insertAt)), 0, widget);
+              widgets.splice(Math.min(widgets.length, Math.max(0, widget.insertAt)), 0, widget);
             }
             widget.line = line;
             if (cm && !lineIsHidden(doc, line)) {
@@ -38572,7 +35464,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
             return true;
           });
-          signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle));
+          if (cm) {
+            signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle));
+          }
           return widget;
         }
         __name(addLineWidget, "addLineWidget");
@@ -38584,7 +35478,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           this.id = ++nextMarkerId;
         }, "TextMarker");
         TextMarker.prototype.clear = function() {
-          var this$1 = this;
           if (this.explicitlyCleared) {
             return;
           }
@@ -38600,9 +35493,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           var min2 = null, max2 = null;
           for (var i2 = 0; i2 < this.lines.length; ++i2) {
-            var line = this$1.lines[i2];
-            var span = getMarkedSpanFor(line.markedSpans, this$1);
-            if (cm && !this$1.collapsed) {
+            var line = this.lines[i2];
+            var span = getMarkedSpanFor(line.markedSpans, this);
+            if (cm && !this.collapsed) {
               regLineChange(cm, lineNo(line), "text");
             } else if (cm) {
               if (span.to != null) {
@@ -38613,13 +35506,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
             }
             line.markedSpans = removeMarkedSpan(line.markedSpans, span);
-            if (span.from == null && this$1.collapsed && !lineIsHidden(this$1.doc, line) && cm) {
+            if (span.from == null && this.collapsed && !lineIsHidden(this.doc, line) && cm) {
               updateLineHeight(line, textHeight(cm.display));
             }
           }
           if (cm && this.collapsed && !cm.options.lineWrapping) {
             for (var i$12 = 0; i$12 < this.lines.length; ++i$12) {
-              var visual = visualLine(this$1.lines[i$12]), len = lineLength(visual);
+              var visual = visualLine(this.lines[i$12]), len = lineLength(visual);
               if (len > cm.display.maxLineLength) {
                 cm.display.maxLine = visual;
                 cm.display.maxLineLength = len;
@@ -38649,14 +35542,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         };
         TextMarker.prototype.find = function(side, lineObj) {
-          var this$1 = this;
           if (side == null && this.type == "bookmark") {
             side = 1;
           }
           var from, to;
           for (var i2 = 0; i2 < this.lines.length; ++i2) {
-            var line = this$1.lines[i2];
-            var span = getMarkedSpanFor(line.markedSpans, this$1);
+            var line = this.lines[i2];
+            var span = getMarkedSpanFor(line.markedSpans, this);
             if (span.from != null) {
               from = Pos(lineObj ? line : lineNo(line), span.from);
               if (side == -1) {
@@ -38755,7 +35647,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (marker.collapsed && curLine != from.line) {
               updateLineHeight(line, 0);
             }
-            addMarkedSpan(line, new MarkedSpan(marker, curLine == from.line ? from.ch : null, curLine == to.line ? to.ch : null));
+            addMarkedSpan(line, new MarkedSpan(marker, curLine == from.line ? from.ch : null, curLine == to.line ? to.ch : null), doc.cm && doc.cm.curOp);
             ++curLine;
           });
           if (marker.collapsed) {
@@ -38786,7 +35678,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
             if (marker.collapsed) {
               regChange(cm, from.line, to.line + 1);
-            } else if (marker.className || marker.title || marker.startStyle || marker.endStyle || marker.css) {
+            } else if (marker.className || marker.startStyle || marker.endStyle || marker.css || marker.attributes || marker.title) {
               for (var i2 = from.line; i2 <= to.line; i2++) {
                 regLineChange(cm, i2, "text");
               }
@@ -38800,21 +35692,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(markText, "markText");
         var SharedTextMarker = /* @__PURE__ */ __name(function(markers, primary) {
-          var this$1 = this;
           this.markers = markers;
           this.primary = primary;
           for (var i2 = 0; i2 < markers.length; ++i2) {
-            markers[i2].parent = this$1;
+            markers[i2].parent = this;
           }
         }, "SharedTextMarker");
         SharedTextMarker.prototype.clear = function() {
-          var this$1 = this;
           if (this.explicitlyCleared) {
             return;
           }
           this.explicitlyCleared = true;
           for (var i2 = 0; i2 < this.markers.length; ++i2) {
-            this$1.markers[i2].clear();
+            this.markers[i2].clear();
           }
           signalLater(this, "clear");
         };
@@ -38956,6 +35846,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (lineSep === false) {
               return lines;
             }
+            if (lineSep === "") {
+              return lines.join("");
+            }
             return lines.join(lineSep || this.lineSeparator());
           },
           getLine: function(line) {
@@ -38989,15 +35882,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return clipPos(this, pos);
           },
           getCursor: function(start2) {
-            var range$$1 = this.sel.primary(), pos;
+            var range2 = this.sel.primary(), pos;
             if (start2 == null || start2 == "head") {
-              pos = range$$1.head;
+              pos = range2.head;
             } else if (start2 == "anchor") {
-              pos = range$$1.anchor;
+              pos = range2.anchor;
             } else if (start2 == "end" || start2 == "to" || start2 === false) {
-              pos = range$$1.to();
+              pos = range2.to();
             } else {
-              pos = range$$1.from();
+              pos = range2.from();
             }
             return pos;
           },
@@ -39024,29 +35917,27 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             extendSelections(this, clipPosArray(this, heads), options);
           }),
           setSelections: docMethodOp(function(ranges, primary, options) {
-            var this$1 = this;
             if (!ranges.length) {
               return;
             }
             var out = [];
             for (var i2 = 0; i2 < ranges.length; i2++) {
-              out[i2] = new Range(clipPos(this$1, ranges[i2].anchor), clipPos(this$1, ranges[i2].head));
+              out[i2] = new Range(clipPos(this, ranges[i2].anchor), clipPos(this, ranges[i2].head || ranges[i2].anchor));
             }
             if (primary == null) {
               primary = Math.min(ranges.length - 1, this.sel.primIndex);
             }
-            setSelection(this, normalizeSelection(out, primary), options);
+            setSelection(this, normalizeSelection(this.cm, out, primary), options);
           }),
           addSelection: docMethodOp(function(anchor, head, options) {
             var ranges = this.sel.ranges.slice(0);
             ranges.push(new Range(clipPos(this, anchor), clipPos(this, head || anchor)));
-            setSelection(this, normalizeSelection(ranges, ranges.length - 1), options);
+            setSelection(this, normalizeSelection(this.cm, ranges, ranges.length - 1), options);
           }),
           getSelection: function(lineSep) {
-            var this$1 = this;
             var ranges = this.sel.ranges, lines;
             for (var i2 = 0; i2 < ranges.length; i2++) {
-              var sel = getBetween(this$1, ranges[i2].from(), ranges[i2].to());
+              var sel = getBetween(this, ranges[i2].from(), ranges[i2].to());
               lines = lines ? lines.concat(sel) : sel;
             }
             if (lineSep === false) {
@@ -39056,12 +35947,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           },
           getSelections: function(lineSep) {
-            var this$1 = this;
             var parts = [], ranges = this.sel.ranges;
             for (var i2 = 0; i2 < ranges.length; i2++) {
-              var sel = getBetween(this$1, ranges[i2].from(), ranges[i2].to());
+              var sel = getBetween(this, ranges[i2].from(), ranges[i2].to());
               if (lineSep !== false) {
-                sel = sel.join(lineSep || this$1.lineSeparator());
+                sel = sel.join(lineSep || this.lineSeparator());
               }
               parts[i2] = sel;
             }
@@ -39075,15 +35965,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             this.replaceSelections(dup, collapse, origin || "+input");
           },
           replaceSelections: docMethodOp(function(code, collapse, origin) {
-            var this$1 = this;
             var changes = [], sel = this.sel;
             for (var i2 = 0; i2 < sel.ranges.length; i2++) {
-              var range$$1 = sel.ranges[i2];
-              changes[i2] = { from: range$$1.from(), to: range$$1.to(), text: this$1.splitLines(code[i2]), origin };
+              var range2 = sel.ranges[i2];
+              changes[i2] = { from: range2.from(), to: range2.to(), text: this.splitLines(code[i2]), origin };
             }
             var newSel = collapse && collapse != "end" && computeReplacedSel(this, changes, collapse);
             for (var i$12 = changes.length - 1; i$12 >= 0; i$12--) {
-              makeChange(this$1, changes[i$12]);
+              makeChange(this, changes[i$12]);
             }
             if (newSel) {
               setSelectionReplaceHistory(this, newSel);
@@ -39124,7 +36013,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return { undo: done, redo: undone };
           },
           clearHistory: function() {
-            this.history = new History(this.history.maxGeneration);
+            var this$1 = this;
+            this.history = new History(this.history);
+            linkedDocs(this, function(doc) {
+              return doc.history = this$1.history;
+            }, true);
           },
           markClean: function() {
             this.cleanGeneration = this.changeGeneration(true);
@@ -39145,7 +36038,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             };
           },
           setHistory: function(histData) {
-            var hist = this.history = new History(this.history.maxGeneration);
+            var hist = this.history = new History(this.history);
             hist.done = copyHistoryArray(histData.done.slice(0), null, true);
             hist.undone = copyHistoryArray(histData.undone.slice(0), null, true);
           },
@@ -39269,18 +36162,18 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           findMarks: function(from, to, filter) {
             from = clipPos(this, from);
             to = clipPos(this, to);
-            var found = [], lineNo$$1 = from.line;
+            var found = [], lineNo2 = from.line;
             this.iter(from.line, to.line + 1, function(line) {
               var spans = line.markedSpans;
               if (spans) {
                 for (var i2 = 0; i2 < spans.length; i2++) {
                   var span = spans[i2];
-                  if (!(span.to != null && lineNo$$1 == from.line && from.ch >= span.to || span.from == null && lineNo$$1 != from.line || span.from != null && lineNo$$1 == to.line && span.from >= to.ch) && (!filter || filter(span.marker))) {
+                  if (!(span.to != null && lineNo2 == from.line && from.ch >= span.to || span.from == null && lineNo2 != from.line || span.from != null && lineNo2 == to.line && span.from >= to.ch) && (!filter || filter(span.marker))) {
                     found.push(span.marker.parent || span.marker);
                   }
                 }
               }
-              ++lineNo$$1;
+              ++lineNo2;
             });
             return found;
           },
@@ -39299,7 +36192,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return markers;
           },
           posFromIndex: function(off2) {
-            var ch, lineNo$$1 = this.first, sepSize = this.lineSeparator().length;
+            var ch, lineNo2 = this.first, sepSize = this.lineSeparator().length;
             this.iter(function(line) {
               var sz = line.text.length + sepSize;
               if (sz > off2) {
@@ -39307,9 +36200,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 return true;
               }
               off2 -= sz;
-              ++lineNo$$1;
+              ++lineNo2;
             });
-            return clipPos(this, Pos(lineNo$$1, ch));
+            return clipPos(this, Pos(lineNo2, ch));
           },
           indexFromPos: function(coords) {
             coords = clipPos(this, coords);
@@ -39356,19 +36249,18 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return copy;
           },
           unlinkDoc: function(other) {
-            var this$1 = this;
-            if (other instanceof CodeMirror$1) {
+            if (other instanceof CodeMirror2) {
               other = other.doc;
             }
             if (this.linked) {
               for (var i2 = 0; i2 < this.linked.length; ++i2) {
-                var link = this$1.linked[i2];
+                var link = this.linked[i2];
                 if (link.doc != other) {
                   continue;
                 }
-                this$1.linked.splice(i2, 1);
-                other.unlinkDoc(this$1);
-                detachSharedMarkers(findSharedMarkers(this$1));
+                this.linked.splice(i2, 1);
+                other.unlinkDoc(this);
+                detachSharedMarkers(findSharedMarkers(this));
                 break;
               }
             }
@@ -39434,33 +36326,45 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           if (files && files.length && window.FileReader && window.File) {
             var n = files.length, text = Array(n), read2 = 0;
-            var loadFile = /* @__PURE__ */ __name(function(file, i3) {
-              if (cm.options.allowDropFileTypes && indexOf(cm.options.allowDropFileTypes, file.type) == -1) {
-                return;
-              }
-              var reader = new FileReader();
-              reader.onload = operation(cm, function() {
-                var content = reader.result;
-                if (/[\x00-\x08\x0e-\x1f]{2}/.test(content)) {
-                  content = "";
-                }
-                text[i3] = content;
-                if (++read2 == n) {
+            var markAsReadAndPasteIfAllFilesAreRead = /* @__PURE__ */ __name(function() {
+              if (++read2 == n) {
+                operation(cm, function() {
                   pos = clipPos(cm.doc, pos);
                   var change = {
                     from: pos,
                     to: pos,
-                    text: cm.doc.splitLines(text.join(cm.doc.lineSeparator())),
+                    text: cm.doc.splitLines(text.filter(function(t) {
+                      return t != null;
+                    }).join(cm.doc.lineSeparator())),
                     origin: "paste"
                   };
                   makeChange(cm.doc, change);
-                  setSelectionReplaceHistory(cm.doc, simpleSelection(pos, changeEnd(change)));
+                  setSelectionReplaceHistory(cm.doc, simpleSelection(clipPos(cm.doc, pos), clipPos(cm.doc, changeEnd(change))));
+                })();
+              }
+            }, "markAsReadAndPasteIfAllFilesAreRead");
+            var readTextFromFile = /* @__PURE__ */ __name(function(file, i3) {
+              if (cm.options.allowDropFileTypes && indexOf(cm.options.allowDropFileTypes, file.type) == -1) {
+                markAsReadAndPasteIfAllFilesAreRead();
+                return;
+              }
+              var reader = new FileReader();
+              reader.onerror = function() {
+                return markAsReadAndPasteIfAllFilesAreRead();
+              };
+              reader.onload = function() {
+                var content = reader.result;
+                if (/[\x00-\x08\x0e-\x1f]{2}/.test(content)) {
+                  markAsReadAndPasteIfAllFilesAreRead();
+                  return;
                 }
-              });
+                text[i3] = content;
+                markAsReadAndPasteIfAllFilesAreRead();
+              };
               reader.readAsText(file);
-            }, "loadFile");
-            for (var i2 = 0; i2 < n; ++i2) {
-              loadFile(files[i2], i2);
+            }, "readTextFromFile");
+            for (var i2 = 0; i2 < files.length; i2++) {
+              readTextFromFile(files[i2], i2);
             }
           } else {
             if (cm.state.draggingText && cm.doc.sel.contains(pos) > -1) {
@@ -39486,7 +36390,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 cm.replaceSelection(text$1, "around", "paste");
                 cm.display.input.focus();
               }
-            } catch (e2) {
+            } catch (e$1) {
             }
           }
         }
@@ -39541,12 +36445,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (!document.getElementsByClassName) {
             return;
           }
-          var byClass = document.getElementsByClassName("CodeMirror");
+          var byClass = document.getElementsByClassName("CodeMirror"), editors = [];
           for (var i2 = 0; i2 < byClass.length; i2++) {
             var cm = byClass[i2].CodeMirror;
             if (cm) {
-              f(cm);
+              editors.push(cm);
             }
+          }
+          if (editors.length) {
+            editors[0].operation(function() {
+              for (var i3 = 0; i3 < editors.length; i3++) {
+                f(editors[i3]);
+              }
+            });
           }
         }
         __name(forEachCodeMirror, "forEachCodeMirror");
@@ -39576,16 +36487,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         __name(registerGlobalHandlers, "registerGlobalHandlers");
         function onResize(cm) {
           var d = cm.display;
-          if (d.lastWrapHeight == d.wrapper.clientHeight && d.lastWrapWidth == d.wrapper.clientWidth) {
-            return;
-          }
           d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
           d.scrollbarsClipped = false;
           cm.setSize();
         }
         __name(onResize, "onResize");
         var keyNames = {
-          3: "Enter",
+          3: "Pause",
           8: "Backspace",
           9: "Tab",
           13: "Enter",
@@ -39617,7 +36525,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           109: "-",
           110: ".",
           111: "/",
-          127: "Delete",
+          145: "ScrollLock",
           173: "-",
           186: ";",
           187: "=",
@@ -39630,6 +36538,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           220: "\\",
           221: "]",
           222: "'",
+          224: "Mod",
           63232: "Up",
           63233: "Down",
           63234: "Left",
@@ -39696,22 +36605,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           "Ctrl-U": "undoSelection",
           "Shift-Ctrl-U": "redoSelection",
           "Alt-U": "redoSelection",
-          fallthrough: "basic"
+          "fallthrough": "basic"
         };
         keyMap.emacsy = {
           "Ctrl-F": "goCharRight",
           "Ctrl-B": "goCharLeft",
           "Ctrl-P": "goLineUp",
           "Ctrl-N": "goLineDown",
-          "Alt-F": "goWordRight",
-          "Alt-B": "goWordLeft",
           "Ctrl-A": "goLineStart",
           "Ctrl-E": "goLineEnd",
           "Ctrl-V": "goPageDown",
           "Shift-Ctrl-V": "goPageUp",
           "Ctrl-D": "delCharAfter",
           "Ctrl-H": "delCharBefore",
-          "Alt-D": "delWordAfter",
           "Alt-Backspace": "delWordBefore",
           "Ctrl-K": "killLine",
           "Ctrl-T": "transposeChars",
@@ -39748,7 +36654,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           "Shift-Cmd-U": "redoSelection",
           "Ctrl-Up": "goDocStart",
           "Ctrl-Down": "goDocEnd",
-          fallthrough: ["basic", "emacsy"]
+          "fallthrough": ["basic", "emacsy"]
         };
         keyMap["default"] = mac ? keyMap.macDefault : keyMap.pcDefault;
         function normalizeKeyName(name) {
@@ -39822,9 +36728,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return keymap;
         }
         __name(normalizeKeyMap, "normalizeKeyMap");
-        function lookupKey(key, map$$1, handle, context) {
-          map$$1 = getKeyMap(map$$1);
-          var found = map$$1.call ? map$$1.call(key, context) : map$$1[key];
+        function lookupKey(key, map2, handle, context) {
+          map2 = getKeyMap(map2);
+          var found = map2.call ? map2.call(key, context) : map2[key];
           if (found === false) {
             return "nothing";
           }
@@ -39834,12 +36740,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (found != null && handle(found)) {
             return "handled";
           }
-          if (map$$1.fallthrough) {
-            if (Object.prototype.toString.call(map$$1.fallthrough) != "[object Array]") {
-              return lookupKey(key, map$$1.fallthrough, handle, context);
+          if (map2.fallthrough) {
+            if (Object.prototype.toString.call(map2.fallthrough) != "[object Array]") {
+              return lookupKey(key, map2.fallthrough, handle, context);
             }
-            for (var i2 = 0; i2 < map$$1.fallthrough.length; i2++) {
-              var result = lookupKey(key, map$$1.fallthrough[i2], handle, context);
+            for (var i2 = 0; i2 < map2.fallthrough.length; i2++) {
+              var result = lookupKey(key, map2.fallthrough[i2], handle, context);
               if (result) {
                 return result;
               }
@@ -39860,7 +36766,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if ((flipCtrlCmd ? event.metaKey : event.ctrlKey) && base != "Ctrl") {
             name = "Ctrl-" + name;
           }
-          if ((flipCtrlCmd ? event.ctrlKey : event.metaKey) && base != "Cmd") {
+          if ((flipCtrlCmd ? event.ctrlKey : event.metaKey) && base != "Mod") {
             name = "Cmd-" + name;
           }
           if (!noShift && event.shiftKey && base != "Shift") {
@@ -39876,6 +36782,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var name = keyNames[event.keyCode];
           if (name == null || event.altGraphKey) {
             return false;
+          }
+          if (event.keyCode == 3 && event.code) {
+            name = event.code;
           }
           return addModifierNames(name, event, noShift);
         }
@@ -39917,6 +36826,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         __name(moveLogically, "moveLogically");
         function endOfLine(visually, cm, lineObj, lineNo2, dir) {
           if (visually) {
+            if (cm.doc.direction == "rtl") {
+              dir = -dir;
+            }
             var order2 = getOrder(lineObj, cm.doc.direction);
             if (order2) {
               var part = dir < 0 ? lst(order2) : order2[0];
@@ -40150,7 +37062,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return cm.moveH(1, "word");
           },
           delCharBefore: function(cm) {
-            return cm.deleteH(-1, "char");
+            return cm.deleteH(-1, "codepoint");
           },
           delCharAfter: function(cm) {
             return cm.deleteH(1, "char");
@@ -40266,7 +37178,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var line = getLine(cm.doc, start2.line);
           var order2 = getOrder(line, cm.doc.direction);
           if (!order2 || order2[0].level == 0) {
-            var firstNonWS = Math.max(0, line.text.search(/\S/));
+            var firstNonWS = Math.max(start2.ch, line.text.search(/\S/));
             var inWS = pos.line == start2.line && pos.ch <= firstNonWS && pos.ch;
             return Pos(start2.line, inWS ? 0 : firstNonWS, start2.sticky);
           }
@@ -40314,14 +37226,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (isModifierKey(name)) {
               return "handled";
             }
-            stopSeq.set(50, function() {
-              if (cm.state.keySeq == seq) {
-                cm.state.keySeq = null;
-                cm.display.input.reset();
-              }
-            });
-            name = seq + " " + name;
+            if (/\'$/.test(name)) {
+              cm.state.keySeq = null;
+            } else {
+              stopSeq.set(50, function() {
+                if (cm.state.keySeq == seq) {
+                  cm.state.keySeq = null;
+                  cm.display.input.reset();
+                }
+              });
+            }
+            if (dispatchKeyInner(cm, seq + " " + name, e, handle)) {
+              return true;
+            }
           }
+          return dispatchKeyInner(cm, name, e, handle);
+        }
+        __name(dispatchKey, "dispatchKey");
+        function dispatchKeyInner(cm, name, e, handle) {
           var result = lookupKeyForEditor(cm, name, handle);
           if (result == "multi") {
             cm.state.keySeq = name;
@@ -40333,13 +37255,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             e_preventDefault(e);
             restartBlink(cm);
           }
-          if (seq && !result && /\'$/.test(name)) {
-            e_preventDefault(e);
-            return true;
-          }
           return !!result;
         }
-        __name(dispatchKey, "dispatchKey");
+        __name(dispatchKeyInner, "dispatchKeyInner");
         function handleKeyBinding(cm, e) {
           var name = keyName(e, true);
           if (!name) {
@@ -40369,6 +37287,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         var lastStoppedKey = null;
         function onKeyDown2(e) {
           var cm = this;
+          if (e.target && e.target != cm.display.input.getField()) {
+            return;
+          }
           cm.curOp.focus = activeElt();
           if (signalDOMEvent(cm, e)) {
             return;
@@ -40384,6 +37305,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (!handled && code == 88 && !hasCopyEvent && (mac ? e.metaKey : e.ctrlKey)) {
               cm.replaceSelection("", null, "cut");
             }
+          }
+          if (gecko && !mac && !handled && code == 46 && e.shiftKey && !e.ctrlKey && document.execCommand) {
+            document.execCommand("cut");
           }
           if (code == 18 && !/\bCodeMirror-crosshair\b/.test(cm.display.lineDiv.className)) {
             showCrossHair(cm);
@@ -40414,6 +37338,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         __name(onKeyUp, "onKeyUp");
         function onKeyPress(e) {
           var cm = this;
+          if (e.target && e.target != cm.display.input.getField()) {
+            return;
+          }
           if (eventInWidget(cm.display, e) || signalDOMEvent(cm, e) || e.ctrlKey && !e.altKey || mac && e.metaKey) {
             return;
           }
@@ -40445,8 +37372,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         PastClick.prototype.compare = function(time, pos, button) {
           return this.time + DOUBLECLICK_DELAY > time && cmp(pos, this.pos) == 0 && button == this.button;
         };
-        var lastClick;
-        var lastDoubleClick;
+        var lastClick, lastDoubleClick;
         function clickRepeat(pos, button) {
           var now = +new Date();
           if (lastDoubleClick && lastDoubleClick.compare(now, pos, button)) {
@@ -40505,7 +37431,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }, 20);
           } else if (button == 3) {
             if (captureRightClick) {
-              onContextMenu(cm, e);
+              cm.display.input.onContextMenu(e);
             } else {
               delayBlurEvent(cm);
             }
@@ -40581,8 +37507,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               display.scroller.draggable = false;
             }
             cm.state.draggingText = false;
-            off(document, "mouseup", dragEnd);
-            off(document, "mousemove", mouseMove);
+            if (cm.state.delayingBlurEvent) {
+              if (cm.hasFocus()) {
+                cm.state.delayingBlurEvent = false;
+              } else {
+                delayBlurEvent(cm);
+              }
+            }
+            off(display.wrapper.ownerDocument, "mouseup", dragEnd);
+            off(display.wrapper.ownerDocument, "mousemove", mouseMove);
             off(display.scroller, "dragstart", dragStart);
             off(display.scroller, "drop", dragEnd);
             if (!moved) {
@@ -40590,9 +37523,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               if (!behavior.addNew) {
                 extendSelection(cm.doc, pos, null, null, behavior.extend);
               }
-              if (webkit || ie && ie_version == 9) {
+              if (webkit && !safari || ie && ie_version == 9) {
                 setTimeout(function() {
-                  document.body.focus();
+                  display.wrapper.ownerDocument.body.focus({ preventScroll: true });
                   display.input.focus();
                 }, 20);
               } else {
@@ -40611,17 +37544,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           cm.state.draggingText = dragEnd;
           dragEnd.copy = !behavior.moveOnDrag;
-          if (display.scroller.dragDrop) {
-            display.scroller.dragDrop();
-          }
-          on(document, "mouseup", dragEnd);
-          on(document, "mousemove", mouseMove);
+          on(display.wrapper.ownerDocument, "mouseup", dragEnd);
+          on(display.wrapper.ownerDocument, "mousemove", mouseMove);
           on(display.scroller, "dragstart", dragStart);
           on(display.scroller, "drop", dragEnd);
-          delayBlurEvent(cm);
+          cm.state.delayingBlurEvent = true;
           setTimeout(function() {
             return display.input.focus();
           }, 20);
+          if (display.scroller.dragDrop) {
+            display.scroller.dragDrop();
+          }
         }
         __name(leftButtonStartDrag, "leftButtonStartDrag");
         function rangeForUnit(cm, pos, unit) {
@@ -40639,6 +37572,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(rangeForUnit, "rangeForUnit");
         function leftButtonSelect(cm, event, start2, behavior) {
+          if (ie) {
+            delayBlurEvent(cm);
+          }
           var display = cm.display, doc = cm.doc;
           e_preventDefault(event);
           var ourRange, ourIndex, startSel = doc.sel, ranges = startSel.ranges;
@@ -40660,11 +37596,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             start2 = posFromMouse(cm, event, true, true);
             ourIndex = -1;
           } else {
-            var range$$1 = rangeForUnit(cm, start2, behavior.unit);
+            var range2 = rangeForUnit(cm, start2, behavior.unit);
             if (behavior.extend) {
-              ourRange = extendRange(ourRange, range$$1.anchor, range$$1.head, behavior.extend);
+              ourRange = extendRange(ourRange, range2.anchor, range2.head, behavior.extend);
             } else {
-              ourRange = range$$1;
+              ourRange = range2;
             }
           }
           if (!behavior.addNew) {
@@ -40673,9 +37609,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             startSel = doc.sel;
           } else if (ourIndex == -1) {
             ourIndex = ranges.length;
-            setSelection(doc, normalizeSelection(ranges.concat([ourRange]), ourIndex), { scroll: false, origin: "*mouse" });
+            setSelection(doc, normalizeSelection(cm, ranges.concat([ourRange]), ourIndex), { scroll: false, origin: "*mouse" });
           } else if (ranges.length > 1 && ranges[ourIndex].empty() && behavior.unit == "char" && !behavior.extend) {
-            setSelection(doc, normalizeSelection(ranges.slice(0, ourIndex).concat(ranges.slice(ourIndex + 1)), 0), { scroll: false, origin: "*mouse" });
+            setSelection(doc, normalizeSelection(cm, ranges.slice(0, ourIndex).concat(ranges.slice(ourIndex + 1)), 0), { scroll: false, origin: "*mouse" });
             startSel = doc.sel;
           } else {
             replaceOneSelection(doc, ourIndex, ourRange, sel_mouse);
@@ -40702,22 +37638,22 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               if (!ranges2.length) {
                 ranges2.push(new Range(start2, start2));
               }
-              setSelection(doc, normalizeSelection(startSel.ranges.slice(0, ourIndex).concat(ranges2), ourIndex), { origin: "*mouse", scroll: false });
+              setSelection(doc, normalizeSelection(cm, startSel.ranges.slice(0, ourIndex).concat(ranges2), ourIndex), { origin: "*mouse", scroll: false });
               cm.scrollIntoView(pos);
             } else {
               var oldRange = ourRange;
-              var range$$12 = rangeForUnit(cm, pos, behavior.unit);
+              var range3 = rangeForUnit(cm, pos, behavior.unit);
               var anchor = oldRange.anchor, head;
-              if (cmp(range$$12.anchor, anchor) > 0) {
-                head = range$$12.head;
-                anchor = minPos(oldRange.from(), range$$12.anchor);
+              if (cmp(range3.anchor, anchor) > 0) {
+                head = range3.head;
+                anchor = minPos(oldRange.from(), range3.anchor);
               } else {
-                head = range$$12.anchor;
-                anchor = maxPos(oldRange.to(), range$$12.head);
+                head = range3.anchor;
+                anchor = maxPos(oldRange.to(), range3.head);
               }
               var ranges$1 = startSel.ranges.slice(0);
               ranges$1[ourIndex] = bidiSimplify(cm, new Range(clipPos(doc, anchor), head));
-              setSelection(doc, normalizeSelection(ranges$1, ourIndex), sel_mouse);
+              setSelection(doc, normalizeSelection(cm, ranges$1, ourIndex), sel_mouse);
             }
           }
           __name(extendTo, "extendTo");
@@ -40757,15 +37693,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           function done(e) {
             cm.state.selectingText = false;
             counter = Infinity;
-            e_preventDefault(e);
-            display.input.focus();
-            off(document, "mousemove", move);
-            off(document, "mouseup", up);
+            if (e) {
+              e_preventDefault(e);
+              display.input.focus();
+            }
+            off(display.wrapper.ownerDocument, "mousemove", move);
+            off(display.wrapper.ownerDocument, "mouseup", up);
             doc.history.lastSelOrigin = null;
           }
           __name(done, "done");
           var move = operation(cm, function(e) {
-            if (!e_button(e)) {
+            if (e.buttons === 0 || !e_button(e)) {
               done(e);
             } else {
               extend(e);
@@ -40773,28 +37711,28 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           });
           var up = operation(cm, done);
           cm.state.selectingText = up;
-          on(document, "mousemove", move);
-          on(document, "mouseup", up);
+          on(display.wrapper.ownerDocument, "mousemove", move);
+          on(display.wrapper.ownerDocument, "mouseup", up);
         }
         __name(leftButtonSelect, "leftButtonSelect");
-        function bidiSimplify(cm, range$$1) {
-          var anchor = range$$1.anchor;
-          var head = range$$1.head;
+        function bidiSimplify(cm, range2) {
+          var anchor = range2.anchor;
+          var head = range2.head;
           var anchorLine = getLine(cm.doc, anchor.line);
           if (cmp(anchor, head) == 0 && anchor.sticky == head.sticky) {
-            return range$$1;
+            return range2;
           }
           var order2 = getOrder(anchorLine);
           if (!order2) {
-            return range$$1;
+            return range2;
           }
           var index = getBidiPartAt(order2, anchor.ch, anchor.sticky), part = order2[index];
           if (part.from != anchor.ch && part.to != anchor.ch) {
-            return range$$1;
+            return range2;
           }
           var boundary = index + (part.from == anchor.ch == (part.level != 1) ? 0 : 1);
           if (boundary == 0 || boundary == order2.length) {
-            return range$$1;
+            return range2;
           }
           var leftSide;
           if (head.line != anchor.line) {
@@ -40811,7 +37749,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var usePart = order2[boundary + (leftSide ? -1 : 0)];
           var from = leftSide == (usePart.level == 1);
           var ch = from ? usePart.from : usePart.to, sticky = from ? "after" : "before";
-          return anchor.ch == ch && anchor.sticky == sticky ? range$$1 : new Range(new Pos(anchor.line, ch, sticky), head);
+          return anchor.ch == ch && anchor.sticky == sticky ? range2 : new Range(new Pos(anchor.line, ch, sticky), head);
         }
         __name(bidiSimplify, "bidiSimplify");
         function gutterEvent(cm, e, type, prevent) {
@@ -40823,7 +37761,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             try {
               mX = e.clientX;
               mY = e.clientY;
-            } catch (e2) {
+            } catch (e$1) {
               return false;
             }
           }
@@ -40839,12 +37777,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return e_defaultPrevented(e);
           }
           mY -= lineBox.top - display.viewOffset;
-          for (var i2 = 0; i2 < cm.options.gutters.length; ++i2) {
+          for (var i2 = 0; i2 < cm.display.gutterSpecs.length; ++i2) {
             var g = display.gutters.childNodes[i2];
             if (g && g.getBoundingClientRect().right >= mX) {
               var line = lineAtHeight(cm.doc, mY);
-              var gutter = cm.options.gutters[i2];
-              signal(cm, type, cm, line, gutter, e);
+              var gutter = cm.display.gutterSpecs[i2];
+              signal(cm, type, cm, line, gutter.className, e);
               return e_defaultPrevented(e);
             }
           }
@@ -40861,7 +37799,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (signalDOMEvent(cm, e, "contextmenu")) {
             return;
           }
-          cm.display.input.onContextMenu(e);
+          if (!captureRightClick) {
+            cm.display.input.onContextMenu(e);
+          }
         }
         __name(onContextMenu, "onContextMenu");
         function contextMenuInGutter(cm, e) {
@@ -40881,10 +37821,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         } };
         var defaults = {};
         var optionHandlers = {};
-        function defineOptions(CodeMirror) {
-          var optionHandlers2 = CodeMirror.optionHandlers;
+        function defineOptions(CodeMirror3) {
+          var optionHandlers2 = CodeMirror3.optionHandlers;
           function option(name, deflt, handle, notOnInit) {
-            CodeMirror.defaults[name] = deflt;
+            CodeMirror3.defaults[name] = deflt;
             if (handle) {
               optionHandlers2[name] = notOnInit ? function(cm, val, old) {
                 if (old != Init) {
@@ -40894,8 +37834,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           }
           __name(option, "option");
-          CodeMirror.defineOption = option;
-          CodeMirror.Init = Init;
+          CodeMirror3.defineOption = option;
+          CodeMirror3.Init = Init;
           option("value", "", function(cm, val) {
             return cm.setValue(val);
           }, true);
@@ -40932,7 +37872,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               replaceRange(cm.doc, val, newBreaks[i2], Pos(newBreaks[i2].line, newBreaks[i2].ch + val.length));
             }
           });
-          option("specialChars", /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/g, function(cm, val, old) {
+          option("specialChars", /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\ufeff\ufff9-\ufffc]/g, function(cm, val, old) {
             cm.state.specialChars = new RegExp(val.source + (val.test("	") ? "" : "|	"), "g");
             if (old != Init) {
               cm.refresh();
@@ -40948,11 +37888,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           option("spellcheck", false, function(cm, val) {
             return cm.getInputField().spellcheck = val;
           }, true);
+          option("autocorrect", false, function(cm, val) {
+            return cm.getInputField().autocorrect = val;
+          }, true);
+          option("autocapitalize", false, function(cm, val) {
+            return cm.getInputField().autocapitalize = val;
+          }, true);
           option("rtlMoveVisually", !windows);
           option("wholeLineUpdateBefore", true);
           option("theme", "default", function(cm) {
             themeChanged(cm);
-            guttersChanged(cm);
+            updateGutters(cm);
           }, true);
           option("keyMap", "default", function(cm, val, old) {
             var next = getKeyMap(val);
@@ -40967,9 +37913,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           option("extraKeys", null);
           option("configureMouse", null);
           option("lineWrapping", false, wrappingChanged, true);
-          option("gutters", [], function(cm) {
-            setGuttersForLineNumbers(cm.options);
-            guttersChanged(cm);
+          option("gutters", [], function(cm, val) {
+            cm.display.gutterSpecs = getGutters(val, cm.options.lineNumbers);
+            updateGutters(cm);
           }, true);
           option("fixedGutter", true, function(cm, val) {
             cm.display.gutters.style.left = val ? compensateForHScroll(cm.display) + "px" : "0";
@@ -40984,24 +37930,29 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             cm.display.scrollbars.setScrollTop(cm.doc.scrollTop);
             cm.display.scrollbars.setScrollLeft(cm.doc.scrollLeft);
           }, true);
-          option("lineNumbers", false, function(cm) {
-            setGuttersForLineNumbers(cm.options);
-            guttersChanged(cm);
+          option("lineNumbers", false, function(cm, val) {
+            cm.display.gutterSpecs = getGutters(cm.options.gutters, val);
+            updateGutters(cm);
           }, true);
-          option("firstLineNumber", 1, guttersChanged, true);
+          option("firstLineNumber", 1, updateGutters, true);
           option("lineNumberFormatter", function(integer) {
             return integer;
-          }, guttersChanged, true);
+          }, updateGutters, true);
           option("showCursorWhenSelecting", false, updateSelection, true);
           option("resetSelectionOnContextMenu", true);
           option("lineWiseCopyCut", true);
           option("pasteLinesPerSelection", true);
+          option("selectionsMayTouch", false);
           option("readOnly", false, function(cm, val) {
             if (val == "nocursor") {
               onBlur(cm);
               cm.display.input.blur();
             }
             cm.display.input.readOnlyChanged(val);
+          });
+          option("screenReaderLabel", null, function(cm, val) {
+            val = val === "" ? null : val;
+            cm.display.input.screenReaderLabelChanged(val);
           });
           option("disableInput", false, function(cm, val) {
             if (!val) {
@@ -41039,14 +37990,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           option("direction", "ltr", function(cm, val) {
             return cm.doc.setDirection(val);
           }, true);
+          option("phrases", null);
         }
         __name(defineOptions, "defineOptions");
-        function guttersChanged(cm) {
-          updateGutters(cm);
-          regChange(cm);
-          alignHorizontally(cm);
-        }
-        __name(guttersChanged, "guttersChanged");
         function dragDropChanged(cm, value, old) {
           var wasOn = old && old != Init;
           if (!value != !wasOn) {
@@ -41077,23 +38023,23 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }, 100);
         }
         __name(wrappingChanged, "wrappingChanged");
-        function CodeMirror$1(place, options) {
+        function CodeMirror2(place, options) {
           var this$1 = this;
-          if (!(this instanceof CodeMirror$1)) {
-            return new CodeMirror$1(place, options);
+          if (!(this instanceof CodeMirror2)) {
+            return new CodeMirror2(place, options);
           }
           this.options = options = options ? copyObj(options) : {};
           copyObj(defaults, options, false);
-          setGuttersForLineNumbers(options);
           var doc = options.value;
           if (typeof doc == "string") {
             doc = new Doc(doc, options.mode, null, options.lineSeparator, options.direction);
+          } else if (options.mode) {
+            doc.modeOption = options.mode;
           }
           this.doc = doc;
-          var input = new CodeMirror$1.inputStyles[options.inputStyle](this);
-          var display = this.display = new Display(place, doc, input);
+          var input = new CodeMirror2.inputStyles[options.inputStyle](this);
+          var display = this.display = new Display(place, doc, input, options);
           display.wrapper.CodeMirror = this;
-          updateGutters(this);
           themeChanged(this);
           if (options.lineWrapping) {
             this.display.wrapper.className += " CodeMirror-wrap";
@@ -41107,8 +38053,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             delayingBlurEvent: false,
             focused: false,
             suppressEdits: false,
-            pasteIncoming: false,
-            cutIncoming: false,
+            pasteIncoming: -1,
+            cutIncoming: -1,
             selectingText: false,
             draggingText: false,
             highlight: new Delayed(),
@@ -41129,13 +38075,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           this.curOp.forceUpdate = true;
           attachDoc(this, doc);
           if (options.autofocus && !mobile || this.hasFocus()) {
-            setTimeout(bind(onFocus, this), 20);
+            setTimeout(function() {
+              if (this$1.hasFocus() && !this$1.state.focused) {
+                onFocus(this$1);
+              }
+            }, 20);
           } else {
             onBlur(this);
           }
           for (var opt in optionHandlers) {
             if (optionHandlers.hasOwnProperty(opt)) {
-              optionHandlers[opt](this$1, options[opt], Init);
+              optionHandlers[opt](this, options[opt], Init);
             }
           }
           maybeUpdateLineNumberWidth(this);
@@ -41143,16 +38093,16 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             options.finishInit(this);
           }
           for (var i2 = 0; i2 < initHooks.length; ++i2) {
-            initHooks[i2](this$1);
+            initHooks[i2](this);
           }
           endOperation(this);
           if (webkit && options.lineWrapping && getComputedStyle(display.lineDiv).textRendering == "optimizelegibility") {
             display.lineDiv.style.textRendering = "auto";
           }
         }
-        __name(CodeMirror$1, "CodeMirror$1");
-        CodeMirror$1.defaults = defaults;
-        CodeMirror$1.optionHandlers = optionHandlers;
+        __name(CodeMirror2, "CodeMirror");
+        CodeMirror2.defaults = defaults;
+        CodeMirror2.optionHandlers = optionHandlers;
         function registerEventHandlers(cm) {
           var d = cm.display;
           on(d.scroller, "mousedown", operation(cm, onMouseDown));
@@ -41174,11 +38124,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               return signalDOMEvent(cm, e) || e_preventDefault(e);
             });
           }
-          if (!captureRightClick) {
-            on(d.scroller, "contextmenu", function(e) {
-              return onContextMenu(cm, e);
-            });
-          }
+          on(d.scroller, "contextmenu", function(e) {
+            return onContextMenu(cm, e);
+          });
+          on(d.input.getField(), "contextmenu", function(e) {
+            if (!d.scroller.contains(e.target)) {
+              onContextMenu(cm, e);
+            }
+          });
           var touchFinished, prevTouch = { end: 0 };
           function finishTouch() {
             if (d.activeTouch) {
@@ -41298,7 +38251,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(registerEventHandlers, "registerEventHandlers");
         var initHooks = [];
-        CodeMirror$1.defineInitHook = function(f) {
+        CodeMirror2.defineInitHook = function(f) {
           return initHooks.push(f);
         };
         function indentLine(cm, n, how, aggressive) {
@@ -41382,7 +38335,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (!sel) {
             sel = doc.sel;
           }
-          var paste = cm.state.pasteIncoming || origin == "paste";
+          var recent = +new Date() - 200;
+          var paste = origin == "paste" || cm.state.pasteIncoming > recent;
           var textLines = splitLinesAuto(inserted), multiPaste = null;
           if (paste && sel.ranges.length > 1) {
             if (lastCopied && lastCopied.text.join("\n") == inserted) {
@@ -41398,25 +38352,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               });
             }
           }
-          var updateInput;
+          var updateInput = cm.curOp.updateInput;
           for (var i$12 = sel.ranges.length - 1; i$12 >= 0; i$12--) {
-            var range$$1 = sel.ranges[i$12];
-            var from = range$$1.from(), to = range$$1.to();
-            if (range$$1.empty()) {
+            var range2 = sel.ranges[i$12];
+            var from = range2.from(), to = range2.to();
+            if (range2.empty()) {
               if (deleted && deleted > 0) {
                 from = Pos(from.line, from.ch - deleted);
               } else if (cm.state.overwrite && !paste) {
                 to = Pos(to.line, Math.min(getLine(doc, to.line).text.length, to.ch + lst(textLines).length));
-              } else if (lastCopied && lastCopied.lineWise && lastCopied.text.join("\n") == inserted) {
+              } else if (paste && lastCopied && lastCopied.lineWise && lastCopied.text.join("\n") == textLines.join("\n")) {
                 from = to = Pos(from.line, 0);
               }
             }
-            updateInput = cm.curOp.updateInput;
             var changeEvent = {
               from,
               to,
               text: multiPaste ? multiPaste[i$12 % multiPaste.length] : textLines,
-              origin: origin || (paste ? "paste" : cm.state.cutIncoming ? "cut" : "+input")
+              origin: origin || (paste ? "paste" : cm.state.cutIncoming > recent ? "cut" : "+input")
             };
             makeChange(cm.doc, changeEvent);
             signalLater(cm, "inputRead", cm, changeEvent);
@@ -41425,9 +38378,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             triggerElectric(cm, inserted);
           }
           ensureCursorVisible(cm);
-          cm.curOp.updateInput = updateInput;
+          if (cm.curOp.updateInput < 2) {
+            cm.curOp.updateInput = updateInput;
+          }
           cm.curOp.typing = true;
-          cm.state.pasteIncoming = cm.state.cutIncoming = false;
+          cm.state.pasteIncoming = cm.state.cutIncoming = -1;
         }
         __name(applyTextInput, "applyTextInput");
         function handlePaste(e, cm) {
@@ -41449,26 +38404,26 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           var sel = cm.doc.sel;
           for (var i2 = sel.ranges.length - 1; i2 >= 0; i2--) {
-            var range$$1 = sel.ranges[i2];
-            if (range$$1.head.ch > 100 || i2 && sel.ranges[i2 - 1].head.line == range$$1.head.line) {
+            var range2 = sel.ranges[i2];
+            if (range2.head.ch > 100 || i2 && sel.ranges[i2 - 1].head.line == range2.head.line) {
               continue;
             }
-            var mode = cm.getModeAt(range$$1.head);
+            var mode = cm.getModeAt(range2.head);
             var indented = false;
             if (mode.electricChars) {
               for (var j = 0; j < mode.electricChars.length; j++) {
                 if (inserted.indexOf(mode.electricChars.charAt(j)) > -1) {
-                  indented = indentLine(cm, range$$1.head.line, "smart");
+                  indented = indentLine(cm, range2.head.line, "smart");
                   break;
                 }
               }
             } else if (mode.electricInput) {
-              if (mode.electricInput.test(getLine(cm.doc, range$$1.head.line).text.slice(0, range$$1.head.ch))) {
-                indented = indentLine(cm, range$$1.head.line, "smart");
+              if (mode.electricInput.test(getLine(cm.doc, range2.head.line).text.slice(0, range2.head.ch))) {
+                indented = indentLine(cm, range2.head.line, "smart");
               }
             }
             if (indented) {
-              signalLater(cm, "electricInput", cm, range$$1.head.line);
+              signalLater(cm, "electricInput", cm, range2.head.line);
             }
           }
         }
@@ -41484,9 +38439,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return { text, ranges };
         }
         __name(copyableRanges, "copyableRanges");
-        function disableBrowserMagic(field, spellcheck) {
-          field.setAttribute("autocorrect", "off");
-          field.setAttribute("autocapitalize", "off");
+        function disableBrowserMagic(field, spellcheck, autocorrect, autocapitalize) {
+          field.setAttribute("autocorrect", autocorrect ? "" : "off");
+          field.setAttribute("autocapitalize", autocapitalize ? "" : "off");
           field.setAttribute("spellcheck", !!spellcheck);
         }
         __name(disableBrowserMagic, "disableBrowserMagic");
@@ -41505,11 +38460,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           return div;
         }
         __name(hiddenTextarea, "hiddenTextarea");
-        var addEditorMethods = /* @__PURE__ */ __name(function(CodeMirror) {
-          var optionHandlers2 = CodeMirror.optionHandlers;
-          var helpers = CodeMirror.helpers = {};
-          CodeMirror.prototype = {
-            constructor: CodeMirror,
+        function addEditorMethods(CodeMirror3) {
+          var optionHandlers2 = CodeMirror3.optionHandlers;
+          var helpers = CodeMirror3.helpers = {};
+          CodeMirror3.prototype = {
+            constructor: CodeMirror3,
             focus: function() {
               window.focus();
               this.display.input.focus();
@@ -41531,20 +38486,20 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             getDoc: function() {
               return this.doc;
             },
-            addKeyMap: function(map$$1, bottom2) {
-              this.state.keyMaps[bottom2 ? "push" : "unshift"](getKeyMap(map$$1));
+            addKeyMap: function(map2, bottom2) {
+              this.state.keyMaps[bottom2 ? "push" : "unshift"](getKeyMap(map2));
             },
-            removeKeyMap: function(map$$1) {
+            removeKeyMap: function(map2) {
               var maps = this.state.keyMaps;
               for (var i2 = 0; i2 < maps.length; ++i2) {
-                if (maps[i2] == map$$1 || maps[i2].name == map$$1) {
+                if (maps[i2] == map2 || maps[i2].name == map2) {
                   maps.splice(i2, 1);
                   return true;
                 }
               }
             },
             addOverlay: methodOp(function(spec, options) {
-              var mode = spec.token ? spec : CodeMirror.getMode(this.options, spec);
+              var mode = spec.token ? spec : CodeMirror3.getMode(this.options, spec);
               if (mode.startState) {
                 throw new Error("Overlays may not be stateful.");
               }
@@ -41560,14 +38515,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               regChange(this);
             }),
             removeOverlay: methodOp(function(spec) {
-              var this$1 = this;
               var overlays = this.state.overlays;
               for (var i2 = 0; i2 < overlays.length; ++i2) {
                 var cur = overlays[i2].modeSpec;
                 if (cur == spec || typeof spec == "string" && cur.name == spec) {
                   overlays.splice(i2, 1);
-                  this$1.state.modeGen++;
-                  regChange(this$1);
+                  this.state.modeGen++;
+                  regChange(this);
                   return;
                 }
               }
@@ -41585,26 +38539,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
             }),
             indentSelection: methodOp(function(how) {
-              var this$1 = this;
               var ranges = this.doc.sel.ranges, end3 = -1;
               for (var i2 = 0; i2 < ranges.length; i2++) {
-                var range$$1 = ranges[i2];
-                if (!range$$1.empty()) {
-                  var from = range$$1.from(), to = range$$1.to();
+                var range2 = ranges[i2];
+                if (!range2.empty()) {
+                  var from = range2.from(), to = range2.to();
                   var start2 = Math.max(end3, from.line);
-                  end3 = Math.min(this$1.lastLine(), to.line - (to.ch ? 0 : 1)) + 1;
+                  end3 = Math.min(this.lastLine(), to.line - (to.ch ? 0 : 1)) + 1;
                   for (var j = start2; j < end3; ++j) {
-                    indentLine(this$1, j, how);
+                    indentLine(this, j, how);
                   }
-                  var newRanges = this$1.doc.sel.ranges;
+                  var newRanges = this.doc.sel.ranges;
                   if (from.ch == 0 && ranges.length == newRanges.length && newRanges[i2].from().ch > 0) {
-                    replaceOneSelection(this$1.doc, i2, new Range(from, newRanges[i2].to()), sel_dontScroll);
+                    replaceOneSelection(this.doc, i2, new Range(from, newRanges[i2].to()), sel_dontScroll);
                   }
-                } else if (range$$1.head.line > end3) {
-                  indentLine(this$1, range$$1.head.line, how, true);
-                  end3 = range$$1.head.line;
-                  if (i2 == this$1.doc.sel.primIndex) {
-                    ensureCursorVisible(this$1);
+                } else if (range2.head.line > end3) {
+                  indentLine(this, range2.head.line, how, true);
+                  end3 = range2.head.line;
+                  if (i2 == this.doc.sel.primIndex) {
+                    ensureCursorVisible(this);
                   }
                 }
               }
@@ -41643,13 +38596,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               if (!mode.innerMode) {
                 return mode;
               }
-              return CodeMirror.innerMode(mode, this.getTokenAt(pos).state).mode;
+              return CodeMirror3.innerMode(mode, this.getTokenAt(pos).state).mode;
             },
             getHelper: function(pos, type) {
               return this.getHelpers(pos, type)[0];
             },
             getHelpers: function(pos, type) {
-              var this$1 = this;
               var found = [];
               if (!helpers.hasOwnProperty(type)) {
                 return found;
@@ -41673,7 +38625,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
               for (var i$12 = 0; i$12 < help._global.length; i$12++) {
                 var cur = help._global[i$12];
-                if (cur.pred(mode, this$1) && indexOf(found, cur.val) == -1) {
+                if (cur.pred(mode, this) && indexOf(found, cur.val) == -1) {
                   found.push(cur.val);
                 }
               }
@@ -41685,13 +38637,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               return getContextBefore(this, line + 1, precise).state;
             },
             cursorCoords: function(start2, mode) {
-              var pos, range$$1 = this.doc.sel.primary();
+              var pos, range2 = this.doc.sel.primary();
               if (start2 == null) {
-                pos = range$$1.head;
+                pos = range2.head;
               } else if (typeof start2 == "object") {
                 pos = clipPos(this.doc, start2);
               } else {
-                pos = start2 ? range$$1.from() : range$$1.to();
+                pos = start2 ? range2.from() : range2.to();
               }
               return cursorCoords(this, pos, mode || "page");
             },
@@ -41782,7 +38734,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               triggerElectric(this, text);
             }),
             findPosH: function(from, amount, unit, visually) {
-              var this$1 = this;
               var dir = 1;
               if (amount < 0) {
                 dir = -1;
@@ -41790,7 +38741,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
               var cur = clipPos(this.doc, from);
               for (var i2 = 0; i2 < amount; ++i2) {
-                cur = findPosH(this$1.doc, cur, dir, unit, visually);
+                cur = findPosH(this.doc, cur, dir, unit, visually);
                 if (cur.hitSide) {
                   break;
                 }
@@ -41799,11 +38750,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             },
             moveH: methodOp(function(dir, unit) {
               var this$1 = this;
-              this.extendSelectionsBy(function(range$$1) {
-                if (this$1.display.shift || this$1.doc.extend || range$$1.empty()) {
-                  return findPosH(this$1.doc, range$$1.head, dir, unit, this$1.options.rtlMoveVisually);
+              this.extendSelectionsBy(function(range2) {
+                if (this$1.display.shift || this$1.doc.extend || range2.empty()) {
+                  return findPosH(this$1.doc, range2.head, dir, unit, this$1.options.rtlMoveVisually);
                 } else {
-                  return dir < 0 ? range$$1.from() : range$$1.to();
+                  return dir < 0 ? range2.from() : range2.to();
                 }
               }, sel_move);
             }),
@@ -41812,14 +38763,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               if (sel.somethingSelected()) {
                 doc.replaceSelection("", null, "+delete");
               } else {
-                deleteNearSelection(this, function(range$$1) {
-                  var other = findPosH(doc, range$$1.head, dir, unit, false);
-                  return dir < 0 ? { from: other, to: range$$1.head } : { from: range$$1.head, to: other };
+                deleteNearSelection(this, function(range2) {
+                  var other = findPosH(doc, range2.head, dir, unit, false);
+                  return dir < 0 ? { from: other, to: range2.head } : { from: range2.head, to: other };
                 });
               }
             }),
             findPosV: function(from, amount, unit, goalColumn) {
-              var this$1 = this;
               var dir = 1, x = goalColumn;
               if (amount < 0) {
                 dir = -1;
@@ -41827,13 +38777,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
               var cur = clipPos(this.doc, from);
               for (var i2 = 0; i2 < amount; ++i2) {
-                var coords = cursorCoords(this$1, cur, "div");
+                var coords = cursorCoords(this, cur, "div");
                 if (x == null) {
                   x = coords.left;
                 } else {
                   coords.left = x;
                 }
-                cur = findPosV(this$1, coords, dir, unit);
+                cur = findPosV(this, coords, dir, unit);
                 if (cur.hitSide) {
                   break;
                 }
@@ -41844,17 +38794,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               var this$1 = this;
               var doc = this.doc, goals = [];
               var collapse = !this.display.shift && !doc.extend && doc.sel.somethingSelected();
-              doc.extendSelectionsBy(function(range$$1) {
+              doc.extendSelectionsBy(function(range2) {
                 if (collapse) {
-                  return dir < 0 ? range$$1.from() : range$$1.to();
+                  return dir < 0 ? range2.from() : range2.to();
                 }
-                var headPos = cursorCoords(this$1, range$$1.head, "div");
-                if (range$$1.goalColumn != null) {
-                  headPos.left = range$$1.goalColumn;
+                var headPos = cursorCoords(this$1, range2.head, "div");
+                if (range2.goalColumn != null) {
+                  headPos.left = range2.goalColumn;
                 }
                 goals.push(headPos.left);
                 var pos = findPosV(this$1, headPos, dir, unit);
-                if (unit == "page" && range$$1 == doc.sel.primary()) {
+                if (unit == "page" && range2 == doc.sel.primary()) {
                   addToScrollTop(this$1, charCoords(this$1, pos, "div").top - headPos.top);
                 }
                 return pos;
@@ -41923,25 +38873,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
                 clientWidth: displayWidth(this)
               };
             },
-            scrollIntoView: methodOp(function(range$$1, margin) {
-              if (range$$1 == null) {
-                range$$1 = { from: this.doc.sel.primary().head, to: null };
+            scrollIntoView: methodOp(function(range2, margin) {
+              if (range2 == null) {
+                range2 = { from: this.doc.sel.primary().head, to: null };
                 if (margin == null) {
                   margin = this.options.cursorScrollMargin;
                 }
-              } else if (typeof range$$1 == "number") {
-                range$$1 = { from: Pos(range$$1, 0), to: null };
-              } else if (range$$1.from == null) {
-                range$$1 = { from: range$$1, to: null };
+              } else if (typeof range2 == "number") {
+                range2 = { from: Pos(range2, 0), to: null };
+              } else if (range2.from == null) {
+                range2 = { from: range2, to: null };
               }
-              if (!range$$1.to) {
-                range$$1.to = range$$1.from;
+              if (!range2.to) {
+                range2.to = range2.from;
               }
-              range$$1.margin = margin || 0;
-              if (range$$1.from.line != null) {
-                scrollToRange(this, range$$1);
+              range2.margin = margin || 0;
+              if (range2.from.line != null) {
+                scrollToRange(this, range2);
               } else {
-                scrollToCoordsRange(this, range$$1.from, range$$1.to, range$$1.margin);
+                scrollToCoordsRange(this, range2.from, range2.to, range2.margin);
               }
             }),
             setSize: methodOp(function(width, height) {
@@ -41958,17 +38908,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               if (this.options.lineWrapping) {
                 clearLineMeasurementCache(this);
               }
-              var lineNo$$1 = this.display.viewFrom;
-              this.doc.iter(lineNo$$1, this.display.viewTo, function(line) {
+              var lineNo2 = this.display.viewFrom;
+              this.doc.iter(lineNo2, this.display.viewTo, function(line) {
                 if (line.widgets) {
                   for (var i2 = 0; i2 < line.widgets.length; i2++) {
                     if (line.widgets[i2].noHScroll) {
-                      regLineChange(this$1, lineNo$$1, "widget");
+                      regLineChange(this$1, lineNo2, "widget");
                       break;
                     }
                   }
                 }
-                ++lineNo$$1;
+                ++lineNo2;
               });
               this.curOp.forceUpdate = true;
               signal(this, "refresh", this);
@@ -41988,8 +38938,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               this.curOp.forceUpdate = true;
               clearCaches(this);
               scrollToCoords(this, this.doc.scrollLeft, this.doc.scrollTop);
-              updateGutterSpace(this);
-              if (oldHeight == null || Math.abs(oldHeight - textHeight(this.display)) > 0.5) {
+              updateGutterSpace(this.display);
+              if (oldHeight == null || Math.abs(oldHeight - textHeight(this.display)) > 0.5 || this.options.lineWrapping) {
                 estimateLineHeights(this);
               }
               signal(this, "refresh", this);
@@ -41997,6 +38947,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             swapDoc: methodOp(function(doc) {
               var old = this.doc;
               old.cm = null;
+              if (this.state.selectingText) {
+                this.state.selectingText();
+              }
               attachDoc(this, doc);
               clearCaches(this);
               this.display.input.reset();
@@ -42005,6 +38958,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               signalLater(this, "swapDoc", this, old);
               return old;
             }),
+            phrase: function(phraseText) {
+              var phrases = this.options.phrases;
+              return phrases && Object.prototype.hasOwnProperty.call(phrases, phraseText) ? phrases[phraseText] : phraseText;
+            },
             getInputField: function() {
               return this.display.input.getField();
             },
@@ -42018,24 +38975,26 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               return this.display.gutters;
             }
           };
-          eventMixin(CodeMirror);
-          CodeMirror.registerHelper = function(type, name, value) {
+          eventMixin(CodeMirror3);
+          CodeMirror3.registerHelper = function(type, name, value) {
             if (!helpers.hasOwnProperty(type)) {
-              helpers[type] = CodeMirror[type] = { _global: [] };
+              helpers[type] = CodeMirror3[type] = { _global: [] };
             }
             helpers[type][name] = value;
           };
-          CodeMirror.registerGlobalHelper = function(type, name, predicate, value) {
-            CodeMirror.registerHelper(type, name, value);
+          CodeMirror3.registerGlobalHelper = function(type, name, predicate, value) {
+            CodeMirror3.registerHelper(type, name, value);
             helpers[type]._global.push({ pred: predicate, val: value });
           };
-        }, "addEditorMethods");
+        }
+        __name(addEditorMethods, "addEditorMethods");
         function findPosH(doc, pos, dir, unit, visually) {
           var oldPos = pos;
           var origDir = dir;
           var lineObj = getLine(doc, pos.line);
+          var lineDir = visually && doc.direction == "rtl" ? -dir : dir;
           function findNextLine() {
-            var l = pos.line + dir;
+            var l = pos.line + lineDir;
             if (l < doc.first || l >= doc.first + doc.size) {
               return false;
             }
@@ -42045,14 +39004,22 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           __name(findNextLine, "findNextLine");
           function moveOnce(boundToLine) {
             var next;
-            if (visually) {
+            if (unit == "codepoint") {
+              var ch = lineObj.text.charCodeAt(pos.ch + (dir > 0 ? 0 : -1));
+              if (isNaN(ch)) {
+                next = null;
+              } else {
+                var astral = dir > 0 ? ch >= 55296 && ch < 56320 : ch >= 56320 && ch < 57343;
+                next = new Pos(pos.line, Math.max(0, Math.min(lineObj.text.length, pos.ch + dir * (astral ? 2 : 1))), -dir);
+              }
+            } else if (visually) {
               next = moveVisually(doc.cm, lineObj, pos, dir);
             } else {
               next = moveLogically(lineObj, pos, dir);
             }
             if (next == null) {
               if (!boundToLine && findNextLine()) {
-                pos = endOfLine(visually, doc.cm, lineObj, pos.line, dir);
+                pos = endOfLine(visually, doc.cm, lineObj, pos.line, lineDir);
               } else {
                 return false;
               }
@@ -42062,7 +39029,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return true;
           }
           __name(moveOnce, "moveOnce");
-          if (unit == "char") {
+          if (unit == "char" || unit == "codepoint") {
             moveOnce();
           } else if (unit == "column") {
             moveOnce(true);
@@ -42137,9 +39104,22 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var this$1 = this;
           var input = this, cm = input.cm;
           var div = input.div = display.lineDiv;
-          disableBrowserMagic(div, cm.options.spellcheck);
+          div.contentEditable = true;
+          disableBrowserMagic(div, cm.options.spellcheck, cm.options.autocorrect, cm.options.autocapitalize);
+          function belongsToInput(e) {
+            for (var t = e.target; t; t = t.parentNode) {
+              if (t == div) {
+                return true;
+              }
+              if (/\bCodeMirror-(?:line)?widget\b/.test(t.className)) {
+                break;
+              }
+            }
+            return false;
+          }
+          __name(belongsToInput, "belongsToInput");
           on(div, "paste", function(e) {
-            if (signalDOMEvent(cm, e) || handlePaste(e, cm)) {
+            if (!belongsToInput(e) || signalDOMEvent(cm, e) || handlePaste(e, cm)) {
               return;
             }
             if (ie_version <= 11) {
@@ -42173,7 +39153,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             }
           });
           function onCopyCut(e) {
-            if (signalDOMEvent(cm, e)) {
+            if (!belongsToInput(e) || signalDOMEvent(cm, e)) {
               return;
             }
             if (cm.somethingSelected()) {
@@ -42205,7 +39185,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             var kludge = hiddenTextarea(), te = kludge.firstChild;
             cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild);
             te.value = lastCopied.text.join("\n");
-            var hadFocus = document.activeElement;
+            var hadFocus = activeElt();
             selectInput(te);
             setTimeout(function() {
               cm.display.lineSpace.removeChild(kludge);
@@ -42219,9 +39199,16 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           on(div, "copy", onCopyCut);
           on(div, "cut", onCopyCut);
         };
+        ContentEditableInput.prototype.screenReaderLabelChanged = function(label) {
+          if (label) {
+            this.div.setAttribute("aria-label", label);
+          } else {
+            this.div.removeAttribute("aria-label");
+          }
+        };
         ContentEditableInput.prototype.prepareSelection = function() {
           var result = prepareSelection(this.cm, false);
-          result.focus = this.cm.state.focused;
+          result.focus = activeElt() == this.div;
           return result;
         };
         ContentEditableInput.prototype.showSelection = function(info, takeFocus) {
@@ -42233,8 +39220,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           this.showMultipleSelections(info);
         };
+        ContentEditableInput.prototype.getSelection = function() {
+          return this.cm.display.wrapper.ownerDocument.getSelection();
+        };
         ContentEditableInput.prototype.showPrimarySelection = function() {
-          var sel = window.getSelection(), cm = this.cm, prim = cm.doc.sel.primary();
+          var sel = this.getSelection(), cm = this.cm, prim = cm.doc.sel.primary();
           var from = prim.from(), to = prim.to();
           if (cm.display.viewTo == cm.display.viewFrom || from.line >= cm.display.viewTo || to.line < cm.display.viewFrom) {
             sel.removeAllRanges();
@@ -42250,8 +39240,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var end3 = to.line < cm.display.viewTo && posToDOM(cm, to);
           if (!end3) {
             var measure = view[view.length - 1].measure;
-            var map$$1 = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map;
-            end3 = { node: map$$1[map$$1.length - 1], offset: map$$1[map$$1.length - 2] - map$$1[map$$1.length - 3] };
+            var map2 = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map;
+            end3 = { node: map2[map2.length - 1], offset: map2[map2.length - 2] - map2[map2.length - 3] };
           }
           if (!start2 || !end3) {
             sel.removeAllRanges();
@@ -42298,14 +39288,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           removeChildrenAndAdd(this.cm.display.selectionDiv, info.selection);
         };
         ContentEditableInput.prototype.rememberSelection = function() {
-          var sel = window.getSelection();
+          var sel = this.getSelection();
           this.lastAnchorNode = sel.anchorNode;
           this.lastAnchorOffset = sel.anchorOffset;
           this.lastFocusNode = sel.focusNode;
           this.lastFocusOffset = sel.focusOffset;
         };
         ContentEditableInput.prototype.selectionInEditor = function() {
-          var sel = window.getSelection();
+          var sel = this.getSelection();
           if (!sel.rangeCount) {
             return false;
           }
@@ -42314,7 +39304,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         };
         ContentEditableInput.prototype.focus = function() {
           if (this.cm.options.readOnly != "nocursor") {
-            if (!this.selectionInEditor()) {
+            if (!this.selectionInEditor() || activeElt() != this.div) {
               this.showSelection(this.prepareSelection(), true);
             }
             this.div.focus();
@@ -42348,15 +39338,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           this.polling.set(this.cm.options.pollInterval, poll);
         };
         ContentEditableInput.prototype.selectionChanged = function() {
-          var sel = window.getSelection();
+          var sel = this.getSelection();
           return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset || sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset;
         };
         ContentEditableInput.prototype.pollSelection = function() {
           if (this.readDOMTimeout != null || this.gracePeriod || !this.selectionChanged()) {
             return;
           }
-          var sel = window.getSelection(), cm = this.cm;
-          if (android && chrome && this.cm.options.gutters.length && isInGutter(sel.anchorNode)) {
+          var sel = this.getSelection(), cm = this.cm;
+          if (android && chrome && this.cm.display.gutterSpecs.length && isInGutter(sel.anchorNode)) {
             this.cm.triggerOnKeyDown({ type: "keydown", keyCode: 8, preventDefault: Math.abs });
             this.blur();
             this.focus();
@@ -42498,7 +39488,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           node.contentEditable = "false";
         };
         ContentEditableInput.prototype.onKeyPress = function(e) {
-          if (e.charCode == 0) {
+          if (e.charCode == 0 || this.composing) {
             return;
           }
           e.preventDefault();
@@ -42548,7 +39538,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         }
         __name(badPos, "badPos");
         function domTextBetween(cm, from, to, fromLine, toLine) {
-          var text = "", closing = false, lineSep = cm.doc.lineSeparator();
+          var text = "", closing = false, lineSep = cm.doc.lineSeparator(), extraLinebreak = false;
           function recognizeMarker(id) {
             return function(marker) {
               return marker.id == id;
@@ -42558,7 +39548,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           function close() {
             if (closing) {
               text += lineSep;
-              closing = false;
+              if (extraLinebreak) {
+                text += lineSep;
+              }
+              closing = extraLinebreak = false;
             }
           }
           __name(close, "close");
@@ -42572,33 +39565,39 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           function walk(node) {
             if (node.nodeType == 1) {
               var cmText = node.getAttribute("cm-text");
-              if (cmText != null) {
-                addText(cmText || node.textContent.replace(/\u200b/g, ""));
+              if (cmText) {
+                addText(cmText);
                 return;
               }
-              var markerID = node.getAttribute("cm-marker"), range$$1;
+              var markerID = node.getAttribute("cm-marker"), range2;
               if (markerID) {
                 var found = cm.findMarks(Pos(fromLine, 0), Pos(toLine + 1, 0), recognizeMarker(+markerID));
-                if (found.length && (range$$1 = found[0].find(0))) {
-                  addText(getBetween(cm.doc, range$$1.from, range$$1.to).join(lineSep));
+                if (found.length && (range2 = found[0].find(0))) {
+                  addText(getBetween(cm.doc, range2.from, range2.to).join(lineSep));
                 }
                 return;
               }
               if (node.getAttribute("contenteditable") == "false") {
                 return;
               }
-              var isBlock = /^(pre|div|p)$/i.test(node.nodeName);
+              var isBlock = /^(pre|div|p|li|table|br)$/i.test(node.nodeName);
+              if (!/^br$/i.test(node.nodeName) && node.textContent.length == 0) {
+                return;
+              }
               if (isBlock) {
                 close();
               }
               for (var i2 = 0; i2 < node.childNodes.length; i2++) {
                 walk(node.childNodes[i2]);
               }
+              if (/^(pre|p)$/i.test(node.nodeName)) {
+                extraLinebreak = true;
+              }
               if (isBlock) {
                 closing = true;
               }
             } else if (node.nodeType == 3) {
-              addText(node.nodeValue);
+              addText(node.nodeValue.replace(/\u200b/g, "").replace(/\u00a0/g, " "));
             }
           }
           __name(walk, "walk");
@@ -42608,6 +39607,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               break;
             }
             from = from.nextSibling;
+            extraLinebreak = false;
           }
           return text;
         }
@@ -42666,14 +39666,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           var measure = lineView.measure, maps = measure.maps;
           function find(textNode2, topNode2, offset3) {
             for (var i2 = -1; i2 < (maps ? maps.length : 0); i2++) {
-              var map$$1 = i2 < 0 ? measure.map : maps[i2];
-              for (var j = 0; j < map$$1.length; j += 3) {
-                var curNode = map$$1[j + 2];
+              var map2 = i2 < 0 ? measure.map : maps[i2];
+              for (var j = 0; j < map2.length; j += 3) {
+                var curNode = map2[j + 2];
                 if (curNode == textNode2 || curNode == topNode2) {
                   var line2 = lineNo(i2 < 0 ? lineView.line : lineView.rest[i2]);
-                  var ch = map$$1[j] + offset3;
+                  var ch = map2[j] + offset3;
                   if (offset3 < 0 || curNode != textNode2) {
-                    ch = map$$1[j + (offset3 ? 1 : 0)];
+                    ch = map2[j + (offset3 ? 1 : 0)];
                   }
                   return Pos(line2, ch);
                 }
@@ -42714,9 +39714,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         TextareaInput.prototype.init = function(display) {
           var this$1 = this;
           var input = this, cm = this.cm;
-          var div = this.wrapper = hiddenTextarea();
-          var te = this.textarea = div.firstChild;
-          display.wrapper.insertBefore(div, display.wrapper.firstChild);
+          this.createField(display);
+          var te = this.textarea;
+          display.wrapper.insertBefore(this.wrapper, display.wrapper.firstChild);
           if (ios) {
             te.style.width = "0px";
           }
@@ -42730,7 +39730,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (signalDOMEvent(cm, e) || handlePaste(e, cm)) {
               return;
             }
-            cm.state.pasteIncoming = true;
+            cm.state.pasteIncoming = +new Date();
             input.fastPoll();
           });
           function prepareCopyCut(e) {
@@ -42753,7 +39753,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               }
             }
             if (e.type == "cut") {
-              cm.state.cutIncoming = true;
+              cm.state.cutIncoming = +new Date();
             }
           }
           __name(prepareCopyCut, "prepareCopyCut");
@@ -42763,8 +39763,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             if (eventInWidget(display, e) || signalDOMEvent(cm, e)) {
               return;
             }
-            cm.state.pasteIncoming = true;
-            input.focus();
+            if (!te.dispatchEvent) {
+              cm.state.pasteIncoming = +new Date();
+              input.focus();
+              return;
+            }
+            var event = new Event("paste");
+            event.clipboardData = e.clipboardData;
+            te.dispatchEvent(event);
           });
           on(display.lineSpace, "selectstart", function(e) {
             if (!eventInWidget(display, e)) {
@@ -42788,6 +39794,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               input.composing = null;
             }
           });
+        };
+        TextareaInput.prototype.createField = function(_display) {
+          this.wrapper = hiddenTextarea();
+          this.textarea = this.wrapper.firstChild;
+        };
+        TextareaInput.prototype.screenReaderLabelChanged = function(label) {
+          if (label) {
+            this.textarea.setAttribute("aria-label", label);
+          } else {
+            this.textarea.removeAttribute("aria-label");
+          }
         };
         TextareaInput.prototype.prepareSelection = function() {
           var cm = this.cm, display = cm.display, doc = cm.doc;
@@ -42937,6 +39954,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         };
         TextareaInput.prototype.onContextMenu = function(e) {
           var input = this, cm = input.cm, display = cm.display, te = input.textarea;
+          if (input.contextMenuPending) {
+            input.contextMenuPending();
+          }
           var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop;
           if (!pos || presto) {
             return;
@@ -42946,8 +39966,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll);
           }
           var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText;
-          input.wrapper.style.cssText = "position: absolute";
-          var wrapperBox = input.wrapper.getBoundingClientRect();
+          var wrapperBox = input.wrapper.offsetParent.getBoundingClientRect();
+          input.wrapper.style.cssText = "position: static";
           te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);";
           var oldScrollY;
           if (webkit) {
@@ -42961,7 +39981,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           if (!cm.somethingSelected()) {
             te.value = input.prevInput = " ";
           }
-          input.contextMenuPending = true;
+          input.contextMenuPending = rehide;
           display.selForContextMenu = cm.doc.sel;
           clearTimeout(display.detectingSelectAll);
           function prepareSelectAllHack() {
@@ -42978,6 +39998,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
           __name(prepareSelectAllHack, "prepareSelectAllHack");
           function rehide() {
+            if (input.contextMenuPending != rehide) {
+              return;
+            }
             input.contextMenuPending = false;
             input.wrapper.style.cssText = oldWrapperCSS;
             te.style.cssText = oldCSS;
@@ -43021,6 +40044,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             this.reset();
           }
           this.textarea.disabled = val == "nocursor";
+          this.textarea.readOnly = !!val;
         };
         TextareaInput.prototype.setUneditable = function() {
         };
@@ -43071,69 +40095,69 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               textarea.style.display = "";
               if (textarea.form) {
                 off(textarea.form, "submit", save2);
-                if (typeof textarea.form.submit == "function") {
+                if (!options.leaveSubmitMethodAlone && typeof textarea.form.submit == "function") {
                   textarea.form.submit = realSubmit;
                 }
               }
             };
           };
           textarea.style.display = "none";
-          var cm = CodeMirror$1(function(node) {
+          var cm = CodeMirror2(function(node) {
             return textarea.parentNode.insertBefore(node, textarea.nextSibling);
           }, options);
           return cm;
         }
         __name(fromTextArea, "fromTextArea");
-        function addLegacyProps(CodeMirror) {
-          CodeMirror.off = off;
-          CodeMirror.on = on;
-          CodeMirror.wheelEventPixels = wheelEventPixels;
-          CodeMirror.Doc = Doc;
-          CodeMirror.splitLines = splitLinesAuto;
-          CodeMirror.countColumn = countColumn;
-          CodeMirror.findColumn = findColumn;
-          CodeMirror.isWordChar = isWordCharBasic;
-          CodeMirror.Pass = Pass;
-          CodeMirror.signal = signal;
-          CodeMirror.Line = Line;
-          CodeMirror.changeEnd = changeEnd;
-          CodeMirror.scrollbarModel = scrollbarModel;
-          CodeMirror.Pos = Pos;
-          CodeMirror.cmpPos = cmp;
-          CodeMirror.modes = modes;
-          CodeMirror.mimeModes = mimeModes;
-          CodeMirror.resolveMode = resolveMode;
-          CodeMirror.getMode = getMode;
-          CodeMirror.modeExtensions = modeExtensions;
-          CodeMirror.extendMode = extendMode;
-          CodeMirror.copyState = copyState;
-          CodeMirror.startState = startState;
-          CodeMirror.innerMode = innerMode;
-          CodeMirror.commands = commands;
-          CodeMirror.keyMap = keyMap;
-          CodeMirror.keyName = keyName;
-          CodeMirror.isModifierKey = isModifierKey;
-          CodeMirror.lookupKey = lookupKey;
-          CodeMirror.normalizeKeyMap = normalizeKeyMap;
-          CodeMirror.StringStream = StringStream;
-          CodeMirror.SharedTextMarker = SharedTextMarker;
-          CodeMirror.TextMarker = TextMarker;
-          CodeMirror.LineWidget = LineWidget;
-          CodeMirror.e_preventDefault = e_preventDefault;
-          CodeMirror.e_stopPropagation = e_stopPropagation;
-          CodeMirror.e_stop = e_stop;
-          CodeMirror.addClass = addClass;
-          CodeMirror.contains = contains2;
-          CodeMirror.rmClass = rmClass;
-          CodeMirror.keyNames = keyNames;
+        function addLegacyProps(CodeMirror3) {
+          CodeMirror3.off = off;
+          CodeMirror3.on = on;
+          CodeMirror3.wheelEventPixels = wheelEventPixels;
+          CodeMirror3.Doc = Doc;
+          CodeMirror3.splitLines = splitLinesAuto;
+          CodeMirror3.countColumn = countColumn;
+          CodeMirror3.findColumn = findColumn;
+          CodeMirror3.isWordChar = isWordCharBasic;
+          CodeMirror3.Pass = Pass;
+          CodeMirror3.signal = signal;
+          CodeMirror3.Line = Line;
+          CodeMirror3.changeEnd = changeEnd;
+          CodeMirror3.scrollbarModel = scrollbarModel;
+          CodeMirror3.Pos = Pos;
+          CodeMirror3.cmpPos = cmp;
+          CodeMirror3.modes = modes;
+          CodeMirror3.mimeModes = mimeModes;
+          CodeMirror3.resolveMode = resolveMode;
+          CodeMirror3.getMode = getMode;
+          CodeMirror3.modeExtensions = modeExtensions;
+          CodeMirror3.extendMode = extendMode;
+          CodeMirror3.copyState = copyState;
+          CodeMirror3.startState = startState;
+          CodeMirror3.innerMode = innerMode;
+          CodeMirror3.commands = commands;
+          CodeMirror3.keyMap = keyMap;
+          CodeMirror3.keyName = keyName;
+          CodeMirror3.isModifierKey = isModifierKey;
+          CodeMirror3.lookupKey = lookupKey;
+          CodeMirror3.normalizeKeyMap = normalizeKeyMap;
+          CodeMirror3.StringStream = StringStream;
+          CodeMirror3.SharedTextMarker = SharedTextMarker;
+          CodeMirror3.TextMarker = TextMarker;
+          CodeMirror3.LineWidget = LineWidget;
+          CodeMirror3.e_preventDefault = e_preventDefault;
+          CodeMirror3.e_stopPropagation = e_stopPropagation;
+          CodeMirror3.e_stop = e_stop;
+          CodeMirror3.addClass = addClass;
+          CodeMirror3.contains = contains2;
+          CodeMirror3.rmClass = rmClass;
+          CodeMirror3.keyNames = keyNames;
         }
         __name(addLegacyProps, "addLegacyProps");
-        defineOptions(CodeMirror$1);
-        addEditorMethods(CodeMirror$1);
+        defineOptions(CodeMirror2);
+        addEditorMethods(CodeMirror2);
         var dontDelegate = "iter insert remove copy getEditor constructor".split(" ");
         for (var prop in Doc.prototype) {
           if (Doc.prototype.hasOwnProperty(prop) && indexOf(dontDelegate, prop) < 0) {
-            CodeMirror$1.prototype[prop] = function(method) {
+            CodeMirror2.prototype[prop] = function(method) {
               return function() {
                 return method.apply(this.doc, arguments);
               };
@@ -43141,591 +40165,36 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           }
         }
         eventMixin(Doc);
-        CodeMirror$1.inputStyles = { "textarea": TextareaInput, "contenteditable": ContentEditableInput };
-        CodeMirror$1.defineMode = function(name) {
-          if (!CodeMirror$1.defaults.mode && name != "null") {
-            CodeMirror$1.defaults.mode = name;
+        CodeMirror2.inputStyles = { "textarea": TextareaInput, "contenteditable": ContentEditableInput };
+        CodeMirror2.defineMode = function(name) {
+          if (!CodeMirror2.defaults.mode && name != "null") {
+            CodeMirror2.defaults.mode = name;
           }
           defineMode.apply(this, arguments);
         };
-        CodeMirror$1.defineMIME = defineMIME;
-        CodeMirror$1.defineMode("null", function() {
+        CodeMirror2.defineMIME = defineMIME;
+        CodeMirror2.defineMode("null", function() {
           return { token: function(stream) {
             return stream.skipToEnd();
           } };
         });
-        CodeMirror$1.defineMIME("text/plain", "null");
-        CodeMirror$1.defineExtension = function(name, func) {
-          CodeMirror$1.prototype[name] = func;
+        CodeMirror2.defineMIME("text/plain", "null");
+        CodeMirror2.defineExtension = function(name, func) {
+          CodeMirror2.prototype[name] = func;
         };
-        CodeMirror$1.defineDocExtension = function(name, func) {
+        CodeMirror2.defineDocExtension = function(name, func) {
           Doc.prototype[name] = func;
         };
-        CodeMirror$1.fromTextArea = fromTextArea;
-        addLegacyProps(CodeMirror$1);
-        CodeMirror$1.version = "5.31.0";
-        return CodeMirror$1;
-      });
-    }
-  });
-
-  // node_modules/react-codemirror/lib/Codemirror.js
-  var require_Codemirror = __commonJS({
-    "node_modules/react-codemirror/lib/Codemirror.js"(exports, module) {
-      "use strict";
-      var React57 = require_react();
-      var ReactDOM7 = require_react_dom();
-      var PropTypes34 = require_prop_types2();
-      var className = require_classnames2();
-      var debounce2 = require_lodash2();
-      var isEqual2 = require_lodash3();
-      var createReactClass = require_create_react_class();
-      function normalizeLineEndings(str) {
-        if (!str)
-          return str;
-        return str.replace(/\r\n|\r/g, "\n");
-      }
-      __name(normalizeLineEndings, "normalizeLineEndings");
-      var CodeMirror = createReactClass({
-        propTypes: {
-          autoFocus: PropTypes34.bool,
-          className: PropTypes34.any,
-          codeMirrorInstance: PropTypes34.func,
-          defaultValue: PropTypes34.string,
-          name: PropTypes34.string,
-          onChange: PropTypes34.func,
-          onCursorActivity: PropTypes34.func,
-          onFocusChange: PropTypes34.func,
-          onScroll: PropTypes34.func,
-          options: PropTypes34.object,
-          path: PropTypes34.string,
-          value: PropTypes34.string,
-          preserveScrollPosition: PropTypes34.bool
-        },
-        getDefaultProps: /* @__PURE__ */ __name(function getDefaultProps() {
-          return {
-            preserveScrollPosition: false
-          };
-        }, "getDefaultProps"),
-        getCodeMirrorInstance: /* @__PURE__ */ __name(function getCodeMirrorInstance() {
-          return this.props.codeMirrorInstance || require_codemirror();
-        }, "getCodeMirrorInstance"),
-        getInitialState: /* @__PURE__ */ __name(function getInitialState() {
-          return {
-            isFocused: false
-          };
-        }, "getInitialState"),
-        componentWillMount: /* @__PURE__ */ __name(function componentWillMount() {
-          this.componentWillReceiveProps = debounce2(this.componentWillReceiveProps, 0);
-          if (this.props.path) {
-            console.error("Warning: react-codemirror: the `path` prop has been changed to `name`");
-          }
-        }, "componentWillMount"),
-        componentDidMount: /* @__PURE__ */ __name(function componentDidMount() {
-          var codeMirrorInstance = this.getCodeMirrorInstance();
-          this.codeMirror = codeMirrorInstance.fromTextArea(this.textareaNode, this.props.options);
-          this.codeMirror.on("change", this.codemirrorValueChanged);
-          this.codeMirror.on("cursorActivity", this.cursorActivity);
-          this.codeMirror.on("focus", this.focusChanged.bind(this, true));
-          this.codeMirror.on("blur", this.focusChanged.bind(this, false));
-          this.codeMirror.on("scroll", this.scrollChanged);
-          this.codeMirror.setValue(this.props.defaultValue || this.props.value || "");
-        }, "componentDidMount"),
-        componentWillUnmount: /* @__PURE__ */ __name(function componentWillUnmount() {
-          if (this.codeMirror) {
-            this.codeMirror.toTextArea();
-          }
-        }, "componentWillUnmount"),
-        componentWillReceiveProps: /* @__PURE__ */ __name(function componentWillReceiveProps(nextProps) {
-          if (this.codeMirror && nextProps.value !== void 0 && nextProps.value !== this.props.value && normalizeLineEndings(this.codeMirror.getValue()) !== normalizeLineEndings(nextProps.value)) {
-            if (this.props.preserveScrollPosition) {
-              var prevScrollPosition = this.codeMirror.getScrollInfo();
-              this.codeMirror.setValue(nextProps.value);
-              this.codeMirror.scrollTo(prevScrollPosition.left, prevScrollPosition.top);
-            } else {
-              this.codeMirror.setValue(nextProps.value);
-            }
-          }
-          if (typeof nextProps.options === "object") {
-            for (var optionName in nextProps.options) {
-              if (nextProps.options.hasOwnProperty(optionName)) {
-                this.setOptionIfChanged(optionName, nextProps.options[optionName]);
-              }
-            }
-          }
-        }, "componentWillReceiveProps"),
-        setOptionIfChanged: /* @__PURE__ */ __name(function setOptionIfChanged(optionName, newValue) {
-          var oldValue = this.codeMirror.getOption(optionName);
-          if (!isEqual2(oldValue, newValue)) {
-            this.codeMirror.setOption(optionName, newValue);
-          }
-        }, "setOptionIfChanged"),
-        getCodeMirror: /* @__PURE__ */ __name(function getCodeMirror() {
-          return this.codeMirror;
-        }, "getCodeMirror"),
-        focus: /* @__PURE__ */ __name(function focus() {
-          if (this.codeMirror) {
-            this.codeMirror.focus();
-          }
-        }, "focus"),
-        focusChanged: /* @__PURE__ */ __name(function focusChanged(focused) {
-          this.setState({
-            isFocused: focused
-          });
-          this.props.onFocusChange && this.props.onFocusChange(focused);
-        }, "focusChanged"),
-        cursorActivity: /* @__PURE__ */ __name(function cursorActivity(cm) {
-          this.props.onCursorActivity && this.props.onCursorActivity(cm);
-        }, "cursorActivity"),
-        scrollChanged: /* @__PURE__ */ __name(function scrollChanged(cm) {
-          this.props.onScroll && this.props.onScroll(cm.getScrollInfo());
-        }, "scrollChanged"),
-        codemirrorValueChanged: /* @__PURE__ */ __name(function codemirrorValueChanged(doc, change) {
-          if (this.props.onChange && change.origin !== "setValue") {
-            this.props.onChange(doc.getValue(), change);
-          }
-        }, "codemirrorValueChanged"),
-        render: /* @__PURE__ */ __name(function render3() {
-          var _this = this;
-          var editorClassName = className("ReactCodeMirror", this.state.isFocused ? "ReactCodeMirror--focused" : null, this.props.className);
-          return React57.createElement("div", { className: editorClassName }, React57.createElement("textarea", {
-            ref: function(ref) {
-              return _this.textareaNode = ref;
-            },
-            name: this.props.name || this.props.path,
-            defaultValue: this.props.value,
-            autoComplete: "off",
-            autoFocus: this.props.autoFocus
-          }));
-        }, "render")
-      });
-      module.exports = CodeMirror;
-    }
-  });
-
-  // node_modules/redux-logger/dist/redux-logger.js
-  var require_redux_logger = __commonJS({
-    "node_modules/redux-logger/dist/redux-logger.js"(exports, module) {
-      !function(e, t) {
-        typeof exports == "object" && typeof module != "undefined" ? t(exports) : typeof define == "function" && define.amd ? define(["exports"], t) : t(e.reduxLogger = e.reduxLogger || {});
-      }(exports, function(e) {
-        "use strict";
-        function t(e2, t2) {
-          e2.super_ = t2, e2.prototype = Object.create(t2.prototype, { constructor: { value: e2, enumerable: false, writable: true, configurable: true } });
-        }
-        __name(t, "t");
-        function r(e2, t2) {
-          Object.defineProperty(this, "kind", { value: e2, enumerable: true }), t2 && t2.length && Object.defineProperty(this, "path", { value: t2, enumerable: true });
-        }
-        __name(r, "r");
-        function n(e2, t2, r2) {
-          n.super_.call(this, "E", e2), Object.defineProperty(this, "lhs", { value: t2, enumerable: true }), Object.defineProperty(this, "rhs", { value: r2, enumerable: true });
-        }
-        __name(n, "n");
-        function o(e2, t2) {
-          o.super_.call(this, "N", e2), Object.defineProperty(this, "rhs", { value: t2, enumerable: true });
-        }
-        __name(o, "o");
-        function i(e2, t2) {
-          i.super_.call(this, "D", e2), Object.defineProperty(this, "lhs", { value: t2, enumerable: true });
-        }
-        __name(i, "i");
-        function a(e2, t2, r2) {
-          a.super_.call(this, "A", e2), Object.defineProperty(this, "index", { value: t2, enumerable: true }), Object.defineProperty(this, "item", { value: r2, enumerable: true });
-        }
-        __name(a, "a");
-        function f(e2, t2, r2) {
-          var n2 = e2.slice((r2 || t2) + 1 || e2.length);
-          return e2.length = t2 < 0 ? e2.length + t2 : t2, e2.push.apply(e2, n2), e2;
-        }
-        __name(f, "f");
-        function u(e2) {
-          var t2 = typeof e2 == "undefined" ? "undefined" : N(e2);
-          return t2 !== "object" ? t2 : e2 === Math ? "math" : e2 === null ? "null" : Array.isArray(e2) ? "array" : Object.prototype.toString.call(e2) === "[object Date]" ? "date" : typeof e2.toString == "function" && /^\/.*\//.test(e2.toString()) ? "regexp" : "object";
-        }
-        __name(u, "u");
-        function l(e2, t2, r2, c2, s2, d2, p2) {
-          s2 = s2 || [], p2 = p2 || [];
-          var g2 = s2.slice(0);
-          if (typeof d2 != "undefined") {
-            if (c2) {
-              if (typeof c2 == "function" && c2(g2, d2))
-                return;
-              if ((typeof c2 == "undefined" ? "undefined" : N(c2)) === "object") {
-                if (c2.prefilter && c2.prefilter(g2, d2))
-                  return;
-                if (c2.normalize) {
-                  var h2 = c2.normalize(g2, d2, e2, t2);
-                  h2 && (e2 = h2[0], t2 = h2[1]);
-                }
-              }
-            }
-            g2.push(d2);
-          }
-          u(e2) === "regexp" && u(t2) === "regexp" && (e2 = e2.toString(), t2 = t2.toString());
-          var y2 = typeof e2 == "undefined" ? "undefined" : N(e2), v2 = typeof t2 == "undefined" ? "undefined" : N(t2), b2 = y2 !== "undefined" || p2 && p2[p2.length - 1].lhs && p2[p2.length - 1].lhs.hasOwnProperty(d2), m2 = v2 !== "undefined" || p2 && p2[p2.length - 1].rhs && p2[p2.length - 1].rhs.hasOwnProperty(d2);
-          if (!b2 && m2)
-            r2(new o(g2, t2));
-          else if (!m2 && b2)
-            r2(new i(g2, e2));
-          else if (u(e2) !== u(t2))
-            r2(new n(g2, e2, t2));
-          else if (u(e2) === "date" && e2 - t2 !== 0)
-            r2(new n(g2, e2, t2));
-          else if (y2 === "object" && e2 !== null && t2 !== null)
-            if (p2.filter(function(t3) {
-              return t3.lhs === e2;
-            }).length)
-              e2 !== t2 && r2(new n(g2, e2, t2));
-            else {
-              if (p2.push({ lhs: e2, rhs: t2 }), Array.isArray(e2)) {
-                var w2;
-                e2.length;
-                for (w2 = 0; w2 < e2.length; w2++)
-                  w2 >= t2.length ? r2(new a(g2, w2, new i(void 0, e2[w2]))) : l(e2[w2], t2[w2], r2, c2, g2, w2, p2);
-                for (; w2 < t2.length; )
-                  r2(new a(g2, w2, new o(void 0, t2[w2++])));
-              } else {
-                var x2 = Object.keys(e2), S2 = Object.keys(t2);
-                x2.forEach(function(n2, o2) {
-                  var i2 = S2.indexOf(n2);
-                  i2 >= 0 ? (l(e2[n2], t2[n2], r2, c2, g2, n2, p2), S2 = f(S2, i2)) : l(e2[n2], void 0, r2, c2, g2, n2, p2);
-                }), S2.forEach(function(e3) {
-                  l(void 0, t2[e3], r2, c2, g2, e3, p2);
-                });
-              }
-              p2.length = p2.length - 1;
-            }
-          else
-            e2 !== t2 && (y2 === "number" && isNaN(e2) && isNaN(t2) || r2(new n(g2, e2, t2)));
-        }
-        __name(l, "l");
-        function c(e2, t2, r2, n2) {
-          return n2 = n2 || [], l(e2, t2, function(e3) {
-            e3 && n2.push(e3);
-          }, r2), n2.length ? n2 : void 0;
-        }
-        __name(c, "c");
-        function s(e2, t2, r2) {
-          if (r2.path && r2.path.length) {
-            var n2, o2 = e2[t2], i2 = r2.path.length - 1;
-            for (n2 = 0; n2 < i2; n2++)
-              o2 = o2[r2.path[n2]];
-            switch (r2.kind) {
-              case "A":
-                s(o2[r2.path[n2]], r2.index, r2.item);
-                break;
-              case "D":
-                delete o2[r2.path[n2]];
-                break;
-              case "E":
-              case "N":
-                o2[r2.path[n2]] = r2.rhs;
-            }
-          } else
-            switch (r2.kind) {
-              case "A":
-                s(e2[t2], r2.index, r2.item);
-                break;
-              case "D":
-                e2 = f(e2, t2);
-                break;
-              case "E":
-              case "N":
-                e2[t2] = r2.rhs;
-            }
-          return e2;
-        }
-        __name(s, "s");
-        function d(e2, t2, r2) {
-          if (e2 && t2 && r2 && r2.kind) {
-            for (var n2 = e2, o2 = -1, i2 = r2.path ? r2.path.length - 1 : 0; ++o2 < i2; )
-              typeof n2[r2.path[o2]] == "undefined" && (n2[r2.path[o2]] = typeof r2.path[o2] == "number" ? [] : {}), n2 = n2[r2.path[o2]];
-            switch (r2.kind) {
-              case "A":
-                s(r2.path ? n2[r2.path[o2]] : n2, r2.index, r2.item);
-                break;
-              case "D":
-                delete n2[r2.path[o2]];
-                break;
-              case "E":
-              case "N":
-                n2[r2.path[o2]] = r2.rhs;
-            }
-          }
-        }
-        __name(d, "d");
-        function p(e2, t2, r2) {
-          if (r2.path && r2.path.length) {
-            var n2, o2 = e2[t2], i2 = r2.path.length - 1;
-            for (n2 = 0; n2 < i2; n2++)
-              o2 = o2[r2.path[n2]];
-            switch (r2.kind) {
-              case "A":
-                p(o2[r2.path[n2]], r2.index, r2.item);
-                break;
-              case "D":
-                o2[r2.path[n2]] = r2.lhs;
-                break;
-              case "E":
-                o2[r2.path[n2]] = r2.lhs;
-                break;
-              case "N":
-                delete o2[r2.path[n2]];
-            }
-          } else
-            switch (r2.kind) {
-              case "A":
-                p(e2[t2], r2.index, r2.item);
-                break;
-              case "D":
-                e2[t2] = r2.lhs;
-                break;
-              case "E":
-                e2[t2] = r2.lhs;
-                break;
-              case "N":
-                e2 = f(e2, t2);
-            }
-          return e2;
-        }
-        __name(p, "p");
-        function g(e2, t2, r2) {
-          if (e2 && t2 && r2 && r2.kind) {
-            var n2, o2, i2 = e2;
-            for (o2 = r2.path.length - 1, n2 = 0; n2 < o2; n2++)
-              typeof i2[r2.path[n2]] == "undefined" && (i2[r2.path[n2]] = {}), i2 = i2[r2.path[n2]];
-            switch (r2.kind) {
-              case "A":
-                p(i2[r2.path[n2]], r2.index, r2.item);
-                break;
-              case "D":
-                i2[r2.path[n2]] = r2.lhs;
-                break;
-              case "E":
-                i2[r2.path[n2]] = r2.lhs;
-                break;
-              case "N":
-                delete i2[r2.path[n2]];
-            }
-          }
-        }
-        __name(g, "g");
-        function h(e2, t2, r2) {
-          if (e2 && t2) {
-            var n2 = /* @__PURE__ */ __name(function(n3) {
-              r2 && !r2(e2, t2, n3) || d(e2, t2, n3);
-            }, "n");
-            l(e2, t2, n2);
-          }
-        }
-        __name(h, "h");
-        function y(e2) {
-          return "color: " + F[e2].color + "; font-weight: bold";
-        }
-        __name(y, "y");
-        function v(e2) {
-          var t2 = e2.kind, r2 = e2.path, n2 = e2.lhs, o2 = e2.rhs, i2 = e2.index, a2 = e2.item;
-          switch (t2) {
-            case "E":
-              return [r2.join("."), n2, "\u2192", o2];
-            case "N":
-              return [r2.join("."), o2];
-            case "D":
-              return [r2.join(".")];
-            case "A":
-              return [r2.join(".") + "[" + i2 + "]", a2];
-            default:
-              return [];
-          }
-        }
-        __name(v, "v");
-        function b(e2, t2, r2, n2) {
-          var o2 = c(e2, t2);
-          try {
-            n2 ? r2.groupCollapsed("diff") : r2.group("diff");
-          } catch (e3) {
-            r2.log("diff");
-          }
-          o2 ? o2.forEach(function(e3) {
-            var t3 = e3.kind, n3 = v(e3);
-            r2.log.apply(r2, ["%c " + F[t3].text, y(t3)].concat(P(n3)));
-          }) : r2.log("\u2014\u2014 no diff \u2014\u2014");
-          try {
-            r2.groupEnd();
-          } catch (e3) {
-            r2.log("\u2014\u2014 diff end \u2014\u2014 ");
-          }
-        }
-        __name(b, "b");
-        function m(e2, t2, r2, n2) {
-          switch (typeof e2 == "undefined" ? "undefined" : N(e2)) {
-            case "object":
-              return typeof e2[n2] == "function" ? e2[n2].apply(e2, P(r2)) : e2[n2];
-            case "function":
-              return e2(t2);
-            default:
-              return e2;
-          }
-        }
-        __name(m, "m");
-        function w(e2) {
-          var t2 = e2.timestamp, r2 = e2.duration;
-          return function(e3, n2, o2) {
-            var i2 = ["action"];
-            return i2.push("%c" + String(e3.type)), t2 && i2.push("%c@ " + n2), r2 && i2.push("%c(in " + o2.toFixed(2) + " ms)"), i2.join(" ");
-          };
-        }
-        __name(w, "w");
-        function x(e2, t2) {
-          var r2 = t2.logger, n2 = t2.actionTransformer, o2 = t2.titleFormatter, i2 = o2 === void 0 ? w(t2) : o2, a2 = t2.collapsed, f2 = t2.colors, u2 = t2.level, l2 = t2.diff, c2 = typeof t2.titleFormatter == "undefined";
-          e2.forEach(function(o3, s2) {
-            var d2 = o3.started, p2 = o3.startedTime, g2 = o3.action, h2 = o3.prevState, y2 = o3.error, v2 = o3.took, w2 = o3.nextState, x2 = e2[s2 + 1];
-            x2 && (w2 = x2.prevState, v2 = x2.started - d2);
-            var S2 = n2(g2), k2 = typeof a2 == "function" ? a2(function() {
-              return w2;
-            }, g2, o3) : a2, j2 = D(p2), E2 = f2.title ? "color: " + f2.title(S2) + ";" : "", A2 = ["color: gray; font-weight: lighter;"];
-            A2.push(E2), t2.timestamp && A2.push("color: gray; font-weight: lighter;"), t2.duration && A2.push("color: gray; font-weight: lighter;");
-            var O2 = i2(S2, j2, v2);
-            try {
-              k2 ? f2.title && c2 ? r2.groupCollapsed.apply(r2, ["%c " + O2].concat(A2)) : r2.groupCollapsed(O2) : f2.title && c2 ? r2.group.apply(r2, ["%c " + O2].concat(A2)) : r2.group(O2);
-            } catch (e3) {
-              r2.log(O2);
-            }
-            var N2 = m(u2, S2, [h2], "prevState"), P2 = m(u2, S2, [S2], "action"), C2 = m(u2, S2, [y2, h2], "error"), F2 = m(u2, S2, [w2], "nextState");
-            if (N2)
-              if (f2.prevState) {
-                var L2 = "color: " + f2.prevState(h2) + "; font-weight: bold";
-                r2[N2]("%c prev state", L2, h2);
-              } else
-                r2[N2]("prev state", h2);
-            if (P2)
-              if (f2.action) {
-                var T2 = "color: " + f2.action(S2) + "; font-weight: bold";
-                r2[P2]("%c action    ", T2, S2);
-              } else
-                r2[P2]("action    ", S2);
-            if (y2 && C2)
-              if (f2.error) {
-                var M = "color: " + f2.error(y2, h2) + "; font-weight: bold;";
-                r2[C2]("%c error     ", M, y2);
-              } else
-                r2[C2]("error     ", y2);
-            if (F2)
-              if (f2.nextState) {
-                var _11 = "color: " + f2.nextState(w2) + "; font-weight: bold";
-                r2[F2]("%c next state", _11, w2);
-              } else
-                r2[F2]("next state", w2);
-            l2 && b(h2, w2, r2, k2);
-            try {
-              r2.groupEnd();
-            } catch (e3) {
-              r2.log("\u2014\u2014 log end \u2014\u2014");
-            }
-          });
-        }
-        __name(x, "x");
-        function S() {
-          var e2 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, t2 = Object.assign({}, L, e2), r2 = t2.logger, n2 = t2.stateTransformer, o2 = t2.errorTransformer, i2 = t2.predicate, a2 = t2.logErrors, f2 = t2.diffPredicate;
-          if (typeof r2 == "undefined")
-            return function() {
-              return function(e3) {
-                return function(t3) {
-                  return e3(t3);
-                };
-              };
-            };
-          if (e2.getState && e2.dispatch)
-            return console.error("[redux-logger] redux-logger not installed. Make sure to pass logger instance as middleware:\n// Logger with default options\nimport { logger } from 'redux-logger'\nconst store = createStore(\n  reducer,\n  applyMiddleware(logger)\n)\n// Or you can create your own logger with custom options http://bit.ly/redux-logger-options\nimport createLogger from 'redux-logger'\nconst logger = createLogger({\n  // ...options\n});\nconst store = createStore(\n  reducer,\n  applyMiddleware(logger)\n)\n"), function() {
-              return function(e3) {
-                return function(t3) {
-                  return e3(t3);
-                };
-              };
-            };
-          var u2 = [];
-          return function(e3) {
-            var r3 = e3.getState;
-            return function(e4) {
-              return function(l2) {
-                if (typeof i2 == "function" && !i2(r3, l2))
-                  return e4(l2);
-                var c2 = {};
-                u2.push(c2), c2.started = O.now(), c2.startedTime = new Date(), c2.prevState = n2(r3()), c2.action = l2;
-                var s2 = void 0;
-                if (a2)
-                  try {
-                    s2 = e4(l2);
-                  } catch (e5) {
-                    c2.error = o2(e5);
-                  }
-                else
-                  s2 = e4(l2);
-                c2.took = O.now() - c2.started, c2.nextState = n2(r3());
-                var d2 = t2.diff && typeof f2 == "function" ? f2(r3, l2) : t2.diff;
-                if (x(u2, Object.assign({}, t2, { diff: d2 })), u2.length = 0, c2.error)
-                  throw c2.error;
-                return s2;
-              };
-            };
-          };
-        }
-        __name(S, "S");
-        var k, j, E = /* @__PURE__ */ __name(function(e2, t2) {
-          return new Array(t2 + 1).join(e2);
-        }, "E"), A = /* @__PURE__ */ __name(function(e2, t2) {
-          return E("0", t2 - e2.toString().length) + e2;
-        }, "A"), D = /* @__PURE__ */ __name(function(e2) {
-          return A(e2.getHours(), 2) + ":" + A(e2.getMinutes(), 2) + ":" + A(e2.getSeconds(), 2) + "." + A(e2.getMilliseconds(), 3);
-        }, "D"), O = typeof performance != "undefined" && performance !== null && typeof performance.now == "function" ? performance : Date, N = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e2) {
-          return typeof e2;
-        } : function(e2) {
-          return e2 && typeof Symbol == "function" && e2.constructor === Symbol && e2 !== Symbol.prototype ? "symbol" : typeof e2;
-        }, P = /* @__PURE__ */ __name(function(e2) {
-          if (Array.isArray(e2)) {
-            for (var t2 = 0, r2 = Array(e2.length); t2 < e2.length; t2++)
-              r2[t2] = e2[t2];
-            return r2;
-          }
-          return Array.from(e2);
-        }, "P"), C = [];
-        k = (typeof global == "undefined" ? "undefined" : N(global)) === "object" && global ? global : typeof window != "undefined" ? window : {}, j = k.DeepDiff, j && C.push(function() {
-          typeof j != "undefined" && k.DeepDiff === c && (k.DeepDiff = j, j = void 0);
-        }), t(n, r), t(o, r), t(i, r), t(a, r), Object.defineProperties(c, { diff: { value: c, enumerable: true }, observableDiff: { value: l, enumerable: true }, applyDiff: { value: h, enumerable: true }, applyChange: { value: d, enumerable: true }, revertChange: { value: g, enumerable: true }, isConflict: { value: function() {
-          return typeof j != "undefined";
-        }, enumerable: true }, noConflict: { value: function() {
-          return C && (C.forEach(function(e2) {
-            e2();
-          }), C = null), c;
-        }, enumerable: true } });
-        var F = { E: { color: "#2196F3", text: "CHANGED:" }, N: { color: "#4CAF50", text: "ADDED:" }, D: { color: "#F44336", text: "DELETED:" }, A: { color: "#2196F3", text: "ARRAY:" } }, L = { level: "log", logger: console, logErrors: true, collapsed: void 0, predicate: void 0, duration: false, timestamp: true, stateTransformer: function(e2) {
-          return e2;
-        }, actionTransformer: function(e2) {
-          return e2;
-        }, errorTransformer: function(e2) {
-          return e2;
-        }, colors: { title: function() {
-          return "inherit";
-        }, prevState: function() {
-          return "#9E9E9E";
-        }, action: function() {
-          return "#03A9F4";
-        }, nextState: function() {
-          return "#4CAF50";
-        }, error: function() {
-          return "#F20404";
-        } }, diff: false, diffPredicate: void 0, transformer: void 0 }, T = /* @__PURE__ */ __name(function() {
-          var e2 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, t2 = e2.dispatch, r2 = e2.getState;
-          return typeof t2 == "function" || typeof r2 == "function" ? S()({ dispatch: t2, getState: r2 }) : void console.error("\n[redux-logger v3] BREAKING CHANGE\n[redux-logger v3] Since 3.0.0 redux-logger exports by default logger with default settings.\n[redux-logger v3] Change\n[redux-logger v3] import createLogger from 'redux-logger'\n[redux-logger v3] to\n[redux-logger v3] import { createLogger } from 'redux-logger'\n");
-        }, "T");
-        e.defaults = L, e.createLogger = S, e.logger = T, e.default = T, Object.defineProperty(e, "__esModule", { value: true });
+        CodeMirror2.fromTextArea = fromTextArea;
+        addLegacyProps(CodeMirror2);
+        CodeMirror2.version = "5.62.0";
+        return CodeMirror2;
       });
     }
   });
 
   // src/js/app.jsx
-  var import_react57 = __toModule(require_react());
+  var import_react59 = __toModule(require_react());
   var import_react_dom9 = __toModule(require_react_dom());
 
   // node_modules/react-redux/es/components/Provider.js
@@ -43905,7 +40374,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   var Provider_default = Provider;
 
-  // node_modules/@babel/runtime/helpers/esm/extends.js
+  // node_modules/react-redux/node_modules/@babel/runtime/helpers/esm/extends.js
   function _extends() {
     _extends = Object.assign || function(target) {
       for (var i = 1; i < arguments.length; i++) {
@@ -43922,7 +40391,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(_extends, "_extends");
 
-  // node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
+  // node_modules/react-redux/node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
   function _objectWithoutPropertiesLoose(source, excluded) {
     if (source == null)
       return {};
@@ -44062,12 +40531,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         wrappedComponentName,
         WrappedComponent
       });
-      var pure2 = connectOptions.pure;
+      var pure = connectOptions.pure;
       function createChildSelector(store2) {
         return selectorFactory(store2.dispatch, selectorFactoryOptions);
       }
       __name(createChildSelector, "createChildSelector");
-      var usePureOnlyMemo = pure2 ? import_react4.useMemo : function(callback) {
+      var usePureOnlyMemo = pure ? import_react4.useMemo : function(callback) {
         return callback();
       };
       function ConnectFunction(props) {
@@ -44135,7 +40604,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         return renderedChild;
       }
       __name(ConnectFunction, "ConnectFunction");
-      var Connect = pure2 ? import_react4.default.memo(ConnectFunction) : ConnectFunction;
+      var Connect = pure ? import_react4.default.memo(ConnectFunction) : ConnectFunction;
       Connect.WrappedComponent = WrappedComponent;
       Connect.displayName = ConnectFunction.displayName = displayName;
       if (forwardRef) {
@@ -44317,13 +40786,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __name(defaultMergeProps, "defaultMergeProps");
   function wrapMergePropsFunc(mergeProps) {
     return /* @__PURE__ */ __name(function initMergePropsProxy(dispatch, _ref) {
-      var displayName = _ref.displayName, pure2 = _ref.pure, areMergedPropsEqual = _ref.areMergedPropsEqual;
+      var displayName = _ref.displayName, pure = _ref.pure, areMergedPropsEqual = _ref.areMergedPropsEqual;
       var hasRunOnce = false;
       var mergedProps;
       return /* @__PURE__ */ __name(function mergePropsProxy(stateProps, dispatchProps, ownProps) {
         var nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
         if (hasRunOnce) {
-          if (!pure2 || !areMergedPropsEqual(nextMergedProps, mergedProps))
+          if (!pure || !areMergedPropsEqual(nextMergedProps, mergedProps))
             mergedProps = nextMergedProps;
         } else {
           hasRunOnce = true;
@@ -44471,7 +40940,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       if (_ref2 === void 0) {
         _ref2 = {};
       }
-      var _ref3 = _ref2, _ref3$pure = _ref3.pure, pure2 = _ref3$pure === void 0 ? true : _ref3$pure, _ref3$areStatesEqual = _ref3.areStatesEqual, areStatesEqual = _ref3$areStatesEqual === void 0 ? strictEqual : _ref3$areStatesEqual, _ref3$areOwnPropsEqua = _ref3.areOwnPropsEqual, areOwnPropsEqual = _ref3$areOwnPropsEqua === void 0 ? shallowEqual : _ref3$areOwnPropsEqua, _ref3$areStatePropsEq = _ref3.areStatePropsEqual, areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? shallowEqual : _ref3$areStatePropsEq, _ref3$areMergedPropsE = _ref3.areMergedPropsEqual, areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? shallowEqual : _ref3$areMergedPropsE, extraOptions = _objectWithoutPropertiesLoose(_ref3, ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"]);
+      var _ref3 = _ref2, _ref3$pure = _ref3.pure, pure = _ref3$pure === void 0 ? true : _ref3$pure, _ref3$areStatesEqual = _ref3.areStatesEqual, areStatesEqual = _ref3$areStatesEqual === void 0 ? strictEqual : _ref3$areStatesEqual, _ref3$areOwnPropsEqua = _ref3.areOwnPropsEqual, areOwnPropsEqual = _ref3$areOwnPropsEqua === void 0 ? shallowEqual : _ref3$areOwnPropsEqua, _ref3$areStatePropsEq = _ref3.areStatePropsEqual, areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? shallowEqual : _ref3$areStatePropsEq, _ref3$areMergedPropsE = _ref3.areMergedPropsEqual, areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? shallowEqual : _ref3$areMergedPropsE, extraOptions = _objectWithoutPropertiesLoose(_ref3, ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"]);
       var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, "mapStateToProps");
       var initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, "mapDispatchToProps");
       var initMergeProps = match(mergeProps, mergePropsFactories, "mergeProps");
@@ -44484,7 +40953,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         initMapStateToProps,
         initMapDispatchToProps,
         initMergeProps,
-        pure: pure2,
+        pure,
         areStatesEqual,
         areOwnPropsEqual,
         areStatePropsEqual,
@@ -44644,8 +41113,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   setBatch(import_react_dom.unstable_batchedUpdates);
 
   // src/js/components/ProxyApp.jsx
-  var import_react56 = __toModule(require_react());
-  var import_prop_types33 = __toModule(require_prop_types());
+  var import_react58 = __toModule(require_react());
+  var import_prop_types26 = __toModule(require_prop_types2());
 
   // src/js/utils.js
   var import_lodash = __toModule(require_lodash());
@@ -44728,6 +41197,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     if (url.startsWith("/")) {
       url = "." + url;
     }
+    if (false) {
+      return Promise.resolve("mocked");
+    }
     return fetch(url, {
       credentials: "same-origin",
       ...options
@@ -44753,12 +41225,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     return result;
   }
   __name(getDiff, "getDiff");
-  var pure = /* @__PURE__ */ __name((renderFn) => class extends import_react8.default.PureComponent {
-    static displayName = renderFn.name;
-    render() {
-      return renderFn(this.props);
-    }
-  }, "pure");
 
   // src/js/ducks/ui/flow.ts
   var import_lodash3 = __toModule(require_lodash());
@@ -44957,8 +41423,2105 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(defaultSort, "defaultSort");
 
-  // src/js/ducks/flows.js
-  var import_filt = __toModule(require_filt());
+  // src/js/filt/filt.js
+  var filt_default = function() {
+    "use strict";
+    function peg$subclass(child, parent) {
+      function ctor() {
+        this.constructor = child;
+      }
+      __name(ctor, "ctor");
+      ctor.prototype = parent.prototype;
+      child.prototype = new ctor();
+    }
+    __name(peg$subclass, "peg$subclass");
+    function peg$SyntaxError(message, expected, found, location2) {
+      this.message = message;
+      this.expected = expected;
+      this.found = found;
+      this.location = location2;
+      this.name = "SyntaxError";
+      if (typeof Error.captureStackTrace === "function") {
+        Error.captureStackTrace(this, peg$SyntaxError);
+      }
+    }
+    __name(peg$SyntaxError, "peg$SyntaxError");
+    peg$subclass(peg$SyntaxError, Error);
+    function peg$parse(input) {
+      var options = arguments.length > 1 ? arguments[1] : {}, parser = this, peg$FAILED = {}, peg$startRuleFunctions = { start: peg$parsestart }, peg$startRuleFunction = peg$parsestart, peg$c0 = { type: "other", description: "filter expression" }, peg$c1 = /* @__PURE__ */ __name(function(orExpr) {
+        return orExpr;
+      }, "peg$c1"), peg$c2 = { type: "other", description: "whitespace" }, peg$c3 = /^[ \t\n\r]/, peg$c4 = { type: "class", value: "[ \\t\\n\\r]", description: "[ \\t\\n\\r]" }, peg$c5 = { type: "other", description: "control character" }, peg$c6 = /^[|&!()~"]/, peg$c7 = { type: "class", value: '[|&!()~"]', description: '[|&!()~"]' }, peg$c8 = { type: "other", description: "optional whitespace" }, peg$c9 = "|", peg$c10 = { type: "literal", value: "|", description: '"|"' }, peg$c11 = /* @__PURE__ */ __name(function(first, second) {
+        return or(first, second);
+      }, "peg$c11"), peg$c12 = "&", peg$c13 = { type: "literal", value: "&", description: '"&"' }, peg$c14 = /* @__PURE__ */ __name(function(first, second) {
+        return and(first, second);
+      }, "peg$c14"), peg$c15 = "!", peg$c16 = { type: "literal", value: "!", description: '"!"' }, peg$c17 = /* @__PURE__ */ __name(function(expr) {
+        return not(expr);
+      }, "peg$c17"), peg$c18 = "(", peg$c19 = { type: "literal", value: "(", description: '"("' }, peg$c20 = ")", peg$c21 = { type: "literal", value: ")", description: '")"' }, peg$c22 = /* @__PURE__ */ __name(function(expr) {
+        return binding(expr);
+      }, "peg$c22"), peg$c23 = "true", peg$c24 = { type: "literal", value: "true", description: '"true"' }, peg$c25 = /* @__PURE__ */ __name(function() {
+        return trueFilter;
+      }, "peg$c25"), peg$c26 = "false", peg$c27 = { type: "literal", value: "false", description: '"false"' }, peg$c28 = /* @__PURE__ */ __name(function() {
+        return falseFilter;
+      }, "peg$c28"), peg$c29 = "~a", peg$c30 = { type: "literal", value: "~a", description: '"~a"' }, peg$c31 = /* @__PURE__ */ __name(function() {
+        return assetFilter;
+      }, "peg$c31"), peg$c32 = "~b", peg$c33 = { type: "literal", value: "~b", description: '"~b"' }, peg$c34 = /* @__PURE__ */ __name(function(s) {
+        return body(s);
+      }, "peg$c34"), peg$c35 = "~bq", peg$c36 = { type: "literal", value: "~bq", description: '"~bq"' }, peg$c37 = /* @__PURE__ */ __name(function(s) {
+        return requestBody(s);
+      }, "peg$c37"), peg$c38 = "~bs", peg$c39 = { type: "literal", value: "~bs", description: '"~bs"' }, peg$c40 = /* @__PURE__ */ __name(function(s) {
+        return responseBody(s);
+      }, "peg$c40"), peg$c41 = "~c", peg$c42 = { type: "literal", value: "~c", description: '"~c"' }, peg$c43 = /* @__PURE__ */ __name(function(s) {
+        return responseCode(s);
+      }, "peg$c43"), peg$c44 = "~d", peg$c45 = { type: "literal", value: "~d", description: '"~d"' }, peg$c46 = /* @__PURE__ */ __name(function(s) {
+        return domain(s);
+      }, "peg$c46"), peg$c47 = "~dst", peg$c48 = { type: "literal", value: "~dst", description: '"~dst"' }, peg$c49 = /* @__PURE__ */ __name(function(s) {
+        return destination(s);
+      }, "peg$c49"), peg$c50 = "~e", peg$c51 = { type: "literal", value: "~e", description: '"~e"' }, peg$c52 = /* @__PURE__ */ __name(function() {
+        return errorFilter;
+      }, "peg$c52"), peg$c53 = "~h", peg$c54 = { type: "literal", value: "~h", description: '"~h"' }, peg$c55 = /* @__PURE__ */ __name(function(s) {
+        return header(s);
+      }, "peg$c55"), peg$c56 = "~hq", peg$c57 = { type: "literal", value: "~hq", description: '"~hq"' }, peg$c58 = /* @__PURE__ */ __name(function(s) {
+        return requestHeader(s);
+      }, "peg$c58"), peg$c59 = "~hs", peg$c60 = { type: "literal", value: "~hs", description: '"~hs"' }, peg$c61 = /* @__PURE__ */ __name(function(s) {
+        return responseHeader(s);
+      }, "peg$c61"), peg$c62 = "~http", peg$c63 = { type: "literal", value: "~http", description: '"~http"' }, peg$c64 = /* @__PURE__ */ __name(function() {
+        return httpFilter;
+      }, "peg$c64"), peg$c65 = "~m", peg$c66 = { type: "literal", value: "~m", description: '"~m"' }, peg$c67 = /* @__PURE__ */ __name(function(s) {
+        return method(s);
+      }, "peg$c67"), peg$c68 = "~marked", peg$c69 = { type: "literal", value: "~marked", description: '"~marked"' }, peg$c70 = /* @__PURE__ */ __name(function() {
+        return markedFilter;
+      }, "peg$c70"), peg$c71 = "~q", peg$c72 = { type: "literal", value: "~q", description: '"~q"' }, peg$c73 = /* @__PURE__ */ __name(function() {
+        return noResponseFilter;
+      }, "peg$c73"), peg$c74 = "~src", peg$c75 = { type: "literal", value: "~src", description: '"~src"' }, peg$c76 = /* @__PURE__ */ __name(function(s) {
+        return source(s);
+      }, "peg$c76"), peg$c77 = "~s", peg$c78 = { type: "literal", value: "~s", description: '"~s"' }, peg$c79 = /* @__PURE__ */ __name(function() {
+        return responseFilter;
+      }, "peg$c79"), peg$c80 = "~t", peg$c81 = { type: "literal", value: "~t", description: '"~t"' }, peg$c82 = /* @__PURE__ */ __name(function(s) {
+        return contentType(s);
+      }, "peg$c82"), peg$c83 = "~tcp", peg$c84 = { type: "literal", value: "~tcp", description: '"~tcp"' }, peg$c85 = /* @__PURE__ */ __name(function() {
+        return tcpFilter;
+      }, "peg$c85"), peg$c86 = "~tq", peg$c87 = { type: "literal", value: "~tq", description: '"~tq"' }, peg$c88 = /* @__PURE__ */ __name(function(s) {
+        return requestContentType(s);
+      }, "peg$c88"), peg$c89 = "~ts", peg$c90 = { type: "literal", value: "~ts", description: '"~ts"' }, peg$c91 = /* @__PURE__ */ __name(function(s) {
+        return responseContentType(s);
+      }, "peg$c91"), peg$c92 = "~u", peg$c93 = { type: "literal", value: "~u", description: '"~u"' }, peg$c94 = /* @__PURE__ */ __name(function(s) {
+        return url(s);
+      }, "peg$c94"), peg$c95 = "~websocket", peg$c96 = { type: "literal", value: "~websocket", description: '"~websocket"' }, peg$c97 = /* @__PURE__ */ __name(function() {
+        return websocketFilter;
+      }, "peg$c97"), peg$c98 = { type: "other", description: "integer" }, peg$c99 = /^['"]/, peg$c100 = { type: "class", value: `['"]`, description: `['"]` }, peg$c101 = /^[0-9]/, peg$c102 = { type: "class", value: "[0-9]", description: "[0-9]" }, peg$c103 = /* @__PURE__ */ __name(function(digits) {
+        return parseInt(digits.join(""), 10);
+      }, "peg$c103"), peg$c104 = { type: "other", description: "string" }, peg$c105 = '"', peg$c106 = { type: "literal", value: '"', description: '"\\""' }, peg$c107 = /* @__PURE__ */ __name(function(chars) {
+        return chars.join("");
+      }, "peg$c107"), peg$c108 = "'", peg$c109 = { type: "literal", value: "'", description: `"'"` }, peg$c110 = /^["\\]/, peg$c111 = { type: "class", value: '["\\\\]', description: '["\\\\]' }, peg$c112 = { type: "any", description: "any character" }, peg$c113 = /* @__PURE__ */ __name(function(char) {
+        return char;
+      }, "peg$c113"), peg$c114 = "\\", peg$c115 = { type: "literal", value: "\\", description: '"\\\\"' }, peg$c116 = /^['\\]/, peg$c117 = { type: "class", value: "['\\\\]", description: "['\\\\]" }, peg$c118 = /^['"\\]/, peg$c119 = { type: "class", value: `['"\\\\]`, description: `['"\\\\]` }, peg$c120 = "n", peg$c121 = { type: "literal", value: "n", description: '"n"' }, peg$c122 = /* @__PURE__ */ __name(function() {
+        return "\n";
+      }, "peg$c122"), peg$c123 = "r", peg$c124 = { type: "literal", value: "r", description: '"r"' }, peg$c125 = /* @__PURE__ */ __name(function() {
+        return "\r";
+      }, "peg$c125"), peg$c126 = "t", peg$c127 = { type: "literal", value: "t", description: '"t"' }, peg$c128 = /* @__PURE__ */ __name(function() {
+        return "	";
+      }, "peg$c128"), peg$currPos = 0, peg$savedPos = 0, peg$posDetailsCache = [{ line: 1, column: 1, seenCR: false }], peg$maxFailPos = 0, peg$maxFailExpected = [], peg$silentFails = 0, peg$result;
+      if ("startRule" in options) {
+        if (!(options.startRule in peg$startRuleFunctions)) {
+          throw new Error(`Can't start parsing from rule "` + options.startRule + '".');
+        }
+        peg$startRuleFunction = peg$startRuleFunctions[options.startRule];
+      }
+      function text() {
+        return input.substring(peg$savedPos, peg$currPos);
+      }
+      __name(text, "text");
+      function location2() {
+        return peg$computeLocation(peg$savedPos, peg$currPos);
+      }
+      __name(location2, "location");
+      function expected(description) {
+        throw peg$buildException(null, [{ type: "other", description }], input.substring(peg$savedPos, peg$currPos), peg$computeLocation(peg$savedPos, peg$currPos));
+      }
+      __name(expected, "expected");
+      function error(message) {
+        throw peg$buildException(message, null, input.substring(peg$savedPos, peg$currPos), peg$computeLocation(peg$savedPos, peg$currPos));
+      }
+      __name(error, "error");
+      function peg$computePosDetails(pos) {
+        var details = peg$posDetailsCache[pos], p, ch;
+        if (details) {
+          return details;
+        } else {
+          p = pos - 1;
+          while (!peg$posDetailsCache[p]) {
+            p--;
+          }
+          details = peg$posDetailsCache[p];
+          details = {
+            line: details.line,
+            column: details.column,
+            seenCR: details.seenCR
+          };
+          while (p < pos) {
+            ch = input.charAt(p);
+            if (ch === "\n") {
+              if (!details.seenCR) {
+                details.line++;
+              }
+              details.column = 1;
+              details.seenCR = false;
+            } else if (ch === "\r" || ch === "\u2028" || ch === "\u2029") {
+              details.line++;
+              details.column = 1;
+              details.seenCR = true;
+            } else {
+              details.column++;
+              details.seenCR = false;
+            }
+            p++;
+          }
+          peg$posDetailsCache[pos] = details;
+          return details;
+        }
+      }
+      __name(peg$computePosDetails, "peg$computePosDetails");
+      function peg$computeLocation(startPos, endPos) {
+        var startPosDetails = peg$computePosDetails(startPos), endPosDetails = peg$computePosDetails(endPos);
+        return {
+          start: {
+            offset: startPos,
+            line: startPosDetails.line,
+            column: startPosDetails.column
+          },
+          end: {
+            offset: endPos,
+            line: endPosDetails.line,
+            column: endPosDetails.column
+          }
+        };
+      }
+      __name(peg$computeLocation, "peg$computeLocation");
+      function peg$fail(expected2) {
+        if (peg$currPos < peg$maxFailPos) {
+          return;
+        }
+        if (peg$currPos > peg$maxFailPos) {
+          peg$maxFailPos = peg$currPos;
+          peg$maxFailExpected = [];
+        }
+        peg$maxFailExpected.push(expected2);
+      }
+      __name(peg$fail, "peg$fail");
+      function peg$buildException(message, expected2, found, location3) {
+        function cleanupExpected(expected3) {
+          var i = 1;
+          expected3.sort(function(a, b) {
+            if (a.description < b.description) {
+              return -1;
+            } else if (a.description > b.description) {
+              return 1;
+            } else {
+              return 0;
+            }
+          });
+          while (i < expected3.length) {
+            if (expected3[i - 1] === expected3[i]) {
+              expected3.splice(i, 1);
+            } else {
+              i++;
+            }
+          }
+        }
+        __name(cleanupExpected, "cleanupExpected");
+        function buildMessage(expected3, found2) {
+          function stringEscape(s) {
+            function hex(ch) {
+              return ch.charCodeAt(0).toString(16).toUpperCase();
+            }
+            __name(hex, "hex");
+            return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\x08/g, "\\b").replace(/\t/g, "\\t").replace(/\n/g, "\\n").replace(/\f/g, "\\f").replace(/\r/g, "\\r").replace(/[\x00-\x07\x0B\x0E\x0F]/g, function(ch) {
+              return "\\x0" + hex(ch);
+            }).replace(/[\x10-\x1F\x80-\xFF]/g, function(ch) {
+              return "\\x" + hex(ch);
+            }).replace(/[\u0100-\u0FFF]/g, function(ch) {
+              return "\\u0" + hex(ch);
+            }).replace(/[\u1000-\uFFFF]/g, function(ch) {
+              return "\\u" + hex(ch);
+            });
+          }
+          __name(stringEscape, "stringEscape");
+          var expectedDescs = new Array(expected3.length), expectedDesc, foundDesc, i;
+          for (i = 0; i < expected3.length; i++) {
+            expectedDescs[i] = expected3[i].description;
+          }
+          expectedDesc = expected3.length > 1 ? expectedDescs.slice(0, -1).join(", ") + " or " + expectedDescs[expected3.length - 1] : expectedDescs[0];
+          foundDesc = found2 ? '"' + stringEscape(found2) + '"' : "end of input";
+          return "Expected " + expectedDesc + " but " + foundDesc + " found.";
+        }
+        __name(buildMessage, "buildMessage");
+        if (expected2 !== null) {
+          cleanupExpected(expected2);
+        }
+        return new peg$SyntaxError(message !== null ? message : buildMessage(expected2, found), expected2, found, location3);
+      }
+      __name(peg$buildException, "peg$buildException");
+      function peg$parsestart() {
+        var s0, s1, s2, s3;
+        peg$silentFails++;
+        s0 = peg$currPos;
+        s1 = peg$parse__();
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parseOrExpr();
+          if (s2 !== peg$FAILED) {
+            s3 = peg$parse__();
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c1(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c0);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parsestart, "peg$parsestart");
+      function peg$parsews() {
+        var s0, s1;
+        peg$silentFails++;
+        if (peg$c3.test(input.charAt(peg$currPos))) {
+          s0 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s0 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c4);
+          }
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c2);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parsews, "peg$parsews");
+      function peg$parsecc() {
+        var s0, s1;
+        peg$silentFails++;
+        if (peg$c6.test(input.charAt(peg$currPos))) {
+          s0 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s0 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c7);
+          }
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c5);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parsecc, "peg$parsecc");
+      function peg$parse__() {
+        var s0, s1;
+        peg$silentFails++;
+        s0 = [];
+        s1 = peg$parsews();
+        while (s1 !== peg$FAILED) {
+          s0.push(s1);
+          s1 = peg$parsews();
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c8);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parse__, "peg$parse__");
+      function peg$parseOrExpr() {
+        var s0, s1, s2, s3, s4, s5;
+        s0 = peg$currPos;
+        s1 = peg$parseAndExpr();
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parse__();
+          if (s2 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 124) {
+              s3 = peg$c9;
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c10);
+              }
+            }
+            if (s3 !== peg$FAILED) {
+              s4 = peg$parse__();
+              if (s4 !== peg$FAILED) {
+                s5 = peg$parseOrExpr();
+                if (s5 !== peg$FAILED) {
+                  peg$savedPos = s0;
+                  s1 = peg$c11(s1, s5);
+                  s0 = s1;
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$parseAndExpr();
+        }
+        return s0;
+      }
+      __name(peg$parseOrExpr, "peg$parseOrExpr");
+      function peg$parseAndExpr() {
+        var s0, s1, s2, s3, s4, s5;
+        s0 = peg$currPos;
+        s1 = peg$parseNotExpr();
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parse__();
+          if (s2 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 38) {
+              s3 = peg$c12;
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c13);
+              }
+            }
+            if (s3 !== peg$FAILED) {
+              s4 = peg$parse__();
+              if (s4 !== peg$FAILED) {
+                s5 = peg$parseAndExpr();
+                if (s5 !== peg$FAILED) {
+                  peg$savedPos = s0;
+                  s1 = peg$c14(s1, s5);
+                  s0 = s1;
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          s1 = peg$parseNotExpr();
+          if (s1 !== peg$FAILED) {
+            s2 = [];
+            s3 = peg$parsews();
+            if (s3 !== peg$FAILED) {
+              while (s3 !== peg$FAILED) {
+                s2.push(s3);
+                s3 = peg$parsews();
+              }
+            } else {
+              s2 = peg$FAILED;
+            }
+            if (s2 !== peg$FAILED) {
+              s3 = peg$parseAndExpr();
+              if (s3 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c14(s1, s3);
+                s0 = s1;
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+          if (s0 === peg$FAILED) {
+            s0 = peg$parseNotExpr();
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseAndExpr, "peg$parseAndExpr");
+      function peg$parseNotExpr() {
+        var s0, s1, s2, s3;
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 33) {
+          s1 = peg$c15;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c16);
+          }
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parse__();
+          if (s2 !== peg$FAILED) {
+            s3 = peg$parseNotExpr();
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c17(s3);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$parseBindingExpr();
+        }
+        return s0;
+      }
+      __name(peg$parseNotExpr, "peg$parseNotExpr");
+      function peg$parseBindingExpr() {
+        var s0, s1, s2, s3, s4, s5;
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 40) {
+          s1 = peg$c18;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c19);
+          }
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parse__();
+          if (s2 !== peg$FAILED) {
+            s3 = peg$parseOrExpr();
+            if (s3 !== peg$FAILED) {
+              s4 = peg$parse__();
+              if (s4 !== peg$FAILED) {
+                if (input.charCodeAt(peg$currPos) === 41) {
+                  s5 = peg$c20;
+                  peg$currPos++;
+                } else {
+                  s5 = peg$FAILED;
+                  if (peg$silentFails === 0) {
+                    peg$fail(peg$c21);
+                  }
+                }
+                if (s5 !== peg$FAILED) {
+                  peg$savedPos = s0;
+                  s1 = peg$c22(s3);
+                  s0 = s1;
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$parseExpr();
+        }
+        return s0;
+      }
+      __name(peg$parseBindingExpr, "peg$parseBindingExpr");
+      function peg$parseExpr() {
+        var s0, s1, s2, s3;
+        s0 = peg$currPos;
+        if (input.substr(peg$currPos, 4) === peg$c23) {
+          s1 = peg$c23;
+          peg$currPos += 4;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c24);
+          }
+        }
+        if (s1 !== peg$FAILED) {
+          peg$savedPos = s0;
+          s1 = peg$c25();
+        }
+        s0 = s1;
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.substr(peg$currPos, 5) === peg$c26) {
+            s1 = peg$c26;
+            peg$currPos += 5;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c27);
+            }
+          }
+          if (s1 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c28();
+          }
+          s0 = s1;
+          if (s0 === peg$FAILED) {
+            s0 = peg$currPos;
+            if (input.substr(peg$currPos, 2) === peg$c29) {
+              s1 = peg$c29;
+              peg$currPos += 2;
+            } else {
+              s1 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c30);
+              }
+            }
+            if (s1 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c31();
+            }
+            s0 = s1;
+            if (s0 === peg$FAILED) {
+              s0 = peg$currPos;
+              if (input.substr(peg$currPos, 2) === peg$c32) {
+                s1 = peg$c32;
+                peg$currPos += 2;
+              } else {
+                s1 = peg$FAILED;
+                if (peg$silentFails === 0) {
+                  peg$fail(peg$c33);
+                }
+              }
+              if (s1 !== peg$FAILED) {
+                s2 = [];
+                s3 = peg$parsews();
+                if (s3 !== peg$FAILED) {
+                  while (s3 !== peg$FAILED) {
+                    s2.push(s3);
+                    s3 = peg$parsews();
+                  }
+                } else {
+                  s2 = peg$FAILED;
+                }
+                if (s2 !== peg$FAILED) {
+                  s3 = peg$parseStringLiteral();
+                  if (s3 !== peg$FAILED) {
+                    peg$savedPos = s0;
+                    s1 = peg$c34(s3);
+                    s0 = s1;
+                  } else {
+                    peg$currPos = s0;
+                    s0 = peg$FAILED;
+                  }
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+              if (s0 === peg$FAILED) {
+                s0 = peg$currPos;
+                if (input.substr(peg$currPos, 3) === peg$c35) {
+                  s1 = peg$c35;
+                  peg$currPos += 3;
+                } else {
+                  s1 = peg$FAILED;
+                  if (peg$silentFails === 0) {
+                    peg$fail(peg$c36);
+                  }
+                }
+                if (s1 !== peg$FAILED) {
+                  s2 = [];
+                  s3 = peg$parsews();
+                  if (s3 !== peg$FAILED) {
+                    while (s3 !== peg$FAILED) {
+                      s2.push(s3);
+                      s3 = peg$parsews();
+                    }
+                  } else {
+                    s2 = peg$FAILED;
+                  }
+                  if (s2 !== peg$FAILED) {
+                    s3 = peg$parseStringLiteral();
+                    if (s3 !== peg$FAILED) {
+                      peg$savedPos = s0;
+                      s1 = peg$c37(s3);
+                      s0 = s1;
+                    } else {
+                      peg$currPos = s0;
+                      s0 = peg$FAILED;
+                    }
+                  } else {
+                    peg$currPos = s0;
+                    s0 = peg$FAILED;
+                  }
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+                if (s0 === peg$FAILED) {
+                  s0 = peg$currPos;
+                  if (input.substr(peg$currPos, 3) === peg$c38) {
+                    s1 = peg$c38;
+                    peg$currPos += 3;
+                  } else {
+                    s1 = peg$FAILED;
+                    if (peg$silentFails === 0) {
+                      peg$fail(peg$c39);
+                    }
+                  }
+                  if (s1 !== peg$FAILED) {
+                    s2 = [];
+                    s3 = peg$parsews();
+                    if (s3 !== peg$FAILED) {
+                      while (s3 !== peg$FAILED) {
+                        s2.push(s3);
+                        s3 = peg$parsews();
+                      }
+                    } else {
+                      s2 = peg$FAILED;
+                    }
+                    if (s2 !== peg$FAILED) {
+                      s3 = peg$parseStringLiteral();
+                      if (s3 !== peg$FAILED) {
+                        peg$savedPos = s0;
+                        s1 = peg$c40(s3);
+                        s0 = s1;
+                      } else {
+                        peg$currPos = s0;
+                        s0 = peg$FAILED;
+                      }
+                    } else {
+                      peg$currPos = s0;
+                      s0 = peg$FAILED;
+                    }
+                  } else {
+                    peg$currPos = s0;
+                    s0 = peg$FAILED;
+                  }
+                  if (s0 === peg$FAILED) {
+                    s0 = peg$currPos;
+                    if (input.substr(peg$currPos, 2) === peg$c41) {
+                      s1 = peg$c41;
+                      peg$currPos += 2;
+                    } else {
+                      s1 = peg$FAILED;
+                      if (peg$silentFails === 0) {
+                        peg$fail(peg$c42);
+                      }
+                    }
+                    if (s1 !== peg$FAILED) {
+                      s2 = [];
+                      s3 = peg$parsews();
+                      if (s3 !== peg$FAILED) {
+                        while (s3 !== peg$FAILED) {
+                          s2.push(s3);
+                          s3 = peg$parsews();
+                        }
+                      } else {
+                        s2 = peg$FAILED;
+                      }
+                      if (s2 !== peg$FAILED) {
+                        s3 = peg$parseIntegerLiteral();
+                        if (s3 !== peg$FAILED) {
+                          peg$savedPos = s0;
+                          s1 = peg$c43(s3);
+                          s0 = s1;
+                        } else {
+                          peg$currPos = s0;
+                          s0 = peg$FAILED;
+                        }
+                      } else {
+                        peg$currPos = s0;
+                        s0 = peg$FAILED;
+                      }
+                    } else {
+                      peg$currPos = s0;
+                      s0 = peg$FAILED;
+                    }
+                    if (s0 === peg$FAILED) {
+                      s0 = peg$currPos;
+                      if (input.substr(peg$currPos, 2) === peg$c44) {
+                        s1 = peg$c44;
+                        peg$currPos += 2;
+                      } else {
+                        s1 = peg$FAILED;
+                        if (peg$silentFails === 0) {
+                          peg$fail(peg$c45);
+                        }
+                      }
+                      if (s1 !== peg$FAILED) {
+                        s2 = [];
+                        s3 = peg$parsews();
+                        if (s3 !== peg$FAILED) {
+                          while (s3 !== peg$FAILED) {
+                            s2.push(s3);
+                            s3 = peg$parsews();
+                          }
+                        } else {
+                          s2 = peg$FAILED;
+                        }
+                        if (s2 !== peg$FAILED) {
+                          s3 = peg$parseStringLiteral();
+                          if (s3 !== peg$FAILED) {
+                            peg$savedPos = s0;
+                            s1 = peg$c46(s3);
+                            s0 = s1;
+                          } else {
+                            peg$currPos = s0;
+                            s0 = peg$FAILED;
+                          }
+                        } else {
+                          peg$currPos = s0;
+                          s0 = peg$FAILED;
+                        }
+                      } else {
+                        peg$currPos = s0;
+                        s0 = peg$FAILED;
+                      }
+                      if (s0 === peg$FAILED) {
+                        s0 = peg$currPos;
+                        if (input.substr(peg$currPos, 4) === peg$c47) {
+                          s1 = peg$c47;
+                          peg$currPos += 4;
+                        } else {
+                          s1 = peg$FAILED;
+                          if (peg$silentFails === 0) {
+                            peg$fail(peg$c48);
+                          }
+                        }
+                        if (s1 !== peg$FAILED) {
+                          s2 = [];
+                          s3 = peg$parsews();
+                          if (s3 !== peg$FAILED) {
+                            while (s3 !== peg$FAILED) {
+                              s2.push(s3);
+                              s3 = peg$parsews();
+                            }
+                          } else {
+                            s2 = peg$FAILED;
+                          }
+                          if (s2 !== peg$FAILED) {
+                            s3 = peg$parseStringLiteral();
+                            if (s3 !== peg$FAILED) {
+                              peg$savedPos = s0;
+                              s1 = peg$c49(s3);
+                              s0 = s1;
+                            } else {
+                              peg$currPos = s0;
+                              s0 = peg$FAILED;
+                            }
+                          } else {
+                            peg$currPos = s0;
+                            s0 = peg$FAILED;
+                          }
+                        } else {
+                          peg$currPos = s0;
+                          s0 = peg$FAILED;
+                        }
+                        if (s0 === peg$FAILED) {
+                          s0 = peg$currPos;
+                          if (input.substr(peg$currPos, 2) === peg$c50) {
+                            s1 = peg$c50;
+                            peg$currPos += 2;
+                          } else {
+                            s1 = peg$FAILED;
+                            if (peg$silentFails === 0) {
+                              peg$fail(peg$c51);
+                            }
+                          }
+                          if (s1 !== peg$FAILED) {
+                            peg$savedPos = s0;
+                            s1 = peg$c52();
+                          }
+                          s0 = s1;
+                          if (s0 === peg$FAILED) {
+                            s0 = peg$currPos;
+                            if (input.substr(peg$currPos, 2) === peg$c53) {
+                              s1 = peg$c53;
+                              peg$currPos += 2;
+                            } else {
+                              s1 = peg$FAILED;
+                              if (peg$silentFails === 0) {
+                                peg$fail(peg$c54);
+                              }
+                            }
+                            if (s1 !== peg$FAILED) {
+                              s2 = [];
+                              s3 = peg$parsews();
+                              if (s3 !== peg$FAILED) {
+                                while (s3 !== peg$FAILED) {
+                                  s2.push(s3);
+                                  s3 = peg$parsews();
+                                }
+                              } else {
+                                s2 = peg$FAILED;
+                              }
+                              if (s2 !== peg$FAILED) {
+                                s3 = peg$parseStringLiteral();
+                                if (s3 !== peg$FAILED) {
+                                  peg$savedPos = s0;
+                                  s1 = peg$c55(s3);
+                                  s0 = s1;
+                                } else {
+                                  peg$currPos = s0;
+                                  s0 = peg$FAILED;
+                                }
+                              } else {
+                                peg$currPos = s0;
+                                s0 = peg$FAILED;
+                              }
+                            } else {
+                              peg$currPos = s0;
+                              s0 = peg$FAILED;
+                            }
+                            if (s0 === peg$FAILED) {
+                              s0 = peg$currPos;
+                              if (input.substr(peg$currPos, 3) === peg$c56) {
+                                s1 = peg$c56;
+                                peg$currPos += 3;
+                              } else {
+                                s1 = peg$FAILED;
+                                if (peg$silentFails === 0) {
+                                  peg$fail(peg$c57);
+                                }
+                              }
+                              if (s1 !== peg$FAILED) {
+                                s2 = [];
+                                s3 = peg$parsews();
+                                if (s3 !== peg$FAILED) {
+                                  while (s3 !== peg$FAILED) {
+                                    s2.push(s3);
+                                    s3 = peg$parsews();
+                                  }
+                                } else {
+                                  s2 = peg$FAILED;
+                                }
+                                if (s2 !== peg$FAILED) {
+                                  s3 = peg$parseStringLiteral();
+                                  if (s3 !== peg$FAILED) {
+                                    peg$savedPos = s0;
+                                    s1 = peg$c58(s3);
+                                    s0 = s1;
+                                  } else {
+                                    peg$currPos = s0;
+                                    s0 = peg$FAILED;
+                                  }
+                                } else {
+                                  peg$currPos = s0;
+                                  s0 = peg$FAILED;
+                                }
+                              } else {
+                                peg$currPos = s0;
+                                s0 = peg$FAILED;
+                              }
+                              if (s0 === peg$FAILED) {
+                                s0 = peg$currPos;
+                                if (input.substr(peg$currPos, 3) === peg$c59) {
+                                  s1 = peg$c59;
+                                  peg$currPos += 3;
+                                } else {
+                                  s1 = peg$FAILED;
+                                  if (peg$silentFails === 0) {
+                                    peg$fail(peg$c60);
+                                  }
+                                }
+                                if (s1 !== peg$FAILED) {
+                                  s2 = [];
+                                  s3 = peg$parsews();
+                                  if (s3 !== peg$FAILED) {
+                                    while (s3 !== peg$FAILED) {
+                                      s2.push(s3);
+                                      s3 = peg$parsews();
+                                    }
+                                  } else {
+                                    s2 = peg$FAILED;
+                                  }
+                                  if (s2 !== peg$FAILED) {
+                                    s3 = peg$parseStringLiteral();
+                                    if (s3 !== peg$FAILED) {
+                                      peg$savedPos = s0;
+                                      s1 = peg$c61(s3);
+                                      s0 = s1;
+                                    } else {
+                                      peg$currPos = s0;
+                                      s0 = peg$FAILED;
+                                    }
+                                  } else {
+                                    peg$currPos = s0;
+                                    s0 = peg$FAILED;
+                                  }
+                                } else {
+                                  peg$currPos = s0;
+                                  s0 = peg$FAILED;
+                                }
+                                if (s0 === peg$FAILED) {
+                                  s0 = peg$currPos;
+                                  if (input.substr(peg$currPos, 5) === peg$c62) {
+                                    s1 = peg$c62;
+                                    peg$currPos += 5;
+                                  } else {
+                                    s1 = peg$FAILED;
+                                    if (peg$silentFails === 0) {
+                                      peg$fail(peg$c63);
+                                    }
+                                  }
+                                  if (s1 !== peg$FAILED) {
+                                    peg$savedPos = s0;
+                                    s1 = peg$c64();
+                                  }
+                                  s0 = s1;
+                                  if (s0 === peg$FAILED) {
+                                    s0 = peg$currPos;
+                                    if (input.substr(peg$currPos, 2) === peg$c65) {
+                                      s1 = peg$c65;
+                                      peg$currPos += 2;
+                                    } else {
+                                      s1 = peg$FAILED;
+                                      if (peg$silentFails === 0) {
+                                        peg$fail(peg$c66);
+                                      }
+                                    }
+                                    if (s1 !== peg$FAILED) {
+                                      s2 = [];
+                                      s3 = peg$parsews();
+                                      if (s3 !== peg$FAILED) {
+                                        while (s3 !== peg$FAILED) {
+                                          s2.push(s3);
+                                          s3 = peg$parsews();
+                                        }
+                                      } else {
+                                        s2 = peg$FAILED;
+                                      }
+                                      if (s2 !== peg$FAILED) {
+                                        s3 = peg$parseStringLiteral();
+                                        if (s3 !== peg$FAILED) {
+                                          peg$savedPos = s0;
+                                          s1 = peg$c67(s3);
+                                          s0 = s1;
+                                        } else {
+                                          peg$currPos = s0;
+                                          s0 = peg$FAILED;
+                                        }
+                                      } else {
+                                        peg$currPos = s0;
+                                        s0 = peg$FAILED;
+                                      }
+                                    } else {
+                                      peg$currPos = s0;
+                                      s0 = peg$FAILED;
+                                    }
+                                    if (s0 === peg$FAILED) {
+                                      s0 = peg$currPos;
+                                      if (input.substr(peg$currPos, 7) === peg$c68) {
+                                        s1 = peg$c68;
+                                        peg$currPos += 7;
+                                      } else {
+                                        s1 = peg$FAILED;
+                                        if (peg$silentFails === 0) {
+                                          peg$fail(peg$c69);
+                                        }
+                                      }
+                                      if (s1 !== peg$FAILED) {
+                                        peg$savedPos = s0;
+                                        s1 = peg$c70();
+                                      }
+                                      s0 = s1;
+                                      if (s0 === peg$FAILED) {
+                                        s0 = peg$currPos;
+                                        if (input.substr(peg$currPos, 2) === peg$c71) {
+                                          s1 = peg$c71;
+                                          peg$currPos += 2;
+                                        } else {
+                                          s1 = peg$FAILED;
+                                          if (peg$silentFails === 0) {
+                                            peg$fail(peg$c72);
+                                          }
+                                        }
+                                        if (s1 !== peg$FAILED) {
+                                          peg$savedPos = s0;
+                                          s1 = peg$c73();
+                                        }
+                                        s0 = s1;
+                                        if (s0 === peg$FAILED) {
+                                          s0 = peg$currPos;
+                                          if (input.substr(peg$currPos, 4) === peg$c74) {
+                                            s1 = peg$c74;
+                                            peg$currPos += 4;
+                                          } else {
+                                            s1 = peg$FAILED;
+                                            if (peg$silentFails === 0) {
+                                              peg$fail(peg$c75);
+                                            }
+                                          }
+                                          if (s1 !== peg$FAILED) {
+                                            s2 = [];
+                                            s3 = peg$parsews();
+                                            if (s3 !== peg$FAILED) {
+                                              while (s3 !== peg$FAILED) {
+                                                s2.push(s3);
+                                                s3 = peg$parsews();
+                                              }
+                                            } else {
+                                              s2 = peg$FAILED;
+                                            }
+                                            if (s2 !== peg$FAILED) {
+                                              s3 = peg$parseStringLiteral();
+                                              if (s3 !== peg$FAILED) {
+                                                peg$savedPos = s0;
+                                                s1 = peg$c76(s3);
+                                                s0 = s1;
+                                              } else {
+                                                peg$currPos = s0;
+                                                s0 = peg$FAILED;
+                                              }
+                                            } else {
+                                              peg$currPos = s0;
+                                              s0 = peg$FAILED;
+                                            }
+                                          } else {
+                                            peg$currPos = s0;
+                                            s0 = peg$FAILED;
+                                          }
+                                          if (s0 === peg$FAILED) {
+                                            s0 = peg$currPos;
+                                            if (input.substr(peg$currPos, 2) === peg$c77) {
+                                              s1 = peg$c77;
+                                              peg$currPos += 2;
+                                            } else {
+                                              s1 = peg$FAILED;
+                                              if (peg$silentFails === 0) {
+                                                peg$fail(peg$c78);
+                                              }
+                                            }
+                                            if (s1 !== peg$FAILED) {
+                                              peg$savedPos = s0;
+                                              s1 = peg$c79();
+                                            }
+                                            s0 = s1;
+                                            if (s0 === peg$FAILED) {
+                                              s0 = peg$currPos;
+                                              if (input.substr(peg$currPos, 2) === peg$c80) {
+                                                s1 = peg$c80;
+                                                peg$currPos += 2;
+                                              } else {
+                                                s1 = peg$FAILED;
+                                                if (peg$silentFails === 0) {
+                                                  peg$fail(peg$c81);
+                                                }
+                                              }
+                                              if (s1 !== peg$FAILED) {
+                                                s2 = [];
+                                                s3 = peg$parsews();
+                                                if (s3 !== peg$FAILED) {
+                                                  while (s3 !== peg$FAILED) {
+                                                    s2.push(s3);
+                                                    s3 = peg$parsews();
+                                                  }
+                                                } else {
+                                                  s2 = peg$FAILED;
+                                                }
+                                                if (s2 !== peg$FAILED) {
+                                                  s3 = peg$parseStringLiteral();
+                                                  if (s3 !== peg$FAILED) {
+                                                    peg$savedPos = s0;
+                                                    s1 = peg$c82(s3);
+                                                    s0 = s1;
+                                                  } else {
+                                                    peg$currPos = s0;
+                                                    s0 = peg$FAILED;
+                                                  }
+                                                } else {
+                                                  peg$currPos = s0;
+                                                  s0 = peg$FAILED;
+                                                }
+                                              } else {
+                                                peg$currPos = s0;
+                                                s0 = peg$FAILED;
+                                              }
+                                              if (s0 === peg$FAILED) {
+                                                s0 = peg$currPos;
+                                                if (input.substr(peg$currPos, 4) === peg$c83) {
+                                                  s1 = peg$c83;
+                                                  peg$currPos += 4;
+                                                } else {
+                                                  s1 = peg$FAILED;
+                                                  if (peg$silentFails === 0) {
+                                                    peg$fail(peg$c84);
+                                                  }
+                                                }
+                                                if (s1 !== peg$FAILED) {
+                                                  peg$savedPos = s0;
+                                                  s1 = peg$c85();
+                                                }
+                                                s0 = s1;
+                                                if (s0 === peg$FAILED) {
+                                                  s0 = peg$currPos;
+                                                  if (input.substr(peg$currPos, 3) === peg$c86) {
+                                                    s1 = peg$c86;
+                                                    peg$currPos += 3;
+                                                  } else {
+                                                    s1 = peg$FAILED;
+                                                    if (peg$silentFails === 0) {
+                                                      peg$fail(peg$c87);
+                                                    }
+                                                  }
+                                                  if (s1 !== peg$FAILED) {
+                                                    s2 = [];
+                                                    s3 = peg$parsews();
+                                                    if (s3 !== peg$FAILED) {
+                                                      while (s3 !== peg$FAILED) {
+                                                        s2.push(s3);
+                                                        s3 = peg$parsews();
+                                                      }
+                                                    } else {
+                                                      s2 = peg$FAILED;
+                                                    }
+                                                    if (s2 !== peg$FAILED) {
+                                                      s3 = peg$parseStringLiteral();
+                                                      if (s3 !== peg$FAILED) {
+                                                        peg$savedPos = s0;
+                                                        s1 = peg$c88(s3);
+                                                        s0 = s1;
+                                                      } else {
+                                                        peg$currPos = s0;
+                                                        s0 = peg$FAILED;
+                                                      }
+                                                    } else {
+                                                      peg$currPos = s0;
+                                                      s0 = peg$FAILED;
+                                                    }
+                                                  } else {
+                                                    peg$currPos = s0;
+                                                    s0 = peg$FAILED;
+                                                  }
+                                                  if (s0 === peg$FAILED) {
+                                                    s0 = peg$currPos;
+                                                    if (input.substr(peg$currPos, 3) === peg$c89) {
+                                                      s1 = peg$c89;
+                                                      peg$currPos += 3;
+                                                    } else {
+                                                      s1 = peg$FAILED;
+                                                      if (peg$silentFails === 0) {
+                                                        peg$fail(peg$c90);
+                                                      }
+                                                    }
+                                                    if (s1 !== peg$FAILED) {
+                                                      s2 = [];
+                                                      s3 = peg$parsews();
+                                                      if (s3 !== peg$FAILED) {
+                                                        while (s3 !== peg$FAILED) {
+                                                          s2.push(s3);
+                                                          s3 = peg$parsews();
+                                                        }
+                                                      } else {
+                                                        s2 = peg$FAILED;
+                                                      }
+                                                      if (s2 !== peg$FAILED) {
+                                                        s3 = peg$parseStringLiteral();
+                                                        if (s3 !== peg$FAILED) {
+                                                          peg$savedPos = s0;
+                                                          s1 = peg$c91(s3);
+                                                          s0 = s1;
+                                                        } else {
+                                                          peg$currPos = s0;
+                                                          s0 = peg$FAILED;
+                                                        }
+                                                      } else {
+                                                        peg$currPos = s0;
+                                                        s0 = peg$FAILED;
+                                                      }
+                                                    } else {
+                                                      peg$currPos = s0;
+                                                      s0 = peg$FAILED;
+                                                    }
+                                                    if (s0 === peg$FAILED) {
+                                                      s0 = peg$currPos;
+                                                      if (input.substr(peg$currPos, 2) === peg$c92) {
+                                                        s1 = peg$c92;
+                                                        peg$currPos += 2;
+                                                      } else {
+                                                        s1 = peg$FAILED;
+                                                        if (peg$silentFails === 0) {
+                                                          peg$fail(peg$c93);
+                                                        }
+                                                      }
+                                                      if (s1 !== peg$FAILED) {
+                                                        s2 = [];
+                                                        s3 = peg$parsews();
+                                                        if (s3 !== peg$FAILED) {
+                                                          while (s3 !== peg$FAILED) {
+                                                            s2.push(s3);
+                                                            s3 = peg$parsews();
+                                                          }
+                                                        } else {
+                                                          s2 = peg$FAILED;
+                                                        }
+                                                        if (s2 !== peg$FAILED) {
+                                                          s3 = peg$parseStringLiteral();
+                                                          if (s3 !== peg$FAILED) {
+                                                            peg$savedPos = s0;
+                                                            s1 = peg$c94(s3);
+                                                            s0 = s1;
+                                                          } else {
+                                                            peg$currPos = s0;
+                                                            s0 = peg$FAILED;
+                                                          }
+                                                        } else {
+                                                          peg$currPos = s0;
+                                                          s0 = peg$FAILED;
+                                                        }
+                                                      } else {
+                                                        peg$currPos = s0;
+                                                        s0 = peg$FAILED;
+                                                      }
+                                                      if (s0 === peg$FAILED) {
+                                                        s0 = peg$currPos;
+                                                        if (input.substr(peg$currPos, 10) === peg$c95) {
+                                                          s1 = peg$c95;
+                                                          peg$currPos += 10;
+                                                        } else {
+                                                          s1 = peg$FAILED;
+                                                          if (peg$silentFails === 0) {
+                                                            peg$fail(peg$c96);
+                                                          }
+                                                        }
+                                                        if (s1 !== peg$FAILED) {
+                                                          peg$savedPos = s0;
+                                                          s1 = peg$c97();
+                                                        }
+                                                        s0 = s1;
+                                                        if (s0 === peg$FAILED) {
+                                                          s0 = peg$currPos;
+                                                          s1 = peg$parseStringLiteral();
+                                                          if (s1 !== peg$FAILED) {
+                                                            peg$savedPos = s0;
+                                                            s1 = peg$c94(s1);
+                                                          }
+                                                          s0 = s1;
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseExpr, "peg$parseExpr");
+      function peg$parseIntegerLiteral() {
+        var s0, s1, s2, s3;
+        peg$silentFails++;
+        s0 = peg$currPos;
+        if (peg$c99.test(input.charAt(peg$currPos))) {
+          s1 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c100);
+          }
+        }
+        if (s1 === peg$FAILED) {
+          s1 = null;
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = [];
+          if (peg$c101.test(input.charAt(peg$currPos))) {
+            s3 = input.charAt(peg$currPos);
+            peg$currPos++;
+          } else {
+            s3 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c102);
+            }
+          }
+          if (s3 !== peg$FAILED) {
+            while (s3 !== peg$FAILED) {
+              s2.push(s3);
+              if (peg$c101.test(input.charAt(peg$currPos))) {
+                s3 = input.charAt(peg$currPos);
+                peg$currPos++;
+              } else {
+                s3 = peg$FAILED;
+                if (peg$silentFails === 0) {
+                  peg$fail(peg$c102);
+                }
+              }
+            }
+          } else {
+            s2 = peg$FAILED;
+          }
+          if (s2 !== peg$FAILED) {
+            if (peg$c99.test(input.charAt(peg$currPos))) {
+              s3 = input.charAt(peg$currPos);
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c100);
+              }
+            }
+            if (s3 === peg$FAILED) {
+              s3 = null;
+            }
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c103(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c98);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseIntegerLiteral, "peg$parseIntegerLiteral");
+      function peg$parseStringLiteral() {
+        var s0, s1, s2, s3;
+        peg$silentFails++;
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 34) {
+          s1 = peg$c105;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c106);
+          }
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = [];
+          s3 = peg$parseDoubleStringChar();
+          while (s3 !== peg$FAILED) {
+            s2.push(s3);
+            s3 = peg$parseDoubleStringChar();
+          }
+          if (s2 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 34) {
+              s3 = peg$c105;
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c106);
+              }
+            }
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c107(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.charCodeAt(peg$currPos) === 39) {
+            s1 = peg$c108;
+            peg$currPos++;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c109);
+            }
+          }
+          if (s1 !== peg$FAILED) {
+            s2 = [];
+            s3 = peg$parseSingleStringChar();
+            while (s3 !== peg$FAILED) {
+              s2.push(s3);
+              s3 = peg$parseSingleStringChar();
+            }
+            if (s2 !== peg$FAILED) {
+              if (input.charCodeAt(peg$currPos) === 39) {
+                s3 = peg$c108;
+                peg$currPos++;
+              } else {
+                s3 = peg$FAILED;
+                if (peg$silentFails === 0) {
+                  peg$fail(peg$c109);
+                }
+              }
+              if (s3 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c107(s2);
+                s0 = s1;
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+          if (s0 === peg$FAILED) {
+            s0 = peg$currPos;
+            s1 = peg$currPos;
+            peg$silentFails++;
+            s2 = peg$parsecc();
+            peg$silentFails--;
+            if (s2 === peg$FAILED) {
+              s1 = void 0;
+            } else {
+              peg$currPos = s1;
+              s1 = peg$FAILED;
+            }
+            if (s1 !== peg$FAILED) {
+              s2 = [];
+              s3 = peg$parseUnquotedStringChar();
+              if (s3 !== peg$FAILED) {
+                while (s3 !== peg$FAILED) {
+                  s2.push(s3);
+                  s3 = peg$parseUnquotedStringChar();
+                }
+              } else {
+                s2 = peg$FAILED;
+              }
+              if (s2 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c107(s2);
+                s0 = s1;
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          }
+        }
+        peg$silentFails--;
+        if (s0 === peg$FAILED) {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c104);
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseStringLiteral, "peg$parseStringLiteral");
+      function peg$parseDoubleStringChar() {
+        var s0, s1, s2;
+        s0 = peg$currPos;
+        s1 = peg$currPos;
+        peg$silentFails++;
+        if (peg$c110.test(input.charAt(peg$currPos))) {
+          s2 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c111);
+          }
+        }
+        peg$silentFails--;
+        if (s2 === peg$FAILED) {
+          s1 = void 0;
+        } else {
+          peg$currPos = s1;
+          s1 = peg$FAILED;
+        }
+        if (s1 !== peg$FAILED) {
+          if (input.length > peg$currPos) {
+            s2 = input.charAt(peg$currPos);
+            peg$currPos++;
+          } else {
+            s2 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c112);
+            }
+          }
+          if (s2 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c113(s2);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.charCodeAt(peg$currPos) === 92) {
+            s1 = peg$c114;
+            peg$currPos++;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c115);
+            }
+          }
+          if (s1 !== peg$FAILED) {
+            s2 = peg$parseEscapeSequence();
+            if (s2 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c113(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseDoubleStringChar, "peg$parseDoubleStringChar");
+      function peg$parseSingleStringChar() {
+        var s0, s1, s2;
+        s0 = peg$currPos;
+        s1 = peg$currPos;
+        peg$silentFails++;
+        if (peg$c116.test(input.charAt(peg$currPos))) {
+          s2 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c117);
+          }
+        }
+        peg$silentFails--;
+        if (s2 === peg$FAILED) {
+          s1 = void 0;
+        } else {
+          peg$currPos = s1;
+          s1 = peg$FAILED;
+        }
+        if (s1 !== peg$FAILED) {
+          if (input.length > peg$currPos) {
+            s2 = input.charAt(peg$currPos);
+            peg$currPos++;
+          } else {
+            s2 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c112);
+            }
+          }
+          if (s2 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c113(s2);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.charCodeAt(peg$currPos) === 92) {
+            s1 = peg$c114;
+            peg$currPos++;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c115);
+            }
+          }
+          if (s1 !== peg$FAILED) {
+            s2 = peg$parseEscapeSequence();
+            if (s2 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c113(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseSingleStringChar, "peg$parseSingleStringChar");
+      function peg$parseUnquotedStringChar() {
+        var s0, s1, s2;
+        s0 = peg$currPos;
+        s1 = peg$currPos;
+        peg$silentFails++;
+        s2 = peg$parsews();
+        peg$silentFails--;
+        if (s2 === peg$FAILED) {
+          s1 = void 0;
+        } else {
+          peg$currPos = s1;
+          s1 = peg$FAILED;
+        }
+        if (s1 !== peg$FAILED) {
+          if (input.length > peg$currPos) {
+            s2 = input.charAt(peg$currPos);
+            peg$currPos++;
+          } else {
+            s2 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c112);
+            }
+          }
+          if (s2 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c113(s2);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        return s0;
+      }
+      __name(peg$parseUnquotedStringChar, "peg$parseUnquotedStringChar");
+      function peg$parseEscapeSequence() {
+        var s0, s1;
+        if (peg$c118.test(input.charAt(peg$currPos))) {
+          s0 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s0 = peg$FAILED;
+          if (peg$silentFails === 0) {
+            peg$fail(peg$c119);
+          }
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.charCodeAt(peg$currPos) === 110) {
+            s1 = peg$c120;
+            peg$currPos++;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) {
+              peg$fail(peg$c121);
+            }
+          }
+          if (s1 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c122();
+          }
+          s0 = s1;
+          if (s0 === peg$FAILED) {
+            s0 = peg$currPos;
+            if (input.charCodeAt(peg$currPos) === 114) {
+              s1 = peg$c123;
+              peg$currPos++;
+            } else {
+              s1 = peg$FAILED;
+              if (peg$silentFails === 0) {
+                peg$fail(peg$c124);
+              }
+            }
+            if (s1 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c125();
+            }
+            s0 = s1;
+            if (s0 === peg$FAILED) {
+              s0 = peg$currPos;
+              if (input.charCodeAt(peg$currPos) === 116) {
+                s1 = peg$c126;
+                peg$currPos++;
+              } else {
+                s1 = peg$FAILED;
+                if (peg$silentFails === 0) {
+                  peg$fail(peg$c127);
+                }
+              }
+              if (s1 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c128();
+              }
+              s0 = s1;
+            }
+          }
+        }
+        return s0;
+      }
+      __name(peg$parseEscapeSequence, "peg$parseEscapeSequence");
+      var flowutils = (init_utils(), utils_exports);
+      function or(first, second) {
+        function orFilter() {
+          return first.apply(this, arguments) || second.apply(this, arguments);
+        }
+        __name(orFilter, "orFilter");
+        orFilter.desc = first.desc + " or " + second.desc;
+        return orFilter;
+      }
+      __name(or, "or");
+      function and(first, second) {
+        function andFilter() {
+          return first.apply(this, arguments) && second.apply(this, arguments);
+        }
+        __name(andFilter, "andFilter");
+        andFilter.desc = first.desc + " and " + second.desc;
+        return andFilter;
+      }
+      __name(and, "and");
+      function not(expr) {
+        function notFilter() {
+          return !expr.apply(this, arguments);
+        }
+        __name(notFilter, "notFilter");
+        notFilter.desc = "not " + expr.desc;
+        return notFilter;
+      }
+      __name(not, "not");
+      function binding(expr) {
+        function bindingFilter() {
+          return expr.apply(this, arguments);
+        }
+        __name(bindingFilter, "bindingFilter");
+        bindingFilter.desc = "(" + expr.desc + ")";
+        return bindingFilter;
+      }
+      __name(binding, "binding");
+      function trueFilter(flow) {
+        return true;
+      }
+      __name(trueFilter, "trueFilter");
+      trueFilter.desc = "true";
+      function falseFilter(flow) {
+        return false;
+      }
+      __name(falseFilter, "falseFilter");
+      falseFilter.desc = "false";
+      var ASSET_TYPES = [
+        new RegExp("text/javascript"),
+        new RegExp("application/x-javascript"),
+        new RegExp("application/javascript"),
+        new RegExp("text/css"),
+        new RegExp("image/.*"),
+        new RegExp("application/x-shockwave-flash")
+      ];
+      function assetFilter(flow) {
+        if (flow.response) {
+          var ct = flowutils.ResponseUtils.getContentType(flow.response);
+          var i = ASSET_TYPES.length;
+          while (i--) {
+            if (ASSET_TYPES[i].test(ct)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      __name(assetFilter, "assetFilter");
+      assetFilter.desc = "is asset";
+      function responseCode(code) {
+        function responseCodeFilter(flow) {
+          return flow.response && flow.response.status_code === code;
+        }
+        __name(responseCodeFilter, "responseCodeFilter");
+        responseCodeFilter.desc = "resp. code is " + code;
+        return responseCodeFilter;
+      }
+      __name(responseCode, "responseCode");
+      function body(regex) {
+        regex = new RegExp(regex, "i");
+        function bodyFilter(flow) {
+          return true;
+        }
+        __name(bodyFilter, "bodyFilter");
+        bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        return bodyFilter;
+      }
+      __name(body, "body");
+      function requestBody(regex) {
+        regex = new RegExp(regex, "i");
+        function requestBodyFilter(flow) {
+          return true;
+        }
+        __name(requestBodyFilter, "requestBodyFilter");
+        requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        return requestBodyFilter;
+      }
+      __name(requestBody, "requestBody");
+      function responseBody(regex) {
+        regex = new RegExp(regex, "i");
+        function responseBodyFilter(flow) {
+          return true;
+        }
+        __name(responseBodyFilter, "responseBodyFilter");
+        responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        return responseBodyFilter;
+      }
+      __name(responseBody, "responseBody");
+      function domain(regex) {
+        regex = new RegExp(regex, "i");
+        function domainFilter(flow) {
+          return flow.request && (regex.test(flow.request.host) || regex.test(flow.request.pretty_host));
+        }
+        __name(domainFilter, "domainFilter");
+        domainFilter.desc = "domain matches " + regex;
+        return domainFilter;
+      }
+      __name(domain, "domain");
+      function destination(regex) {
+        regex = new RegExp(regex, "i");
+        function destinationFilter(flow) {
+          return !!flow.server_conn.address && regex.test(flow.server_conn.address[0] + ":" + flow.server_conn.address[1]);
+        }
+        __name(destinationFilter, "destinationFilter");
+        destinationFilter.desc = "destination address matches " + regex;
+        return destinationFilter;
+      }
+      __name(destination, "destination");
+      function errorFilter(flow) {
+        return !!flow.error;
+      }
+      __name(errorFilter, "errorFilter");
+      errorFilter.desc = "has error";
+      function header(regex) {
+        regex = new RegExp(regex, "i");
+        function headerFilter(flow) {
+          return flow.request && flowutils.RequestUtils.match_header(flow.request, regex) || flow.response && flowutils.ResponseUtils.match_header(flow.response, regex);
+        }
+        __name(headerFilter, "headerFilter");
+        headerFilter.desc = "header matches " + regex;
+        return headerFilter;
+      }
+      __name(header, "header");
+      function requestHeader(regex) {
+        regex = new RegExp(regex, "i");
+        function requestHeaderFilter(flow) {
+          return flow.request && flowutils.RequestUtils.match_header(flow.request, regex);
+        }
+        __name(requestHeaderFilter, "requestHeaderFilter");
+        requestHeaderFilter.desc = "req. header matches " + regex;
+        return requestHeaderFilter;
+      }
+      __name(requestHeader, "requestHeader");
+      function responseHeader(regex) {
+        regex = new RegExp(regex, "i");
+        function responseHeaderFilter(flow) {
+          return flow.response && flowutils.ResponseUtils.match_header(flow.response, regex);
+        }
+        __name(responseHeaderFilter, "responseHeaderFilter");
+        responseHeaderFilter.desc = "resp. header matches " + regex;
+        return responseHeaderFilter;
+      }
+      __name(responseHeader, "responseHeader");
+      function httpFilter(flow) {
+        return flow.type === "http";
+      }
+      __name(httpFilter, "httpFilter");
+      httpFilter.desc = "is an HTTP Flow";
+      function method(regex) {
+        regex = new RegExp(regex, "i");
+        function methodFilter(flow) {
+          return flow.request && regex.test(flow.request.method);
+        }
+        __name(methodFilter, "methodFilter");
+        methodFilter.desc = "method matches " + regex;
+        return methodFilter;
+      }
+      __name(method, "method");
+      function markedFilter(flow) {
+        return flow.marked;
+      }
+      __name(markedFilter, "markedFilter");
+      markedFilter.desc = "is marked";
+      function noResponseFilter(flow) {
+        return flow.request && !flow.response;
+      }
+      __name(noResponseFilter, "noResponseFilter");
+      noResponseFilter.desc = "has no response";
+      function responseFilter(flow) {
+        return !!flow.response;
+      }
+      __name(responseFilter, "responseFilter");
+      responseFilter.desc = "has response";
+      function source(regex) {
+        regex = new RegExp(regex, "i");
+        function sourceFilter(flow) {
+          return !!flow.client_conn.address && regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
+        }
+        __name(sourceFilter, "sourceFilter");
+        sourceFilter.desc = "source address matches " + regex;
+        return sourceFilter;
+      }
+      __name(source, "source");
+      function contentType(regex) {
+        regex = new RegExp(regex, "i");
+        function contentTypeFilter(flow) {
+          return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request)) || flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
+        }
+        __name(contentTypeFilter, "contentTypeFilter");
+        contentTypeFilter.desc = "content type matches " + regex;
+        return contentTypeFilter;
+      }
+      __name(contentType, "contentType");
+      function tcpFilter(flow) {
+        return flow.type === "tcp";
+      }
+      __name(tcpFilter, "tcpFilter");
+      tcpFilter.desc = "is a TCP Flow";
+      function requestContentType(regex) {
+        regex = new RegExp(regex, "i");
+        function requestContentTypeFilter(flow) {
+          return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
+        }
+        __name(requestContentTypeFilter, "requestContentTypeFilter");
+        requestContentTypeFilter.desc = "req. content type matches " + regex;
+        return requestContentTypeFilter;
+      }
+      __name(requestContentType, "requestContentType");
+      function responseContentType(regex) {
+        regex = new RegExp(regex, "i");
+        function responseContentTypeFilter(flow) {
+          return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
+        }
+        __name(responseContentTypeFilter, "responseContentTypeFilter");
+        responseContentTypeFilter.desc = "resp. content type matches " + regex;
+        return responseContentTypeFilter;
+      }
+      __name(responseContentType, "responseContentType");
+      function url(regex) {
+        regex = new RegExp(regex, "i");
+        function urlFilter(flow) {
+          return flow.request && regex.test(flowutils.RequestUtils.pretty_url(flow.request));
+        }
+        __name(urlFilter, "urlFilter");
+        urlFilter.desc = "url matches " + regex;
+        return urlFilter;
+      }
+      __name(url, "url");
+      function websocketFilter(flow) {
+        return flow.type === "websocket";
+      }
+      __name(websocketFilter, "websocketFilter");
+      websocketFilter.desc = "is a Websocket Flow";
+      peg$result = peg$startRuleFunction();
+      if (peg$result !== peg$FAILED && peg$currPos === input.length) {
+        return peg$result;
+      } else {
+        if (peg$result !== peg$FAILED && peg$currPos < input.length) {
+          peg$fail({ type: "end", description: "end of input" });
+        }
+        throw peg$buildException(null, peg$maxFailExpected, peg$maxFailPos < input.length ? input.charAt(peg$maxFailPos) : null, peg$maxFailPos < input.length ? peg$computeLocation(peg$maxFailPos, peg$maxFailPos + 1) : peg$computeLocation(peg$maxFailPos, peg$maxFailPos));
+      }
+    }
+    __name(peg$parse, "peg$parse");
+    return {
+      SyntaxError: peg$SyntaxError,
+      parse: peg$parse
+    };
+  }();
+
+  // src/js/ducks/flows.ts
   init_utils();
   var ADD2 = "FLOWS_ADD";
   var UPDATE2 = "FLOWS_UPDATE";
@@ -45050,7 +43613,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     if (!filter) {
       return;
     }
-    return import_filt.default.parse(filter);
+    return filt_default.parse(filter);
   }
   __name(makeFilter, "makeFilter");
   function makeSort({ column, desc }) {
@@ -45147,7 +43710,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(clear, "clear");
   function download() {
-    window.location = "/flows/dump";
+    window.location.href = "/flows/dump";
     return { type: REQUEST_ACTION };
   }
   __name(download, "download");
@@ -45171,6 +43734,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var SET_TAB = "UI_FLOWVIEW_SET_TAB";
   var START_EDIT = "UI_FLOWVIEW_START_EDIT";
   var UPDATE_EDIT = "UI_FLOWVIEW_UPDATE_EDIT";
+  var ABORT_EDIT = "UI_FLOWVIEW_ABORT_EDIT";
   var SET_SHOW_FULL_CONTENT = "UI_SET_SHOW_FULL_CONTENT";
   var SET_CONTENT_VIEW_DESCRIPTION = "UI_SET_CONTENT_VIEW_DESCRIPTION";
   var SET_CONTENT = "UI_SET_CONTENT";
@@ -45201,6 +43765,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           ...state,
           modifiedFlow: import_lodash3.default.merge({}, state.modifiedFlow, action.update)
         };
+      case ABORT_EDIT:
+        return {
+          ...state,
+          modifiedFlow: void 0
+        };
       case SELECT:
         return {
           ...state,
@@ -45210,7 +43779,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           showFullContent: isFullContentShown
         };
       case UPDATE2:
-        if (action.data.id === state.modifiedFlow.id) {
+        if (action.data.id === state.modifiedFlow?.id) {
           return {
             ...state,
             modifiedFlow: void 0,
@@ -45276,8 +43845,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     return { type: START_EDIT, flow };
   }
   __name(startEdit, "startEdit");
-  function updateEdit(update5) {
-    return { type: UPDATE_EDIT, update: update5 };
+  function updateEdit(update4) {
+    return { type: UPDATE_EDIT, update: update4 };
   }
   __name(updateEdit, "updateEdit");
   function setContentViewDescription(description) {
@@ -45293,7 +43862,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(setContent, "setContent");
   function stopEdit(flow, modifiedFlow) {
-    return update2(flow, getDiff(flow, modifiedFlow));
+    let diff = getDiff(flow, modifiedFlow);
+    if (Object.values(diff).some((x) => x !== void 0)) {
+      return update2(flow, diff);
+    } else {
+      return { type: ABORT_EDIT };
+    }
   }
   __name(stopEdit, "stopEdit");
 
@@ -45436,8 +44010,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __name(onKeyDown, "onKeyDown");
 
   // src/js/components/MainView.jsx
-  var import_react37 = __toModule(require_react());
-  var import_prop_types21 = __toModule(require_prop_types());
+  var import_react38 = __toModule(require_react());
+  var import_prop_types18 = __toModule(require_prop_types2());
 
   // src/js/components/common/Splitter.jsx
   var import_react9 = __toModule(require_react());
@@ -45519,7 +44093,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/components/FlowTable.jsx
   var import_react15 = __toModule(require_react());
-  var import_prop_types4 = __toModule(require_prop_types());
+  var import_prop_types2 = __toModule(require_prop_types2());
   var import_react_dom4 = __toModule(require_react_dom());
   var import_shallowequal = __toModule(require_shallowequal());
 
@@ -45580,9 +44154,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(calcVScroll, "calcVScroll");
 
-  // src/js/components/FlowTable/FlowTableHead.jsx
+  // src/js/components/FlowTable/FlowTableHead.tsx
   var import_react13 = __toModule(require_react());
-  var import_prop_types2 = __toModule(require_prop_types());
   var import_classnames4 = __toModule(require_classnames());
 
   // src/js/components/FlowTable/FlowColumns.tsx
@@ -45590,33 +44163,207 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var import_classnames3 = __toModule(require_classnames());
   init_utils();
 
-  // src/js/ducks/settings.ts
-  var RECEIVE3 = "SETTINGS_RECEIVE";
-  var UPDATE3 = "SETTINGS_UPDATE";
-  var REQUEST_UPDATE = "REQUEST_UPDATE";
+  // src/js/ducks/ui/optionsEditor.js
+  var OPTION_UPDATE_START = "UI_OPTION_UPDATE_START";
+  var OPTION_UPDATE_SUCCESS = "UI_OPTION_UPDATE_SUCCESS";
+  var OPTION_UPDATE_ERROR = "UI_OPTION_UPDATE_ERROR";
   var defaultState5 = {};
-  var reducer3 = /* @__PURE__ */ __name((state = defaultState5, action) => {
+  function reducer3(state = defaultState5, action) {
     switch (action.type) {
-      case RECEIVE3:
-        return action.data;
-      case UPDATE3:
+      case OPTION_UPDATE_START:
         return {
           ...state,
-          ...action.data
+          [action.option]: {
+            isUpdating: true,
+            value: action.value,
+            error: false
+          }
         };
+      case OPTION_UPDATE_SUCCESS:
+        return {
+          ...state,
+          [action.option]: void 0
+        };
+      case OPTION_UPDATE_ERROR:
+        let val = state[action.option].value;
+        if (typeof val === "boolean") {
+          val = !val;
+        }
+        return {
+          ...state,
+          [action.option]: {
+            value: val,
+            isUpdating: false,
+            error: action.error
+          }
+        };
+      case HIDE_MODAL:
+        return {};
+      default:
+        return state;
+    }
+  }
+  __name(reducer3, "reducer");
+  function startUpdate(option, value) {
+    return {
+      type: OPTION_UPDATE_START,
+      option,
+      value
+    };
+  }
+  __name(startUpdate, "startUpdate");
+  function updateSuccess(option) {
+    return {
+      type: OPTION_UPDATE_SUCCESS,
+      option
+    };
+  }
+  __name(updateSuccess, "updateSuccess");
+  function updateError(option, error) {
+    return {
+      type: OPTION_UPDATE_ERROR,
+      option,
+      error
+    };
+  }
+  __name(updateError, "updateError");
+
+  // src/js/ducks/options.ts
+  var import_lodash4 = __toModule(require_lodash());
+
+  // src/js/ducks/_options_gen.ts
+  var defaultState6 = {
+    server: true,
+    showhost: false,
+    add_upstream_certs_to_client_chain: false,
+    confdir: "~/.mitmproxy",
+    certs: [],
+    cert_passphrase: null,
+    ciphers_client: null,
+    ciphers_server: null,
+    client_certs: null,
+    ignore_hosts: [],
+    allow_hosts: [],
+    listen_host: "",
+    listen_port: 8080,
+    mode: "regular",
+    upstream_cert: true,
+    http2: true,
+    websocket: true,
+    rawtcp: true,
+    ssl_insecure: false,
+    ssl_verify_upstream_trusted_confdir: null,
+    ssl_verify_upstream_trusted_ca: null,
+    tcp_hosts: [],
+    content_view_lines_cutoff: 512,
+    key_size: 2048,
+    body_size_limit: null,
+    keep_host_header: false,
+    block_global: true,
+    block_private: false,
+    block_list: [],
+    anticache: false,
+    anticomp: false,
+    client_replay: [],
+    command_history: true,
+    export_preserve_original_ip: false,
+    onboarding: true,
+    onboarding_host: "mitm.it",
+    onboarding_port: 80,
+    proxyauth: null,
+    connection_strategy: "eager",
+    proxy_debug: false,
+    scripts: [],
+    server_replay_kill_extra: false,
+    server_replay_nopop: false,
+    server_replay_refresh: true,
+    server_replay_use_headers: [],
+    server_replay: [],
+    server_replay_ignore_content: false,
+    server_replay_ignore_params: [],
+    server_replay_ignore_payload_params: [],
+    server_replay_ignore_host: false,
+    server_replay_ignore_port: false,
+    map_remote: [],
+    map_local: [],
+    modify_body: [],
+    modify_headers: [],
+    stickyauth: null,
+    stickycookie: null,
+    stream_large_bodies: null,
+    save_stream_file: null,
+    save_stream_filter: null,
+    tls_version_client_min: "TLS1_2",
+    tls_version_client_max: "UNBOUNDED",
+    tls_version_server_min: "TLS1_2",
+    tls_version_server_max: "UNBOUNDED",
+    upstream_auth: null,
+    web_open_browser: true,
+    web_debug: false,
+    web_port: 8081,
+    web_host: "127.0.0.1",
+    web_columns: ["tls", "icon", "path", "method", "status", "size", "time"],
+    intercept_active: false,
+    intercept: null,
+    rfile: null,
+    readfile_filter: null,
+    web_static_viewer: "",
+    view_filter: null,
+    view_order: "time",
+    view_order_reversed: false,
+    console_focus_follow: false,
+    termlog_verbosity: "info"
+  };
+
+  // src/js/ducks/options.ts
+  var RECEIVE3 = "OPTIONS_RECEIVE";
+  var UPDATE3 = "OPTIONS_UPDATE";
+  var reducer4 = /* @__PURE__ */ __name((state = defaultState6, action) => {
+    switch (action.type) {
+      case RECEIVE3:
+        let s = {};
+        for (const [name, { value }] of Object.entries(action.data)) {
+          s[name] = value;
+        }
+        return s;
+      case UPDATE3:
+        let s2 = { ...state };
+        for (const [name, { value }] of Object.entries(action.data)) {
+          s2[name] = value;
+        }
+        return s2;
       default:
         return state;
     }
   }, "reducer");
-  var settings_default = reducer3;
-  function update3(settings) {
-    fetchApi.put("/settings", settings);
-    return { type: REQUEST_UPDATE };
+  var options_default = reducer4;
+  function pureSendUpdate(option, value, dispatch) {
+    fetchApi.put("/options", { [option]: value }).then((response) => {
+      if (response.status === 200) {
+        dispatch(updateSuccess(option));
+      } else {
+        response.text().then((error) => {
+          dispatch(updateError(option, error));
+        });
+      }
+    });
+  }
+  __name(pureSendUpdate, "pureSendUpdate");
+  var sendUpdate = import_lodash4.default.throttle(pureSendUpdate, 500, { leading: true, trailing: true });
+  function update3(name, value) {
+    return (dispatch) => {
+      dispatch(startUpdate(name, value));
+      sendUpdate(name, value, dispatch);
+    };
   }
   __name(update3, "update");
+  function save() {
+    return (dispatch) => fetchApi("/options/save", { method: "POST" });
+  }
+  __name(save, "save");
   function addInterceptFilter(example) {
     return (dispatch, getState) => {
-      let intercept = getState().settings.intercept;
+      let intercept = getState().options.intercept;
       if (intercept && intercept.includes(example)) {
         return;
       }
@@ -45625,7 +44372,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       } else {
         intercept = `${intercept} | ${example}`;
       }
-      dispatch(update3({ intercept }));
+      dispatch(update3("intercept", intercept));
     };
   }
   __name(addInterceptFilter, "addInterceptFilter");
@@ -45634,7 +44381,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var import_react11 = __toModule(require_react());
 
   // node_modules/react-popper/lib/esm/utils.js
-  var React8 = __toModule(require_react());
+  var React7 = __toModule(require_react());
   var fromEntries = /* @__PURE__ */ __name(function fromEntries2(entries) {
     return entries.reduce(function(acc, _ref) {
       var key = _ref[0], value = _ref[1];
@@ -45642,10 +44389,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       return acc;
     }, {});
   }, "fromEntries");
-  var useIsomorphicLayoutEffect2 = typeof window !== "undefined" && window.document && window.document.createElement ? React8.useLayoutEffect : React8.useEffect;
+  var useIsomorphicLayoutEffect2 = typeof window !== "undefined" && window.document && window.document.createElement ? React7.useLayoutEffect : React7.useEffect;
 
   // node_modules/react-popper/lib/esm/usePopper.js
-  var React9 = __toModule(require_react());
+  var React8 = __toModule(require_react());
 
   // node_modules/@popperjs/core/lib/enums.js
   var top = "top";
@@ -47211,14 +45958,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     if (options === void 0) {
       options = {};
     }
-    var prevOptions = React9.useRef(null);
+    var prevOptions = React8.useRef(null);
     var optionsWithDefaults = {
       onFirstUpdate: options.onFirstUpdate,
       placement: options.placement || "bottom",
       strategy: options.strategy || "absolute",
       modifiers: options.modifiers || EMPTY_MODIFIERS
     };
-    var _React$useState = React9.useState({
+    var _React$useState = React8.useState({
       styles: {
         popper: {
           position: optionsWithDefaults.strategy,
@@ -47231,7 +45978,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       },
       attributes: {}
     }), state = _React$useState[0], setState = _React$useState[1];
-    var updateStateModifier = React9.useMemo(function() {
+    var updateStateModifier = React8.useMemo(function() {
       return {
         name: "updateState",
         enabled: true,
@@ -47251,7 +45998,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         requires: ["computeStyles"]
       };
     }, []);
-    var popperOptions = React9.useMemo(function() {
+    var popperOptions = React8.useMemo(function() {
       var newOptions = {
         onFirstUpdate: optionsWithDefaults.onFirstUpdate,
         placement: optionsWithDefaults.placement,
@@ -47268,7 +46015,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         return newOptions;
       }
     }, [optionsWithDefaults.onFirstUpdate, optionsWithDefaults.placement, optionsWithDefaults.strategy, optionsWithDefaults.modifiers, updateStateModifier]);
-    var popperInstanceRef = React9.useRef();
+    var popperInstanceRef = React8.useRef();
     useIsomorphicLayoutEffect2(function() {
       if (popperInstanceRef.current) {
         popperInstanceRef.current.setOptions(popperOptions);
@@ -47337,7 +46084,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }), " ", title), submenu);
   }
   __name(SubMenu, "SubMenu");
-  var Dropdown_default = import_react11.default.memo(/* @__PURE__ */ __name(function Dropdown({ text, children, options, className, onOpen, ...attrs }) {
+  var Dropdown_default = import_react11.default.memo(/* @__PURE__ */ __name(function Dropdown({ text, children, options, className: className2, onOpen, ...attrs }) {
     const [refElement, setRefElement] = (0, import_react11.useState)(null);
     const [open, _setOpen] = (0, import_react11.useState)(false);
     const [popperElement, setPopperElement] = (0, import_react11.useState)(null);
@@ -47349,9 +46096,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     (0, import_react11.useEffect)(() => {
       if (!open)
         return;
-      document.addEventListener("click", () => {
-        setTimeout(() => setOpen(false));
-      }, { capture: true, once: true });
+      setTimeout(() => {
+        document.addEventListener("click", () => {
+          setTimeout(() => setOpen(false));
+        }, { once: true });
+      });
     }, [open]);
     let contents;
     if (open) {
@@ -47367,14 +46116,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     return /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "#",
       ref: setRefElement,
-      className: (0, import_classnames2.default)(className, { "open": open }),
+      className: (0, import_classnames2.default)(className2, { "open": open }),
       onClick: () => setOpen(true),
       ...attrs
     }, text), contents);
   }, "Dropdown"));
 
   // src/js/components/FlowTable/FlowColumns.tsx
-  var defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"];
   var TLSColumn = /* @__PURE__ */ __name(({ flow }) => {
     return /* @__PURE__ */ import_react12.default.createElement("td", {
       className: (0, import_classnames3.default)("col-tls", flow.client_conn.tls_established ? "col-tls-https" : "col-tls-http")
@@ -47489,7 +46237,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var TimeColumn = /* @__PURE__ */ __name(({ flow }) => {
     return /* @__PURE__ */ import_react12.default.createElement("td", {
       className: "col-time"
-    }, flow.type === "http" && flow.response ? formatTimeDelta(1e3 * (flow.response.timestamp_end - flow.request.timestamp_start)) : "...");
+    }, flow.type === "http" && flow.response?.timestamp_end ? formatTimeDelta(1e3 * (flow.response.timestamp_end - flow.request.timestamp_start)) : "...");
   }, "TimeColumn");
   TimeColumn.headerClass = "col-time";
   TimeColumn.headerName = "Time";
@@ -47537,7 +46285,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     const ct = flow.response && ResponseUtils.getContentType(flow.response);
     return /* @__PURE__ */ import_react12.default.createElement("td", {
       className: (0, import_classnames3.default)("col-quickactions", { hover: open }),
-      onClick: (e) => e.stopPropagation()
+      onClick: (e) => 0
     }, /* @__PURE__ */ import_react12.default.createElement("div", null, resume_or_replay, /* @__PURE__ */ import_react12.default.createElement(Dropdown_default, {
       text: /* @__PURE__ */ import_react12.default.createElement("i", {
         className: "fa fa-fw fa-ellipsis-h text-muted"
@@ -47561,7 +46309,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       title: "Intercept requests like this"
     }, /* @__PURE__ */ import_react12.default.createElement(MenuItem, {
       onClick: () => filt(`~q ${flow.request.host}`)
-    }, "Requests to ", flow.request.host), "w", flow.request.path !== "/" && /* @__PURE__ */ import_react12.default.createElement(MenuItem, {
+    }, "Requests to ", flow.request.host), flow.request.path !== "/" && /* @__PURE__ */ import_react12.default.createElement(MenuItem, {
       onClick: () => filt(`~q ${flow.request.host}${flow.request.path}`)
     }, "Requests to ", flow.request.host + flow.request.path), flow.request.method !== "GET" && /* @__PURE__ */ import_react12.default.createElement(MenuItem, {
       onClick: () => filt(`~q ~m ${flow.request.method} ${flow.request.host}`)
@@ -47591,626 +46339,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   ]) {
     columns[col.name.replace(/Column$/, "").toLowerCase()] = col;
   }
-
-  // src/js/components/FlowTable/FlowTableHead.jsx
-  FlowTableHead.propTypes = {
-    setSort: import_prop_types2.default.func.isRequired,
-    sortDesc: import_prop_types2.default.bool.isRequired,
-    sortColumn: import_prop_types2.default.string,
-    displayColumnNames: import_prop_types2.default.array
-  };
-  function getDisplayColumns(displayColumnNames) {
-    if (typeof displayColumnNames == "undefined") {
-      return Object.values(columns);
-    }
-    return displayColumnNames.map((x) => columns[x]).concat([columns.quickactions]);
-  }
-  __name(getDisplayColumns, "getDisplayColumns");
-  function FlowTableHead({ sortColumn, sortDesc, setSort: setSort3, displayColumnNames }) {
-    const sortType = sortDesc ? "sort-desc" : "sort-asc";
-    const displayColumns = getDisplayColumns(displayColumnNames);
-    return /* @__PURE__ */ import_react13.default.createElement("tr", null, displayColumns.map((Column) => /* @__PURE__ */ import_react13.default.createElement("th", {
-      className: (0, import_classnames4.default)(Column.headerClass, sortColumn === Column.name && sortType),
-      key: Column.name,
-      onClick: () => setSort3(Column.name, Column.name !== sortColumn ? false : !sortDesc)
-    }, Column.headerName)));
-  }
-  __name(FlowTableHead, "FlowTableHead");
-  var FlowTableHead_default = connect_default((state) => ({
-    sortDesc: state.flows.sort.desc,
-    sortColumn: state.flows.sort.column,
-    displayColumnNames: state.options["web_columns"] ? state.options["web_columns"].value : defaultColumnNames
-  }), {
-    setSort: setSort2
-  })(FlowTableHead);
-
-  // src/js/components/FlowTable/FlowRow.jsx
-  var import_react14 = __toModule(require_react());
-  var import_prop_types3 = __toModule(require_prop_types());
-  var import_classnames5 = __toModule(require_classnames());
-  FlowRow.propTypes = {
-    onSelect: import_prop_types3.default.func.isRequired,
-    flow: import_prop_types3.default.object.isRequired,
-    highlighted: import_prop_types3.default.bool,
-    selected: import_prop_types3.default.bool
-  };
-  function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames, intercept }) {
-    const className = (0, import_classnames5.default)({
-      "selected": selected,
-      "highlighted": highlighted,
-      "intercepted": flow.intercepted,
-      "has-request": flow.request,
-      "has-response": flow.response
-    });
-    const displayColumns = getDisplayColumns(displayColumnNames);
-    return /* @__PURE__ */ import_react14.default.createElement("tr", {
-      className,
-      onClick: () => onSelect(flow.id)
-    }, displayColumns.map((Column) => /* @__PURE__ */ import_react14.default.createElement(Column, {
-      key: Column.name,
-      flow,
-      intercept
-    })));
-  }
-  __name(FlowRow, "FlowRow");
-  var FlowRow_default = connect_default((state) => ({
-    displayColumnNames: state.options["web_columns"] ? state.options["web_columns"].value : defaultColumnNames,
-    intercept: state.settings.intercept
-  }))(pure(FlowRow));
-
-  // src/js/components/FlowTable.jsx
-  var import_filt2 = __toModule(require_filt());
-  var FlowTable = class extends import_react15.default.Component {
-    constructor(props, context) {
-      super(props, context);
-      this.state = { vScroll: calcVScroll() };
-      this.onViewportUpdate = this.onViewportUpdate.bind(this);
-    }
-    UNSAFE_componentWillMount() {
-      window.addEventListener("resize", this.onViewportUpdate);
-    }
-    UNSAFE_componentWillUnmount() {
-      window.removeEventListener("resize", this.onViewportUpdate);
-    }
-    componentDidUpdate() {
-      this.onViewportUpdate();
-      if (!this.shouldScrollIntoView) {
-        return;
-      }
-      this.shouldScrollIntoView = false;
-      const { rowHeight, flows, selected } = this.props;
-      const viewport2 = import_react_dom4.default.findDOMNode(this);
-      const head = import_react_dom4.default.findDOMNode(this.refs.head);
-      const headHeight = head ? head.offsetHeight : 0;
-      const rowTop = flows.indexOf(selected) * rowHeight + headHeight;
-      const rowBottom = rowTop + rowHeight;
-      const viewportTop = viewport2.scrollTop;
-      const viewportHeight = viewport2.offsetHeight;
-      if (rowTop - headHeight < viewportTop) {
-        viewport2.scrollTop = rowTop - headHeight;
-      } else if (rowBottom > viewportTop + viewportHeight) {
-        viewport2.scrollTop = rowBottom - viewportHeight;
-      }
-    }
-    UNSAFE_componentWillReceiveProps(nextProps) {
-      if (nextProps.selected && nextProps.selected !== this.props.selected) {
-        this.shouldScrollIntoView = true;
-      }
-    }
-    onViewportUpdate() {
-      const viewport2 = import_react_dom4.default.findDOMNode(this);
-      const viewportTop = viewport2.scrollTop || 0;
-      const vScroll = calcVScroll({
-        viewportTop,
-        viewportHeight: viewport2.offsetHeight || 0,
-        itemCount: this.props.flows.length,
-        rowHeight: this.props.rowHeight
-      });
-      if (this.state.viewportTop !== viewportTop || !(0, import_shallowequal.default)(this.state.vScroll, vScroll)) {
-        this.setState({ vScroll, viewportTop });
-      }
-    }
-    render() {
-      const { vScroll, viewportTop } = this.state;
-      const { flows, selected, highlight } = this.props;
-      const isHighlighted = highlight ? import_filt2.default.parse(highlight) : () => false;
-      return /* @__PURE__ */ import_react15.default.createElement("div", {
-        className: "flow-table",
-        onScroll: this.onViewportUpdate
-      }, /* @__PURE__ */ import_react15.default.createElement("table", null, /* @__PURE__ */ import_react15.default.createElement("thead", {
-        ref: "head",
-        style: { transform: `translateY(${viewportTop}px)` }
-      }, /* @__PURE__ */ import_react15.default.createElement(FlowTableHead_default, null)), /* @__PURE__ */ import_react15.default.createElement("tbody", null, /* @__PURE__ */ import_react15.default.createElement("tr", {
-        style: { height: vScroll.paddingTop }
-      }), flows.slice(vScroll.start, vScroll.end).map((flow) => /* @__PURE__ */ import_react15.default.createElement(FlowRow_default, {
-        key: flow.id,
-        flow,
-        selected: flow === selected,
-        highlighted: isHighlighted(flow),
-        onSelect: this.props.selectFlow
-      })), /* @__PURE__ */ import_react15.default.createElement("tr", {
-        style: { height: vScroll.paddingBottom }
-      }))));
-    }
-  };
-  __name(FlowTable, "FlowTable");
-  __publicField(FlowTable, "propTypes", {
-    selectFlow: import_prop_types4.default.func.isRequired,
-    flows: import_prop_types4.default.array.isRequired,
-    rowHeight: import_prop_types4.default.number,
-    highlight: import_prop_types4.default.string,
-    selected: import_prop_types4.default.object
-  });
-  __publicField(FlowTable, "defaultProps", {
-    rowHeight: 32
-  });
-  var PureFlowTable = AutoScroll_default(FlowTable);
-  var FlowTable_default = connect_default((state) => ({
-    flows: state.flows.view,
-    highlight: state.flows.highlight,
-    selected: state.flows.byId[state.flows.selected[0]]
-  }), {
-    selectFlow: select
-  })(PureFlowTable);
-
-  // src/js/components/FlowView.jsx
-  var import_react36 = __toModule(require_react());
-  var import_lodash8 = __toModule(require_lodash());
-
-  // src/js/components/FlowView/Nav.jsx
-  var import_react16 = __toModule(require_react());
-  var import_prop_types5 = __toModule(require_prop_types());
-  var import_classnames6 = __toModule(require_classnames());
-  var import_lodash4 = __toModule(require_lodash());
-  NavAction.propTypes = {
-    icon: import_prop_types5.default.string.isRequired,
-    title: import_prop_types5.default.string.isRequired,
-    onClick: import_prop_types5.default.func.isRequired
-  };
-  function NavAction({ icon, title, onClick }) {
-    return /* @__PURE__ */ import_react16.default.createElement("a", {
-      title,
-      href: "#",
-      className: "nav-action",
-      onClick: (event) => {
-        event.preventDefault();
-        onClick(event);
-      }
-    }, /* @__PURE__ */ import_react16.default.createElement("i", {
-      className: `fa fa-fw ${icon}`
-    }));
-  }
-  __name(NavAction, "NavAction");
-  Nav.propTypes = {
-    active: import_prop_types5.default.string.isRequired,
-    tabs: import_prop_types5.default.array.isRequired,
-    onSelectTab: import_prop_types5.default.func.isRequired
-  };
-  function Nav({ active, tabs, onSelectTab }) {
-    return /* @__PURE__ */ import_react16.default.createElement("nav", {
-      className: "nav-tabs nav-tabs-sm"
-    }, tabs.map((tab) => /* @__PURE__ */ import_react16.default.createElement("a", {
-      key: tab,
-      href: "#",
-      className: (0, import_classnames6.default)({ active: active === tab }),
-      onClick: (event) => {
-        event.preventDefault();
-        onSelectTab(tab);
-      }
-    }, import_lodash4.default.capitalize(tab))));
-  }
-  __name(Nav, "Nav");
-
-  // src/js/components/FlowView/Messages.jsx
-  var import_react34 = __toModule(require_react());
-  var import_prop_types20 = __toModule(require_prop_types());
-  init_utils();
-
-  // src/js/components/ContentView.jsx
-  var import_react26 = __toModule(require_react());
-  var import_prop_types14 = __toModule(require_prop_types());
-
-  // src/js/components/ContentView/ContentViews.jsx
-  var import_react19 = __toModule(require_react());
-  var import_prop_types8 = __toModule(require_prop_types());
-
-  // src/js/components/ContentView/ContentLoader.jsx
-  var import_react17 = __toModule(require_react());
-  var import_prop_types6 = __toModule(require_prop_types());
-  init_utils();
-  function withContentLoader(View) {
-    return class extends import_react17.default.Component {
-      static displayName = View.displayName || View.name;
-      static matches = View.matches;
-      static propTypes = {
-        ...View.propTypes,
-        content: import_prop_types6.default.string,
-        flow: import_prop_types6.default.object.isRequired,
-        message: import_prop_types6.default.object.isRequired
-      };
-      constructor(props) {
-        super(props);
-        this.state = {
-          content: void 0,
-          request: void 0
-        };
-      }
-      componentDidMount() {
-        this.updateContent(this.props);
-      }
-      UNSAFE_componentWillReceiveProps(nextProps) {
-        if (nextProps.message.content !== this.props.message.content || nextProps.message.contentHash !== this.props.message.contentHash || nextProps.contentView !== this.props.contentView) {
-          this.updateContent(nextProps);
-        }
-      }
-      componentWillUnmount() {
-        if (this.state.request) {
-          this.state.request.abort();
-        }
-      }
-      updateContent(props) {
-        if (this.state.request) {
-          this.state.request.abort();
-        }
-        if (props.message.content !== void 0) {
-          return this.setState({ request: void 0, content: props.message.content });
-        }
-        if (props.message.contentLength === 0) {
-          return this.setState({ request: void 0, content: "" });
-        }
-        let requestUrl = MessageUtils.getContentURL(props.flow, props.message, props.contentView);
-        let request = new XMLHttpRequest();
-        request.addEventListener("load", this.requestComplete.bind(this, request));
-        request.addEventListener("error", this.requestFailed.bind(this, request));
-        request.open("GET", requestUrl);
-        request.send();
-        this.setState({ request, content: void 0 });
-      }
-      requestComplete(request, e) {
-        if (request !== this.state.request) {
-          return;
-        }
-        this.setState({
-          content: request.responseText,
-          request: void 0
-        });
-      }
-      requestFailed(request, e) {
-        if (request !== this.state.request) {
-          return;
-        }
-        console.error(e);
-        this.setState({
-          content: "Error getting content.",
-          request: void 0
-        });
-      }
-      render() {
-        return this.state.content !== void 0 ? /* @__PURE__ */ import_react17.default.createElement(View, {
-          content: this.state.content,
-          ...this.props
-        }) : /* @__PURE__ */ import_react17.default.createElement("div", {
-          className: "text-center"
-        }, /* @__PURE__ */ import_react17.default.createElement("i", {
-          className: "fa fa-spinner fa-spin"
-        }));
-      }
-    };
-  }
-  __name(withContentLoader, "withContentLoader");
-
-  // src/js/components/ContentView/ContentViews.jsx
-  init_utils();
-
-  // src/js/components/ContentView/CodeEditor.jsx
-  var import_react18 = __toModule(require_react());
-  var import_prop_types7 = __toModule(require_prop_types());
-  var import_react_codemirror = __toModule(require_Codemirror());
-  CodeEditor.propTypes = {
-    content: import_prop_types7.default.string.isRequired,
-    onChange: import_prop_types7.default.func.isRequired
-  };
-  function CodeEditor({ content, onChange }) {
-    let options = {
-      lineNumbers: true
-    };
-    return /* @__PURE__ */ import_react18.default.createElement("div", {
-      className: "codeeditor",
-      onKeyDown: (e) => e.stopPropagation()
-    }, /* @__PURE__ */ import_react18.default.createElement(import_react_codemirror.default, {
-      value: content,
-      onChange,
-      options
-    }));
-  }
-  __name(CodeEditor, "CodeEditor");
-
-  // src/js/components/ContentView/ContentViews.jsx
-  var isImage = /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon)$/i;
-  ViewImage.matches = (msg) => isImage.test(MessageUtils.getContentType(msg));
-  ViewImage.propTypes = {
-    flow: import_prop_types8.default.object.isRequired,
-    message: import_prop_types8.default.object.isRequired
-  };
-  function ViewImage({ flow, message }) {
-    return /* @__PURE__ */ import_react19.default.createElement("div", {
-      className: "flowview-image"
-    }, /* @__PURE__ */ import_react19.default.createElement("img", {
-      src: MessageUtils.getContentURL(flow, message),
-      alt: "preview",
-      className: "img-thumbnail"
-    }));
-  }
-  __name(ViewImage, "ViewImage");
-  Edit.propTypes = {
-    content: import_prop_types8.default.string.isRequired
-  };
-  function Edit({ content, onChange }) {
-    return /* @__PURE__ */ import_react19.default.createElement(CodeEditor, {
-      content,
-      onChange
-    });
-  }
-  __name(Edit, "Edit");
-  Edit = withContentLoader(Edit);
-  var PureViewServer = class extends import_react19.Component {
-    UNSAFE_componentWillMount() {
-      this.setContentView(this.props);
-    }
-    UNSAFE_componentWillReceiveProps(nextProps) {
-      if (nextProps.content !== this.props.content) {
-        this.setContentView(nextProps);
-      }
-    }
-    setContentView(props) {
-      try {
-        this.data = JSON.parse(props.content);
-      } catch (err) {
-        this.data = { lines: [], description: err.message };
-      }
-      props.setContentViewDescription(props.contentView !== this.data.description ? this.data.description : "");
-      props.setContent(this.data.lines);
-    }
-    render() {
-      const { content, contentView, message, maxLines } = this.props;
-      let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines);
-      return /* @__PURE__ */ import_react19.default.createElement("div", null, ViewImage.matches(message) && /* @__PURE__ */ import_react19.default.createElement(ViewImage, {
-        ...this.props
-      }), /* @__PURE__ */ import_react19.default.createElement("pre", null, lines.map((line, i) => /* @__PURE__ */ import_react19.default.createElement("div", {
-        key: `line${i}`
-      }, line.map((element, j) => {
-        let [style, text] = element;
-        return /* @__PURE__ */ import_react19.default.createElement("span", {
-          key: `tuple${j}`,
-          className: style
-        }, text);
-      })))));
-    }
-  };
-  __name(PureViewServer, "PureViewServer");
-  __publicField(PureViewServer, "propTypes", {
-    showFullContent: import_prop_types8.default.bool.isRequired,
-    maxLines: import_prop_types8.default.number.isRequired,
-    setContentViewDescription: import_prop_types8.default.func.isRequired,
-    setContent: import_prop_types8.default.func.isRequired
-  });
-  var ViewServer = connect_default((state) => ({
-    showFullContent: state.ui.flow.showFullContent,
-    maxLines: state.ui.flow.maxContentLines
-  }), {
-    setContentViewDescription,
-    setContent
-  })(withContentLoader(PureViewServer));
-
-  // src/js/components/ContentView/MetaViews.jsx
-  var import_react23 = __toModule(require_react());
-
-  // src/js/components/ContentView/UploadContentButton.jsx
-  var import_react21 = __toModule(require_react());
-  var import_prop_types10 = __toModule(require_prop_types());
-
-  // src/js/components/common/FileChooser.jsx
-  var import_react20 = __toModule(require_react());
-  var import_prop_types9 = __toModule(require_prop_types());
-  FileChooser.propTypes = {
-    icon: import_prop_types9.default.string,
-    text: import_prop_types9.default.string,
-    className: import_prop_types9.default.string,
-    title: import_prop_types9.default.string,
-    onOpenFile: import_prop_types9.default.func.isRequired
-  };
-  function FileChooser({ icon, text, className, title, onOpenFile }) {
-    let fileInput;
-    return /* @__PURE__ */ import_react20.default.createElement("a", {
-      href: "#",
-      onClick: () => fileInput.click(),
-      className,
-      title
-    }, /* @__PURE__ */ import_react20.default.createElement("i", {
-      className: "fa fa-fw " + icon
-    }), text, /* @__PURE__ */ import_react20.default.createElement("input", {
-      ref: (ref) => fileInput = ref,
-      className: "hidden",
-      type: "file",
-      onChange: (e) => {
-        e.preventDefault();
-        if (e.target.files.length > 0)
-          onOpenFile(e.target.files[0]);
-        fileInput.value = "";
-      }
-    }));
-  }
-  __name(FileChooser, "FileChooser");
-
-  // src/js/components/ContentView/UploadContentButton.jsx
-  UploadContentButton.propTypes = {
-    uploadContent: import_prop_types10.default.func.isRequired
-  };
-  function UploadContentButton({ uploadContent: uploadContent2 }) {
-    return /* @__PURE__ */ import_react21.default.createElement(FileChooser, {
-      icon: "fa-upload",
-      title: "Upload a file to replace the content.",
-      onOpenFile: uploadContent2,
-      className: "btn btn-default btn-xs"
-    });
-  }
-  __name(UploadContentButton, "UploadContentButton");
-
-  // src/js/components/ContentView/DownloadContentButton.jsx
-  var import_react22 = __toModule(require_react());
-  init_utils();
-  var import_prop_types11 = __toModule(require_prop_types());
-  DownloadContentButton.propTypes = {
-    flow: import_prop_types11.default.object.isRequired,
-    message: import_prop_types11.default.object.isRequired
-  };
-  function DownloadContentButton({ flow, message }) {
-    return /* @__PURE__ */ import_react22.default.createElement("a", {
-      className: "btn btn-default btn-xs",
-      href: MessageUtils.getContentURL(flow, message),
-      title: "Download the content of the flow."
-    }, /* @__PURE__ */ import_react22.default.createElement("i", {
-      className: "fa fa-download"
-    }));
-  }
-  __name(DownloadContentButton, "DownloadContentButton");
-
-  // src/js/components/ContentView/MetaViews.jsx
-  function ContentEmpty({ flow, message }) {
-    return /* @__PURE__ */ import_react23.default.createElement("div", {
-      className: "alert alert-info"
-    }, "No ", flow.request === message ? "request" : "response", " content.");
-  }
-  __name(ContentEmpty, "ContentEmpty");
-  function ContentMissing({ flow, message }) {
-    return /* @__PURE__ */ import_react23.default.createElement("div", {
-      className: "alert alert-info"
-    }, flow.request === message ? "Request" : "Response", " content missing.");
-  }
-  __name(ContentMissing, "ContentMissing");
-  function ContentTooLarge({ message, onClick, uploadContent: uploadContent2, flow }) {
-    return /* @__PURE__ */ import_react23.default.createElement("div", null, /* @__PURE__ */ import_react23.default.createElement("div", {
-      className: "alert alert-warning"
-    }, /* @__PURE__ */ import_react23.default.createElement("button", {
-      onClick,
-      className: "btn btn-xs btn-warning pull-right"
-    }, "Display anyway"), formatSize(message.contentLength), " content size."), /* @__PURE__ */ import_react23.default.createElement("div", {
-      className: "view-options text-center"
-    }, /* @__PURE__ */ import_react23.default.createElement(UploadContentButton, {
-      uploadContent: uploadContent2
-    }), "\xA0", /* @__PURE__ */ import_react23.default.createElement(DownloadContentButton, {
-      flow,
-      message
-    })));
-  }
-  __name(ContentTooLarge, "ContentTooLarge");
-
-  // src/js/components/ContentView/ShowFullContentButton.jsx
-  var import_react25 = __toModule(require_react());
-  var import_prop_types13 = __toModule(require_prop_types());
-  var import_react_dom5 = __toModule(require_react_dom());
-
-  // src/js/components/common/Button.jsx
-  var import_react24 = __toModule(require_react());
-  var import_prop_types12 = __toModule(require_prop_types());
-  var import_classnames7 = __toModule(require_classnames());
-  Button.propTypes = {
-    onClick: import_prop_types12.default.func.isRequired,
-    children: import_prop_types12.default.node,
-    icon: import_prop_types12.default.string,
-    title: import_prop_types12.default.string
-  };
-  function Button({ onClick, children, icon, disabled, className, title }) {
-    return /* @__PURE__ */ import_react24.default.createElement("button", {
-      className: (0, import_classnames7.default)(className, "btn btn-default"),
-      onClick: disabled ? void 0 : onClick,
-      disabled,
-      title
-    }, icon && /* @__PURE__ */ import_react24.default.createElement("i", {
-      className: "fa fa-fw " + icon
-    }), children);
-  }
-  __name(Button, "Button");
-
-  // src/js/components/ContentView/ShowFullContentButton.jsx
-  ShowFullContentButton.propTypes = {
-    setShowFullContent: import_prop_types13.default.func.isRequired,
-    showFullContent: import_prop_types13.default.bool.isRequired
-  };
-  function ShowFullContentButton({ setShowFullContent: setShowFullContent2, showFullContent, visibleLines, contentLines }) {
-    return !showFullContent && /* @__PURE__ */ import_react25.default.createElement("div", null, /* @__PURE__ */ import_react25.default.createElement(Button, {
-      className: "view-all-content-btn btn-xs",
-      onClick: () => setShowFullContent2()
-    }, "Show full content"), /* @__PURE__ */ import_react25.default.createElement("span", {
-      className: "pull-right"
-    }, " ", visibleLines, "/", contentLines, " are visible \xA0 "));
-  }
-  __name(ShowFullContentButton, "ShowFullContentButton");
-  var ShowFullContentButton_default = connect_default((state) => ({
-    showFullContent: state.ui.flow.showFullContent,
-    visibleLines: state.ui.flow.maxContentLines,
-    contentLines: state.ui.flow.content.length
-  }), {
-    setShowFullContent
-  })(ShowFullContentButton);
-
-  // src/js/components/ContentView.jsx
-  ContentView.propTypes = {
-    flow: import_prop_types14.default.object.isRequired,
-    message: import_prop_types14.default.object.isRequired
-  };
-  ContentView.isContentTooLarge = (msg) => msg.contentLength > 1024 * 1024 * (ViewImage.matches(msg) ? 10 : 0.2);
-  function ContentView(props) {
-    const { flow, message, contentView, isDisplayLarge, displayLarge: displayLarge2, onContentChange, readonly } = props;
-    if (message.contentLength === 0 && readonly) {
-      return /* @__PURE__ */ import_react26.default.createElement(ContentEmpty, {
-        ...props
-      });
-    }
-    if (message.contentLength === null && readonly) {
-      return /* @__PURE__ */ import_react26.default.createElement(ContentMissing, {
-        ...props
-      });
-    }
-    if (!isDisplayLarge && ContentView.isContentTooLarge(message)) {
-      return /* @__PURE__ */ import_react26.default.createElement(ContentTooLarge, {
-        ...props,
-        onClick: displayLarge2
-      });
-    }
-    let view;
-    if (contentView === "Edit") {
-      view = /* @__PURE__ */ import_react26.default.createElement(Edit, {
-        flow,
-        message,
-        onChange: onContentChange
-      });
-    } else {
-      view = /* @__PURE__ */ import_react26.default.createElement(ViewServer, {
-        flow,
-        message,
-        contentView
-      });
-    }
-    return /* @__PURE__ */ import_react26.default.createElement("div", {
-      className: "contentview"
-    }, view, /* @__PURE__ */ import_react26.default.createElement(ShowFullContentButton_default, null));
-  }
-  __name(ContentView, "ContentView");
-  var ContentView_default = connect_default((state) => ({
-    contentView: state.ui.flow.contentView,
-    isDisplayLarge: state.ui.flow.displayLarge
-  }), {
-    displayLarge,
-    updateEdit
-  })(ContentView);
-
-  // src/js/components/ContentView/ContentViewOptions.jsx
-  var import_react28 = __toModule(require_react());
-  var import_prop_types15 = __toModule(require_prop_types());
-
-  // src/js/components/ContentView/ViewSelector.tsx
-  var import_react27 = __toModule(require_react());
 
   // node_modules/@babel/runtime/helpers/esm/defineProperty.js
   function _defineProperty(obj, key, value) {
@@ -48339,7 +46467,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     return typeOfVal;
   }
   __name(kindOf, "kindOf");
-  function createStore(reducer8, preloadedState, enhancer) {
+  function createStore(reducer9, preloadedState, enhancer) {
     var _ref2;
     if (typeof preloadedState === "function" && typeof enhancer === "function" || typeof enhancer === "function" && typeof arguments[3] === "function") {
       throw new Error(false ? formatProdErrorMessage(0) : "It looks like you are passing several store enhancers to createStore(). This is not supported. Instead, compose them together to a single function. See https://redux.js.org/tutorials/fundamentals/part-4-store#creating-a-store-with-enhancers for an example.");
@@ -48352,12 +46480,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       if (typeof enhancer !== "function") {
         throw new Error(false ? formatProdErrorMessage(1) : "Expected the enhancer to be a function. Instead, received: '" + kindOf(enhancer) + "'");
       }
-      return enhancer(createStore)(reducer8, preloadedState);
+      return enhancer(createStore)(reducer9, preloadedState);
     }
-    if (typeof reducer8 !== "function") {
-      throw new Error(false ? formatProdErrorMessage(2) : "Expected the root reducer to be a function. Instead, received: '" + kindOf(reducer8) + "'");
+    if (typeof reducer9 !== "function") {
+      throw new Error(false ? formatProdErrorMessage(2) : "Expected the root reducer to be a function. Instead, received: '" + kindOf(reducer9) + "'");
     }
-    var currentReducer = reducer8;
+    var currentReducer = reducer9;
     var currentState = preloadedState;
     var currentListeners = [];
     var nextListeners = currentListeners;
@@ -48504,14 +46632,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __name(getUnexpectedStateShapeWarningMessage, "getUnexpectedStateShapeWarningMessage");
   function assertReducerShape(reducers) {
     Object.keys(reducers).forEach(function(key) {
-      var reducer8 = reducers[key];
-      var initialState = reducer8(void 0, {
+      var reducer9 = reducers[key];
+      var initialState = reducer9(void 0, {
         type: ActionTypes.INIT
       });
       if (typeof initialState === "undefined") {
         throw new Error(false ? formatProdErrorMessage(12) : 'The slice reducer for key "' + key + `" returned undefined during initialization. If the state passed to the reducer is undefined, you must explicitly return the initial state. The initial state may not be undefined. If you don't want to set a value for this reducer, you can use null instead of undefined.`);
       }
-      if (typeof reducer8(void 0, {
+      if (typeof reducer9(void 0, {
         type: ActionTypes.PROBE_UNKNOWN_ACTION()
       }) === "undefined") {
         throw new Error(false ? formatProdErrorMessage(13) : 'The slice reducer for key "' + key + '" returned undefined when probed with a random type. ' + ("Don't try to handle '" + ActionTypes.INIT + `' or other actions in "redux/*" `) + "namespace. They are considered private. Instead, you must return the current state for any unknown actions, unless it is undefined, in which case you must return the initial state, regardless of the action type. The initial state may not be undefined, but can be null.");
@@ -48561,9 +46689,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       var nextState = {};
       for (var _i = 0; _i < finalReducerKeys.length; _i++) {
         var _key = finalReducerKeys[_i];
-        var reducer8 = finalReducers[_key];
+        var reducer9 = finalReducers[_key];
         var previousStateForKey = state[_key];
-        var nextStateForKey = reducer8(previousStateForKey, action);
+        var nextStateForKey = reducer9(previousStateForKey, action);
         if (typeof nextStateForKey === "undefined") {
           var actionType = action && action.type;
           throw new Error(false ? formatProdErrorMessage(14) : "When called with an action of type " + (actionType ? '"' + String(actionType) + '"' : "(unknown type)") + ', the slice reducer for key "' + _key + '" returned undefined. To ignore an action, you must explicitly return the previous state. If you want this reducer to hold no value, you can return null instead of undefined.');
@@ -48596,8 +46724,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(compose, "compose");
   function applyMiddleware() {
-    for (var _len = arguments.length, middlewares2 = new Array(_len), _key = 0; _key < _len; _key++) {
-      middlewares2[_key] = arguments[_key];
+    for (var _len = arguments.length, middlewares = new Array(_len), _key = 0; _key < _len; _key++) {
+      middlewares[_key] = arguments[_key];
     }
     return function(createStore2) {
       return function() {
@@ -48611,7 +46739,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
             return _dispatch.apply(void 0, arguments);
           }, "dispatch")
         };
-        var chain = middlewares2.map(function(middleware) {
+        var chain = middlewares.map(function(middleware) {
           return middleware(middlewareAPI);
         });
         _dispatch = compose.apply(void 0, chain)(store2.dispatch);
@@ -48629,17 +46757,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     warning2('You are currently using minified code outside of NODE_ENV === "production". This means that you are running a slower development build of Redux. You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) to ensure you have the correct code for your production build.');
   }
 
-  // src/js/ducks/eventLog.js
+  // src/js/ducks/eventLog.ts
   var ADD3 = "EVENTS_ADD";
   var RECEIVE4 = "EVENTS_RECEIVE";
   var TOGGLE_VISIBILITY = "EVENTS_TOGGLE_VISIBILITY";
   var TOGGLE_FILTER = "EVENTS_TOGGLE_FILTER";
-  var defaultState6 = {
+  var defaultState7 = {
     visible: false,
     filters: { debug: false, info: true, web: true, warn: true, error: true },
     ...reduce(void 0, {})
   };
-  function reduce3(state = defaultState6, action) {
+  function reduce3(state = defaultState7, action) {
     switch (action.type) {
       case TOGGLE_VISIBILITY:
         return {
@@ -48688,11 +46816,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/ducks/ui/header.js
   var SET_ACTIVE_MENU = "UI_SET_ACTIVE_MENU";
-  var defaultState7 = {
+  var defaultState8 = {
     activeMenu: "Start",
     isFlowSelected: false
   };
-  function reducer4(state = defaultState7, action) {
+  function reducer5(state = defaultState8, action) {
     switch (action.type) {
       case SET_ACTIVE_MENU:
         return {
@@ -48723,96 +46851,32 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         return state;
     }
   }
-  __name(reducer4, "reducer");
+  __name(reducer5, "reducer");
   function setActiveMenu(activeMenu) {
     return { type: SET_ACTIVE_MENU, activeMenu };
   }
   __name(setActiveMenu, "setActiveMenu");
 
-  // src/js/ducks/ui/optionsEditor.js
-  var OPTION_UPDATE_START = "UI_OPTION_UPDATE_START";
-  var OPTION_UPDATE_SUCCESS = "UI_OPTION_UPDATE_SUCCESS";
-  var OPTION_UPDATE_ERROR = "UI_OPTION_UPDATE_ERROR";
-  var defaultState8 = {};
-  function reducer5(state = defaultState8, action) {
-    switch (action.type) {
-      case OPTION_UPDATE_START:
-        return {
-          ...state,
-          [action.option]: {
-            isUpdating: true,
-            value: action.value,
-            error: false
-          }
-        };
-      case OPTION_UPDATE_SUCCESS:
-        return {
-          ...state,
-          [action.option]: void 0
-        };
-      case OPTION_UPDATE_ERROR:
-        let val = state[action.option].value;
-        if (typeof val === "boolean") {
-          val = !val;
-        }
-        return {
-          ...state,
-          [action.option]: {
-            value: val,
-            isUpdating: false,
-            error: action.error
-          }
-        };
-      case HIDE_MODAL:
-        return {};
-      default:
-        return state;
-    }
-  }
-  __name(reducer5, "reducer");
-  function startUpdate(option, value) {
-    return {
-      type: OPTION_UPDATE_START,
-      option,
-      value
-    };
-  }
-  __name(startUpdate, "startUpdate");
-  function updateSuccess(option) {
-    return {
-      type: OPTION_UPDATE_SUCCESS,
-      option
-    };
-  }
-  __name(updateSuccess, "updateSuccess");
-  function updateError(option, error) {
-    return {
-      type: OPTION_UPDATE_ERROR,
-      option,
-      error
-    };
-  }
-  __name(updateError, "updateError");
-
   // src/js/ducks/ui/index.ts
   var ui_default = combineReducers({
     flow: flow_default,
-    header: reducer4,
+    header: reducer5,
     modal: reducer2,
-    optionsEditor: reducer5
+    optionsEditor: reducer3
   });
 
-  // src/js/ducks/connection.js
-  var ConnectionState = {
-    INIT: Symbol("init"),
-    FETCHING: Symbol("fetching"),
-    ESTABLISHED: Symbol("established"),
-    ERROR: Symbol("error"),
-    OFFLINE: Symbol("offline")
-  };
+  // src/js/ducks/connection.ts
+  var ConnectionState;
+  (function(ConnectionState2) {
+    ConnectionState2["INIT"] = "CONNECTION_INIT";
+    ConnectionState2["FETCHING"] = "CONNECTION_FETCHING";
+    ConnectionState2["ESTABLISHED"] = "CONNECTION_ESTABLISHED";
+    ConnectionState2["ERROR"] = "CONNECTION_ERROR";
+    ConnectionState2["OFFLINE"] = "CONNECTION_OFFLINE";
+  })(ConnectionState || (ConnectionState = {}));
   var defaultState9 = {
     state: ConnectionState.INIT,
-    message: null
+    message: void 0
   };
   function reducer6(state = defaultState9, action) {
     switch (action.type) {
@@ -48842,50 +46906,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(connectionError, "connectionError");
 
-  // src/js/ducks/options.js
-  var import_lodash5 = __toModule(require_lodash());
-  var RECEIVE5 = "OPTIONS_RECEIVE";
-  var UPDATE4 = "OPTIONS_UPDATE";
-  var defaultState10 = {};
-  function reducer7(state = defaultState10, action) {
-    switch (action.type) {
-      case RECEIVE5:
-        return action.data;
-      case UPDATE4:
-        return {
-          ...state,
-          ...action.data
-        };
-      default:
-        return state;
-    }
-  }
-  __name(reducer7, "reducer");
-  function pureSendUpdate(option, value, dispatch) {
-    fetchApi.put("/options", { [option]: value }).then((response) => {
-      if (response.status === 200) {
-        dispatch(updateSuccess(option));
-      } else {
-        response.text().then((error) => {
-          dispatch(updateError(option, error));
-        });
-      }
-    });
-  }
-  __name(pureSendUpdate, "pureSendUpdate");
-  var sendUpdate = import_lodash5.default.throttle(pureSendUpdate, 700, { leading: true, trailing: true });
-  function update4(option, value) {
-    return (dispatch) => {
-      dispatch(startUpdate(option, value));
-      sendUpdate(option, value, dispatch);
-    };
-  }
-  __name(update4, "update");
-  function save() {
-    return (dispatch) => fetchApi("/options/save", { method: "POST" });
-  }
-  __name(save, "save");
-
   // node_modules/redux-thunk/es/index.js
   function createThunkMiddleware(extraArgument) {
     return function(_ref) {
@@ -48905,36 +46925,757 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   thunk.withExtraArgument = createThunkMiddleware;
   var es_default = thunk;
 
+  // src/js/ducks/conf.ts
+  var defaultState10 = window.MITMWEB_CONF || {
+    static: false,
+    version: "1.2.3",
+    contentViews: ["Auto", "Raw"]
+  };
+  var reducer7 = /* @__PURE__ */ __name((state = defaultState10, action) => {
+    return state;
+  }, "reducer");
+  var conf_default = reducer7;
+
+  // src/js/ducks/options_meta.ts
+  var defaultState11 = {};
+  var reducer8 = /* @__PURE__ */ __name((state = defaultState11, action) => {
+    switch (action.type) {
+      case RECEIVE3:
+        return action.data;
+      case UPDATE3:
+        return {
+          ...state,
+          ...action.data
+        };
+      default:
+        return state;
+    }
+  }, "reducer");
+  var options_meta_default = reducer8;
+
   // src/js/ducks/index.ts
-  var import_redux_logger = __toModule(require_redux_logger());
-  var middlewares = [es_default];
-  if (true) {
-    middlewares.push(import_redux_logger.logger);
-  }
   var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
   var rootReducer = combineReducers({
     eventLog: reduce3,
     flows: reduce2,
-    settings: settings_default,
     connection: reducer6,
     ui: ui_default,
-    options: reducer7
+    options: options_default,
+    options_meta: options_meta_default,
+    conf: conf_default
   });
-  var store = createStore(rootReducer, composeEnhancers(applyMiddleware(...middlewares)));
+  var createAppStore = /* @__PURE__ */ __name((preloadedState) => {
+    return createStore(rootReducer, preloadedState, composeEnhancers(applyMiddleware(es_default)));
+  }, "createAppStore");
+  var store = createAppStore(void 0);
   var useAppDispatch = /* @__PURE__ */ __name(() => useDispatch(), "useAppDispatch");
   var useAppSelector = useSelector;
 
+  // src/js/components/FlowTable/FlowTableHead.tsx
+  var FlowTableHead_default = import_react13.default.memo(/* @__PURE__ */ __name(function FlowTableHead() {
+    const dispatch = useAppDispatch(), sortDesc = useAppSelector((state) => state.flows.sort.desc), sortColumn = useAppSelector((state) => state.flows.sort.column), displayColumnNames = useAppSelector((state) => state.options.web_columns);
+    const sortType = sortDesc ? "sort-desc" : "sort-asc";
+    const displayColumns = displayColumnNames.map((x) => columns[x]).concat(QuickActionsColumn);
+    return /* @__PURE__ */ import_react13.default.createElement("tr", null, displayColumns.map((Column) => /* @__PURE__ */ import_react13.default.createElement("th", {
+      className: (0, import_classnames4.default)(Column.headerClass, sortColumn === Column.name && sortType),
+      key: Column.name,
+      onClick: () => dispatch(setSort2(Column.name, Column.name !== sortColumn ? false : !sortDesc))
+    }, Column.headerName)));
+  }, "FlowTableHead"));
+
+  // src/js/components/FlowTable/FlowRow.tsx
+  var import_react14 = __toModule(require_react());
+  var import_classnames5 = __toModule(require_classnames());
+  var FlowRow_default = import_react14.default.memo(/* @__PURE__ */ __name(function FlowRow({ flow, selected, highlighted }) {
+    const dispatch = useAppDispatch(), displayColumnNames = useAppSelector((state) => state.options.web_columns), className2 = (0, import_classnames5.default)({
+      "selected": selected,
+      "highlighted": highlighted,
+      "intercepted": flow.intercepted,
+      "has-request": flow.type === "http" && flow.request,
+      "has-response": flow.type === "http" && flow.response
+    });
+    const onClick = /* @__PURE__ */ __name((e) => {
+      let node = e.target;
+      while (node.parentNode) {
+        if (node.classList.contains("col-quickactions"))
+          return;
+        node = node.parentNode;
+      }
+      dispatch(select(flow.id));
+    }, "onClick");
+    const displayColumns = displayColumnNames.map((x) => columns[x]).concat(QuickActionsColumn);
+    return /* @__PURE__ */ import_react14.default.createElement("tr", {
+      className: className2,
+      onClick
+    }, displayColumns.map((Column) => /* @__PURE__ */ import_react14.default.createElement(Column, {
+      key: Column.name,
+      flow
+    })));
+  }, "FlowRow"));
+
+  // src/js/components/FlowTable.jsx
+  var FlowTable = class extends import_react15.default.Component {
+    constructor(props, context) {
+      super(props, context);
+      this.state = { vScroll: calcVScroll() };
+      this.onViewportUpdate = this.onViewportUpdate.bind(this);
+    }
+    UNSAFE_componentWillMount() {
+      window.addEventListener("resize", this.onViewportUpdate);
+    }
+    UNSAFE_componentWillUnmount() {
+      window.removeEventListener("resize", this.onViewportUpdate);
+    }
+    componentDidUpdate() {
+      this.onViewportUpdate();
+      if (!this.shouldScrollIntoView) {
+        return;
+      }
+      this.shouldScrollIntoView = false;
+      const { rowHeight, flows, selected } = this.props;
+      const viewport2 = import_react_dom4.default.findDOMNode(this);
+      const head = import_react_dom4.default.findDOMNode(this.refs.head);
+      const headHeight = head ? head.offsetHeight : 0;
+      const rowTop = flows.indexOf(selected) * rowHeight + headHeight;
+      const rowBottom = rowTop + rowHeight;
+      const viewportTop = viewport2.scrollTop;
+      const viewportHeight = viewport2.offsetHeight;
+      if (rowTop - headHeight < viewportTop) {
+        viewport2.scrollTop = rowTop - headHeight;
+      } else if (rowBottom > viewportTop + viewportHeight) {
+        viewport2.scrollTop = rowBottom - viewportHeight;
+      }
+    }
+    UNSAFE_componentWillReceiveProps(nextProps) {
+      if (nextProps.selected && nextProps.selected !== this.props.selected) {
+        this.shouldScrollIntoView = true;
+      }
+    }
+    onViewportUpdate() {
+      const viewport2 = import_react_dom4.default.findDOMNode(this);
+      const viewportTop = viewport2.scrollTop || 0;
+      const vScroll = calcVScroll({
+        viewportTop,
+        viewportHeight: viewport2.offsetHeight || 0,
+        itemCount: this.props.flows.length,
+        rowHeight: this.props.rowHeight
+      });
+      if (this.state.viewportTop !== viewportTop || !(0, import_shallowequal.default)(this.state.vScroll, vScroll)) {
+        this.setState({ vScroll, viewportTop });
+      }
+    }
+    render() {
+      const { vScroll, viewportTop } = this.state;
+      const { flows, selected, highlight } = this.props;
+      const isHighlighted = highlight ? filt_default.parse(highlight) : () => false;
+      return /* @__PURE__ */ import_react15.default.createElement("div", {
+        className: "flow-table",
+        onScroll: this.onViewportUpdate
+      }, /* @__PURE__ */ import_react15.default.createElement("table", null, /* @__PURE__ */ import_react15.default.createElement("thead", {
+        ref: "head",
+        style: { transform: `translateY(${viewportTop}px)` }
+      }, /* @__PURE__ */ import_react15.default.createElement(FlowTableHead_default, null)), /* @__PURE__ */ import_react15.default.createElement("tbody", null, /* @__PURE__ */ import_react15.default.createElement("tr", {
+        style: { height: vScroll.paddingTop }
+      }), flows.slice(vScroll.start, vScroll.end).map((flow) => /* @__PURE__ */ import_react15.default.createElement(FlowRow_default, {
+        key: flow.id,
+        flow,
+        selected: flow === selected,
+        highlighted: isHighlighted(flow)
+      })), /* @__PURE__ */ import_react15.default.createElement("tr", {
+        style: { height: vScroll.paddingBottom }
+      }))));
+    }
+  };
+  __name(FlowTable, "FlowTable");
+  __publicField(FlowTable, "propTypes", {
+    flows: import_prop_types2.default.array.isRequired,
+    rowHeight: import_prop_types2.default.number,
+    highlight: import_prop_types2.default.string,
+    selected: import_prop_types2.default.object
+  });
+  __publicField(FlowTable, "defaultProps", {
+    rowHeight: 32
+  });
+  var PureFlowTable = AutoScroll_default(FlowTable);
+  var FlowTable_default = connect_default((state) => ({
+    flows: state.flows.view,
+    highlight: state.flows.highlight,
+    selected: state.flows.byId[state.flows.selected[0]]
+  }))(PureFlowTable);
+
+  // src/js/components/FlowView.jsx
+  var import_react37 = __toModule(require_react());
+  var import_lodash9 = __toModule(require_lodash());
+
+  // src/js/components/FlowView/Nav.jsx
+  var import_react16 = __toModule(require_react());
+  var import_prop_types3 = __toModule(require_prop_types2());
+  var import_classnames6 = __toModule(require_classnames());
+  var import_lodash5 = __toModule(require_lodash());
+  NavAction.propTypes = {
+    icon: import_prop_types3.default.string.isRequired,
+    title: import_prop_types3.default.string.isRequired,
+    onClick: import_prop_types3.default.func.isRequired
+  };
+  function NavAction({ icon, title, onClick }) {
+    return /* @__PURE__ */ import_react16.default.createElement("a", {
+      title,
+      href: "#",
+      className: "nav-action",
+      onClick: (event) => {
+        event.preventDefault();
+        onClick(event);
+      }
+    }, /* @__PURE__ */ import_react16.default.createElement("i", {
+      className: `fa fa-fw ${icon}`
+    }));
+  }
+  __name(NavAction, "NavAction");
+  Nav.propTypes = {
+    active: import_prop_types3.default.string.isRequired,
+    tabs: import_prop_types3.default.array.isRequired,
+    onSelectTab: import_prop_types3.default.func.isRequired
+  };
+  function Nav({ active, tabs, onSelectTab }) {
+    return /* @__PURE__ */ import_react16.default.createElement("nav", {
+      className: "nav-tabs nav-tabs-sm"
+    }, tabs.map((tab) => /* @__PURE__ */ import_react16.default.createElement("a", {
+      key: tab,
+      href: "#",
+      className: (0, import_classnames6.default)({ active: active === tab }),
+      onClick: (event) => {
+        event.preventDefault();
+        onSelectTab(tab);
+      }
+    }, import_lodash5.default.capitalize(tab))));
+  }
+  __name(Nav, "Nav");
+
+  // src/js/components/FlowView/Messages.jsx
+  var import_react35 = __toModule(require_react());
+  var import_prop_types17 = __toModule(require_prop_types2());
+  init_utils();
+
+  // src/js/components/ContentView.jsx
+  var import_react27 = __toModule(require_react());
+  var import_prop_types11 = __toModule(require_prop_types2());
+
+  // src/js/components/ContentView/ContentViews.jsx
+  var import_react20 = __toModule(require_react());
+  var import_prop_types6 = __toModule(require_prop_types2());
+
+  // src/js/components/ContentView/ContentLoader.jsx
+  var import_react17 = __toModule(require_react());
+  var import_prop_types4 = __toModule(require_prop_types2());
+  init_utils();
+  function withContentLoader(View) {
+    return class extends import_react17.default.Component {
+      static displayName = View.displayName || View.name;
+      static matches = View.matches;
+      static propTypes = {
+        ...View.propTypes,
+        content: import_prop_types4.default.string,
+        flow: import_prop_types4.default.object.isRequired,
+        message: import_prop_types4.default.object.isRequired
+      };
+      constructor(props) {
+        super(props);
+        this.state = {
+          content: void 0,
+          request: void 0
+        };
+      }
+      componentDidMount() {
+        this.updateContent(this.props);
+      }
+      UNSAFE_componentWillReceiveProps(nextProps) {
+        if (nextProps.message.content !== this.props.message.content || nextProps.message.contentHash !== this.props.message.contentHash || nextProps.contentView !== this.props.contentView) {
+          this.updateContent(nextProps);
+        }
+      }
+      componentWillUnmount() {
+        if (this.state.request) {
+          this.state.request.abort();
+        }
+      }
+      updateContent(props) {
+        if (this.state.request) {
+          this.state.request.abort();
+        }
+        if (props.message.content !== void 0) {
+          return this.setState({ request: void 0, content: props.message.content });
+        }
+        if (props.message.contentLength === 0) {
+          return this.setState({ request: void 0, content: "" });
+        }
+        let requestUrl = MessageUtils.getContentURL(props.flow, props.message, props.contentView);
+        let request = new XMLHttpRequest();
+        request.addEventListener("load", this.requestComplete.bind(this, request));
+        request.addEventListener("error", this.requestFailed.bind(this, request));
+        request.open("GET", requestUrl);
+        request.send();
+        this.setState({ request, content: void 0 });
+      }
+      requestComplete(request, e) {
+        if (request !== this.state.request) {
+          return;
+        }
+        this.setState({
+          content: request.responseText,
+          request: void 0
+        });
+      }
+      requestFailed(request, e) {
+        if (request !== this.state.request) {
+          return;
+        }
+        console.error(e);
+        this.setState({
+          content: "Error getting content.",
+          request: void 0
+        });
+      }
+      render() {
+        return this.state.content !== void 0 ? /* @__PURE__ */ import_react17.default.createElement(View, {
+          content: this.state.content,
+          ...this.props
+        }) : /* @__PURE__ */ import_react17.default.createElement("div", {
+          className: "text-center"
+        }, /* @__PURE__ */ import_react17.default.createElement("i", {
+          className: "fa fa-spinner fa-spin"
+        }));
+      }
+    };
+  }
+  __name(withContentLoader, "withContentLoader");
+
+  // src/js/components/ContentView/ContentViews.jsx
+  init_utils();
+
+  // src/js/components/ContentView/CodeEditor.tsx
+  var import_react19 = __toModule(require_react());
+  var import_prop_types5 = __toModule(require_prop_types2());
+
+  // src/js/contrib/CodeMirror.tsx
+  var import_react18 = __toModule(require_react());
+  var import_classnames7 = __toModule(require_classnames());
+  var import_codemirror = __toModule(require_codemirror());
+  var import_lodash6 = __toModule(require_lodash());
+  function normalizeLineEndings(str) {
+    if (!str)
+      return str;
+    return str.replace(/\r\n|\r/g, "\n");
+  }
+  __name(normalizeLineEndings, "normalizeLineEndings");
+  var CodeMirror = class extends import_react18.default.Component {
+    getDefaultProps() {
+      return {
+        preserveScrollPosition: false
+      };
+    }
+    getCodeMirrorInstance() {
+      return this.props.codeMirrorInstance || import_codemirror.default;
+    }
+    getInitialState() {
+      return {
+        isFocused: false
+      };
+    }
+    UNSAFE_componentWillMount() {
+      this.componentWillReceiveProps = import_lodash6.default.debounce(this.componentWillReceiveProps, 0);
+      if (this.props.path) {
+        console.error("Warning: react-codemirror: the `path` prop has been changed to `name`");
+      }
+    }
+    componentDidMount() {
+      const codeMirrorInstance = this.getCodeMirrorInstance();
+      this.codeMirror = codeMirrorInstance.fromTextArea(this.textareaNode, this.props.options);
+      this.codeMirror.on("change", this.codemirrorValueChanged);
+      this.codeMirror.on("cursorActivity", this.cursorActivity);
+      this.codeMirror.on("focus", this.focusChanged.bind(this, true));
+      this.codeMirror.on("blur", this.focusChanged.bind(this, false));
+      this.codeMirror.on("scroll", this.scrollChanged);
+      this.codeMirror.setValue(this.props.defaultValue || this.props.value || "");
+    }
+    componentWillUnmount() {
+      if (this.codeMirror) {
+        this.codeMirror.toTextArea();
+      }
+    }
+    UNSAFE_componentWillReceiveProps(nextProps) {
+      if (this.codeMirror && nextProps.value !== void 0 && nextProps.value !== this.props.value && normalizeLineEndings(this.codeMirror.getValue()) !== normalizeLineEndings(nextProps.value)) {
+        if (this.props.preserveScrollPosition) {
+          var prevScrollPosition = this.codeMirror.getScrollInfo();
+          this.codeMirror.setValue(nextProps.value);
+          this.codeMirror.scrollTo(prevScrollPosition.left, prevScrollPosition.top);
+        } else {
+          this.codeMirror.setValue(nextProps.value);
+        }
+      }
+      if (typeof nextProps.options === "object") {
+        for (let optionName in nextProps.options) {
+          if (nextProps.options.hasOwnProperty(optionName)) {
+            this.setOptionIfChanged(optionName, nextProps.options[optionName]);
+          }
+        }
+      }
+    }
+    setOptionIfChanged(optionName, newValue) {
+      const oldValue = this.codeMirror.getOption(optionName);
+      if (!import_lodash6.default.isEqual(oldValue, newValue)) {
+        this.codeMirror.setOption(optionName, newValue);
+      }
+    }
+    getCodeMirror() {
+      return this.codeMirror;
+    }
+    focus() {
+      if (this.codeMirror) {
+        this.codeMirror.focus();
+      }
+    }
+    focusChanged(focused) {
+      this.setState({
+        isFocused: focused
+      });
+      this.props.onFocusChange && this.props.onFocusChange(focused);
+    }
+    cursorActivity(cm) {
+      this.props.onCursorActivity && this.props.onCursorActivity(cm);
+    }
+    scrollChanged(cm) {
+      this.props.onScroll && this.props.onScroll(cm.getScrollInfo());
+    }
+    codemirrorValueChanged(doc, change) {
+      if (this.props.onChange && change.origin !== "setValue") {
+        this.props.onChange(doc.getValue(), change);
+      }
+    }
+    render() {
+      const editorClassName = (0, import_classnames7.default)("ReactCodeMirror", this.state.isFocused ? "ReactCodeMirror--focused" : null, this.props.className);
+      return /* @__PURE__ */ import_react18.default.createElement("div", {
+        className: editorClassName
+      }, /* @__PURE__ */ import_react18.default.createElement("textarea", {
+        ref: (ref) => this.textareaNode = ref,
+        name: this.props.name || this.props.path,
+        defaultValue: this.props.value,
+        autoComplete: "off",
+        autoFocus: this.props.autoFocus
+      }));
+    }
+  };
+  __name(CodeMirror, "CodeMirror");
+
+  // src/js/components/ContentView/CodeEditor.tsx
+  CodeEditor.propTypes = {
+    content: import_prop_types5.default.string.isRequired,
+    onChange: import_prop_types5.default.func.isRequired
+  };
+  function CodeEditor({ content, onChange }) {
+    let options = {
+      lineNumbers: true
+    };
+    return /* @__PURE__ */ import_react19.default.createElement("div", {
+      className: "codeeditor",
+      onKeyDown: (e) => e.stopPropagation()
+    }, /* @__PURE__ */ import_react19.default.createElement(CodeMirror, {
+      value: content,
+      onChange,
+      options
+    }));
+  }
+  __name(CodeEditor, "CodeEditor");
+
+  // src/js/components/ContentView/ContentViews.jsx
+  var isImage = /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon)$/i;
+  ViewImage.matches = (msg) => isImage.test(MessageUtils.getContentType(msg));
+  ViewImage.propTypes = {
+    flow: import_prop_types6.default.object.isRequired,
+    message: import_prop_types6.default.object.isRequired
+  };
+  function ViewImage({ flow, message }) {
+    return /* @__PURE__ */ import_react20.default.createElement("div", {
+      className: "flowview-image"
+    }, /* @__PURE__ */ import_react20.default.createElement("img", {
+      src: MessageUtils.getContentURL(flow, message),
+      alt: "preview",
+      className: "img-thumbnail"
+    }));
+  }
+  __name(ViewImage, "ViewImage");
+  Edit.propTypes = {
+    content: import_prop_types6.default.string.isRequired
+  };
+  function Edit({ content, onChange }) {
+    return /* @__PURE__ */ import_react20.default.createElement(CodeEditor, {
+      content,
+      onChange
+    });
+  }
+  __name(Edit, "Edit");
+  Edit = withContentLoader(Edit);
+  var PureViewServer = class extends import_react20.Component {
+    UNSAFE_componentWillMount() {
+      this.setContentView(this.props);
+    }
+    UNSAFE_componentWillReceiveProps(nextProps) {
+      if (nextProps.content !== this.props.content) {
+        this.setContentView(nextProps);
+      }
+    }
+    setContentView(props) {
+      try {
+        this.data = JSON.parse(props.content);
+      } catch (err) {
+        this.data = { lines: [], description: err.message };
+      }
+      props.setContentViewDescription(props.contentView !== this.data.description ? this.data.description : "");
+      props.setContent(this.data.lines);
+    }
+    render() {
+      const { content, contentView, message, maxLines } = this.props;
+      let lines = this.props.showFullContent ? this.data.lines : this.data.lines.slice(0, maxLines);
+      return /* @__PURE__ */ import_react20.default.createElement("div", null, ViewImage.matches(message) && /* @__PURE__ */ import_react20.default.createElement(ViewImage, {
+        ...this.props
+      }), /* @__PURE__ */ import_react20.default.createElement("pre", null, lines.map((line, i) => /* @__PURE__ */ import_react20.default.createElement("div", {
+        key: `line${i}`
+      }, line.map((element, j) => {
+        let [style, text] = element;
+        return /* @__PURE__ */ import_react20.default.createElement("span", {
+          key: `tuple${j}`,
+          className: style
+        }, text);
+      })))));
+    }
+  };
+  __name(PureViewServer, "PureViewServer");
+  __publicField(PureViewServer, "propTypes", {
+    showFullContent: import_prop_types6.default.bool.isRequired,
+    maxLines: import_prop_types6.default.number.isRequired,
+    setContentViewDescription: import_prop_types6.default.func.isRequired,
+    setContent: import_prop_types6.default.func.isRequired
+  });
+  var ViewServer = connect_default((state) => ({
+    showFullContent: state.ui.flow.showFullContent,
+    maxLines: state.ui.flow.maxContentLines
+  }), {
+    setContentViewDescription,
+    setContent
+  })(withContentLoader(PureViewServer));
+
+  // src/js/components/ContentView/MetaViews.jsx
+  var import_react24 = __toModule(require_react());
+
+  // src/js/components/ContentView/UploadContentButton.jsx
+  var import_react22 = __toModule(require_react());
+  var import_prop_types7 = __toModule(require_prop_types2());
+
+  // src/js/components/common/FileChooser.tsx
+  var import_react21 = __toModule(require_react());
+  var FileChooser_default = import_react21.default.memo(/* @__PURE__ */ __name(function FileChooser({ icon, text, className: className2, title, onOpenFile, onClick }) {
+    let fileInput;
+    return /* @__PURE__ */ import_react21.default.createElement("a", {
+      href: "#",
+      onClick: (e) => {
+        fileInput.click();
+        onClick && onClick(e);
+      },
+      className: className2,
+      title
+    }, /* @__PURE__ */ import_react21.default.createElement("i", {
+      className: "fa fa-fw " + icon
+    }), text, /* @__PURE__ */ import_react21.default.createElement("input", {
+      ref: (ref) => fileInput = ref,
+      className: "hidden",
+      type: "file",
+      onChange: (e) => {
+        e.preventDefault();
+        if (e.target.files && e.target.files.length > 0)
+          onOpenFile(e.target.files[0]);
+        fileInput.value = "";
+      }
+    }));
+  }, "FileChooser"));
+
+  // src/js/components/ContentView/UploadContentButton.jsx
+  UploadContentButton.propTypes = {
+    uploadContent: import_prop_types7.default.func.isRequired
+  };
+  function UploadContentButton({ uploadContent: uploadContent2 }) {
+    return /* @__PURE__ */ import_react22.default.createElement(FileChooser_default, {
+      icon: "fa-upload",
+      title: "Upload a file to replace the content.",
+      onOpenFile: uploadContent2,
+      className: "btn btn-default btn-xs"
+    });
+  }
+  __name(UploadContentButton, "UploadContentButton");
+
+  // src/js/components/ContentView/DownloadContentButton.jsx
+  var import_react23 = __toModule(require_react());
+  init_utils();
+  var import_prop_types8 = __toModule(require_prop_types2());
+  DownloadContentButton.propTypes = {
+    flow: import_prop_types8.default.object.isRequired,
+    message: import_prop_types8.default.object.isRequired
+  };
+  function DownloadContentButton({ flow, message }) {
+    return /* @__PURE__ */ import_react23.default.createElement("a", {
+      className: "btn btn-default btn-xs",
+      href: MessageUtils.getContentURL(flow, message),
+      title: "Download the content of the flow."
+    }, /* @__PURE__ */ import_react23.default.createElement("i", {
+      className: "fa fa-download"
+    }));
+  }
+  __name(DownloadContentButton, "DownloadContentButton");
+
+  // src/js/components/ContentView/MetaViews.jsx
+  function ContentEmpty({ flow, message }) {
+    return /* @__PURE__ */ import_react24.default.createElement("div", {
+      className: "alert alert-info"
+    }, "No ", flow.request === message ? "request" : "response", " content.");
+  }
+  __name(ContentEmpty, "ContentEmpty");
+  function ContentMissing({ flow, message }) {
+    return /* @__PURE__ */ import_react24.default.createElement("div", {
+      className: "alert alert-info"
+    }, flow.request === message ? "Request" : "Response", " content missing.");
+  }
+  __name(ContentMissing, "ContentMissing");
+  function ContentTooLarge({ message, onClick, uploadContent: uploadContent2, flow }) {
+    return /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("div", {
+      className: "alert alert-warning"
+    }, /* @__PURE__ */ import_react24.default.createElement("button", {
+      onClick,
+      className: "btn btn-xs btn-warning pull-right"
+    }, "Display anyway"), formatSize(message.contentLength), " content size."), /* @__PURE__ */ import_react24.default.createElement("div", {
+      className: "view-options text-center"
+    }, /* @__PURE__ */ import_react24.default.createElement(UploadContentButton, {
+      uploadContent: uploadContent2
+    }), "\xA0", /* @__PURE__ */ import_react24.default.createElement(DownloadContentButton, {
+      flow,
+      message
+    })));
+  }
+  __name(ContentTooLarge, "ContentTooLarge");
+
+  // src/js/components/ContentView/ShowFullContentButton.jsx
+  var import_react26 = __toModule(require_react());
+  var import_prop_types10 = __toModule(require_prop_types2());
+  var import_react_dom5 = __toModule(require_react_dom());
+
+  // src/js/components/common/Button.jsx
+  var import_react25 = __toModule(require_react());
+  var import_prop_types9 = __toModule(require_prop_types2());
+  var import_classnames8 = __toModule(require_classnames());
+  Button.propTypes = {
+    onClick: import_prop_types9.default.func.isRequired,
+    children: import_prop_types9.default.node,
+    icon: import_prop_types9.default.string,
+    title: import_prop_types9.default.string
+  };
+  function Button({ onClick, children, icon, disabled, className: className2, title }) {
+    return /* @__PURE__ */ import_react25.default.createElement("button", {
+      className: (0, import_classnames8.default)(className2, "btn btn-default"),
+      onClick: disabled ? void 0 : onClick,
+      disabled,
+      title
+    }, icon && /* @__PURE__ */ import_react25.default.createElement("i", {
+      className: "fa fa-fw " + icon
+    }), children);
+  }
+  __name(Button, "Button");
+
+  // src/js/components/ContentView/ShowFullContentButton.jsx
+  ShowFullContentButton.propTypes = {
+    setShowFullContent: import_prop_types10.default.func.isRequired,
+    showFullContent: import_prop_types10.default.bool.isRequired
+  };
+  function ShowFullContentButton({ setShowFullContent: setShowFullContent2, showFullContent, visibleLines, contentLines }) {
+    return !showFullContent && /* @__PURE__ */ import_react26.default.createElement("div", null, /* @__PURE__ */ import_react26.default.createElement(Button, {
+      className: "view-all-content-btn btn-xs",
+      onClick: () => setShowFullContent2()
+    }, "Show full content"), /* @__PURE__ */ import_react26.default.createElement("span", {
+      className: "pull-right"
+    }, " ", visibleLines, "/", contentLines, " are visible \xA0 "));
+  }
+  __name(ShowFullContentButton, "ShowFullContentButton");
+  var ShowFullContentButton_default = connect_default((state) => ({
+    showFullContent: state.ui.flow.showFullContent,
+    visibleLines: state.ui.flow.maxContentLines,
+    contentLines: state.ui.flow.content.length
+  }), {
+    setShowFullContent
+  })(ShowFullContentButton);
+
+  // src/js/components/ContentView.jsx
+  ContentView.propTypes = {
+    flow: import_prop_types11.default.object.isRequired,
+    message: import_prop_types11.default.object.isRequired
+  };
+  ContentView.isContentTooLarge = (msg) => msg.contentLength > 1024 * 1024 * (ViewImage.matches(msg) ? 10 : 0.2);
+  function ContentView(props) {
+    const { flow, message, contentView, isDisplayLarge, displayLarge: displayLarge2, onContentChange, readonly } = props;
+    if (message.contentLength === 0 && readonly) {
+      return /* @__PURE__ */ import_react27.default.createElement(ContentEmpty, {
+        ...props
+      });
+    }
+    if (message.contentLength === null && readonly) {
+      return /* @__PURE__ */ import_react27.default.createElement(ContentMissing, {
+        ...props
+      });
+    }
+    if (!isDisplayLarge && ContentView.isContentTooLarge(message)) {
+      return /* @__PURE__ */ import_react27.default.createElement(ContentTooLarge, {
+        ...props,
+        onClick: displayLarge2
+      });
+    }
+    let view;
+    if (contentView === "Edit") {
+      view = /* @__PURE__ */ import_react27.default.createElement(Edit, {
+        flow,
+        message,
+        onChange: onContentChange
+      });
+    } else {
+      view = /* @__PURE__ */ import_react27.default.createElement(ViewServer, {
+        flow,
+        message,
+        contentView
+      });
+    }
+    return /* @__PURE__ */ import_react27.default.createElement("div", {
+      className: "contentview"
+    }, view, /* @__PURE__ */ import_react27.default.createElement(ShowFullContentButton_default, null));
+  }
+  __name(ContentView, "ContentView");
+  var ContentView_default = connect_default((state) => ({
+    contentView: state.ui.flow.contentView,
+    isDisplayLarge: state.ui.flow.displayLarge
+  }), {
+    displayLarge,
+    updateEdit
+  })(ContentView);
+
+  // src/js/components/ContentView/ContentViewOptions.jsx
+  var import_react29 = __toModule(require_react());
+  var import_prop_types12 = __toModule(require_prop_types2());
+
   // src/js/components/ContentView/ViewSelector.tsx
-  var ViewSelector_default = import_react27.default.memo(/* @__PURE__ */ __name(function ViewSelector() {
-    const dispatch = useAppDispatch(), contentViews = useAppSelector((state) => state.settings.contentViews || []), activeView = useAppSelector((state) => state.ui.flow.contentView);
-    let inner = /* @__PURE__ */ import_react27.default.createElement("span", null, /* @__PURE__ */ import_react27.default.createElement("b", null, "View:"), " ", activeView.toLowerCase(), " ", /* @__PURE__ */ import_react27.default.createElement("span", {
+  var import_react28 = __toModule(require_react());
+  var ViewSelector_default = import_react28.default.memo(/* @__PURE__ */ __name(function ViewSelector() {
+    const dispatch = useAppDispatch(), contentViews = useAppSelector((state) => state.conf.contentViews || []), activeView = useAppSelector((state) => state.ui.flow.contentView);
+    let inner = /* @__PURE__ */ import_react28.default.createElement("span", null, /* @__PURE__ */ import_react28.default.createElement("b", null, "View:"), " ", activeView.toLowerCase(), " ", /* @__PURE__ */ import_react28.default.createElement("span", {
       className: "caret"
     }));
-    return /* @__PURE__ */ import_react27.default.createElement(Dropdown_default, {
+    return /* @__PURE__ */ import_react28.default.createElement(Dropdown_default, {
       text: inner,
       className: "btn btn-default btn-xs pull-left",
       options: { placement: "top-start" }
-    }, contentViews.map((name) => /* @__PURE__ */ import_react27.default.createElement(MenuItem, {
+    }, contentViews.map((name) => /* @__PURE__ */ import_react28.default.createElement(MenuItem, {
       key: name,
       onClick: () => dispatch(setContentView(name))
     }, name.toLowerCase().replace("_", " "))));
@@ -48942,20 +47683,20 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/components/ContentView/ContentViewOptions.jsx
   ContentViewOptions.propTypes = {
-    flow: import_prop_types15.default.object.isRequired,
-    message: import_prop_types15.default.object.isRequired
+    flow: import_prop_types12.default.object.isRequired,
+    message: import_prop_types12.default.object.isRequired
   };
   function ContentViewOptions({ flow, message, uploadContent: uploadContent2, readonly, contentViewDescription }) {
-    return /* @__PURE__ */ import_react28.default.createElement("div", {
+    return /* @__PURE__ */ import_react29.default.createElement("div", {
       className: "view-options"
-    }, readonly ? /* @__PURE__ */ import_react28.default.createElement(ViewSelector_default, {
+    }, readonly ? /* @__PURE__ */ import_react29.default.createElement(ViewSelector_default, {
       message
-    }) : /* @__PURE__ */ import_react28.default.createElement("span", null, /* @__PURE__ */ import_react28.default.createElement("b", null, "View:"), " edit"), "\xA0", /* @__PURE__ */ import_react28.default.createElement(DownloadContentButton, {
+    }) : /* @__PURE__ */ import_react29.default.createElement("span", null, /* @__PURE__ */ import_react29.default.createElement("b", null, "View:"), " edit"), "\xA0", /* @__PURE__ */ import_react29.default.createElement(DownloadContentButton, {
       flow,
       message
-    }), "\xA0", !readonly && /* @__PURE__ */ import_react28.default.createElement(UploadContentButton, {
+    }), "\xA0", !readonly && /* @__PURE__ */ import_react29.default.createElement(UploadContentButton, {
       uploadContent: uploadContent2
-    }), "\xA0", readonly && /* @__PURE__ */ import_react28.default.createElement("span", null, contentViewDescription));
+    }), "\xA0", readonly && /* @__PURE__ */ import_react29.default.createElement("span", null, contentViewDescription));
   }
   __name(ContentViewOptions, "ContentViewOptions");
   var ContentViewOptions_default = connect_default((state) => ({
@@ -48964,15 +47705,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }))(ContentViewOptions);
 
   // src/js/components/ValueEditor/ValidateEditor.jsx
-  var import_react30 = __toModule(require_react());
-  var import_prop_types17 = __toModule(require_prop_types());
+  var import_react31 = __toModule(require_react());
+  var import_prop_types14 = __toModule(require_prop_types2());
 
   // src/js/components/ValueEditor/ValueEditor.jsx
-  var import_react29 = __toModule(require_react());
-  var import_prop_types16 = __toModule(require_prop_types());
-  var import_lodash6 = __toModule(require_lodash());
-  var import_classnames8 = __toModule(require_classnames());
-  var ValueEditor = class extends import_react29.Component {
+  var import_react30 = __toModule(require_react());
+  var import_prop_types13 = __toModule(require_prop_types2());
+  var import_lodash7 = __toModule(require_lodash());
+  var import_classnames9 = __toModule(require_classnames());
+  var ValueEditor = class extends import_react30.Component {
     constructor(props) {
       super(props);
       this.state = { editable: false };
@@ -48991,17 +47732,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       this.input.blur();
     }
     reset() {
-      this.input.innerHTML = import_lodash6.default.escape(this.props.content);
+      this.input.innerHTML = import_lodash7.default.escape(this.props.content);
     }
     render() {
-      let className = (0, import_classnames8.default)("inline-input", {
+      let className2 = (0, import_classnames9.default)("inline-input", {
         "readonly": this.props.readonly,
         "editable": !this.props.readonly
       }, this.props.className);
-      return /* @__PURE__ */ import_react29.default.createElement("div", {
+      return /* @__PURE__ */ import_react30.default.createElement("div", {
         ref: (input) => this.input = input,
         tabIndex: this.props.readonly ? void 0 : 0,
-        className,
+        className: className2,
         contentEditable: this.state.editable || void 0,
         onFocus: this.onFocus,
         onMouseDown: this.onMouseDown,
@@ -49010,7 +47751,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         onKeyDown: this.onKeyDown,
         onInput: this.onInput,
         onPaste: this.onPaste,
-        dangerouslySetInnerHTML: { __html: import_lodash6.default.escape(this.props.content) }
+        dangerouslySetInnerHTML: { __html: import_lodash7.default.escape(this.props.content) }
       });
     }
     onPaste(e) {
@@ -49093,12 +47834,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   };
   __name(ValueEditor, "ValueEditor");
   __publicField(ValueEditor, "propTypes", {
-    content: import_prop_types16.default.string.isRequired,
-    readonly: import_prop_types16.default.bool,
-    onDone: import_prop_types16.default.func.isRequired,
-    className: import_prop_types16.default.string,
-    onInput: import_prop_types16.default.func,
-    onKeyDown: import_prop_types16.default.func
+    content: import_prop_types13.default.string.isRequired,
+    readonly: import_prop_types13.default.bool,
+    onDone: import_prop_types13.default.func.isRequired,
+    className: import_prop_types13.default.string,
+    onInput: import_prop_types13.default.func,
+    onKeyDown: import_prop_types13.default.func
   });
   __publicField(ValueEditor, "defaultProps", {
     onInput: () => {
@@ -49108,8 +47849,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   });
 
   // src/js/components/ValueEditor/ValidateEditor.jsx
-  var import_classnames9 = __toModule(require_classnames());
-  var ValidateEditor = class extends import_react30.Component {
+  var import_classnames10 = __toModule(require_classnames());
+  var ValidateEditor = class extends import_react31.Component {
     constructor(props) {
       super(props);
       this.state = { valid: props.isValid(props.content) };
@@ -49130,48 +47871,48 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       this.props.onDone(content);
     }
     render() {
-      let className = (0, import_classnames9.default)(this.props.className, {
+      let className2 = (0, import_classnames10.default)(this.props.className, {
         "has-success": this.state.valid,
         "has-warning": !this.state.valid
       });
-      return /* @__PURE__ */ import_react30.default.createElement(ValueEditor, {
+      return /* @__PURE__ */ import_react31.default.createElement(ValueEditor, {
         content: this.props.content,
         readonly: this.props.readonly,
         onDone: this.onDone,
         onInput: this.onInput,
-        className,
+        className: className2,
         ref: (e) => this.editor = e
       });
     }
   };
   __name(ValidateEditor, "ValidateEditor");
   __publicField(ValidateEditor, "propTypes", {
-    content: import_prop_types17.default.string.isRequired,
-    readonly: import_prop_types17.default.bool,
-    onDone: import_prop_types17.default.func.isRequired,
-    className: import_prop_types17.default.string,
-    isValid: import_prop_types17.default.func.isRequired
+    content: import_prop_types14.default.string.isRequired,
+    readonly: import_prop_types14.default.bool,
+    onDone: import_prop_types14.default.func.isRequired,
+    className: import_prop_types14.default.string,
+    isValid: import_prop_types14.default.func.isRequired
   });
 
   // src/js/components/common/HideInStatic.jsx
-  var import_react31 = __toModule(require_react());
+  var import_react32 = __toModule(require_react());
   function HideInStatic({ children }) {
-    return window.MITMWEB_STATIC ? null : [children];
+    return window.MITMWEB_CONF && window.MITMWEB_CONF.static ? null : [children];
   }
   __name(HideInStatic, "HideInStatic");
 
   // src/js/components/FlowView/Headers.jsx
-  var import_react32 = __toModule(require_react());
-  var import_prop_types18 = __toModule(require_prop_types());
+  var import_react33 = __toModule(require_react());
+  var import_prop_types15 = __toModule(require_prop_types2());
   var import_react_dom6 = __toModule(require_react_dom());
-  var HeaderEditor = class extends import_react32.Component {
+  var HeaderEditor = class extends import_react33.Component {
     constructor(props) {
       super(props);
       this.onKeyDown = this.onKeyDown.bind(this);
     }
     render() {
       let { onTab, ...props } = this.props;
-      return /* @__PURE__ */ import_react32.default.createElement(ValueEditor, {
+      return /* @__PURE__ */ import_react33.default.createElement(ValueEditor, {
         ...props,
         onKeyDown: this.onKeyDown
       });
@@ -49197,7 +47938,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   };
   __name(HeaderEditor, "HeaderEditor");
-  var Headers = class extends import_react32.Component {
+  var Headers = class extends import_react33.Component {
     onChange(row, col, val) {
       const nextHeaders = _.cloneDeep(this.props.message[this.props.type]);
       nextHeaders[row][col] = val;
@@ -49251,24 +47992,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       const { message, readonly } = this.props;
       if (message[this.props.type]) {
-        return /* @__PURE__ */ import_react32.default.createElement("table", {
+        return /* @__PURE__ */ import_react33.default.createElement("table", {
           className: "header-table"
-        }, /* @__PURE__ */ import_react32.default.createElement("tbody", null, message[this.props.type].map((header, i) => /* @__PURE__ */ import_react32.default.createElement("tr", {
+        }, /* @__PURE__ */ import_react33.default.createElement("tbody", null, message[this.props.type].map((header, i) => /* @__PURE__ */ import_react33.default.createElement("tr", {
           key: i
-        }, /* @__PURE__ */ import_react32.default.createElement("td", {
+        }, /* @__PURE__ */ import_react33.default.createElement("td", {
           className: "header-name"
-        }, /* @__PURE__ */ import_react32.default.createElement(HeaderEditor, {
+        }, /* @__PURE__ */ import_react33.default.createElement(HeaderEditor, {
           ref: `${i}-key`,
           content: header[0],
           readonly,
           onDone: (val) => this.onChange(i, 0, val),
           onRemove: (event) => this.onRemove(i, 0, event),
           onTab: (event) => this.onTab(i, 0, event)
-        }), /* @__PURE__ */ import_react32.default.createElement("span", {
+        }), /* @__PURE__ */ import_react33.default.createElement("span", {
           className: "header-colon"
-        }, ":")), /* @__PURE__ */ import_react32.default.createElement("td", {
+        }, ":")), /* @__PURE__ */ import_react33.default.createElement("td", {
           className: "header-value"
-        }, /* @__PURE__ */ import_react32.default.createElement(HeaderEditor, {
+        }, /* @__PURE__ */ import_react33.default.createElement(HeaderEditor, {
           ref: `${i}-value`,
           content: header[1],
           readonly,
@@ -49277,45 +48018,45 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           onTab: (event) => this.onTab(i, 1, event)
         }))))));
       } else {
-        return /* @__PURE__ */ import_react32.default.createElement("table", {
+        return /* @__PURE__ */ import_react33.default.createElement("table", {
           className: "header-table"
-        }, /* @__PURE__ */ import_react32.default.createElement("tbody", null));
+        }, /* @__PURE__ */ import_react33.default.createElement("tbody", null));
       }
     }
   };
   __name(Headers, "Headers");
   __publicField(Headers, "propTypes", {
-    onChange: import_prop_types18.default.func.isRequired,
-    message: import_prop_types18.default.object.isRequired,
-    type: import_prop_types18.default.string.isRequired
+    onChange: import_prop_types15.default.func.isRequired,
+    message: import_prop_types15.default.object.isRequired,
+    type: import_prop_types15.default.string.isRequired
   });
   __publicField(Headers, "defaultProps", {
     type: "headers"
   });
 
   // src/js/components/FlowView/ToggleEdit.jsx
-  var import_react33 = __toModule(require_react());
-  var import_prop_types19 = __toModule(require_prop_types());
+  var import_react34 = __toModule(require_react());
+  var import_prop_types16 = __toModule(require_prop_types2());
   ToggleEdit.propTypes = {
-    isEdit: import_prop_types19.default.bool.isRequired,
-    flow: import_prop_types19.default.object.isRequired,
-    startEdit: import_prop_types19.default.func.isRequired,
-    stopEdit: import_prop_types19.default.func.isRequired
+    isEdit: import_prop_types16.default.bool.isRequired,
+    flow: import_prop_types16.default.object.isRequired,
+    startEdit: import_prop_types16.default.func.isRequired,
+    stopEdit: import_prop_types16.default.func.isRequired
   };
   function ToggleEdit({ isEdit, startEdit: startEdit2, stopEdit: stopEdit2, flow, modifiedFlow }) {
-    return /* @__PURE__ */ import_react33.default.createElement("div", {
+    return /* @__PURE__ */ import_react34.default.createElement("div", {
       className: "edit-flow-container"
-    }, isEdit ? /* @__PURE__ */ import_react33.default.createElement("a", {
+    }, isEdit ? /* @__PURE__ */ import_react34.default.createElement("a", {
       className: "edit-flow",
       title: "Finish Edit",
       onClick: () => stopEdit2(flow, modifiedFlow)
-    }, /* @__PURE__ */ import_react33.default.createElement("i", {
+    }, /* @__PURE__ */ import_react34.default.createElement("i", {
       className: "fa fa-check"
-    })) : /* @__PURE__ */ import_react33.default.createElement("a", {
+    })) : /* @__PURE__ */ import_react34.default.createElement("a", {
       className: "edit-flow",
       title: "Edit Flow",
       onClick: () => startEdit2(flow)
-    }, /* @__PURE__ */ import_react33.default.createElement("i", {
+    }, /* @__PURE__ */ import_react34.default.createElement("i", {
       className: "fa fa-pencil"
     })));
   }
@@ -49331,18 +48072,18 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/components/FlowView/Messages.jsx
   function RequestLine({ flow, readonly, updateFlow }) {
-    return /* @__PURE__ */ import_react34.default.createElement("div", {
+    return /* @__PURE__ */ import_react35.default.createElement("div", {
       className: "first-line request-line"
-    }, /* @__PURE__ */ import_react34.default.createElement("div", null, /* @__PURE__ */ import_react34.default.createElement(ValueEditor, {
+    }, /* @__PURE__ */ import_react35.default.createElement("div", null, /* @__PURE__ */ import_react35.default.createElement(ValueEditor, {
       content: flow.request.method,
       readonly,
       onDone: (method) => updateFlow({ request: { method } })
-    }), "\xA0", /* @__PURE__ */ import_react34.default.createElement(ValidateEditor, {
+    }), "\xA0", /* @__PURE__ */ import_react35.default.createElement(ValidateEditor, {
       content: RequestUtils.pretty_url(flow.request),
       readonly,
       onDone: (url) => updateFlow({ request: { path: "", ...parseUrl(url) } }),
       isValid: (url) => !!parseUrl(url).host
-    }), "\xA0", /* @__PURE__ */ import_react34.default.createElement(ValidateEditor, {
+    }), "\xA0", /* @__PURE__ */ import_react35.default.createElement(ValidateEditor, {
       content: flow.request.http_version,
       readonly,
       onDone: (http_version) => updateFlow({ request: { http_version } }),
@@ -49351,19 +48092,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(RequestLine, "RequestLine");
   function ResponseLine({ flow, readonly, updateFlow }) {
-    return /* @__PURE__ */ import_react34.default.createElement("div", {
+    return /* @__PURE__ */ import_react35.default.createElement("div", {
       className: "first-line response-line"
-    }, /* @__PURE__ */ import_react34.default.createElement(ValidateEditor, {
+    }, /* @__PURE__ */ import_react35.default.createElement(ValidateEditor, {
       content: flow.response.http_version,
       readonly,
       onDone: (nextVer) => updateFlow({ response: { http_version: nextVer } }),
       isValid: isValidHttpVersion
-    }), "\xA0", /* @__PURE__ */ import_react34.default.createElement(ValidateEditor, {
+    }), "\xA0", /* @__PURE__ */ import_react35.default.createElement(ValidateEditor, {
       content: flow.response.status_code + "",
       readonly,
       onDone: (code) => updateFlow({ response: { code: parseInt(code) } }),
       isValid: (code) => /^\d+$/.test(code)
-    }), "\xA0", /* @__PURE__ */ import_react34.default.createElement(ValueEditor, {
+    }), "\xA0", /* @__PURE__ */ import_react35.default.createElement(ValueEditor, {
       content: flow.response.reason,
       readonly,
       onDone: (msg) => updateFlow({ response: { msg } })
@@ -49377,31 +48118,31 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     updateFlow: updateEdit,
     uploadContent
   });
-  var Request = class extends import_react34.Component {
+  var Request = class extends import_react35.Component {
     render() {
       const { flow, isEdit, updateFlow, uploadContent: uploadContent2 } = this.props;
       let noContent = !isEdit && (flow.request.contentLength == 0 || flow.request.contentLength == null);
-      return /* @__PURE__ */ import_react34.default.createElement("section", {
+      return /* @__PURE__ */ import_react35.default.createElement("section", {
         className: "request"
-      }, /* @__PURE__ */ import_react34.default.createElement("article", null, /* @__PURE__ */ import_react34.default.createElement(ToggleEdit_default, null), /* @__PURE__ */ import_react34.default.createElement(RequestLine, {
+      }, /* @__PURE__ */ import_react35.default.createElement("article", null, /* @__PURE__ */ import_react35.default.createElement(ToggleEdit_default, null), /* @__PURE__ */ import_react35.default.createElement(RequestLine, {
         flow,
         readonly: !isEdit,
         updateFlow
-      }), /* @__PURE__ */ import_react34.default.createElement(Headers, {
+      }), /* @__PURE__ */ import_react35.default.createElement(Headers, {
         message: flow.request,
         readonly: !isEdit,
         onChange: (headers) => updateFlow({ request: { headers } })
-      }), /* @__PURE__ */ import_react34.default.createElement("hr", null), /* @__PURE__ */ import_react34.default.createElement(ContentView_default, {
+      }), /* @__PURE__ */ import_react35.default.createElement("hr", null), /* @__PURE__ */ import_react35.default.createElement(ContentView_default, {
         readonly: !isEdit,
         flow,
         onContentChange: (content) => updateFlow({ request: { content } }),
         message: flow.request
-      }), /* @__PURE__ */ import_react34.default.createElement("hr", null), /* @__PURE__ */ import_react34.default.createElement(Headers, {
+      }), /* @__PURE__ */ import_react35.default.createElement("hr", null), /* @__PURE__ */ import_react35.default.createElement(Headers, {
         message: flow.request,
         readonly: !isEdit,
         onChange: (trailers) => updateFlow({ request: { trailers } }),
         type: "trailers"
-      })), /* @__PURE__ */ import_react34.default.createElement(HideInStatic, null, !noContent && /* @__PURE__ */ import_react34.default.createElement("footer", null, /* @__PURE__ */ import_react34.default.createElement(ContentViewOptions_default, {
+      })), /* @__PURE__ */ import_react35.default.createElement(HideInStatic, null, !noContent && /* @__PURE__ */ import_react35.default.createElement("footer", null, /* @__PURE__ */ import_react35.default.createElement(ContentViewOptions_default, {
         flow,
         readonly: !isEdit,
         message: flow.request,
@@ -49411,31 +48152,31 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   };
   __name(Request, "Request");
   Request = Message(Request);
-  var Response = class extends import_react34.Component {
+  var Response = class extends import_react35.Component {
     render() {
       const { flow, isEdit, updateFlow, uploadContent: uploadContent2 } = this.props;
       let noContent = !isEdit && (flow.response.contentLength == 0 || flow.response.contentLength == null);
-      return /* @__PURE__ */ import_react34.default.createElement("section", {
+      return /* @__PURE__ */ import_react35.default.createElement("section", {
         className: "response"
-      }, /* @__PURE__ */ import_react34.default.createElement("article", null, /* @__PURE__ */ import_react34.default.createElement(ToggleEdit_default, null), /* @__PURE__ */ import_react34.default.createElement(ResponseLine, {
+      }, /* @__PURE__ */ import_react35.default.createElement("article", null, /* @__PURE__ */ import_react35.default.createElement(ToggleEdit_default, null), /* @__PURE__ */ import_react35.default.createElement(ResponseLine, {
         flow,
         readonly: !isEdit,
         updateFlow
-      }), /* @__PURE__ */ import_react34.default.createElement(Headers, {
+      }), /* @__PURE__ */ import_react35.default.createElement(Headers, {
         message: flow.response,
         readonly: !isEdit,
         onChange: (headers) => updateFlow({ response: { headers } })
-      }), /* @__PURE__ */ import_react34.default.createElement("hr", null), /* @__PURE__ */ import_react34.default.createElement(ContentView_default, {
+      }), /* @__PURE__ */ import_react35.default.createElement("hr", null), /* @__PURE__ */ import_react35.default.createElement(ContentView_default, {
         readonly: !isEdit,
         flow,
         onContentChange: (content) => updateFlow({ response: { content } }),
         message: flow.response
-      }), /* @__PURE__ */ import_react34.default.createElement("hr", null), /* @__PURE__ */ import_react34.default.createElement(Headers, {
+      }), /* @__PURE__ */ import_react35.default.createElement("hr", null), /* @__PURE__ */ import_react35.default.createElement(Headers, {
         message: flow.response,
         readonly: !isEdit,
         onChange: (trailers) => updateFlow({ response: { trailers } }),
         type: "trailers"
-      })), /* @__PURE__ */ import_react34.default.createElement(HideInStatic, null, !noContent && /* @__PURE__ */ import_react34.default.createElement("footer", null, /* @__PURE__ */ import_react34.default.createElement(ContentViewOptions_default, {
+      })), /* @__PURE__ */ import_react35.default.createElement(HideInStatic, null, !noContent && /* @__PURE__ */ import_react35.default.createElement("footer", null, /* @__PURE__ */ import_react35.default.createElement(ContentViewOptions_default, {
         flow,
         message: flow.response,
         uploadContent: (content) => uploadContent2(flow, content, "response"),
@@ -49446,64 +48187,64 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __name(Response, "Response");
   Response = Message(Response);
   ErrorView.propTypes = {
-    flow: import_prop_types20.default.object.isRequired
+    flow: import_prop_types17.default.object.isRequired
   };
   function ErrorView({ flow }) {
-    return /* @__PURE__ */ import_react34.default.createElement("section", {
+    return /* @__PURE__ */ import_react35.default.createElement("section", {
       className: "error"
-    }, /* @__PURE__ */ import_react34.default.createElement("div", {
+    }, /* @__PURE__ */ import_react35.default.createElement("div", {
       className: "alert alert-warning"
-    }, flow.error.msg, /* @__PURE__ */ import_react34.default.createElement("div", null, /* @__PURE__ */ import_react34.default.createElement("small", null, formatTimeStamp(flow.error.timestamp)))));
+    }, flow.error.msg, /* @__PURE__ */ import_react35.default.createElement("div", null, /* @__PURE__ */ import_react35.default.createElement("small", null, formatTimeStamp(flow.error.timestamp)))));
   }
   __name(ErrorView, "ErrorView");
 
   // src/js/components/FlowView/Details.jsx
-  var import_react35 = __toModule(require_react());
-  var import_lodash7 = __toModule(require_lodash());
+  var import_react36 = __toModule(require_react());
+  var import_lodash8 = __toModule(require_lodash());
   function TimeStamp({ t, deltaTo, title }) {
-    return t ? /* @__PURE__ */ import_react35.default.createElement("tr", null, /* @__PURE__ */ import_react35.default.createElement("td", null, title, ":"), /* @__PURE__ */ import_react35.default.createElement("td", null, formatTimeStamp(t), deltaTo && /* @__PURE__ */ import_react35.default.createElement("span", {
+    return t ? /* @__PURE__ */ import_react36.default.createElement("tr", null, /* @__PURE__ */ import_react36.default.createElement("td", null, title, ":"), /* @__PURE__ */ import_react36.default.createElement("td", null, formatTimeStamp(t), deltaTo && /* @__PURE__ */ import_react36.default.createElement("span", {
       className: "text-muted"
-    }, "(", formatTimeDelta(1e3 * (t - deltaTo)), ")"))) : /* @__PURE__ */ import_react35.default.createElement("tr", null);
+    }, "(", formatTimeDelta(1e3 * (t - deltaTo)), ")"))) : /* @__PURE__ */ import_react36.default.createElement("tr", null);
   }
   __name(TimeStamp, "TimeStamp");
   function ConnectionInfo({ conn }) {
-    return /* @__PURE__ */ import_react35.default.createElement("table", {
+    return /* @__PURE__ */ import_react36.default.createElement("table", {
       className: "connection-table"
-    }, /* @__PURE__ */ import_react35.default.createElement("tbody", null, /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("tbody", null, /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "address"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, "Address:"), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.address.join(":"))), conn.sni && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, "Address:"), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.address.join(":"))), conn.sni && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "sni"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, /* @__PURE__ */ import_react35.default.createElement("abbr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, /* @__PURE__ */ import_react36.default.createElement("abbr", {
       title: "TLS Server Name Indication"
-    }, "TLS SNI:")), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.sni)), conn.tls_version && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, "TLS SNI:")), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.sni)), conn.tls_version && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "tls_version"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, "TLS version:"), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.tls_version)), conn.cipher_name && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, "TLS version:"), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.tls_version)), conn.cipher_name && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "cipher_name"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, "cipher name:"), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.cipher_name)), conn.alpn_proto_negotiated && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, "cipher name:"), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.cipher_name)), conn.alpn_proto_negotiated && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "ALPN"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, /* @__PURE__ */ import_react35.default.createElement("abbr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, /* @__PURE__ */ import_react36.default.createElement("abbr", {
       title: "ALPN protocol negotiated"
-    }, "ALPN:")), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.alpn_proto_negotiated)), conn.ip_address && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, "ALPN:")), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.alpn_proto_negotiated)), conn.ip_address && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "ip_address"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, "Resolved address:"), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.ip_address.join(":"))), conn.source_address && /* @__PURE__ */ import_react35.default.createElement("tr", {
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, "Resolved address:"), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.ip_address.join(":"))), conn.source_address && /* @__PURE__ */ import_react36.default.createElement("tr", {
       key: "source_address"
-    }, /* @__PURE__ */ import_react35.default.createElement("td", null, "Source address:"), /* @__PURE__ */ import_react35.default.createElement("td", null, conn.source_address.join(":")))));
+    }, /* @__PURE__ */ import_react36.default.createElement("td", null, "Source address:"), /* @__PURE__ */ import_react36.default.createElement("td", null, conn.source_address.join(":")))));
   }
   __name(ConnectionInfo, "ConnectionInfo");
   function CertificateInfo({ flow }) {
-    return /* @__PURE__ */ import_react35.default.createElement("div", null, flow.client_conn.cert && [
-      /* @__PURE__ */ import_react35.default.createElement("h4", {
+    return /* @__PURE__ */ import_react36.default.createElement("div", null, flow.client_conn.cert && [
+      /* @__PURE__ */ import_react36.default.createElement("h4", {
         key: "name"
       }, "Client Certificate"),
-      /* @__PURE__ */ import_react35.default.createElement("pre", {
+      /* @__PURE__ */ import_react36.default.createElement("pre", {
         key: "value",
         style: { maxHeight: 100 }
       }, flow.client_conn.cert)
     ], flow.server_conn.cert && [
-      /* @__PURE__ */ import_react35.default.createElement("h4", {
+      /* @__PURE__ */ import_react36.default.createElement("h4", {
         key: "name"
       }, "Server Certificate"),
-      /* @__PURE__ */ import_react35.default.createElement("pre", {
+      /* @__PURE__ */ import_react36.default.createElement("pre", {
         key: "value",
         style: { maxHeight: 100 }
       }, flow.server_conn.cert)
@@ -49558,30 +48299,30 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         deltaTo: req.timestamp_start
       }
     ];
-    return /* @__PURE__ */ import_react35.default.createElement("div", null, /* @__PURE__ */ import_react35.default.createElement("h4", null, "Timing"), /* @__PURE__ */ import_react35.default.createElement("table", {
+    return /* @__PURE__ */ import_react36.default.createElement("div", null, /* @__PURE__ */ import_react36.default.createElement("h4", null, "Timing"), /* @__PURE__ */ import_react36.default.createElement("table", {
       className: "timing-table"
-    }, /* @__PURE__ */ import_react35.default.createElement("tbody", null, timestamps.filter((v) => v).sort((a, b) => a.t - b.t).map((item) => /* @__PURE__ */ import_react35.default.createElement(TimeStamp, {
+    }, /* @__PURE__ */ import_react36.default.createElement("tbody", null, timestamps.filter((v) => v).sort((a, b) => a.t - b.t).map((item) => /* @__PURE__ */ import_react36.default.createElement(TimeStamp, {
       key: item.title,
       ...item
     })))));
   }
   __name(Timing, "Timing");
   function Details({ flow }) {
-    return /* @__PURE__ */ import_react35.default.createElement("section", {
+    return /* @__PURE__ */ import_react36.default.createElement("section", {
       className: "detail"
-    }, /* @__PURE__ */ import_react35.default.createElement("h4", null, "Client Connection"), /* @__PURE__ */ import_react35.default.createElement(ConnectionInfo, {
+    }, /* @__PURE__ */ import_react36.default.createElement("h4", null, "Client Connection"), /* @__PURE__ */ import_react36.default.createElement(ConnectionInfo, {
       conn: flow.client_conn
     }), flow.server_conn.address && [
-      /* @__PURE__ */ import_react35.default.createElement("h4", {
+      /* @__PURE__ */ import_react36.default.createElement("h4", {
         key: "sc"
       }, "Server Connection"),
-      /* @__PURE__ */ import_react35.default.createElement(ConnectionInfo, {
+      /* @__PURE__ */ import_react36.default.createElement(ConnectionInfo, {
         key: "sc-ci",
         conn: flow.server_conn
       })
-    ], /* @__PURE__ */ import_react35.default.createElement(CertificateInfo, {
+    ], /* @__PURE__ */ import_react36.default.createElement(CertificateInfo, {
       flow
-    }), /* @__PURE__ */ import_react35.default.createElement(Timing, {
+    }), /* @__PURE__ */ import_react36.default.createElement(Timing, {
       flow
     }));
   }
@@ -49601,14 +48342,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         tabName = tabs[0];
       }
     }
-    const Tab = allTabs[import_lodash8.default.capitalize(tabName)];
-    return /* @__PURE__ */ import_react36.default.createElement("div", {
+    const Tab = allTabs[import_lodash9.default.capitalize(tabName)];
+    return /* @__PURE__ */ import_react37.default.createElement("div", {
       className: "flow-detail"
-    }, /* @__PURE__ */ import_react36.default.createElement(Nav, {
+    }, /* @__PURE__ */ import_react37.default.createElement(Nav, {
       tabs,
       active: tabName,
       onSelectTab: selectTab2
-    }), /* @__PURE__ */ import_react36.default.createElement(Tab, {
+    }), /* @__PURE__ */ import_react37.default.createElement(Tab, {
       flow
     }));
   }
@@ -49622,14 +48363,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/components/MainView.jsx
   MainView.propTypes = {
-    hasSelection: import_prop_types21.default.bool.isRequired
+    hasSelection: import_prop_types18.default.bool.isRequired
   };
   function MainView({ hasSelection }) {
-    return /* @__PURE__ */ import_react37.default.createElement("div", {
+    return /* @__PURE__ */ import_react38.default.createElement("div", {
       className: "main-view"
-    }, /* @__PURE__ */ import_react37.default.createElement(FlowTable_default, null), hasSelection && /* @__PURE__ */ import_react37.default.createElement(Splitter, {
+    }, /* @__PURE__ */ import_react38.default.createElement(FlowTable_default, null), hasSelection && /* @__PURE__ */ import_react38.default.createElement(Splitter, {
       key: "splitter"
-    }), hasSelection && /* @__PURE__ */ import_react37.default.createElement(FlowView_default, {
+    }), hasSelection && /* @__PURE__ */ import_react38.default.createElement(FlowView_default, {
       key: "flowDetails"
     }));
   }
@@ -49639,23 +48380,21 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }), {})(MainView);
 
   // src/js/components/Header.jsx
-  var import_react46 = __toModule(require_react());
-  var import_prop_types27 = __toModule(require_prop_types());
+  var import_react48 = __toModule(require_react());
+  var import_prop_types21 = __toModule(require_prop_types2());
+  var import_classnames12 = __toModule(require_classnames());
+
+  // src/js/components/Header/MainMenu.tsx
+  var import_react41 = __toModule(require_react());
+
+  // src/js/components/Header/FilterInput.tsx
+  var import_react40 = __toModule(require_react());
+  var import_react_dom7 = __toModule(require_react_dom());
   var import_classnames11 = __toModule(require_classnames());
 
-  // src/js/components/Header/MainMenu.jsx
-  var import_react40 = __toModule(require_react());
-
-  // src/js/components/Header/FilterInput.jsx
-  var import_react39 = __toModule(require_react());
-  var import_prop_types22 = __toModule(require_prop_types());
-  var import_react_dom7 = __toModule(require_react_dom());
-  var import_classnames10 = __toModule(require_classnames());
-  var import_filt3 = __toModule(require_filt());
-
   // src/js/components/Header/FilterDocs.jsx
-  var import_react38 = __toModule(require_react());
-  var _FilterDocs = class extends import_react38.Component {
+  var import_react39 = __toModule(require_react());
+  var _FilterDocs = class extends import_react39.Component {
     constructor(props, context) {
       super(props, context);
       this.state = { doc: _FilterDocs.doc };
@@ -49676,21 +48415,21 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     render() {
       const { doc } = this.state;
-      return !doc ? /* @__PURE__ */ import_react38.default.createElement("i", {
+      return !doc ? /* @__PURE__ */ import_react39.default.createElement("i", {
         className: "fa fa-spinner fa-spin"
-      }) : /* @__PURE__ */ import_react38.default.createElement("table", {
+      }) : /* @__PURE__ */ import_react39.default.createElement("table", {
         className: "table table-condensed"
-      }, /* @__PURE__ */ import_react38.default.createElement("tbody", null, doc.commands.map((cmd) => /* @__PURE__ */ import_react38.default.createElement("tr", {
+      }, /* @__PURE__ */ import_react39.default.createElement("tbody", null, doc.commands.map((cmd) => /* @__PURE__ */ import_react39.default.createElement("tr", {
         key: cmd[1],
         onClick: (e) => this.props.selectHandler(cmd[0].split(" ")[0] + " ")
-      }, /* @__PURE__ */ import_react38.default.createElement("td", null, cmd[0].replace(" ", "\xA0")), /* @__PURE__ */ import_react38.default.createElement("td", null, cmd[1]))), /* @__PURE__ */ import_react38.default.createElement("tr", {
+      }, /* @__PURE__ */ import_react39.default.createElement("td", null, cmd[0].replace(" ", "\xA0")), /* @__PURE__ */ import_react39.default.createElement("td", null, cmd[1]))), /* @__PURE__ */ import_react39.default.createElement("tr", {
         key: "docs-link"
-      }, /* @__PURE__ */ import_react38.default.createElement("td", {
+      }, /* @__PURE__ */ import_react39.default.createElement("td", {
         colSpan: "2"
-      }, /* @__PURE__ */ import_react38.default.createElement("a", {
+      }, /* @__PURE__ */ import_react39.default.createElement("a", {
         href: "https://mitmproxy.org/docs/latest/concepts-filters/",
         target: "_blank"
-      }, /* @__PURE__ */ import_react38.default.createElement("i", {
+      }, /* @__PURE__ */ import_react39.default.createElement("i", {
         className: "fa fa-external-link"
       }), "\xA0 mitmproxy docs")))));
     }
@@ -49700,8 +48439,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __publicField(FilterDocs, "xhr", null);
   __publicField(FilterDocs, "doc", null);
 
-  // src/js/components/Header/FilterInput.jsx
-  var FilterInput = class extends import_react39.Component {
+  // src/js/components/Header/FilterInput.tsx
+  var FilterInput = class extends import_react40.Component {
     constructor(props, context) {
       super(props, context);
       this.state = { value: this.props.value, focus: false, mousefocus: false };
@@ -49718,9 +48457,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     isValid(filt) {
       try {
-        const str = filt == null ? this.state.value : filt;
-        if (str) {
-          import_filt3.default.parse(str);
+        if (filt) {
+          filt_default.parse(filt);
         }
         return true;
       } catch (e) {
@@ -49729,12 +48467,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     getDesc() {
       if (!this.state.value) {
-        return /* @__PURE__ */ import_react39.default.createElement(FilterDocs, {
+        return /* @__PURE__ */ import_react40.default.createElement(FilterDocs, {
           selectHandler: this.selectFilter
         });
       }
       try {
-        return import_filt3.default.parse(this.state.value).desc;
+        return filt_default.parse(this.state.value).desc;
       } catch (e) {
         return "" + e;
       }
@@ -49778,14 +48516,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       const { type, color, placeholder } = this.props;
       const { value, focus, mousefocus } = this.state;
-      return /* @__PURE__ */ import_react39.default.createElement("div", {
-        className: (0, import_classnames10.default)("filter-input input-group", { "has-error": !this.isValid() })
-      }, /* @__PURE__ */ import_react39.default.createElement("span", {
+      return /* @__PURE__ */ import_react40.default.createElement("div", {
+        className: (0, import_classnames11.default)("filter-input input-group", { "has-error": !this.isValid(value) })
+      }, /* @__PURE__ */ import_react40.default.createElement("span", {
         className: "input-group-addon"
-      }, /* @__PURE__ */ import_react39.default.createElement("i", {
+      }, /* @__PURE__ */ import_react40.default.createElement("i", {
         className: "fa fa-fw fa-" + type,
         style: { color }
-      })), /* @__PURE__ */ import_react39.default.createElement("input", {
+      })), /* @__PURE__ */ import_react40.default.createElement("input", {
         type: "text",
         ref: "input",
         placeholder,
@@ -49795,133 +48533,127 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         onFocus: this.onFocus,
         onBlur: this.onBlur,
         onKeyDown: this.onKeyDown
-      }), (focus || mousefocus) && /* @__PURE__ */ import_react39.default.createElement("div", {
+      }), (focus || mousefocus) && /* @__PURE__ */ import_react40.default.createElement("div", {
         className: "popover bottom",
         onMouseEnter: this.onMouseEnter,
         onMouseLeave: this.onMouseLeave
-      }, /* @__PURE__ */ import_react39.default.createElement("div", {
+      }, /* @__PURE__ */ import_react40.default.createElement("div", {
         className: "arrow"
-      }), /* @__PURE__ */ import_react39.default.createElement("div", {
+      }), /* @__PURE__ */ import_react40.default.createElement("div", {
         className: "popover-content"
       }, this.getDesc())));
     }
   };
   __name(FilterInput, "FilterInput");
 
-  // src/js/components/Header/MainMenu.jsx
+  // src/js/components/Header/MainMenu.tsx
   MainMenu.title = "Start";
   function MainMenu() {
-    return /* @__PURE__ */ import_react40.default.createElement("div", {
+    return /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "main-menu"
-    }, /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react40.default.createElement(FlowFilterInput, null), /* @__PURE__ */ import_react40.default.createElement(HighlightInput, null)), /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, /* @__PURE__ */ import_react41.default.createElement(FlowFilterInput, null), /* @__PURE__ */ import_react41.default.createElement(HighlightInput, null)), /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-legend"
-    }, "Find")), /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, "Find")), /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react40.default.createElement(InterceptInput, null), /* @__PURE__ */ import_react40.default.createElement(ResumeAll, null)), /* @__PURE__ */ import_react40.default.createElement("div", {
+    }, /* @__PURE__ */ import_react41.default.createElement(InterceptInput, null), /* @__PURE__ */ import_react41.default.createElement(ResumeAll, null)), /* @__PURE__ */ import_react41.default.createElement("div", {
       className: "menu-legend"
     }, "Intercept")));
   }
   __name(MainMenu, "MainMenu");
-  function setIntercept(intercept) {
-    return update3({ intercept });
+  function InterceptInput() {
+    const dispatch = useAppDispatch(), value = useAppSelector((state) => state.options.intercept);
+    return /* @__PURE__ */ import_react41.default.createElement(FilterInput, {
+      value: value || "",
+      placeholder: "Intercept",
+      type: "pause",
+      color: "hsl(208, 56%, 53%)",
+      onChange: (val) => dispatch(update3("intercept", val))
+    });
   }
-  __name(setIntercept, "setIntercept");
-  var InterceptInput = connect_default((state) => ({
-    value: state.settings.intercept || "",
-    placeholder: "Intercept",
-    type: "pause",
-    color: "hsl(208, 56%, 53%)"
-  }), { onChange: setIntercept })(FilterInput);
-  var FlowFilterInput = connect_default((state) => ({
-    value: state.flows.filter || "",
-    placeholder: "Search",
-    type: "search",
-    color: "black"
-  }), { onChange: setFilter2 })(FilterInput);
-  var HighlightInput = connect_default((state) => ({
-    value: state.flows.highlight || "",
-    placeholder: "Highlight",
-    type: "tag",
-    color: "hsl(48, 100%, 50%)"
-  }), { onChange: setHighlight })(FilterInput);
-  function ResumeAll({ resumeAll: resumeAll2 }) {
-    return /* @__PURE__ */ import_react40.default.createElement(Button, {
+  __name(InterceptInput, "InterceptInput");
+  function FlowFilterInput() {
+    const value = useAppSelector((state) => state.flows.filter);
+    return /* @__PURE__ */ import_react41.default.createElement(FilterInput, {
+      value: value || "",
+      placeholder: "Search",
+      type: "search",
+      color: "black",
+      onChange: setFilter2
+    });
+  }
+  __name(FlowFilterInput, "FlowFilterInput");
+  function HighlightInput() {
+    const value = useAppSelector((state) => state.flows.highlight);
+    return /* @__PURE__ */ import_react41.default.createElement(FilterInput, {
+      value: value || "",
+      placeholder: "Highlight",
+      type: "tag",
+      color: "hsl(48, 100%, 50%)",
+      onChange: setHighlight
+    });
+  }
+  __name(HighlightInput, "HighlightInput");
+  function ResumeAll() {
+    const dispatch = useAppDispatch();
+    return /* @__PURE__ */ import_react41.default.createElement(Button, {
       className: "btn-sm",
       title: "[a]ccept all",
       icon: "fa-forward text-success",
-      onClick: () => resumeAll2()
+      onClick: () => dispatch(resumeAll())
     }, "Resume All");
   }
   __name(ResumeAll, "ResumeAll");
-  ResumeAll = connect_default(null, { resumeAll })(ResumeAll);
 
   // src/js/components/Header/OptionMenu.jsx
-  var import_react42 = __toModule(require_react());
+  var import_react44 = __toModule(require_react());
 
-  // src/js/components/Header/MenuToggle.jsx
-  var import_prop_types23 = __toModule(require_prop_types());
-  MenuToggle.propTypes = {
-    value: import_prop_types23.default.bool.isRequired,
-    onChange: import_prop_types23.default.func.isRequired,
-    children: import_prop_types23.default.node.isRequired
-  };
+  // src/js/components/Header/MenuToggle.tsx
+  var import_react42 = __toModule(require_react());
   function MenuToggle({ value, onChange, children }) {
-    return /* @__PURE__ */ React.createElement("div", {
+    return /* @__PURE__ */ import_react42.default.createElement("div", {
       className: "menu-entry"
-    }, /* @__PURE__ */ React.createElement("label", null, /* @__PURE__ */ React.createElement("input", {
+    }, /* @__PURE__ */ import_react42.default.createElement("label", null, /* @__PURE__ */ import_react42.default.createElement("input", {
       type: "checkbox",
       checked: value,
       onChange
     }), children));
   }
   __name(MenuToggle, "MenuToggle");
-  SettingsToggle.propTypes = {
-    setting: import_prop_types23.default.string.isRequired,
-    children: import_prop_types23.default.node.isRequired
-  };
-  function SettingsToggle({ setting, children, settings, updateSettings }) {
-    return /* @__PURE__ */ React.createElement(MenuToggle, {
-      value: settings[setting] || false,
-      onChange: () => updateSettings({ [setting]: !settings[setting] })
+  function OptionsToggle({ name, children }) {
+    const dispatch = useAppDispatch(), value = useAppSelector((state) => state.options[name]);
+    return /* @__PURE__ */ import_react42.default.createElement(MenuToggle, {
+      value: !!value,
+      onChange: () => dispatch(update3(name, !value))
     }, children);
   }
-  __name(SettingsToggle, "SettingsToggle");
-  SettingsToggle = connect_default((state) => ({
-    settings: state.settings
-  }), {
-    updateSettings: update3
-  })(SettingsToggle);
-  function EventlogToggle({ toggleVisibility: toggleVisibility2, eventLogVisible }) {
-    return /* @__PURE__ */ React.createElement(MenuToggle, {
-      value: eventLogVisible,
-      onChange: toggleVisibility2
+  __name(OptionsToggle, "OptionsToggle");
+  function EventlogToggle() {
+    const dispatch = useDispatch(), visible = useAppSelector((state) => state.eventLog.visible);
+    return /* @__PURE__ */ import_react42.default.createElement(MenuToggle, {
+      value: visible,
+      onChange: () => dispatch(toggleVisibility())
     }, "Display Event Log");
   }
   __name(EventlogToggle, "EventlogToggle");
-  EventlogToggle = connect_default((state) => ({
-    eventLogVisible: state.eventLog.visible
-  }), {
-    toggleVisibility
-  })(EventlogToggle);
 
   // src/js/components/common/DocsLink.jsx
-  var import_react41 = __toModule(require_react());
-  var import_prop_types24 = __toModule(require_prop_types());
+  var import_react43 = __toModule(require_react());
+  var import_prop_types19 = __toModule(require_prop_types2());
   DocsLink.propTypes = {
-    resource: import_prop_types24.default.string.isRequired
+    resource: import_prop_types19.default.string.isRequired
   };
   function DocsLink({ children, resource }) {
     let url = `https://docs.mitmproxy.org/stable/${resource}`;
-    return /* @__PURE__ */ import_react41.default.createElement("a", {
+    return /* @__PURE__ */ import_react43.default.createElement("a", {
       target: "_blank",
       href: url
-    }, children || /* @__PURE__ */ import_react41.default.createElement("i", {
+    }, children || /* @__PURE__ */ import_react43.default.createElement("i", {
       className: "fa fa-question-circle"
     }));
   }
@@ -49930,35 +48662,35 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   // src/js/components/Header/OptionMenu.jsx
   OptionMenu.title = "Options";
   function OptionMenu({ openOptions }) {
-    return /* @__PURE__ */ import_react42.default.createElement("div", null, /* @__PURE__ */ import_react42.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react42.default.createElement("div", {
+    return /* @__PURE__ */ import_react44.default.createElement("div", null, /* @__PURE__ */ import_react44.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react42.default.createElement(Button, {
+    }, /* @__PURE__ */ import_react44.default.createElement(Button, {
       title: "Open Options",
       icon: "fa-cogs text-primary",
       onClick: openOptions
-    }, "Edit Options ", /* @__PURE__ */ import_react42.default.createElement("sup", null, "alpha"))), /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, "Edit Options ", /* @__PURE__ */ import_react44.default.createElement("sup", null, "alpha"))), /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-legend"
-    }, "Options Editor")), /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, "Options Editor")), /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react42.default.createElement(SettingsToggle, {
-      setting: "anticache"
-    }, "Strip cache headers ", /* @__PURE__ */ import_react42.default.createElement(DocsLink, {
+    }, /* @__PURE__ */ import_react44.default.createElement(OptionsToggle, {
+      name: "anticache"
+    }, "Strip cache headers ", /* @__PURE__ */ import_react44.default.createElement(DocsLink, {
       resource: "overview-features/#anticache"
-    })), /* @__PURE__ */ import_react42.default.createElement(SettingsToggle, {
-      setting: "showhost"
-    }, "Use host header for display"), /* @__PURE__ */ import_react42.default.createElement(SettingsToggle, {
-      setting: "ssl_insecure"
-    }, "Don't verify server certificates")), /* @__PURE__ */ import_react42.default.createElement("div", {
+    })), /* @__PURE__ */ import_react44.default.createElement(OptionsToggle, {
+      name: "showhost"
+    }, "Use host header for display"), /* @__PURE__ */ import_react44.default.createElement(OptionsToggle, {
+      name: "ssl_insecure"
+    }, "Don't verify server certificates")), /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-legend"
-    }, "Quick Options"))), /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, "Quick Options"))), /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react42.default.createElement(EventlogToggle, null)), /* @__PURE__ */ import_react42.default.createElement("div", {
+    }, /* @__PURE__ */ import_react44.default.createElement(EventlogToggle, null)), /* @__PURE__ */ import_react44.default.createElement("div", {
       className: "menu-legend"
     }, "View Options")));
   }
@@ -49968,100 +48700,104 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   })(OptionMenu);
 
   // src/js/components/Header/FileMenu.tsx
-  var import_react43 = __toModule(require_react());
-  var FileMenu_default = import_react43.default.memo(/* @__PURE__ */ __name(function FileMenu() {
+  var import_react45 = __toModule(require_react());
+  var FileMenu_default = import_react45.default.memo(/* @__PURE__ */ __name(function FileMenu() {
     const dispatch = useDispatch();
-    return /* @__PURE__ */ import_react43.default.createElement(Dropdown_default, {
+    return /* @__PURE__ */ import_react45.default.createElement(Dropdown_default, {
       className: "pull-left special",
       text: "mitmproxy",
       options: { "placement": "bottom-start" }
-    }, /* @__PURE__ */ import_react43.default.createElement(MenuItem, {
+    }, /* @__PURE__ */ import_react45.default.createElement(MenuItem, {
       onClick: () => confirm("Delete all flows?") && dispatch(clear())
-    }, /* @__PURE__ */ import_react43.default.createElement("i", {
+    }, /* @__PURE__ */ import_react45.default.createElement("i", {
       className: "fa fa-fw fa-trash"
-    }), "\xA0Clear All"), /* @__PURE__ */ import_react43.default.createElement("li", null, /* @__PURE__ */ import_react43.default.createElement(FileChooser, {
+    }), "\xA0Clear All"), /* @__PURE__ */ import_react45.default.createElement("li", null, /* @__PURE__ */ import_react45.default.createElement(FileChooser_default, {
       icon: "fa-folder-open",
       text: "\xA0Open...",
-      onOpenFile: (file) => dispatch(upload(file))
-    })), /* @__PURE__ */ import_react43.default.createElement(MenuItem, {
+      onClick: (e) => e.stopPropagation(),
+      onOpenFile: (file) => {
+        dispatch(upload(file));
+        document.body.click();
+      }
+    })), /* @__PURE__ */ import_react45.default.createElement(MenuItem, {
       onClick: () => dispatch(download())
-    }, /* @__PURE__ */ import_react43.default.createElement("i", {
+    }, /* @__PURE__ */ import_react45.default.createElement("i", {
       className: "fa fa-fw fa-floppy-o"
-    }), "\xA0Save..."), /* @__PURE__ */ import_react43.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react43.default.createElement(Divider, null), /* @__PURE__ */ import_react43.default.createElement("li", null, /* @__PURE__ */ import_react43.default.createElement("a", {
+    }), "\xA0Save..."), /* @__PURE__ */ import_react45.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react45.default.createElement(Divider, null), /* @__PURE__ */ import_react45.default.createElement("li", null, /* @__PURE__ */ import_react45.default.createElement("a", {
       href: "http://mitm.it/",
       target: "_blank"
-    }, /* @__PURE__ */ import_react43.default.createElement("i", {
+    }, /* @__PURE__ */ import_react45.default.createElement("i", {
       className: "fa fa-fw fa-external-link"
     }), "\xA0Install Certificates..."))));
   }, "FileMenu"));
 
   // src/js/components/Header/FlowMenu.jsx
-  var import_react44 = __toModule(require_react());
-  var import_prop_types25 = __toModule(require_prop_types());
+  var import_react46 = __toModule(require_react());
+  var import_prop_types20 = __toModule(require_prop_types2());
   init_utils();
   FlowMenu.title = "Flow";
   FlowMenu.propTypes = {
-    flow: import_prop_types25.default.object,
-    resumeFlow: import_prop_types25.default.func.isRequired,
-    killFlow: import_prop_types25.default.func.isRequired,
-    replayFlow: import_prop_types25.default.func.isRequired,
-    duplicateFlow: import_prop_types25.default.func.isRequired,
-    removeFlow: import_prop_types25.default.func.isRequired,
-    revertFlow: import_prop_types25.default.func.isRequired
+    flow: import_prop_types20.default.object,
+    resumeFlow: import_prop_types20.default.func.isRequired,
+    killFlow: import_prop_types20.default.func.isRequired,
+    replayFlow: import_prop_types20.default.func.isRequired,
+    duplicateFlow: import_prop_types20.default.func.isRequired,
+    removeFlow: import_prop_types20.default.func.isRequired,
+    revertFlow: import_prop_types20.default.func.isRequired
   };
   function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
     if (!flow)
-      return /* @__PURE__ */ import_react44.default.createElement("div", null);
-    return /* @__PURE__ */ import_react44.default.createElement("div", {
+      return /* @__PURE__ */ import_react46.default.createElement("div", null);
+    return /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "flow-menu"
-    }, /* @__PURE__ */ import_react44.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, /* @__PURE__ */ import_react46.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, /* @__PURE__ */ import_react46.default.createElement(Button, {
       title: "[r]eplay flow",
       icon: "fa-repeat text-primary",
       onClick: () => replayFlow(flow)
-    }, "Replay"), /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, "Replay"), /* @__PURE__ */ import_react46.default.createElement(Button, {
       title: "[D]uplicate flow",
       icon: "fa-copy text-info",
       onClick: () => duplicateFlow(flow)
-    }, "Duplicate"), /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, "Duplicate"), /* @__PURE__ */ import_react46.default.createElement(Button, {
       disabled: !flow || !flow.modified,
       title: "revert changes to flow [V]",
       icon: "fa-history text-warning",
       onClick: () => revertFlow(flow)
-    }, "Revert"), /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, "Revert"), /* @__PURE__ */ import_react46.default.createElement(Button, {
       title: "[d]elete flow",
       icon: "fa-trash text-danger",
       onClick: () => removeFlow(flow)
-    }, "Delete")), /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, "Delete")), /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-legend"
-    }, "Flow Modification"))), /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, "Flow Modification"))), /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, /* @__PURE__ */ import_react46.default.createElement(Button, {
       title: "download",
       icon: "fa-download",
       onClick: () => window.location = MessageUtils.getContentURL(flow, flow.response)
-    }, "Download")), /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, "Download")), /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-legend"
-    }, "Export")), /* @__PURE__ */ import_react44.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, "Export")), /* @__PURE__ */ import_react46.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-group"
-    }, /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-content"
-    }, /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, /* @__PURE__ */ import_react46.default.createElement(Button, {
       disabled: !flow || !flow.intercepted,
       title: "[a]ccept intercepted flow",
       icon: "fa-play text-success",
       onClick: () => resumeFlow(flow)
-    }, "Resume"), /* @__PURE__ */ import_react44.default.createElement(Button, {
+    }, "Resume"), /* @__PURE__ */ import_react46.default.createElement(Button, {
       disabled: !flow || !flow.intercepted,
       title: "kill intercepted flow [x]",
       icon: "fa-times text-danger",
       onClick: () => killFlow(flow)
-    }, "Abort")), /* @__PURE__ */ import_react44.default.createElement("div", {
+    }, "Abort")), /* @__PURE__ */ import_react46.default.createElement("div", {
       className: "menu-legend"
     }, "Interception"))));
   }
@@ -50077,43 +48813,37 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     revertFlow: revert
   })(FlowMenu);
 
-  // src/js/components/Header/ConnectionIndicator.jsx
-  var import_react45 = __toModule(require_react());
-  var import_prop_types26 = __toModule(require_prop_types());
-  ConnectionIndicator.propTypes = {
-    state: import_prop_types26.default.symbol.isRequired,
-    message: import_prop_types26.default.string
-  };
-  function ConnectionIndicator({ state, message }) {
-    switch (state) {
+  // src/js/components/Header/ConnectionIndicator.tsx
+  var import_react47 = __toModule(require_react());
+  var ConnectionIndicator_default = import_react47.default.memo(/* @__PURE__ */ __name(function ConnectionIndicator() {
+    const connState = useAppSelector((state) => state.connection.state), message = useAppSelector((state) => state.connection.message);
+    switch (connState) {
       case ConnectionState.INIT:
-        return /* @__PURE__ */ import_react45.default.createElement("span", {
+        return /* @__PURE__ */ import_react47.default.createElement("span", {
           className: "connection-indicator init"
         }, "connecting\u2026");
       case ConnectionState.FETCHING:
-        return /* @__PURE__ */ import_react45.default.createElement("span", {
+        return /* @__PURE__ */ import_react47.default.createElement("span", {
           className: "connection-indicator fetching"
         }, "fetching data\u2026");
       case ConnectionState.ESTABLISHED:
-        return /* @__PURE__ */ import_react45.default.createElement("span", {
+        return /* @__PURE__ */ import_react47.default.createElement("span", {
           className: "connection-indicator established"
         }, "connected");
       case ConnectionState.ERROR:
-        return /* @__PURE__ */ import_react45.default.createElement("span", {
+        return /* @__PURE__ */ import_react47.default.createElement("span", {
           className: "connection-indicator error",
           title: message
         }, "connection lost");
       case ConnectionState.OFFLINE:
-        return /* @__PURE__ */ import_react45.default.createElement("span", {
+        return /* @__PURE__ */ import_react47.default.createElement("span", {
           className: "connection-indicator offline"
         }, "offline");
     }
-  }
-  __name(ConnectionIndicator, "ConnectionIndicator");
-  var ConnectionIndicator_default = connect_default((state) => state.connection)(ConnectionIndicator);
+  }, "ConnectionIndicator"));
 
   // src/js/components/Header.jsx
-  var _Header = class extends import_react46.Component {
+  var _Header = class extends import_react48.Component {
     handleClick(active, e) {
       e.preventDefault();
       this.props.setActiveMenu(active.title);
@@ -50124,14 +48854,14 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       if (selectedFlowId)
         entries.push(FlowMenu_default);
       const Active = _.find(entries, (e) => e.title == activeMenu) || MainMenu;
-      return /* @__PURE__ */ import_react46.default.createElement("header", null, /* @__PURE__ */ import_react46.default.createElement("nav", {
+      return /* @__PURE__ */ import_react48.default.createElement("header", null, /* @__PURE__ */ import_react48.default.createElement("nav", {
         className: "nav-tabs nav-tabs-lg"
-      }, /* @__PURE__ */ import_react46.default.createElement(FileMenu_default, null), entries.map((Entry) => /* @__PURE__ */ import_react46.default.createElement("a", {
+      }, /* @__PURE__ */ import_react48.default.createElement(FileMenu_default, null), entries.map((Entry) => /* @__PURE__ */ import_react48.default.createElement("a", {
         key: Entry.title,
         href: "#",
-        className: (0, import_classnames11.default)({ active: Entry === Active }),
+        className: (0, import_classnames12.default)({ active: Entry === Active }),
         onClick: (e) => this.handleClick(Entry, e)
-      }, Entry.title)), /* @__PURE__ */ import_react46.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react46.default.createElement(ConnectionIndicator_default, null))), /* @__PURE__ */ import_react46.default.createElement("div", null, /* @__PURE__ */ import_react46.default.createElement(Active, null)));
+      }, Entry.title)), /* @__PURE__ */ import_react48.default.createElement(HideInStatic, null, /* @__PURE__ */ import_react48.default.createElement(ConnectionIndicator_default, null))), /* @__PURE__ */ import_react48.default.createElement("div", null, /* @__PURE__ */ import_react48.default.createElement(Active, null)));
     }
   };
   var Header = _Header;
@@ -50145,33 +48875,33 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   })(Header);
 
   // src/js/components/EventLog.jsx
-  var import_react49 = __toModule(require_react());
-  var import_prop_types30 = __toModule(require_prop_types());
+  var import_react51 = __toModule(require_react());
+  var import_prop_types24 = __toModule(require_prop_types2());
 
   // src/js/components/common/ToggleButton.jsx
-  var import_react47 = __toModule(require_react());
-  var import_prop_types28 = __toModule(require_prop_types());
+  var import_react49 = __toModule(require_react());
+  var import_prop_types22 = __toModule(require_prop_types2());
   ToggleButton.propTypes = {
-    checked: import_prop_types28.default.bool.isRequired,
-    onToggle: import_prop_types28.default.func.isRequired,
-    text: import_prop_types28.default.string.isRequired
+    checked: import_prop_types22.default.bool.isRequired,
+    onToggle: import_prop_types22.default.func.isRequired,
+    text: import_prop_types22.default.string.isRequired
   };
   function ToggleButton({ checked, onToggle, text }) {
-    return /* @__PURE__ */ import_react47.default.createElement("div", {
+    return /* @__PURE__ */ import_react49.default.createElement("div", {
       className: "btn btn-toggle " + (checked ? "btn-primary" : "btn-default"),
       onClick: onToggle
-    }, /* @__PURE__ */ import_react47.default.createElement("i", {
+    }, /* @__PURE__ */ import_react49.default.createElement("i", {
       className: "fa fa-fw " + (checked ? "fa-check-square-o" : "fa-square-o")
     }), "\xA0", text);
   }
   __name(ToggleButton, "ToggleButton");
 
   // src/js/components/EventLog/EventList.jsx
-  var import_react48 = __toModule(require_react());
-  var import_prop_types29 = __toModule(require_prop_types());
+  var import_react50 = __toModule(require_react());
+  var import_prop_types23 = __toModule(require_prop_types2());
   var import_react_dom8 = __toModule(require_react_dom());
   var import_shallowequal2 = __toModule(require_shallowequal());
-  var EventLogList = class extends import_react48.Component {
+  var EventLogList = class extends import_react50.Component {
     constructor(props) {
       super(props);
       this.heights = {};
@@ -50213,24 +48943,24 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       const { vScroll } = this.state;
       const { events } = this.props;
-      return /* @__PURE__ */ import_react48.default.createElement("pre", {
+      return /* @__PURE__ */ import_react50.default.createElement("pre", {
         onScroll: this.onViewportUpdate
-      }, /* @__PURE__ */ import_react48.default.createElement("div", {
+      }, /* @__PURE__ */ import_react50.default.createElement("div", {
         style: { height: vScroll.paddingTop }
-      }), events.slice(vScroll.start, vScroll.end).map((event) => /* @__PURE__ */ import_react48.default.createElement("div", {
+      }), events.slice(vScroll.start, vScroll.end).map((event) => /* @__PURE__ */ import_react50.default.createElement("div", {
         key: event.id,
         ref: (node) => this.setHeight(event.id, node)
-      }, /* @__PURE__ */ import_react48.default.createElement(LogIcon, {
+      }, /* @__PURE__ */ import_react50.default.createElement(LogIcon, {
         event
-      }), event.message)), /* @__PURE__ */ import_react48.default.createElement("div", {
+      }), event.message)), /* @__PURE__ */ import_react50.default.createElement("div", {
         style: { height: vScroll.paddingBottom }
       }));
     }
   };
   __name(EventLogList, "EventLogList");
   __publicField(EventLogList, "propTypes", {
-    events: import_prop_types29.default.array.isRequired,
-    rowHeight: import_prop_types29.default.number
+    events: import_prop_types23.default.array.isRequired,
+    rowHeight: import_prop_types23.default.number
   });
   __publicField(EventLogList, "defaultProps", {
     rowHeight: 18
@@ -50242,7 +48972,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       warn: "exclamation-triangle",
       error: "ban"
     }[event.level] || "info";
-    return /* @__PURE__ */ import_react48.default.createElement("i", {
+    return /* @__PURE__ */ import_react50.default.createElement("i", {
       className: `fa fa-fw fa-${icon}`
     });
   }
@@ -50250,7 +48980,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var EventList_default = AutoScroll_default(EventLogList);
 
   // src/js/components/EventLog.jsx
-  var PureEventLog = class extends import_react49.Component {
+  var PureEventLog = class extends import_react51.Component {
     constructor(props, context) {
       super(props, context);
       this.state = { height: this.props.defaultHeight };
@@ -50276,33 +49006,33 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       const { height } = this.state;
       const { filters, events, toggleFilter: toggleFilter2, close } = this.props;
-      return /* @__PURE__ */ import_react49.default.createElement("div", {
+      return /* @__PURE__ */ import_react51.default.createElement("div", {
         className: "eventlog",
         style: { height }
-      }, /* @__PURE__ */ import_react49.default.createElement("div", {
+      }, /* @__PURE__ */ import_react51.default.createElement("div", {
         onMouseDown: this.onDragStart
-      }, "Eventlog", /* @__PURE__ */ import_react49.default.createElement("div", {
+      }, "Eventlog", /* @__PURE__ */ import_react51.default.createElement("div", {
         className: "pull-right"
-      }, ["debug", "info", "web", "warn", "error"].map((type) => /* @__PURE__ */ import_react49.default.createElement(ToggleButton, {
+      }, ["debug", "info", "web", "warn", "error"].map((type) => /* @__PURE__ */ import_react51.default.createElement(ToggleButton, {
         key: type,
         text: type,
         checked: filters[type],
         onToggle: () => toggleFilter2(type)
-      })), /* @__PURE__ */ import_react49.default.createElement("i", {
+      })), /* @__PURE__ */ import_react51.default.createElement("i", {
         onClick: close,
         className: "fa fa-close"
-      }))), /* @__PURE__ */ import_react49.default.createElement(EventList_default, {
+      }))), /* @__PURE__ */ import_react51.default.createElement(EventList_default, {
         events
       }));
     }
   };
   __name(PureEventLog, "PureEventLog");
   __publicField(PureEventLog, "propTypes", {
-    filters: import_prop_types30.default.object.isRequired,
-    events: import_prop_types30.default.array.isRequired,
-    toggleFilter: import_prop_types30.default.func.isRequired,
-    close: import_prop_types30.default.func.isRequired,
-    defaultHeight: import_prop_types30.default.number
+    filters: import_prop_types24.default.object.isRequired,
+    events: import_prop_types24.default.array.isRequired,
+    toggleFilter: import_prop_types24.default.func.isRequired,
+    close: import_prop_types24.default.func.isRequired,
+    defaultHeight: import_prop_types24.default.number
   });
   __publicField(PureEventLog, "defaultProps", {
     defaultHeight: 200
@@ -50315,18 +49045,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     toggleFilter
   })(PureEventLog);
 
-  // src/js/components/Footer.jsx
-  var import_react50 = __toModule(require_react());
-  var import_prop_types31 = __toModule(require_prop_types());
-  Footer.propTypes = {
-    settings: import_prop_types31.default.object.isRequired
-  };
-  function Footer({ settings }) {
+  // src/js/components/Footer.tsx
+  var import_react52 = __toModule(require_react());
+  function Footer() {
+    const version = useAppSelector((state) => state.conf.version);
     let {
       mode,
       intercept,
       showhost,
-      no_upstream_cert,
+      upstream_cert,
       rawtcp,
       http2,
       websocket,
@@ -50337,94 +49064,90 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       stream_large_bodies,
       listen_host,
       listen_port,
-      version,
       server
-    } = settings;
-    return /* @__PURE__ */ import_react50.default.createElement("footer", null, mode && mode !== "regular" && /* @__PURE__ */ import_react50.default.createElement("span", {
+    } = useAppSelector((state) => state.options);
+    return /* @__PURE__ */ import_react52.default.createElement("footer", null, mode && mode !== "regular" && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, mode, " mode"), intercept && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, mode, " mode"), intercept && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "Intercept: ", intercept), showhost && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "Intercept: ", intercept), showhost && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "showhost"), no_upstream_cert && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "showhost"), !upstream_cert && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "no-upstream-cert"), !rawtcp && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "no-upstream-cert"), !rawtcp && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "no-raw-tcp"), !http2 && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "no-raw-tcp"), !http2 && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "no-http2"), !websocket && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "no-http2"), !websocket && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "no-websocket"), anticache && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "no-websocket"), anticache && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "anticache"), anticomp && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "anticache"), anticomp && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "anticomp"), stickyauth && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "anticomp"), stickyauth && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "stickyauth: ", stickyauth), stickycookie && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "stickyauth: ", stickyauth), stickycookie && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "stickycookie: ", stickycookie), stream_large_bodies && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, "stickycookie: ", stickycookie), stream_large_bodies && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-success"
-    }, "stream: ", formatSize(stream_large_bodies)), /* @__PURE__ */ import_react50.default.createElement("div", {
+    }, "stream: ", formatSize(stream_large_bodies)), /* @__PURE__ */ import_react52.default.createElement("div", {
       className: "pull-right"
-    }, /* @__PURE__ */ import_react50.default.createElement(HideInStatic, null, server && /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, /* @__PURE__ */ import_react52.default.createElement(HideInStatic, null, server && /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-primary",
       title: "HTTP Proxy Server Address"
-    }, listen_host || "*", ":", listen_port)), /* @__PURE__ */ import_react50.default.createElement("span", {
+    }, listen_host || "*", ":", listen_port)), /* @__PURE__ */ import_react52.default.createElement("span", {
       className: "label label-info",
       title: "Mitmproxy Version"
-    }, "v", version)));
+    }, version)));
   }
   __name(Footer, "Footer");
-  var Footer_default = connect_default((state) => ({
-    settings: state.settings
-  }))(Footer);
 
   // src/js/components/Modal/Modal.jsx
-  var import_react55 = __toModule(require_react());
+  var import_react57 = __toModule(require_react());
 
   // src/js/components/Modal/ModalList.jsx
-  var import_react54 = __toModule(require_react());
+  var import_react56 = __toModule(require_react());
 
   // src/js/components/Modal/ModalLayout.jsx
-  var import_react51 = __toModule(require_react());
+  var import_react53 = __toModule(require_react());
   function ModalLayout({ children }) {
-    return /* @__PURE__ */ import_react51.default.createElement("div", null, /* @__PURE__ */ import_react51.default.createElement("div", {
+    return /* @__PURE__ */ import_react53.default.createElement("div", null, /* @__PURE__ */ import_react53.default.createElement("div", {
       className: "modal-backdrop fade in"
-    }), /* @__PURE__ */ import_react51.default.createElement("div", {
+    }), /* @__PURE__ */ import_react53.default.createElement("div", {
       className: "modal modal-visible",
       id: "optionsModal",
       tabIndex: "-1",
       role: "dialog",
       "aria-labelledby": "options"
-    }, /* @__PURE__ */ import_react51.default.createElement("div", {
+    }, /* @__PURE__ */ import_react53.default.createElement("div", {
       className: "modal-dialog modal-lg",
       role: "document"
-    }, /* @__PURE__ */ import_react51.default.createElement("div", {
+    }, /* @__PURE__ */ import_react53.default.createElement("div", {
       className: "modal-content"
     }, children))));
   }
   __name(ModalLayout, "ModalLayout");
 
   // src/js/components/Modal/OptionModal.jsx
-  var import_react53 = __toModule(require_react());
+  var import_react55 = __toModule(require_react());
 
   // src/js/components/Modal/Option.jsx
-  var import_react52 = __toModule(require_react());
-  var import_prop_types32 = __toModule(require_prop_types());
-  var import_classnames12 = __toModule(require_classnames());
+  var import_react54 = __toModule(require_react());
+  var import_prop_types25 = __toModule(require_prop_types2());
+  var import_classnames13 = __toModule(require_classnames());
   var stopPropagation = /* @__PURE__ */ __name((e) => {
     if (e.keyCode !== Key.ESC) {
       e.stopPropagation();
     }
   }, "stopPropagation");
   BooleanOption.propTypes = {
-    value: import_prop_types32.default.bool.isRequired,
-    onChange: import_prop_types32.default.func.isRequired
+    value: import_prop_types25.default.bool.isRequired,
+    onChange: import_prop_types25.default.func.isRequired
   };
   function BooleanOption({ value, onChange, ...props }) {
-    return /* @__PURE__ */ import_react52.default.createElement("div", {
+    return /* @__PURE__ */ import_react54.default.createElement("div", {
       className: "checkbox"
-    }, /* @__PURE__ */ import_react52.default.createElement("label", null, /* @__PURE__ */ import_react52.default.createElement("input", {
+    }, /* @__PURE__ */ import_react54.default.createElement("label", null, /* @__PURE__ */ import_react54.default.createElement("input", {
       type: "checkbox",
       checked: value,
       onChange: (e) => onChange(e.target.checked),
@@ -50433,11 +49156,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(BooleanOption, "BooleanOption");
   StringOption.propTypes = {
-    value: import_prop_types32.default.string.isRequired,
-    onChange: import_prop_types32.default.func.isRequired
+    value: import_prop_types25.default.string,
+    onChange: import_prop_types25.default.func.isRequired
   };
   function StringOption({ value, onChange, ...props }) {
-    return /* @__PURE__ */ import_react52.default.createElement("input", {
+    return /* @__PURE__ */ import_react54.default.createElement("input", {
       type: "text",
       value: value || "",
       onChange: (e) => onChange(e.target.value),
@@ -50447,7 +49170,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   __name(StringOption, "StringOption");
   function Optional(Component21) {
     return function({ onChange, ...props }) {
-      return /* @__PURE__ */ import_react52.default.createElement(Component21, {
+      return /* @__PURE__ */ import_react54.default.createElement(Component21, {
         onChange: (x) => onChange(x ? x : null),
         ...props
       });
@@ -50455,11 +49178,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(Optional, "Optional");
   NumberOption.propTypes = {
-    value: import_prop_types32.default.number.isRequired,
-    onChange: import_prop_types32.default.func.isRequired
+    value: import_prop_types25.default.number.isRequired,
+    onChange: import_prop_types25.default.func.isRequired
   };
   function NumberOption({ value, onChange, ...props }) {
-    return /* @__PURE__ */ import_react52.default.createElement("input", {
+    return /* @__PURE__ */ import_react54.default.createElement("input", {
       type: "number",
       value,
       onChange: (e) => onChange(parseInt(e.target.value)),
@@ -50468,27 +49191,27 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(NumberOption, "NumberOption");
   ChoicesOption.propTypes = {
-    value: import_prop_types32.default.string.isRequired,
-    onChange: import_prop_types32.default.func.isRequired
+    value: import_prop_types25.default.string.isRequired,
+    onChange: import_prop_types25.default.func.isRequired
   };
   function ChoicesOption({ value, onChange, choices, ...props }) {
-    return /* @__PURE__ */ import_react52.default.createElement("select", {
+    return /* @__PURE__ */ import_react54.default.createElement("select", {
       onChange: (e) => onChange(e.target.value),
       value,
       ...props
-    }, choices.map((choice) => /* @__PURE__ */ import_react52.default.createElement("option", {
+    }, choices.map((choice) => /* @__PURE__ */ import_react54.default.createElement("option", {
       key: choice,
       value: choice
     }, choice)));
   }
   __name(ChoicesOption, "ChoicesOption");
   StringSequenceOption.propTypes = {
-    value: import_prop_types32.default.arrayOf(import_prop_types32.default.string).isRequired,
-    onChange: import_prop_types32.default.func.isRequired
+    value: import_prop_types25.default.arrayOf(import_prop_types25.default.string).isRequired,
+    onChange: import_prop_types25.default.func.isRequired
   };
   function StringSequenceOption({ value, onChange, ...props }) {
     const height = Math.max(value.length, 1);
-    return /* @__PURE__ */ import_react52.default.createElement("textarea", {
+    return /* @__PURE__ */ import_react54.default.createElement("textarea", {
       rows: height,
       value: value.join("\n"),
       onChange: (e) => onChange(e.target.value.split("\n")),
@@ -50510,13 +49233,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       props.choices = choices;
     } else {
       Opt = Options[type];
+      if (!Opt)
+        throw `unknown option type ${type}`;
     }
     if (Opt !== BooleanOption) {
       props.className = "form-control";
     }
-    return /* @__PURE__ */ import_react52.default.createElement("div", {
-      className: (0, import_classnames12.default)({ "has-error": error })
-    }, /* @__PURE__ */ import_react52.default.createElement(Opt, {
+    return /* @__PURE__ */ import_react54.default.createElement("div", {
+      className: (0, import_classnames13.default)({ "has-error": error })
+    }, /* @__PURE__ */ import_react54.default.createElement(Opt, {
       name,
       value,
       onChange,
@@ -50526,27 +49251,27 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   __name(PureOption, "PureOption");
   var Option_default = connect_default((state, { name }) => ({
-    ...state.options[name],
+    ...state.options_meta[name],
     ...state.ui.optionsEditor[name]
   }), (dispatch, { name }) => ({
-    onChange: (value) => dispatch(update4(name, value))
+    onChange: (value) => dispatch(update3(name, value))
   }))(PureOption);
 
   // src/js/components/Modal/OptionModal.jsx
-  var import_lodash9 = __toModule(require_lodash());
+  var import_lodash10 = __toModule(require_lodash());
   function PureOptionHelp({ help }) {
-    return /* @__PURE__ */ import_react53.default.createElement("div", {
+    return /* @__PURE__ */ import_react55.default.createElement("div", {
       className: "help-block small"
     }, help);
   }
   __name(PureOptionHelp, "PureOptionHelp");
   var OptionHelp = connect_default((state, { name }) => ({
-    help: state.options[name].help
+    help: state.options_meta[name].help
   }))(PureOptionHelp);
   function PureOptionError({ error }) {
     if (!error)
       return null;
-    return /* @__PURE__ */ import_react53.default.createElement("div", {
+    return /* @__PURE__ */ import_react55.default.createElement("div", {
       className: "small text-danger"
     }, error);
   }
@@ -50561,7 +49286,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       if (typeof defaultVal === "boolean") {
         defaultVal = defaultVal ? "true" : "false";
       } else if (Array.isArray(defaultVal)) {
-        if (import_lodash9.default.isEmpty(import_lodash9.default.compact(value)) && import_lodash9.default.isEmpty(defaultVal)) {
+        if (import_lodash10.default.isEmpty(import_lodash10.default.compact(value)) && import_lodash10.default.isEmpty(defaultVal)) {
           return null;
         }
         defaultVal = "[ ]";
@@ -50570,17 +49295,17 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       } else if (defaultVal === null) {
         defaultVal = "null";
       }
-      return /* @__PURE__ */ import_react53.default.createElement("div", {
+      return /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "small"
-      }, "Default: ", /* @__PURE__ */ import_react53.default.createElement("strong", null, " ", defaultVal, " "), " ");
+      }, "Default: ", /* @__PURE__ */ import_react55.default.createElement("strong", null, " ", defaultVal, " "), " ");
     }
   }
   __name(PureOptionDefault, "PureOptionDefault");
   var OptionDefault = connect_default((state, { name }) => ({
-    value: state.options[name].value,
-    defaultVal: state.options[name].default
+    value: state.options[name],
+    defaultVal: state.options_meta[name].default
   }))(PureOptionDefault);
-  var PureOptionModal = class extends import_react53.Component {
+  var PureOptionModal = class extends import_react55.Component {
     constructor(props, context) {
       super(props, context);
       this.state = { title: "Options" };
@@ -50590,41 +49315,41 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       const { hideModal: hideModal2, options } = this.props;
       const { title } = this.state;
-      return /* @__PURE__ */ import_react53.default.createElement("div", null, /* @__PURE__ */ import_react53.default.createElement("div", {
+      return /* @__PURE__ */ import_react55.default.createElement("div", null, /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "modal-header"
-      }, /* @__PURE__ */ import_react53.default.createElement("button", {
+      }, /* @__PURE__ */ import_react55.default.createElement("button", {
         type: "button",
         className: "close",
         "data-dismiss": "modal",
         onClick: () => {
           hideModal2();
         }
-      }, /* @__PURE__ */ import_react53.default.createElement("i", {
+      }, /* @__PURE__ */ import_react55.default.createElement("i", {
         className: "fa fa-fw fa-times"
-      })), /* @__PURE__ */ import_react53.default.createElement("div", {
+      })), /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "modal-title"
-      }, /* @__PURE__ */ import_react53.default.createElement("h4", null, title))), /* @__PURE__ */ import_react53.default.createElement("div", {
+      }, /* @__PURE__ */ import_react55.default.createElement("h4", null, title))), /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "modal-body"
-      }, /* @__PURE__ */ import_react53.default.createElement("div", {
+      }, /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "form-horizontal"
-      }, options.map((name) => /* @__PURE__ */ import_react53.default.createElement("div", {
+      }, options.map((name) => /* @__PURE__ */ import_react55.default.createElement("div", {
         key: name,
         className: "form-group"
-      }, /* @__PURE__ */ import_react53.default.createElement("div", {
+      }, /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "col-xs-6"
-      }, /* @__PURE__ */ import_react53.default.createElement("label", {
+      }, /* @__PURE__ */ import_react55.default.createElement("label", {
         htmlFor: name
-      }, name), /* @__PURE__ */ import_react53.default.createElement(OptionHelp, {
+      }, name), /* @__PURE__ */ import_react55.default.createElement(OptionHelp, {
         name
-      })), /* @__PURE__ */ import_react53.default.createElement("div", {
+      })), /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "col-xs-6"
-      }, /* @__PURE__ */ import_react53.default.createElement(Option_default, {
+      }, /* @__PURE__ */ import_react55.default.createElement(Option_default, {
         name
-      }), /* @__PURE__ */ import_react53.default.createElement(OptionError, {
+      }), /* @__PURE__ */ import_react55.default.createElement(OptionError, {
         name
-      }), /* @__PURE__ */ import_react53.default.createElement(OptionDefault, {
+      }), /* @__PURE__ */ import_react55.default.createElement(OptionDefault, {
         name
-      })))))), /* @__PURE__ */ import_react53.default.createElement("div", {
+      })))))), /* @__PURE__ */ import_react55.default.createElement("div", {
         className: "modal-footer"
       }));
     }
@@ -50639,20 +49364,20 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
   // src/js/components/Modal/ModalList.jsx
   function OptionModal() {
-    return /* @__PURE__ */ import_react54.default.createElement(ModalLayout, null, /* @__PURE__ */ import_react54.default.createElement(OptionModal_default, null));
+    return /* @__PURE__ */ import_react56.default.createElement(ModalLayout, null, /* @__PURE__ */ import_react56.default.createElement(OptionModal_default, null));
   }
   __name(OptionModal, "OptionModal");
   var ModalList_default = [OptionModal];
 
   // src/js/components/Modal/Modal.jsx
-  var PureModal = class extends import_react55.Component {
+  var PureModal = class extends import_react57.Component {
     constructor(props, context) {
       super(props, context);
     }
     render() {
       const { activeModal } = this.props;
       const ActiveModal = ModalList_default.find((m) => m.name === activeModal);
-      return activeModal ? /* @__PURE__ */ import_react55.default.createElement(ActiveModal, null) : /* @__PURE__ */ import_react55.default.createElement("div", null);
+      return activeModal ? /* @__PURE__ */ import_react57.default.createElement(ActiveModal, null) : /* @__PURE__ */ import_react57.default.createElement("div", null);
     }
   };
   __name(PureModal, "PureModal");
@@ -50661,7 +49386,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }))(PureModal);
 
   // src/js/components/ProxyApp.jsx
-  var ProxyAppMain = class extends import_react56.Component {
+  var ProxyAppMain = class extends import_react58.Component {
     componentDidMount() {
       window.addEventListener("keydown", this.props.onKeyDown);
     }
@@ -50670,12 +49395,12 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     render() {
       const { showEventLog } = this.props;
-      return /* @__PURE__ */ import_react56.default.createElement("div", {
+      return /* @__PURE__ */ import_react58.default.createElement("div", {
         id: "container",
         tabIndex: "0"
-      }, /* @__PURE__ */ import_react56.default.createElement(Header_default, null), /* @__PURE__ */ import_react56.default.createElement(MainView_default, null), showEventLog && /* @__PURE__ */ import_react56.default.createElement(EventLog_default, {
+      }, /* @__PURE__ */ import_react58.default.createElement(Header_default, null), /* @__PURE__ */ import_react58.default.createElement(MainView_default, null), showEventLog && /* @__PURE__ */ import_react58.default.createElement(EventLog_default, {
         key: "eventlog"
-      }), /* @__PURE__ */ import_react56.default.createElement(Footer_default, null), /* @__PURE__ */ import_react56.default.createElement(Modal_default, null));
+      }), /* @__PURE__ */ import_react58.default.createElement(Footer, null), /* @__PURE__ */ import_react58.default.createElement(Modal_default, null));
     }
   };
   __name(ProxyAppMain, "ProxyAppMain");
@@ -50770,7 +49495,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       this.socket.addEventListener("error", (error) => this.onError(error));
     }
     onOpen() {
-      this.fetchData("settings");
       this.fetchData("flows");
       this.fetchData("events");
       this.fetchData("options");
@@ -50823,7 +49547,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     onOpen() {
       this.fetchData("flows");
-      this.fetchData("settings");
+      this.fetchData("options");
     }
     fetchData(resource) {
       fetchApi(`./${resource}`).then((res) => res.json()).then((json) => {
@@ -50848,20 +49572,15 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     store.dispatch(add2(msg));
   });
   document.addEventListener("DOMContentLoaded", () => {
-    (0, import_react_dom9.render)(/* @__PURE__ */ import_react57.default.createElement(Provider_default, {
+    (0, import_react_dom9.render)(/* @__PURE__ */ import_react59.default.createElement(Provider_default, {
       store
-    }, /* @__PURE__ */ import_react57.default.createElement(ProxyApp_default, null)), document.getElementById("mitmproxy"));
+    }, /* @__PURE__ */ import_react59.default.createElement(ProxyApp_default, null)), document.getElementById("mitmproxy"));
   });
 })();
 /*
 object-assign
 (c) Sindre Sorhus
 @license MIT
-*/
-/*!
-  Copyright (c) 2016 Jed Watson.
-  Licensed under the MIT License (MIT), see
-  http://jedwatson.github.io/classnames
 */
 /*!
   Copyright (c) 2018 Jed Watson.

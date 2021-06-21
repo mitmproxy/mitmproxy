@@ -1,12 +1,25 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
-import { Key } from '../../utils.js'
+import {Key} from '../../utils.js'
 import Filt from '../../filt/filt'
 import FilterDocs from './FilterDocs'
 
-export default class FilterInput extends Component {
+type FilterInputProps = {
+    type: string
+    color: any
+    placeholder: string
+    value: string
+    onChange: (value) => void
+}
+
+type FilterInputState = {
+    value: string
+    focus: boolean
+    mousefocus: boolean
+}
+
+export default class FilterInput extends Component<FilterInputProps, FilterInputState> {
 
     constructor(props, context) {
         super(props, context)
@@ -14,7 +27,7 @@ export default class FilterInput extends Component {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
         // finalized, hiding the tooltip just as the user clicks on it.
-        this.state = { value: this.props.value, focus: false, mousefocus: false }
+        this.state = {value: this.props.value, focus: false, mousefocus: false}
 
         this.onChange = this.onChange.bind(this)
         this.onFocus = this.onFocus.bind(this)
@@ -26,14 +39,13 @@ export default class FilterInput extends Component {
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
-        this.setState({ value: nextProps.value })
+        this.setState({value: nextProps.value})
     }
 
     isValid(filt) {
         try {
-            const str = filt == null ? this.state.value : filt
-            if (str) {
-                Filt.parse(str)
+            if (filt) {
+                Filt.parse(filt)
             }
             return true
         } catch (e) {
@@ -54,7 +66,7 @@ export default class FilterInput extends Component {
 
     onChange(e) {
         const value = e.target.value
-        this.setState({ value })
+        this.setState({value})
 
         // Only propagate valid filters upwards.
         if (this.isValid(value)) {
@@ -63,19 +75,19 @@ export default class FilterInput extends Component {
     }
 
     onFocus() {
-        this.setState({ focus: true })
+        this.setState({focus: true})
     }
 
     onBlur() {
-        this.setState({ focus: false })
+        this.setState({focus: false})
     }
 
     onMouseEnter() {
-        this.setState({ mousefocus: true })
+        this.setState({mousefocus: true})
     }
 
     onMouseLeave() {
-        this.setState({ mousefocus: false })
+        this.setState({mousefocus: false})
     }
 
     onKeyDown(e) {
@@ -101,12 +113,12 @@ export default class FilterInput extends Component {
     }
 
     render() {
-        const { type, color, placeholder } = this.props
-        const { value, focus, mousefocus } = this.state
+        const {type, color, placeholder} = this.props
+        const {value, focus, mousefocus} = this.state
         return (
-            <div className={classnames('filter-input input-group', { 'has-error': !this.isValid() })}>
+            <div className={classnames('filter-input input-group', {'has-error': !this.isValid(value)})}>
                 <span className="input-group-addon">
-                    <i className={'fa fa-fw fa-' + type} style={{ color }}/>
+                    <i className={'fa fa-fw fa-' + type} style={{color}}/>
                 </span>
                 <input
                     type="text"
@@ -125,7 +137,7 @@ export default class FilterInput extends Component {
                          onMouseLeave={this.onMouseLeave}>
                         <div className="arrow"/>
                         <div className="popover-content">
-                        {this.getDesc()}
+                            {this.getDesc()}
                         </div>
                     </div>
                 )}

@@ -16,4 +16,28 @@ module.exports = {
     collectCoverageFrom: [
         "src/js/**/*.{js,jsx,ts,tsx}"
     ],
-};
+    /*
+    "transform": {
+        "^.+\\.(t|j)sx?$": [
+            "@swc-node/jest",
+            {
+                "parser": {
+                    "jsx": true
+                }
+            },
+        ],
+    }
+    /**/
+    "transform": {
+        "^.+\\.[jt]sx?$": [
+            "esbuild-jest",
+            {
+                "loaders": {
+                    ".js": "tsx"
+                },
+                "format": "cjs",
+                "sourcemap": true,
+            }
+        ]
+    }
+}

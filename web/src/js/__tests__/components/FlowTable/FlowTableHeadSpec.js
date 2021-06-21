@@ -1,35 +1,29 @@
 import React from 'react'
-import renderer from 'react-test-renderer'
-import ConnectedHead, { FlowTableHead } from '../../../components/FlowTable/FlowTableHead'
-import { Provider } from 'react-redux'
-import { TStore } from '../../ducks/tutils'
+import FlowTableHead from '../../../components/FlowTable/FlowTableHead'
+import {Provider} from 'react-redux'
+import {TStore} from '../../ducks/tutils'
+import {fireEvent, render, screen} from "@testing-library/react";
+import {setSort} from "../../../ducks/flows";
 
 
-describe('FlowTableHead Component', () => {
-    let sortFn = jest.fn(),
-        store = TStore(),
-        flowTableHead = renderer.create(
+test("FlowTableHead Component", async () => {
+
+    const store = TStore(),
+        {asFragment} = render(
             <Provider store={store}>
-                <FlowTableHead setSort={sortFn} sortDesc={true}/>
-            </Provider>),
-        tree =flowTableHead.toJSON()
+                <table>
+                    <thead>
+                    <FlowTableHead/>
+                    </thead>
+                </table>
+            </Provider>
+        )
+    expect(asFragment()).toMatchSnapshot()
 
-    it('should render correctly', () => {
-        expect(tree).toMatchSnapshot()
-    })
+    fireEvent.click(screen.getByText("Size"))
 
-    it('should handle click', () => {
-        tree.children[0].props.onClick()
-        expect(sortFn).toBeCalledWith('TLSColumn', false)
-    })
-
-    it('should connect to state', () => {
-        let store = TStore(),
-            provider = renderer.create(
-                <Provider store={store}>
-                    <ConnectedHead/>
-                </Provider>),
-            tree = provider.toJSON()
-        expect(tree).toMatchSnapshot()
-    })
+    expect(store.getActions()).toStrictEqual([
+            setSort("SizeColumn", false)
+        ]
+    )
 })

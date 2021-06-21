@@ -22,7 +22,6 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.addons import export
 from mitmproxy.utils.strutils import always_str
-from mitmproxy.addons.export import curl_command
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -220,7 +219,7 @@ class IndexHandler(RequestHandler):
     def get(self):
         token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         assert token
-        self.render("index.html")
+        self.render("index.html", static=False, version=version.VERSION)
 
 
 class FilterHelp(RequestHandler):
@@ -525,6 +524,17 @@ class DnsRebind(RequestHandler):
         )
 
 
+class Conf(RequestHandler):
+    def get(self):
+        conf = {
+            "static": False,
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views]
+        }
+        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
+        self.set_header("content-type", "application/javascript")
+
+
 class Application(tornado.web.Application):
     master: "mitmproxy.tools.web.master.WebMaster"
 
@@ -559,7 +569,7 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export/(?P<format>[a-z_]+).json", ExportFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export/(?P<format>[a-z][a-z_]+).json", ExportFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
@@ -567,6 +577,7 @@ class Application(tornado.web.Application):
                 (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions)
+                (r"/options/save", SaveOptions),
+                (r"/conf\.js", Conf),
             ]
         )

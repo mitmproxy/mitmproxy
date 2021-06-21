@@ -35,11 +35,11 @@ type SubMenuProps = {
 
 export function SubMenu({title, children}: SubMenuProps) {
     const [open, setOpen] = useState(false);
-    const [referenceElement, setReferenceElement] = useState(null);
-    const [popperElement, setPopperElement] = useState(null);
+    const [referenceElement, setReferenceElement] = useState<HTMLLIElement | null>(null);
+    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(null);
     const {styles, attributes} = usePopper(referenceElement, popperElement, {placement: "right-start"});
 
-    let submenu = null;
+    let submenu: React.ReactNode | null = null;
     if (open) {
         submenu = <ul className="dropdown-menu show" ref={setPopperElement}
                       style={styles.popper} {...attributes.popper}>{children}</ul>;
@@ -66,9 +66,9 @@ type DropdownProps = {
 }
 export default React.memo(function Dropdown({text, children, options, className, onOpen, ...attrs}: DropdownProps) {
 
-    const [refElement, setRefElement] = useState(null);
+    const [refElement, setRefElement] = useState<HTMLAnchorElement | null>(null);
     const [open, _setOpen] = useState(false);
-    const [popperElement, setPopperElement] = useState(null);
+    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(null);
     const {styles, attributes} = usePopper(refElement, popperElement, {...options});
 
     let setOpen = (b: boolean) => {
@@ -79,11 +79,13 @@ export default React.memo(function Dropdown({text, children, options, className,
     useEffect(() => {
         if (!open)
             return
-        document.addEventListener("click", () => {
-            // a bit tricky: we need to wait here for a bit so that we don't double-toggle
-            // when clicking the dropdown button.
-            setTimeout(() => setOpen(false));
-        }, {capture: true, once: true});
+        setTimeout(() => {
+            document.addEventListener("click", () => {
+                // a bit tricky: we need to wait here for a bit so that we don't double-toggle
+                // when clicking the dropdown button.
+                setTimeout(() => setOpen(false));
+            }, {once: true});
+        });
     }, [open]);
 
     let contents;

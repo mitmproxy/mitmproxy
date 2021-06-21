@@ -218,7 +218,9 @@ export function clear() {
 }
 
 export function download() {
-    window.location = '/flows/dump'
+    if (process.env.NODE_ENV !== 'test'){
+        window.location.href = '/flows/dump';
+    }
     return { type: REQUEST_ACTION }
 }
 

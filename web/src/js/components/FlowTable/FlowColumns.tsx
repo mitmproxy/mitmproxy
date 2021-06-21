@@ -4,12 +4,11 @@ import classnames from 'classnames'
 import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
 import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
 import * as flowActions from "../../ducks/flows";
-import {addInterceptFilter} from "../../ducks/settings"
+import {addInterceptFilter} from "../../ducks/options"
 import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
 import {fetchApi} from "../../utils"
 import {Flow} from "../../flow";
 
-export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
 
 type FlowColumnProps = {
     flow: Flow
@@ -155,7 +154,7 @@ SizeColumn.headerName = 'Size'
 export const TimeColumn: FlowColumn = ({flow}) => {
     return (
         <td className="col-time">
-            {flow.type === "http" && flow.response ? (
+            {flow.type === "http" && flow.response?.timestamp_end ? (
                 formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))
             ) : (
                 '...'
@@ -198,7 +197,7 @@ export const QuickActionsColumn: FlowColumn = ({flow}) => {
             })
     }
 
-    let resume_or_replay = null;
+    let resume_or_replay: React.ReactNode | null = null;
     if (flow.intercepted) {
         resume_or_replay = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.resume(flow))}>
             <i className="fa fa-fw fa-play text-success"/>
@@ -216,7 +215,7 @@ export const QuickActionsColumn: FlowColumn = ({flow}) => {
     const ct = flow.response && ResponseUtils.getContentType(flow.response);
 
     return (
-        <td className={classnames("col-quickactions", {hover: open})} onClick={(e) => e.stopPropagation()}>
+        <td className={classnames("col-quickactions", {hover: open})} onClick={(e) => 0/*e.stopPropagation()*/}>
             <div>
                 {resume_or_replay}
                 <Dropdown text={<i className="fa fa-fw fa-ellipsis-h text-muted"/>} className="quickaction"
@@ -232,7 +231,7 @@ export const QuickActionsColumn: FlowColumn = ({flow}) => {
                     <SubMenu title="Intercept requests like this">
                         <MenuItem onClick={() => filt(`~q ${flow.request.host}`)}>
                             Requests to {flow.request.host}
-                        </MenuItem>w
+                        </MenuItem>
                         {flow.request.path !== "/" &&
                         <MenuItem onClick={() => filt(`~q ${flow.request.host}${flow.request.path}`)}>
                             Requests to {flow.request.host + flow.request.path}

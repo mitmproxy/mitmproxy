@@ -6,7 +6,7 @@ describe('connection reducer', () => {
     it('should return initial state', () => {
         expect(reduceConnection(undefined, {})).toEqual({
             state: ConnectionState.INIT,
-            message: null,
+            message: undefined,
         })
     })
 

@@ -173,7 +173,7 @@ exports[`Flowcolumns Components should render TimeStampColumn 1`] = `
 <td
   className="col-start"
 >
-  1999-12-31 23:00:00.000
+  2000-01-01 00:00:00.000
 </td>
 `;
 

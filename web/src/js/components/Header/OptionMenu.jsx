@@ -1,9 +1,9 @@
 import React from "react"
 import { connect } from "react-redux"
-import { EventlogToggle, SettingsToggle } from "./MenuToggle"
+import { EventlogToggle, OptionsToggle } from "./MenuToggle"
 import Button from "../common/Button"
 import DocsLink from "../common/DocsLink"
-import HideInStatic from "../common/HideInStatic";
+import HideInStaticx from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal"
 
 OptionMenu.title = 'Options'
@@ -11,7 +11,7 @@ OptionMenu.title = 'Options'
 function OptionMenu({ openOptions }) {
     return (
         <div>
-            <HideInStatic>
+            <HideInStaticx>
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button title="Open Options" icon="fa-cogs text-primary"
@@ -24,19 +24,19 @@ function OptionMenu({ openOptions }) {
 
                 <div className="menu-group">
                     <div className="menu-content">
-                        <SettingsToggle setting="anticache">
+                        <OptionsToggle name="anticache">
                             Strip cache headers <DocsLink resource="overview-features/#anticache"/>
-                        </SettingsToggle>
-                        <SettingsToggle setting="showhost">
+                        </OptionsToggle>
+                        <OptionsToggle name="showhost">
                             Use host header for display
-                        </SettingsToggle>
-                        <SettingsToggle setting="ssl_insecure">
+                        </OptionsToggle>
+                        <OptionsToggle name="ssl_insecure">
                             Don't verify server certificates
-                        </SettingsToggle>
+                        </OptionsToggle>
                     </div>
                     <div className="menu-legend">Quick Options</div>
                 </div>
-            </HideInStatic>
+            </HideInStaticx>
 
             <div className="menu-group">
                 <div className="menu-content">

@@ -5,7 +5,6 @@ describe('reduceState in js/ducks/index.js', () => {
         let state = rootReducer(undefined, {})
         expect(state.hasOwnProperty('eventLog')).toBeTruthy()
         expect(state.hasOwnProperty('flows')).toBeTruthy()
-        expect(state.hasOwnProperty('settings')).toBeTruthy()
         expect(state.hasOwnProperty('connection')).toBeTruthy()
         expect(state.hasOwnProperty('ui')).toBeTruthy()
     })

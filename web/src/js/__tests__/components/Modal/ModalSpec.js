@@ -1,9 +1,18 @@
 import React from 'react'
-import renderer from 'react-test-renderer'
 import Modal from '../../../components/Modal/Modal'
-import { Provider } from 'react-redux'
-import { TStore } from '../../ducks/tutils'
+import {render} from "../../test-utils"
+import {setActiveModal} from "../../../ducks/ui/modal";
 
+test("Modal Component", async () => {
+    const {asFragment, store} = render(<Modal/>);
+    expect(asFragment()).toMatchSnapshot();
+
+    store.dispatch(setActiveModal("OptionModal"));
+    expect(asFragment()).toMatchSnapshot();
+
+})
+
+/*
 describe('Modal Component', () => {
     let store = TStore()
 
@@ -28,3 +37,4 @@ describe('Modal Component', () => {
         expect(tree).toMatchSnapshot()
     })
 })
+*/

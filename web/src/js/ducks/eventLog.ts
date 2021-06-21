@@ -51,7 +51,7 @@ export function toggleVisibility() {
 
 export function add(message, level = 'web') {
     let data = {
-        id: Math.random().toString(),
+        id:  Math.random().toString(),
         message,
         level,
     }

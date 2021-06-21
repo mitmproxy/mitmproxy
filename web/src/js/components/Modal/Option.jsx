@@ -31,7 +31,7 @@ function BooleanOption({ value, onChange, ...props }) {
 }
 
 StringOption.propTypes = {
-    value: PropTypes.string.isRequired,
+    value: PropTypes.string,
     onChange: PropTypes.func.isRequired,
 }
 function StringOption({ value, onChange, ...props }) {
@@ -115,6 +115,8 @@ function PureOption({ choices, type, value, onChange, name, error }) {
         props.choices = choices
     } else {
         Opt = Options[type]
+        if(!Opt)
+            throw `unknown option type ${type}`
     }
     if (Opt !== BooleanOption) {
         props.className = "form-control"
@@ -132,7 +134,7 @@ function PureOption({ choices, type, value, onChange, name, error }) {
 }
 export default connect(
     (state, { name }) => ({
-        ...state.options[name],
+        ...state.options_meta[name],
         ...state.ui.optionsEditor[name]
     }),
     (dispatch, { name }) => ({

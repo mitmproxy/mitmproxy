@@ -81,12 +81,12 @@ export function reverseString(s) {
 }
 
 function getCookie(name) {
-    var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
+    let r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 const xsrf = `_xsrf=${getCookie("_xsrf")}`;
 
-export function fetchApi(url, options={}) {
+export function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
     if (options.method && options.method !== "GET") {
         if (url.indexOf("?") === -1) {
             url += "?" + xsrf;
@@ -106,7 +106,7 @@ export function fetchApi(url, options={}) {
     });
 }
 
-fetchApi.put = (url, json, options) => fetchApi(
+fetchApi.put = (url: string, json: any, options: RequestInit) => fetchApi(
     url,
     {
         method: "PUT",
@@ -131,6 +131,9 @@ export function getDiff(obj1, obj2) {
     return result
 }
 
+/**
+ * @deprecated use React.memo instead.
+ */
 export const pure = renderFn => class extends React.PureComponent {
     static displayName = renderFn.name
 

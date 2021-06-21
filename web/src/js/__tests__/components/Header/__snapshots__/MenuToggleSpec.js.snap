@@ -1,18 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EventlogToggle Component should render and connect to state 1`] = `
-<div
-  className="menu-entry"
->
-  <label>
-    <input
-      checked={true}
-      onChange={[Function]}
-      type="checkbox"
-    />
-    Display Event Log
-  </label>
-</div>
+exports[`EventlogToggle 1`] = `
+<DocumentFragment>
+  <div
+    class="menu-entry"
+  >
+    <label>
+      <input
+        checked=""
+        type="checkbox"
+      />
+      Display Event Log
+    </label>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`MenuToggle Component should render correctly 1`] = `
@@ -32,19 +33,17 @@ exports[`MenuToggle Component should render correctly 1`] = `
 </div>
 `;
 
-exports[`SettingToggle Component should render and connect to state 1`] = `
-<div
-  className="menu-entry"
->
-  <label>
-    <input
-      checked={true}
-      onChange={[Function]}
-      type="checkbox"
-    />
-    <p>
-      foo children
-    </p>
-  </label>
-</div>
+exports[`OptionsToggle 1`] = `
+<DocumentFragment>
+  <div
+    class="menu-entry"
+  >
+    <label>
+      <input
+        type="checkbox"
+      />
+      toggle anticache
+    </label>
+  </div>
+</DocumentFragment>
 `;

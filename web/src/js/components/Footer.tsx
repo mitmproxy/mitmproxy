@@ -1,16 +1,15 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { formatSize } from '../utils.js'
-import HideInStatic from '../components/common/HideInStatic'
+import {formatSize} from '../utils.js'
+import HideInStaticx from '../components/common/HideInStatic'
+import {useAppSelector} from "../ducks";
 
-Footer.propTypes = {
-    settings: PropTypes.object.isRequired,
-}
+export default function Footer() {
+    const version = useAppSelector(state => state.conf.version);
+    let {
+        mode, intercept, showhost, upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
+        stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, server
+    } = useAppSelector(state => state.options);
 
-function Footer({ settings }) {
-    let {mode, intercept, showhost, no_upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
-            stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, version, server} = settings;
     return (
         <footer>
             {mode && mode !== "regular" && (
@@ -22,7 +21,7 @@ function Footer({ settings }) {
             {showhost && (
                 <span className="label label-success">showhost</span>
             )}
-            {no_upstream_cert && (
+            {!upstream_cert && (
                 <span className="label label-success">no-upstream-cert</span>
             )}
             {!rawtcp && (
@@ -50,24 +49,18 @@ function Footer({ settings }) {
                 <span className="label label-success">stream: {formatSize(stream_large_bodies)}</span>
             )}
             <div className="pull-right">
-                <HideInStatic>
-                {
-                    server && (
-                    <span className="label label-primary" title="HTTP Proxy Server Address">
-                        {listen_host||"*"}:{listen_port}
+                <HideInStaticx>
+                    {
+                        server && (
+                            <span className="label label-primary" title="HTTP Proxy Server Address">
+                        {listen_host || "*"}:{listen_port}
                     </span>)
-                }
-                </HideInStatic>
-            <span className="label label-info" title="Mitmproxy Version">
-            v{version}
+                    }
+                </HideInStaticx>
+                <span className="label label-info" title="Mitmproxy Version">
+            {version}
             </span>
             </div>
         </footer>
     )
 }
-
-export default connect(
-    state => ({
-        settings: state.settings,
-    })
-)(Footer)

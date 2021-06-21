@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowRow 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr
+        class="selected highlighted has-request has-response"
+      >
+        <td
+          class="col-tls col-tls-https"
+        />
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-plain"
+          />
+        </td>
+        <td
+          class="col-path"
+        >
+          <i
+            class="fa fa-fw fa-exclamation pull-right"
+          />
+          http://address:22/second
+        </td>
+        <td
+          class="col-method"
+        >
+          GET
+        </td>
+        <td
+          class="col-status"
+          style="color: darkgreen;"
+        >
+          200
+        </td>
+        <td
+          class="col-size"
+        >
+          14b
+        </td>
+        <td
+          class="col-time"
+        >
+          3s
+        </td>
+        <td
+          class="col-quickactions"
+        >
+          <div>
+            <a
+              class="quickaction"
+              href="#"
+            >
+              <i
+                class="fa fa-fw fa-repeat text-primary"
+              />
+            </a>
+            <a
+              class="quickaction"
+              href="#"
+            >
+              <i
+                class="fa fa-fw fa-ellipsis-h text-muted"
+              />
+            </a>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;

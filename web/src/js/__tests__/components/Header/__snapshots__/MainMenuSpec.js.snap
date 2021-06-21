@@ -1,122 +1,99 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`MainMenu Component should render and connect to state 1`] = `
-<div
-  className="main-menu"
->
+exports[`MainMenu 1`] = `
+<DocumentFragment>
   <div
-    className="menu-group"
+    class="main-menu"
   >
     <div
-      className="menu-content"
+      class="menu-group"
     >
       <div
-        className="filter-input input-group"
+        class="menu-content"
       >
-        <span
-          className="input-group-addon"
+        <div
+          class="filter-input input-group"
         >
-          <i
-            className="fa fa-fw fa-search"
-            style={
-              Object {
-                "color": "black",
-              }
-            }
+          <span
+            class="input-group-addon"
+          >
+            <i
+              class="fa fa-fw fa-search"
+              style="color: black;"
+            />
+          </span>
+          <input
+            class="form-control"
+            placeholder="Search"
+            type="text"
+            value="~d address"
           />
-        </span>
-        <input
-          className="form-control"
-          onBlur={[Function]}
-          onChange={[Function]}
-          onFocus={[Function]}
-          onKeyDown={[Function]}
-          placeholder="Search"
-          type="text"
-          value="~u foo"
-        />
+        </div>
+        <div
+          class="filter-input input-group"
+        >
+          <span
+            class="input-group-addon"
+          >
+            <i
+              class="fa fa-fw fa-tag"
+              style="color: rgb(0, 0, 0);"
+            />
+          </span>
+          <input
+            class="form-control"
+            placeholder="Highlight"
+            type="text"
+            value="~u /path"
+          />
+        </div>
       </div>
       <div
-        className="filter-input input-group"
+        class="menu-legend"
       >
-        <span
-          className="input-group-addon"
-        >
-          <i
-            className="fa fa-fw fa-tag"
-            style={
-              Object {
-                "color": "hsl(48, 100%, 50%)",
-              }
-            }
-          />
-        </span>
-        <input
-          className="form-control"
-          onBlur={[Function]}
-          onChange={[Function]}
-          onFocus={[Function]}
-          onKeyDown={[Function]}
-          placeholder="Highlight"
-          type="text"
-          value="~a bar"
-        />
+        Find
       </div>
     </div>
     <div
-      className="menu-legend"
+      class="menu-group"
     >
-      Find
+      <div
+        class="menu-content"
+      >
+        <div
+          class="filter-input input-group"
+        >
+          <span
+            class="input-group-addon"
+          >
+            <i
+              class="fa fa-fw fa-pause"
+              style="color: rgb(68, 68, 68);"
+            />
+          </span>
+          <input
+            class="form-control"
+            placeholder="Intercept"
+            type="text"
+            value=""
+          />
+        </div>
+        <button
+          class="btn-sm btn btn-default"
+          title="[a]ccept all"
+        >
+          <i
+            class="fa fa-fw fa-forward text-success"
+          />
+          Resume All
+        </button>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Intercept
+      </div>
     </div>
   </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
-    >
-      <div
-        className="filter-input input-group"
-      >
-        <span
-          className="input-group-addon"
-        >
-          <i
-            className="fa fa-fw fa-pause"
-            style={
-              Object {
-                "color": "hsl(208, 56%, 53%)",
-              }
-            }
-          />
-        </span>
-        <input
-          className="form-control"
-          onBlur={[Function]}
-          onChange={[Function]}
-          onFocus={[Function]}
-          onKeyDown={[Function]}
-          placeholder="Intercept"
-          type="text"
-          value=""
-        />
-      </div>
-      <button
-        className="btn-sm btn btn-default"
-        onClick={[Function]}
-        title="[a]ccept all"
-      >
-        <i
-          className="fa fa-fw fa-forward text-success"
-        />
-        Resume All
-      </button>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      Intercept
-    </div>
-  </div>
-</div>
+</DocumentFragment>
 `;

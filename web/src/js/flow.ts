@@ -4,7 +4,7 @@ Type definitions for flows. Sync with mitmproxy/tools/web/app.py.
 interface _Flow {
     id: string
     intercepted: boolean
-    is_replay: "request" | "response"
+    is_replay?: "request" | "response"
     type: string
     modified: boolean
     marked: string
@@ -38,9 +38,9 @@ export interface Connection {
     sockname?: Address
 
     tls_established: boolean
-    sni: string | boolean | undefined
+    sni?: string | boolean
     cipher?: string
-    alpn: string
+    alpn?: string
     tls_version?: string
 
     timestamp_start?: number

@@ -3,7 +3,7 @@ import {useDispatch} from 'react-redux'
 import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider, MenuItem} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
-import HideInStatic from "../common/HideInStatic";
+import HideInStaticx from "../common/HideInStatic";
 
 
 export default React.memo(function FileMenu() {
@@ -17,20 +17,27 @@ export default React.memo(function FileMenu() {
                 <FileChooser
                     icon="fa-folder-open"
                     text="&nbsp;Open..."
-                    onOpenFile={file => dispatch(flowsActions.upload(file))}
+                    onClick={
+                        // stop event propagation: we must keep the input in DOM for upload to work.
+                        e => e.stopPropagation()
+                    }
+                    onOpenFile={file => {
+                        dispatch(flowsActions.upload(file));
+                        document.body.click(); // "restart" event propagation
+                    }}
                 />
             </li>
             <MenuItem onClick={() => dispatch(flowsActions.download())}>
                 <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save...
             </MenuItem>
-            <HideInStatic>
+            <HideInStaticx>
                 <Divider/>
                 <li>
                     <a href="http://mitm.it/" target="_blank">
                         <i className="fa fa-fw fa-external-link"/>&nbsp;Install Certificates...
                     </a>
                 </li>
-            </HideInStatic>
+            </HideInStaticx>
         </Dropdown>
     )
 });

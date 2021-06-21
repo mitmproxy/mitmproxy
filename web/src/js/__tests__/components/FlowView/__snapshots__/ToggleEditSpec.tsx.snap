@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ToggleEdit 1`] = `
+<DocumentFragment>
+  <div
+    class="edit-flow-container"
+  >
+    <a
+      class="edit-flow"
+      title="Finish Edit"
+    >
+      <i
+        class="fa fa-check"
+      />
+    </a>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`ToggleEdit 2`] = `
+<DocumentFragment>
+  <div
+    class="edit-flow-container"
+  >
+    <a
+      class="edit-flow"
+      title="Edit Flow"
+    >
+      <i
+        class="fa fa-pencil"
+      />
+    </a>
+  </div>
+</DocumentFragment>
+`;

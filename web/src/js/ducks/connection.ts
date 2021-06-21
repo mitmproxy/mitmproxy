@@ -1,19 +1,27 @@
-export const ConnectionState = {
-    INIT: Symbol("init"),
-    FETCHING: Symbol("fetching"), // WebSocket is established, but still fetching resources.
-    ESTABLISHED: Symbol("established"),
-    ERROR: Symbol("error"),
-    OFFLINE: Symbol("offline"), // indicates that there is no live (websocket) backend.
+import {Reducer} from "redux";
+import {OptionsState} from "./_options_gen";
+
+export enum ConnectionState {
+    INIT= "CONNECTION_INIT",
+    FETCHING = "CONNECTION_FETCHING", // WebSocket is established, but still fetching resources.
+    ESTABLISHED = "CONNECTION_ESTABLISHED",
+    ERROR = "CONNECTION_ERROR",
+    OFFLINE = "CONNECTION_OFFLINE", // indicates that there is no live (websocket) backend.
 }
 
-const defaultState = {
+
+interface ConnState {
+    state: ConnectionState,
+    message?: string
+}
+
+const defaultState: ConnState = {
     state: ConnectionState.INIT,
-    message: null,
+    message: undefined,
 }
 
-export default function reducer(state = defaultState, action) {
+const reducer: Reducer<ConnState> = (state = defaultState, action) => {
     switch (action.type) {
-
         case ConnectionState.ESTABLISHED:
         case ConnectionState.FETCHING:
         case ConnectionState.ERROR:
@@ -27,6 +35,7 @@ export default function reducer(state = defaultState, action) {
             return state
     }
 }
+export default reducer
 
 export function startFetching() {
     return { type: ConnectionState.FETCHING }

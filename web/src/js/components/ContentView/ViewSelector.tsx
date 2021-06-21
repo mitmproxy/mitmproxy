@@ -6,7 +6,7 @@ import {useAppDispatch, useAppSelector} from "../../ducks";
 
 export default React.memo(function ViewSelector() {
     const dispatch = useAppDispatch(),
-        contentViews = useAppSelector((state) => state.settings.contentViews || []),
+        contentViews = useAppSelector(state => state.conf.contentViews || []),
         activeView = useAppSelector(state => state.ui.flow.contentView);
 
     let inner = <span><b>View:</b> {activeView.toLowerCase()} <span className="caret"/></span>

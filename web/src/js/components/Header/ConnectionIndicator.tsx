@@ -1,16 +1,14 @@
 import React from "react"
-import PropTypes from "prop-types"
-import { connect } from "react-redux"
-import { ConnectionState } from "../../ducks/connection"
+import {ConnectionState} from "../../ducks/connection"
+import {useAppSelector} from "../../ducks";
 
 
-ConnectionIndicator.propTypes = {
-    state: PropTypes.symbol.isRequired,
-    message: PropTypes.string,
+export default React.memo(function ConnectionIndicator() {
 
-}
-export function ConnectionIndicator({ state, message }) {
-    switch (state) {
+    const connState = useAppSelector(state => state.connection.state),
+        message = useAppSelector(state => state.connection.message)
+
+    switch (connState) {
         case ConnectionState.INIT:
             return <span className="connection-indicator init">connecting…</span>;
         case ConnectionState.FETCHING:
@@ -22,9 +20,8 @@ export function ConnectionIndicator({ state, message }) {
                          title={message}>connection lost</span>;
         case ConnectionState.OFFLINE:
             return <span className="connection-indicator offline">offline</span>;
+        default:
+            const exhaustiveCheck: never = connState;
+            throw "unknown connection state";
     }
-}
-
-export default connect(
-    state => state.connection,
-)(ConnectionIndicator)
+})
