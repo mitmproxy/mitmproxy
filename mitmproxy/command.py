@@ -73,7 +73,7 @@ class Command:
         for name, parameter in self.signature.parameters.items():
             t = parameter.annotation
             if not mitmproxy.types.CommandTypes.get(parameter.annotation, None):
-                raise exceptions.CommandError(f"Argument {name} has an unknown type ({_empty_as_none(t)}) in {func}.")
+                raise exceptions.CommandError(f"Argument {name} has an unknown type {t} in {func}.")
         if self.return_type and not mitmproxy.types.CommandTypes.get(self.return_type, None):
             raise exceptions.CommandError(f"Return type has an unknown type ({self.return_type}) in {func}.")
 
