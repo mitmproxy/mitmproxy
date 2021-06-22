@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy import http
 from mitmproxy import websocket
 from mitmproxy.test import tflow
@@ -26,3 +28,18 @@ class TestWebSocketMessage:
         assert not m.killed
         m.kill()
         assert m.killed
+
+    def test_text(self):
+        txt = websocket.WebSocketMessage(Opcode.TEXT, True, b"foo")
+        bin = websocket.WebSocketMessage(Opcode.BINARY, True, b"foo")
+
+        assert txt.is_text
+        assert txt.text
+        txt.text = "bar"
+        assert txt.content == b"bar"
+
+        assert not bin.is_text
+        with pytest.raises(AttributeError, match="do not have a 'text' attribute."):
+            _ = bin.text
+        with pytest.raises(AttributeError, match="do not have a 'text' attribute."):
+            bin.text = "bar"
