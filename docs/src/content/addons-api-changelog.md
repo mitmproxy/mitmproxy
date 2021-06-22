@@ -14,9 +14,18 @@ We try to avoid them, but this page lists breaking changes in the mitmproxy addo
 
 #### Connection Events
 
-We've revised mitmproxy's connection-specific event hooks as part of the new proxy core. See the new 
-[event hook documentation]({{< relref "addons-api#ConnectionEvents" >}}) for details. As the passed objects are slightly
-different now, we've also taken this opportunity to introduce a consistent event names:
+We've revised mitmproxy's connection-specific event hooks as part of the new proxy core. The `.client_conn` and 
+`.server_conn` objects have major API changes across the board. See the new 
+[event hook documentation]({{< relref "addons-api#ConnectionEvents" >}}) for details. 
+
+| Attribute      | Client (v6) | Server (v6)       | mitmproxy v7 |
+|----------------|-------------|-------------------|--------------|
+| Remote IP:Port | `.address`  | `.ip_address`     | `.peername`  |
+| Local IP:Port  | ❌          | `.source_address` | `.sockname`  |
+| Remote Domain  | N/A         | `.address`        | `.address`   |
+
+
+As the passed objects are different now, we've also taken this opportunity to introduce more consistent event names:
 
 | mitmproxy 6        | mitmproxy 7           |
 | ------------------ | --------------------- |
@@ -44,3 +53,12 @@ mitmproxy 6 had a custom WebSocketFlow class, which had
 WebSocketFlow is no more and instead HTTPFlow has a neat 
 [`.websocket` attribute]({{< relref "api/mitmproxy.http.md#HTTPFlow.websocket" >}}). All WebSocket flows are now passed
 the originating `HTTPFlow` with this attribute set. As always, existing dumpfiles are automatically converted on load.
+
+#### Certificates
+
+mitmproxy now uses `cryptography` instead of `pyOpenSSL` to generate certificates. As a consequence, the API of
+`mitmproxy.certs` has changed.
+
+#### HTTP Headers
+
+`mitmproxy.net.http.Headers` -> `mitmproxy.http.Headers` for consistency.
