@@ -4,7 +4,7 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy.utils import emoji
+from mitmproxy.utils import emoji, strutils
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     from mitmproxy.command import CommandManager
@@ -112,6 +112,23 @@ class _StrType(_BaseType):
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
+
+
+class _BytesType(_BaseType):
+    typ = bytes
+    display = "bytes"
+
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
+        return []
+
+    def parse(self, manager: "CommandManager", t: type, s: str) -> bytes:
+        try:
+            return strutils.escaped_str_to_bytes(s)
+        except ValueError as e:
+            raise exceptions.TypeError(str(e))
+
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
+        return isinstance(val, bytes)
 
 
 class _UnknownType(_BaseType):
@@ -460,4 +477,5 @@ CommandTypes = TypeManager(
     _PathType,
     _StrType,
     _StrSeqType,
+    _BytesType,
 )
