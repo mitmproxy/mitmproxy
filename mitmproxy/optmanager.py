@@ -1,3 +1,4 @@
+import collections
 import contextlib
 import blinker
 import blinker._saferef
@@ -91,7 +92,7 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: typing.Dict[str, [str]] = {}
+        self.deferred: typing.Dict[str, typing.List[str]] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
@@ -295,7 +296,7 @@ class OptManager:
             are added.
         """
         vals = {}
-        unknown = {}
+        unknown: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
         for i in spec:
             parts = i.split("=", maxsplit=1)
             if len(parts) == 1:
@@ -305,10 +306,7 @@ class OptManager:
             if optname in self._options:
                 vals[optname] = self.parse_setval(self._options[optname], optval, vals.get(optname))
             else:
-                try:
-                    unknown[optname].append(optval)
-                except KeyError:
-                    unknown[optname] = [optval]
+                unknown[optname].append(optval)
         if defer:
             self.deferred.update(unknown)
         elif unknown:
