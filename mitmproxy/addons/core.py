@@ -56,6 +56,8 @@ class Core:
             strings and integers are set to None (if permitted), and sequences
             are emptied. Boolean values can be true, false or toggle.
             Multiple values are concatenated with a single space.
+            Sequences are set using multiple invocations to set for
+            the same option.
         """
         strspec = f"{option}={value}"
         try:
