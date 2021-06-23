@@ -24,18 +24,9 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   This greatly improves testing capabilities, prevents a wide array of race conditions, and increases
   proper isolation between layers.
 
-We wanted to bring these improvements out, so we have a few temporary regressions:
-
-* Support for HTTP/2 Push Promises has been dropped.
-* body_size_limit is currently unsupported.
-* upstream_auth is currently unsupported.
-
-If you depend on these features, please raise your voice in
-[#4348](https://github.com/mitmproxy/mitmproxy/issues/4348)!
-
 ### Full Changelog
 
-* New Proxy Core based on sans-io pattern (@mhils)
+* New Proxy Core (see section above, @mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
   events have been replaced with new events, see addon documentation for details (@mhils)
@@ -55,7 +46,8 @@ If you depend on these features, please raise your voice in
 * Pressing `?` now exits console help view (@abitrolly)
 * `--modify-headers` now works correctly when modifying a header that is also part of the filter expression (@Prinzhorn)
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
-* Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
+* Add option `export_preserve_original_ip` to force exported command to connect to IP from original request.
+  Only supports curl at the moment. (@dkasak)
 * Major proxy protocol testing (@r00t-)
 * Switch Docker image release to be based on Debian (@PeterDaveHello)
 * Multiple Browsers: The `browser.start` command may be executed more than once to start additional
@@ -63,11 +55,19 @@ If you depend on these features, please raise your voice in
 * Improve readability of SHA256 fingerprint. (@wrekone)
 * Metadata and Replay Flow Filters: Flows may be filtered based on metadata and replay status. (@rbdixon)
 * Flow control: don't read connection data faster than it can be forwarded. (@hazcod)
+* Docker images for ARM64 architecture (@hazcod, @mhils)
 * Fix parsing of certificate issuer/subject with escaped special characters (@Prinzhorn)
 * Customize markers with emoji, and filters: The `flow.mark` command may be used to mark a flow with either the default
-  "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
-* New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments. (@rbdixon)
+  "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker
+  characters. (@rbdixon)
+* New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments.
+  (@rbdixon)
 * Fix multipart forms losing `boundary` values on edit (@roytu)
+* `Transfer-Encoding: chunked` HTTP message bodies are now retained if they are below the stream_large_bodies limit.
+  (@mhils)
+* `json()` method for HTTP Request and Response instances will return decoded JSON body. (@rbdixon)
+* Support for HTTP/2 Push Promises has been dropped. (@mhils)
+* Make it possible to set sequence options from the command line (@Yopi)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 

@@ -1,3 +1,19 @@
+"""
+This addon determines the next protocol layer in our proxy stack.
+Whenever a protocol layer in the proxy wants to pass a connection to a child layer and isn't sure which protocol comes
+next, it calls the `next_layer` hook, which ends up here.
+For example, if mitmproxy runs as a regular proxy, we first need to determine if
+new clients start with a TLS handshake right away (Secure Web Proxy) or send a plaintext HTTP CONNECT request.
+This addon here peeks at the incoming bytes and then makes a decision based on proxy mode, mitmproxy options, etc.
+
+For a typical HTTPS request, this addon is called a couple of times: First to determine that we start with an HTTP layer
+which processes the `CONNECT` request, a second time to determine that the client then starts negotiating TLS, and a
+third time where we check if the protocol within that TLS stream is actually HTTP or something else.
+
+Sometimes it's useful to hardcode specific logic in next_layer when one wants to do fancy things.
+In that case it's not necessary to modify mitmproxy's source, adding a custom addon with a next_layer event hook
+that sets nextlayer.layer works just as well.
+"""
 import re
 from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
 
@@ -87,21 +103,21 @@ class NextLayer:
             raise AssertionError()
 
     def next_layer(self, nextlayer: layer.NextLayer):
-        nextlayer.layer = self._next_layer(
-            nextlayer.context,
-            nextlayer.data_client(),
-            nextlayer.data_server(),
-        )
+        if nextlayer.layer is None:
+            nextlayer.layer = self._next_layer(
+                nextlayer.context,
+                nextlayer.data_client(),
+                nextlayer.data_server(),
+            )
 
     def _next_layer(self, context: context.Context, data_client: bytes, data_server: bytes) -> Optional[layer.Layer]:
         if len(context.layers) == 0:
             return self.make_top_layer(context)
 
         if len(data_client) < 3 and not data_server:
-            return None
+            return None  # not enough data yet to make a decision
 
-        client_tls = is_tls_record_magic(data_client)
-
+        # helper function to quickly check if the existing layer stack matches a particular configuration.
         def s(*layers):
             return stack_match(context, layers)
 
@@ -113,11 +129,16 @@ class NextLayer:
             return None
 
         # 2. Check for TLS
+        client_tls = is_tls_record_magic(data_client)
         if client_tls:
             # client tls usually requires a server tls layer as parent layer, except:
-            #  - reverse proxy mode manages this itself.
             #  - a secure web proxy doesn't have a server part.
-            if s(modes.ReverseProxy) or s(modes.HttpProxy):
+            #  - reverse proxy mode manages this itself.
+            if (
+                s(modes.HttpProxy) or
+                s(modes.ReverseProxy) or
+                s(modes.ReverseProxy, layers.ServerTLSLayer)
+            ):
                 return layers.ClientTLSLayer(context)
             else:
                 # We already assign the next layer here os that ServerTLSLayer
@@ -127,11 +148,11 @@ class NextLayer:
                 return ret
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
-        if any([
-            s(modes.HttpProxy),
+        if (
+            s(modes.HttpProxy) or
             # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
-            s(modes.HttpProxy, layers.ClientTLSLayer),
-        ]):
+            s(modes.HttpProxy, layers.ClientTLSLayer)
+        ):
             if ctx.options.mode == "regular":
                 return layers.HttpLayer(context, HTTPMode.regular)
             else:

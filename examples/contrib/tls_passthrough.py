@@ -1,3 +1,5 @@
+# FIXME: This addon is currently not compatible with mitmproxy 7 and above.
+
 """
 This inline script allows conditional TLS Interception based
 on a user-defined strategy.

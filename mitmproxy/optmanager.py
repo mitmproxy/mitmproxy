@@ -1,3 +1,4 @@
+import collections
 import contextlib
 import blinker
 import blinker._saferef
@@ -91,7 +92,7 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: typing.Dict[str, str] = {}
+        self.deferred: typing.Dict[str, typing.List[str]] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
@@ -295,7 +296,7 @@ class OptManager:
             are added.
         """
         vals = {}
-        unknown = {}
+        unknown: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
         for i in spec:
             parts = i.split("=", maxsplit=1)
             if len(parts) == 1:
@@ -303,9 +304,9 @@ class OptManager:
             else:
                 optname, optval = parts[0], parts[1]
             if optname in self._options:
-                vals[optname] = self.parse_setval(self._options[optname], optval)
+                vals[optname] = self.parse_setval(self._options[optname], optval, vals.get(optname))
             else:
-                unknown[optname] = optval
+                unknown[optname].append(optval)
         if defer:
             self.deferred.update(unknown)
         elif unknown:
@@ -318,15 +319,16 @@ class OptManager:
             have since been added.
         """
         update = {}
-        for optname, optval in self.deferred.items():
+        for optname, optvals in self.deferred.items():
             if optname in self._options:
-                optval = self.parse_setval(self._options[optname], optval)
-                update[optname] = optval
+                for optval in optvals:
+                    optval = self.parse_setval(self._options[optname], optval, update.get(optname))
+                    update[optname] = optval
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
 
-    def parse_setval(self, o: _Option, optstr: typing.Optional[str]) -> typing.Any:
+    def parse_setval(self, o: _Option, optstr: typing.Optional[str], currentvalue: typing.Any) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
@@ -357,7 +359,10 @@ class OptManager:
             if not optstr:
                 return []
             else:
-                return getattr(self, o.name) + [optstr]
+                if currentvalue:
+                    return getattr(self, o.name) + currentvalue + [optstr]
+                else:
+                    return getattr(self, o.name) + [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     def make_parser(self, parser, optname, metavar=None, short=None):
@@ -434,7 +439,7 @@ class OptManager:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
 
-def dump_defaults(opts):
+def dump_defaults(opts, out: typing.TextIO):
     """
         Dumps an annotated file with all options.
     """
@@ -453,7 +458,7 @@ def dump_defaults(opts):
 
         txt = "\n".join(textwrap.wrap(txt))
         s.yaml_set_comment_before_after_key(k, before="\n" + txt)
-    return ruamel.yaml.round_trip_dump(s)
+    return ruamel.yaml.YAML().dump(s, out)
 
 
 def dump_dicts(opts, keys: typing.List[str]=None):
@@ -482,7 +487,8 @@ def parse(text):
     if not text:
         return {}
     try:
-        data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
+        yaml = ruamel.yaml.YAML(typ='unsafe', pure=True)
+        data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):
             snip = v.problem_mark.get_snippet()
@@ -532,7 +538,7 @@ def load_paths(opts: OptManager, *paths: str) -> None:
                 )
 
 
-def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
+def serialize(opts: OptManager, file: typing.TextIO, text: str, defaults: bool = False) -> None:
     """
         Performs a round-trip serialization. If text is not None, it is
         treated as a previous serialization that should be modified
@@ -550,9 +556,8 @@ def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
     for k in list(data.keys()):
         if k not in opts._options:
             del data[k]
-    ret = ruamel.yaml.round_trip_dump(data)
-    assert ret
-    return ret
+
+    ruamel.yaml.YAML().dump(data, file)
 
 
 def save(opts: OptManager, path: str, defaults: bool =False) -> None:
@@ -572,6 +577,6 @@ def save(opts: OptManager, path: str, defaults: bool =False) -> None:
                 )
     else:
         data = ""
-    data = serialize(opts, data, defaults)
+
     with open(path, "wt", encoding="utf8") as f:
-        f.write(data)
+        serialize(opts, f, data, defaults)

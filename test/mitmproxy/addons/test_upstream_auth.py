@@ -45,9 +45,8 @@ def test_simple():
         f = tflow.tflow()
         f.mode = "transparent"
         up.requestheaders(f)
-        assert "proxy-authorization" in f.request.headers
+        assert "authorization" in f.request.headers
 
         f = tflow.tflow()
-        f.mode = "upstream"
-        up.http_connect(f)
+        up.http_connect_upstream(f)
         assert "proxy-authorization" in f.request.headers
