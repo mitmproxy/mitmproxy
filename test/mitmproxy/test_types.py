@@ -42,6 +42,17 @@ def test_str():
         assert b.parse(tctx.master.commands, str, "foo") == "foo"
 
 
+def test_bytes():
+    with taddons.context() as tctx:
+        b = mitmproxy.types._BytesType()
+        assert b.is_valid(tctx.master.commands, bytes, b"foo") is True
+        assert b.is_valid(tctx.master.commands, bytes, 1) is False
+        assert b.completion(tctx.master.commands, bytes, "") == []
+        assert b.parse(tctx.master.commands, bytes, "foo") == b"foo"
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, bytes, "incomplete escape sequence\\")
+
+
 def test_unknown():
     with taddons.context() as tctx:
         b = mitmproxy.types._UnknownType()
