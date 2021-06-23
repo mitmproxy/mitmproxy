@@ -24,14 +24,21 @@ DEFAULT_CIPHERS = (
 
 
 class AppData(TypedDict):
+    client_alpn: Optional[bytes]
     server_alpn: Optional[bytes]
     http2: bool
 
 
 def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
     app_data: AppData = conn.get_app_data()
+    client_alpn = app_data["client_alpn"]
     server_alpn = app_data["server_alpn"]
     http2 = app_data["http2"]
+    if client_alpn is not None:
+        if client_alpn in options:
+            return client_alpn
+        else:
+            return SSL.NO_OVERLAPPING_PROTOCOLS
     if server_alpn and server_alpn in options:
         return server_alpn
     if server_alpn == b"":
@@ -148,6 +155,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data(AppData(
+            client_alpn=client.alpn,
             server_alpn=server.alpn,
             http2=ctx.options.http2,
         ))
@@ -169,18 +177,19 @@ class TlsConfig:
         if not server.alpn_offers:
             if client.alpn_offers:
                 if ctx.options.http2:
+                    # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol
+                    # version. There are some edge cases where we want to mirror the regular server's behavior
+                    # accurately, for example header capitalization.
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
                     server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
-            elif client.tls_established:
-                # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
-                # There are some edge cases where we want to mirror the regular server's behavior accurately,
-                # for example header capitalization.
-                server.alpn_offers = []
-            elif ctx.options.http2:
-                server.alpn_offers = tls.HTTP_ALPNS
             else:
-                server.alpn_offers = tls.HTTP1_ALPNS
+                # We either have no client TLS or a client without ALPN.
+                # - If the client does use TLS but did not send an ALPN extension, we want to mirror that upstream.
+                # - If the client does not use TLS, there's no clear-cut answer. As a pragmatic approach, we also do
+                #   not send any ALPN extension in this case, which defaults to whatever protocol we are speaking
+                #   or falls back to HTTP.
+                server.alpn_offers = []
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")

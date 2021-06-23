@@ -29,6 +29,7 @@ def load_script(path: str) -> typing.Optional[types.ModuleType]:
     try:
         loader = importlib.machinery.SourceFileLoader(fullname, path)
         spec = importlib.util.spec_from_loader(fullname, loader=loader)
+        assert spec
         m = importlib.util.module_from_spec(spec)
         loader.exec_module(m)
         if not getattr(m, "name", None):

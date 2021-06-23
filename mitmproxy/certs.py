@@ -17,7 +17,7 @@ import OpenSSL
 from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
-CA_EXPIRY = datetime.timedelta(days=3 * 365)
+CA_EXPIRY = datetime.timedelta(days=10 * 365)
 CERT_EXPIRY = datetime.timedelta(days=365)
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
@@ -145,8 +145,13 @@ class Cert(serializable.Serializable):
 
 def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
     parts = []
-    for rdn in name.rdns:
-        k, v = rdn.rfc4514_string().split("=", maxsplit=1)
+    for attr in name:
+        # pyca cryptography <35.0.0 backwards compatiblity
+        if hasattr(name, "rfc4514_attribute_name"):  # pragma: no cover
+            k = attr.rfc4514_attribute_name  # type: ignore
+        else:  # pragma: no cover
+            k = attr.rfc4514_string().partition("=")[0]
+        v = attr.value
         parts.append((k, v))
     return parts
 

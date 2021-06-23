@@ -21,7 +21,7 @@ export default class ValidateEditor extends Component {
         this.onDone = this.onDone.bind(this)
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({ valid: nextProps.isValid(nextProps.content) })
     }
 

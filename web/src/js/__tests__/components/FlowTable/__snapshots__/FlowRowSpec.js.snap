@@ -48,5 +48,18 @@ exports[`FlowRow Component should render correctly 1`] = `
   >
     3s
   </td>
+  <td
+    className="col-quickactions"
+  >
+    <div>
+      <div
+        className="quickaction"
+      >
+        <i
+          className="fa fa-fw fa-ellipsis-h"
+        />
+      </div>
+    </div>
+  </td>
 </tr>
 `;

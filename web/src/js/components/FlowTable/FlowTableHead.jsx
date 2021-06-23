@@ -1,10 +1,10 @@
-import React  from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
+import {connect} from 'react-redux'
 import classnames from 'classnames'
-import columns, {defaultColumnNames} from './FlowColumns'
+import {columns, defaultColumnNames} from './FlowColumns'
 
-import { setSort } from '../../ducks/flows'
+import {setSort} from '../../ducks/flows'
 
 FlowTableHead.propTypes = {
     setSort: PropTypes.func.isRequired,
@@ -14,19 +14,13 @@ FlowTableHead.propTypes = {
 }
 
 export function getDisplayColumns(displayColumnNames) {
-    let displayColumns = []
     if (typeof displayColumnNames == "undefined") {
-        return columns
+        return Object.values(columns)
     }
-    for (const column of columns) {
-        if (displayColumnNames.includes(column.name.slice(0,-6).toLowerCase())) {
-            displayColumns.push(column)
-        }
-    }
-    return displayColumns
+    return displayColumnNames.map(x => columns[x]).concat([columns.quickactions]);
 }
 
-export function FlowTableHead({ sortColumn, sortDesc, setSort, displayColumnNames}) {
+export function FlowTableHead({sortColumn, sortDesc, setSort, displayColumnNames}) {
     const sortType = sortDesc ? 'sort-desc' : 'sort-asc'
 
     const displayColumns = getDisplayColumns(displayColumnNames)

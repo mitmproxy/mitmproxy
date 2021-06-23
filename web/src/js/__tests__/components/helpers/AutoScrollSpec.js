@@ -12,7 +12,7 @@ describe('Autoscroll', () => {
             this.state = { vScroll: calcVScroll() }
         }
 
-       componentWillUpdate() {
+       UNSAFE_componentWillUpdate() {
            mockFn("foo")
        }
 
@@ -31,7 +31,7 @@ describe('Autoscroll', () => {
             viewport = ReactDOM.findDOMNode(autoScroll)
         viewport.scrollTop = 10
         Object.defineProperty(viewport, "scrollHeight", { value: 10, writable: true })
-        autoScroll.componentWillUpdate()
+        autoScroll.UNSAFE_componentWillUpdate()
         expect(mockFn).toBeCalledWith("foo")
 
         Object.defineProperty(viewport, "scrollHeight", { value: 0, writable: true })

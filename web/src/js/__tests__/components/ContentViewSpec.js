@@ -5,7 +5,7 @@ import { TStore, TFlow } from '../ducks/tutils'
 import { Provider } from 'react-redux'
 import mockXMLHttpRequest from 'mock-xmlhttprequest'
 
-global.XMLHttpRequest = mockXMLHttpRequest
+window.XMLHttpRequest = mockXMLHttpRequest
 
 describe('ContentView Component', () => {
     let store = TStore()

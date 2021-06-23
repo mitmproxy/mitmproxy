@@ -2,85 +2,121 @@
 
 exports[`MainMenu Component should render and connect to state 1`] = `
 <div
-  className="menu-main"
+  className="main-menu"
 >
   <div
-    className="filter-input input-group"
+    className="menu-group"
   >
-    <span
-      className="input-group-addon"
+    <div
+      className="menu-content"
     >
-      <i
-        className="fa fa-fw fa-search"
-        style={
-          Object {
-            "color": "black",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Search"
-      type="text"
-      value="~u foo"
-    />
+      <div
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-search"
+            style={
+              Object {
+                "color": "black",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Search"
+          type="text"
+          value="~u foo"
+        />
+      </div>
+      <div
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-tag"
+            style={
+              Object {
+                "color": "hsl(48, 100%, 50%)",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Highlight"
+          type="text"
+          value="~a bar"
+        />
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Find
+    </div>
   </div>
   <div
-    className="filter-input input-group"
+    className="menu-group"
   >
-    <span
-      className="input-group-addon"
+    <div
+      className="menu-content"
     >
-      <i
-        className="fa fa-fw fa-tag"
-        style={
-          Object {
-            "color": "hsl(48, 100%, 50%)",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Highlight"
-      type="text"
-      value="~a bar"
-    />
-  </div>
-  <div
-    className="filter-input input-group"
-  >
-    <span
-      className="input-group-addon"
+      <div
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-pause"
+            style={
+              Object {
+                "color": "hsl(208, 56%, 53%)",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Intercept"
+          type="text"
+          value=""
+        />
+      </div>
+      <button
+        className="btn-sm btn btn-default"
+        onClick={[Function]}
+        title="[a]ccept all"
+      >
+        <i
+          className="fa fa-fw fa-forward text-success"
+        />
+        Resume All
+      </button>
+    </div>
+    <div
+      className="menu-legend"
     >
-      <i
-        className="fa fa-fw fa-pause"
-        style={
-          Object {
-            "color": "hsl(208, 56%, 53%)",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Intercept"
-      type="text"
-      value=""
-    />
+      Intercept
+    </div>
   </div>
 </div>
 `;

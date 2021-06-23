@@ -10,6 +10,7 @@ def test_context():
         )
         assert repr(c)
         c.layers.append(1)
+        assert repr(c)
         c2 = c.fork()
         c.layers.append(2)
         c2.layers.append(3)

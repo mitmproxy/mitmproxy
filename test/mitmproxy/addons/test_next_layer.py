@@ -122,5 +122,6 @@ class TestNextLayer:
             assert isinstance(nl._next_layer(ctx, b"", b"hello"), layers.TCPLayer)
 
             l = MagicMock()
+            l.layer = None
             nl.next_layer(l)
             assert isinstance(l.layer, layers.modes.HttpProxy)

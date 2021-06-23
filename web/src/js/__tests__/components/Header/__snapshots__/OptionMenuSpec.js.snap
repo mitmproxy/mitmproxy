@@ -8,9 +8,8 @@ exports[`OptionMenu Component should render correctly 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
-        disabled={undefined}
         onClick={[Function]}
         title="Open Options"
       >
@@ -21,7 +20,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
         <sup>
           alpha
         </sup>
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"

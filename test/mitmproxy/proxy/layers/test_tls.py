@@ -226,8 +226,8 @@ class TestServerTLS:
 
     def test_simple(self, tctx):
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
-        tctx.server.state = ConnectionState.OPEN
         tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.state = ConnectionState.OPEN
         tctx.server.sni = "example.mitmproxy.org"
 
         tssl = SSLTest(server_side=True)
@@ -345,7 +345,7 @@ def make_client_tls_layer(
     playbook = tutils.Playbook(server_layer)
 
     # Add some server config, this is needed anyways.
-    tctx.server.address = ("example.mitmproxy.org", 443)
+    tctx.server.__dict__["address"] = ("example.mitmproxy.org", 443)  # .address fails because connection is open
     tctx.server.sni = "example.mitmproxy.org"
 
     tssl_client = SSLTest(**kwargs)

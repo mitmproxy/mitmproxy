@@ -11,7 +11,7 @@ const stopPropagation = e => {
     }
 }
 
-BooleanOption.PropTypes = {
+BooleanOption.propTypes = {
     value: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired,
 }
@@ -30,7 +30,7 @@ function BooleanOption({ value, onChange, ...props }) {
     )
 }
 
-StringOption.PropTypes = {
+StringOption.propTypes = {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
 }
@@ -52,7 +52,7 @@ function Optional(Component) {
     }
 }
 
-NumberOption.PropTypes = {
+NumberOption.propTypes = {
     value: PropTypes.number.isRequired,
     onChange: PropTypes.func.isRequired,
 }
@@ -66,7 +66,7 @@ function NumberOption({ value, onChange, ...props }) {
     )
 }
 
-ChoicesOption.PropTypes = {
+ChoicesOption.propTypes = {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
 }
@@ -86,8 +86,8 @@ export function ChoicesOption({ value, onChange, choices, ...props }) {
     )
 }
 
-StringSequenceOption.PropTypes = {
-    value: PropTypes.string.isRequired,
+StringSequenceOption.propTypes = {
+    value: PropTypes.arrayOf(PropTypes.string).isRequired,
     onChange: PropTypes.func.isRequired,
 }
 function StringSequenceOption({ value, onChange, ...props }) {

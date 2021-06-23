@@ -15,36 +15,36 @@ describe('FlowTable Component', () => {
     it('should render correctly', () => {
         let provider = renderer.create(
                 <Provider store={store}>
-                    <FlowTable onSelect={selectFn} flows={[tflow]}/>
+                    <FlowTable selectFlow={selectFn} flows={[tflow]}/>
                 </Provider>),
             tree = provider.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
-    let provider = TestUtils.renderIntoDocument(
+    let provider = renderer.create(
         <Provider store={store} >
-            <FlowTable onSelect={selectFn} flows={[tflow]}/>
+            <FlowTable selectFlow={selectFn} flows={[tflow]}/>
         </Provider>),
-        flowTable = TestUtils.findRenderedComponentWithType(provider, FlowTable)
+        flowTable = provider.root.findByType(FlowTable)
 
     it('should handle componentWillUnmount', () => {
-        flowTable.componentWillUnmount()
-        expect(window.addEventListener).toBeCalledWith('resize', flowTable.onViewportUpdate)
+        flowTable.instance.UNSAFE_componentWillUnmount()
+        expect(window.addEventListener).toBeCalledWith('resize', flowTable.instance.onViewportUpdate)
     })
 
     it('should handle componentDidUpdate', () => {
         // flowTable.shouldScrollIntoView == false
-        expect(flowTable.componentDidUpdate()).toEqual(undefined)
+        expect(flowTable.instance.componentDidUpdate()).toEqual(undefined)
         // rowTop - headHeight < viewportTop
-        flowTable.shouldScrollIntoView = true
-        flowTable.componentDidUpdate()
+        flowTable.instance.shouldScrollIntoView = true
+        flowTable.instance.componentDidUpdate()
         // rowBottom > viewportTop + viewportHeight
-        flowTable.shouldScrollIntoView = true
-        flowTable.componentDidUpdate()
+        flowTable.instance.shouldScrollIntoView = true
+        flowTable.instance.componentDidUpdate()
     })
 
     it('should handle componentWillReceiveProps', () => {
-        flowTable.componentWillReceiveProps({selected: tflow})
-        expect(flowTable.shouldScrollIntoView).toBeTruthy()
+        flowTable.instance.UNSAFE_componentWillReceiveProps({selected: tflow})
+        expect(flowTable.instance.shouldScrollIntoView).toBeTruthy()
     })
 })

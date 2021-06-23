@@ -105,7 +105,7 @@ export class Request extends Component {
                         flow={flow}
                         onContentChange={content => updateFlow({ request: {content}})}
                         message={flow.request}/>
-                    
+
                     <hr/>
                     <Headers
                         message={flow.request}

@@ -5,6 +5,7 @@ from mitmproxy.addons import blocklist
 from mitmproxy.addons import browser
 from mitmproxy.addons import clientplayback
 from mitmproxy.addons import command_history
+from mitmproxy.addons import comment
 from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
@@ -21,7 +22,6 @@ from mitmproxy.addons import modifybody
 from mitmproxy.addons import modifyheaders
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
-from mitmproxy.addons import streambodies
 from mitmproxy.addons import save
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import upstream_auth
@@ -37,14 +37,15 @@ def default_addons():
         anticomp.AntiComp(),
         clientplayback.ClientPlayback(),
         command_history.CommandHistory(),
+        comment.Comment(),
         cut.Cut(),
         disable_h2c.DisableH2C(),
         export.Export(),
-        next_layer.NextLayer(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
         proxyserver.Proxyserver(),
         script.ScriptLoader(),
+        next_layer.NextLayer(),
         serverplayback.ServerPlayback(),
         mapremote.MapRemote(),
         maplocal.MapLocal(),
@@ -52,7 +53,6 @@ def default_addons():
         modifyheaders.ModifyHeaders(),
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
-        streambodies.StreamBodies(),
         save.Save(),
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),

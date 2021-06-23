@@ -75,3 +75,17 @@ class HttpConnectHook(commands.StartHook):
     but all requests going over the newly opened connection will.
     """
     flow: http.HTTPFlow
+
+
+@dataclass
+class HttpConnectUpstreamHook(commands.StartHook):
+    """
+    An HTTP CONNECT request is about to be sent to an upstream proxy.
+    This event can be ignored for most practical purposes.
+
+    This event can be used to set custom authentication headers for upstream proxies.
+
+    CONNECT requests do not generate the usual HTTP handler events,
+    but all requests going over the newly opened connection will.
+    """
+    flow: http.HTTPFlow

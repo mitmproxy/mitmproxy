@@ -1,24 +1,37 @@
-import React, { Component } from "react"
-import PropTypes from 'prop-types'
-import { connect } from "react-redux"
+import React from "react"
+import {connect} from "react-redux"
 import FilterInput from "./FilterInput"
-import { update as updateSettings } from "../../ducks/settings"
-import { setFilter, setHighlight } from "../../ducks/flows"
+import {update as updateSettings} from "../../ducks/settings"
+import * as flowsActions from "../../ducks/flows"
+import {setFilter, setHighlight} from "../../ducks/flows"
+import Button from "../common/Button"
 
 MainMenu.title = "Start"
 
 export default function MainMenu() {
     return (
-        <div className="menu-main">
-            <FlowFilterInput/>
-            <HighlightInput/>
-            <InterceptInput/>
+        <div className="main-menu">
+            <div className="menu-group">
+                <div className="menu-content">
+                    <FlowFilterInput/>
+                    <HighlightInput/>
+                </div>
+                <div className="menu-legend">Find</div>
+            </div>
+
+            <div className="menu-group">
+                <div className="menu-content">
+                    <InterceptInput/>
+                    <ResumeAll/>
+                </div>
+                <div className="menu-legend">Intercept</div>
+            </div>
         </div>
     )
 }
 
 export function setIntercept(intercept) {
-    updateSettings({ intercept })
+    return updateSettings({intercept})
 }
 
 const InterceptInput = connect(
@@ -28,7 +41,7 @@ const InterceptInput = connect(
         type: 'pause',
         color: 'hsl(208, 56%, 53%)'
     }),
-    { onChange: setIntercept }
+    {onChange: setIntercept}
 )(FilterInput);
 
 const FlowFilterInput = connect(
@@ -38,7 +51,7 @@ const FlowFilterInput = connect(
         type: 'search',
         color: 'black'
     }),
-    { onChange: setFilter }
+    {onChange: setFilter}
 )(FilterInput);
 
 const HighlightInput = connect(
@@ -48,5 +61,19 @@ const HighlightInput = connect(
         type: 'tag',
         color: 'hsl(48, 100%, 50%)'
     }),
-    { onChange: setHighlight }
+    {onChange: setHighlight}
 )(FilterInput);
+
+export function ResumeAll({resumeAll}) {
+    return (
+        <Button className="btn-sm" title="[a]ccept all"
+                icon="fa-forward text-success" onClick={() => resumeAll()}>
+            Resume All
+        </Button>
+    )
+}
+
+ResumeAll = connect(
+    null,
+    {resumeAll: flowsActions.resumeAll}
+)(ResumeAll)

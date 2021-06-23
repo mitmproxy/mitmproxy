@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from cryptography import x509
+from cryptography.x509 import NameOID
 
 import pytest
 
@@ -231,3 +233,26 @@ class TestCert:
 
         with pytest.raises(TypeError):
             tstore.add_cert_file("encrypted-no-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), None)
+
+    def test_special_character(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:
+            d = f.read()
+        c = certs.Cert.from_pem(d)
+
+        assert dict(c.issuer).get('O') == 'DigiCert, Inc.'
+        assert dict(c.subject).get('O') == 'GitHub, Inc.'
+
+    def test_multi_valued_rdns(self, tdata):
+        subject = x509.Name([
+            x509.RelativeDistinguishedName([
+                x509.NameAttribute(NameOID.TITLE, u'Test'),
+                x509.NameAttribute(NameOID.COMMON_NAME, u'Multivalue'),
+                x509.NameAttribute(NameOID.SURNAME, u'RDNs'),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'TSLA'),
+            ]),
+            x509.RelativeDistinguishedName([
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'PyCA')
+            ]),
+        ])
+        expected = [('2.5.4.12', 'Test'), ('CN', 'Multivalue'), ('2.5.4.4', 'RDNs'), ('O', 'TSLA'), ('O', 'PyCA')]
+        assert(certs._name_to_keyval(subject)) == expected

@@ -275,6 +275,8 @@ class ClearAll(RequestHandler):
 class ResumeFlows(RequestHandler):
     def post(self):
         for f in self.view:
+            if not f.intercepted:
+                continue
             f.resume()
             self.view.update([f])
 

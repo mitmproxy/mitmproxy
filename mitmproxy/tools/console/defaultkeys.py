@@ -1,5 +1,6 @@
 def map(km):
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
+    km.add(";", "console.command flow.comment @focus ''", ["flowlist", "flowview"], "Add comment to flow")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("B", "browser.start", ["global"], "Start an attached browser")
     km.add("C", "console.view.commands", ["global"], "View commands")

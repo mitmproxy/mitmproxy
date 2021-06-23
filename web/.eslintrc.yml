@@ -1,6 +1,0 @@
-{
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "sourceType": "module",
-    }
-}

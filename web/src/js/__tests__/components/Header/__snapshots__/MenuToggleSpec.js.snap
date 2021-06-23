@@ -22,7 +22,7 @@ exports[`MenuToggle Component should render correctly 1`] = `
   <label>
     <input
       checked={true}
-      onChange={[Function]}
+      onChange={[MockFunction]}
       type="checkbox"
     />
     <p>

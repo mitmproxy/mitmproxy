@@ -6,7 +6,7 @@ import { ViewServer, ViewImage, PureViewServer, Edit } from '../../../components
 import { TFlow, TStore } from '../../ducks/tutils'
 import mockXMLHttpRequest from 'mock-xmlhttprequest'
 
-global.XMLHttpRequest = mockXMLHttpRequest
+window.XMLHttpRequest = mockXMLHttpRequest
 let tflow = new TFlow()
 
 describe('ViewImage Component', () => {

@@ -82,9 +82,18 @@ class Flow(stateobject.StateObject):
     We're waiting for a user action to forward the flow to its destination.
     """
 
-    marked: bool
+    marked: str = ""
     """
-    If `True`, this flow has been marked by the user.
+    If this attribute is a non-empty string the flow has been marked by the user.
+
+    A string value will be used as the marker annotation. May either be a single character or a Unicode emoji name.
+
+    For example `:grapes:` becomes `🍇` in views that support emoji rendering.
+    Consult the [Github API Emoji List](https://api.github.com/emojis) for a list of emoji that may be used.
+    Not all emoji, especially [emoji modifiers](https://en.wikipedia.org/wiki/Miscellaneous_Symbols_and_Pictographs#Emoji_modifiers)
+    will render consistently.
+
+    The default marker for the view will be used if the Unicode emoji name can not be interpreted.
     """
 
     is_replay: typing.Optional[str]
@@ -111,9 +120,10 @@ class Flow(stateobject.StateObject):
         self.intercepted: bool = False
         self._backup: typing.Optional[Flow] = None
         self.reply: typing.Optional[controller.Reply] = None
-        self.marked: bool = False
+        self.marked: str = ""
         self.is_replay: typing.Optional[str] = None
         self.metadata: typing.Dict[str, typing.Any] = dict()
+        self.comment: str = ""
 
     _stateobject_attributes = dict(
         id=str,
@@ -123,8 +133,9 @@ class Flow(stateobject.StateObject):
         type=str,
         intercepted=bool,
         is_replay=str,
-        marked=bool,
+        marked=str,
         metadata=typing.Dict[str, typing.Any],
+        comment=str,
     )
 
     def get_state(self):

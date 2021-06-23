@@ -17,6 +17,12 @@ import collections.abc
 import pydivert
 import pydivert.consts
 
+if typing.TYPE_CHECKING:
+    class WindowsError(OSError):
+        @property
+        def winerror(self) -> int:
+            return 42
+
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
 
