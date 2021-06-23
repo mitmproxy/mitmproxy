@@ -67,6 +67,7 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   (@mhils)
 * `json()` method for HTTP Request and Response instances will return decoded JSON body. (@rbdixon)
 * Support for HTTP/2 Push Promises has been dropped. (@mhils)
+* Make it possible to set sequence options from the command line (@Yopi)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
