@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 from pprint import pprint
 
 import click
 
-from mitmproxy import tnetstring
+from mitmproxy.io import tnetstring
 
 
 def read_tnetstring(input):
