@@ -312,6 +312,10 @@ def convert_12_13(data):
 def convert_13_14(data):
     data["version"] = 14
     data["comment"] = ""
+    # bugfix for https://github.com/mitmproxy/mitmproxy/issues/4576
+    if data.get("response", {}).get("timestamp_start", {}) is None:
+        data["response"]["timestamp_start"] = data["request"]["timestamp_end"]
+        data["response"]["timestamp_end"] = data["request"]["timestamp_end"] + 1
     return data
 
 
