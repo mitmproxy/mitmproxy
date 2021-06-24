@@ -171,7 +171,7 @@ class TlsConfig:
         else:
             verify = net_tls.Verify.VERIFY_PEER
 
-        if server.sni is True:
+        if server.sni is None:
             server.sni = client.sni or server.address[0]
 
         if not server.alpn_offers:
