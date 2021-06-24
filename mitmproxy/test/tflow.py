@@ -6,7 +6,7 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.test import tutils
+from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
 
 
@@ -95,9 +95,9 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     if server_conn is True:
         server_conn = tserver_conn()
     if req is True:
-        req = tutils.treq()
+        req = treq()
     if resp is True:
-        resp = tutils.tresp()
+        resp = tresp()
     if err is True:
         err = terr()
 
