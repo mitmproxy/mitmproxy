@@ -1,7 +1,6 @@
 import pytest
 
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
@@ -19,7 +18,7 @@ def test_open_connection(tctx):
             << OpenConnection(tctx.server)
     )
 
-    tctx.server.state = ConnectionState.OPEN
+    tctx.server.timestamp_start = 1624544785
     assert (
             Playbook(tcp.TCPLayer(tctx, True))
             << None

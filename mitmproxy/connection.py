@@ -91,6 +91,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     For server connections, this value may also be set to `True`, which means "use `Server.address`".
     """
 
+    timestamp_start: Optional[float]
     timestamp_end: Optional[float] = None
     """*Timestamp:* Connection has been closed."""
     timestamp_tls_setup: Optional[float] = None
