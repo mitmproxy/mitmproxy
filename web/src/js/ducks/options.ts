@@ -17,7 +17,7 @@ const reducer: Reducer<OptionsState> = (state = defaultState, action) => {
         case RECEIVE:
             let s = <OptionsState>{};
             // @ts-ignore
-            for (const [name, value] of Object.entries(action.data)) {
+            for (const [name, {value}] of Object.entries(action.data)) {
                 s[name] = value
             }
             return s;
@@ -25,7 +25,7 @@ const reducer: Reducer<OptionsState> = (state = defaultState, action) => {
         case UPDATE:
             let s2 = {...state}
             // @ts-ignore
-            for (const [name, value] of Object.entries(action.data)) {
+            for (const [name, {value}] of Object.entries(action.data)) {
                 s2[name] = value
             }
             return s2
