@@ -78,7 +78,7 @@ function templates() {
         .pipe(gulp.dest("../mitmproxy/tools/web"));
 }
 
-const peg_src = "src/js/filt/filt.peg";
+const peg_src = "src/js/filt/*.peg";
 
 function peg() {
     return gulp.src(peg_src, {base: "src/"})
