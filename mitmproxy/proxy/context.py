@@ -31,6 +31,7 @@ class Context:
         ret = Context(self.client, self.options)
         ret.server = self.server
         ret.layers = self.layers.copy()
+        ret._h2c = getattr(self, "_h2c", False)
         return ret
 
     def __repr__(self):

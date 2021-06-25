@@ -39,7 +39,7 @@ def default_addons():
         command_history.CommandHistory(),
         comment.Comment(),
         cut.Cut(),
-        disable_h2c.DisableH2C(),
+        # disable_h2c.DisableH2C(),
         export.Export(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),

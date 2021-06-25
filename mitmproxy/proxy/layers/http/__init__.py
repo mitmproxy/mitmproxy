@@ -668,7 +668,7 @@ class HttpLayer(layer.Layer):
         self.command_sources = {}
 
         http_conn: HttpConnection
-        if self.context.client.alpn == b"h2":
+        if self.context.client.alpn == b"h2" or getattr(self.context, "_h2c", False):
             http_conn = Http2Server(context.fork())
         else:
             http_conn = Http1Server(context.fork())
@@ -854,7 +854,7 @@ class HttpClient(layer.Layer):
         else:
             err = yield commands.OpenConnection(self.context.server)
         if not err:
-            if self.context.server.alpn == b"h2":
+            if self.context.server.alpn == b"h2" or getattr(self.context, "_h2c", False):
                 self.child_layer = Http2Client(self.context)
             else:
                 self.child_layer = Http1Client(self.context)

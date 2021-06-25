@@ -178,6 +178,9 @@ class NextLayer:
             return layers.TCPLayer(context)
 
         # 6. Assume HTTP by default.
+        if data_client[:24] == b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n':
+            context._h2c = True
+
         return layers.HttpLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context: context.Context) -> layer.Layer:
