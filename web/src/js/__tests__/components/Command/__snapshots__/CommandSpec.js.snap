@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CommandBar Component should render correctly 1`] = `
+Array [
+  <div
+    className="command"
+  >
+    Command Result
+  </div>,
+  <div
+    className="command-result"
+  />,
+  <div
+    className="command-suggestion"
+  >
+    Argument suggestion: 
+    
+  </div>,
+  <div
+    className="command-input input-group"
+  >
+    <span
+      className="input-group-addon"
+    >
+      <i
+        className="fa fa-fw fa-terminal"
+      />
+    </span>
+    <input
+      className="form-control"
+      onChange={[Function]}
+      onKeyDown={[Function]}
+      onKeyUp={[Function]}
+      placeholder="Enter command"
+      type="text"
+      value=""
+    />
+  </div>,
+]
+`;

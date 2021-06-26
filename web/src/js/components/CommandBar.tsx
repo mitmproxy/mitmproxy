@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Component } from 'react'
 import classnames from 'classnames'
-import { Key, fetchApi } from '../utils.js'
+import { Key, fetchApi } from '../utils'
 import Filt from '../filt/command'
 
 export default function CommandBar() {
