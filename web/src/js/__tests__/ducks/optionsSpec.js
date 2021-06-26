@@ -13,12 +13,12 @@ describe('option reducer', () => {
     })
 
     it('should handle receive action', () => {
-        let action = { type: OptionsActions.RECEIVE, data: {id: 'foo'} }
+        let action = { type: OptionsActions.RECEIVE, data: {id: {value: 'foo'} } }
         expect(reduceOptions(undefined, action)).toEqual({id: 'foo'})
     })
 
     it('should handle update action', () => {
-        let action = {type: OptionsActions.UPDATE, data: {id: 1} }
+        let action = {type: OptionsActions.UPDATE, data: {id: {value: 1} } }
         expect(reduceOptions(undefined, action)).toEqual({...OptionsActions.defaultState, id: 1})
     })
 })
