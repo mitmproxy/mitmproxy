@@ -122,9 +122,20 @@ class TlsStartData:
 
 
 @dataclass
-class TlsStartHook(StartHook):
+class TlsStartClientHook(StartHook):
     """
-    TLS Negotation is about to start.
+    TLS Negotation between mitmproxy and a client is about to start.
+
+    An addon is expected to initialize data.ssl_conn.
+    (by default, this is done by mitmproxy.addons.TlsConfig)
+    """
+    data: TlsStartData
+
+
+@dataclass
+class TlsStartServerHook(StartHook):
+    """
+    TLS Negotation between mitmproxy and a server is about to start.
 
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by mitmproxy.addons.TlsConfig)
@@ -152,7 +163,10 @@ class _TLSLayer(tunnel.TunnelLayer):
         assert not self.tls
 
         tls_start = TlsStartData(self.conn, self.context)
-        yield TlsStartHook(tls_start)
+        if tls_start.conn == tls_start.context.client:
+            yield TlsStartClientHook(tls_start)
+        else:
+            yield TlsStartServerHook(tls_start)
         if not tls_start.ssl_conn:
             yield commands.Log("No TLS context was provided, failing connection.", "error")
             yield commands.CloseConnection(self.conn)

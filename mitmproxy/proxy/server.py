@@ -414,30 +414,31 @@ if __name__ == "__main__":  # pragma: no cover
             if "redirect" in flow.request.path:
                 flow.request.host = "httpbin.org"
 
-        def tls_start(tls_start: tls.TlsStartData):
+        def tls_start_client(tls_start: tls.TlsStartData):
             # INSECURE
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-            if tls_start.conn == tls_start.context.client:
-                ssl_context.use_privatekey_file(
-                    pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.key")
-                )
-                ssl_context.use_certificate_chain_file(
-                    pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.crt")
-                )
-
+            ssl_context.use_privatekey_file(
+                pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.key")
+            )
+            ssl_context.use_certificate_chain_file(
+                pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.crt")
+            )
             tls_start.ssl_conn = SSL.Connection(ssl_context)
+            tls_start.ssl_conn.set_accept_state()
 
-            if tls_start.conn == tls_start.context.client:
-                tls_start.ssl_conn.set_accept_state()
-            else:
-                tls_start.ssl_conn.set_connect_state()
-                if tls_start.context.client.sni is not None:
-                    tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni.encode())
+        def tls_start_server(tls_start: tls.TlsStartData):
+            # INSECURE
+            ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+            tls_start.ssl_conn = SSL.Connection(ssl_context)
+            tls_start.ssl_conn.set_connect_state()
+            if tls_start.context.client.sni is not None:
+                tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni.encode())
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,
             "request": request,
-            "tls_start": tls_start,
+            "tls_start_client": tls_start_client,
+            "tls_start_server": tls_start_server,
         }).handle_client()
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
