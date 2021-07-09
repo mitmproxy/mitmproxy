@@ -176,7 +176,7 @@ class FlowCaptureMixin(object):
     # we could also put it on the page object.
 
     def get_full_url(self, request):
-        host_port = request.host
+        host_port = request.pretty_host
         if request.method == 'CONNECT':
             if request.port != 443:
                 host_port = host_port + ':' + str(request.port)
