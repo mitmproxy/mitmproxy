@@ -228,8 +228,8 @@ class Fragmentizer:
 
     def __call__(self, content: bytes) -> Iterator[wsproto.events.Message]:
         if not content:
-            return
-        if len(content) == sum(self.fragment_lengths):
+            yield self.msg(content, True)
+        elif len(content) == sum(self.fragment_lengths):
             # message has the same length, we can reuse the same sizes
             offset = 0
             for fl in self.fragment_lengths[:-1]:
