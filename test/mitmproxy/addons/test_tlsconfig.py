@@ -126,7 +126,7 @@ class TestTlsConfig:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
             tls_start = tls.TlsStartData(ctx.client, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_client(tls_start)
             tssl_server = tls_start.ssl_conn
             tssl_client = test_tls.SSLTest()
             assert self.do_handshake(tssl_client, tssl_server)
@@ -141,7 +141,7 @@ class TestTlsConfig:
             ctx.server.address = ("example.mitmproxy.org", 443)
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             with pytest.raises(SSL.Error, match="certificate verify failed"):
@@ -156,7 +156,7 @@ class TestTlsConfig:
                 "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
@@ -175,7 +175,7 @@ class TestTlsConfig:
                 ciphers_server="ALL"
             )
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
@@ -191,7 +191,7 @@ class TestTlsConfig:
                 tctx.configure(ta, http2=http2)
                 ctx.client.alpn_offers = client_offers
                 ctx.server.alpn_offers = None
-                ta.tls_start(tls_start)
+                ta.tls_start_server(tls_start)
                 assert ctx.server.alpn_offers == expected
 
             assert_alpn(True, tls.HTTP_ALPNS + (b"foo",), tls.HTTP_ALPNS + (b"foo",))
@@ -222,7 +222,7 @@ class TestTlsConfig:
             )
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
 

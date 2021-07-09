@@ -11,9 +11,9 @@ from mitmproxy.proxy.layer import NextLayer, NextLayerHook
 from mitmproxy.proxy.layers import http, modes, tcp, tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
-from mitmproxy.proxy.layers.tls import ClientTLSLayer, TlsStartHook
+from mitmproxy.proxy.layers.tls import ClientTLSLayer, TlsStartClientHook, TlsStartServerHook
 from mitmproxy.tcp import TCPFlow
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client, reply_tls_start_server
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
@@ -64,8 +64,8 @@ def test_upstream_https(tctx):
         >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.upstream))
         << OpenConnection(upstream)
         >> reply(None)
-        << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"http/1.1")
+        << TlsStartServerHook(Placeholder())
+        >> reply_tls_start_server(alpn=b"http/1.1")
         << SendData(upstream, clienthello)
     )
     assert upstream().address == ("example.mitmproxy.org", 8081)
@@ -74,8 +74,8 @@ def test_upstream_https(tctx):
         >> DataReceived(tctx2.client, clienthello())
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(ClientTLSLayer)
-        << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"http/1.1")
+        << TlsStartClientHook(Placeholder())
+        >> reply_tls_start_client(alpn=b"http/1.1")
         << SendData(tctx2.client, serverhello)
     )
     assert (
@@ -195,8 +195,8 @@ def test_reverse_proxy_tcp_over_tls(tctx: Context, monkeypatch, patch, connectio
             )
         assert (
             playbook
-            << TlsStartHook(Placeholder())
-            >> reply_tls_start()
+            << TlsStartServerHook(Placeholder())
+            >> reply_tls_start_server()
             << SendData(tctx.server, data)
         )
         assert tls.parse_client_hello(data()).sni == "localhost"

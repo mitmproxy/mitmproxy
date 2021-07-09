@@ -156,57 +156,63 @@ def interact(playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTe
     tssl.bio_write(data())
 
 
-def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_client(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
-    Helper function to simplify the syntax for tls_start hooks.
+    Helper function to simplify the syntax for tls_start_client hooks.
     """
 
-    def make_conn(tls_start: tls.TlsStartData) -> None:
+    def make_client_conn(tls_start: tls.TlsStartData) -> None:
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-        if tls_start.conn == tls_start.context.client:
-            ssl_context.use_privatekey_file(
-                tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
-            )
-            ssl_context.use_certificate_chain_file(
-                tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt")
-            )
-        else:
-            ssl_context.load_verify_locations(
-                cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt")
-            )
+        ssl_context.use_privatekey_file(
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
+        )
+        ssl_context.use_certificate_chain_file(
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt")
+        )
         if alpn is not None:
-            if tls_start.conn == tls_start.context.client:
-                ssl_context.set_alpn_select_callback(lambda conn, protos: alpn)
-            else:
-                ssl_context.set_alpn_protos([alpn])
+            ssl_context.set_alpn_select_callback(lambda conn, protos: alpn)
 
-        if tls_start.conn == tls_start.context.client:
-            tls_start.ssl_conn = SSL.Connection(ssl_context)
-            tls_start.ssl_conn.set_accept_state()
-        else:
-            ssl_context.set_verify(SSL.VERIFY_PEER)
+        tls_start.ssl_conn = SSL.Connection(ssl_context)
+        tls_start.ssl_conn.set_accept_state()
 
-            tls_start.ssl_conn = SSL.Connection(ssl_context)
-            tls_start.ssl_conn.set_connect_state()
-            # Set SNI
-            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni.encode())
+    return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
-            # Manually enable hostname verification.
-            # Recent OpenSSL versions provide slightly nicer ways to do this, but they are not exposed in
-            # cryptography and likely a PITA to add.
-            # https://wiki.openssl.org/index.php/Hostname_validation
-            param = SSL._lib.SSL_get0_param(tls_start.ssl_conn._ssl)
-            # Common Name matching is disabled in both Chrome and Firefox, so we should disable it, too.
-            # https://www.chromestatus.com/feature/4981025180483584
-            SSL._lib.X509_VERIFY_PARAM_set_hostflags(
-                param,
-                SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
-            )
-            SSL._openssl_assert(
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni.encode(), 0) == 1
-            )
 
-    return tutils.reply(*args, side_effect=make_conn, **kwargs)
+def reply_tls_start_server(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
+    """
+    Helper function to simplify the syntax for tls_start_server hooks.
+    """
+
+    def make_server_conn(tls_start: tls.TlsStartData) -> None:
+        ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+        ssl_context.load_verify_locations(
+            cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt")
+        )
+        if alpn is not None:
+            ssl_context.set_alpn_protos([alpn])
+        ssl_context.set_verify(SSL.VERIFY_PEER)
+
+        tls_start.ssl_conn = SSL.Connection(ssl_context)
+        tls_start.ssl_conn.set_connect_state()
+        # Set SNI
+        tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni.encode())
+
+        # Manually enable hostname verification.
+        # Recent OpenSSL versions provide slightly nicer ways to do this, but they are not exposed in
+        # cryptography and likely a PITA to add.
+        # https://wiki.openssl.org/index.php/Hostname_validation
+        param = SSL._lib.SSL_get0_param(tls_start.ssl_conn._ssl)
+        # Common Name matching is disabled in both Chrome and Firefox, so we should disable it, too.
+        # https://www.chromestatus.com/feature/4981025180483584
+        SSL._lib.X509_VERIFY_PARAM_set_hostflags(
+            param,
+            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
+        )
+        SSL._openssl_assert(
+            SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni.encode(), 0) == 1
+        )
+
+    return tutils.reply(*args, side_effect=make_server_conn, **kwargs)
 
 
 class TestServerTLS:
@@ -236,8 +242,8 @@ class TestServerTLS:
         data = tutils.Placeholder(bytes)
         assert (
                 playbook
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartServerHook(tutils.Placeholder())
+                >> reply_tls_start_server()
                 << commands.SendData(tctx.server, data)
         )
 
@@ -294,8 +300,8 @@ class TestServerTLS:
                 >> tutils.reply_next_layer(TlsEchoLayer)
                 << commands.OpenConnection(tctx.server)
                 >> tutils.reply(None)
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartServerHook(tutils.Placeholder())
+                >> reply_tls_start_server()
                 << commands.SendData(tctx.server, data)
         )
 
@@ -323,8 +329,8 @@ class TestServerTLS:
         data = tutils.Placeholder(bytes)
         assert (
                 playbook
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartServerHook(tutils.Placeholder())
+                >> reply_tls_start_server()
                 << commands.SendData(tctx.server, data)
                 >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
                 << commands.Log("Server TLS handshake failed. The remote server does not speak TLS.", "warn")
@@ -370,8 +376,8 @@ class TestClientTLS:
                 >> events.DataReceived(tctx.client, tssl_client.bio_read())
                 << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply()
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartClientHook(tutils.Placeholder())
+                >> reply_tls_start_client()
                 << commands.SendData(tctx.client, data)
         )
         tssl_client.bio_write(data())
@@ -422,8 +428,8 @@ class TestClientTLS:
             )
         assert (
             playbook
-            << tls.TlsStartHook(tutils.Placeholder())
-            >> reply_tls_start(alpn=b"quux")
+            << tls.TlsStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server(alpn=b"quux")
             << commands.SendData(tctx.server, data)
         )
 
@@ -437,7 +443,7 @@ class TestClientTLS:
                 playbook
                 >> events.DataReceived(tctx.server, tssl_server.bio_read())
                 << commands.SendData(tctx.server, data)
-                << tls.TlsStartHook(tutils.Placeholder())
+                << tls.TlsStartClientHook(tutils.Placeholder())
         )
         tssl_server.bio_write(data())
         assert tctx.server.tls_established
@@ -446,7 +452,7 @@ class TestClientTLS:
         data = tutils.Placeholder(bytes)
         assert (
                 playbook
-                >> reply_tls_start(alpn=b"quux")
+                >> reply_tls_start_client(alpn=b"quux")
                 << commands.SendData(tctx.client, data)
         )
         tssl_client.bio_write(data())
@@ -496,8 +502,8 @@ class TestClientTLS:
                 >> events.DataReceived(tctx.client, tssl_client.bio_read())
                 << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply()
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartClientHook(tutils.Placeholder())
+                >> reply_tls_start_client()
                 << commands.SendData(tctx.client, data)
         )
         tssl_client.bio_write(data())
@@ -523,8 +529,8 @@ class TestClientTLS:
                 >> events.DataReceived(tctx.client, tssl_client.bio_read())
                 << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply()
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start()
+                << tls.TlsStartClientHook(tutils.Placeholder())
+                >> reply_tls_start_client()
                 << commands.SendData(tctx.client, tutils.Placeholder())
                 >> events.ConnectionClosed(tctx.client)
                 << commands.Log("Client TLS handshake failed. The client may not trust the proxy's certificate "

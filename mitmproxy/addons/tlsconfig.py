@@ -118,11 +118,11 @@ class TlsConfig:
                 )
         )
 
-    def tls_start(self, tls_start: tls.TlsStartData):
-        if tls_start.conn == tls_start.context.client:
-            self.create_client_proxy_ssl_conn(tls_start)
-        else:
-            self.create_proxy_server_ssl_conn(tls_start)
+    def tls_start_client(self, tls_start: tls.TlsStartData):
+        self.create_client_proxy_ssl_conn(tls_start)
+
+    def tls_start_server(self, tls_start: tls.TlsStartData):
+        self.create_proxy_server_ssl_conn(tls_start)
 
     def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         client: connection.Client = tls_start.context.client
