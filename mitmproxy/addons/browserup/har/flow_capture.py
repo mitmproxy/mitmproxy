@@ -183,7 +183,7 @@ class FlowCaptureMixin(object):
             host_port = 'https://' + host_port
         else:
             if request.scheme is not None:
-                host_port = request.url
+                host_port = request.pretty_url
             else:
                 host_port = host_port + ":" + str(request.port)
 
