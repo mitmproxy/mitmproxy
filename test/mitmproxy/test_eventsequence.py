@@ -23,9 +23,8 @@ def test_http_flow(resp, err):
         assert isinstance(next(i), layers.http.HttpErrorHook)
 
 
-@pytest.mark.parametrize("err", [False, True])
-def test_websocket_flow(err):
-    f = tflow.twebsocketflow(err=err)
+def test_websocket_flow():
+    f = tflow.twebsocketflow()
     i = eventsequence.iterate(f)
 
     assert isinstance(next(i), layers.http.HttpRequestHeadersHook)
@@ -41,10 +40,7 @@ def test_websocket_flow(err):
     assert len(f.websocket.messages) == 2
     assert isinstance(next(i), layers.websocket.WebsocketMessageHook)
     assert len(f.websocket.messages) == 3
-    if err:
-        assert isinstance(next(i), layers.websocket.WebsocketErrorHook)
-    else:
-        assert isinstance(next(i), layers.websocket.WebsocketEndHook)
+    assert isinstance(next(i), layers.websocket.WebsocketEndHook)
 
 
 @pytest.mark.parametrize("err", [False, True])

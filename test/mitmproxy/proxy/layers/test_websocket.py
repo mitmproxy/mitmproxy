@@ -188,7 +188,7 @@ def test_protocol_error(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88/\x03\xeaexpected CONTINUATION, got <Opcode.BINARY: 2>")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
 
     )
@@ -245,11 +245,10 @@ def test_close_disconnect(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88\x02\x03\xe8")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
             >> ConnectionClosed(tctx.client)
     )
-    assert "ABNORMAL_CLOSURE" in flow.error.msg
 
 
 def test_close_error(ws_testdata):
@@ -263,10 +262,9 @@ def test_close_error(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88\x02\x0f\xa0")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
     )
-    assert "UNKNOWN_ERROR=4000" in flow.error.msg
 
 
 def test_deflate(ws_testdata):

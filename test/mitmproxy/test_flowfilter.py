@@ -461,9 +461,6 @@ class TestMatchingWebSocketFlow:
     def flow(self) -> http.HTTPFlow:
         return tflow.twebsocketflow()
 
-    def err(self) -> http.HTTPFlow:
-        return tflow.twebsocketflow(err=True)
-
     def q(self, q, o):
         return flowfilter.parse(q)(o)
 
@@ -483,10 +480,6 @@ class TestMatchingWebSocketFlow:
         assert not self.q("~websocket", f)
         f = tflow.tflow(resp=True)
         assert not self.q("~websocket", f)
-
-    def test_ferr(self):
-        e = self.err()
-        assert self.q("~e", e)
 
     def test_domain(self):
         q = self.flow()

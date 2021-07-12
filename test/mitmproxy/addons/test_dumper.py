@@ -234,7 +234,7 @@ def test_websocket():
         assert "WebSocket connection closed by" in sio.getvalue()
 
         f = tflow.twebsocketflow(err=True)
-        d.websocket_error(f)
+        d.websocket_end(f)
         assert "Error in WebSocket" in sio_err.getvalue()
 
 
