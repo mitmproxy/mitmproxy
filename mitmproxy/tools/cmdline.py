@@ -27,6 +27,8 @@ def common_options(parser, opts):
             Set an option. When the value is omitted, booleans are set to true,
             strings and integers are set to None (if permitted), and sequences
             are emptied. Boolean values can be true, false or toggle.
+            Sequences are set using multiple invocations to set for
+            the same option.
         """
     )
     parser.add_argument(

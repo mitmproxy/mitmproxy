@@ -6,7 +6,9 @@ from mitmproxy import hooks
 
 class LogEntry:
     def __init__(self, msg, level):
-        self.msg = msg
+        # it's important that we serialize to string here already so that we don't pick up changes
+        # happening after this log statement.
+        self.msg = str(msg)
         self.level = level
 
     def __eq__(self, other):

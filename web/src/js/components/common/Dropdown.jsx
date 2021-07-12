@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, {Component} from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames'
 
@@ -18,21 +18,22 @@ export default class Dropdown extends Component {
 
     constructor(props, context) {
         super(props, context)
-        this.state = { open: false }
+        this.state = {open: false}
         this.close = this.close.bind(this)
         this.open = this.open.bind(this)
     }
 
     close() {
-        this.setState({ open: false })
+        this.setState({open: false})
         document.removeEventListener('click', this.close)
     }
 
-    open(e){
+    open(e) {
         e.preventDefault()
         if (this.state.open) {
             return
         }
+        e.stopPropagation();
         this.setState({open: !this.state.open})
         document.addEventListener('click', this.close)
     }
@@ -40,13 +41,13 @@ export default class Dropdown extends Component {
     render() {
         const {dropup, className, btnClass, text, children} = this.props
         return (
-            <div className={classnames( (dropup ? 'dropup' : 'dropdown'), className, { open: this.state.open })}>
+            <div className={classnames((dropup ? 'dropup' : 'dropdown'), className, {open: this.state.open})}>
                 <a href='#' className={btnClass}
                    onClick={this.open}>
                     {text}
                 </a>
                 <ul className="dropdown-menu" role="menu">
-                    {children.map ( (item, i) =>  <li key={i}> {item} </li> )}
+                    {children.map((item, i) => <li key={i}> {item} </li>)}
                 </ul>
             </div>
         )

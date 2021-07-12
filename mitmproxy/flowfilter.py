@@ -86,7 +86,7 @@ class FMarked(_Action):
     help = "Match marked flows"
 
     def __call__(self, f):
-        return f.marked
+        return bool(f.marked)
 
 
 class FHTTP(_Action):
@@ -416,6 +416,25 @@ class FMeta(_Rex):
         return self.re.search(m)
 
 
+class FMarker(_Rex):
+    code = "marker"
+    help = "Match marked flows with specified marker"
+    is_binary = False
+
+    def __call__(self, f):
+        return self.re.search(f.marked)
+
+
+class FComment(_Rex):
+    code = "comment"
+    help = "Flow comment"
+    flags = re.MULTILINE
+    is_binary = False
+
+    def __call__(self, f):
+        return self.re.search(f.comment)
+
+
 class _Int(_Action):
 
     def __init__(self, num):
@@ -502,6 +521,8 @@ filter_rex: Sequence[Type[_Rex]] = [
     FSrc,
     FUrl,
     FMeta,
+    FMarker,
+    FComment,
 ]
 filter_int = [
     FCode

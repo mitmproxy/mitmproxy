@@ -41,7 +41,6 @@ exports[`Request Component should render correctly 1`] = `
       <div>
         <div
           className="inline-input readonly"
-          contentEditable={undefined}
           dangerouslySetInnerHTML={
             Object {
               "__html": "GET",
@@ -54,12 +53,10 @@ exports[`Request Component should render correctly 1`] = `
           onKeyDown={[Function]}
           onMouseDown={[Function]}
           onPaste={[Function]}
-          tabIndex={undefined}
         />
          
         <div
           className="inline-input readonly has-success"
-          contentEditable={undefined}
           dangerouslySetInnerHTML={
             Object {
               "__html": "http://address:22/path",
@@ -72,12 +69,10 @@ exports[`Request Component should render correctly 1`] = `
           onKeyDown={[Function]}
           onMouseDown={[Function]}
           onPaste={[Function]}
-          tabIndex={undefined}
         />
          
         <div
           className="inline-input readonly has-success"
-          contentEditable={undefined}
           dangerouslySetInnerHTML={
             Object {
               "__html": "HTTP/1.1",
@@ -90,7 +85,6 @@ exports[`Request Component should render correctly 1`] = `
           onKeyDown={[Function]}
           onMouseDown={[Function]}
           onPaste={[Function]}
-          tabIndex={undefined}
         />
       </div>
     </div>
@@ -104,7 +98,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "header",
@@ -117,7 +110,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -130,7 +122,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "qvalue",
@@ -143,7 +134,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>
@@ -153,7 +143,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "content-length",
@@ -166,7 +155,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -179,7 +167,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "7",
@@ -192,7 +179,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>
@@ -210,7 +196,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "trailer",
@@ -223,7 +208,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -236,7 +220,6 @@ exports[`Request Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "qvalue",
@@ -249,7 +232,6 @@ exports[`Request Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>
@@ -361,7 +343,6 @@ exports[`Response Component should render correctly 1`] = `
     >
       <div
         className="inline-input readonly has-success"
-        contentEditable={undefined}
         dangerouslySetInnerHTML={
           Object {
             "__html": "HTTP/1.1",
@@ -374,12 +355,10 @@ exports[`Response Component should render correctly 1`] = `
         onKeyDown={[Function]}
         onMouseDown={[Function]}
         onPaste={[Function]}
-        tabIndex={undefined}
       />
        
       <div
         className="inline-input readonly has-success"
-        contentEditable={undefined}
         dangerouslySetInnerHTML={
           Object {
             "__html": "200",
@@ -392,12 +371,10 @@ exports[`Response Component should render correctly 1`] = `
         onKeyDown={[Function]}
         onMouseDown={[Function]}
         onPaste={[Function]}
-        tabIndex={undefined}
       />
        
       <div
         className="inline-input readonly"
-        contentEditable={undefined}
         dangerouslySetInnerHTML={
           Object {
             "__html": "OK",
@@ -410,7 +387,6 @@ exports[`Response Component should render correctly 1`] = `
         onKeyDown={[Function]}
         onMouseDown={[Function]}
         onPaste={[Function]}
-        tabIndex={undefined}
       />
     </div>
     <table
@@ -423,7 +399,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "header-response",
@@ -436,7 +411,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -449,7 +423,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "svalue",
@@ -462,7 +435,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>
@@ -472,7 +444,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "content-length",
@@ -485,7 +456,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -498,7 +468,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "7",
@@ -511,7 +480,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>
@@ -529,7 +497,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "trailer",
@@ -542,7 +509,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
             <span
               className="header-colon"
@@ -555,7 +521,6 @@ exports[`Response Component should render correctly 1`] = `
           >
             <div
               className="inline-input readonly"
-              contentEditable={undefined}
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "qvalue",
@@ -568,7 +533,6 @@ exports[`Response Component should render correctly 1`] = `
               onKeyDown={[Function]}
               onMouseDown={[Function]}
               onPaste={[Function]}
-              tabIndex={undefined}
             />
           </td>
         </tr>

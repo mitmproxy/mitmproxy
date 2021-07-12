@@ -300,6 +300,25 @@ def convert_11_12(data):
     return data
 
 
+def convert_12_13(data):
+    data["version"] = 13
+    if data["marked"]:
+        data["marked"] = ":default:"
+    else:
+        data["marked"] = ""
+    return data
+
+
+def convert_13_14(data):
+    data["version"] = 14
+    data["comment"] = ""
+    # bugfix for https://github.com/mitmproxy/mitmproxy/issues/4576
+    if data.get("response", None) and data["response"]["timestamp_start"] is None:
+        data["response"]["timestamp_start"] = data["request"]["timestamp_end"]
+        data["response"]["timestamp_end"] = data["request"]["timestamp_end"] + 1
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -359,6 +378,8 @@ converters = {
     9: convert_9_10,
     10: convert_10_11,
     11: convert_11_12,
+    12: convert_12_13,
+    13: convert_13_14,
 }
 
 

@@ -65,6 +65,8 @@ class Http2Connection(HttpConnection):
             stream is not None
             and
             stream.state_machine.state is not h2.stream.StreamState.CLOSED
+            and
+            self.h2_conn.state_machine.state is not h2.connection.ConnectionState.CLOSED
         ):
             return False
         else:
@@ -79,6 +81,8 @@ class Http2Connection(HttpConnection):
             stream.state_machine.state is not h2.stream.StreamState.HALF_CLOSED_LOCAL
             and
             stream.state_machine.state is not h2.stream.StreamState.CLOSED
+            and
+            self.h2_conn.state_machine.state is not h2.connection.ConnectionState.CLOSED
         ):
             return True
         else:

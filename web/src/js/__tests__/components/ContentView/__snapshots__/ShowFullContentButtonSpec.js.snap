@@ -4,14 +4,12 @@ exports[`ShowFullContentButton Component should connect to state 1`] = `null`;
 
 exports[`ShowFullContentButton Component should render correctly 1`] = `
 <div>
-  <div
+  <button
     className="view-all-content-btn btn-xs btn btn-default"
-    disabled={undefined}
     onClick={[Function]}
-    title={undefined}
   >
     Show full content
-  </div>
+  </button>
   <span
     className="pull-right"
   >

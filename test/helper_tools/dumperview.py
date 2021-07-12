@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import click
 
 from mitmproxy.addons import dumper

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`FlowColumns Components should render IconColumn 1`] = `
+exports[`Flowcolumns Components should render IconColumn 1`] = `
 <td
   className="col-icon"
 >
@@ -10,7 +10,7 @@ exports[`FlowColumns Components should render IconColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 2`] = `
+exports[`Flowcolumns Components should render IconColumn 2`] = `
 <td
   className="col-icon"
 >
@@ -20,7 +20,7 @@ exports[`FlowColumns Components should render IconColumn 2`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 3`] = `
+exports[`Flowcolumns Components should render IconColumn 3`] = `
 <td
   className="col-icon"
 >
@@ -30,7 +30,7 @@ exports[`FlowColumns Components should render IconColumn 3`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 4`] = `
+exports[`Flowcolumns Components should render IconColumn 4`] = `
 <td
   className="col-icon"
 >
@@ -40,7 +40,7 @@ exports[`FlowColumns Components should render IconColumn 4`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 5`] = `
+exports[`Flowcolumns Components should render IconColumn 5`] = `
 <td
   className="col-icon"
 >
@@ -50,7 +50,7 @@ exports[`FlowColumns Components should render IconColumn 5`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 6`] = `
+exports[`Flowcolumns Components should render IconColumn 6`] = `
 <td
   className="col-icon"
 >
@@ -60,7 +60,7 @@ exports[`FlowColumns Components should render IconColumn 6`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 7`] = `
+exports[`Flowcolumns Components should render IconColumn 7`] = `
 <td
   className="col-icon"
 >
@@ -70,7 +70,7 @@ exports[`FlowColumns Components should render IconColumn 7`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 8`] = `
+exports[`Flowcolumns Components should render IconColumn 8`] = `
 <td
   className="col-icon"
 >
@@ -80,7 +80,7 @@ exports[`FlowColumns Components should render IconColumn 8`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render IconColumn 9`] = `
+exports[`Flowcolumns Components should render IconColumn 9`] = `
 <td
   className="col-icon"
 >
@@ -90,7 +90,7 @@ exports[`FlowColumns Components should render IconColumn 9`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render MethodColumn 1`] = `
+exports[`Flowcolumns Components should render MethodColumn 1`] = `
 <td
   className="col-method"
 >
@@ -98,7 +98,23 @@ exports[`FlowColumns Components should render MethodColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render SizeColumn 1`] = `
+exports[`Flowcolumns Components should render QuickActionsColumn 1`] = `
+<td
+  className="col-quickactions"
+>
+  <div>
+    <div
+      className="quickaction"
+    >
+      <i
+        className="fa fa-fw fa-ellipsis-h"
+      />
+    </div>
+  </div>
+</td>
+`;
+
+exports[`Flowcolumns Components should render SizeColumn 1`] = `
 <td
   className="col-size"
 >
@@ -106,7 +122,7 @@ exports[`FlowColumns Components should render SizeColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render StatusColumn 1`] = `
+exports[`Flowcolumns Components should render StatusColumn 1`] = `
 <td
   className="col-status"
   style={
@@ -117,13 +133,13 @@ exports[`FlowColumns Components should render StatusColumn 1`] = `
 />
 `;
 
-exports[`FlowColumns Components should render TLSColumn 1`] = `
+exports[`Flowcolumns Components should render TLSColumn 1`] = `
 <td
   className="col-tls col-tls-http"
 />
 `;
 
-exports[`FlowColumns Components should render TimeColumn 1`] = `
+exports[`Flowcolumns Components should render TimeColumn 1`] = `
 <td
   className="col-time"
 >
@@ -131,7 +147,7 @@ exports[`FlowColumns Components should render TimeColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render TimeColumn 2`] = `
+exports[`Flowcolumns Components should render TimeColumn 2`] = `
 <td
   className="col-time"
 >
@@ -139,7 +155,7 @@ exports[`FlowColumns Components should render TimeColumn 2`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render TimeStampColumn 1`] = `
+exports[`Flowcolumns Components should render TimeStampColumn 1`] = `
 <td
   className="col-start"
 >
@@ -147,7 +163,7 @@ exports[`FlowColumns Components should render TimeStampColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render pathColumn 1`] = `
+exports[`Flowcolumns Components should render pathColumn 1`] = `
 <td
   className="col-path"
 >
@@ -158,7 +174,7 @@ exports[`FlowColumns Components should render pathColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render pathColumn 2`] = `
+exports[`Flowcolumns Components should render pathColumn 2`] = `
 <td
   className="col-path"
 >

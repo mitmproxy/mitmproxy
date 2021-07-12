@@ -85,7 +85,7 @@ def run(
         process_options(parser, opts, args)
 
         if args.options:
-            print(optmanager.dump_defaults(opts))
+            optmanager.dump_defaults(opts, sys.stdout)
             sys.exit(0)
         if args.commands:
             master.commands.dump()

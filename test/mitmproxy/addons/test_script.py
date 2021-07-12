@@ -204,7 +204,8 @@ class TestScriptLoader:
             sc.script_run([tflow.tflow(resp=True)], "/")
             await tctx.master.await_log("No such script")
 
-    def test_simple(self, tdata):
+    @pytest.mark.asyncio
+    async def test_simple(self, tdata):
         sc = script.ScriptLoader()
         with taddons.context(loadcore=False) as tctx:
             tctx.master.addons.add(sc)

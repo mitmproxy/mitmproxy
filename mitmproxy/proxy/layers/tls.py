@@ -122,9 +122,20 @@ class TlsStartData:
 
 
 @dataclass
-class TlsStartHook(StartHook):
+class TlsStartClientHook(StartHook):
     """
-    TLS Negotation is about to start.
+    TLS Negotation between mitmproxy and a client is about to start.
+
+    An addon is expected to initialize data.ssl_conn.
+    (by default, this is done by mitmproxy.addons.TlsConfig)
+    """
+    data: TlsStartData
+
+
+@dataclass
+class TlsStartServerHook(StartHook):
+    """
+    TLS Negotation between mitmproxy and a server is about to start.
 
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by mitmproxy.addons.TlsConfig)
@@ -133,7 +144,7 @@ class TlsStartHook(StartHook):
 
 
 class _TLSLayer(tunnel.TunnelLayer):
-    tls: SSL.Connection = None
+    tls: SSL.Connection = None  # type: ignore
     """The OpenSSL connection object"""
 
     def __init__(self, context: context.Context, conn: connection.Connection):
@@ -152,7 +163,10 @@ class _TLSLayer(tunnel.TunnelLayer):
         assert not self.tls
 
         tls_start = TlsStartData(self.conn, self.context)
-        yield TlsStartHook(tls_start)
+        if tls_start.conn == tls_start.context.client:
+            yield TlsStartClientHook(tls_start)
+        else:
+            yield TlsStartServerHook(tls_start)
         if not tls_start.ssl_conn:
             yield commands.Log("No TLS context was provided, failing connection.", "error")
             yield commands.CloseConnection(self.conn)
@@ -181,8 +195,8 @@ class _TLSLayer(tunnel.TunnelLayer):
             # provide more detailed information for some errors.
             last_err = e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
             if last_err == ('SSL routines', 'tls_process_server_certificate', 'certificate verify failed'):
-                verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)
-                error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()
+                verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)  # type: ignore
+                error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()  # type: ignore
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
                 ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'),

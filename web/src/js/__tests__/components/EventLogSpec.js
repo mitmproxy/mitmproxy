@@ -2,10 +2,9 @@ jest.mock('../../components/EventLog/EventList')
 
 import React from 'react'
 import renderer from 'react-test-renderer'
-import TestUtils from 'react-dom/test-utils'
-import EventLog, { PureEventLog } from '../../components/EventLog'
-import { Provider } from 'react-redux'
-import { TStore } from '../ducks/tutils'
+import EventLog, {PureEventLog} from '../../components/EventLog'
+import {Provider} from 'react-redux'
+import {TStore} from '../ducks/tutils'
 
 window.addEventListener = jest.fn()
 window.removeEventListener = jest.fn()
@@ -13,9 +12,9 @@ window.removeEventListener = jest.fn()
 describe('EventLog Component', () => {
     let store = TStore(),
         provider = renderer.create(
-        <Provider store={store}>
-            <EventLog/>
-        </Provider>),
+            <Provider store={store}>
+                <EventLog/>
+            </Provider>),
         tree = provider.toJSON()
 
     it('should connect to state and render correctly', () => {
@@ -27,31 +26,31 @@ describe('EventLog Component', () => {
         debugToggleButton.props.onClick()
     })
 
-    provider = TestUtils.renderIntoDocument(
+    provider = renderer.create(
         <Provider store={store}><EventLog/></Provider>)
-    let eventLog = TestUtils.findRenderedComponentWithType(provider, PureEventLog),
-        mockEvent = { preventDefault: jest.fn() }
+    let eventLog = provider.root.findByType(PureEventLog),
+        mockEvent = {preventDefault: jest.fn()}
 
     it('should handle DragStart', () => {
-        eventLog.onDragStart(mockEvent)
+        eventLog.instance.onDragStart(mockEvent)
         expect(mockEvent.preventDefault).toBeCalled()
-        expect(window.addEventListener).toBeCalledWith('mousemove', eventLog.onDragMove)
-        expect(window.addEventListener).toBeCalledWith('mouseup', eventLog.onDragStop)
-        expect(window.addEventListener).toBeCalledWith('dragend', eventLog.onDragStop)
+        expect(window.addEventListener).toBeCalledWith('mousemove', eventLog.instance.onDragMove)
+        expect(window.addEventListener).toBeCalledWith('mouseup', eventLog.instance.onDragStop)
+        expect(window.addEventListener).toBeCalledWith('dragend', eventLog.instance.onDragStop)
         mockEvent.preventDefault.mockClear()
     })
 
     it('should handle DragMove', () => {
-        eventLog.onDragMove(mockEvent)
+        eventLog.instance.onDragMove(mockEvent)
         expect(mockEvent.preventDefault).toBeCalled()
         mockEvent.preventDefault.mockClear()
     })
 
     console.error = jest.fn() // silent the error.
     it('should handle DragStop', () => {
-        eventLog.onDragStop(mockEvent)
+        eventLog.instance.onDragStop(mockEvent)
         expect(mockEvent.preventDefault).toBeCalled()
-        expect(window.removeEventListener).toBeCalledWith('mousemove', eventLog.onDragMove)
+        expect(window.removeEventListener).toBeCalledWith('mousemove', eventLog.instance.onDragMove)
     })
 
 })

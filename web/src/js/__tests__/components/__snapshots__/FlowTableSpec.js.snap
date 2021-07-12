@@ -56,6 +56,12 @@ exports[`FlowTable Component should render correctly 1`] = `
         >
           Time
         </th>
+        <th
+          className="col-quickactions"
+          onClick={[Function]}
+        >
+          
+        </th>
       </tr>
     </thead>
     <tbody>

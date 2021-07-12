@@ -9,7 +9,14 @@ and activate your virtualenv environment before proceeding.**
 
 ## Testing
 
-- Run `yarn run test` to run the testsuite.
+- Run `yarn test` to run the test suite.
+
+
+## Advanced Tools
+
+- `yarn run gulp` supports live-reloading if you install a matching
+  [browser extension](http://livereload.com/extensions/).
+- You can debug application state using the [Redux DevTools](https://github.com/reduxjs/redux-devtools).
 
 ## Architecture
 

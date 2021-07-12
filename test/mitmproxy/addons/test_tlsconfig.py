@@ -17,13 +17,19 @@ from test.mitmproxy.proxy.layers import test_tls
 def test_alpn_select_callback():
     ctx = SSL.Context(SSL.SSLv23_METHOD)
     conn = SSL.Connection(ctx)
-    conn.set_app_data(tlsconfig.AppData(server_alpn=b"h2", http2=True))
+
+    # Test that we respect addons setting `client.alpn`.
+    conn.set_app_data(tlsconfig.AppData(server_alpn=b"h2", http2=True, client_alpn=b"qux"))
+    assert tlsconfig.alpn_select_callback(conn, [b"http/1.1", b"qux", b"h2"]) == b"qux"
+    conn.set_app_data(tlsconfig.AppData(server_alpn=b"h2", http2=True, client_alpn=b""))
+    assert tlsconfig.alpn_select_callback(conn, [b"http/1.1", b"qux", b"h2"]) == SSL.NO_OVERLAPPING_PROTOCOLS
 
     # Test that we try to mirror the server connection's ALPN
+    conn.set_app_data(tlsconfig.AppData(server_alpn=b"h2", http2=True, client_alpn=None))
     assert tlsconfig.alpn_select_callback(conn, [b"http/1.1", b"qux", b"h2"]) == b"h2"
 
     # Test that we respect the client's preferred HTTP ALPN.
-    conn.set_app_data(tlsconfig.AppData(server_alpn=None, http2=True))
+    conn.set_app_data(tlsconfig.AppData(server_alpn=None, http2=True, client_alpn=None))
     assert tlsconfig.alpn_select_callback(conn, [b"qux", b"http/1.1", b"h2"]) == b"http/1.1"
     assert tlsconfig.alpn_select_callback(conn, [b"qux", b"h2", b"http/1.1"]) == b"h2"
 
@@ -31,7 +37,7 @@ def test_alpn_select_callback():
     assert tlsconfig.alpn_select_callback(conn, [b"qux", b"quux"]) == SSL.NO_OVERLAPPING_PROTOCOLS
 
     # Test that we don't select an ALPN if the server refused to select one.
-    conn.set_app_data(tlsconfig.AppData(server_alpn=b"", http2=True))
+    conn.set_app_data(tlsconfig.AppData(server_alpn=b"", http2=True, client_alpn=None))
     assert tlsconfig.alpn_select_callback(conn, [b"http/1.1"]) == SSL.NO_OVERLAPPING_PROTOCOLS
 
 
@@ -120,7 +126,7 @@ class TestTlsConfig:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
             tls_start = tls.TlsStartData(ctx.client, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_client(tls_start)
             tssl_server = tls_start.ssl_conn
             tssl_client = test_tls.SSLTest()
             assert self.do_handshake(tssl_client, tssl_server)
@@ -135,7 +141,7 @@ class TestTlsConfig:
             ctx.server.address = ("example.mitmproxy.org", 443)
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             with pytest.raises(SSL.Error, match="certificate verify failed"):
@@ -150,7 +156,7 @@ class TestTlsConfig:
                 "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
@@ -169,7 +175,7 @@ class TestTlsConfig:
                 ciphers_server="ALL"
             )
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
@@ -185,13 +191,13 @@ class TestTlsConfig:
                 tctx.configure(ta, http2=http2)
                 ctx.client.alpn_offers = client_offers
                 ctx.server.alpn_offers = None
-                ta.tls_start(tls_start)
+                ta.tls_start_server(tls_start)
                 assert ctx.server.alpn_offers == expected
 
             assert_alpn(True, tls.HTTP_ALPNS + (b"foo",), tls.HTTP_ALPNS + (b"foo",))
             assert_alpn(False, tls.HTTP_ALPNS + (b"foo",), tls.HTTP1_ALPNS + (b"foo",))
-            assert_alpn(True, [], tls.HTTP_ALPNS)
-            assert_alpn(False, [], tls.HTTP1_ALPNS)
+            assert_alpn(True, [], [])
+            assert_alpn(False, [], [])
             ctx.client.timestamp_tls_setup = time.time()
             # make sure that we don't upgrade h1 to h2,
             # see comment in tlsconfig.py
@@ -216,7 +222,7 @@ class TestTlsConfig:
             )
 
             tls_start = tls.TlsStartData(ctx.server, context=ctx)
-            ta.tls_start(tls_start)
+            ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
 

@@ -32,3 +32,17 @@ class Context:
         ret.server = self.server
         ret.layers = self.layers.copy()
         return ret
+
+    def __repr__(self):
+        layers = "\n    ".join(repr(l) for l in self.layers)
+        if layers:
+            layers = f"[\n    {layers}\n  ]"
+        else:
+            layers = "[]"
+        return (
+            f"Context(\n"
+            f"  {self.client!r},\n"
+            f"  {self.server!r},\n"
+            f"  layers={layers}\n"
+            f")"
+        )

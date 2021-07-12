@@ -13,7 +13,7 @@ function Footer({ settings }) {
             stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, version, server} = settings;
     return (
         <footer>
-            {mode && mode != "regular" && (
+            {mode && mode !== "regular" && (
                 <span className="label label-success">{mode} mode</span>
             )}
             {intercept && (
@@ -25,8 +25,8 @@ function Footer({ settings }) {
             {no_upstream_cert && (
                 <span className="label label-success">no-upstream-cert</span>
             )}
-            {rawtcp && (
-                <span className="label label-success">raw-tcp</span>
+            {!rawtcp && (
+                <span className="label label-success">no-raw-tcp</span>
             )}
             {!http2 && (
                 <span className="label label-success">no-http2</span>

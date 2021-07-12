@@ -11,9 +11,9 @@ from mitmproxy.proxy.layer import NextLayer, NextLayerHook
 from mitmproxy.proxy.layers import http, modes, tcp, tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
-from mitmproxy.proxy.layers.tls import ClientTLSLayer, TlsStartHook
+from mitmproxy.proxy.layers.tls import ClientTLSLayer, TlsStartClientHook, TlsStartServerHook
 from mitmproxy.tcp import TCPFlow
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client, reply_tls_start_server
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
@@ -55,9 +55,7 @@ def test_upstream_https(tctx):
     serverhello = Placeholder(bytes)
     request = Placeholder(bytes)
     tls_finished = Placeholder(bytes)
-    h2_client_settings_ack = Placeholder(bytes)
     response = Placeholder(bytes)
-    h2_server_settings_ack = Placeholder(bytes)
 
     assert (
         proxy1
@@ -66,8 +64,8 @@ def test_upstream_https(tctx):
         >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.upstream))
         << OpenConnection(upstream)
         >> reply(None)
-        << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"h2")
+        << TlsStartServerHook(Placeholder())
+        >> reply_tls_start_server(alpn=b"http/1.1")
         << SendData(upstream, clienthello)
     )
     assert upstream().address == ("example.mitmproxy.org", 8081)
@@ -76,8 +74,8 @@ def test_upstream_https(tctx):
         >> DataReceived(tctx2.client, clienthello())
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(ClientTLSLayer)
-        << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"h2")
+        << TlsStartClientHook(Placeholder())
+        >> reply_tls_start_client(alpn=b"http/1.1")
         << SendData(tctx2.client, serverhello)
     )
     assert (
@@ -91,21 +89,18 @@ def test_upstream_https(tctx):
         << SendData(tctx2.client, tls_finished)
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.regular))
-        << SendData(tctx2.client, h2_client_settings_ack)
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b'GET / HTTP/1.1\r\nhost: example.com\r\n\r\n')
+        << SendData(server, b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-        << CloseConnection(server)
         << SendData(tctx2.client, response)
     )
     assert server().address == ("example.com", 80)
 
     assert (
         proxy1
-        >> DataReceived(upstream, tls_finished() + h2_client_settings_ack() + response())
-        << SendData(upstream, h2_server_settings_ack)
-        << SendData(tctx1.client, b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n")
+        >> DataReceived(upstream, tls_finished() + response())
+        << SendData(tctx1.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
     )
 
 
@@ -200,8 +195,8 @@ def test_reverse_proxy_tcp_over_tls(tctx: Context, monkeypatch, patch, connectio
             )
         assert (
             playbook
-            << TlsStartHook(Placeholder())
-            >> reply_tls_start()
+            << TlsStartServerHook(Placeholder())
+            >> reply_tls_start_server()
             << SendData(tctx.server, data)
         )
         assert tls.parse_client_hello(data()).sni == "localhost"

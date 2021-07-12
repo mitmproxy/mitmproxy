@@ -2,7 +2,7 @@ import uuid
 import warnings
 from abc import ABCMeta
 from enum import Flag
-from typing import Literal, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
@@ -85,12 +85,12 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     """Ciphers accepted by the proxy server on this connection."""
     tls_version: Optional[str] = None
     """The active TLS version."""
-    sni: Union[str, Literal[True], None]
+    sni: Optional[str] = None
     """
     The [Server Name Indication (SNI)](https://en.wikipedia.org/wiki/Server_Name_Indication) sent in the ClientHello.
-    For server connections, this value may also be set to `True`, which means "use `Server.address`".
     """
 
+    timestamp_start: Optional[float]
     timestamp_end: Optional[float] = None
     """*Timestamp:* Connection has been closed."""
     timestamp_tls_setup: Optional[float] = None
@@ -143,8 +143,6 @@ class Client(Connection):
     """
     The certificate used by mitmproxy to establish TLS with the client.
     """
-    sni: Union[str, None] = None
-    """The Server Name Indication sent by the client."""
 
     timestamp_start: float
     """*Timestamp:* TCP SYN received"""
@@ -271,7 +269,6 @@ class Server(Connection):
     timestamp_tcp_setup: Optional[float] = None
     """*Timestamp:* TCP ACK received."""
 
-    sni: Union[str, Literal[True], None] = True
     via: Optional[server_spec.ServerSpec] = None
     """An optional proxy server specification via which the connection should be established."""
 
@@ -292,6 +289,11 @@ class Server(Connection):
         else:
             local_port = ""
         return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
+
+    def __setattr__(self, name, value):
+        if name == "address" and self.__dict__.get("state", ConnectionState.CLOSED) is ConnectionState.OPEN:
+            raise RuntimeError("Cannot change server address on open connection.")
+        return super().__setattr__(name, value)
 
     def get_state(self):
         return {
