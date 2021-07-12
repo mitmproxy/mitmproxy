@@ -21,7 +21,6 @@ from mitmproxy.addons import modifybody
 from mitmproxy.addons import modifyheaders
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
-from mitmproxy.addons import streambodies
 from mitmproxy.addons import save
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import upstream_auth
@@ -52,7 +51,6 @@ def default_addons():
         modifyheaders.ModifyHeaders(),
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
-        streambodies.StreamBodies(),
         save.Save(),
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),
