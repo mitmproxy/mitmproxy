@@ -47,7 +47,7 @@ class WebsocketEndHook(StartHook):
 @dataclass
 class WebsocketErrorHook(StartHook):
     """
-    A WebSocket connection has had an error.
+    A WebSocket connection has had an error (a close code other than 1000, 1001 or 1005).
 
     Every WebSocket flow will receive either a websocket_error or a websocket_end event, but not both.
     """
