@@ -1,13 +1,10 @@
 import React from 'react'
-import renderer from 'react-test-renderer'
 import CommandBar from '../../../components/CommandBar'
+import { render } from "../../test-utils"
 
-describe('CommandBar Component', () => {
-    let commandBar = renderer.create(
-            <CommandBar />),
-        tree = commandBar.toJSON()
-
-    it('should render correctly', () => {
-        expect(tree).toMatchSnapshot()
-    })
+test('CommandBar Component', async () => {
+    const {asFragment, store} = render(
+        <CommandBar/>
+    );
+    expect(asFragment()).toMatchSnapshot();
 })

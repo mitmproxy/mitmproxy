@@ -27,10 +27,8 @@ from mitmproxy.utils.strutils import always_str
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
-
     Args:
         flow: The original flow.
-
     Sync with web/src/flow.ts.
     """
     f = {
@@ -454,12 +452,20 @@ class FlowContentView(RequestHandler):
 
 
 class Commands(RequestHandler):
+    def get(self):
+        commands = {}
+        for (name, command) in self.master.commands.commands.items():
+            commands[name] = []
+            for parameter in command.parameters:
+                commands[name].append({"name": parameter.name})
+        self.write({"commands": commands})
+
     def post(self):
         result = self.master.commands.execute(self.json["command"])
         if result is None:
             self.write({"result": ""})
             return
-        self.write({"result": str(result)})
+        self.write({ "result": result, "type": type(result).__name__ })
 
 
 class Events(RequestHandler):
@@ -477,16 +483,6 @@ class Options(RequestHandler):
             self.master.options.update(**update)
         except Exception as err:
             raise APIError(400, f"{err}")
-
-
-class CommandArguments(RequestHandler):
-    def get(self):
-        arguments = {}
-        for (name, command) in self.master.commands.commands.items():
-            arguments[name] = []
-            for parameter in command.parameters:
-                arguments[name].append(parameter.name)
-        self.write(arguments)
 
 
 class SaveOptions(RequestHandler):
@@ -541,7 +537,7 @@ class Application(tornado.web.Application):
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
                 (r"/updates", ClientConnection),
-                (r"/commands", Commands),
+                (r"/commands(?:\.json)?", Commands),
                 (r"/events(?:\.json)?", Events),
                 (r"/flows(?:\.json)?", Flows),
                 (r"/flows/dump", DumpFlows),
@@ -559,7 +555,6 @@ class Application(tornado.web.Application):
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
                     FlowContentView),
                 (r"/clear", ClearAll),
-                (r"/arguments(?:\.json)?", CommandArguments),
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
                 (r"/conf\.js", Conf),
