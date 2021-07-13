@@ -4,7 +4,7 @@ import { render } from "../../test-utils"
 import fetchMock from 'fetch-mock';
 
 test('CommandBar Component', async () => {
-    fetchMock.get('./commands.json', {status: 200})
+    fetchMock.get('./commands.json', {status: 200, body: {"commands": "foo"}})
 
     const {asFragment, store} = render(
         <CommandBar/>
