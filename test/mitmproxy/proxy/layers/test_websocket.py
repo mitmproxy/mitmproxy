@@ -249,6 +249,9 @@ def test_close_disconnect(ws_testdata):
             >> reply()
             >> ConnectionClosed(tctx.client)
     )
+    # The \x03\xe8 above is code 1000 (normal closure).
+    # But 1006 (ABNORMAL_CLOSURE) is expected, because the connection was already closed.
+    assert flow.websocket.close_code == 1006
 
 
 def test_close_error(ws_testdata):
@@ -265,6 +268,7 @@ def test_close_error(ws_testdata):
             << websocket.WebsocketEndHook(flow)
             >> reply()
     )
+    assert flow.websocket.close_code == 4000
 
 
 def test_deflate(ws_testdata):
