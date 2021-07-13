@@ -465,7 +465,7 @@ class Commands(RequestHandler):
         if result is None:
             self.write({"result": ""})
             return
-        self.write({ "result": result, "type": type(result).__name__ })
+        self.write({"result": result, "type": type(result).__name__})
 
 
 class Events(RequestHandler):

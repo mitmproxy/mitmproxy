@@ -1,5 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CommandBar Component 1`] = `
+<DocumentFragment>
+  <div
+    class="command"
+  >
+    <div
+      class="command-title"
+    >
+      Command Result
+    </div>
+    <div
+      class="command-result"
+    />
+    <div
+      class="command-input input-group"
+    >
+      <span
+        class="input-group-addon"
+      >
+        <i
+          class="fa fa-fw fa-terminal"
+        />
+      </span>
+      <input
+        class="form-control"
+        placeholder="Enter command"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`CommandBar Component should render correctly 1`] = `
 Array [
   <div

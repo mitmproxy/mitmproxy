@@ -1,6 +1,9 @@
 {
     "name": "mitmproxy",
     "private": true,
+    "jest": {
+        "verbose": true
+    },
     "scripts": {
         "test": "jest --coverage",
         "build": "gulp prod",
@@ -31,6 +34,7 @@
         "@types/redux-mock-store": "^1.0.2",
         "esbuild": "^0.12.9",
         "esbuild-jest": "^0.5.0",
+        "fetch-mock": "^9.11.0",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^4.3.0",
         "gulp-esbuild": "^0.8.2",
@@ -42,6 +46,7 @@
         "gulp-replace": "^1.1.3",
         "gulp-sourcemaps": "^3.0.0",
         "jest": "^27.0.4",
+        "node-fetch": "^2.6.1",
         "through2": "^4.0.2"
     }
 }
