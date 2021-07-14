@@ -1,4 +1,3 @@
-import ast
 import re
 
 import pyparsing
@@ -32,18 +31,21 @@ expr = pyparsing.ZeroOrMore(
 def quote(val: str) -> str:
     if val and all(char not in val for char in "'\" \r\n\t"):
         return val
-    return repr(val)  # TODO: More of a hack.
+    if '"' not in val:
+        return f'"{val}"'
+    if "'" not in val:
+        return f"'{val}'"
+    return '"' + re.sub(r'(?<!\\)(\\\\)*"', lambda m: (m.group(1) or "") + '\\"', val) + '"'
 
 
 def unquote(x: str) -> str:
-    quoted = (
-            (x.startswith('"') and x.endswith('"'))
-            or
-            (x.startswith("'") and x.endswith("'"))
-    )
-    if quoted:
-        try:
-            x = ast.literal_eval(x)
-        except Exception:
-            x = x[1:-1]
-    return x
+    quote_char = ""
+    if len(x) > 1 and x.startswith('"') and x.endswith('"'):
+        quote_char = '"'
+    if len(x) > 1 and x.startswith("'") and x.endswith("'"):
+        quote_char = "'"
+
+    if quote_char:
+        return re.sub(r"(?<!\\)(\\\\)*\\" + quote_char, lambda m: (m.group(1) or "") + quote_char, x[1:-1])
+    else:
+        return x

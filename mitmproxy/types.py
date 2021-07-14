@@ -1,5 +1,7 @@
+import codecs
 import os
 import glob
+import re
 import typing
 
 from mitmproxy import exceptions
@@ -104,11 +106,30 @@ class _StrType(_BaseType):
     typ = str
     display = "str"
 
+    # https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
+    escape_sequences = re.compile(r"""
+        \\ (
+        [\\'"abfnrtv]  # Standard C escape sequence
+        | [0-7]{1,3}   # Character with octal value
+        | x..          # Character with hex value
+        | N{[^}]+}     # Character name in the Unicode database
+        | u....        # Character with 16-bit hex value
+        | U........    # Character with 32-bit hex value
+        )
+        """, re.VERBOSE)
+
+    @staticmethod
+    def _unescape(match: re.Match[str]) -> str:
+        return codecs.decode(match.group(0), "unicode-escape")  # type: ignore
+
     def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> str:
-        return s
+        try:
+            return self.escape_sequences.sub(self._unescape, s)
+        except ValueError as e:
+            raise exceptions.TypeError(f"Invalid str: {e}") from e
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)

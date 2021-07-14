@@ -43,6 +43,15 @@ def test_expr(test_input, expected):
 
 
 @given(text())
+@example(r"foo")
+@example(r"'foo\''")
+@example(r"'foo\"'")
+@example(r'"foo\""')
+@example(r'"foo\'"')
+@example("'foo\\'")
+@example("'foo\\\\'")
+@example("\"foo\\'\"")
+@example("\"foo\\\\'\"")
 def test_quote_unquote_cycle(s):
     assert command_lexer.unquote(command_lexer.quote(s)) == s
 
