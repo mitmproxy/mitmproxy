@@ -455,10 +455,14 @@ class Commands(RequestHandler):
     def get(self):
         commands = {}
         for (name, command) in self.master.commands.commands.items():
-            commands[name] = []
+            commands[name] = {
+                "args": [],
+                "signature_help": command.signature_help(),
+                "description": command.help
+            }
             for parameter in command.parameters:
-                commands[name].append({"name": parameter.name})
-        self.write({"commands": commands})
+                commands[name]["args"].append(parameter.name)
+        self.write({"commands": commands, "history": self.master.commands.execute("commands.history.get")})
 
     def post(self):
         result = self.master.commands.execute(self.json["command"])

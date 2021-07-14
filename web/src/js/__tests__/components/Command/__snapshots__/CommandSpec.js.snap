@@ -30,6 +30,11 @@ exports[`CommandBar Component 1`] = `
         value=""
       />
     </div>
+    <div
+      class="available-commands popover bottom"
+    >
+      Available Commands: []
+    </div>
   </div>
 </DocumentFragment>
 `;

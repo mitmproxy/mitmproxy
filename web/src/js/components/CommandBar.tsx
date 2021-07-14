@@ -3,7 +3,7 @@ import classnames from 'classnames'
 import { Key, fetchApi } from '../utils'
 import Filt from '../filt/command'
 
-export function AvailableCommands({input, commands}) {
+function getAvailableCommands(commands, input = "") {
     if (!commands) return null
     let availableCommands = []
     for (const [command, args] of Object.entries(commands)) {
@@ -11,10 +11,10 @@ export function AvailableCommands({input, commands}) {
             availableCommands.push(command)
         }
     }
-    return <div className="available-commands popover bottom">Available Commands: {JSON.stringify(availableCommands)}</div>
+    return availableCommands
 }
 
-export function ArgumentSuggestion({nextArgs, currentArg}){
+export function CommandHelp({nextArgs, currentArg, help, description}){
     let results = []
     for (let i = 0; i < nextArgs.length; i++) {
         if (i==currentArg) {
@@ -26,37 +26,49 @@ export function ArgumentSuggestion({nextArgs, currentArg}){
     return (<div className="argument-suggestion popover top">
         <div className="arrow"/>
         <div className="popover-content">
-            Argument suggestion: {results}
+            <div><strong>Argument suggestion:</strong> {results}</div>
+            { help.includes("->") && <div><strong>Signature help: </strong>{help}</div>}
+            { description && <div># {description}</div>}
         </div>
     </div>)
 }
 
 export default function CommandBar() {
     const [input, setInput] = useState("")
-    const [command, setCommand] = useState("")
-    const [results, setResults] = useState([])
-    const [history, setHistory] = useState([])
-    const [currentPos, setCurrentPos] = useState(0)
+    const [originalInput, setOriginalInput] = useState("")
+    const [currentCompletion, setCurrentCompletion] = useState(0)
+
+    const [availableCommands, setAvailableCommands] = useState([])
     const [allCommands, setAllCommands] = useState({})
     const [nextArgs, setNextArgs] = useState([])
     const [currentArg, setCurrentArg] = useState(0)
-    const [commandHelp, setCommandHelp] = useState("")
+    const [signatureHelp, setSignatureHelp] = useState("")
+    const [description, setDescription] = useState("")
+
+    const [results, setResults] = useState([])
+    const [history, setHistory] = useState([])
+    const [currentPos, setCurrentPos] = useState(0)
 
     useEffect(() => {
         fetchApi('/commands', { method: 'GET' })
         .then(response => response.json())
-        .then(data => setAllCommands(data))
+        .then(data => {
+            setAllCommands(data)
+            setAvailableCommands(getAvailableCommands(data["commands"]))
+        })
     }, [])
 
-    const parseCommand = (input) => {
+    const parseCommand = (originalInput, input) => {
         const parts = Filt.parse(input)
-        if (allCommands["commands"].hasOwnProperty(parts[0])){
-            setCommand(parts[0])
-        } else {
-            setCommand("")
-        }
+        const originalParts = Filt.parse(originalInput)
+        const commands = allCommands["commands"]
 
-        const nextArgs = allCommands["commands"][parts[0]]?.map(arg => arg.name)
+        setSignatureHelp(commands[parts[0]]?.signature_help)
+        setDescription(commands[parts[0]]?.description)
+
+        setAvailableCommands(getAvailableCommands(commands, originalParts[0]))
+
+        const nextArgs = allCommands["commands"][parts[0]]?.args
 
         if (nextArgs) {
             setNextArgs([parts[0], ...nextArgs])
@@ -66,6 +78,7 @@ export default function CommandBar() {
 
     const onChange = (e) =>  {
         setInput(e.target.value)
+        setOriginalInput(e.target.value)
     }
 
     const onKeyDown = (e) => {
@@ -91,25 +104,34 @@ export default function CommandBar() {
             })
 
             setInput("")
+            setOriginalInput("")
         }
         if (e.keyCode === Key.UP) {
             if (currentPos > 0) {
                 setInput(history[currentPos - 1])
+                setOriginalInput(history[currentPos -1])
                 setCurrentPos(currentPos - 1)
             }
         }
         if (e.keyCode === Key.DOWN) {
             setInput(history[currentPos])
+            setOriginalInput(history[currentPos])
             if (currentPos < history.length -1) {
                 setCurrentPos(currentPos + 1)
             }
+        }
+        if (e.keyCode === Key.TAB) {
+            setInput(availableCommands[currentCompletion])
+            setCurrentCompletion((currentCompletion + 1) % availableCommands.length)
+            e.preventDefault()
         }
         e.stopPropagation()
     }
 
     const onKeyUp = (e) => {
         if (input == "") return
-        parseCommand(input)
+        console.log("keyup event")
+        parseCommand(originalInput, input)
         e.stopPropagation()
     }
 
@@ -125,7 +147,7 @@ export default function CommandBar() {
                     </div>
                 ))}
             </div>
-            { nextArgs.length > 0 && <ArgumentSuggestion nextArgs={nextArgs} currentArg={currentArg} /> }
+            { signatureHelp && <CommandHelp nextArgs={nextArgs} currentArg={currentArg} help={signatureHelp} description={description}/> }
             <div className={classnames('command-input input-group')}>
                 <span className="input-group-addon">
                     <i className={'fa fa-fw fa-terminal'}/>
@@ -140,7 +162,7 @@ export default function CommandBar() {
                     onKeyUp={onKeyUp}
                 />
             </div>
-            { !command && <AvailableCommands input={input} commands={allCommands["commands"]} /> }
+            <div className="available-commands popover bottom">Available Commands: {JSON.stringify(availableCommands)}</div>
         </div>
     )
 }
