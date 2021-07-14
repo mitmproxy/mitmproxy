@@ -134,7 +134,6 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             websocket.WebsocketStartHook,
             websocket.WebsocketMessageHook,
             websocket.WebsocketEndHook,
-            websocket.WebsocketErrorHook,
         ]
     )
 

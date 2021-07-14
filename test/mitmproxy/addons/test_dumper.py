@@ -232,10 +232,30 @@ def test_websocket():
 
         d.websocket_end(f)
         assert "WebSocket connection closed by" in sio.getvalue()
+        sio_err.truncate(0)
 
         f = tflow.twebsocketflow(err=True)
-        d.websocket_error(f)
+        d.websocket_end(f)
         assert "Error in WebSocket" in sio_err.getvalue()
+        assert "(reason:" not in sio_err.getvalue()
+        sio_err.truncate(0)
+
+        f = tflow.twebsocketflow(err=True, close_reason='Some lame excuse')
+        d.websocket_end(f)
+        assert "Error in WebSocket" in sio_err.getvalue()
+        assert "(reason: Some lame excuse)" in sio_err.getvalue()
+        sio_err.truncate(0)
+
+        f = tflow.twebsocketflow(close_code=4000)
+        d.websocket_end(f)
+        assert "UNKNOWN_ERROR=4000" in sio_err.getvalue()
+        assert "(reason:" not in sio_err.getvalue()
+        sio_err.truncate(0)
+
+        f = tflow.twebsocketflow(close_code=4000, close_reason='I swear I had a reason')
+        d.websocket_end(f)
+        assert "UNKNOWN_ERROR=4000" in sio_err.getvalue()
+        assert "(reason: I swear I had a reason)" in sio_err.getvalue()
 
 
 def test_http2():
