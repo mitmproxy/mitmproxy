@@ -254,7 +254,7 @@ def test_close_disconnect(ws_testdata):
     assert flow.websocket.close_code == 1006
 
 
-def test_close_error(ws_testdata):
+def test_close_code(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (
             playbook
