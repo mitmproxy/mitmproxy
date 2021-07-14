@@ -40,6 +40,10 @@ def test_str():
         assert b.is_valid(tctx.master.commands, str, 1) is False
         assert b.completion(tctx.master.commands, str, "") == []
         assert b.parse(tctx.master.commands, str, "foo") == "foo"
+        assert b.parse(tctx.master.commands, str, r"foo\nbar") == "foo\nbar"
+        assert b.parse(tctx.master.commands, str, r"\N{BELL}") == "🔔"
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, bool, r"\N{UNKNOWN UNICODE SYMBOL!}")
 
 
 def test_bytes():
