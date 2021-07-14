@@ -84,8 +84,6 @@ export default function CommandBar() {
     const onKeyDown = (e) => {
         if (e.keyCode === Key.ENTER) {
             const body = {"command": input}
-            const newHistory = Object.assign([], history)
-            newHistory.splice(currentPos, 0, input)
 
             fetchApi(`/commands`, {
                 method: 'POST',
@@ -96,12 +94,18 @@ export default function CommandBar() {
             })
             .then(response => response.json())
             .then(data => {
-                setHistory(newHistory)
+                setHistory(data.history)
                 setCurrentPos(currentPos + 1)
                 setNextArgs([])
-
-                setResults([...results, {"id": results.length, "result": data.result}])
+                setResults([...results, {
+                    "id": results.length,
+                    "command": input,
+                    "result": JSON.stringify(data.result)
+                }])
             })
+
+            setSignatureHelp("")
+            setDescription("")
 
             setInput("")
             setOriginalInput("")
@@ -130,7 +134,6 @@ export default function CommandBar() {
 
     const onKeyUp = (e) => {
         if (input == "") return
-        console.log("keyup event")
         parseCommand(originalInput, input)
         e.stopPropagation()
     }
@@ -143,6 +146,7 @@ export default function CommandBar() {
             <div className="command-result">
                 {results.map(result => (
                     <div key={result.id}>
+                        <div><strong>$ {result.command}</strong></div>
                         {result.result}
                     </div>
                 ))}
