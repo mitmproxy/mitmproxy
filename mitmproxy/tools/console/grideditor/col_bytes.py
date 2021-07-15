@@ -34,8 +34,8 @@ class Display(base.Cell):
 
 class Edit(base.Cell):
     def __init__(self, data: bytes) -> None:
-        data = strutils.bytes_to_escaped_str(data)
-        w = urwid.Edit(edit_text=data, wrap="any", multiline=True)
+        d = strutils.bytes_to_escaped_str(data)
+        w = urwid.Edit(edit_text=d, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
         super().__init__(w)
 

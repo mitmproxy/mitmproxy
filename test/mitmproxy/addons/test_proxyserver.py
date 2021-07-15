@@ -90,7 +90,7 @@ async def test_start_stop():
 
 
 @pytest.mark.asyncio
-async def test_inject():
+async def test_inject() -> None:
     async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         while s := await reader.read(1):
             writer.write(s.upper())
@@ -112,39 +112,39 @@ async def test_inject():
 
             writer.write(b"a")
             assert await reader.read(1) == b"A"
-            ps.inject_tcp(state.flows[0], False, "b")
+            ps.inject_tcp(state.flows[0], False, b"b")
             assert await reader.read(1) == b"B"
-            ps.inject_tcp(state.flows[0], True, "c")
+            ps.inject_tcp(state.flows[0], True, b"c")
             assert await reader.read(1) == b"c"
 
 
 @pytest.mark.asyncio
-async def test_inject_fail():
+async def test_inject_fail() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         ps.inject_websocket(
             tflow.tflow(),
             True,
-            "test"
+            b"test"
         )
         await tctx.master.await_log("Cannot inject WebSocket messages into non-WebSocket flows.", level="warn")
         ps.inject_tcp(
             tflow.tflow(),
             True,
-            "test"
+            b"test"
         )
         await tctx.master.await_log("Cannot inject TCP messages into non-TCP flows.", level="warn")
 
         ps.inject_websocket(
             tflow.twebsocketflow(),
             True,
-            "test"
+            b"test"
         )
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
         ps.inject_websocket(
             tflow.ttcpflow(),
             True,
-            "test"
+            b"test"
         )
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
 
