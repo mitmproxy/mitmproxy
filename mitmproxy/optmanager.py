@@ -360,9 +360,9 @@ class OptManager:
                 return []
             else:
                 if currentvalue:
-                    return getattr(self, o.name) + currentvalue + [optstr]
+                    return currentvalue + [optstr]
                 else:
-                    return getattr(self, o.name) + [optstr]
+                    return [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     def make_parser(self, parser, optname, metavar=None, short=None):
