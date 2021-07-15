@@ -520,21 +520,45 @@ class TestClientTLS:
         )
         assert not tctx.client.tls_established
 
-    def test_mitmproxy_ca_is_untrusted_immediate_disconnect(self, tctx: context.Context):
-        """Test the scenario where the client doesn't trust the mitmproxy CA."""
+    @pytest.mark.parametrize("close_at", ["tls_clienthello", "tls_start_client", "handshake"])
+    def test_immediate_disconnect(self, tctx: context.Context, close_at):
+        """Test the scenario where the client is disconnecting during the handshake.
+        This may happen because they are not interested in the connection anymore, or because they do not like
+        the proxy certificate."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
+        playbook.logs = True
+
+        playbook >> events.DataReceived(tctx.client, tssl_client.bio_read())
+        playbook << tls.TlsClienthelloHook(tutils.Placeholder())
+
+        if close_at == "tls_clienthello":
+            assert (
+                playbook
+                >> events.ConnectionClosed(tctx.client)
+                >> tutils.reply(to=-2)
+                << commands.CloseConnection(tctx.client)
+            )
+            return
+
+        playbook >> tutils.reply()
+        playbook << tls.TlsStartClientHook(tutils.Placeholder())
+
+        if close_at == "tls_start_client":
+            assert (
+                playbook
+                >> events.ConnectionClosed(tctx.client)
+                >> reply_tls_start_client(to=-2)
+                << commands.CloseConnection(tctx.client)
+            )
+            return
 
         assert (
-                playbook
-                >> events.DataReceived(tctx.client, tssl_client.bio_read())
-                << tls.TlsClienthelloHook(tutils.Placeholder())
-                >> tutils.reply()
-                << tls.TlsStartClientHook(tutils.Placeholder())
-                >> reply_tls_start_client()
-                << commands.SendData(tctx.client, tutils.Placeholder())
-                >> events.ConnectionClosed(tctx.client)
-                << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
-                                "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
-                                "client does not trust the proxy's certificate.", "info")
-                << commands.CloseConnection(tctx.client)
+            playbook
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, tutils.Placeholder())
+            >> events.ConnectionClosed(tctx.client)
+            << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
+                            "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
+                            "client does not trust the proxy's certificate.", "info")
+            << commands.CloseConnection(tctx.client)
         )
