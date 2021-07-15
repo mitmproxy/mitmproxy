@@ -1174,3 +1174,35 @@ def test_reuse_error(tctx):
     )
     assert b"502 Bad Gateway" in error_html()
     assert b"tls verify failed" in error_html()
+
+
+def test_transparent_sni(tctx):
+    """Test that we keep the SNI in lazy transparent mode."""
+    tctx.client.sni = "example.com"
+    tctx.server.address = ("192.0.2.42", 443)
+    tctx.server.tls = True
+
+    flow = Placeholder(HTTPFlow)
+
+    server = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+    )
+    assert server().address == ("192.0.2.42", 443)
+    assert server().sni == "example.com"
+
+
+def test_original_server_disconnects(tctx):
+    """Test that we correctly handle the case where the initial server conn is just closed."""
+    tctx.server.state = ConnectionState.OPEN
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.server)
+    )
