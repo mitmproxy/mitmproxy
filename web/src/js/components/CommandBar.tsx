@@ -27,7 +27,7 @@ export function CommandHelp({nextArgs, currentArg, help, description, availableC
         <div className="arrow"/>
         <div className="popover-content">
             { results.length > 0 && <div><strong>Argument suggestion:</strong> {results}</div> }
-            { help.includes("->") && <div><strong>Signature help: </strong>{help}</div>}
+            { help?.includes("->") && <div><strong>Signature help: </strong>{help}</div>}
             { description && <div># {description}</div>}
             <div><strong>Available Commands: </strong><p className="available-commands">{JSON.stringify(availableCommands)}</p></div>
         </div>
@@ -38,6 +38,7 @@ export default function CommandBar() {
     const [input, setInput] = useState("")
     const [originalInput, setOriginalInput] = useState("")
     const [currentCompletion, setCurrentCompletion] = useState(0)
+    const [completionCandidate, setCompletionCandidate] = useState([])
 
     const [availableCommands, setAvailableCommands] = useState([])
     const [allCommands, setAllCommands] = useState({})
@@ -54,7 +55,8 @@ export default function CommandBar() {
         fetchApi('/commands', { method: 'GET' })
         .then(response => response.json())
         .then(data => {
-            setAllCommands(data)
+            setAllCommands(data["commands"])
+            setCompletionCandidate(getAvailableCommands(data["commands"]))
             setAvailableCommands(getAvailableCommands(data["commands"]))
         })
     }, [])
@@ -62,14 +64,14 @@ export default function CommandBar() {
     const parseCommand = (originalInput, input) => {
         const parts = Filt.parse(input)
         const originalParts = Filt.parse(originalInput)
-        const commands = allCommands["commands"]
 
-        setSignatureHelp(commands[parts[0]]?.signature_help)
-        setDescription(commands[parts[0]]?.description)
+        setSignatureHelp(allCommands[parts[0]]?.signature_help)
+        setDescription(allCommands[parts[0]]?.description)
 
-        setAvailableCommands(getAvailableCommands(commands, originalParts[0]))
+        setCompletionCandidate(getAvailableCommands(allCommands, originalParts[0]))
+        setAvailableCommands(getAvailableCommands(allCommands, parts[0]))
 
-        const nextArgs = allCommands["commands"][parts[0]]?.args
+        const nextArgs = allCommands[parts[0]]?.args
 
         if (nextArgs) {
             setNextArgs([parts[0], ...nextArgs])
@@ -80,6 +82,7 @@ export default function CommandBar() {
     const onChange = (e) =>  {
         setInput(e.target.value)
         setOriginalInput(e.target.value)
+        setCurrentCompletion(0)
     }
 
     const onKeyDown = (e) => {
@@ -110,6 +113,8 @@ export default function CommandBar() {
 
             setInput("")
             setOriginalInput("")
+
+            setCompletionCandidate(availableCommands)
         }
         if (e.keyCode === Key.UP) {
             if (currentPos > 0) {
@@ -126,15 +131,14 @@ export default function CommandBar() {
             }
         }
         if (e.keyCode === Key.TAB) {
-            setInput(availableCommands[currentCompletion])
-            setCurrentCompletion((currentCompletion + 1) % availableCommands.length)
+            setInput(completionCandidate[currentCompletion])
+            setCurrentCompletion((currentCompletion + 1) % completionCandidate.length)
             e.preventDefault()
         }
         e.stopPropagation()
     }
 
     const onKeyUp = (e) => {
-        if (input == "") return
         parseCommand(originalInput, input)
         e.stopPropagation()
     }
