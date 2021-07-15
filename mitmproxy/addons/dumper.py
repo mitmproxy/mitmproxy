@@ -30,10 +30,9 @@ def colorful(line, styles):
 
 
 class Dumper:
-    def __init__(self, outfile=None, errfile=None):
+    def __init__(self, outfile=None):
         self.filter: Optional[flowfilter.TFilter] = None
         self.outfp: Optional[IO] = outfile
-        self.errfp: Optional[IO] = errfile
 
     def load(self, loader):
         loader.add_option(
@@ -74,11 +73,6 @@ class Dumper:
         click.secho(text, file=self.outfp, err=False, **style)
         if self.outfp:
             self.outfp.flush()
-
-    def echo_error(self, text: str, **style):
-        click.secho(text, file=self.errfp, err=True, **style)
-        if self.errfp:
-            self.errfp.flush()
 
     def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
@@ -300,7 +294,7 @@ class Dumper:
                 self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
             else:
                 error = flow.Error(f"WebSocket Error: {self.format_websocket_error(f.websocket)}")
-                self.echo_error(
+                self.echo(
                     f"Error in WebSocket connection to {human.format_address(f.server_conn.address)}: {error}",
                     fg="red"
                 )
@@ -316,7 +310,7 @@ class Dumper:
 
     def tcp_error(self, f):
         if self.match(f):
-            self.echo_error(
+            self.echo(
                 f"Error in TCP connection to {human.format_address(f.server_conn.address)}: {f.error}",
                 fg="red"
             )
