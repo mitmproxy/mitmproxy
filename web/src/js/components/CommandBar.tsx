@@ -14,7 +14,7 @@ function getAvailableCommands(commands, input = "") {
     return availableCommands
 }
 
-export function CommandHelp({nextArgs, currentArg, help, description}){
+export function CommandHelp({nextArgs, currentArg, help, description, availableCommands}){
     let results = []
     for (let i = 0; i < nextArgs.length; i++) {
         if (i==currentArg) {
@@ -26,9 +26,10 @@ export function CommandHelp({nextArgs, currentArg, help, description}){
     return (<div className="argument-suggestion popover top">
         <div className="arrow"/>
         <div className="popover-content">
-            <div><strong>Argument suggestion:</strong> {results}</div>
+            { results.length > 0 && <div><strong>Argument suggestion:</strong> {results}</div> }
             { help.includes("->") && <div><strong>Signature help: </strong>{help}</div>}
             { description && <div># {description}</div>}
+            <div><strong>Available Commands: </strong><p className="available-commands">{JSON.stringify(availableCommands)}</p></div>
         </div>
     </div>)
 }
@@ -151,7 +152,7 @@ export default function CommandBar() {
                     </div>
                 ))}
             </div>
-            { signatureHelp && <CommandHelp nextArgs={nextArgs} currentArg={currentArg} help={signatureHelp} description={description}/> }
+            <CommandHelp nextArgs={nextArgs} currentArg={currentArg} help={signatureHelp} description={description} availableCommands={availableCommands} />
             <div className={classnames('command-input input-group')}>
                 <span className="input-group-addon">
                     <i className={'fa fa-fw fa-terminal'}/>
@@ -166,7 +167,6 @@ export default function CommandBar() {
                     onKeyUp={onKeyUp}
                 />
             </div>
-            <div className="available-commands popover bottom">Available Commands: {JSON.stringify(availableCommands)}</div>
         </div>
     )
 }
