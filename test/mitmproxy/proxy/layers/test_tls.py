@@ -536,6 +536,8 @@ class TestClientTLS:
                 playbook
                 >> events.ConnectionClosed(tctx.client)
                 >> tutils.reply(to=-2)
+                << tls.TlsStartClientHook(tutils.Placeholder())
+                >> reply_tls_start_client()
                 << commands.CloseConnection(tctx.client)
             )
             return
