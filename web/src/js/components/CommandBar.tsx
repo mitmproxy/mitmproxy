@@ -1,11 +1,29 @@
-import React, { useState, useEffect, Component } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import classnames from 'classnames'
 import { Key, fetchApi } from '../utils'
 import Filt from '../filt/command'
 
-function getAvailableCommands(commands, input = "") {
-    if (!commands) return null
-    let availableCommands = []
+type CommandHelpProps = {
+    nextArgs: string[],
+    currentArg: number,
+    help: string,
+    description: string,
+    availableCommands: string[],
+}
+
+type CommandResult = {
+    "id": number,
+    "command": string,
+    "result": string,
+}
+
+type ResultProps = {
+    results: CommandResult[],
+}
+
+function getAvailableCommands(commands, input: string = "") {
+    if (!commands) return []
+    let availableCommands: string[] = []
     for (const [command, args] of Object.entries(commands)) {
         if (command.startsWith(input)) {
             availableCommands.push(command)
@@ -14,19 +32,43 @@ function getAvailableCommands(commands, input = "") {
     return availableCommands
 }
 
-export function CommandHelp({nextArgs, currentArg, help, description, availableCommands}){
-    let results = []
-    for (let i = 0; i < nextArgs.length; i++) {
+export function Results({results}: ResultProps) {
+    const resultElement= useRef<HTMLDivElement>(null!);
+
+    useEffect(() => {
+        if (resultElement) {
+            resultElement.current?.addEventListener('DOMNodeInserted', event => {
+                const { currentTarget: target } = event;
+                target.scroll({ top: target.scrollHeight, behavior: 'auto' });
+            });
+        }
+    }, [])
+
+    return (
+        <div className="command-result" ref={resultElement}>
+            {results.map(result => (
+                <div key={result.id}>
+                    <div><strong>$ {result.command}</strong></div>
+                    {result.result}
+                </div>
+            ))}
+        </div>
+    )
+}
+
+export function CommandHelp({nextArgs, currentArg, help, description, availableCommands}: CommandHelpProps){
+    let argumentSuggestion: JSX.Element[] = []
+    for (let i: number = 0; i < nextArgs.length; i++) {
         if (i==currentArg) {
-            results.push(<mark>{nextArgs[i]}</mark>)
+            argumentSuggestion.push(<mark>{nextArgs[i]}</mark>)
             continue
         }
-        results.push(<span>{nextArgs[i]} </span>)
+        argumentSuggestion.push(<span>{nextArgs[i]} </span>)
     }
     return (<div className="argument-suggestion popover top">
         <div className="arrow"/>
         <div className="popover-content">
-            { results.length > 0 && <div><strong>Argument suggestion:</strong> {results}</div> }
+            { argumentSuggestion.length > 0 && <div><strong>Argument suggestion:</strong> {argumentSuggestion}</div> }
             { help?.includes("->") && <div><strong>Signature help: </strong>{help}</div>}
             { description && <div># {description}</div>}
             <div><strong>Available Commands: </strong><p className="available-commands">{JSON.stringify(availableCommands)}</p></div>
@@ -35,21 +77,21 @@ export function CommandHelp({nextArgs, currentArg, help, description, availableC
 }
 
 export default function CommandBar() {
-    const [input, setInput] = useState("")
-    const [originalInput, setOriginalInput] = useState("")
-    const [currentCompletion, setCurrentCompletion] = useState(0)
-    const [completionCandidate, setCompletionCandidate] = useState([])
+    const [input, setInput] = useState<string>("")
+    const [originalInput, setOriginalInput] = useState<string>("")
+    const [currentCompletion, setCurrentCompletion] = useState<number>(0)
+    const [completionCandidate, setCompletionCandidate] = useState<string[]>([])
 
-    const [availableCommands, setAvailableCommands] = useState([])
+    const [availableCommands, setAvailableCommands] = useState<string[]>([])
     const [allCommands, setAllCommands] = useState({})
-    const [nextArgs, setNextArgs] = useState([])
-    const [currentArg, setCurrentArg] = useState(0)
-    const [signatureHelp, setSignatureHelp] = useState("")
-    const [description, setDescription] = useState("")
+    const [nextArgs, setNextArgs] = useState<string[]>([])
+    const [currentArg, setCurrentArg] = useState<number>(0)
+    const [signatureHelp, setSignatureHelp] = useState<string>("")
+    const [description, setDescription] = useState<string>("")
 
-    const [results, setResults] = useState([])
-    const [history, setHistory] = useState([])
-    const [currentPos, setCurrentPos] = useState(0)
+    const [results, setResults] = useState<CommandResult[]>([])
+    const [history, setHistory] = useState<string[]>([])
+    const [currentPos, setCurrentPos] = useState<number>(0)
 
     useEffect(() => {
         fetchApi('/commands', { method: 'GET' })
@@ -57,13 +99,13 @@ export default function CommandBar() {
         .then(data => {
             setAllCommands(data["commands"])
             setCompletionCandidate(getAvailableCommands(data["commands"]))
-            setAvailableCommands(getAvailableCommands(data["commands"]))
+            setAvailableCommands(Object.keys(data["commands"]))
         })
     }, [])
 
-    const parseCommand = (originalInput, input) => {
-        const parts = Filt.parse(input)
-        const originalParts = Filt.parse(originalInput)
+    const parseCommand = (originalInput: string, input: string) => {
+        const parts: string[] = Filt.parse(input)
+        const originalParts: string[] = Filt.parse(originalInput)
 
         setSignatureHelp(allCommands[parts[0]]?.signature_help)
         setDescription(allCommands[parts[0]]?.description)
@@ -71,7 +113,7 @@ export default function CommandBar() {
         setCompletionCandidate(getAvailableCommands(allCommands, originalParts[0]))
         setAvailableCommands(getAvailableCommands(allCommands, parts[0]))
 
-        const nextArgs = allCommands[parts[0]]?.args
+        const nextArgs: string[] = allCommands[parts[0]]?.args
 
         if (nextArgs) {
             setNextArgs([parts[0], ...nextArgs])
@@ -114,6 +156,7 @@ export default function CommandBar() {
             setInput("")
             setOriginalInput("")
 
+            setCurrentCompletion(0)
             setCompletionCandidate(availableCommands)
         }
         if (e.keyCode === Key.UP) {
@@ -139,6 +182,10 @@ export default function CommandBar() {
     }
 
     const onKeyUp = (e) => {
+        if (!input) {
+            setAvailableCommands(Object.keys(allCommands))
+            return
+        }
         parseCommand(originalInput, input)
         e.stopPropagation()
     }
@@ -148,14 +195,7 @@ export default function CommandBar() {
             <div className="command-title">
                 Command Result
             </div>
-            <div className="command-result">
-                {results.map(result => (
-                    <div key={result.id}>
-                        <div><strong>$ {result.command}</strong></div>
-                        {result.result}
-                    </div>
-                ))}
-            </div>
+            <Results results={results} />
             <CommandHelp nextArgs={nextArgs} currentArg={currentArg} help={signatureHelp} description={description} availableCommands={availableCommands} />
             <div className={classnames('command-input input-group')}>
                 <span className="input-group-addon">
