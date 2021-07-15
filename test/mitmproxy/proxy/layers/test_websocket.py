@@ -169,7 +169,7 @@ def test_drop_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow.websocket.messages[-1].kill()
+    flow.websocket.messages[-1].drop()
     assert (
             playbook
             >> reply()

@@ -170,7 +170,7 @@ class WebsocketLayer(layer.Layer):
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
-                    if not message.killed:
+                    if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
 

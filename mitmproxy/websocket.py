@@ -6,6 +6,7 @@ as HTTP flows as well. They can be distinguished from regular HTTP requests by h
 This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
 import time
+import warnings
 from typing import List, Tuple, Union
 from typing import Optional
 
@@ -44,7 +45,7 @@ class WebSocketMessage(serializable.Serializable):
     """A byte-string representing the content of this message."""
     timestamp: float
     """Timestamp of when this message was received or created."""
-    killed: bool
+    dropped: bool
     """True if the message has not been forwarded by mitmproxy, False otherwise."""
 
     def __init__(
@@ -59,17 +60,17 @@ class WebSocketMessage(serializable.Serializable):
         self.type = Opcode(type)
         self.content = content
         self.timestamp: float = timestamp or time.time()
-        self.killed = killed
+        self.dropped = killed
 
     @classmethod
     def from_state(cls, state: WebSocketMessageState):
         return cls(*state)
 
     def get_state(self) -> WebSocketMessageState:
-        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
+        return int(self.type), self.from_client, self.content, self.timestamp, self.dropped
 
     def set_state(self, state: WebSocketMessageState) -> None:
-        typ, self.from_client, self.content, self.timestamp, self.killed = state
+        typ, self.from_client, self.content, self.timestamp, self.dropped = state
         self.type = Opcode(typ)
 
     def __repr__(self):
@@ -86,9 +87,14 @@ class WebSocketMessage(serializable.Serializable):
         """
         return self.type == Opcode.TEXT
 
-    def kill(self):
-        # Likely to be replaced with .drop() in the future, see https://github.com/mitmproxy/mitmproxy/pull/4486
-        self.killed = True
+    def drop(self):
+        """Drop this message, i.e. don't forward it to the other peer."""
+        self.dropped = True
+
+    def kill(self):  # pragma: no cover
+        """A deprecated alias for `.drop()`."""
+        warnings.warn("WebSocketMessage.kill() is deprecated, use .drop() instead.", DeprecationWarning, stacklevel=2)
+        self.drop()
 
     @property
     def text(self) -> str:
