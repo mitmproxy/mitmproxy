@@ -11,7 +11,6 @@ from mitmproxy import command_lexer
         ("'foo'", True),
         ('"foo"', True),
         ("'foo' bar'", False),
-        ("'foo\\' bar'", True),
         ("'foo' 'bar'", False),
         ("'foo'x", False),
         ('''"foo    ''', True),
@@ -52,8 +51,10 @@ def test_expr(test_input, expected):
 @example("'foo\\\\'")
 @example("\"foo\\'\"")
 @example("\"foo\\\\'\"")
+@example('\'foo\\"\'')
+@example(r"\\\foo")
 def test_quote_unquote_cycle(s):
-    assert command_lexer.unquote(command_lexer.quote(s)) == s
+    assert command_lexer.unquote(command_lexer.quote(s)).replace(r"\x22", '"') == s
 
 
 @given(text())

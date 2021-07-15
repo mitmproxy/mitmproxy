@@ -34,7 +34,7 @@ class TestWebSocketMessage:
         bin = websocket.WebSocketMessage(Opcode.BINARY, True, b"foo")
 
         assert txt.is_text
-        assert txt.text
+        assert txt.text == "foo"
         txt.text = "bar"
         assert txt.content == b"bar"
 
