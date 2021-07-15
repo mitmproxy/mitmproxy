@@ -533,7 +533,8 @@ class TestClientTLS:
                 >> reply_tls_start_client()
                 << commands.SendData(tctx.client, tutils.Placeholder())
                 >> events.ConnectionClosed(tctx.client)
-                << commands.Log("Client TLS handshake failed. The client may not trust the proxy's certificate "
-                                "for wrong.host.mitmproxy.org (connection closed)", "warn")
+                << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
+                                "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
+                                "client does not trust the proxy's certificate.", "info")
                 << commands.CloseConnection(tctx.client)
         )
