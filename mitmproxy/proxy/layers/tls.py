@@ -1,7 +1,7 @@
 import struct
 import time
 from dataclasses import dataclass
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Literal, Optional, Tuple
 
 from OpenSSL import SSL
 from mitmproxy import certs, connection
@@ -22,10 +22,10 @@ def is_tls_handshake_record(d: bytes) -> bool:
     # TLS 1.3 mandates legacy_record_version to be 0x0301.
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     return (
-            len(d) >= 3 and
-            d[0] == 0x16 and
-            d[1] == 0x03 and
-            0x0 <= d[2] <= 0x03
+        len(d) >= 3 and
+        d[0] == 0x16 and
+        d[1] == 0x03 and
+        0x0 <= d[2] <= 0x03
     )
 
 
@@ -399,13 +399,20 @@ class ClientTLSLayer(_TLSLayer):
             dest = self.conn.sni
         else:
             dest = human.format_address(self.context.server.address)
+        level: Literal["warn", "info"] = "warn"
         if err.startswith("Cannot parse ClientHello"):
             pass
         elif "unknown ca" in err or "bad certificate" in err:
             err = f"The client does not trust the proxy's certificate for {dest} ({err})"
+        elif err == "connection closed":
+            err = (
+                f"The client disconnected during the handshake. If this happens consistently for {dest}, "
+                f"this may indicate that the client does not trust the proxy's certificate."
+            )
+            level = "info"
         else:
             err = f"The client may not trust the proxy's certificate for {dest} ({err})"
-        yield commands.Log(f"Client TLS handshake failed. {err}", level="warn")
+        yield commands.Log(f"Client TLS handshake failed. {err}", level=level)
         yield from super().on_handshake_error(err)
         self.event_to_child = self.errored  # type: ignore
 
