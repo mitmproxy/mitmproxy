@@ -1,7 +1,6 @@
 import itertools
 import shutil
-import sys
-from typing import Optional, TextIO, Union
+from typing import IO, Optional, Union
 
 import click
 
@@ -31,10 +30,10 @@ def colorful(line, styles):
 
 
 class Dumper:
-    def __init__(self, outfile=sys.stdout, errfile=sys.stderr):
+    def __init__(self, outfile=None, errfile=None):
         self.filter: Optional[flowfilter.TFilter] = None
-        self.outfp: TextIO = outfile
-        self.errfp: TextIO = errfile
+        self.outfp: Optional[IO] = outfile
+        self.errfp: Optional[IO] = errfile
 
     def load(self, loader):
         loader.add_option(
@@ -72,12 +71,12 @@ class Dumper:
     def echo(self, text: str, ident=None, **style):
         if ident:
             text = indent(ident, text)
-        click.secho(text, file=self.outfp, **style)
+        click.secho(text, file=self.outfp, err=False, **style)
         if self.outfp:
             self.outfp.flush()
 
     def echo_error(self, text: str, **style):
-        click.secho(text, file=self.errfp, **style)
+        click.secho(text, file=self.errfp, err=True, **style)
         if self.errfp:
             self.errfp.flush()
 
