@@ -119,7 +119,7 @@ class _StrType(_BaseType):
         """, re.VERBOSE)
 
     @staticmethod
-    def _unescape(match: re.Match[str]) -> str:
+    def _unescape(match: re.Match) -> str:
         return codecs.decode(match.group(0), "unicode-escape")  # type: ignore
 
     def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:

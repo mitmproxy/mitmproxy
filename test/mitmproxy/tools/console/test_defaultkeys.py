@@ -20,18 +20,18 @@ async def test_commands_exist():
     await m.load_flow(tflow())
 
     for binding in km.bindings:
-        parsed, _ = command_manager.parse_partial(binding.command.strip())
-
-        cmd = parsed[0].value
-        args = [
-            a.value for a in parsed[1:]
-            if a.type != mitmproxy.types.Space
-        ]
-
-        assert cmd in m.commands.commands
-
-        cmd_obj = m.commands.commands[cmd]
         try:
+            parsed, _ = command_manager.parse_partial(binding.command.strip())
+
+            cmd = parsed[0].value
+            args = [
+                a.value for a in parsed[1:]
+                if a.type != mitmproxy.types.Space
+            ]
+
+            assert cmd in m.commands.commands
+
+            cmd_obj = m.commands.commands[cmd]
             cmd_obj.prepare_args(args)
         except Exception as e:
-            raise ValueError(f"Invalid command: {binding.command}") from e
+            raise ValueError(f"Invalid binding: {binding.command}") from e
