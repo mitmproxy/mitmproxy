@@ -1,9 +1,10 @@
 """Process individual messages from a WebSocket connection."""
 import re
-from mitmproxy import ctx
+from mitmproxy import ctx, http
 
 
-def websocket_message(flow):
+def websocket_message(flow: http.HTTPFlow):
+    assert flow.websocket is not None  # make type checker happy
     # get the latest message
     message = flow.websocket.messages[-1]
 
@@ -18,4 +19,4 @@ def websocket_message(flow):
 
     if b'FOOBAR' in message.content:
         # kill the message and not send it to the other endpoint
-        message.content = ""
+        message.drop()
