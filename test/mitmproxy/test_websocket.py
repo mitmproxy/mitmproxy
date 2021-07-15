@@ -25,9 +25,9 @@ class TestWebSocketMessage:
         m.type = Opcode.BINARY
         assert repr(m) == "b'foo'"
 
-        assert not m.killed
-        m.kill()
-        assert m.killed
+        assert not m.dropped
+        m.drop()
+        assert m.dropped
 
     def test_text(self):
         txt = websocket.WebSocketMessage(Opcode.TEXT, True, b"foo")

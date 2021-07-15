@@ -170,7 +170,7 @@ class WebsocketLayer(layer.Layer):
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
-                    if not message.killed:
+                    if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
 
@@ -227,8 +227,6 @@ class Fragmentizer:
             return wsproto.events.BytesMessage(data, message_finished=message_finished)
 
     def __call__(self, content: bytes) -> Iterator[wsproto.events.Message]:
-        if not content:
-            return
         if len(content) == sum(self.fragment_lengths):
             # message has the same length, we can reuse the same sizes
             offset = 0

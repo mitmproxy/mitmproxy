@@ -143,6 +143,23 @@ def test_modify_message(ws_testdata):
     )
 
 
+def test_empty_message(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+            playbook
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            >> DataReceived(tctx.server, b"\x81\x00")
+            << websocket.WebsocketMessageHook(flow)
+    )
+    assert flow.websocket.messages[-1].content == b""
+    assert (
+            playbook
+            >> reply()
+            << SendData(tctx.client, b"\x81\x00")
+    )
+
+
 def test_drop_message(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (
@@ -152,7 +169,7 @@ def test_drop_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow.websocket.messages[-1].kill()
+    flow.websocket.messages[-1].drop()
     assert (
             playbook
             >> reply()
@@ -306,7 +323,9 @@ def test_websocket_connection_repr(tctx):
 class TestFragmentizer:
     def test_empty(self):
         f = websocket.Fragmentizer([b"foo"], False)
-        assert list(f(b"")) == []
+        assert list(f(b"")) == [
+            wsproto.events.BytesMessage(b"", message_finished=True),
+        ]
 
     def test_keep_sizes(self):
         f = websocket.Fragmentizer([b"foo", b"bar"], True)
