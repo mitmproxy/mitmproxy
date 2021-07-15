@@ -161,8 +161,6 @@ class _TLSLayer(tunnel.TunnelLayer):
 
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
-        if not self.conn.connected:
-            return
 
         tls_start = TlsStartData(self.conn, self.context)
         if tls_start.conn == tls_start.context.client:
