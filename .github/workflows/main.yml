@@ -168,7 +168,11 @@ jobs:
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
-    if: github.repository == 'mitmproxy/mitmproxy' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dockertest')
+    if: github.repository == 'mitmproxy/mitmproxy' && (
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/dockertest' ||
+      startsWith(github.ref, 'refs/tags/')
+      )
     environment: deploy-docker
     needs:
      - test
