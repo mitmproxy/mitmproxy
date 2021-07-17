@@ -102,6 +102,12 @@ class TlsConfig:
             choices=[x.name for x in net_tls.Version],
             help=f"Set the maximum TLS version for server connections.",
         )
+        loader.add_option(
+            name="tls_allow_cn_fallback",
+            typespec=bool,
+            default=False,
+            help=f"Allow checking an upstream certificate's CN field if SANs are missing",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -217,6 +223,7 @@ class TlsConfig:
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
             alpn_protos=server.alpn_offers,
+            allow_cn_fallback=ctx.options.tls_allow_cn_fallback,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)

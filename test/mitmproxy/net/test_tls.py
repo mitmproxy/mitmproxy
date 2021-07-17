@@ -41,6 +41,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         ca_pemfile=None,
         client_cert=None,
         alpn_protos=(),
+        allow_cn_fallback=False,
     )
     sctx = tls.create_client_proxy_context(
         min_version=tls.DEFAULT_MIN_VERSION,

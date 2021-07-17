@@ -138,6 +138,7 @@ def create_proxy_server_context(
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
         alpn_protos: Optional[Sequence[bytes]],
+        allow_cn_fallback: bool,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -155,12 +156,12 @@ def create_proxy_server_context(
         # Manually enable hostname verification on the context object.
         # https://wiki.openssl.org/index.php/Hostname_validation
         param = SSL._lib.SSL_CTX_get0_param(context._context)  # type: ignore
-        # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
-        # https://www.chromestatus.com/feature/4981025180483584
-        SSL._lib.X509_VERIFY_PARAM_set_hostflags(  # type: ignore
-            param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT  # type: ignore
-        )
+        host_flags = SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS
+        if not allow_cn_fallback:
+            # Matching on the CN is disabled in both Chrome and Firefox, so we disable it unless requested
+            # https://www.chromestatus.com/feature/4981025180483584
+            host_flags |= SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT  # type: ignore
+        SSL._lib.X509_VERIFY_PARAM_set_hostflags(param, host_flags)  # type: ignore
         try:
             ip: bytes = ipaddress.ip_address(hostname).packed
         except ValueError:
