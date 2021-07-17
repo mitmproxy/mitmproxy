@@ -106,7 +106,7 @@ export function fetchApi(url: string, options: RequestInit = {}): Promise<Respon
     });
 }
 
-fetchApi.put = (url: string, json: any, options: RequestInit) => fetchApi(
+fetchApi.put = (url: string, json: any, options: RequestInit = {}) => fetchApi(
     url,
     {
         method: "PUT",

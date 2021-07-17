@@ -42,7 +42,9 @@ describe('option actions', () => {
 describe('sendUpdate', () => {
 
     it('should handle error', async () => {
-        global.fetch = () => Promise.reject("fooerror");
+        let mockResponse = { status: 404, text: "fooerror" },
+            promise = Promise.resolve(mockResponse)
+        global.fetch = r => { return promise }
         await store.dispatch(OptionsActions.pureSendUpdate("bar", "error"))
         expect(store.getActions()).toEqual([
             OptionsEditorActions.updateError("bar", "fooerror")

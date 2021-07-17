@@ -10,7 +10,7 @@ type FilterInputProps = {
     color: any
     placeholder: string
     value: string
-    onChange: (value) => void
+    onChange: (value) => { type: string, filter?: string, highlight?: string } | void
 }
 
 type FilterInputState = {

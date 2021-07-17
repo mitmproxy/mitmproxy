@@ -43,24 +43,26 @@ function InterceptInput() {
 }
 
 function FlowFilterInput() {
-    const value = useAppSelector(state => state.flows.filter)
+    const dispatch = useAppDispatch(),
+        value = useAppSelector(state => state.flows.filter)
     return <FilterInput
         value={value || ""}
         placeholder="Search"
         type="search"
         color='black'
-        onChange={setFilter}
+        onChange={value => dispatch(setFilter(value))}
     />
 }
 
 function HighlightInput() {
-    const value = useAppSelector(state => state.flows.highlight)
+    const dispatch = useAppDispatch(),
+        value = useAppSelector(state => state.flows.highlight)
     return <FilterInput
         value={value || ""}
         placeholder="Highlight"
         type="tag"
         color='hsl(48, 100%, 50%)'
-        onChange={setHighlight}
+        onChange={value => dispatch(setHighlight(value))}
     />
 }
 
