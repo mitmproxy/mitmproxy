@@ -21,7 +21,7 @@ type ResultProps = {
     results: CommandResult[],
 }
 
-function getAvailableCommands(commands, input: string = "") {
+function getAvailableCommands(commands: object, input: string = "") {
     if (!commands) return []
     let availableCommands: string[] = []
     for (const [command, args] of Object.entries(commands)) {
@@ -37,7 +37,7 @@ export function Results({results}: ResultProps) {
 
     useEffect(() => {
         if (resultElement) {
-            resultElement.current?.addEventListener('DOMNodeInserted', event => {
+            resultElement.current.addEventListener('DOMNodeInserted', event => {
                 const { currentTarget: target } = event;
                 target.scroll({ top: target.scrollHeight, behavior: 'auto' });
             });
@@ -83,7 +83,7 @@ export default function CommandBar() {
     const [completionCandidate, setCompletionCandidate] = useState<string[]>([])
 
     const [availableCommands, setAvailableCommands] = useState<string[]>([])
-    const [allCommands, setAllCommands] = useState({})
+    const [allCommands, setAllCommands] = useState<object>({})
     const [nextArgs, setNextArgs] = useState<string[]>([])
     const [currentArg, setCurrentArg] = useState<number>(0)
     const [signatureHelp, setSignatureHelp] = useState<string>("")

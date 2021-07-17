@@ -1,11 +1,11 @@
 import React from "react"
-import PropTypes from "prop-types"
 
-DocsLink.propTypes = {
-    resource: PropTypes.string.isRequired,
+type DocLinkProps = {
+    children: React.ReactNode,
+    resource: string
 }
 
-export default function DocsLink({ children, resource }) {
+export default function DocsLink({ children, resource }: DocLinkProps) {
     let url = `https://docs.mitmproxy.org/stable/${resource}`
     return (
         <a target="_blank" href={url}>

@@ -2,7 +2,7 @@ import React from "react";
 
 type FileChooserProps = {
     icon: string
-    text: string
+    text?: string
     className?: string
     title?: string
     onOpenFile: (File) => void

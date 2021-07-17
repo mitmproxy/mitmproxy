@@ -4,23 +4,12 @@ exports[`ContentViewOptions Component should render correctly 1`] = `
 <div
   className="view-options"
 >
-  <a
-    className="btn btn-default btn-xs pull-left"
-    href="#"
-    onClick={[Function]}
-  >
-    <span>
-      <b>
-        View:
-      </b>
-       
-      auto
-       
-      <span
-        className="caret"
-      />
-    </span>
-  </a>
+  <span>
+    <b>
+      View:
+    </b>
+     edit
+  </span>
    
   <a
     className="btn btn-default btn-xs"
@@ -32,9 +21,21 @@ exports[`ContentViewOptions Component should render correctly 1`] = `
     />
   </a>
    
+  <a
+    className="btn btn-default btn-xs"
+    href="#"
+    onClick={[Function]}
+    title="Upload a file to replace the content."
+  >
+    <i
+      className="fa fa-fw fa-upload"
+    />
+    <input
+      className="hidden"
+      onChange={[Function]}
+      type="file"
+    />
+  </a>
    
-  <span>
-    foo
-  </span>
 </div>
 `;

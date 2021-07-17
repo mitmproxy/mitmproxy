@@ -34,19 +34,6 @@ exports[`ViewServer Component should render correctly and connect to state 1`] =
 
 exports[`ViewServer Component should render correctly and connect to state 2`] = `
 <div>
-  <pre>
-    <div>
-      <span
-        className="k"
-      >
-        1
-      </span>
-      <span
-        className="v"
-      >
-        1
-      </span>
-    </div>
-  </pre>
+  <pre />
 </div>
 `;

@@ -2,14 +2,24 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
 
-export default class Splitter extends Component {
+type SplitterStates = {
+    applied: boolean,
+    startX: number,
+    startY: number,
+}
+
+type SplitterProps = {
+    axis: string,
+}
+
+export default class Splitter extends Component<SplitterProps, SplitterStates> {
 
     static defaultProps = { axis: 'x' }
 
     constructor(props, context) {
         super(props, context)
 
-        this.state = { applied: false, startX: false, startY: false }
+        this.state = { applied: false, startX: 0, startY: 0 }
 
         this.onMouseMove = this.onMouseMove.bind(this)
         this.onMouseDown = this.onMouseDown.bind(this)

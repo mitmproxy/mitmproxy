@@ -1,19 +1,26 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
 import { MessageUtils } from '../../flow/utils'
+
+type ContentLoaderProps = {
+    content: string,
+    contentView: object,
+    flow: object,
+    message: {
+        content: string,
+        contentHash: string,
+    },
+}
+
+type ContentLoaderStates = {
+    content: string | undefined,
+    request: { abort: () => void }| undefined,
+}
 
 export default function withContentLoader(View) {
 
-    return class extends React.Component {
-        static displayName = View.displayName || View.name
-        static matches = View.matches
-
-        static propTypes = {
-            ...View.propTypes,
-            content: PropTypes.string,  // mark as non-required
-            flow: PropTypes.object.isRequired,
-            message: PropTypes.object.isRequired,
-        }
+    return class extends React.Component<ContentLoaderProps, ContentLoaderStates> {
+        static displayName: string = View.displayName || View.name
+        static matches: (message: any) => boolean = View.matches
 
         constructor(props) {
             super(props)
@@ -45,6 +52,7 @@ export default function withContentLoader(View) {
 
         updateContent(props) {
             if (this.state.request) {
+                console.log("request:",this.state.request)
                 this.state.request.abort()
             }
             // We have a few special cases where we do not need to make an HTTP request.

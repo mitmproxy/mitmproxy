@@ -1,19 +1,21 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
 import classnames from 'classnames'
 import { Key } from '../../utils'
 
-export default class ToggleInputButton extends Component {
+type ToggleInputButtonProps = {
+    name: string,
+    txt: string,
+    onToggleChanged: (string) => void,
+    checked: boolean,
+    placeholder: string,
+    inputType: string,
+}
 
-    static propTypes = {
-        name: PropTypes.string.isRequired,
-        txt: PropTypes.string,
-        onToggleChanged: PropTypes.func.isRequired,
-        checked: PropTypes.bool.isRequired,
-        placeholder: PropTypes.string.isRequired,
-        inputType: PropTypes.string
-    }
+type ToggleInputButtonStates = {
+    txt: string,
+}
 
+export default class ToggleInputButton extends Component<ToggleInputButtonProps, ToggleInputButtonStates> {
     constructor(props) {
         super(props)
         this.state = { txt: props.txt || '' }

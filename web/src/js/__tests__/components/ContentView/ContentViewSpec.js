@@ -19,16 +19,12 @@ describe('ViewImage Component', () => {
 })
 
 describe('ViewServer Component', () => {
-    let store = TStore(),
-    setContentViewDescFn = jest.fn(),
-    setContentFn = jest.fn()
+    let store = TStore()
 
     it('should render correctly and connect to state', () => {
         let provider = renderer.create(
             <Provider store={store}>
                 <ViewServer
-                    setContentViewDescription={setContentViewDescFn}
-                    setContent={setContentFn}
                     flow={tflow}
                     message={tflow.response}
                 />
@@ -37,37 +33,16 @@ describe('ViewServer Component', () => {
         expect(tree).toMatchSnapshot()
 
         let viewServer = renderer.create(
-            <PureViewServer
-                showFullContent={true}
-                maxLines={10}
-                setContentViewDescription={setContentViewDescFn}
-                setContent={setContentViewDescFn}
-                flow={tflow}
-                message={tflow.response}
-                content={JSON.stringify({lines: [['k1', 'v1']]})}
-            />
+            <Provider store={store}>
+                <PureViewServer
+                    flow={tflow}
+                    message={tflow.response}
+                    content={JSON.stringify({lines: [['k1', 'v1']]})}
+                />
+            </Provider>
         )
         tree = viewServer.toJSON()
         expect(tree).toMatchSnapshot()
-    })
-
-    it('should handle componentWillReceiveProps', () => {
-        // case of fail to parse content
-        let viewServer = TestUtils.renderIntoDocument(
-            <PureViewServer
-                showFullContent={true}
-                maxLines={10}
-                setContentViewDescription={setContentViewDescFn}
-                setContent={setContentViewDescFn}
-                flow={tflow}
-                message={tflow.response}
-                content={JSON.stringify({lines: [['k1', 'v1']]})}
-            />
-        )
-        viewServer.UNSAFE_componentWillReceiveProps({...viewServer.props, content: '{foo' })
-        let e = ''
-        try {JSON.parse('{foo') } catch(err){ e = err.message}
-        expect(viewServer.data).toEqual({ description: e, lines: [] })
     })
 })
 

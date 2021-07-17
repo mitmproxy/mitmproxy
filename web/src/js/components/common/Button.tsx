@@ -1,15 +1,16 @@
 import React from "react"
-import PropTypes from 'prop-types'
 import classnames from "classnames"
 
-Button.propTypes = {
-    onClick: PropTypes.func.isRequired,
-    children: PropTypes.node,
-    icon: PropTypes.string,
-    title: PropTypes.string,
+type ButtonProps = {
+    onClick: () => void,
+    children?: React.ReactNode,
+    icon?: string,
+    disabled?: boolean,
+    className?: string,
+    title?: string,
 }
 
-export default function Button({ onClick, children, icon, disabled, className, title }) {
+export default function Button({ onClick, children, icon, disabled, className, title }: ButtonProps) {
     return (
         <button className={classnames(className, 'btn btn-default')}
              onClick={disabled ? undefined : onClick}

@@ -71,9 +71,7 @@ describe('Request Component', () => {
     })
 
     it('should handle uploadContent on flow request ContentViewOptions', () => {
-        // The line below shouldn't have .type, this is a workaround for https://github.com/facebook/react/issues/17301.
-        // If this test breaks, just remove it.
-        let contentViewOptions = provider.root.findByType(ContentViewOptions.type)
+        let contentViewOptions = provider.root.findByType(ContentViewOptions)
         contentViewOptions.props.uploadContent('foo')
         expect(fetch).toBeCalled()
         fetch.mockClear()
@@ -132,9 +130,7 @@ describe('Response Component', () => {
     })
 
     it('should handle updateContent on flow response ContentViewOptions', () => {
-        // The line below shouldn't have .type, this is a workaround for https://github.com/facebook/react/issues/17301.
-        // If this test breaks, just remove it.
-        let contentViewOptions = provider.root.findByType(ContentViewOptions.type)
+        let contentViewOptions = provider.root.findByType(ContentViewOptions)
         contentViewOptions.props.uploadContent('foo')
         expect(fetch).toBeCalled()
         fetch.mockClear()

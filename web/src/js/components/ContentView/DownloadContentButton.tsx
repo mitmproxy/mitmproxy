@@ -1,13 +1,12 @@
 import React from 'react'
 import { MessageUtils } from "../../flow/utils"
-import PropTypes from 'prop-types'
 
-DownloadContentButton.propTypes = {
-    flow: PropTypes.object.isRequired,
-    message: PropTypes.object.isRequired,
+type DownloadContentButtonProps = {
+    flow: object,
+    message: object,
 }
 
-export default function DownloadContentButton({ flow, message }) {
+export default function DownloadContentButton({ flow, message }: DownloadContentButtonProps) {
 
     return (
         <a className="btn btn-default btn-xs"

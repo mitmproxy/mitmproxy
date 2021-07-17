@@ -1,12 +1,11 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import FileChooser from '../common/FileChooser'
 
-UploadContentButton.propTypes = {
-    uploadContent: PropTypes.func.isRequired,
+type UploadContentButtonProps = {
+    uploadContent: () => any,
 }
 
-export default function UploadContentButton({ uploadContent }) {
+export default function UploadContentButton({ uploadContent }: UploadContentButtonProps) {
 
     return (
         <FileChooser
