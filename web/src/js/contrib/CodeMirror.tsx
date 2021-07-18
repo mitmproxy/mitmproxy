@@ -52,7 +52,7 @@ export default class CodeMirror extends React.Component<CodeMirrorProps, CodeMir
     }
 
     UNSAFE_componentWillMount() {
-        this.componentWillReceiveProps = _.debounce(this.componentWillReceiveProps, 0);
+        //this.componentWillReceiveProps = _.debounce(this.componentWillReceiveProps, 0);
         if (this.props.path) {
             console.error('Warning: react-codemirror: the `path` prop has been changed to `name`');
         }
@@ -61,11 +61,11 @@ export default class CodeMirror extends React.Component<CodeMirrorProps, CodeMir
     componentDidMount() {
         const codeMirrorInstance = this.getCodeMirrorInstance();
         this.codeMirror = codeMirrorInstance.fromTextArea(this.textareaNode, this.props.options);
-        this.codeMirror.on('change', this.codemirrorValueChanged);
-        this.codeMirror.on('cursorActivity', this.cursorActivity);
+        this.codeMirror.on('change', this.codemirrorValueChanged.bind(this));
+        this.codeMirror.on('cursorActivity', this.cursorActivity.bind(this));
         this.codeMirror.on('focus', this.focusChanged.bind(this, true));
         this.codeMirror.on('blur', this.focusChanged.bind(this, false));
-        this.codeMirror.on('scroll', this.scrollChanged);
+        this.codeMirror.on('scroll', this.scrollChanged.bind(this));
         this.codeMirror.setValue(this.props.defaultValue || this.props.value || '');
     }
 
