@@ -541,8 +541,14 @@ def upload():  # pragma: no cover
         ], cwd=docker_build_dir)
 
         if be.is_prod_release:
-            subprocess.check_call(["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"])
-            subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest"])
+            subprocess.check_call([
+                "docker", "buildx", "build",
+                "--tag", "mitmproxy/mitmproxy:latest",
+                "--push",
+                "--platform", DOCKER_PLATFORMS,
+                "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
+                "."
+            ], cwd=docker_build_dir)
 
 
 if __name__ == "__main__":  # pragma: no cover

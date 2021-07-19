@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Optional
+# Security: No third-party dependencies here!
 
 if __name__ == "__main__":
     ref = os.environ["GITHUB_REF"]
@@ -17,7 +19,8 @@ if __name__ == "__main__":
 
     # Upload binaries (be it release or snapshot)
     if tag:
-        upload_dir = tag
+        # remove "v" prefix from version tags.
+        upload_dir = re.sub(r"^v([\d.]+)$", r"\1", tag)
     else:
         upload_dir = f"branches/{branch}"
     subprocess.check_call([
