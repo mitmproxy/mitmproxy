@@ -197,7 +197,8 @@ class Proxyserver:
         msg = websocket.WebSocketMessage(
             Opcode.TEXT if is_text else Opcode.BINARY,
             not to_client,
-            message
+            message,
+            injected=True
         )
         event = WebSocketMessageInjected(flow, msg)
         try:

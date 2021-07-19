@@ -1,5 +1,11 @@
 # Release History
 
+## Unreleased: mitmproxy next
+
+* Allow no-op assignments to `Server.address` when connection open (@SaladDais)
+* Added `WebSocketMessage.injected` flag (@Prinzhorn)
+* --- TODO: add new PRs above this line ---
+
 ## 16 July 2021: mitmproxy 7.0
 
 ### New Proxy Core (@mhils, [blog post](https://www.mitmproxy.org/posts/releases/mitmproxy7/))

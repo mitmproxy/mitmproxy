@@ -125,8 +125,10 @@ class WebsocketLayer(layer.Layer):
 
         if isinstance(event, events.ConnectionEvent):
             from_client = event.connection == self.context.client
+            injected = False
         elif isinstance(event, WebSocketMessageInjected):
             from_client = event.message.from_client
+            injected = True
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -166,7 +168,7 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf.clear()
 
-                    message = websocket.WebSocketMessage(typ, from_client, content)
+                    message = websocket.WebSocketMessage(typ, from_client, content, injected=injected)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
