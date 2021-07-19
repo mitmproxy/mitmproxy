@@ -291,8 +291,12 @@ class Server(Connection):
         return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
 
     def __setattr__(self, name, value):
-        if name == "address" and self.__dict__.get("state", ConnectionState.CLOSED) is ConnectionState.OPEN:
-            raise RuntimeError("Cannot change server address on open connection.")
+        if name == "address":
+            connection_open = self.__dict__.get("state", ConnectionState.CLOSED) is ConnectionState.OPEN
+            # assigning the current value is okay, that may be an artifact of calling .set_state().
+            address_changed = self.__dict__.get("address") != value
+            if connection_open and address_changed:
+                raise RuntimeError("Cannot change server address on open connection.")
         return super().__setattr__(name, value)
 
     def get_state(self):
