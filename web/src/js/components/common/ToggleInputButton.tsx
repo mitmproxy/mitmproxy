@@ -5,7 +5,7 @@ import { Key } from '../../utils'
 type ToggleInputButtonProps = {
     name: string,
     txt: string,
-    onToggleChanged: (string) => void,
+    onToggleChanged: Function,
     checked: boolean,
     placeholder: string,
     inputType: string,

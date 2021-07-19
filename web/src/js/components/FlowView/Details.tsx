@@ -1,7 +1,14 @@
 import React from 'react'
 import {formatTimeDelta, formatTimeStamp} from '../../utils'
+import { Flow, HTTPMessage } from '../../flow'
 
-export function TimeStamp({t, deltaTo, title}) {
+type TimeStampProps = {
+    t: number,
+    deltaTo: number,
+    title: string,
+}
+
+export function TimeStamp({t, deltaTo, title}: TimeStampProps) {
     return t ? (
         <tr>
             <td>{title}:</td>
@@ -19,7 +26,19 @@ export function TimeStamp({t, deltaTo, title}) {
     )
 }
 
-export function ConnectionInfo({conn}) {
+type ConnectionInfoProps = {
+    conn: {
+        address: string[],
+        sni: string,
+        tls_version: string,
+        cipher_name: string,
+        alpn_proto_negotiated: string,
+        ip_address: string[],
+        source_address: string[],
+    },
+}
+
+export function ConnectionInfo({conn}: ConnectionInfoProps) {
     return (
         <table className="connection-table">
             <tbody>

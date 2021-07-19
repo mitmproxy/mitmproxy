@@ -1,19 +1,20 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
 import ValueEditor from './ValueEditor'
 import classnames from 'classnames'
 
+type ValidateEditorProps = {
+    content: string | undefined,
+    readonly: boolean,
+    onDone: (content: string) => void,
+    className?: string,
+    isValid: (content: string) => boolean,
+}
 
-export default class ValidateEditor extends Component {
+type ValidateEditorStates = {
+    valid: boolean,
+}
 
-    static propTypes = {
-        content: PropTypes.string.isRequired,
-        readonly: PropTypes.bool,
-        onDone: PropTypes.func.isRequired,
-        className: PropTypes.string,
-        isValid: PropTypes.func.isRequired,
-    }
-
+export default class ValidateEditor extends Component<ValidateEditorProps, ValidateEditorStates> {
     constructor(props) {
         super(props)
         this.state = { valid: props.isValid(props.content) }

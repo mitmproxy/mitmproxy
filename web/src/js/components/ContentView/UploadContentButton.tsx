@@ -2,7 +2,7 @@ import React from 'react'
 import FileChooser from '../common/FileChooser'
 
 type UploadContentButtonProps = {
-    uploadContent: () => any,
+    uploadContent: (content: string) => Promise<Response>,
 }
 
 export default function UploadContentButton({ uploadContent }: UploadContentButtonProps) {

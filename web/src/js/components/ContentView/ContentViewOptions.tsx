@@ -3,11 +3,12 @@ import ViewSelector from './ViewSelector'
 import UploadContentButton from './UploadContentButton'
 import DownloadContentButton from './DownloadContentButton'
 import { useAppSelector } from "../../ducks";
+import { Flow, HTTPMessage } from '../../flow'
 
 type ContentViewOptionsProps = {
-    flow: object,
-    message: object,
-    uploadContent: () => void,
+    flow: Flow,
+    message: HTTPMessage,
+    uploadContent: (content: string) => Promise<Response>,
 }
 
 export default function ContentViewOptions({ flow, message, uploadContent }: ContentViewOptionsProps) {

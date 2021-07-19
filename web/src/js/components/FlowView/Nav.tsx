@@ -1,16 +1,14 @@
 import React  from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
 import classnames from 'classnames'
 import _ from 'lodash'
 
-NavAction.propTypes = {
-    icon: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    onClick: PropTypes.func.isRequired,
+type NavActionProps = {
+    icon: string,
+    title: string,
+    onClick: (e: any) => void,
 }
 
-export function NavAction({ icon, title, onClick }) {
+export function NavAction({ icon, title, onClick }: NavActionProps) {
     return (
         <a title={title}
             href="#"
@@ -24,13 +22,13 @@ export function NavAction({ icon, title, onClick }) {
     )
 }
 
-Nav.propTypes = {
-    active: PropTypes.string.isRequired,
-    tabs: PropTypes.array.isRequired,
-    onSelectTab: PropTypes.func.isRequired,
+type NavProps = {
+    active: string,
+    tabs: string[],
+    onSelectTab: (e: string) => void,
 }
 
-export default function Nav({ active, tabs, onSelectTab }) {
+export default function Nav({ active, tabs, onSelectTab }: NavProps) {
     return (
         <nav className="nav-tabs nav-tabs-sm">
             {tabs.map(tab => (

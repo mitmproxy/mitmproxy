@@ -2,7 +2,7 @@ import React  from 'react'
 
 type ToggleButtonProps = {
     checked: boolean,
-    onToggle: () => void,
+    onToggle: () => any,
     text: string
 }
 

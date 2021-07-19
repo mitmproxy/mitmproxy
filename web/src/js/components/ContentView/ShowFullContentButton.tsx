@@ -10,13 +10,14 @@ export default function ShowFullContentButton() {
     contentLines = useAppSelector(state => state.ui.flow.content.length)
 
     return (
-        !showFullContent &&
+        !showFullContent ? (
             <div>
                 <Button className="view-all-content-btn btn-xs" onClick={() => dispatch(setShowFullContent())}>
                     Show full content
                 </Button>
                 <span className="pull-right"> {visibleLines}/{contentLines} are visible &nbsp; </span>
             </div>
+        ) : null
     )
 }
 

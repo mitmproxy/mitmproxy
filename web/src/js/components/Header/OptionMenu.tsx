@@ -1,21 +1,24 @@
 import React from "react"
-import { connect } from "react-redux"
 import { EventlogToggle, OptionsToggle } from "./MenuToggle"
 import Button from "../common/Button"
 import DocsLink from "../common/DocsLink"
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal"
+import { useAppDispatch } from "../../ducks";
 
 OptionMenu.title = 'Options'
 
-function OptionMenu({ openOptions }) {
+export default function OptionMenu() {
+    const dispatch = useAppDispatch()
+    const openOptions = () => modalActions.setActiveModal('OptionModal')
+
     return (
         <div>
             <HideInStatic>
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button title="Open Options" icon="fa-cogs text-primary"
-                                onClick={openOptions}>
+                                onClick={() => dispatch(openOptions())}>
                             Edit Options <sup>alpha</sup>
                         </Button>
                     </div>
@@ -47,10 +50,3 @@ function OptionMenu({ openOptions }) {
         </div>
     )
 }
-
-export default connect(
-    null,
-    {
-        openOptions: () => modalActions.setActiveModal('OptionModal')
-    }
-)(OptionMenu)

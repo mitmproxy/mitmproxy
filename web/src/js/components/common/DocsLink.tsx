@@ -1,7 +1,7 @@
 import React from "react"
 
 type DocLinkProps = {
-    children: React.ReactNode,
+    children?: React.ReactNode,
     resource: string
 }
 

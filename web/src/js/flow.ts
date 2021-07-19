@@ -67,6 +67,7 @@ export interface HTTPMessage {
     trailers?: Headers
     contentLength: number
     contentHash: string
+    content?: string
     timestamp_start: number
     timestamp_end?: number
 }

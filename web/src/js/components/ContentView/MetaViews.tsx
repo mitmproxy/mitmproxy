@@ -2,10 +2,11 @@ import React from 'react'
 import { formatSize } from '../../utils'
 import UploadContentButton from './UploadContentButton'
 import DownloadContentButton from './DownloadContentButton'
+import { HTTPFlow, HTTPMessage } from '../../flow'
 
 interface ContentProps  {
-    flow: { request: object },
-    message: { contentLength: number },
+    flow: HTTPFlow,
+    message: HTTPMessage,
 }
 
 interface ContentTooLargeProps extends ContentProps {

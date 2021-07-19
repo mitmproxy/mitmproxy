@@ -1,9 +1,10 @@
 import React from 'react'
 import { MessageUtils } from "../../flow/utils"
+import { Flow, HTTPMessage } from '../../flow'
 
 type DownloadContentButtonProps = {
-    flow: object,
-    message: object,
+    flow: Flow,
+    message: HTTPMessage,
 }
 
 export default function DownloadContentButton({ flow, message }: DownloadContentButtonProps) {

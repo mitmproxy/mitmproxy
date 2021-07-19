@@ -21,6 +21,8 @@ export {TFlow}
 
 const tflow1: HTTPFlow = TFlow();
 const tflow2: HTTPFlow = TFlow();
+tflow1.modified = true
+tflow1.intercepted = true
 tflow2.id = "flow2";
 tflow2.request.path = "/second";
 

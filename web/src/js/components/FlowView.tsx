@@ -1,5 +1,4 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
+import React from 'react'
 import _ from 'lodash'
 
 import Nav from './FlowView/Nav'
@@ -7,10 +6,15 @@ import { ErrorView as Error, Request, Response } from './FlowView/Messages'
 import Details from './FlowView/Details'
 
 import { selectTab } from '../ducks/ui/flow'
+import {useAppDispatch, useAppSelector} from "../ducks";
 
 export const allTabs = { Request, Response, Error, Details }
 
-function FlowView({ flow, tabName, selectTab }) {
+export default function FlowView() {
+    const dispatch = useAppDispatch(),
+    flow = useAppSelector(state => state.flows.byId[state.flows.selected[0]])
+
+    let tabName = useAppSelector(state => state.ui.flow.tab)
 
     // only display available tab names
     const tabs = ['request', 'response', 'error'].filter(k => flow[k])
@@ -33,19 +37,9 @@ function FlowView({ flow, tabName, selectTab }) {
             <Nav
                 tabs={tabs}
                 active={tabName}
-                onSelectTab={selectTab}
+                onSelectTab={(tab: string) => dispatch(selectTab(tab))}
             />
             <Tab flow={flow}/>
         </div>
     )
 }
-
-export default connect(
-    state => ({
-        flow: state.flows.byId[state.flows.selected[0]],
-        tabName: state.ui.flow.tab,
-    }),
-    {
-        selectTab,
-    }
-)(FlowView)

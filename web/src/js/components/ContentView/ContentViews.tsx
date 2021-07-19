@@ -24,7 +24,7 @@ function ViewImage({ flow, message }: ViewImageProps) {
 
 type EditProps = {
     content: string,
-    onChange: () => void,
+    onChange: (content: string) => any,
 }
 
 function PureEdit({ content, onChange }: EditProps) {
@@ -39,7 +39,7 @@ type PureViewServerProps = {
 }
 
 type PureViewServerStates = {
-    lines: string[][],
+    lines: [style: string, text: string][][],
     description: string,
 }
 

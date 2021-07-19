@@ -1,13 +1,20 @@
 import React, { Component } from 'react'
 import { fetchApi } from "../../utils";
 
+type FilterDocsProps = {
+    selectHandler: (cmd: string) => void,
+}
 
-export default class FilterDocs extends Component {
+type FilterDocsStates = {
+    doc: {commands: string[][]}
+}
+
+export default class FilterDocs extends Component<FilterDocsProps, FilterDocsStates> {
 
     // @todo move to redux
 
-    static xhr = null
-    static doc = null
+    static xhr: Promise<any>
+    static doc: {commands: string[][]}
 
     constructor(props, context) {
         super(props, context)
@@ -18,7 +25,7 @@ export default class FilterDocs extends Component {
         if (!FilterDocs.xhr) {
             FilterDocs.xhr = fetchApi('/filter-help').then(response => response.json())
             FilterDocs.xhr.catch(() => {
-                FilterDocs.xhr = null
+                FilterDocs.xhr = Promise.resolve()
             })
         }
         if (!this.state.doc) {
@@ -43,7 +50,7 @@ export default class FilterDocs extends Component {
                         </tr>
                     ))}
                     <tr key="docs-link">
-                        <td colSpan="2">
+                        <td colSpan={2}>
                             <a href="https://mitmproxy.org/docs/latest/concepts-filters/"
                                 target="_blank">
                                 <i className="fa fa-external-link"/>

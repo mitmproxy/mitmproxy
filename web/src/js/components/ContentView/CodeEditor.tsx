@@ -1,14 +1,13 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import CodeMirror from "../../contrib/CodeMirror"
 
 
-CodeEditor.propTypes = {
-        content: PropTypes.string.isRequired,
-        onChange: PropTypes.func.isRequired,
+type CodeEditorProps = {
+    content: string,
+    onChange: Function,
 }
 
-export default function CodeEditor ( { content, onChange} ){
+export default function CodeEditor ( { content, onChange}: CodeEditorProps ){
 
     let options = {
         lineNumbers: true

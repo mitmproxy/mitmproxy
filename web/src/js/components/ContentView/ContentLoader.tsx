@@ -1,14 +1,12 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { MessageUtils } from '../../flow/utils'
+import { Flow, HTTPMessage } from '../../flow'
 
 type ContentLoaderProps = {
     content: string,
     contentView: object,
-    flow: object,
-    message: {
-        content: string,
-        contentHash: string,
-    },
+    flow: Flow,
+    message: HTTPMessage,
 }
 
 type ContentLoaderStates = {

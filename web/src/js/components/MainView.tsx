@@ -1,15 +1,11 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'
+import {useAppSelector} from "../ducks";
 
-MainView.propTypes = {
-    hasSelection: PropTypes.bool.isRequired,
-}
-
-function MainView({ hasSelection }) {
+export default function MainView() {
+    const hasSelection = useAppSelector(state => !!state.flows.byId[state.flows.selected[0]])
     return (
         <div className="main-view">
             <FlowTable/>
@@ -18,10 +14,3 @@ function MainView({ hasSelection }) {
         </div>
     )
 }
-
-export default connect(
-    state => ({
-        hasSelection: !!state.flows.byId[state.flows.selected[0]]
-    }),
-    {}
-)(MainView)
