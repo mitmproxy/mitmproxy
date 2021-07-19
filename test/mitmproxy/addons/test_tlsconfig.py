@@ -66,9 +66,10 @@ class TestTlsConfig:
 
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
-            # Edge case first: We don't have _any_ idea about the server, so we just return "mitmproxy" as subject.
+            # Edge case first: We don't have _any_ idea about the server nor is there a SNI,
+            # so we just return our local IP as subject.
             entry = ta.get_cert(ctx)
-            assert entry.cert.cn == "mitmproxy"
+            assert entry.cert.cn == "127.0.0.1"
 
             # Here we have an existing server connection...
             ctx.server.address = ("server-address.example", 443)

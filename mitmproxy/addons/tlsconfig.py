@@ -118,13 +118,8 @@ class TlsConfig:
                 )
         )
 
-    def tls_start_client(self, tls_start: tls.TlsStartData):
-        self.create_client_proxy_ssl_conn(tls_start)
-
-    def tls_start_server(self, tls_start: tls.TlsStartData):
-        self.create_proxy_server_ssl_conn(tls_start)
-
-    def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_client(self, tls_start: tls.TlsStartData) -> None:
+        """Establish TLS between client and proxy."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
 
@@ -161,7 +156,8 @@ class TlsConfig:
         ))
         tls_start.ssl_conn.set_accept_state()
 
-    def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_server(self, tls_start: tls.TlsStartData) -> None:
+        """Establish TLS between proxy and server."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
         assert server.address
@@ -296,9 +292,10 @@ class TlsConfig:
         elif conn_context.server.address:
             altnames.append(conn_context.server.address[0])
 
-        # As a last resort, add *something* so that we have a certificate to serve.
+        # As a last resort, add our local IP address. This may be necessary for HTTPS Proxies which are addressed
+        # via IP. Here we neither have an upstream cert, nor can an IP be included in the server name indication.
         if not altnames:
-            altnames.append("mitmproxy")
+            altnames.append(conn_context.client.sockname[0])
 
         # only keep first occurrence of each hostname
         altnames = list(dict.fromkeys(altnames))
