@@ -9,7 +9,7 @@ from OpenSSL import SSL
 from mitmproxy import certs, connection
 from mitmproxy.addons import tlsconfig
 from mitmproxy.proxy import context
-from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import modes, tls
 from mitmproxy.test import taddons
 from test.mitmproxy.proxy.layers import test_tls
 
@@ -115,7 +115,7 @@ class TestTlsConfig:
 
         return True
 
-    def test_create_client_proxy_ssl_conn(self, tdata):
+    def test_tls_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
@@ -133,7 +133,7 @@ class TestTlsConfig:
             assert self.do_handshake(tssl_client, tssl_server)
             assert tssl_client.obj.getpeercert()["subjectAltName"] == (("DNS", "example.mitmproxy.org"),)
 
-    def test_create_proxy_server_ssl_conn_verify_failed(self):
+    def test_tls_start_server_verify_failed(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
@@ -148,7 +148,7 @@ class TestTlsConfig:
             with pytest.raises(SSL.Error, match="certificate verify failed"):
                 assert self.do_handshake(tssl_client, tssl_server)
 
-    def test_create_proxy_server_ssl_conn_verify_ok(self, tdata):
+    def test_tls_start_server_verify_ok(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
@@ -162,7 +162,7 @@ class TestTlsConfig:
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
 
-    def test_create_proxy_server_ssl_conn_insecure(self):
+    def test_tls_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
@@ -203,6 +203,24 @@ class TestTlsConfig:
             # make sure that we don't upgrade h1 to h2,
             # see comment in tlsconfig.py
             assert_alpn(True, [], [])
+
+    def test_no_h2_proxy(self, tdata):
+        """Do not negotiate h2 on the client<->proxy connection in secure web proxy mode,
+        https://github.com/mitmproxy/mitmproxy/issues/4689"""
+
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, certs=[tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")])
+
+            ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+            # mock up something that looks like a secure web proxy.
+            ctx.layers = [
+                modes.HttpProxy(ctx),
+                123
+            ]
+            tls_start = tls.TlsStartData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"http/1.1"
 
     @pytest.mark.parametrize(
         "client_certs",
