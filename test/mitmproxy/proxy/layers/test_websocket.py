@@ -354,6 +354,7 @@ def test_inject_message(ws_testdata):
     )
     assert flow.websocket.messages[-1].content == b"hello"
     assert flow.websocket.messages[-1].from_client is False
+    assert flow.websocket.messages[-1].injected is True
     assert (
             playbook
             >> reply()
