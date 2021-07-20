@@ -24,3 +24,28 @@ def test_cannot_convert(tdata):
         flow_reader = io.FlowReader(f)
         with pytest.raises(exceptions.FlowReadException):
             list(flow_reader.stream())
+
+
+def test_convert_14_15(tdata):
+    data = {
+        'version': 14,
+        'websocket': {
+            'messages': [{}]
+        }
+    }
+    expected = {
+        'version': 15,
+        'websocket': {
+            'messages': [{'injected': False}]
+        }
+    }
+    assert io.compat.convert_14_15(data) == expected
+
+    # Make sure it does not raise when no `websocket` property exists.
+    data = {
+        'version': 14
+    }
+    expected = {
+        'version': 15
+    }
+    assert io.compat.convert_14_15(data) == expected
