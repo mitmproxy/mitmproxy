@@ -1,5 +1,11 @@
 # Release History
 
+## Unreleased: mitmproxy next
+
+* Don't negotiate HTTP/2 on the outer TLS connection in Secure Web Proxy Mode.
+  This fixes compatibility with Firefox.
+
+
 ## 16 July 2021: mitmproxy 7.0
 
 ### New Proxy Core (@mhils, [blog post](https://www.mitmproxy.org/posts/releases/mitmproxy7/))
