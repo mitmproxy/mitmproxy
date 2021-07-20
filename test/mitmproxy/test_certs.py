@@ -180,6 +180,7 @@ class TestCert:
         assert c2.issuer
         assert c2.to_pem()
         assert c2.has_expired() is not None
+        assert repr(c2) == "<Cert(cn='www.inode.co.nz', altnames=['www.inode.co.nz', 'inode.co.nz'])>"
 
         assert c1 != c2
 

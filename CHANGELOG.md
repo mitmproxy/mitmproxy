@@ -1,5 +1,11 @@
 # Release History
 
+## Unreleased: mitmproxy next
+
+* Use local IP address as certificate subject if no other info is available (@mhils).
+* Disable HTTP/2 CONNECT for Secure Web Proxies to fix compatibility with Firefox. (@mhils)
+* Allow no-op assignments to `Server.address` when connection is open. (@SaladDais)
+
 ## 16 July 2021: mitmproxy 7.0
 
 ### New Proxy Core (@mhils, [blog post](https://www.mitmproxy.org/posts/releases/mitmproxy7/))

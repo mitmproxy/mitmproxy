@@ -346,6 +346,23 @@ class ClientTLSLayer(_TLSLayer):
     client_hello_parsed: bool = False
 
     def __init__(self, context: context.Context):
+        if context.client.tls:
+            # In the case of TLS-over-TLS, we already have client TLS. As the outer TLS connection between client
+            # and proxy isn't that interesting to us, we just unset the attributes here and keep the inner TLS
+            # session's attributes.
+            # Alternatively we could create a new Client instance,
+            # but for now we keep it simple. There is a proof-of-concept at
+            # https://github.com/mitmproxy/mitmproxy/commit/9b6e2a716888b7787514733b76a5936afa485352.
+            context.client.alpn = None
+            context.client.cipher = None
+            context.client.sni = None
+            context.client.timestamp_tls_setup = None
+            context.client.tls_version = None
+            context.client.certificate_list = []
+            context.client.mitmcert = None
+            context.client.alpn_offers = []
+            context.client.cipher_list = []
+
         super().__init__(context, context.client)
         self.server_tls_available = isinstance(self.context.layers[-2], ServerTLSLayer)
         self.recv_buffer = bytearray()

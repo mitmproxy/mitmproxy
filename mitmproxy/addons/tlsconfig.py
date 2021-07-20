@@ -8,10 +8,11 @@ from mitmproxy import certs, ctx, exceptions, connection
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
-from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import tls, modes
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
+
 DEFAULT_CIPHERS = (
     'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
     'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305', 'ECDHE-RSA-CHACHA20-POLY1305',
@@ -118,13 +119,8 @@ class TlsConfig:
                 )
         )
 
-    def tls_start_client(self, tls_start: tls.TlsStartData):
-        self.create_client_proxy_ssl_conn(tls_start)
-
-    def tls_start_server(self, tls_start: tls.TlsStartData):
-        self.create_proxy_server_ssl_conn(tls_start)
-
-    def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_client(self, tls_start: tls.TlsStartData) -> None:
+        """Establish TLS between client and proxy."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
 
@@ -154,14 +150,24 @@ class TlsConfig:
             dhparams=self.certstore.dhparams,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
+
+        # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
+        # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
+        # but the complexity outweighs the benefits for now.
+        if len(tls_start.context.layers) == 2 and isinstance(tls_start.context.layers[0], modes.HttpProxy):
+            client_alpn: Optional[bytes] = b"http/1.1"
+        else:
+            client_alpn = client.alpn
+
         tls_start.ssl_conn.set_app_data(AppData(
-            client_alpn=client.alpn,
+            client_alpn=client_alpn,
             server_alpn=server.alpn,
             http2=ctx.options.http2,
         ))
         tls_start.ssl_conn.set_accept_state()
 
-    def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_server(self, tls_start: tls.TlsStartData) -> None:
+        """Establish TLS between proxy and server."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
         assert server.address
@@ -296,9 +302,10 @@ class TlsConfig:
         elif conn_context.server.address:
             altnames.append(conn_context.server.address[0])
 
-        # As a last resort, add *something* so that we have a certificate to serve.
+        # As a last resort, add our local IP address. This may be necessary for HTTPS Proxies which are addressed
+        # via IP. Here we neither have an upstream cert, nor can an IP be included in the server name indication.
         if not altnames:
-            altnames.append("mitmproxy")
+            altnames.append(conn_context.client.sockname[0])
 
         # only keep first occurrence of each hostname
         altnames = list(dict.fromkeys(altnames))
