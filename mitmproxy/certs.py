@@ -52,6 +52,9 @@ class Cert(serializable.Serializable):
     def __repr__(self):
         return f"<Cert(cn={self.cn!r}, altnames={self.altnames!r})>"
 
+    def __hash__(self):
+        return self._cert.__hash__()
+
     @classmethod
     def from_state(cls, state):
         return cls.from_pem(state)

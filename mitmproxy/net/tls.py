@@ -3,8 +3,9 @@ import ipaddress
 import os
 import threading
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Sequence, Tuple, List, Any, BinaryIO
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
 
 import certifi
 
@@ -127,17 +128,18 @@ def _create_ssl_context(
     return context
 
 
+@lru_cache(256)
 def create_proxy_server_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+        cipher_list: Optional[Tuple[str, ...]],
         verify: Verify,
         hostname: Optional[str],
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
-        alpn_protos: Optional[Sequence[bytes]],
+        alpn_protos: Optional[Tuple[bytes, ...]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -194,17 +196,18 @@ def create_proxy_server_context(
     return context
 
 
+@lru_cache(256)
 def create_client_proxy_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+        cipher_list: Optional[Tuple[str, ...]],
         cert: certs.Cert,
         key: rsa.RSAPrivateKey,
         chain_file: Optional[Path],
         alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
         request_client_cert: bool,
-        extra_chain_certs: Iterable[certs.Cert],
+        extra_chain_certs: Tuple[certs.Cert, ...],
         dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(

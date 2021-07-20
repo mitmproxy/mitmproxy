@@ -165,6 +165,7 @@ class TestCert:
         assert c1.cn == "google.com"
         assert len(c1.altnames) == 436
         assert c1.organization == "Google Inc"
+        assert hash(c1)
 
         with open(tdata.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()
