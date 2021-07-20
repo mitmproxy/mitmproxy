@@ -68,7 +68,6 @@ class KeyListWalker(urwid.ListWalker):
         keybinding_focus_change.send(binding.help or "")
         self._modified()
 
-
     def get_next(self, pos):
         if pos >= len(self.bindings) - 1:
             return None, None
