@@ -50,7 +50,6 @@ export default function withContentLoader(View) {
 
         updateContent(props) {
             if (this.state.request) {
-                console.log("request:",this.state.request)
                 this.state.request.abort()
             }
             // We have a few special cases where we do not need to make an HTTP request.

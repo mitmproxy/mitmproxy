@@ -23,11 +23,10 @@ describe('option reducer', () => {
     })
 })
 
-let store = mockStore()
-
 describe('option actions', () => {
 
     it('should be possible to update option', () => {
+        let store = mockStore()
         let mockResponse = { status: 200 },
             promise = Promise.resolve(mockResponse)
         global.fetch = r => { return promise }
@@ -42,7 +41,8 @@ describe('option actions', () => {
 describe('sendUpdate', () => {
 
     it('should handle error', async () => {
-        let mockResponse = { status: 404, text: "fooerror" },
+        let store = mockStore()
+        let mockResponse = { status: 404, text: () => "fooerror" },
             promise = Promise.resolve(mockResponse)
         global.fetch = r => { return promise }
         await store.dispatch(OptionsActions.pureSendUpdate("bar", "error"))
@@ -55,6 +55,7 @@ describe('sendUpdate', () => {
 describe('save', () => {
 
     it('should dump options', () => {
+        let store = mockStore()
         global.fetch = jest.fn()
         store.dispatch(OptionsActions.save())
         expect(fetch).toBeCalledWith(

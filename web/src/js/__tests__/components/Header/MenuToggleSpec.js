@@ -24,6 +24,7 @@ test("OptionsToggle", async () => {
             <OptionsToggle name='anticache'>toggle anticache</OptionsToggle>,
                 {store}
         );
+    globalThis.fetch = jest.fn()
 
     expect(asFragment()).toMatchSnapshot();
     fireEvent.click(screen.getByText("toggle anticache"));

@@ -34,13 +34,18 @@ export type Address = [string, number];
 
 export interface Connection {
     id: string
+    ip_address?: string[]
+    address?: string[]
+    source_address?: string[]
     peername?: Address
     sockname?: Address
 
     tls_established: boolean
     sni?: string | boolean
     cipher?: string
+    cipher_name?: string
     alpn?: string
+    alpn_proto_negotiated?: string
     tls_version?: string
 
     timestamp_start?: number
