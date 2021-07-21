@@ -5,6 +5,7 @@
 * Use local IP address as certificate subject if no other info is available (@mhils).
 * Disable HTTP/2 CONNECT for Secure Web Proxies to fix compatibility with Firefox. (@mhils)
 * Allow no-op assignments to `Server.address` when connection is open. (@SaladDais)
+* Performance: Re-use OpenSSL context to enable TLS session resumption. (@mhils)
 
 ## 16 July 2021: mitmproxy 7.0
 

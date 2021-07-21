@@ -140,13 +140,13 @@ class TlsConfig:
         ssl_ctx = net_tls.create_client_proxy_context(
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
-            cipher_list=cipher_list,
+            cipher_list=tuple(cipher_list),
             cert=entry.cert,
             key=entry.privatekey,
             chain_file=entry.chain_file,
             request_client_cert=False,
             alpn_select_callback=alpn_select_callback,
-            extra_chain_certs=extra_chain_certs,
+            extra_chain_certs=tuple(extra_chain_certs),
             dhparams=self.certstore.dhparams,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
@@ -216,13 +216,13 @@ class TlsConfig:
         ssl_ctx = net_tls.create_proxy_server_context(
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
-            cipher_list=cipher_list,
+            cipher_list=tuple(cipher_list),
             verify=verify,
             hostname=server.sni,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
-            alpn_protos=server.alpn_offers,
+            alpn_protos=tuple(server.alpn_offers),
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
