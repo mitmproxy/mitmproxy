@@ -88,6 +88,9 @@ and transparently returned to the client.
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that additionally constrains which requests will be redirected.
 
+The _separator_ is arbitrary, and is defined by the first character (`|` in the example above).
+
+
 #### Examples
 
 Pattern | Description
@@ -162,7 +165,7 @@ that defines which requests the `map_remote` option applies to.
 
 * **replacement** is a string literal that is substituted in.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`|` in the example above).
 
 #### Examples
 
@@ -200,7 +203,7 @@ that defines which flows a replacement applies to.
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`/` in the example above).
 
 Modify hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
@@ -246,7 +249,7 @@ that defines which flows to modify headers on.
 headers with **name**. If the value string literal starts with `@` as in
 `@file-path`, it is treated as a **file path** from which the replacement is read.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`/` in the example above).
 
 Existing headers are overwritten by default. This can be changed using a filter expression.
 
