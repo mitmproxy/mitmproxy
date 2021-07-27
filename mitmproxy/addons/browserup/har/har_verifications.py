@@ -76,10 +76,13 @@ class HarVerifications:
     def current_page(self):
         return self.har['log']['pages'][-1]['id']
 
-    # Use glom to dig into the har entries, responses and websockets to get down to an array of something or others
-    # (headers, websocket messages, content then we execute our test against that item
-    # current, *, or filter
+    def no_entries(self):
+        (self.har['log']['entries'] is None) or (len(self.har['log']['entries']) == 0)
+
     def entries(self, criteria=False):
+        # Use glom to dig into the har entries, responses and websockets to get down to an array of something or others
+        # (headers, websocket messages, content then we execute our test against that item
+        # current, *, or filter
         entry_list = self.har['log']['entries']
         har_entry_filters = {
             'page': (lambda item, pgref: glom(item, 'pageref', default='') == pgref),
@@ -89,25 +92,22 @@ class HarVerifications:
             'content': (lambda item, content_rxp: self.rmatch(str(glom(item, 'response.content.text', default=None)), content_rxp)),
             'content_type': (lambda item, content_type_rxp: self.rmatch(str(glom(item, 'response.content.mimeType', default=None)),
                              content_type_rxp)),
-
             'request_header': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'request.headers', default=[]), match_rgxp)),
             'response_header': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'response.headers', default=[]), match_rgxp)),
-
             'request_cookie': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'request.cookies', default=[]), match_rgxp)),
             'response_cookie': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'response.cookies', default=[]), match_rgxp)),
-
             'websocket_message': (lambda item, ws_rxp: self.rmatch_any(glom(item, ('_webSocketMessages', ['data']), default=[]), ws_rxp)),
-
             'json_valid': (lambda item, _: self.valid_json(str(glom(item, 'response.content.text', default=None)))),
             'json_path': (lambda item, path: self.has_json_path(str(glom(item, 'response.content.text', default=None)), path)),
             'json_schema': (lambda item, schema: self.schema_validate(str(glom(item, 'response.content.text', default=None)), schema)),
         }
 
         for filter_name, target_value in criteria.items():
-            filter_lambda = har_entry_filters[filter_name]
-            if filter_name == 'page' and target_value == 'current':
-                target_value = self.current_page()
-            entry_list = [entry for entry in entry_list if filter_lambda(entry, target_value)]
+            filter_lambda = har_entry_filters.get(filter_name, None)
+            if filter_lambda is not None:
+                if filter_name == 'page' and target_value == 'current':
+                    target_value = self.current_page()
+                entry_list = [entry for entry in entry_list if filter_lambda(entry, target_value)]
 
         return entry_list
 

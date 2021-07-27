@@ -123,7 +123,7 @@ public class BrowserUpProxyApiTest {
         String name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifyNotPresent(name, matchCriteria);
-
+        response.
         // TODO: test validations
     }
     

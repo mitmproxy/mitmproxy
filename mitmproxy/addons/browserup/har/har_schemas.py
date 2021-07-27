@@ -2,12 +2,22 @@ from marshmallow import Schema, fields
 
 
 class VerifyResultSchema(Schema):
-    result = fields.Boolean(optional=True, description="Name to match")
+    result = fields.Boolean(optional=False, description="Result True / False")
 
 
 class NameValuePairSchema(Schema):
     name = fields.Str(optional=True, description="Name to match")
     value = fields.Str(optional=True, description="Value to match")
+
+
+class ErrorSchema(Schema):
+    name = fields.Str(optional=False, description="Name of the Error to add. Stored in har under _errors")
+    details = fields.Str(optional=False, description="Short details of the error")
+
+
+class CounterSchema(Schema):
+    name = fields.Str(optional=False, description="Name of Custom Counter value you are adding to the page under _counters")
+    value = fields.Number(optional=False, description="Value for the counter")
 
 
 class MatchCriteriaSchema(Schema):
@@ -34,6 +44,7 @@ class MatchCriteriaSchema(Schema):
     json_valid = fields.Boolean(optional=True, description="Is valid JSON")
     json_path = fields.Str(optional=True, description="Has JSON path")
     json_schema = fields.Str(optional=True, description="Validates against passed JSON schema")
+    error_if_no_traffic = fields.Boolean(optional=True, default=True, description="If the proxy has NO traffic at all, return error")
 
     class Meta:
         ordered = True

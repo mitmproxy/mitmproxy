@@ -1,7 +1,9 @@
 import mitmproxy.http
 from mitmproxy import ctx
 from mitmproxy.addons.browserup.har.har_resources import HarResource, HarPageResource, HarCaptureTypesResource, \
-                                                         PresentResource, NotPresentResource, SizeResource, SLAResource, HealthCheckResource
+                                                         PresentResource, NotPresentResource, SizeResource, \
+                                                         SLAResource, ErrorResource, CounterResource, \
+                                                         HealthCheckResource
 from mitmproxy.addons.browserup.har.har_manager import HarManagerMixin
 from mitmproxy.addons.browserup.har.flow_capture import FlowCaptureMixin
 from mitmproxy.addons.browserup.har import flow_har_entry_patch
@@ -22,6 +24,8 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
                 NotPresentResource(self),
                 SizeResource(self),
                 SLAResource(self),
+                ErrorResource(self),
+                CounterResource(self),
                 HealthCheckResource()
                 ]
 
@@ -29,11 +33,6 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
         if 'blocklisted' in flow.metadata:
             return
         self.capture_websocket_message(flow)
-
-    def websocket_error(self, flow: mitmproxy.http.HTTPFlow):
-        if 'blocklisted' in flow.metadata:
-            return
-        self.capture_websocket_error(flow)
 
     def request(self, flow: mitmproxy.http.HTTPFlow):
         if 'blocklisted' in flow.metadata:

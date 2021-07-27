@@ -150,6 +150,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The MatchCriteria are invalid."
           }
         }
       }
@@ -194,6 +197,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The MatchCriteria are invalid."
           }
         }
       }
@@ -248,6 +254,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The MatchCriteria are invalid."
           }
         }
       }
@@ -302,6 +311,65 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The MatchCriteria are invalid."
+          }
+        }
+      }
+    },
+    "/har/errors": {
+      "post": {
+        "description": "Add Custom Error to the captured traffic har",
+        "operationId": "addError",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "description": "Receives an error to track. Internally, the error is stored in an array in the har under the _errors key",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The Error was added."
+          },
+          "422": {
+            "description": "The Error was invalid."
+          }
+        }
+      }
+    },
+    "/har/counters": {
+      "post": {
+        "description": "Add Custom Counter to the captured traffic har",
+        "operationId": "addCounter",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "description": "Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Counter"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The counter was added."
+          },
+          "422": {
+            "description": "The counter was invalid."
           }
         }
       }
@@ -327,13 +395,13 @@
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name to match"
-          },
           "value": {
             "type": "string",
             "description": "Value to match"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to match"
           }
         }
       },
@@ -443,6 +511,10 @@
           "json_schema": {
             "type": "string",
             "description": "Validates against passed JSON schema"
+          },
+          "error_if_no_traffic": {
+            "type": "boolean",
+            "description": "If the proxy has NO traffic at all, return error"
           }
         },
         "description": "A set of criteria for filtering HTTP Requests and Responses.\n                         Criteria are AND based, and use python regular expressions for string comparison"
@@ -452,7 +524,33 @@
         "properties": {
           "result": {
             "type": "boolean",
-            "description": "Name to match"
+            "description": "Result True / False"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "details": {
+            "type": "string",
+            "description": "Short details of the error"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Error to add. Stored in har under _errors"
+          }
+        }
+      },
+      "Counter": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "description": "Value for the counter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of Custom Counter value you are adding to the page under _counters"
           }
         }
       },

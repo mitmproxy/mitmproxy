@@ -141,12 +141,6 @@ class TestHARCapture:
 
         assert(len(hc.har['log']['entries'][0]['_webSocketMessages']) == 0)
 
-    def test_websocket_error_capture(self, hc):
-        f = twebsocketflow(err=True)
-        hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES]
-        hc.websocket_error(f)
-        assert(len(hc.har['log']['entries'][0]['_webSocketMessages']) == 1)
-
     def test_websocket_messages_capture_on(self, hc):
         f = twebsocketflow()
         hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES]

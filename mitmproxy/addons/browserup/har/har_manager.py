@@ -138,10 +138,20 @@ class HarManagerMixin():
 
         return old_har
 
-    def add_verification_to_har(self, verification_name, verification_type, result):
+    def add_verification_to_har(self, verification_type, verification_name, result):
+        self.add_custom_value_to_har('_verifications', {'name': verification_name, 'type': verification_type, 'value': result})
+
+    def add_counter_to_har(self, counter_dict):
+        self.add_custom_value_to_har('_counters', counter_dict)
+
+    def add_error_to_har(self, error_dict):
+        self.add_custom_value_to_har('_errors', error_dict)
+
+    def add_custom_value_to_har(self, item_type, item):
         page = self.get_or_create_current_page()
-        page.setdefault('_verifications', {}).setdefault(
-            verification_name, {"type": verification_type, "passed": result})
+        page.setdefault(item_type, [])
+        items = page.get(item_type)
+        items.append(item)
 
     def end_har(self):
         ctx.log.info('Ending current har...')

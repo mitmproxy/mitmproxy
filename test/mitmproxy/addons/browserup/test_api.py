@@ -52,9 +52,32 @@ class TestAPI:
         assert response.status == falcon.HTTP_OK
 
     def test_verify_size(self, hc):
-        response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={})
+        response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={'error_if_no_traffic': True})
         assert response.status == falcon.HTTP_OK
 
+    def test_add_float_counter(self, hc):
+        response = self.client().simulate_post('/har/counters', json={'name': 'fooAmount', 'value': 5.0})
+        assert response.status == falcon.HTTP_204
+
+    def test_add_integer_counter(self, hc):
+        response = self.client().simulate_post('/har/counters', json={'name': 'fooAmount', 'value': 5})
+        assert response.status == falcon.HTTP_204
+
+    def test_add_counter_schema_wrong_string_instead_of_number(self, hc):
+        response = self.client().simulate_post('/har/counters', json={'name': 3, 'value': 'nope'})
+        assert response.status == falcon.HTTP_422
+
+    def test_add_counter_schema_wrong(self, hc):
+        response = self.client().simulate_post('/har/counters', json={'name': 3})
+        assert response.status == falcon.HTTP_422
+
+    def test_add_error(self, hc):
+        response = self.client().simulate_post('/har/errors', json={'name': 'BadError', 'details': 'Woops, super bad'})
+        assert response.status == falcon.HTTP_204
+
+    def test_add_error_schema_wrong(self, hc):
+        response = self.client().simulate_post('/har/errors', json={'name': 'sdfsd', 'foo': 'Bar'})
+        assert response.status == falcon.HTTP_422
 
 @pytest.fixture()
 def path(tmpdir):
