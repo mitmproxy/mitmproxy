@@ -55,6 +55,10 @@ class TestAPI:
         response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={'error_if_no_traffic': True})
         assert response.status == falcon.HTTP_OK
 
+    def test_verify_size_bad_match_criteria(self, hc):
+        response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={'foo': True})
+        assert response.status == falcon.HTTP_422
+
     def test_add_float_counter(self, hc):
         response = self.client().simulate_post('/har/counters', json={'name': 'fooAmount', 'value': 5.0})
         assert response.status == falcon.HTTP_204
@@ -78,6 +82,7 @@ class TestAPI:
     def test_add_error_schema_wrong(self, hc):
         response = self.client().simulate_post('/har/errors', json={'name': 'sdfsd', 'foo': 'Bar'})
         assert response.status == falcon.HTTP_422
+
 
 @pytest.fixture()
 def path(tmpdir):

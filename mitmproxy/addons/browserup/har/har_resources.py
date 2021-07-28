@@ -46,7 +46,7 @@ class ValidateMatchCriteriaMixin:
             MatchCriteriaSchema().load(criteria)
         except ValidationError as err:
             resp.content_type = falcon.MEDIA_JSON
-            raise falcon.HTTPError(falcon.HTTP_422, json.dumps({'error' : err.messages}, ensure_ascii=False))
+            raise falcon.HTTPError(falcon.HTTP_422, json.dumps({'error': err.messages}, ensure_ascii=False))
 
 
 class VerifyResponseMixin:
@@ -503,7 +503,7 @@ class CounterResource():
         except ValidationError as err:
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
-            resp.body = json.dumps({'error' : err.messages}, ensure_ascii=False)
+            resp.body = json.dumps({'error': err.messages}, ensure_ascii=False)
         else:
             resp.status = falcon.HTTP_204
 
@@ -546,6 +546,6 @@ class ErrorResource():
         except ValidationError as err:
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
-            resp.body = json.dumps({'error' : err.messages}, ensure_ascii=False)
+            resp.body = json.dumps({'error': err.messages}, ensure_ascii=False)
         else:
             resp.status = falcon.HTTP_204

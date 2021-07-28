@@ -395,13 +395,13 @@
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "value": {
-            "type": "string",
-            "description": "Value to match"
-          },
           "name": {
             "type": "string",
             "description": "Name to match"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to match"
           }
         }
       },
@@ -531,26 +531,26 @@
       "Error": {
         "type": "object",
         "properties": {
-          "details": {
-            "type": "string",
-            "description": "Short details of the error"
-          },
           "name": {
             "type": "string",
             "description": "Name of the Error to add. Stored in har under _errors"
+          },
+          "details": {
+            "type": "string",
+            "description": "Short details of the error"
           }
         }
       },
       "Counter": {
         "type": "object",
         "properties": {
-          "value": {
-            "type": "number",
-            "description": "Value for the counter"
-          },
           "name": {
             "type": "string",
             "description": "Name of Custom Counter value you are adding to the page under _counters"
+          },
+          "value": {
+            "type": "number",
+            "description": "Value for the counter"
           }
         }
       },
