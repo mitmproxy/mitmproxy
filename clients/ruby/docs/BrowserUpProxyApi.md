@@ -4,7 +4,9 @@ All URIs are relative to *http://localhost:8088*
 
 | Method | HTTP request | Description |
 | ------ | ------------ | ----------- |
+| [**add_counter**](BrowserUpProxyApi.md#add_counter) | **POST** /har/counters |  |
 | [**add_custom_har_fields**](BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page |  |
+| [**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors |  |
 | [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har |  |
@@ -13,6 +15,69 @@ All URIs are relative to *http://localhost:8088*
 | [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} |  |
 | [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} |  |
 | [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} |  |
+
+
+## add_counter
+
+> add_counter(counter)
+
+
+
+Add Custom Counter to the captured traffic har
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_proxy_client'
+
+api_instance = BrowserupProxy::BrowserUpProxyApi.new
+counter = BrowserupProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+
+begin
+  
+  api_instance.add_counter(counter)
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_counter: #{e}"
+end
+```
+
+#### Using the add_counter_with_http_info variant
+
+This returns an Array which contains the response data (`nil` in this case), status code and headers.
+
+> <Array(nil, Integer, Hash)> add_counter_with_http_info(counter)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.add_counter_with_http_info(counter)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => nil
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_counter_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **counter** | [**Counter**](Counter.md) | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |  |
+
+### Return type
+
+nil (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
 
 
 ## add_custom_har_fields
@@ -65,6 +130,69 @@ end
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
 | **body** | **Object** |  | [optional] |
+
+### Return type
+
+nil (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+
+## add_error
+
+> add_error(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_proxy_client'
+
+api_instance = BrowserupProxy::BrowserUpProxyApi.new
+error = BrowserupProxy::Error.new # Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+
+begin
+  
+  api_instance.add_error(error)
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_error: #{e}"
+end
+```
+
+#### Using the add_error_with_http_info variant
+
+This returns an Array which contains the response data (`nil` in this case), status code and headers.
+
+> <Array(nil, Integer, Hash)> add_error_with_http_info(error)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.add_error_with_http_info(error)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => nil
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_error_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **error** | [**Error**](Error.md) | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |  |
 
 ### Return type
 

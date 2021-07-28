@@ -107,9 +107,7 @@ var BrowserUpProxyClient = require('browserup-proxy-client');
 
 
 var api = new BrowserUpProxyClient.BrowserUpProxyApi()
-var opts = {
-  'body': null // {Object} 
-};
+var counter = new BrowserUpProxyClient.Counter(); // {Counter} Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 var callback = function(error, data, response) {
   if (error) {
     console.error(error);
@@ -117,7 +115,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully.');
   }
 };
-api.addCustomHarFields(opts, callback);
+api.addCounter(counter, callback);
 
 ```
 
@@ -127,7 +125,9 @@ All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*BrowserUpProxyClient.BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**addCustomHarFields**](docs/BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
+*BrowserUpProxyClient.BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
@@ -140,12 +140,14 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Models
 
+ - [BrowserUpProxyClient.Counter](docs/Counter.md)
  - [BrowserUpProxyClient.Entry](docs/Entry.md)
  - [BrowserUpProxyClient.EntryRequest](docs/EntryRequest.md)
  - [BrowserUpProxyClient.EntryRequestCookies](docs/EntryRequestCookies.md)
  - [BrowserUpProxyClient.EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [BrowserUpProxyClient.EntryResponse](docs/EntryResponse.md)
  - [BrowserUpProxyClient.EntryResponseContent](docs/EntryResponseContent.md)
+ - [BrowserUpProxyClient.Error](docs/Error.md)
  - [BrowserUpProxyClient.Har](docs/Har.md)
  - [BrowserUpProxyClient.HarLog](docs/HarLog.md)
  - [BrowserUpProxyClient.HarLogCreator](docs/HarLogCreator.md)

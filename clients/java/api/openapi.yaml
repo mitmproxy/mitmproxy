@@ -106,6 +106,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerifyResult'
           description: The traffic conformed to the time criteria.
+        "422":
+          description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
       x-contentType: application/json
@@ -138,6 +140,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerifyResult'
           description: The traffic had no matching items
+        "422":
+          description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
       x-contentType: application/json
@@ -179,6 +183,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerifyResult'
           description: The traffic conformed to the size criteria.
+        "422":
+          description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
       x-contentType: application/json
@@ -221,6 +227,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerifyResult'
           description: The traffic conformed to the time criteria.
+        "422":
+          description: The MatchCriteria are invalid.
+      tags:
+      - BrowserUpProxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /har/errors:
+    post:
+      description: Add Custom Error to the captured traffic har
+      operationId: addError
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+        description: Receives an error to track. Internally, the error is stored in
+          an array in the har under the _errors key
+        required: true
+      responses:
+        "204":
+          description: The Error was added.
+        "422":
+          description: The Error was invalid.
+      tags:
+      - BrowserUpProxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /har/counters:
+    post:
+      description: Add Custom Counter to the captured traffic har
+      operationId: addCounter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Counter'
+        description: Receives a new counter to add. The counter is stored, under the
+          hood, in an array in the har under the _counters key
+        required: true
+      responses:
+        "204":
+          description: The counter was added.
+        "422":
+          description: The counter was invalid.
       tags:
       - BrowserUpProxy
       x-contentType: application/json
@@ -254,6 +304,7 @@ components:
         request_cookie: ""
         response_cookie: ""
         json_path: json_path
+        error_if_no_traffic: true
         url: url
         content: content
         response_header: ""
@@ -334,16 +385,45 @@ components:
         json_schema:
           description: Validates against passed JSON schema
           type: string
+        error_if_no_traffic:
+          description: If the proxy has NO traffic at all, return error
+          type: boolean
       type: object
     VerifyResult:
       example:
         result: true
       properties:
         result:
-          description: Name to match
+          description: Result True / False
           type: boolean
       type: object
     WebSocketMessage:
+    Error:
+      example:
+        name: name
+        details: details
+      properties:
+        name:
+          description: Name of the Error to add. Stored in har under _errors
+          type: string
+        details:
+          description: Short details of the error
+          type: string
+      type: object
+    Counter:
+      example:
+        name: name
+        value: 0.8008281904610115
+      properties:
+        name:
+          description: Name of Custom Counter value you are adding to the page under
+            _counters
+          type: string
+        value:
+          description: Value for the counter
+          type: number
+      type: object
+    Entry:
       example:
         data: data
         time: 4.965218492984954

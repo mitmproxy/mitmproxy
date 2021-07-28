@@ -9,6 +9,7 @@
 # import sys
 # sys.setrecursionlimit(n)
 
+from BrowserUpProxyClient.model.counter import Counter
 from BrowserUpProxyClient.model.custom_har_data import CustomHarData
 from BrowserUpProxyClient.model.entry import Entry
 from BrowserUpProxyClient.model.entry_request import EntryRequest
@@ -16,6 +17,7 @@ from BrowserUpProxyClient.model.entry_request_cookies import EntryRequestCookies
 from BrowserUpProxyClient.model.entry_request_query_string import EntryRequestQueryString
 from BrowserUpProxyClient.model.entry_response import EntryResponse
 from BrowserUpProxyClient.model.entry_response_content import EntryResponseContent
+from BrowserUpProxyClient.model.error import Error
 from BrowserUpProxyClient.model.har import Har
 from BrowserUpProxyClient.model.har_log import HarLog
 from BrowserUpProxyClient.model.har_log_creator import HarLogCreator

@@ -13,12 +13,14 @@
 
 
 import ApiClient from './ApiClient';
+import Counter from './model/Counter';
 import Entry from './model/Entry';
 import EntryRequest from './model/EntryRequest';
 import EntryRequestCookies from './model/EntryRequestCookies';
 import EntryRequestQueryString from './model/EntryRequestQueryString';
 import EntryResponse from './model/EntryResponse';
 import EntryResponseContent from './model/EntryResponseContent';
+import Error from './model/Error';
 import Har from './model/Har';
 import HarLog from './model/HarLog';
 import HarLogCreator from './model/HarLogCreator';
@@ -70,6 +72,12 @@ export {
     ApiClient,
 
     /**
+     * The Counter model constructor.
+     * @property {module:BrowserUpProxyClient/model/Counter}
+     */
+    Counter,
+
+    /**
      * The Entry model constructor.
      * @property {module:BrowserUpProxyClient/model/Entry}
      */
@@ -104,6 +112,12 @@ export {
      * @property {module:BrowserUpProxyClient/model/EntryResponseContent}
      */
     EntryResponseContent,
+
+    /**
+     * The Error model constructor.
+     * @property {module:BrowserUpProxyClient/model/Error}
+     */
+    Error,
 
     /**
      * The Har model constructor.

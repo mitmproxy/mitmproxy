@@ -4,7 +4,9 @@ All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 [**addCustomHarFields**](BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
+[**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
@@ -14,6 +16,51 @@ Method | HTTP request | Description
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
 [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
+
+
+## addCounter
+
+> addCounter(counter)
+
+
+
+Add Custom Counter to the captured traffic har
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let counter = new BrowserUpProxyClient.Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+apiInstance.addCounter(counter, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | 
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
 
 
 ## addCustomHarFields
@@ -48,6 +95,51 @@ apiInstance.addCustomHarFields(opts, (error, data, response) => {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **body** | **Object**|  | [optional] 
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+
+## addError
+
+> addError(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let error = new BrowserUpProxyClient.Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+apiInstance.addError(error, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key | 
 
 ### Return type
 

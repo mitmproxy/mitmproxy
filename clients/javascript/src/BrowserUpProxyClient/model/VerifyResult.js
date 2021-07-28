@@ -58,7 +58,7 @@ class VerifyResult {
 }
 
 /**
- * Name to match
+ * Result True / False
  * @member {Boolean} result
  */
 VerifyResult.prototype['result'] = undefined;

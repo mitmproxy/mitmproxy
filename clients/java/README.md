@@ -89,11 +89,11 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Object body = null; // Object | 
+    Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
     try {
-      apiInstance.addCustomHarFields(body);
+      apiInstance.addCounter(counter);
     } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#addCustomHarFields");
+      System.err.println("Exception when calling BrowserUpProxyApi#addCounter");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Reason: " + e.getResponseBody());
       System.err.println("Response headers: " + e.getResponseHeaders());
@@ -110,7 +110,9 @@ All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 *BrowserUpProxyApi* | [**addCustomHarFields**](docs/BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
+*BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 *BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
@@ -123,6 +125,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Models
 
+ - [Counter](docs/Counter.md)
  - [Entry](docs/Entry.md)
  - [EntryRequest](docs/EntryRequest.md)
  - [EntryRequestCookies](docs/EntryRequestCookies.md)
@@ -130,6 +133,7 @@ Class | Method | HTTP request | Description
  - [EntryResponse](docs/EntryResponse.md)
  - [EntryResponseContent](docs/EntryResponseContent.md)
  - [EntryTimings](docs/EntryTimings.md)
+ - [Error](docs/Error.md)
  - [Har](docs/Har.md)
  - [HarLog](docs/HarLog.md)
  - [HarLogCreator](docs/HarLogCreator.md)

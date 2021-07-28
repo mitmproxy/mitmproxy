@@ -13,6 +13,8 @@
 
 
 import ApiClient from "../ApiClient";
+import Counter from '../model/Counter';
+import Error from '../model/Error';
 import Har from '../model/Har';
 import MatchCriteria from '../model/MatchCriteria';
 import VerifyResult from '../model/VerifyResult';
@@ -35,6 +37,46 @@ export default class BrowserUpProxyApi {
         this.apiClient = apiClient || ApiClient.instance;
     }
 
+
+    /**
+     * Callback function to receive the result of the addCounter operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCounterCallback
+     * @param {String} error Error message, if any.
+     * @param data This operation does not return a value.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Add Custom Counter to the captured traffic har
+     * @param {module:BrowserUpProxyClient/model/Counter} counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCounterCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    addCounter(counter, callback) {
+      let postBody = counter;
+      // verify the required parameter 'counter' is set
+      if (counter === undefined || counter === null) {
+        throw new Error("Missing the required parameter 'counter' when calling addCounter");
+      }
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = [];
+      let returnType = null;
+      return this.apiClient.callApi(
+        '/har/counters', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
 
     /**
      * Callback function to receive the result of the addCustomHarFields operation.
@@ -69,6 +111,46 @@ export default class BrowserUpProxyApi {
       let returnType = null;
       return this.apiClient.callApi(
         '/har/page', 'PUT',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the addError operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addErrorCallback
+     * @param {String} error Error message, if any.
+     * @param data This operation does not return a value.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Add Custom Error to the captured traffic har
+     * @param {module:BrowserUpProxyClient/model/Error} error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addErrorCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    addError(error, callback) {
+      let postBody = error;
+      // verify the required parameter 'error' is set
+      if (error === undefined || error === null) {
+        throw new Error("Missing the required parameter 'error' when calling addError");
+      }
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = [];
+      let returnType = null;
+      return this.apiClient.callApi(
+        '/har/errors', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );

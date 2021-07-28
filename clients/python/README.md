@@ -55,6 +55,8 @@ import time
 import BrowserUpProxyClient
 from pprint import pprint
 from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.counter import Counter
+from BrowserUpProxyClient.model.error import Error
 from BrowserUpProxyClient.model.har import Har
 from BrowserUpProxyClient.model.match_criteria import MatchCriteria
 from BrowserUpProxyClient.model.verify_result import VerifyResult
@@ -70,12 +72,15 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    body = CustomHarData() # CustomHarData |  (optional)
+    counter = Counter(
+        name="name_example",
+        value=3.14,
+    ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
     try:
-        api_instance.add_custom_har_fields(body=body)
+        api_instance.add_counter(counter)
     except BrowserUpProxyClient.ApiException as e:
-        print("Exception when calling BrowserUpProxyApi->add_custom_har_fields: %s\n" % e)
+        print("Exception when calling BrowserUpProxyApi->add_counter: %s\n" % e)
 ```
 
 ## Documentation for API Endpoints
@@ -84,7 +89,9 @@ All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*BrowserUpProxyApi* | [**add_counter**](docs/BrowserUpProxyApi.md#add_counter) | **POST** /har/counters | 
 *BrowserUpProxyApi* | [**add_custom_har_fields**](docs/BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page | 
+*BrowserUpProxyApi* | [**add_error**](docs/BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 *BrowserUpProxyApi* | [**get_har_log**](docs/BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**reset_har_log**](docs/BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
@@ -97,6 +104,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Counter](docs/Counter.md)
  - [CustomHarData](docs/CustomHarData.md)
  - [Entry](docs/Entry.md)
  - [EntryRequest](docs/EntryRequest.md)
@@ -104,6 +112,7 @@ Class | Method | HTTP request | Description
  - [EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [EntryResponse](docs/EntryResponse.md)
  - [EntryResponseContent](docs/EntryResponseContent.md)
+ - [Error](docs/Error.md)
  - [Har](docs/Har.md)
  - [HarLog](docs/HarLog.md)
  - [HarLogCreator](docs/HarLogCreator.md)

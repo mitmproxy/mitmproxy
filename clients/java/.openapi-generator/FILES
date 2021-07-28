@@ -5,6 +5,7 @@ api/openapi.yaml
 build.gradle
 build.sbt
 docs/BrowserUpProxyApi.md
+docs/Counter.md
 docs/Entry.md
 docs/EntryRequest.md
 docs/EntryRequestCookies.md
@@ -12,6 +13,7 @@ docs/EntryRequestQueryString.md
 docs/EntryResponse.md
 docs/EntryResponseContent.md
 docs/EntryTimings.md
+docs/Error.md
 docs/Har.md
 docs/HarLog.md
 docs/HarLogCreator.md
@@ -37,13 +39,18 @@ src/main/java/com/browserup/proxy_client/ApiClient.java
 src/main/java/com/browserup/proxy_client/ApiException.java
 src/main/java/com/browserup/proxy_client/ApiResponse.java
 src/main/java/com/browserup/proxy_client/Configuration.java
+src/main/java/com/browserup/proxy_client/Counter.java
 src/main/java/com/browserup/proxy_client/Entry.java
 src/main/java/com/browserup/proxy_client/EntryRequest.java
 src/main/java/com/browserup/proxy_client/EntryRequestCookies.java
 src/main/java/com/browserup/proxy_client/EntryRequestQueryString.java
 src/main/java/com/browserup/proxy_client/EntryResponse.java
 src/main/java/com/browserup/proxy_client/EntryResponseContent.java
+<<<<<<< HEAD
 src/main/java/com/browserup/proxy_client/EntryTimings.java
+=======
+src/main/java/com/browserup/proxy_client/Error.java
+>>>>>>> Rebuilt clients
 src/main/java/com/browserup/proxy_client/GzipRequestInterceptor.java
 src/main/java/com/browserup/proxy_client/Har.java
 src/main/java/com/browserup/proxy_client/HarLog.java
@@ -84,3 +91,5 @@ src/test/java/com/browserup/proxy_client/PagePageTimingsTest.java
 src/test/java/com/browserup/proxy_client/PageTest.java
 src/test/java/com/browserup/proxy_client/VerifyResultTest.java
 src/test/java/com/browserup/proxy_client/WebSocketMessageTest.java
+src/test/java/com/browserup/proxy_client/CounterTest.java
+src/test/java/com/browserup/proxy_client/ErrorTest.java

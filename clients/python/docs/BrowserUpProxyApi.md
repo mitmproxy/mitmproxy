@@ -4,7 +4,9 @@ All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**add_counter**](BrowserUpProxyApi.md#add_counter) | **POST** /har/counters | 
 [**add_custom_har_fields**](BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page | 
+[**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
@@ -14,6 +16,73 @@ Method | HTTP request | Description
 [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 
 [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} | 
 
+
+# **add_counter**
+> add_counter(counter)
+
+
+
+Add Custom Counter to the captured traffic har
+
+### Example
+
+```python
+import time
+import BrowserUpProxyClient
+from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.counter import Counter
+from pprint import pprint
+# Defining the host is optional and defaults to http://localhost:8088
+# See configuration.py for a list of all supported configuration parameters.
+configuration = BrowserUpProxyClient.Configuration(
+    host = "http://localhost:8088"
+)
+
+
+# Enter a context with an instance of the API client
+with BrowserUpProxyClient.ApiClient() as api_client:
+    # Create an instance of the API class
+    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    counter = Counter(
+        name="name_example",
+        value=3.14,
+    ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+
+    # example passing only required values which don't have defaults set
+    try:
+        api_instance.add_counter(counter)
+    except BrowserUpProxyClient.ApiException as e:
+        print("Exception when calling BrowserUpProxyApi->add_counter: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The counter was added. |  -  |
+**422** | The counter was invalid. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **add_custom_har_fields**
 > add_custom_har_fields()
@@ -75,6 +144,73 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **204** | The custom fields were added to the HAR. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **add_error**
+> add_error(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Example
+
+```python
+import time
+import BrowserUpProxyClient
+from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.error import Error
+from pprint import pprint
+# Defining the host is optional and defaults to http://localhost:8088
+# See configuration.py for a list of all supported configuration parameters.
+configuration = BrowserUpProxyClient.Configuration(
+    host = "http://localhost:8088"
+)
+
+
+# Enter a context with an instance of the API client
+with BrowserUpProxyClient.ApiClient() as api_client:
+    # Create an instance of the API class
+    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    error = Error(
+        name="name_example",
+        details="details_example",
+    ) # Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+
+    # example passing only required values which don't have defaults set
+    try:
+        api_instance.add_error(error)
+    except BrowserUpProxyClient.ApiException as e:
+        print("Exception when calling BrowserUpProxyApi->add_error: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The Error was added. |  -  |
+**422** | The Error was invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -358,6 +494,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -394,6 +531,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic had no matching items |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -439,6 +577,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -475,6 +614,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -521,6 +661,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -558,6 +699,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the size criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -604,6 +746,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -641,6 +784,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

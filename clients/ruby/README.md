@@ -62,14 +62,12 @@ Please follow the [installation](#installation) procedure and then run the follo
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
-opts = {
-  body: Object # Object | 
-}
+counter = BrowserupProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
 begin
-  api_instance.add_custom_har_fields(opts)
+  api_instance.add_counter(counter)
 rescue BrowserupProxy::ApiError => e
-  puts "Exception when calling BrowserUpProxyApi->add_custom_har_fields: #{e}"
+  puts "Exception when calling BrowserUpProxyApi->add_counter: #{e}"
 end
 
 ```
@@ -80,7 +78,9 @@ All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*BrowserupProxy::BrowserUpProxyApi* | [**add_counter**](docs/BrowserUpProxyApi.md#add_counter) | **POST** /har/counters | 
 *BrowserupProxy::BrowserUpProxyApi* | [**add_custom_har_fields**](docs/BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page | 
+*BrowserupProxy::BrowserUpProxyApi* | [**add_error**](docs/BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 *BrowserupProxy::BrowserUpProxyApi* | [**get_har_log**](docs/BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 *BrowserupProxy::BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserupProxy::BrowserUpProxyApi* | [**reset_har_log**](docs/BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
@@ -93,12 +93,14 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Models
 
+ - [BrowserupProxy::Counter](docs/Counter.md)
  - [BrowserupProxy::Entry](docs/Entry.md)
  - [BrowserupProxy::EntryRequest](docs/EntryRequest.md)
  - [BrowserupProxy::EntryRequestCookies](docs/EntryRequestCookies.md)
  - [BrowserupProxy::EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [BrowserupProxy::EntryResponse](docs/EntryResponse.md)
  - [BrowserupProxy::EntryResponseContent](docs/EntryResponseContent.md)
+ - [BrowserupProxy::Error](docs/Error.md)
  - [BrowserupProxy::Har](docs/Har.md)
  - [BrowserupProxy::HarLog](docs/HarLog.md)
  - [BrowserupProxy::HarLogCreator](docs/HarLogCreator.md)

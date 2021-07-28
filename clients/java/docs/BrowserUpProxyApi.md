@@ -4,7 +4,9 @@ All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 [**addCustomHarFields**](BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
+[**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
@@ -14,6 +16,68 @@ Method | HTTP request | Description
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
 [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
+
+<a name="addCounter"></a>
+# **addCounter**
+> addCounter(counter)
+
+
+
+Add Custom Counter to the captured traffic har
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:8088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+    try {
+      apiInstance.addCounter(counter);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#addCounter");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The counter was added. |  -  |
+**422** | The counter was invalid. |  -  |
 
 <a name="addCustomHarFields"></a>
 # **addCustomHarFields**
@@ -75,6 +139,68 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **204** | The custom fields were added to the HAR. |  -  |
+
+<a name="addError"></a>
+# **addError**
+> addError(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:8088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    Error error = new Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+    try {
+      apiInstance.addError(error);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#addError");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The Error was added. |  -  |
+**422** | The Error was invalid. |  -  |
 
 <a name="getHarLog"></a>
 # **getHarLog**
@@ -370,6 +496,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic had no matching items |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifyPresent"></a>
 # **verifyPresent**
@@ -434,6 +561,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySLA"></a>
 # **verifySLA**
@@ -500,6 +628,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySize"></a>
 # **verifySize**
@@ -566,4 +695,5 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the size criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 

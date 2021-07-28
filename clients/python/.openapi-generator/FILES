@@ -9,6 +9,7 @@ BrowserUpProxyClient/apis/__init__.py
 BrowserUpProxyClient/configuration.py
 BrowserUpProxyClient/exceptions.py
 BrowserUpProxyClient/model/__init__.py
+BrowserUpProxyClient/model/counter.py
 BrowserUpProxyClient/model/custom_har_data.py
 BrowserUpProxyClient/model/entry.py
 BrowserUpProxyClient/model/entry_request.py
@@ -16,6 +17,7 @@ BrowserUpProxyClient/model/entry_request_cookies.py
 BrowserUpProxyClient/model/entry_request_query_string.py
 BrowserUpProxyClient/model/entry_response.py
 BrowserUpProxyClient/model/entry_response_content.py
+BrowserUpProxyClient/model/error.py
 BrowserUpProxyClient/model/har.py
 BrowserUpProxyClient/model/har_log.py
 BrowserUpProxyClient/model/har_log_creator.py
@@ -30,6 +32,7 @@ BrowserUpProxyClient/models/__init__.py
 BrowserUpProxyClient/rest.py
 README.md
 docs/BrowserUpProxyApi.md
+docs/Counter.md
 docs/CustomHarData.md
 docs/Entry.md
 docs/EntryRequest.md
@@ -37,6 +40,7 @@ docs/EntryRequestCookies.md
 docs/EntryRequestQueryString.md
 docs/EntryResponse.md
 docs/EntryResponseContent.md
+docs/Error.md
 docs/Har.md
 docs/HarLog.md
 docs/HarLogCreator.md
@@ -52,4 +56,6 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
+test/test_counter.py
+test/test_error.py
 tox.ini
