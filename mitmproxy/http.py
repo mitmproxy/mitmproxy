@@ -250,7 +250,7 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Union[Callable[[bytes], bytes], bool] = False
+    stream: Union[Callable[[bytes], Union[Iterable[bytes], bytes]], bool] = False
     """
     If `True`, the message body will not be buffered on the proxy
     but immediately streamed to the destination instead.
