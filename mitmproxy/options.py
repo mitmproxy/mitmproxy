@@ -56,11 +56,11 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "ciphers_client", Optional[str], None,
-            "Set supported ciphers for client connections using OpenSSL syntax."
+            "Set supported ciphers for client <-> mitmproxy connections using OpenSSL syntax."
         )
         self.add_option(
             "ciphers_server", Optional[str], None,
-            "Set supported ciphers for server connections using OpenSSL syntax."
+            "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax."
         )
         self.add_option(
             "client_certs", Optional[str], None,
