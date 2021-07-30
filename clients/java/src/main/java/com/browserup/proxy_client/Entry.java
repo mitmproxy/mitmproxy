@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Arrays;
 import com.browserup.proxy_client.EntryRequest;
 import com.browserup.proxy_client.EntryResponse;
+import com.browserup.proxy_client.EntryTimings;
 import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import org.threeten.bp.OffsetDateTime;
 
 /**
  * Entry
@@ -41,7 +43,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private String startedDateTime;
+  private OffsetDateTime startedDateTime;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
@@ -61,7 +63,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_TIMINGS = "timings";
   @SerializedName(SERIALIZED_NAME_TIMINGS)
-  private Object timings;
+  private EntryTimings timings;
 
   public static final String SERIALIZED_NAME_SERVER_I_P_ADDRESS = "serverIPAddress";
   @SerializedName(SERIALIZED_NAME_SERVER_I_P_ADDRESS)
@@ -103,7 +105,7 @@ public class Entry {
   }
 
 
-  public Entry startedDateTime(String startedDateTime) {
+  public Entry startedDateTime(OffsetDateTime startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -115,12 +117,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public String getStartedDateTime() {
+  public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(String startedDateTime) {
+  public void setStartedDateTime(OffsetDateTime startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 
@@ -214,7 +216,7 @@ public class Entry {
   }
 
 
-  public Entry timings(Object timings) {
+  public Entry timings(EntryTimings timings) {
     
     this.timings = timings;
     return this;
@@ -226,12 +228,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public Object getTimings() {
+  public EntryTimings getTimings() {
     return timings;
   }
 
 
-  public void setTimings(Object timings) {
+  public void setTimings(EntryTimings timings) {
     this.timings = timings;
   }
 

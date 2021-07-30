@@ -15,6 +15,7 @@ package com.browserup.proxy_client;
 
 import com.browserup.proxy_client.EntryRequest;
 import com.browserup.proxy_client.EntryResponse;
+import com.browserup.proxy_client.EntryTimings;
 import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import org.threeten.bp.OffsetDateTime;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;

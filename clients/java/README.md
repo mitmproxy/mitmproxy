@@ -129,6 +129,7 @@ Class | Method | HTTP request | Description
  - [EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [EntryResponse](docs/EntryResponse.md)
  - [EntryResponseContent](docs/EntryResponseContent.md)
+ - [EntryTimings](docs/EntryTimings.md)
  - [Har](docs/Har.md)
  - [HarLog](docs/HarLog.md)
  - [HarLogCreator](docs/HarLogCreator.md)

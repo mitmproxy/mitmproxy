@@ -346,9 +346,9 @@ components:
     WebSocketMessage:
       example:
         data: data
-        time: 7.386281948385884
+        time: 4.965218492984954
         type: type
-        opcode: 4.145608029883936
+        opcode: 1.1730742509559433
       properties:
         type:
           type: string
@@ -372,7 +372,7 @@ components:
             comment: comment
             version: version
           entries:
-          - startedDateTime: startedDateTime
+          - startedDateTime: 2000-01-23T04:56:07.000+00:00
             request:
               headers:
               - name: name
@@ -415,13 +415,13 @@ components:
             cache: '{}'
             _webSocketMessages:
             - data: data
-              time: 7.386281948385884
+              time: 4.965218492984954
               type: type
-              opcode: 4.145608029883936
+              opcode: 1.1730742509559433
             - data: data
-              time: 7.386281948385884
+              time: 4.965218492984954
               type: type
-              opcode: 4.145608029883936
+              opcode: 1.1730742509559433
             response:
               headers:
               - name: name
@@ -462,12 +462,20 @@ components:
                 encoding: encoding
               status: 2
             serverIPAddress: serverIPAddress
-            timings: '{}'
+            timings:
+              receive: -0.315314730164736
+              wait: -0.851058409014583
+              blocked: -0.8768486463222744
+              dns: -0.5854391970116064
+              comment: comment
+              send: -0.8975354299855842
+              ssl: -0.25422552263162346
+              connect: -0.26137180516141156
             connection: connection
             comment: comment
             time: 0.14658129805029452
             pageref: pageref
-          - startedDateTime: startedDateTime
+          - startedDateTime: 2000-01-23T04:56:07.000+00:00
             request:
               headers:
               - name: name
@@ -510,13 +518,13 @@ components:
             cache: '{}'
             _webSocketMessages:
             - data: data
-              time: 7.386281948385884
+              time: 4.965218492984954
               type: type
-              opcode: 4.145608029883936
+              opcode: 1.1730742509559433
             - data: data
-              time: 7.386281948385884
+              time: 4.965218492984954
               type: type
-              opcode: 4.145608029883936
+              opcode: 1.1730742509559433
             response:
               headers:
               - name: name
@@ -557,7 +565,15 @@ components:
                 encoding: encoding
               status: 2
             serverIPAddress: serverIPAddress
-            timings: '{}'
+            timings:
+              receive: -0.315314730164736
+              wait: -0.851058409014583
+              blocked: -0.8768486463222744
+              dns: -0.5854391970116064
+              comment: comment
+              send: -0.8975354299855842
+              ssl: -0.25422552263162346
+              connect: -0.26137180516141156
             connection: connection
             comment: comment
             time: 0.14658129805029452
@@ -640,7 +656,7 @@ components:
       type: object
     Entry:
       example:
-        startedDateTime: startedDateTime
+        startedDateTime: 2000-01-23T04:56:07.000+00:00
         request:
           headers:
           - name: name
@@ -683,13 +699,13 @@ components:
         cache: '{}'
         _webSocketMessages:
         - data: data
-          time: 7.386281948385884
+          time: 4.965218492984954
           type: type
-          opcode: 4.145608029883936
+          opcode: 1.1730742509559433
         - data: data
-          time: 7.386281948385884
+          time: 4.965218492984954
           type: type
-          opcode: 4.145608029883936
+          opcode: 1.1730742509559433
         response:
           headers:
           - name: name
@@ -730,7 +746,15 @@ components:
             encoding: encoding
           status: 2
         serverIPAddress: serverIPAddress
-        timings: '{}'
+        timings:
+          receive: -0.315314730164736
+          wait: -0.851058409014583
+          blocked: -0.8768486463222744
+          dns: -0.5854391970116064
+          comment: comment
+          send: -0.8975354299855842
+          ssl: -0.25422552263162346
+          connect: -0.26137180516141156
         connection: connection
         comment: comment
         time: 0.14658129805029452
@@ -739,6 +763,7 @@ components:
         pageref:
           type: string
         startedDateTime:
+          format: date-time
           type: string
         time:
           minimum: 0
@@ -790,34 +815,7 @@ components:
             comment:
               type: string
         timings:
-          properties:
-            dns:
-              minimum: -1
-              type: number
-            connect:
-              minimum: -1
-              type: number
-            blocked:
-              minimum: -1
-              type: number
-            send:
-              minimum: -1
-              type: number
-            wait:
-              minimum: -1
-              type: number
-            receive:
-              minimum: -1
-              type: number
-            ssl:
-              minimum: -1
-              type: number
-            comment:
-              type: string
-          required:
-          - receive
-          - send
-          - wait
+          $ref: '#/components/schemas/Entry_timings'
         serverIPAddress:
           type: string
         _webSocketMessages:
@@ -859,7 +857,7 @@ components:
           comment: comment
           version: version
         entries:
-        - startedDateTime: startedDateTime
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
           request:
             headers:
             - name: name
@@ -902,13 +900,13 @@ components:
           cache: '{}'
           _webSocketMessages:
           - data: data
-            time: 7.386281948385884
+            time: 4.965218492984954
             type: type
-            opcode: 4.145608029883936
+            opcode: 1.1730742509559433
           - data: data
-            time: 7.386281948385884
+            time: 4.965218492984954
             type: type
-            opcode: 4.145608029883936
+            opcode: 1.1730742509559433
           response:
             headers:
             - name: name
@@ -949,12 +947,20 @@ components:
               encoding: encoding
             status: 2
           serverIPAddress: serverIPAddress
-          timings: '{}'
+          timings:
+            receive: -0.315314730164736
+            wait: -0.851058409014583
+            blocked: -0.8768486463222744
+            dns: -0.5854391970116064
+            comment: comment
+            send: -0.8975354299855842
+            ssl: -0.25422552263162346
+            connect: -0.26137180516141156
           connection: connection
           comment: comment
           time: 0.14658129805029452
           pageref: pageref
-        - startedDateTime: startedDateTime
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
           request:
             headers:
             - name: name
@@ -997,13 +1003,13 @@ components:
           cache: '{}'
           _webSocketMessages:
           - data: data
-            time: 7.386281948385884
+            time: 4.965218492984954
             type: type
-            opcode: 4.145608029883936
+            opcode: 1.1730742509559433
           - data: data
-            time: 7.386281948385884
+            time: 4.965218492984954
             type: type
-            opcode: 4.145608029883936
+            opcode: 1.1730742509559433
           response:
             headers:
             - name: name
@@ -1044,7 +1050,15 @@ components:
               encoding: encoding
             status: 2
           serverIPAddress: serverIPAddress
-          timings: '{}'
+          timings:
+            receive: -0.315314730164736
+            wait: -0.851058409014583
+            blocked: -0.8768486463222744
+            dns: -0.5854391970116064
+            comment: comment
+            send: -0.8975354299855842
+            ssl: -0.25422552263162346
+            connect: -0.26137180516141156
           connection: connection
           comment: comment
           time: 0.14658129805029452
@@ -1359,5 +1373,44 @@ components:
       - redirectURL
       - status
       - statusText
+      type: object
+    Entry_timings:
+      example:
+        receive: -0.315314730164736
+        wait: -0.851058409014583
+        blocked: -0.8768486463222744
+        dns: -0.5854391970116064
+        comment: comment
+        send: -0.8975354299855842
+        ssl: -0.25422552263162346
+        connect: -0.26137180516141156
+      properties:
+        dns:
+          minimum: -1
+          type: number
+        connect:
+          minimum: -1
+          type: number
+        blocked:
+          minimum: -1
+          type: number
+        send:
+          minimum: -1
+          type: number
+        wait:
+          minimum: -1
+          type: number
+        receive:
+          minimum: -1
+          type: number
+        ssl:
+          minimum: -1
+          type: number
+        comment:
+          type: string
+      required:
+      - receive
+      - send
+      - wait
       type: object
 

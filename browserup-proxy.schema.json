@@ -632,7 +632,8 @@
             "type": "string"
           },
           "startedDateTime": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "time": {
             "type": "number",
@@ -950,6 +951,7 @@
             }
           },
           "timings": {
+            "type": "object",
             "required": [
               "send",
               "wait",
