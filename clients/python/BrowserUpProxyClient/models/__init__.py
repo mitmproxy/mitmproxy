@@ -17,6 +17,7 @@ from BrowserUpProxyClient.model.entry_request_cookies import EntryRequestCookies
 from BrowserUpProxyClient.model.entry_request_query_string import EntryRequestQueryString
 from BrowserUpProxyClient.model.entry_response import EntryResponse
 from BrowserUpProxyClient.model.entry_response_content import EntryResponseContent
+from BrowserUpProxyClient.model.entry_timings import EntryTimings
 from BrowserUpProxyClient.model.error import Error
 from BrowserUpProxyClient.model.har import Har
 from BrowserUpProxyClient.model.har_log import HarLog
@@ -27,3 +28,4 @@ from BrowserUpProxyClient.model.name_value_pair import NameValuePair
 from BrowserUpProxyClient.model.page import Page
 from BrowserUpProxyClient.model.page_page_timings import PagePageTimings
 from BrowserUpProxyClient.model.verify_result import VerifyResult
+from BrowserUpProxyClient.model.web_socket_message import WebSocketMessage

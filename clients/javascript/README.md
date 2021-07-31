@@ -146,6 +146,7 @@ Class | Method | HTTP request | Description
  - [BrowserUpProxyClient.EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [BrowserUpProxyClient.EntryResponse](docs/EntryResponse.md)
  - [BrowserUpProxyClient.EntryResponseContent](docs/EntryResponseContent.md)
+ - [BrowserUpProxyClient.EntryTimings](docs/EntryTimings.md)
  - [BrowserUpProxyClient.Error](docs/Error.md)
  - [BrowserUpProxyClient.Har](docs/Har.md)
  - [BrowserUpProxyClient.HarLog](docs/HarLog.md)
@@ -156,6 +157,7 @@ Class | Method | HTTP request | Description
  - [BrowserUpProxyClient.Page](docs/Page.md)
  - [BrowserUpProxyClient.PagePageTimings](docs/PagePageTimings.md)
  - [BrowserUpProxyClient.VerifyResult](docs/VerifyResult.md)
+ - [BrowserUpProxyClient.WebSocketMessage](docs/WebSocketMessage.md)
 
 
 ## Documentation for Authorization

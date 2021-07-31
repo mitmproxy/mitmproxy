@@ -393,7 +393,6 @@ components:
           description: Result True / False
           type: boolean
       type: object
-    WebSocketMessage:
     Error:
       example:
         name: name
@@ -419,7 +418,7 @@ components:
             _counters
           type: string
       type: object
-    Entry:
+    WebSocketMessage:
       example:
         data: data
         time: 4.965218492984954

@@ -14,43 +14,22 @@ require 'date'
 require 'time'
 
 module BrowserupProxy
-  class Entry
-    attr_accessor :pageref
+  class WebSocketMessage
+    attr_accessor :type
 
-    attr_accessor :started_date_time
+    attr_accessor :opcode
+
+    attr_accessor :data
 
     attr_accessor :time
-
-    attr_accessor :request
-
-    attr_accessor :response
-
-    attr_accessor :cache
-
-    attr_accessor :timings
-
-    attr_accessor :server_ip_address
-
-    attr_accessor :_web_socket_messages
-
-    attr_accessor :connection
-
-    attr_accessor :comment
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'pageref' => :'pageref',
-        :'started_date_time' => :'startedDateTime',
-        :'time' => :'time',
-        :'request' => :'request',
-        :'response' => :'response',
-        :'cache' => :'cache',
-        :'timings' => :'timings',
-        :'server_ip_address' => :'serverIPAddress',
-        :'_web_socket_messages' => :'_webSocketMessages',
-        :'connection' => :'connection',
-        :'comment' => :'comment'
+        :'type' => :'type',
+        :'opcode' => :'opcode',
+        :'data' => :'data',
+        :'time' => :'time'
       }
     end
 
@@ -62,17 +41,10 @@ module BrowserupProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'pageref' => :'String',
-        :'started_date_time' => :'Time',
-        :'time' => :'Float',
-        :'request' => :'EntryRequest',
-        :'response' => :'EntryResponse',
-        :'cache' => :'Object',
-        :'timings' => :'EntryTimings',
-        :'server_ip_address' => :'String',
-        :'_web_socket_messages' => :'Array<WebSocketMessage>',
-        :'connection' => :'String',
-        :'comment' => :'String'
+        :'type' => :'String',
+        :'opcode' => :'Float',
+        :'data' => :'String',
+        :'time' => :'Float'
       }
     end
 
@@ -86,61 +58,31 @@ module BrowserupProxy
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::Entry` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::WebSocketMessage` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::Entry`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::WebSocketMessage`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'pageref')
-        self.pageref = attributes[:'pageref']
+      if attributes.key?(:'type')
+        self.type = attributes[:'type']
       end
 
-      if attributes.key?(:'started_date_time')
-        self.started_date_time = attributes[:'started_date_time']
+      if attributes.key?(:'opcode')
+        self.opcode = attributes[:'opcode']
+      end
+
+      if attributes.key?(:'data')
+        self.data = attributes[:'data']
       end
 
       if attributes.key?(:'time')
         self.time = attributes[:'time']
-      end
-
-      if attributes.key?(:'request')
-        self.request = attributes[:'request']
-      end
-
-      if attributes.key?(:'response')
-        self.response = attributes[:'response']
-      end
-
-      if attributes.key?(:'cache')
-        self.cache = attributes[:'cache']
-      end
-
-      if attributes.key?(:'timings')
-        self.timings = attributes[:'timings']
-      end
-
-      if attributes.key?(:'server_ip_address')
-        self.server_ip_address = attributes[:'server_ip_address']
-      end
-
-      if attributes.key?(:'_web_socket_messages')
-        if (value = attributes[:'_web_socket_messages']).is_a?(Array)
-          self._web_socket_messages = value
-        end
-      end
-
-      if attributes.key?(:'connection')
-        self.connection = attributes[:'connection']
-      end
-
-      if attributes.key?(:'comment')
-        self.comment = attributes[:'comment']
       end
     end
 
@@ -148,32 +90,20 @@ module BrowserupProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @started_date_time.nil?
-        invalid_properties.push('invalid value for "started_date_time", started_date_time cannot be nil.')
+      if @type.nil?
+        invalid_properties.push('invalid value for "type", type cannot be nil.')
+      end
+
+      if @opcode.nil?
+        invalid_properties.push('invalid value for "opcode", opcode cannot be nil.')
+      end
+
+      if @data.nil?
+        invalid_properties.push('invalid value for "data", data cannot be nil.')
       end
 
       if @time.nil?
         invalid_properties.push('invalid value for "time", time cannot be nil.')
-      end
-
-      if @time < 0
-        invalid_properties.push('invalid value for "time", must be greater than or equal to 0.')
-      end
-
-      if @request.nil?
-        invalid_properties.push('invalid value for "request", request cannot be nil.')
-      end
-
-      if @response.nil?
-        invalid_properties.push('invalid value for "response", response cannot be nil.')
-      end
-
-      if @cache.nil?
-        invalid_properties.push('invalid value for "cache", cache cannot be nil.')
-      end
-
-      if @timings.nil?
-        invalid_properties.push('invalid value for "timings", timings cannot be nil.')
       end
 
       invalid_properties
@@ -182,28 +112,11 @@ module BrowserupProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @started_date_time.nil?
+      return false if @type.nil?
+      return false if @opcode.nil?
+      return false if @data.nil?
       return false if @time.nil?
-      return false if @time < 0
-      return false if @request.nil?
-      return false if @response.nil?
-      return false if @cache.nil?
-      return false if @timings.nil?
       true
-    end
-
-    # Custom attribute writer method with validation
-    # @param [Object] time Value to be assigned
-    def time=(time)
-      if time.nil?
-        fail ArgumentError, 'time cannot be nil'
-      end
-
-      if time < 0
-        fail ArgumentError, 'invalid value for "time", must be greater than or equal to 0.'
-      end
-
-      @time = time
     end
 
     # Checks equality by comparing each attribute.
@@ -211,17 +124,10 @@ module BrowserupProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          pageref == o.pageref &&
-          started_date_time == o.started_date_time &&
-          time == o.time &&
-          request == o.request &&
-          response == o.response &&
-          cache == o.cache &&
-          timings == o.timings &&
-          server_ip_address == o.server_ip_address &&
-          _web_socket_messages == o._web_socket_messages &&
-          connection == o.connection &&
-          comment == o.comment
+          type == o.type &&
+          opcode == o.opcode &&
+          data == o.data &&
+          time == o.time
     end
 
     # @see the `==` method
@@ -233,7 +139,7 @@ module BrowserupProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [pageref, started_date_time, time, request, response, cache, timings, server_ip_address, _web_socket_messages, connection, comment].hash
+      [type, opcode, data, time].hash
     end
 
     # Builds the object from hash

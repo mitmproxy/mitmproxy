@@ -14,42 +14,33 @@ require 'date'
 require 'time'
 
 module BrowserupProxy
-  class Entry
-    attr_accessor :pageref
+  class EntryTimings
+    attr_accessor :dns
 
-    attr_accessor :started_date_time
+    attr_accessor :connect
 
-    attr_accessor :time
+    attr_accessor :blocked
 
-    attr_accessor :request
+    attr_accessor :_send
 
-    attr_accessor :response
+    attr_accessor :wait
 
-    attr_accessor :cache
+    attr_accessor :receive
 
-    attr_accessor :timings
-
-    attr_accessor :server_ip_address
-
-    attr_accessor :_web_socket_messages
-
-    attr_accessor :connection
+    attr_accessor :ssl
 
     attr_accessor :comment
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'pageref' => :'pageref',
-        :'started_date_time' => :'startedDateTime',
-        :'time' => :'time',
-        :'request' => :'request',
-        :'response' => :'response',
-        :'cache' => :'cache',
-        :'timings' => :'timings',
-        :'server_ip_address' => :'serverIPAddress',
-        :'_web_socket_messages' => :'_webSocketMessages',
-        :'connection' => :'connection',
+        :'dns' => :'dns',
+        :'connect' => :'connect',
+        :'blocked' => :'blocked',
+        :'_send' => :'send',
+        :'wait' => :'wait',
+        :'receive' => :'receive',
+        :'ssl' => :'ssl',
         :'comment' => :'comment'
       }
     end
@@ -62,16 +53,13 @@ module BrowserupProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'pageref' => :'String',
-        :'started_date_time' => :'Time',
-        :'time' => :'Float',
-        :'request' => :'EntryRequest',
-        :'response' => :'EntryResponse',
-        :'cache' => :'Object',
-        :'timings' => :'EntryTimings',
-        :'server_ip_address' => :'String',
-        :'_web_socket_messages' => :'Array<WebSocketMessage>',
-        :'connection' => :'String',
+        :'dns' => :'Float',
+        :'connect' => :'Float',
+        :'blocked' => :'Float',
+        :'_send' => :'Float',
+        :'wait' => :'Float',
+        :'receive' => :'Float',
+        :'ssl' => :'Float',
         :'comment' => :'String'
       }
     end
@@ -86,57 +74,43 @@ module BrowserupProxy
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::Entry` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::EntryTimings` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::Entry`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::EntryTimings`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'pageref')
-        self.pageref = attributes[:'pageref']
+      if attributes.key?(:'dns')
+        self.dns = attributes[:'dns']
       end
 
-      if attributes.key?(:'started_date_time')
-        self.started_date_time = attributes[:'started_date_time']
+      if attributes.key?(:'connect')
+        self.connect = attributes[:'connect']
       end
 
-      if attributes.key?(:'time')
-        self.time = attributes[:'time']
+      if attributes.key?(:'blocked')
+        self.blocked = attributes[:'blocked']
       end
 
-      if attributes.key?(:'request')
-        self.request = attributes[:'request']
+      if attributes.key?(:'_send')
+        self._send = attributes[:'_send']
       end
 
-      if attributes.key?(:'response')
-        self.response = attributes[:'response']
+      if attributes.key?(:'wait')
+        self.wait = attributes[:'wait']
       end
 
-      if attributes.key?(:'cache')
-        self.cache = attributes[:'cache']
+      if attributes.key?(:'receive')
+        self.receive = attributes[:'receive']
       end
 
-      if attributes.key?(:'timings')
-        self.timings = attributes[:'timings']
-      end
-
-      if attributes.key?(:'server_ip_address')
-        self.server_ip_address = attributes[:'server_ip_address']
-      end
-
-      if attributes.key?(:'_web_socket_messages')
-        if (value = attributes[:'_web_socket_messages']).is_a?(Array)
-          self._web_socket_messages = value
-        end
-      end
-
-      if attributes.key?(:'connection')
-        self.connection = attributes[:'connection']
+      if attributes.key?(:'ssl')
+        self.ssl = attributes[:'ssl']
       end
 
       if attributes.key?(:'comment')
@@ -148,32 +122,44 @@ module BrowserupProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @started_date_time.nil?
-        invalid_properties.push('invalid value for "started_date_time", started_date_time cannot be nil.')
+      if !@dns.nil? && @dns < -1
+        invalid_properties.push('invalid value for "dns", must be greater than or equal to -1.')
       end
 
-      if @time.nil?
-        invalid_properties.push('invalid value for "time", time cannot be nil.')
+      if !@connect.nil? && @connect < -1
+        invalid_properties.push('invalid value for "connect", must be greater than or equal to -1.')
       end
 
-      if @time < 0
-        invalid_properties.push('invalid value for "time", must be greater than or equal to 0.')
+      if !@blocked.nil? && @blocked < -1
+        invalid_properties.push('invalid value for "blocked", must be greater than or equal to -1.')
       end
 
-      if @request.nil?
-        invalid_properties.push('invalid value for "request", request cannot be nil.')
+      if @_send.nil?
+        invalid_properties.push('invalid value for "_send", _send cannot be nil.')
       end
 
-      if @response.nil?
-        invalid_properties.push('invalid value for "response", response cannot be nil.')
+      if @_send < -1
+        invalid_properties.push('invalid value for "_send", must be greater than or equal to -1.')
       end
 
-      if @cache.nil?
-        invalid_properties.push('invalid value for "cache", cache cannot be nil.')
+      if @wait.nil?
+        invalid_properties.push('invalid value for "wait", wait cannot be nil.')
       end
 
-      if @timings.nil?
-        invalid_properties.push('invalid value for "timings", timings cannot be nil.')
+      if @wait < -1
+        invalid_properties.push('invalid value for "wait", must be greater than or equal to -1.')
+      end
+
+      if @receive.nil?
+        invalid_properties.push('invalid value for "receive", receive cannot be nil.')
+      end
+
+      if @receive < -1
+        invalid_properties.push('invalid value for "receive", must be greater than or equal to -1.')
+      end
+
+      if !@ssl.nil? && @ssl < -1
+        invalid_properties.push('invalid value for "ssl", must be greater than or equal to -1.')
       end
 
       invalid_properties
@@ -182,28 +168,99 @@ module BrowserupProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @started_date_time.nil?
-      return false if @time.nil?
-      return false if @time < 0
-      return false if @request.nil?
-      return false if @response.nil?
-      return false if @cache.nil?
-      return false if @timings.nil?
+      return false if !@dns.nil? && @dns < -1
+      return false if !@connect.nil? && @connect < -1
+      return false if !@blocked.nil? && @blocked < -1
+      return false if @_send.nil?
+      return false if @_send < -1
+      return false if @wait.nil?
+      return false if @wait < -1
+      return false if @receive.nil?
+      return false if @receive < -1
+      return false if !@ssl.nil? && @ssl < -1
       true
     end
 
     # Custom attribute writer method with validation
-    # @param [Object] time Value to be assigned
-    def time=(time)
-      if time.nil?
-        fail ArgumentError, 'time cannot be nil'
+    # @param [Object] dns Value to be assigned
+    def dns=(dns)
+      if !dns.nil? && dns < -1
+        fail ArgumentError, 'invalid value for "dns", must be greater than or equal to -1.'
       end
 
-      if time < 0
-        fail ArgumentError, 'invalid value for "time", must be greater than or equal to 0.'
+      @dns = dns
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] connect Value to be assigned
+    def connect=(connect)
+      if !connect.nil? && connect < -1
+        fail ArgumentError, 'invalid value for "connect", must be greater than or equal to -1.'
       end
 
-      @time = time
+      @connect = connect
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] blocked Value to be assigned
+    def blocked=(blocked)
+      if !blocked.nil? && blocked < -1
+        fail ArgumentError, 'invalid value for "blocked", must be greater than or equal to -1.'
+      end
+
+      @blocked = blocked
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] _send Value to be assigned
+    def _send=(_send)
+      if _send.nil?
+        fail ArgumentError, '_send cannot be nil'
+      end
+
+      if _send < -1
+        fail ArgumentError, 'invalid value for "_send", must be greater than or equal to -1.'
+      end
+
+      @_send = _send
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] wait Value to be assigned
+    def wait=(wait)
+      if wait.nil?
+        fail ArgumentError, 'wait cannot be nil'
+      end
+
+      if wait < -1
+        fail ArgumentError, 'invalid value for "wait", must be greater than or equal to -1.'
+      end
+
+      @wait = wait
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] receive Value to be assigned
+    def receive=(receive)
+      if receive.nil?
+        fail ArgumentError, 'receive cannot be nil'
+      end
+
+      if receive < -1
+        fail ArgumentError, 'invalid value for "receive", must be greater than or equal to -1.'
+      end
+
+      @receive = receive
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] ssl Value to be assigned
+    def ssl=(ssl)
+      if !ssl.nil? && ssl < -1
+        fail ArgumentError, 'invalid value for "ssl", must be greater than or equal to -1.'
+      end
+
+      @ssl = ssl
     end
 
     # Checks equality by comparing each attribute.
@@ -211,16 +268,13 @@ module BrowserupProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          pageref == o.pageref &&
-          started_date_time == o.started_date_time &&
-          time == o.time &&
-          request == o.request &&
-          response == o.response &&
-          cache == o.cache &&
-          timings == o.timings &&
-          server_ip_address == o.server_ip_address &&
-          _web_socket_messages == o._web_socket_messages &&
-          connection == o.connection &&
+          dns == o.dns &&
+          connect == o.connect &&
+          blocked == o.blocked &&
+          _send == o._send &&
+          wait == o.wait &&
+          receive == o.receive &&
+          ssl == o.ssl &&
           comment == o.comment
     end
 
@@ -233,7 +287,7 @@ module BrowserupProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [pageref, started_date_time, time, request, response, cache, timings, server_ip_address, _web_socket_messages, connection, comment].hash
+      [dns, connect, blocked, _send, wait, receive, ssl, comment].hash
     end
 
     # Builds the object from hash

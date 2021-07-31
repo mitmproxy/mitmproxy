@@ -102,6 +102,12 @@
       //expect(instance).to.be();
     });
 
+    it('should have the property webSocketMessages (base name: "_webSocketMessages")', function() {
+      // uncomment below and update the code to test the property webSocketMessages
+      //var instance = new BrowserUpProxyClient.Entry();
+      //expect(instance).to.be();
+    });
+
     it('should have the property connection (base name: "connection")', function() {
       // uncomment below and update the code to test the property connection
       //var instance = new BrowserUpProxyClient.Entry();

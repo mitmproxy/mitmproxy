@@ -12,19 +12,11 @@ import sys
 import unittest
 
 import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_request import EntryRequest
-from BrowserUpProxyClient.model.entry_response import EntryResponse
 from BrowserUpProxyClient.model.entry_timings import EntryTimings
-from BrowserUpProxyClient.model.web_socket_message import WebSocketMessage
-globals()['EntryRequest'] = EntryRequest
-globals()['EntryResponse'] = EntryResponse
-globals()['EntryTimings'] = EntryTimings
-globals()['WebSocketMessage'] = WebSocketMessage
-from BrowserUpProxyClient.model.entry import Entry
 
 
-class TestEntry(unittest.TestCase):
-    """Entry unit test stubs"""
+class TestEntryTimings(unittest.TestCase):
+    """EntryTimings unit test stubs"""
 
     def setUp(self):
         pass
@@ -32,10 +24,10 @@ class TestEntry(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def testEntry(self):
-        """Test Entry"""
+    def testEntryTimings(self):
+        """Test EntryTimings"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = Entry()  # noqa: E501
+        # model = EntryTimings()  # noqa: E501
         pass
 
 

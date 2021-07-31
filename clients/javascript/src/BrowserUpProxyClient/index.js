@@ -20,6 +20,7 @@ import EntryRequestCookies from './model/EntryRequestCookies';
 import EntryRequestQueryString from './model/EntryRequestQueryString';
 import EntryResponse from './model/EntryResponse';
 import EntryResponseContent from './model/EntryResponseContent';
+import EntryTimings from './model/EntryTimings';
 import Error from './model/Error';
 import Har from './model/Har';
 import HarLog from './model/HarLog';
@@ -30,6 +31,7 @@ import NameValuePair from './model/NameValuePair';
 import Page from './model/Page';
 import PagePageTimings from './model/PagePageTimings';
 import VerifyResult from './model/VerifyResult';
+import WebSocketMessage from './model/WebSocketMessage';
 import BrowserUpProxyApi from './browserup-proxy-client/BrowserUpProxyApi';
 
 
@@ -114,6 +116,12 @@ export {
     EntryResponseContent,
 
     /**
+     * The EntryTimings model constructor.
+     * @property {module:BrowserUpProxyClient/model/EntryTimings}
+     */
+    EntryTimings,
+
+    /**
      * The Error model constructor.
      * @property {module:BrowserUpProxyClient/model/Error}
      */
@@ -172,6 +180,12 @@ export {
      * @property {module:BrowserUpProxyClient/model/VerifyResult}
      */
     VerifyResult,
+
+    /**
+     * The WebSocketMessage model constructor.
+     * @property {module:BrowserUpProxyClient/model/WebSocketMessage}
+     */
+    WebSocketMessage,
 
     /**
     * The BrowserUpProxyApi service constructor.

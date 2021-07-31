@@ -99,6 +99,7 @@ Class | Method | HTTP request | Description
  - [BrowserupProxy::EntryRequestQueryString](docs/EntryRequestQueryString.md)
  - [BrowserupProxy::EntryResponse](docs/EntryResponse.md)
  - [BrowserupProxy::EntryResponseContent](docs/EntryResponseContent.md)
+ - [BrowserupProxy::EntryTimings](docs/EntryTimings.md)
  - [BrowserupProxy::Error](docs/Error.md)
  - [BrowserupProxy::Har](docs/Har.md)
  - [BrowserupProxy::HarLog](docs/HarLog.md)
@@ -109,6 +110,7 @@ Class | Method | HTTP request | Description
  - [BrowserupProxy::Page](docs/Page.md)
  - [BrowserupProxy::PagePageTimings](docs/PagePageTimings.md)
  - [BrowserupProxy::VerifyResult](docs/VerifyResult.md)
+ - [BrowserupProxy::WebSocketMessage](docs/WebSocketMessage.md)
 
 
 ## Documentation for Authorization

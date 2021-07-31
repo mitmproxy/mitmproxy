@@ -14,6 +14,8 @@
 import ApiClient from '../ApiClient';
 import EntryRequest from './EntryRequest';
 import EntryResponse from './EntryResponse';
+import EntryTimings from './EntryTimings';
+import WebSocketMessage from './WebSocketMessage';
 
 /**
  * The Entry model module.
@@ -24,12 +26,12 @@ class Entry {
     /**
      * Constructs a new <code>Entry</code>.
      * @alias module:BrowserUpProxyClient/model/Entry
-     * @param startedDateTime {String} 
+     * @param startedDateTime {Date} 
      * @param time {Number} 
      * @param request {module:BrowserUpProxyClient/model/EntryRequest} 
      * @param response {module:BrowserUpProxyClient/model/EntryResponse} 
      * @param cache {Object} 
-     * @param timings {Object} 
+     * @param timings {module:BrowserUpProxyClient/model/EntryTimings} 
      */
     constructor(startedDateTime, time, request, response, cache, timings) { 
         
@@ -65,7 +67,7 @@ class Entry {
                 obj['pageref'] = ApiClient.convertToType(data['pageref'], 'String');
             }
             if (data.hasOwnProperty('startedDateTime')) {
-                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'String');
+                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'Date');
             }
             if (data.hasOwnProperty('time')) {
                 obj['time'] = ApiClient.convertToType(data['time'], 'Number');
@@ -80,10 +82,13 @@ class Entry {
                 obj['cache'] = ApiClient.convertToType(data['cache'], Object);
             }
             if (data.hasOwnProperty('timings')) {
-                obj['timings'] = ApiClient.convertToType(data['timings'], Object);
+                obj['timings'] = EntryTimings.constructFromObject(data['timings']);
             }
             if (data.hasOwnProperty('serverIPAddress')) {
                 obj['serverIPAddress'] = ApiClient.convertToType(data['serverIPAddress'], 'String');
+            }
+            if (data.hasOwnProperty('_webSocketMessages')) {
+                obj['_webSocketMessages'] = ApiClient.convertToType(data['_webSocketMessages'], [WebSocketMessage]);
             }
             if (data.hasOwnProperty('connection')) {
                 obj['connection'] = ApiClient.convertToType(data['connection'], 'String');
@@ -104,7 +109,7 @@ class Entry {
 Entry.prototype['pageref'] = undefined;
 
 /**
- * @member {String} startedDateTime
+ * @member {Date} startedDateTime
  */
 Entry.prototype['startedDateTime'] = undefined;
 
@@ -129,7 +134,7 @@ Entry.prototype['response'] = undefined;
 Entry.prototype['cache'] = undefined;
 
 /**
- * @member {Object} timings
+ * @member {module:BrowserUpProxyClient/model/EntryTimings} timings
  */
 Entry.prototype['timings'] = undefined;
 
@@ -137,6 +142,11 @@ Entry.prototype['timings'] = undefined;
  * @member {String} serverIPAddress
  */
 Entry.prototype['serverIPAddress'] = undefined;
+
+/**
+ * @member {Array.<module:BrowserUpProxyClient/model/WebSocketMessage>} _webSocketMessages
+ */
+Entry.prototype['_webSocketMessages'] = undefined;
 
 /**
  * @member {String} connection
