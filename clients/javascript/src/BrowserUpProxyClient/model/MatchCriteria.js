@@ -88,6 +88,9 @@ class MatchCriteria {
             if (data.hasOwnProperty('json_schema')) {
                 obj['json_schema'] = ApiClient.convertToType(data['json_schema'], 'String');
             }
+            if (data.hasOwnProperty('error_if_no_traffic')) {
+                obj['error_if_no_traffic'] = ApiClient.convertToType(data['error_if_no_traffic'], 'Boolean');
+            }
         }
         return obj;
     }
@@ -168,6 +171,12 @@ MatchCriteria.prototype['json_path'] = undefined;
  * @member {String} json_schema
  */
 MatchCriteria.prototype['json_schema'] = undefined;
+
+/**
+ * If the proxy has NO traffic at all, return error
+ * @member {Boolean} error_if_no_traffic
+ */
+MatchCriteria.prototype['error_if_no_traffic'] = undefined;
 
 
 

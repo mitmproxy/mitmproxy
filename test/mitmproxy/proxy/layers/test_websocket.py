@@ -143,6 +143,23 @@ def test_modify_message(ws_testdata):
     )
 
 
+def test_empty_message(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+            playbook
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            >> DataReceived(tctx.server, b"\x81\x00")
+            << websocket.WebsocketMessageHook(flow)
+    )
+    assert flow.websocket.messages[-1].content == b""
+    assert (
+            playbook
+            >> reply()
+            << SendData(tctx.client, b"\x81\x00")
+    )
+
+
 def test_drop_message(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (
@@ -152,7 +169,7 @@ def test_drop_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow.websocket.messages[-1].kill()
+    flow.websocket.messages[-1].drop()
     assert (
             playbook
             >> reply()
@@ -188,7 +205,7 @@ def test_protocol_error(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88/\x03\xeaexpected CONTINUATION, got <Opcode.BINARY: 2>")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
 
     )
@@ -245,14 +262,16 @@ def test_close_disconnect(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88\x02\x03\xe8")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
             >> ConnectionClosed(tctx.client)
     )
-    assert "ABNORMAL_CLOSURE" in flow.error.msg
+    # The \x03\xe8 above is code 1000 (normal closure).
+    # But 1006 (ABNORMAL_CLOSURE) is expected, because the connection was already closed.
+    assert flow.websocket.close_code == 1006
 
 
-def test_close_error(ws_testdata):
+def test_close_code(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (
             playbook
@@ -263,10 +282,10 @@ def test_close_error(ws_testdata):
             << CloseConnection(tctx.server)
             << SendData(tctx.client, b"\x88\x02\x0f\xa0")
             << CloseConnection(tctx.client)
-            << websocket.WebsocketErrorHook(flow)
+            << websocket.WebsocketEndHook(flow)
             >> reply()
     )
-    assert "UNKNOWN_ERROR=4000" in flow.error.msg
+    assert flow.websocket.close_code == 4000
 
 
 def test_deflate(ws_testdata):
@@ -304,7 +323,9 @@ def test_websocket_connection_repr(tctx):
 class TestFragmentizer:
     def test_empty(self):
         f = websocket.Fragmentizer([b"foo"], False)
-        assert list(f(b"")) == []
+        assert list(f(b"")) == [
+            wsproto.events.BytesMessage(b"", message_finished=True),
+        ]
 
     def test_keep_sizes(self):
         f = websocket.Fragmentizer([b"foo", b"bar"], True)

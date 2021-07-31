@@ -165,6 +165,7 @@ class TestCert:
         assert c1.cn == "google.com"
         assert len(c1.altnames) == 436
         assert c1.organization == "Google Inc"
+        assert hash(c1)
 
         with open(tdata.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()
@@ -180,6 +181,7 @@ class TestCert:
         assert c2.issuer
         assert c2.to_pem()
         assert c2.has_expired() is not None
+        assert repr(c2) == "<Cert(cn='www.inode.co.nz', altnames=['www.inode.co.nz', 'inode.co.nz'])>"
 
         assert c1 != c2
 

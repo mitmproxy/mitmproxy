@@ -17,6 +17,7 @@
 | **json_valid** | **Boolean** | Is valid JSON | [optional] |
 | **json_path** | **String** | Has JSON path | [optional] |
 | **json_schema** | **String** | Validates against passed JSON schema | [optional] |
+| **error_if_no_traffic** | **Boolean** | If the proxy has NO traffic at all, return error | [optional] |
 
 ## Example
 
@@ -36,7 +37,8 @@ instance = BrowserupProxy::MatchCriteria.new(
   response_cookie: null,
   json_valid: null,
   json_path: null,
-  json_schema: null
+  json_schema: null,
+  error_if_no_traffic: null
 )
 ```
 

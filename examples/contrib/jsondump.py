@@ -247,11 +247,5 @@ class JSONDumper:
         """
         self.queue.put(flow.get_state())
 
-    def websocket_error(self, flow):
-        """
-        Dump websocket errors.
-        """
-        self.queue.put(flow.get_state())
-
 
 addons = [JSONDumper()]  # pylint: disable=invalid-name

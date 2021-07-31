@@ -1,7 +1,6 @@
 import itertools
 import shutil
-import sys
-from typing import Optional, TextIO, Union
+from typing import IO, Optional, Union
 
 import click
 
@@ -10,10 +9,12 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy import flow
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
-from mitmproxy.websocket import WebSocketMessage
+from mitmproxy.websocket import WebSocketMessage, WebSocketData
+from wsproto.frame_protocol import CloseReason
 
 
 def indent(n: int, text: str) -> str:
@@ -29,10 +30,9 @@ def colorful(line, styles):
 
 
 class Dumper:
-    def __init__(self, outfile=sys.stdout, errfile=sys.stderr):
+    def __init__(self, outfile=None):
         self.filter: Optional[flowfilter.TFilter] = None
-        self.outfp: TextIO = outfile
-        self.errfp: TextIO = errfile
+        self.outfp: Optional[IO] = outfile
 
     def load(self, loader):
         loader.add_option(
@@ -70,14 +70,9 @@ class Dumper:
     def echo(self, text: str, ident=None, **style):
         if ident:
             text = indent(ident, text)
-        click.secho(text, file=self.outfp, **style)
+        click.secho(text, file=self.outfp, err=False, **style)
         if self.outfp:
             self.outfp.flush()
-
-    def echo_error(self, text: str, **style):
-        click.secho(text, file=self.errfp, **style)
-        if self.errfp:
-            self.errfp.flush()
 
     def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
@@ -277,12 +272,6 @@ class Dumper:
         if self.match(f):
             self.echo_flow(f)
 
-    def websocket_error(self, f: http.HTTPFlow):
-        self.echo_error(
-            f"Error in WebSocket connection to {human.format_address(f.server_conn.address)}: {f.error}",
-            fg="red"
-        )
-
     def websocket_message(self, f: http.HTTPFlow):
         assert f.websocket is not None  # satisfy type checker
         if self.match(f):
@@ -300,12 +289,28 @@ class Dumper:
     def websocket_end(self, f: http.HTTPFlow):
         assert f.websocket is not None  # satisfy type checker
         if self.match(f):
-            c = 'client' if f.websocket.closed_by_client else 'server'
-            self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
+            if f.websocket.close_code in {1000, 1001, 1005}:
+                c = 'client' if f.websocket.closed_by_client else 'server'
+                self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
+            else:
+                error = flow.Error(f"WebSocket Error: {self.format_websocket_error(f.websocket)}")
+                self.echo(
+                    f"Error in WebSocket connection to {human.format_address(f.server_conn.address)}: {error}",
+                    fg="red"
+                )
+
+    def format_websocket_error(self, websocket: WebSocketData) -> str:
+        try:
+            ret = CloseReason(websocket.close_code).name
+        except ValueError:
+            ret = f"UNKNOWN_ERROR={websocket.close_code}"
+        if websocket.close_reason:
+            ret += f" (reason: {websocket.close_reason})"
+        return ret
 
     def tcp_error(self, f):
         if self.match(f):
-            self.echo_error(
+            self.echo(
                 f"Error in TCP connection to {human.format_address(f.server_conn.address)}: {f.error}",
                 fg="red"
             )

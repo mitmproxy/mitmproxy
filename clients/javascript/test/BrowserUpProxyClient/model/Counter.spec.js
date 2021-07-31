@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -28,7 +28,7 @@
   var instance;
 
   beforeEach(function() {
-    instance = new BrowserUpProxyClient.AuthBasic();
+    instance = new BrowserUpProxyClient.Counter();
   });
 
   var getProperty = function(object, getter, property) {
@@ -47,16 +47,22 @@
       object[property] = value;
   }
 
-  describe('AuthBasic', function() {
-    it('should create an instance of AuthBasic', function() {
-      // uncomment below and update the code to test AuthBasic
-      //var instane = new BrowserUpProxyClient.AuthBasic();
-      //expect(instance).to.be.a(BrowserUpProxyClient.AuthBasic);
+  describe('Counter', function() {
+    it('should create an instance of Counter', function() {
+      // uncomment below and update the code to test Counter
+      //var instane = new BrowserUpProxyClient.Counter();
+      //expect(instance).to.be.a(BrowserUpProxyClient.Counter);
     });
 
-    it('should have the property base64Credentials (base name: "base_64_credentials")', function() {
-      // uncomment below and update the code to test the property base64Credentials
-      //var instance = new BrowserUpProxyClient.AuthBasic();
+    it('should have the property value (base name: "value")', function() {
+      // uncomment below and update the code to test the property value
+      //var instance = new BrowserUpProxyClient.Counter();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property name (base name: "name")', function() {
+      // uncomment below and update the code to test the property name
+      //var instance = new BrowserUpProxyClient.Counter();
       //expect(instance).to.be();
     });
 

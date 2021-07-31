@@ -30,7 +30,7 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
     return f
 
 
-def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
+def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') -> http.HTTPFlow:
     flow = http.HTTPFlow(tclient_conn(), tserver_conn())
     flow.request = http.Request(
         "example.com",
@@ -74,8 +74,18 @@ def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
             websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
             websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
         ]
-    if err is True:
-        flow.error = terr()
+
+    flow.websocket.close_reason = close_reason
+
+    if close_code is not None:
+        flow.websocket.close_code = close_code
+    else:
+        if err is True:
+            # ABNORMAL_CLOSURE
+            flow.websocket.close_code = 1006
+        else:
+            # NORMAL_CLOSURE
+            flow.websocket.close_code = 1000
 
     flow.reply = controller.DummyReply()
     return flow

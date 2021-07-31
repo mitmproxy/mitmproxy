@@ -41,11 +41,11 @@ public class VerifyResult {
   }
 
    /**
-   * Name to match
+   * Result True / False
    * @return result
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Name to match")
+  @ApiModelProperty(value = "Result True / False")
 
   public Boolean getResult() {
     return result;

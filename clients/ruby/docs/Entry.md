@@ -5,13 +5,14 @@
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
 | **pageref** | **String** |  | [optional] |
-| **started_date_time** | **String** |  |  |
+| **started_date_time** | **Time** |  |  |
 | **time** | **Float** |  |  |
 | **request** | [**EntryRequest**](EntryRequest.md) |  |  |
 | **response** | [**EntryResponse**](EntryResponse.md) |  |  |
 | **cache** | **Object** |  |  |
-| **timings** | **Object** |  |  |
+| **timings** | [**EntryTimings**](EntryTimings.md) |  |  |
 | **server_ip_address** | **String** |  | [optional] |
+| **_web_socket_messages** | [**Array&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  | [optional] |
 | **connection** | **String** |  | [optional] |
 | **comment** | **String** |  | [optional] |
 
@@ -29,6 +30,7 @@ instance = BrowserupProxy::Entry.new(
   cache: null,
   timings: null,
   server_ip_address: null,
+  _web_socket_messages: null,
   connection: null,
   comment: null
 )

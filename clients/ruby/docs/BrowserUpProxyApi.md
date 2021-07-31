@@ -4,24 +4,25 @@ All URIs are relative to *http://localhost:8088*
 
 | Method | HTTP request | Description |
 | ------ | ------------ | ----------- |
-| [**add_custom_har_fields**](BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page |  |
+| [**add_counter**](BrowserUpProxyApi.md#add_counter) | **POST** /har/counters |  |
+| [**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors |  |
 | [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
+| [**new_page**](BrowserUpProxyApi.md#new_page) | **POST** /har/page |  |
 | [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har |  |
-| [**set_har_page**](BrowserUpProxyApi.md#set_har_page) | **POST** /har/page |  |
 | [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} |  |
 | [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} |  |
 | [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} |  |
 | [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} |  |
 
 
-## add_custom_har_fields
+## add_counter
 
-> add_custom_har_fields(opts)
+> add_counter(counter)
 
 
 
-Add custom fields to the current HAR.
+Add Custom Counter to the captured traffic har
 
 ### Examples
 
@@ -30,33 +31,31 @@ require 'time'
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
-opts = {
-  body: Object # Object | 
-}
+counter = BrowserupProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
 begin
   
-  api_instance.add_custom_har_fields(opts)
+  api_instance.add_counter(counter)
 rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->add_custom_har_fields: #{e}"
+  puts "Error when calling BrowserUpProxyApi->add_counter: #{e}"
 end
 ```
 
-#### Using the add_custom_har_fields_with_http_info variant
+#### Using the add_counter_with_http_info variant
 
 This returns an Array which contains the response data (`nil` in this case), status code and headers.
 
-> <Array(nil, Integer, Hash)> add_custom_har_fields_with_http_info(opts)
+> <Array(nil, Integer, Hash)> add_counter_with_http_info(counter)
 
 ```ruby
 begin
   
-  data, status_code, headers = api_instance.add_custom_har_fields_with_http_info(opts)
+  data, status_code, headers = api_instance.add_counter_with_http_info(counter)
   p status_code # => 2xx
   p headers # => { ... }
   p data # => nil
 rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->add_custom_har_fields_with_http_info: #{e}"
+  puts "Error when calling BrowserUpProxyApi->add_counter_with_http_info: #{e}"
 end
 ```
 
@@ -64,7 +63,70 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **body** | **Object** |  | [optional] |
+| **counter** | [**Counter**](Counter.md) | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |  |
+
+### Return type
+
+nil (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+
+## add_error
+
+> add_error(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_proxy_client'
+
+api_instance = BrowserupProxy::BrowserUpProxyApi.new
+error = BrowserupProxy::Error.new # Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+
+begin
+  
+  api_instance.add_error(error)
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_error: #{e}"
+end
+```
+
+#### Using the add_error_with_http_info variant
+
+This returns an Array which contains the response data (`nil` in this case), status code and headers.
+
+> <Array(nil, Integer, Hash)> add_error_with_http_info(error)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.add_error_with_http_info(error)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => nil
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_error_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **error** | [**Error**](Error.md) | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |  |
 
 ### Return type
 
@@ -201,6 +263,70 @@ No authorization required
 - **Accept**: Not defined
 
 
+## new_page
+
+> <Har> new_page(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_proxy_client'
+
+api_instance = BrowserupProxy::BrowserUpProxyApi.new
+title = 'title_example' # String | The unique title for this har page/step.
+
+begin
+  
+  result = api_instance.new_page(title)
+  p result
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->new_page: #{e}"
+end
+```
+
+#### Using the new_page_with_http_info variant
+
+This returns an Array which contains the response data, status code and headers.
+
+> <Array(<Har>, Integer, Hash)> new_page_with_http_info(title)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.new_page_with_http_info(title)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => <Har>
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->new_page_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **title** | **String** | The unique title for this har page/step. |  |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
 ## reset_har_log
 
 > <Har> reset_har_log
@@ -241,67 +367,6 @@ begin
   p data # => <Har>
 rescue BrowserupProxy::ApiError => e
   puts "Error when calling BrowserUpProxyApi->reset_har_log_with_http_info: #{e}"
-end
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## set_har_page
-
-> <Har> set_har_page
-
-
-
-Starts a fresh HAR Page in the current active HAR
-
-### Examples
-
-```ruby
-require 'time'
-require 'browserup_proxy_client'
-
-api_instance = BrowserupProxy::BrowserUpProxyApi.new
-
-begin
-  
-  result = api_instance.set_har_page
-  p result
-rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->set_har_page: #{e}"
-end
-```
-
-#### Using the set_har_page_with_http_info variant
-
-This returns an Array which contains the response data, status code and headers.
-
-> <Array(<Har>, Integer, Hash)> set_har_page_with_http_info
-
-```ruby
-begin
-  
-  data, status_code, headers = api_instance.set_har_page_with_http_info
-  p status_code # => 2xx
-  p headers # => { ... }
-  p data # => <Har>
-rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->set_har_page_with_http_info: #{e}"
 end
 ```
 

@@ -83,6 +83,10 @@ public class MatchCriteria {
   @SerializedName(SERIALIZED_NAME_JSON_SCHEMA)
   private String jsonSchema;
 
+  public static final String SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC = "error_if_no_traffic";
+  @SerializedName(SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC)
+  private Boolean errorIfNoTraffic;
+
 
   public MatchCriteria url(String url) {
     
@@ -383,6 +387,29 @@ public class MatchCriteria {
   }
 
 
+  public MatchCriteria errorIfNoTraffic(Boolean errorIfNoTraffic) {
+    
+    this.errorIfNoTraffic = errorIfNoTraffic;
+    return this;
+  }
+
+   /**
+   * If the proxy has NO traffic at all, return error
+   * @return errorIfNoTraffic
+  **/
+  @javax.annotation.Nullable
+  @ApiModelProperty(value = "If the proxy has NO traffic at all, return error")
+
+  public Boolean getErrorIfNoTraffic() {
+    return errorIfNoTraffic;
+  }
+
+
+  public void setErrorIfNoTraffic(Boolean errorIfNoTraffic) {
+    this.errorIfNoTraffic = errorIfNoTraffic;
+  }
+
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -404,12 +431,13 @@ public class MatchCriteria {
         Objects.equals(this.responseCookie, matchCriteria.responseCookie) &&
         Objects.equals(this.jsonValid, matchCriteria.jsonValid) &&
         Objects.equals(this.jsonPath, matchCriteria.jsonPath) &&
-        Objects.equals(this.jsonSchema, matchCriteria.jsonSchema);
+        Objects.equals(this.jsonSchema, matchCriteria.jsonSchema) &&
+        Objects.equals(this.errorIfNoTraffic, matchCriteria.errorIfNoTraffic);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, page, status, content, contentType, websocketMessage, requestHeader, requestCookie, responseHeader, responseCookie, jsonValid, jsonPath, jsonSchema);
+    return Objects.hash(url, page, status, content, contentType, websocketMessage, requestHeader, requestCookie, responseHeader, responseCookie, jsonValid, jsonPath, jsonSchema, errorIfNoTraffic);
   }
 
   @Override
@@ -429,6 +457,7 @@ public class MatchCriteria {
     sb.append("    jsonValid: ").append(toIndentedString(jsonValid)).append("\n");
     sb.append("    jsonPath: ").append(toIndentedString(jsonPath)).append("\n");
     sb.append("    jsonSchema: ").append(toIndentedString(jsonSchema)).append("\n");
+    sb.append("    errorIfNoTraffic: ").append(toIndentedString(errorIfNoTraffic)).append("\n");
     sb.append("}");
     return sb.toString();
   }

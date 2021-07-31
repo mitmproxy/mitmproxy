@@ -287,7 +287,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
-                    return  # The connection has already been closed.
+                    pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
                     assert writer

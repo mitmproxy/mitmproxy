@@ -4,7 +4,7 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **result** | **Boolean** | Name to match | [optional] |
+| **result** | **Boolean** | Result True / False | [optional] |
 
 ## Example
 

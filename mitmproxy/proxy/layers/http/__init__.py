@@ -710,8 +710,22 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(self.streams[stream_id], event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
-                # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
-                yield commands.CloseConnection(event.connection)
+                # We didn't do anything with this connection yet, now the peer is doing something.
+                if isinstance(event, events.ConnectionClosed):
+                    # The peer has closed it - let's close it too!
+                    yield commands.CloseConnection(event.connection)
+                elif isinstance(event, events.DataReceived):
+                    # The peer has sent data. This can happen with HTTP/2 servers that already send a settings frame.
+                    child_layer: HttpConnection
+                    if self.context.server.alpn == b"h2":
+                        child_layer = Http2Client(self.context.fork())
+                    else:
+                        child_layer = Http1Client(self.context.fork())
+                    self.connections[self.context.server] = child_layer
+                    yield from self.event_to_child(child_layer, events.Start())
+                    yield from self.event_to_child(child_layer, event)
+                else:
+                    raise AssertionError(f"Unexpected event: {event}")
             else:
                 handler = self.connections[event.connection]
                 yield from self.event_to_child(handler, event)
@@ -811,7 +825,12 @@ class HttpLayer(layer.Layer):
                 send_connect = event.tls or self.mode != HTTPMode.upstream
                 stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
-                context.server.sni = event.address[0]
+                # Assume that we are in transparent mode and lazily did not open a connection yet.
+                # We don't want the IP (which is the address) as the upstream SNI, but the client's SNI instead.
+                if self.mode == HTTPMode.transparent and event.address == self.context.server.address:
+                    context.server.sni = self.context.client.sni or event.address[0]
+                else:
+                    context.server.sni = event.address[0]
                 stack /= tls.ServerTLSLayer(context)
 
         stack /= HttpClient(context)

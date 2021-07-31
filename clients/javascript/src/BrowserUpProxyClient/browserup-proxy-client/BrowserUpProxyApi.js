@@ -13,6 +13,8 @@
 
 
 import ApiClient from "../ApiClient";
+import Counter from '../model/Counter';
+import Error from '../model/Error';
 import Har from '../model/Har';
 import MatchCriteria from '../model/MatchCriteria';
 import VerifyResult from '../model/VerifyResult';
@@ -37,22 +39,24 @@ export default class BrowserUpProxyApi {
 
 
     /**
-     * Callback function to receive the result of the addCustomHarFields operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback
+     * Callback function to receive the result of the addCounter operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCounterCallback
      * @param {String} error Error message, if any.
      * @param data This operation does not return a value.
      * @param {String} response The complete HTTP response.
      */
 
     /**
-     * Add custom fields to the current HAR.
-     * @param {Object} opts Optional parameters
-     * @param {Object} opts.body 
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback} callback The callback function, accepting three arguments: error, data, response
+     * Add Custom Counter to the captured traffic har
+     * @param {module:BrowserUpProxyClient/model/Counter} counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCounterCallback} callback The callback function, accepting three arguments: error, data, response
      */
-    addCustomHarFields(opts, callback) {
-      opts = opts || {};
-      let postBody = opts['body'];
+    addCounter(counter, callback) {
+      let postBody = counter;
+      // verify the required parameter 'counter' is set
+      if (counter === undefined || counter === null) {
+        throw new Error("Missing the required parameter 'counter' when calling addCounter");
+      }
 
       let pathParams = {
       };
@@ -68,7 +72,47 @@ export default class BrowserUpProxyApi {
       let accepts = [];
       let returnType = null;
       return this.apiClient.callApi(
-        '/har/page', 'PUT',
+        '/har/counters', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the addError operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addErrorCallback
+     * @param {String} error Error message, if any.
+     * @param data This operation does not return a value.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Add Custom Error to the captured traffic har
+     * @param {module:BrowserUpProxyClient/model/Error} error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addErrorCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    addError(error, callback) {
+      let postBody = error;
+      // verify the required parameter 'error' is set
+      if (error === undefined || error === null) {
+        throw new Error("Missing the required parameter 'error' when calling addError");
+      }
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = [];
+      let returnType = null;
+      return this.apiClient.callApi(
+        '/har/errors', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );
@@ -146,6 +190,48 @@ export default class BrowserUpProxyApi {
     }
 
     /**
+     * Callback function to receive the result of the newPage operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~newPageCallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/Har} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param {String} title The unique title for this har page/step.
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~newPageCallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/Har}
+     */
+    newPage(title, callback) {
+      let postBody = null;
+      // verify the required parameter 'title' is set
+      if (title === undefined || title === null) {
+        throw new Error("Missing the required parameter 'title' when calling newPage");
+      }
+
+      let pathParams = {
+        'title': title
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = [];
+      let accepts = ['application/json'];
+      let returnType = Har;
+      return this.apiClient.callApi(
+        '/har/page', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
      * Callback function to receive the result of the resetHarLog operation.
      * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~resetHarLogCallback
      * @param {String} error Error message, if any.
@@ -176,42 +262,6 @@ export default class BrowserUpProxyApi {
       let returnType = Har;
       return this.apiClient.callApi(
         '/har', 'PUT',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the setHarPage operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setHarPageCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/Har} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Starts a fresh HAR Page in the current active HAR
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setHarPageCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/Har}
-     */
-    setHarPage(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = Har;
-      return this.apiClient.callApi(
-        '/har/page', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );

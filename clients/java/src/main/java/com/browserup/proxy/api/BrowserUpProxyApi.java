@@ -27,6 +27,8 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 
 
+import com.browserup.proxy_client.Counter;
+import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.Har;
 import com.browserup.proxy_client.MatchCriteria;
 import com.browserup.proxy_client.VerifyResult;
@@ -57,22 +59,23 @@ public class BrowserUpProxyApi {
     }
 
     /**
-     * Build call for addCustomHarFields
-     * @param body  (optional)
+     * Build call for addCounter
+     * @param counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key (required)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The counter was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The counter was invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call addCustomHarFieldsCall(Object body, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = body;
+    public okhttp3.Call addCounterCall(Counter counter, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = counter;
 
         // create path and map variables
-        String localVarPath = "/har/page";
+        String localVarPath = "/har/counters";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -95,66 +98,185 @@ public class BrowserUpProxyApi {
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
         String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call addCustomHarFieldsValidateBeforeCall(Object body, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call addCounterValidateBeforeCall(Counter counter, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'counter' is set
+        if (counter == null) {
+            throw new ApiException("Missing the required parameter 'counter' when calling addCounter(Async)");
+        }
         
 
-        okhttp3.Call localVarCall = addCustomHarFieldsCall(body, _callback);
+        okhttp3.Call localVarCall = addCounterCall(counter, _callback);
         return localVarCall;
 
     }
 
     /**
      * 
-     * Add custom fields to the current HAR.
-     * @param body  (optional)
+     * Add Custom Counter to the captured traffic har
+     * @param counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key (required)
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The counter was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The counter was invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public void addCustomHarFields(Object body) throws ApiException {
-        addCustomHarFieldsWithHttpInfo(body);
+    public void addCounter(Counter counter) throws ApiException {
+        addCounterWithHttpInfo(counter);
     }
 
     /**
      * 
-     * Add custom fields to the current HAR.
-     * @param body  (optional)
+     * Add Custom Counter to the captured traffic har
+     * @param counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key (required)
      * @return ApiResponse&lt;Void&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The counter was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The counter was invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<Void> addCustomHarFieldsWithHttpInfo(Object body) throws ApiException {
-        okhttp3.Call localVarCall = addCustomHarFieldsValidateBeforeCall(body, null);
+    public ApiResponse<Void> addCounterWithHttpInfo(Counter counter) throws ApiException {
+        okhttp3.Call localVarCall = addCounterValidateBeforeCall(counter, null);
         return localVarApiClient.execute(localVarCall);
     }
 
     /**
      *  (asynchronously)
-     * Add custom fields to the current HAR.
-     * @param body  (optional)
+     * Add Custom Counter to the captured traffic har
+     * @param counter Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key (required)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The counter was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The counter was invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call addCustomHarFieldsAsync(Object body, final ApiCallback<Void> _callback) throws ApiException {
+    public okhttp3.Call addCounterAsync(Counter counter, final ApiCallback<Void> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = addCustomHarFieldsValidateBeforeCall(body, _callback);
+        okhttp3.Call localVarCall = addCounterValidateBeforeCall(counter, _callback);
+        localVarApiClient.executeAsync(localVarCall, _callback);
+        return localVarCall;
+    }
+    /**
+     * Build call for addError
+     * @param error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 204 </td><td> The Error was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The Error was invalid. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call addErrorCall(Error error, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = error;
+
+        // create path and map variables
+        String localVarPath = "/har/errors";
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            "application/json"
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call addErrorValidateBeforeCall(Error error, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'error' is set
+        if (error == null) {
+            throw new ApiException("Missing the required parameter 'error' when calling addError(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = addErrorCall(error, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Add Custom Error to the captured traffic har
+     * @param error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key (required)
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 204 </td><td> The Error was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The Error was invalid. </td><td>  -  </td></tr>
+     </table>
+     */
+    public void addError(Error error) throws ApiException {
+        addErrorWithHttpInfo(error);
+    }
+
+    /**
+     * 
+     * Add Custom Error to the captured traffic har
+     * @param error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key (required)
+     * @return ApiResponse&lt;Void&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 204 </td><td> The Error was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The Error was invalid. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<Void> addErrorWithHttpInfo(Error error) throws ApiException {
+        okhttp3.Call localVarCall = addErrorValidateBeforeCall(error, null);
+        return localVarApiClient.execute(localVarCall);
+    }
+
+    /**
+     *  (asynchronously)
+     * Add Custom Error to the captured traffic har
+     * @param error Receives an error to track. Internally, the error is stored in an array in the har under the _errors key (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 204 </td><td> The Error was added. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The Error was invalid. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call addErrorAsync(Error error, final ApiCallback<Void> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = addErrorValidateBeforeCall(error, _callback);
         localVarApiClient.executeAsync(localVarCall, _callback);
         return localVarCall;
     }
@@ -359,6 +481,118 @@ public class BrowserUpProxyApi {
         return localVarCall;
     }
     /**
+     * Build call for newPage
+     * @param title The unique title for this har page/step. (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call newPageCall(String title, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = null;
+
+        // create path and map variables
+        String localVarPath = "/har/page"
+            .replaceAll("\\{" + "title" + "\\}", localVarApiClient.escapeString(title.toString()));
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call newPageValidateBeforeCall(String title, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'title' is set
+        if (title == null) {
+            throw new ApiException("Missing the required parameter 'title' when calling newPage(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = newPageCall(title, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @return Har
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public Har newPage(String title) throws ApiException {
+        ApiResponse<Har> localVarResp = newPageWithHttpInfo(title);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @return ApiResponse&lt;Har&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<Har> newPageWithHttpInfo(String title) throws ApiException {
+        okhttp3.Call localVarCall = newPageValidateBeforeCall(title, null);
+        Type localVarReturnType = new TypeToken<Har>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call newPageAsync(String title, final ApiCallback<Har> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = newPageValidateBeforeCall(title, _callback);
+        Type localVarReturnType = new TypeToken<Har>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
      * Build call for resetHarLog
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -461,108 +695,6 @@ public class BrowserUpProxyApi {
         return localVarCall;
     }
     /**
-     * Build call for setHarPage
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setHarPageCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/har/page";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setHarPageValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = setHarPageCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Starts a fresh HAR Page in the current active HAR
-     * @return Har
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public Har setHarPage() throws ApiException {
-        ApiResponse<Har> localVarResp = setHarPageWithHttpInfo();
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Starts a fresh HAR Page in the current active HAR
-     * @return ApiResponse&lt;Har&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Har> setHarPageWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = setHarPageValidateBeforeCall(null);
-        Type localVarReturnType = new TypeToken<Har>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Starts a fresh HAR Page in the current active HAR
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setHarPageAsync(final ApiCallback<Har> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setHarPageValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<Har>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
-        return localVarCall;
-    }
-    /**
      * Build call for verifyNotPresent
      * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
@@ -573,6 +705,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifyNotPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
@@ -636,6 +769,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public VerifyResult verifyNotPresent(String name, MatchCriteria matchCriteria) throws ApiException {
@@ -654,6 +788,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
@@ -674,6 +809,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifyNotPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
@@ -694,6 +830,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifyPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
@@ -757,6 +894,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public VerifyResult verifyPresent(String name, MatchCriteria matchCriteria) throws ApiException {
@@ -775,6 +913,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
@@ -795,6 +934,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifyPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
@@ -816,6 +956,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifySLACall(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
@@ -886,6 +1027,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public VerifyResult verifySLA(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
@@ -905,6 +1047,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
@@ -926,6 +1069,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifySLAAsync(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
@@ -947,6 +1091,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifySizeCall(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
@@ -1017,6 +1162,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public VerifyResult verifySize(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
@@ -1036,6 +1182,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
@@ -1057,6 +1204,7 @@ public class BrowserUpProxyApi {
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+        <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
     public okhttp3.Call verifySizeAsync(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {

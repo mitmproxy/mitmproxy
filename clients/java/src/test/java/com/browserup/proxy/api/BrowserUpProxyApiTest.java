@@ -14,6 +14,8 @@
 package com.browserup.proxy.api;
 
 import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Counter;
+import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.Har;
 import com.browserup.proxy_client.MatchCriteria;
 import com.browserup.proxy_client.VerifyResult;
@@ -37,15 +39,31 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
-     * Add custom fields to the current HAR.
+     * Add Custom Counter to the captured traffic har
      *
      * @throws ApiException
      *          if the Api call fails
      */
     @Test
-    public void addCustomHarFieldsTest() throws ApiException {
-        Object body = null;
-        api.addCustomHarFields(body);
+    public void addCounterTest() throws ApiException {
+        Counter counter = null;
+        api.addCounter(counter);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Add Custom Error to the captured traffic har
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void addErrorTest() throws ApiException {
+        Error error = null;
+        api.addError(error);
 
         // TODO: test validations
     }
@@ -83,6 +101,22 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void newPageTest() throws ApiException {
+        String title = null;
+        Har response = api.newPage(title);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
      * Starts a fresh HAR capture session.
      *
      * @throws ApiException
@@ -91,21 +125,6 @@ public class BrowserUpProxyApiTest {
     @Test
     public void resetHarLogTest() throws ApiException {
         Har response = api.resetHarLog();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Starts a fresh HAR Page in the current active HAR
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setHarPageTest() throws ApiException {
-        Har response = api.setHarPage();
 
         // TODO: test validations
     }

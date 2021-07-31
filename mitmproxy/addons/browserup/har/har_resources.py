@@ -6,6 +6,9 @@ import falcon
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
+from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema, CounterSchema, MatchCriteriaSchema
+from marshmallow import ValidationError
+
 
 class HealthCheckResource:
     def addon_path(self):
@@ -36,11 +39,28 @@ class RespondWithHarMixin:
         resp.body = json.dumps(har, ensure_ascii=False)
 
 
+class ValidateMatchCriteriaMixin:
+    def respond_with_error_on_invalid_criteria(self, req, resp):
+        try:
+            criteria = req.media
+            MatchCriteriaSchema().load(criteria)
+        except ValidationError as err:
+            resp.content_type = falcon.MEDIA_JSON
+            raise falcon.HTTPError(falcon.HTTP_422, json.dumps({'error': err.messages}, ensure_ascii=False))
+
+
 class VerifyResponseMixin:
     def respond_with_bool(self, resp, bool):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
         resp.body = json.dumps({"result": bool}, ensure_ascii=False)
+
+
+class NoEntriesResponseMixin:
+    def respond_with_no_entries_error(self, resp, bool):
+        resp.status = falcon.HTTP_500
+        resp.content_type = falcon.MEDIA_JSON
+        resp.body = json.dumps({"error": 'No traffic entries are present! Is the proxy setup correctly?', }, ensure_ascii=False)
 
 
 class HarResource(RespondWithHarMixin):
@@ -101,10 +121,9 @@ class HarResource(RespondWithHarMixin):
                 schema:
                   $ref: "#/components/schemas/Har"
         """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
+        page_title = req.get_param('title')
 
-        har = self.HarCaptureAddon.new_har(page_ref, page_title, True)
+        har = self.HarCaptureAddon.new_har(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
@@ -120,35 +139,19 @@ class HarPageResource(RespondWithHarMixin):
     def addon_path(self):
         return "har/page"
 
-    def on_put(self, req, resp):
-        """Adds _custom fields to the HAR file.
-        ---
-        description: Add custom fields to the current HAR.
-        operationId: addCustomHarFields
-        tags:
-            - BrowserUpProxy
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/CustomHarData"
-
-        responses:
-            204:
-                description: The custom fields were added to the HAR.
-        """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
-
-        har = self.HarCaptureAddon.new_page(page_ref, page_title)
-        har_file = self.HarCaptureAddon.save_har(har)
-        self.respond_with_har(resp, har, har_file)
-
     def on_post(self, req, resp):
         """Creates a new Har Page to begin capturing to, with a new title
         ---
-        description: Starts a fresh HAR Page in the current active HAR
-        operationId: setHarPage
+        description: Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+        operationId: newPage
+        parameters:
+            - in: path
+              name: title
+              description: The unique title for this har page/step.
+              required: true
+              schema:
+                type: string
+                pattern: /[a-zA-Z-_]{4,25}/
         tags:
             - BrowserUpProxy
         responses:
@@ -159,10 +162,8 @@ class HarPageResource(RespondWithHarMixin):
                         schema:
                             $ref: "#/components/schemas/Har"
         """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
-
-        har = self.HarCaptureAddon.new_page(page_ref, page_title)
+        page_title = req.get_param('title')
+        har = self.HarCaptureAddon.new_page(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
@@ -210,7 +211,7 @@ class HarCaptureTypesResource():
         resp.status = falcon.HTTP_200
 
 
-class PresentResource(VerifyResponseMixin):
+class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -235,7 +236,7 @@ class PresentResource(VerifyResponseMixin):
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -251,15 +252,21 @@ class PresentResource(VerifyResponseMixin):
               application/json:
                 schema:
                   $ref: "#/components/schemas/VerifyResult"
+          422:
+            description: The MatchCriteria are invalid.
         """
+        self.respond_with_error_on_invalid_criteria(req, resp)
         criteria = req.media
         hv = HarVerifications(self.HarCaptureAddon.har)
-        val = hv.present(criteria)
-        self.HarCaptureAddon.add_verification_to_har(name, 'present', val)
-        self.respond_with_bool(resp, val)
+        result = hv.present(criteria)
+        self.HarCaptureAddon.add_verification_to_har(name, 'present', result)
+        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+            self.respond_with_no_entries_error(resp, result)
+        else:
+            self.respond_with_bool(resp, result)
 
 
-class NotPresentResource(VerifyResponseMixin):
+class NotPresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -291,7 +298,7 @@ class NotPresentResource(VerifyResponseMixin):
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         responses:
           200:
             description: The traffic had no matching items
@@ -299,15 +306,21 @@ class NotPresentResource(VerifyResponseMixin):
               application/json:
                 schema:
                   $ref: "#/components/schemas/VerifyResult"
+          422:
+            description: The MatchCriteria are invalid.
         """
+        self.respond_with_error_on_invalid_criteria(req, resp)
         criteria = req.media
         hv = HarVerifications(self.HarCaptureAddon.har)
-        val = hv.not_present(criteria)
-        self.HarCaptureAddon.add_verification_to_har(name, 'not_present', val)
-        self.respond_with_bool(resp, val)
+        result = hv.not_present(criteria)
+        self.HarCaptureAddon.add_verification_to_har(name, 'not_present', result)
+        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+            self.respond_with_no_entries_error(resp, result)
+        else:
+            self.respond_with_bool(resp, result)
 
 
-class SizeResource(VerifyResponseMixin):
+class SizeResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -339,7 +352,7 @@ class SizeResource(VerifyResponseMixin):
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -354,17 +367,23 @@ class SizeResource(VerifyResponseMixin):
               application/json:
                 schema:
                   $ref: "#/components/schemas/VerifyResult"
+          422:
+            description: The MatchCriteria are invalid.
         """
+        self.respond_with_error_on_invalid_criteria(req, resp)
         criteria = req.media
         size_val = int(size) * 1000
         hv = HarVerifications(self.HarCaptureAddon.har)
         max_size = hv.get_max(criteria, 'response')
         result = size_val <= max_size
         self.HarCaptureAddon.add_verification_to_har(name, 'size', result)
-        self.respond_with_bool(resp, result)
+        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+            self.respond_with_no_entries_error(resp, result)
+        else:
+            self.respond_with_bool(resp, result)
 
 
-class SLAResource(VerifyResponseMixin):
+class SLAResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -396,7 +415,7 @@ class SLAResource(VerifyResponseMixin):
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -411,11 +430,103 @@ class SLAResource(VerifyResponseMixin):
               application/json:
                 schema:
                   $ref: "#/components/schemas/VerifyResult"
+          422:
+            description: The MatchCriteria are invalid.
         """
+        self.respond_with_error_on_invalid_criteria(req, resp)
         criteria = req.media
         time_val = int(time)
         hv = HarVerifications(self.HarCaptureAddon.har)
         val = hv.get_max(criteria, 'time')
         result = time_val <= val
         self.HarCaptureAddon.add_verification_to_har(name, 'sla', val)
-        self.respond_with_bool(resp, result)
+        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+            self.respond_with_no_entries_error(resp, result)
+        else:
+            self.respond_with_bool(resp, result)
+
+
+class CounterResource():
+    def __init__(self, HarCaptureAddon):
+        self.name = "harcapture"
+        self.HarCaptureAddon = HarCaptureAddon
+
+    def addon_path(self):
+        return "har/counters"
+
+    def apispec(self, spec):
+        spec.path(resource=self)
+
+    def on_post(self, req, resp):
+        """Adds a custom counter to the har page/step under _counters
+        ---
+        description: Add Custom Counter to the captured traffic har
+        operationId: addCounter
+        tags:
+          - BrowserUpProxy
+        requestBody:
+          description: Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Counter"
+        responses:
+          204:
+            description: The counter was added.
+          422:
+            description: The counter was invalid.
+        """
+        try:
+            counter = req.media
+            CounterSchema().load(counter)
+            self.HarCaptureAddon.add_counter_to_har(counter)
+        except ValidationError as err:
+            resp.status = falcon.HTTP_422
+            resp.content_type = falcon.MEDIA_JSON
+            resp.body = json.dumps({'error': err.messages}, ensure_ascii=False)
+        else:
+            resp.status = falcon.HTTP_204
+
+
+class ErrorResource():
+    def __init__(self, HarCaptureAddon):
+        self.name = "harcapture"
+        self.HarCaptureAddon = HarCaptureAddon
+
+    def addon_path(self):
+        return "har/errors"
+
+    def apispec(self, spec):
+        spec.path(resource=self)
+
+    def on_post(self, req, resp):
+        """Verifies traffic matching the criteria is present
+        ---
+        description: Add Custom Error to the captured traffic har
+        operationId: addError
+        tags:
+          - BrowserUpProxy
+        requestBody:
+          description: Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        responses:
+          204:
+            description: The Error was added.
+          422:
+            description: The Error was invalid.
+        """
+        try:
+            error = req.media
+            ErrorSchema().load(error)
+            self.HarCaptureAddon.add_error_to_har(error)
+        except ValidationError as err:
+            resp.status = falcon.HTTP_422
+            resp.content_type = falcon.MEDIA_JSON
+            resp.body = json.dumps({'error': err.messages}, ensure_ascii=False)
+        else:
+            resp.status = falcon.HTTP_204

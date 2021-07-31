@@ -21,6 +21,8 @@ from BrowserUpProxyClient.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
+from BrowserUpProxyClient.model.counter import Counter
+from BrowserUpProxyClient.model.error import Error
 from BrowserUpProxyClient.model.har import Har
 from BrowserUpProxyClient.model.match_criteria import MatchCriteria
 from BrowserUpProxyClient.model.verify_result import VerifyResult
@@ -38,29 +40,31 @@ class BrowserUpProxyApi(object):
             api_client = ApiClient()
         self.api_client = api_client
 
-        def __add_custom_har_fields(
+        def __add_counter(
             self,
+            counter,
             **kwargs
         ):
-            """add_custom_har_fields  # noqa: E501
+            """add_counter  # noqa: E501
 
-            Add custom fields to the current HAR.  # noqa: E501
+            Add Custom Counter to the captured traffic har  # noqa: E501
             This method makes a synchronous HTTP request by default. To make an
             asynchronous HTTP request, please pass async_req=True
 
-            >>> thread = api.add_custom_har_fields(async_req=True)
+            >>> thread = api.add_counter(counter, async_req=True)
             >>> result = thread.get()
 
+            Args:
+                counter (Counter): Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
             Keyword Args:
-                body (CustomHarData): [optional]
                 _return_http_data_only (bool): response data without head status
                     code and headers. Default is True.
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -98,22 +102,26 @@ class BrowserUpProxyApi(object):
                 '_check_return_type', True
             )
             kwargs['_host_index'] = kwargs.get('_host_index')
+            kwargs['counter'] = \
+                counter
             return self.call_with_http_info(**kwargs)
 
-        self.add_custom_har_fields = _Endpoint(
+        self.add_counter = _Endpoint(
             settings={
                 'response_type': None,
                 'auth': [],
-                'endpoint_path': '/har/page',
-                'operation_id': 'add_custom_har_fields',
-                'http_method': 'PUT',
+                'endpoint_path': '/har/counters',
+                'operation_id': 'add_counter',
+                'http_method': 'POST',
                 'servers': None,
             },
             params_map={
                 'all': [
-                    'body',
+                    'counter',
                 ],
-                'required': [],
+                'required': [
+                    'counter',
+                ],
                 'nullable': [
                 ],
                 'enum': [
@@ -127,13 +135,13 @@ class BrowserUpProxyApi(object):
                 'allowed_values': {
                 },
                 'openapi_types': {
-                    'body':
-                        (CustomHarData,),
+                    'counter':
+                        (Counter,),
                 },
                 'attribute_map': {
                 },
                 'location_map': {
-                    'body': 'body',
+                    'counter': 'body',
                 },
                 'collection_format_map': {
                 }
@@ -145,7 +153,123 @@ class BrowserUpProxyApi(object):
                 ]
             },
             api_client=api_client,
-            callable=__add_custom_har_fields
+            callable=__add_counter
+        )
+
+        def __add_error(
+            self,
+            error,
+            **kwargs
+        ):
+            """add_error  # noqa: E501
+
+            Add Custom Error to the captured traffic har  # noqa: E501
+            This method makes a synchronous HTTP request by default. To make an
+            asynchronous HTTP request, please pass async_req=True
+
+            >>> thread = api.add_error(error, async_req=True)
+            >>> result = thread.get()
+
+            Args:
+                error (Error): Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+
+            Keyword Args:
+                _return_http_data_only (bool): response data without head status
+                    code and headers. Default is True.
+                _preload_content (bool): if False, the urllib3.HTTPResponse object
+                    will be returned without reading/decoding response data.
+                    Default is True.
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
+                    be a pair (tuple) of (connection, read) timeouts.
+                    Default is None.
+                _check_input_type (bool): specifies if type checking
+                    should be done one the data sent to the server.
+                    Default is True.
+                _check_return_type (bool): specifies if type checking
+                    should be done one the data received from the server.
+                    Default is True.
+                _host_index (int/None): specifies the index of the server
+                    that we want to use.
+                    Default is read from the configuration.
+                async_req (bool): execute request asynchronously
+
+            Returns:
+                None
+                    If the method is called asynchronously, returns the request
+                    thread.
+            """
+            kwargs['async_req'] = kwargs.get(
+                'async_req', False
+            )
+            kwargs['_return_http_data_only'] = kwargs.get(
+                '_return_http_data_only', True
+            )
+            kwargs['_preload_content'] = kwargs.get(
+                '_preload_content', True
+            )
+            kwargs['_request_timeout'] = kwargs.get(
+                '_request_timeout', None
+            )
+            kwargs['_check_input_type'] = kwargs.get(
+                '_check_input_type', True
+            )
+            kwargs['_check_return_type'] = kwargs.get(
+                '_check_return_type', True
+            )
+            kwargs['_host_index'] = kwargs.get('_host_index')
+            kwargs['error'] = \
+                error
+            return self.call_with_http_info(**kwargs)
+
+        self.add_error = _Endpoint(
+            settings={
+                'response_type': None,
+                'auth': [],
+                'endpoint_path': '/har/errors',
+                'operation_id': 'add_error',
+                'http_method': 'POST',
+                'servers': None,
+            },
+            params_map={
+                'all': [
+                    'error',
+                ],
+                'required': [
+                    'error',
+                ],
+                'nullable': [
+                ],
+                'enum': [
+                ],
+                'validation': [
+                ]
+            },
+            root_map={
+                'validations': {
+                },
+                'allowed_values': {
+                },
+                'openapi_types': {
+                    'error':
+                        (Error,),
+                },
+                'attribute_map': {
+                },
+                'location_map': {
+                    'error': 'body',
+                },
+                'collection_format_map': {
+                }
+            },
+            headers_map={
+                'accept': [],
+                'content_type': [
+                    'application/json'
+                ]
+            },
+            api_client=api_client,
+            callable=__add_error
         )
 
         def __get_har_log(
@@ -168,8 +292,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -273,8 +397,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -356,6 +480,130 @@ class BrowserUpProxyApi(object):
             callable=__healthcheck
         )
 
+        def __new_page(
+            self,
+            title,
+            **kwargs
+        ):
+            """new_page  # noqa: E501
+
+            Starts a fresh HAR Page (Step) in the current active HAR to group requests.  # noqa: E501
+            This method makes a synchronous HTTP request by default. To make an
+            asynchronous HTTP request, please pass async_req=True
+
+            >>> thread = api.new_page(title, async_req=True)
+            >>> result = thread.get()
+
+            Args:
+                title (str): The unique title for this har page/step.
+
+            Keyword Args:
+                _return_http_data_only (bool): response data without head status
+                    code and headers. Default is True.
+                _preload_content (bool): if False, the urllib3.HTTPResponse object
+                    will be returned without reading/decoding response data.
+                    Default is True.
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
+                    be a pair (tuple) of (connection, read) timeouts.
+                    Default is None.
+                _check_input_type (bool): specifies if type checking
+                    should be done one the data sent to the server.
+                    Default is True.
+                _check_return_type (bool): specifies if type checking
+                    should be done one the data received from the server.
+                    Default is True.
+                _host_index (int/None): specifies the index of the server
+                    that we want to use.
+                    Default is read from the configuration.
+                async_req (bool): execute request asynchronously
+
+            Returns:
+                Har
+                    If the method is called asynchronously, returns the request
+                    thread.
+            """
+            kwargs['async_req'] = kwargs.get(
+                'async_req', False
+            )
+            kwargs['_return_http_data_only'] = kwargs.get(
+                '_return_http_data_only', True
+            )
+            kwargs['_preload_content'] = kwargs.get(
+                '_preload_content', True
+            )
+            kwargs['_request_timeout'] = kwargs.get(
+                '_request_timeout', None
+            )
+            kwargs['_check_input_type'] = kwargs.get(
+                '_check_input_type', True
+            )
+            kwargs['_check_return_type'] = kwargs.get(
+                '_check_return_type', True
+            )
+            kwargs['_host_index'] = kwargs.get('_host_index')
+            kwargs['title'] = \
+                title
+            return self.call_with_http_info(**kwargs)
+
+        self.new_page = _Endpoint(
+            settings={
+                'response_type': (Har,),
+                'auth': [],
+                'endpoint_path': '/har/page',
+                'operation_id': 'new_page',
+                'http_method': 'POST',
+                'servers': None,
+            },
+            params_map={
+                'all': [
+                    'title',
+                ],
+                'required': [
+                    'title',
+                ],
+                'nullable': [
+                ],
+                'enum': [
+                ],
+                'validation': [
+                    'title',
+                ]
+            },
+            root_map={
+                'validations': {
+                    ('title',): {
+
+                        'regex': {
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
+                        },
+                    },
+                },
+                'allowed_values': {
+                },
+                'openapi_types': {
+                    'title':
+                        (str,),
+                },
+                'attribute_map': {
+                    'title': 'title',
+                },
+                'location_map': {
+                    'title': 'path',
+                },
+                'collection_format_map': {
+                }
+            },
+            headers_map={
+                'accept': [
+                    'application/json'
+                ],
+                'content_type': [],
+            },
+            api_client=api_client,
+            callable=__new_page
+        )
+
         def __reset_har_log(
             self,
             **kwargs
@@ -376,8 +624,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -461,111 +709,6 @@ class BrowserUpProxyApi(object):
             callable=__reset_har_log
         )
 
-        def __set_har_page(
-            self,
-            **kwargs
-        ):
-            """set_har_page  # noqa: E501
-
-            Starts a fresh HAR Page in the current active HAR  # noqa: E501
-            This method makes a synchronous HTTP request by default. To make an
-            asynchronous HTTP request, please pass async_req=True
-
-            >>> thread = api.set_har_page(async_req=True)
-            >>> result = thread.get()
-
-
-            Keyword Args:
-                _return_http_data_only (bool): response data without head status
-                    code and headers. Default is True.
-                _preload_content (bool): if False, the urllib3.HTTPResponse object
-                    will be returned without reading/decoding response data.
-                    Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
-                    be a pair (tuple) of (connection, read) timeouts.
-                    Default is None.
-                _check_input_type (bool): specifies if type checking
-                    should be done one the data sent to the server.
-                    Default is True.
-                _check_return_type (bool): specifies if type checking
-                    should be done one the data received from the server.
-                    Default is True.
-                _host_index (int/None): specifies the index of the server
-                    that we want to use.
-                    Default is read from the configuration.
-                async_req (bool): execute request asynchronously
-
-            Returns:
-                Har
-                    If the method is called asynchronously, returns the request
-                    thread.
-            """
-            kwargs['async_req'] = kwargs.get(
-                'async_req', False
-            )
-            kwargs['_return_http_data_only'] = kwargs.get(
-                '_return_http_data_only', True
-            )
-            kwargs['_preload_content'] = kwargs.get(
-                '_preload_content', True
-            )
-            kwargs['_request_timeout'] = kwargs.get(
-                '_request_timeout', None
-            )
-            kwargs['_check_input_type'] = kwargs.get(
-                '_check_input_type', True
-            )
-            kwargs['_check_return_type'] = kwargs.get(
-                '_check_return_type', True
-            )
-            kwargs['_host_index'] = kwargs.get('_host_index')
-            return self.call_with_http_info(**kwargs)
-
-        self.set_har_page = _Endpoint(
-            settings={
-                'response_type': (Har,),
-                'auth': [],
-                'endpoint_path': '/har/page',
-                'operation_id': 'set_har_page',
-                'http_method': 'POST',
-                'servers': None,
-            },
-            params_map={
-                'all': [
-                ],
-                'required': [],
-                'nullable': [
-                ],
-                'enum': [
-                ],
-                'validation': [
-                ]
-            },
-            root_map={
-                'validations': {
-                },
-                'allowed_values': {
-                },
-                'openapi_types': {
-                },
-                'attribute_map': {
-                },
-                'location_map': {
-                },
-                'collection_format_map': {
-                }
-            },
-            headers_map={
-                'accept': [
-                    'application/json'
-                ],
-                'content_type': [],
-            },
-            api_client=api_client,
-            callable=__set_har_page
-        )
-
         def __verify_not_present(
             self,
             name,
@@ -591,8 +734,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -667,7 +810,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -726,8 +869,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -802,7 +945,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -863,8 +1006,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -948,7 +1091,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -1013,8 +1156,8 @@ class BrowserUpProxyApi(object):
                 _preload_content (bool): if False, the urllib3.HTTPResponse object
                     will be returned without reading/decoding response data.
                     Default is True.
-                _request_timeout (float/tuple): timeout setting for this request. If one
-                    number provided, it will be total request timeout. It can also
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
                     be a pair (tuple) of (connection, read) timeouts.
                     Default is None.
                 _check_input_type (bool): specifies if type checking
@@ -1098,7 +1241,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },

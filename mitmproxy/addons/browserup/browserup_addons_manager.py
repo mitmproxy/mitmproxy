@@ -10,7 +10,7 @@ from pathlib import Path
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema
+from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema
 from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
 from mitmproxy import ctx
 
@@ -95,6 +95,8 @@ ___
         spec = self.basic_spec(app)
         spec.components.schema('MatchCriteria', schema=MatchCriteriaSchema)
         spec.components.schema('VerifyResult', schema=VerifyResultSchema)
+        spec.components.schema('Error', schema=ErrorSchema)
+        spec.components.schema('Counter', schema=CounterSchema)
         self.load_resources_from_addons(app, spec)
         self.write_spec(spec)
         return app

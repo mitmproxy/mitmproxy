@@ -129,7 +129,7 @@ class ApiClient(object):
         _return_http_data_only: typing.Optional[bool] = None,
         collection_formats: typing.Optional[typing.Dict[str, str]] = None,
         _preload_content: bool = True,
-        _request_timeout: typing.Optional[typing.Union[int, typing.Tuple]] = None,
+        _request_timeout: typing.Optional[typing.Union[int, float, typing.Tuple]] = None,
         _host: typing.Optional[str] = None,
         _check_type: typing.Optional[bool] = None
     ):
@@ -347,7 +347,7 @@ class ApiClient(object):
         _return_http_data_only: typing.Optional[bool] = None,
         collection_formats: typing.Optional[typing.Dict[str, str]] = None,
         _preload_content: bool = True,
-        _request_timeout: typing.Optional[typing.Union[int, typing.Tuple]] = None,
+        _request_timeout: typing.Optional[typing.Union[int, float, typing.Tuple]] = None,
         _host: typing.Optional[str] = None,
         _check_type: typing.Optional[bool] = None
     ):
@@ -674,7 +674,7 @@ class Endpoint(object):
             'async_req': (bool,),
             '_host_index': (none_type, int),
             '_preload_content': (bool,),
-            '_request_timeout': (none_type, int, (int,), [int]),
+            '_request_timeout': (none_type, float, (float,), [float], int, (int,), [int]),
             '_return_http_data_only': (bool,),
             '_check_input_type': (bool,),
             '_check_return_type': (bool,)
@@ -762,10 +762,10 @@ class Endpoint(object):
         Example:
 
         api_instance = BrowserUpProxyApi()
-        api_instance.add_custom_har_fields  # this is an instance of the class Endpoint
-        api_instance.add_custom_har_fields()  # this invokes api_instance.add_custom_har_fields.__call__()
+        api_instance.add_counter  # this is an instance of the class Endpoint
+        api_instance.add_counter()  # this invokes api_instance.add_counter.__call__()
         which then invokes the callable functions stored in that endpoint at
-        api_instance.add_custom_har_fields.callable or self.callable in this class
+        api_instance.add_counter.callable or self.callable in this class
 
         """
         return self.callable(self, *args, **kwargs)

@@ -132,6 +132,12 @@
       //expect(instance).to.be();
     });
 
+    it('should have the property errorIfNoTraffic (base name: "error_if_no_traffic")', function() {
+      // uncomment below and update the code to test the property errorIfNoTraffic
+      //var instance = new BrowserUpProxyClient.MatchCriteria();
+      //expect(instance).to.be();
+    });
+
   });
 
 }));

@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -28,7 +28,7 @@
   var instance;
 
   beforeEach(function() {
-    instance = new BrowserUpProxyClient.Headers();
+    instance = new BrowserUpProxyClient.Error();
   });
 
   var getProperty = function(object, getter, property) {
@@ -47,16 +47,22 @@
       object[property] = value;
   }
 
-  describe('Headers', function() {
-    it('should create an instance of Headers', function() {
-      // uncomment below and update the code to test Headers
-      //var instane = new BrowserUpProxyClient.Headers();
-      //expect(instance).to.be.a(BrowserUpProxyClient.Headers);
+  describe('Error', function() {
+    it('should create an instance of Error', function() {
+      // uncomment below and update the code to test Error
+      //var instane = new BrowserUpProxyClient.Error();
+      //expect(instance).to.be.a(BrowserUpProxyClient.Error);
     });
 
-    it('should have the property headers (base name: "headers")', function() {
-      // uncomment below and update the code to test the property headers
-      //var instance = new BrowserUpProxyClient.Headers();
+    it('should have the property name (base name: "name")', function() {
+      // uncomment below and update the code to test the property name
+      //var instance = new BrowserUpProxyClient.Error();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property details (base name: "details")', function() {
+      // uncomment below and update the code to test the property details
+      //var instance = new BrowserUpProxyClient.Error();
       //expect(instance).to.be();
     });
 

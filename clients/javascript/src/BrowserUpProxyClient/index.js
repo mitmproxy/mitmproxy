@@ -13,12 +13,15 @@
 
 
 import ApiClient from './ApiClient';
+import Counter from './model/Counter';
 import Entry from './model/Entry';
 import EntryRequest from './model/EntryRequest';
 import EntryRequestCookies from './model/EntryRequestCookies';
 import EntryRequestQueryString from './model/EntryRequestQueryString';
 import EntryResponse from './model/EntryResponse';
 import EntryResponseContent from './model/EntryResponseContent';
+import EntryTimings from './model/EntryTimings';
+import Error from './model/Error';
 import Har from './model/Har';
 import HarLog from './model/HarLog';
 import HarLogCreator from './model/HarLogCreator';
@@ -28,6 +31,7 @@ import NameValuePair from './model/NameValuePair';
 import Page from './model/Page';
 import PagePageTimings from './model/PagePageTimings';
 import VerifyResult from './model/VerifyResult';
+import WebSocketMessage from './model/WebSocketMessage';
 import BrowserUpProxyApi from './browserup-proxy-client/BrowserUpProxyApi';
 
 
@@ -70,6 +74,12 @@ export {
     ApiClient,
 
     /**
+     * The Counter model constructor.
+     * @property {module:BrowserUpProxyClient/model/Counter}
+     */
+    Counter,
+
+    /**
      * The Entry model constructor.
      * @property {module:BrowserUpProxyClient/model/Entry}
      */
@@ -104,6 +114,18 @@ export {
      * @property {module:BrowserUpProxyClient/model/EntryResponseContent}
      */
     EntryResponseContent,
+
+    /**
+     * The EntryTimings model constructor.
+     * @property {module:BrowserUpProxyClient/model/EntryTimings}
+     */
+    EntryTimings,
+
+    /**
+     * The Error model constructor.
+     * @property {module:BrowserUpProxyClient/model/Error}
+     */
+    Error,
 
     /**
      * The Har model constructor.
@@ -158,6 +180,12 @@ export {
      * @property {module:BrowserUpProxyClient/model/VerifyResult}
      */
     VerifyResult,
+
+    /**
+     * The WebSocketMessage model constructor.
+     * @property {module:BrowserUpProxyClient/model/WebSocketMessage}
+     */
+    WebSocketMessage,
 
     /**
     * The BrowserUpProxyApi service constructor.

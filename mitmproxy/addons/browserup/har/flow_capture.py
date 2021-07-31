@@ -155,18 +155,6 @@ class FlowCaptureMixin(object):
             })
             flow.set_har_entry(har_entry)
 
-    # Capture errors as messages like Chrome har export does
-    def capture_websocket_error(self, flow):
-        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
-            har_entry = flow.get_har_entry()
-            har_entry.setdefault("_webSocketMessages", []).append({
-                "type": 'error',
-                "time": flow.error.timestamp,
-                "opcode": -1,
-                "data": flow.error.msg
-            })
-        flow.set_har_entry(har_entry)
-
     # for all of these:  Use -1 if the timing does not apply to the current request.
     # Time required to create TCP connection.
 

@@ -21,6 +21,7 @@ Name | Type | Description | Notes
 **jsonValid** | **Boolean** | Is valid JSON |  [optional]
 **jsonPath** | **String** | Has JSON path |  [optional]
 **jsonSchema** | **String** | Validates against passed JSON schema |  [optional]
+**errorIfNoTraffic** | **Boolean** | If the proxy has NO traffic at all, return error |  [optional]
 
 
 

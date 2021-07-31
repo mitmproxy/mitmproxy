@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -28,7 +28,7 @@
   var instance;
 
   beforeEach(function() {
-    instance = new BrowserUpProxyClient.BlockList();
+    instance = new BrowserUpProxyClient.WebSocketMessage();
   });
 
   var getProperty = function(object, getter, property) {
@@ -47,28 +47,34 @@
       object[property] = value;
   }
 
-  describe('BlockList', function() {
-    it('should create an instance of BlockList', function() {
-      // uncomment below and update the code to test BlockList
-      //var instane = new BrowserUpProxyClient.BlockList();
-      //expect(instance).to.be.a(BrowserUpProxyClient.BlockList);
+  describe('WebSocketMessage', function() {
+    it('should create an instance of WebSocketMessage', function() {
+      // uncomment below and update the code to test WebSocketMessage
+      //var instane = new BrowserUpProxyClient.WebSocketMessage();
+      //expect(instance).to.be.a(BrowserUpProxyClient.WebSocketMessage);
     });
 
-    it('should have the property statusCode (base name: "status_code")', function() {
-      // uncomment below and update the code to test the property statusCode
-      //var instance = new BrowserUpProxyClient.BlockList();
+    it('should have the property type (base name: "type")', function() {
+      // uncomment below and update the code to test the property type
+      //var instance = new BrowserUpProxyClient.WebSocketMessage();
       //expect(instance).to.be();
     });
 
-    it('should have the property urlPattern (base name: "url_pattern")', function() {
-      // uncomment below and update the code to test the property urlPattern
-      //var instance = new BrowserUpProxyClient.BlockList();
+    it('should have the property opcode (base name: "opcode")', function() {
+      // uncomment below and update the code to test the property opcode
+      //var instance = new BrowserUpProxyClient.WebSocketMessage();
       //expect(instance).to.be();
     });
 
-    it('should have the property httpMethodPattern (base name: "http_method_pattern")', function() {
-      // uncomment below and update the code to test the property httpMethodPattern
-      //var instance = new BrowserUpProxyClient.BlockList();
+    it('should have the property data (base name: "data")', function() {
+      // uncomment below and update the code to test the property data
+      //var instance = new BrowserUpProxyClient.WebSocketMessage();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property time (base name: "time")', function() {
+      // uncomment below and update the code to test the property time
+      //var instance = new BrowserUpProxyClient.WebSocketMessage();
       //expect(instance).to.be();
     });
 

@@ -4,24 +4,25 @@ All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addCustomHarFields**](BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
+[**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
+[**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+[**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**setHarPage**](BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
 [**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 [**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
 [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
 
-<a name="addCustomHarFields"></a>
-# **addCustomHarFields**
-> addCustomHarFields(body)
+<a name="addCounter"></a>
+# **addCounter**
+> addCounter(counter)
 
 
 
-Add custom fields to the current HAR.
+Add Custom Counter to the captured traffic har
 
 ### Example
 ```java
@@ -38,11 +39,11 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Object body = null; // Object | 
+    Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
     try {
-      apiInstance.addCustomHarFields(body);
+      apiInstance.addCounter(counter);
     } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#addCustomHarFields");
+      System.err.println("Exception when calling BrowserUpProxyApi#addCounter");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Reason: " + e.getResponseBody());
       System.err.println("Response headers: " + e.getResponseHeaders());
@@ -56,7 +57,7 @@ public class Example {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | **Object**|  | [optional]
+ **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |
 
 ### Return type
 
@@ -74,7 +75,70 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** | The custom fields were added to the HAR. |  -  |
+**204** | The counter was added. |  -  |
+**422** | The counter was invalid. |  -  |
+
+<a name="addError"></a>
+# **addError**
+> addError(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:8088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    Error error = new Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+    try {
+      apiInstance.addError(error);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#addError");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The Error was added. |  -  |
+**422** | The Error was invalid. |  -  |
 
 <a name="getHarLog"></a>
 # **getHarLog**
@@ -191,6 +255,68 @@ No authorization required
 |-------------|-------------|------------------|
 **200** | OK means all is well. |  -  |
 
+<a name="newPage"></a>
+# **newPage**
+> Har newPage(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:8088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    String title = "title_example"; // String | The unique title for this har page/step.
+    try {
+      Har result = apiInstance.newPage(title);
+      System.out.println(result);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#newPage");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **String**| The unique title for this har page/step. |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The current Har file. |  -  |
+
 <a name="resetHarLog"></a>
 # **resetHarLog**
 > Har resetHarLog()
@@ -219,64 +345,6 @@ public class Example {
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling BrowserUpProxyApi#resetHarLog");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Reason: " + e.getResponseBody());
-      System.err.println("Response headers: " + e.getResponseHeaders());
-      e.printStackTrace();
-    }
-  }
-}
-```
-
-### Parameters
-This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
-
-<a name="setHarPage"></a>
-# **setHarPage**
-> Har setHarPage()
-
-
-
-Starts a fresh HAR Page in the current active HAR
-
-### Example
-```java
-// Import classes:
-import com.browserup.proxy_client.ApiClient;
-import com.browserup.proxy_client.ApiException;
-import com.browserup.proxy_client.Configuration;
-import com.browserup.proxy_client.models.*;
-import com.browserup.proxy.api.BrowserUpProxyApi;
-
-public class Example {
-  public static void main(String[] args) {
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
-
-    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    try {
-      Har result = apiInstance.setHarPage();
-      System.out.println(result);
-    } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#setHarPage");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Reason: " + e.getResponseBody());
       System.err.println("Response headers: " + e.getResponseHeaders());
@@ -370,6 +438,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic had no matching items |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifyPresent"></a>
 # **verifyPresent**
@@ -434,6 +503,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySLA"></a>
 # **verifySLA**
@@ -500,6 +570,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySize"></a>
 # **verifySize**
@@ -566,4 +637,5 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the size criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 

@@ -4,23 +4,24 @@ All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**add_custom_har_fields**](BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page | 
+[**add_counter**](BrowserUpProxyApi.md#add_counter) | **POST** /har/counters | 
+[**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+[**new_page**](BrowserUpProxyApi.md#new_page) | **POST** /har/page | 
 [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
-[**set_har_page**](BrowserUpProxyApi.md#set_har_page) | **POST** /har/page | 
 [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
 [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
 [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 
 [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} | 
 
 
-# **add_custom_har_fields**
-> add_custom_har_fields()
+# **add_counter**
+> add_counter(counter)
 
 
 
-Add custom fields to the current HAR.
+Add Custom Counter to the captured traffic har
 
 ### Example
 
@@ -28,6 +29,7 @@ Add custom fields to the current HAR.
 import time
 import BrowserUpProxyClient
 from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.counter import Counter
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost:8088
 # See configuration.py for a list of all supported configuration parameters.
@@ -40,14 +42,16 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    body = CustomHarData() # CustomHarData |  (optional)
+    counter = Counter(
+        value=3.14,
+        name="name_example",
+    ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
     # example passing only required values which don't have defaults set
-    # and optional values
     try:
-        api_instance.add_custom_har_fields(body=body)
+        api_instance.add_counter(counter)
     except BrowserUpProxyClient.ApiException as e:
-        print("Exception when calling BrowserUpProxyApi->add_custom_har_fields: %s\n" % e)
+        print("Exception when calling BrowserUpProxyApi->add_counter: %s\n" % e)
 ```
 
 
@@ -55,7 +59,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | [**CustomHarData**](CustomHarData.md)|  | [optional]
+ **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |
 
 ### Return type
 
@@ -74,7 +78,75 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** | The custom fields were added to the HAR. |  -  |
+**204** | The counter was added. |  -  |
+**422** | The counter was invalid. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **add_error**
+> add_error(error)
+
+
+
+Add Custom Error to the captured traffic har
+
+### Example
+
+```python
+import time
+import BrowserUpProxyClient
+from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.error import Error
+from pprint import pprint
+# Defining the host is optional and defaults to http://localhost:8088
+# See configuration.py for a list of all supported configuration parameters.
+configuration = BrowserUpProxyClient.Configuration(
+    host = "http://localhost:8088"
+)
+
+
+# Enter a context with an instance of the API client
+with BrowserUpProxyClient.ApiClient() as api_client:
+    # Create an instance of the API class
+    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    error = Error(
+        name="name_example",
+        details="details_example",
+    ) # Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+
+    # example passing only required values which don't have defaults set
+    try:
+        api_instance.add_error(error)
+    except BrowserUpProxyClient.ApiException as e:
+        print("Exception when calling BrowserUpProxyApi->add_error: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | The Error was added. |  -  |
+**422** | The Error was invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -196,6 +268,70 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **new_page**
+> Har new_page(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Example
+
+```python
+import time
+import BrowserUpProxyClient
+from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.har import Har
+from pprint import pprint
+# Defining the host is optional and defaults to http://localhost:8088
+# See configuration.py for a list of all supported configuration parameters.
+configuration = BrowserUpProxyClient.Configuration(
+    host = "http://localhost:8088"
+)
+
+
+# Enter a context with an instance of the API client
+with BrowserUpProxyClient.ApiClient() as api_client:
+    # Create an instance of the API class
+    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    title = "qHXQgLTwLi" # str | The unique title for this har page/step.
+
+    # example passing only required values which don't have defaults set
+    try:
+        api_response = api_instance.new_page(title)
+        pprint(api_response)
+    except BrowserUpProxyClient.ApiException as e:
+        print("Exception when calling BrowserUpProxyApi->new_page: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **str**| The unique title for this har page/step. |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The current Har file. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **reset_har_log**
 > Har reset_har_log()
 
@@ -256,66 +392,6 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **set_har_page**
-> Har set_har_page()
-
-
-
-Starts a fresh HAR Page in the current active HAR
-
-### Example
-
-```python
-import time
-import BrowserUpProxyClient
-from BrowserUpProxyClient.api import browser_up_proxy_api
-from BrowserUpProxyClient.model.har import Har
-from pprint import pprint
-# Defining the host is optional and defaults to http://localhost:8088
-# See configuration.py for a list of all supported configuration parameters.
-configuration = BrowserUpProxyClient.Configuration(
-    host = "http://localhost:8088"
-)
-
-
-# Enter a context with an instance of the API client
-with BrowserUpProxyClient.ApiClient() as api_client:
-    # Create an instance of the API class
-    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-
-    # example, this endpoint has no required or optional parameters
-    try:
-        api_response = api_instance.set_har_page()
-        pprint(api_response)
-    except BrowserUpProxyClient.ApiException as e:
-        print("Exception when calling BrowserUpProxyApi->set_har_page: %s\n" % e)
-```
-
-
-### Parameters
-This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **verify_not_present**
 > VerifyResult verify_not_present(name, match_criteria)
 
@@ -343,7 +419,7 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    name = "HqXz" # str | The unique name for this verification operation
+    name = "qHXQgLTwLi" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -358,6 +434,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -394,6 +471,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic had no matching items |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -424,7 +502,7 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    name = "HqXz" # str | The unique name for this verification operation
+    name = "qHXQgLTwLi" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -439,6 +517,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -475,6 +554,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -506,7 +586,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     size = 0 # int | The size used for comparison, in kilobytes
-    name = "HqXz" # str | The unique name for this verification operation
+    name = "qHXQgLTwLi" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -521,6 +601,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -558,6 +639,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the size criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -589,7 +671,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     time = 0 # int | The time used for comparison
-    name = "HqXz" # str | The unique name for this verification operation
+    name = "qHXQgLTwLi" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -604,6 +686,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
         json_valid=True,
         json_path="json_path_example",
         json_schema="json_schema_example",
+        error_if_no_traffic=True,
     ) # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
     # example passing only required values which don't have defaults set
@@ -641,6 +724,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | The traffic conformed to the time criteria. |  -  |
+**422** | The MatchCriteria are invalid. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

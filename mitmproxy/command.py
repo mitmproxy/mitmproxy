@@ -73,7 +73,7 @@ class Command:
         for name, parameter in self.signature.parameters.items():
             t = parameter.annotation
             if not mitmproxy.types.CommandTypes.get(parameter.annotation, None):
-                raise exceptions.CommandError(f"Argument {name} has an unknown type ({_empty_as_none(t)}) in {func}.")
+                raise exceptions.CommandError(f"Argument {name} has an unknown type {t} in {func}.")
         if self.return_type and not mitmproxy.types.CommandTypes.get(self.return_type, None):
             raise exceptions.CommandError(f"Return type has an unknown type ({self.return_type}) in {func}.")
 
@@ -106,8 +106,15 @@ class Command:
             raise exceptions.CommandError(f"Command argument mismatch: \n    {expected}\n    {received}")
 
         for name, value in bound_arguments.arguments.items():
-            convert_to = self.signature.parameters[name].annotation
-            bound_arguments.arguments[name] = parsearg(self.manager, value, convert_to)
+            param = self.signature.parameters[name]
+            convert_to = param.annotation
+            if param.kind == param.VAR_POSITIONAL:
+                bound_arguments.arguments[name] = tuple(
+                    parsearg(self.manager, x, convert_to)
+                    for x in value
+                )
+            else:
+                bound_arguments.arguments[name] = parsearg(self.manager, value, convert_to)
 
         bound_arguments.apply_defaults()
 
