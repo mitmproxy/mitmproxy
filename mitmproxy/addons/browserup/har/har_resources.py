@@ -139,42 +139,19 @@ class HarPageResource(RespondWithHarMixin):
     def addon_path(self):
         return "har/page"
 
-    def on_put(self, req, resp):
-        """Adds _custom fields to the HAR file.
-        ---
-        description: Add custom fields to the current HAR.
-        operationId: addCustomHarFields
-        tags:
-            - BrowserUpProxy
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/CustomHarData"
-
-        responses:
-            204:
-                description: The custom fields were added to the HAR.
-        """
-        page_title = req.get_param('title')
-
-        har = self.HarCaptureAddon.new_page(page_title)
-        har_file = self.HarCaptureAddon.save_har(har)
-        self.respond_with_har(resp, har, har_file)
-
     def on_post(self, req, resp):
         """Creates a new Har Page to begin capturing to, with a new title
         ---
-        description: Starts a fresh HAR Page in the current active HAR
-        operationId: setHarPage
+        description: Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+        operationId: setPage
         parameters:
             - in: path
               name: title
-              description: The unique name for this verification operation
+              description: The unique title for this har page/step.
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,22}/
+                pattern: /[a-zA-Z-_]{4,25}/
         tags:
             - BrowserUpProxy
         responses:
@@ -259,7 +236,7 @@ class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatch
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -321,7 +298,7 @@ class NotPresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMa
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         responses:
           200:
             description: The traffic had no matching items
@@ -375,7 +352,7 @@ class SizeResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCri
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -438,7 +415,7 @@ class SLAResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCrit
               required: true
               schema:
                 type: string
-                pattern: /[a-zA-Z0-9_]{4,16}/
+                pattern: /[a-zA-Z-_]{4,25}/
         requestBody:
           description: Match criteria to select requests - response pairs for size tests
           required: true
@@ -481,7 +458,7 @@ class CounterResource():
         spec.path(resource=self)
 
     def on_post(self, req, resp):
-        """Adds a custom counter to the har page under _counters
+        """Adds a custom counter to the har page/step under _counters
         ---
         description: Add Custom Counter to the captured traffic har
         operationId: addCounter
