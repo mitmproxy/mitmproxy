@@ -54,14 +54,14 @@
       //expect(instance).to.be.a(BrowserUpProxyClient.NameValuePair);
     });
 
-    it('should have the property value (base name: "value")', function() {
-      // uncomment below and update the code to test the property value
+    it('should have the property name (base name: "name")', function() {
+      // uncomment below and update the code to test the property name
       //var instance = new BrowserUpProxyClient.NameValuePair();
       //expect(instance).to.be();
     });
 
-    it('should have the property name (base name: "name")', function() {
-      // uncomment below and update the code to test the property name
+    it('should have the property value (base name: "value")', function() {
+      // uncomment below and update the code to test the property value
       //var instance = new BrowserUpProxyClient.NameValuePair();
       //expect(instance).to.be();
     });

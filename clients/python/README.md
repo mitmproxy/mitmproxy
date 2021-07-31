@@ -90,12 +90,11 @@ All URIs are relative to *http://localhost:8088*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *BrowserUpProxyApi* | [**add_counter**](docs/BrowserUpProxyApi.md#add_counter) | **POST** /har/counters | 
-*BrowserUpProxyApi* | [**add_custom_har_fields**](docs/BrowserUpProxyApi.md#add_custom_har_fields) | **PUT** /har/page | 
 *BrowserUpProxyApi* | [**add_error**](docs/BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 *BrowserUpProxyApi* | [**get_har_log**](docs/BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**reset_har_log**](docs/BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
-*BrowserUpProxyApi* | [**set_har_page**](docs/BrowserUpProxyApi.md#set_har_page) | **POST** /har/page | 
+*BrowserUpProxyApi* | [**set_page**](docs/BrowserUpProxyApi.md#set_page) | **POST** /har/page | 
 *BrowserUpProxyApi* | [**verify_not_present**](docs/BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
 *BrowserUpProxyApi* | [**verify_present**](docs/BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
 *BrowserUpProxyApi* | [**verify_size**](docs/BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 

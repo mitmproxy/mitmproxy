@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -48,60 +48,20 @@
   }
 
   describe('BrowserUpProxyApi', function() {
-    describe('clearAdditionalHeaders', function() {
-      it('should call clearAdditionalHeaders successfully', function(done) {
-        //uncomment below and update the code to test clearAdditionalHeaders
-        //instance.clearAdditionalHeaders(function(error) {
+    describe('addCounter', function() {
+      it('should call addCounter successfully', function(done) {
+        //uncomment below and update the code to test addCounter
+        //instance.addCounter(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('clearAllowList', function() {
-      it('should call clearAllowList successfully', function(done) {
-        //uncomment below and update the code to test clearAllowList
-        //instance.clearAllowList(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('clearBasicAuthSettings', function() {
-      it('should call clearBasicAuthSettings successfully', function(done) {
-        //uncomment below and update the code to test clearBasicAuthSettings
-        //instance.clearBasicAuthSettings(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('getAdditionalHeaders', function() {
-      it('should call getAdditionalHeaders successfully', function(done) {
-        //uncomment below and update the code to test getAdditionalHeaders
-        //instance.getAdditionalHeaders(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('getAllowList', function() {
-      it('should call getAllowList successfully', function(done) {
-        //uncomment below and update the code to test getAllowList
-        //instance.getAllowList(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('getBlockList', function() {
-      it('should call getBlockList successfully', function(done) {
-        //uncomment below and update the code to test getBlockList
-        //instance.getBlockList(function(error) {
+    describe('addError', function() {
+      it('should call addError successfully', function(done) {
+        //uncomment below and update the code to test addError
+        //instance.addError(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
@@ -118,10 +78,10 @@
         done();
       });
     });
-    describe('healthcheckGet', function() {
-      it('should call healthcheckGet successfully', function(done) {
-        //uncomment below and update the code to test healthcheckGet
-        //instance.healthcheckGet(function(error) {
+    describe('healthcheck', function() {
+      it('should call healthcheck successfully', function(done) {
+        //uncomment below and update the code to test healthcheck
+        //instance.healthcheck(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
@@ -138,50 +98,50 @@
         done();
       });
     });
-    describe('setAdditionalHeaders', function() {
-      it('should call setAdditionalHeaders successfully', function(done) {
-        //uncomment below and update the code to test setAdditionalHeaders
-        //instance.setAdditionalHeaders(function(error) {
+    describe('setPage', function() {
+      it('should call setPage successfully', function(done) {
+        //uncomment below and update the code to test setPage
+        //instance.setPage(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('setAllowList', function() {
-      it('should call setAllowList successfully', function(done) {
-        //uncomment below and update the code to test setAllowList
-        //instance.setAllowList(function(error) {
+    describe('verifyNotPresent', function() {
+      it('should call verifyNotPresent successfully', function(done) {
+        //uncomment below and update the code to test verifyNotPresent
+        //instance.verifyNotPresent(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('setBasicAuth', function() {
-      it('should call setBasicAuth successfully', function(done) {
-        //uncomment below and update the code to test setBasicAuth
-        //instance.setBasicAuth(function(error) {
+    describe('verifyPresent', function() {
+      it('should call verifyPresent successfully', function(done) {
+        //uncomment below and update the code to test verifyPresent
+        //instance.verifyPresent(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('setBlockList', function() {
-      it('should call setBlockList successfully', function(done) {
-        //uncomment below and update the code to test setBlockList
-        //instance.setBlockList(function(error) {
+    describe('verifySLA', function() {
+      it('should call verifySLA successfully', function(done) {
+        //uncomment below and update the code to test verifySLA
+        //instance.verifySLA(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('setHarPage', function() {
-      it('should call setHarPage successfully', function(done) {
-        //uncomment below and update the code to test setHarPage
-        //instance.setHarPage(function(error) {
+    describe('verifySize', function() {
+      it('should call verifySize successfully', function(done) {
+        //uncomment below and update the code to test verifySize
+        //instance.verifySize(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});

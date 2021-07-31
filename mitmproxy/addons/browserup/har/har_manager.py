@@ -59,7 +59,7 @@ class HarManagerMixin():
                 self.get_or_create_default_page()
         return self.har
 
-    def new_page(self, page_ref, page_title):
+    def new_page(self, page_title, page_ref=None):
         ctx.log.info(
             'Creating new page with initial page ref: {}, title: {}'.
             format(page_ref, page_title))

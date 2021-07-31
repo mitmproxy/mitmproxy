@@ -111,12 +111,11 @@ All URIs are relative to *http://localhost:8088*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
-*BrowserUpProxyApi* | [**addCustomHarFields**](docs/BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
 *BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 *BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-*BrowserUpProxyApi* | [**setHarPage**](docs/BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
+*BrowserUpProxyApi* | [**setPage**](docs/BrowserUpProxyApi.md#setPage) | **POST** /har/page | 
 *BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 *BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 *BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 

@@ -156,116 +156,6 @@ class BrowserUpProxyApi(object):
             callable=__add_counter
         )
 
-        def __add_custom_har_fields(
-            self,
-            **kwargs
-        ):
-            """add_custom_har_fields  # noqa: E501
-
-            Add custom fields to the current HAR.  # noqa: E501
-            This method makes a synchronous HTTP request by default. To make an
-            asynchronous HTTP request, please pass async_req=True
-
-            >>> thread = api.add_custom_har_fields(async_req=True)
-            >>> result = thread.get()
-
-
-            Keyword Args:
-                body (CustomHarData): [optional]
-                _return_http_data_only (bool): response data without head status
-                    code and headers. Default is True.
-                _preload_content (bool): if False, the urllib3.HTTPResponse object
-                    will be returned without reading/decoding response data.
-                    Default is True.
-                _request_timeout (int/float/tuple): timeout setting for this request. If
-                    one number provided, it will be total request timeout. It can also
-                    be a pair (tuple) of (connection, read) timeouts.
-                    Default is None.
-                _check_input_type (bool): specifies if type checking
-                    should be done one the data sent to the server.
-                    Default is True.
-                _check_return_type (bool): specifies if type checking
-                    should be done one the data received from the server.
-                    Default is True.
-                _host_index (int/None): specifies the index of the server
-                    that we want to use.
-                    Default is read from the configuration.
-                async_req (bool): execute request asynchronously
-
-            Returns:
-                None
-                    If the method is called asynchronously, returns the request
-                    thread.
-            """
-            kwargs['async_req'] = kwargs.get(
-                'async_req', False
-            )
-            kwargs['_return_http_data_only'] = kwargs.get(
-                '_return_http_data_only', True
-            )
-            kwargs['_preload_content'] = kwargs.get(
-                '_preload_content', True
-            )
-            kwargs['_request_timeout'] = kwargs.get(
-                '_request_timeout', None
-            )
-            kwargs['_check_input_type'] = kwargs.get(
-                '_check_input_type', True
-            )
-            kwargs['_check_return_type'] = kwargs.get(
-                '_check_return_type', True
-            )
-            kwargs['_host_index'] = kwargs.get('_host_index')
-            return self.call_with_http_info(**kwargs)
-
-        self.add_custom_har_fields = _Endpoint(
-            settings={
-                'response_type': None,
-                'auth': [],
-                'endpoint_path': '/har/page',
-                'operation_id': 'add_custom_har_fields',
-                'http_method': 'PUT',
-                'servers': None,
-            },
-            params_map={
-                'all': [
-                    'body',
-                ],
-                'required': [],
-                'nullable': [
-                ],
-                'enum': [
-                ],
-                'validation': [
-                ]
-            },
-            root_map={
-                'validations': {
-                },
-                'allowed_values': {
-                },
-                'openapi_types': {
-                    'body':
-                        (CustomHarData,),
-                },
-                'attribute_map': {
-                },
-                'location_map': {
-                    'body': 'body',
-                },
-                'collection_format_map': {
-                }
-            },
-            headers_map={
-                'accept': [],
-                'content_type': [
-                    'application/json'
-                ]
-            },
-            api_client=api_client,
-            callable=__add_custom_har_fields
-        )
-
         def __add_error(
             self,
             error,
@@ -695,19 +585,22 @@ class BrowserUpProxyApi(object):
             callable=__reset_har_log
         )
 
-        def __set_har_page(
+        def __set_page(
             self,
+            title,
             **kwargs
         ):
-            """set_har_page  # noqa: E501
+            """set_page  # noqa: E501
 
-            Starts a fresh HAR Page in the current active HAR  # noqa: E501
+            Starts a fresh HAR Page (Step) in the current active HAR to group requests.  # noqa: E501
             This method makes a synchronous HTTP request by default. To make an
             asynchronous HTTP request, please pass async_req=True
 
-            >>> thread = api.set_har_page(async_req=True)
+            >>> thread = api.set_page(title, async_req=True)
             >>> result = thread.get()
 
+            Args:
+                title (str): The unique title for this har page/step.
 
             Keyword Args:
                 _return_http_data_only (bool): response data without head status
@@ -754,38 +647,54 @@ class BrowserUpProxyApi(object):
                 '_check_return_type', True
             )
             kwargs['_host_index'] = kwargs.get('_host_index')
+            kwargs['title'] = \
+                title
             return self.call_with_http_info(**kwargs)
 
-        self.set_har_page = _Endpoint(
+        self.set_page = _Endpoint(
             settings={
                 'response_type': (Har,),
                 'auth': [],
                 'endpoint_path': '/har/page',
-                'operation_id': 'set_har_page',
+                'operation_id': 'set_page',
                 'http_method': 'POST',
                 'servers': None,
             },
             params_map={
                 'all': [
+                    'title',
                 ],
-                'required': [],
+                'required': [
+                    'title',
+                ],
                 'nullable': [
                 ],
                 'enum': [
                 ],
                 'validation': [
+                    'title',
                 ]
             },
             root_map={
                 'validations': {
+                    ('title',): {
+
+                        'regex': {
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
+                        },
+                    },
                 },
                 'allowed_values': {
                 },
                 'openapi_types': {
+                    'title':
+                        (str,),
                 },
                 'attribute_map': {
+                    'title': 'title',
                 },
                 'location_map': {
+                    'title': 'path',
                 },
                 'collection_format_map': {
                 }
@@ -797,7 +706,7 @@ class BrowserUpProxyApi(object):
                 'content_type': [],
             },
             api_client=api_client,
-            callable=__set_har_page
+            callable=__set_page
         )
 
         def __verify_not_present(
@@ -901,7 +810,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -1036,7 +945,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -1182,7 +1091,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },
@@ -1332,7 +1241,7 @@ class BrowserUpProxyApi(object):
                     ('name',): {
 
                         'regex': {
-                            'pattern': r'[a-zA-Z0-9_]{4,16}',  # noqa: E501
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
                         },
                     },
                 },

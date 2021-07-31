@@ -79,44 +79,6 @@ export default class BrowserUpProxyApi {
     }
 
     /**
-     * Callback function to receive the result of the addCustomHarFields operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Add custom fields to the current HAR.
-     * @param {Object} opts Optional parameters
-     * @param {Object} opts.body 
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    addCustomHarFields(opts, callback) {
-      opts = opts || {};
-      let postBody = opts['body'];
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = ['application/json'];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/har/page', 'PUT',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
      * Callback function to receive the result of the addError operation.
      * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addErrorCallback
      * @param {String} error Error message, if any.
@@ -264,22 +226,28 @@ export default class BrowserUpProxyApi {
     }
 
     /**
-     * Callback function to receive the result of the setHarPage operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setHarPageCallback
+     * Callback function to receive the result of the setPage operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setPageCallback
      * @param {String} error Error message, if any.
      * @param {module:BrowserUpProxyClient/model/Har} data The data returned by the service call.
      * @param {String} response The complete HTTP response.
      */
 
     /**
-     * Starts a fresh HAR Page in the current active HAR
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setHarPageCallback} callback The callback function, accepting three arguments: error, data, response
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param {String} title The unique title for this har page/step.
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setPageCallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpProxyClient/model/Har}
      */
-    setHarPage(callback) {
+    setPage(title, callback) {
       let postBody = null;
+      // verify the required parameter 'title' is set
+      if (title === undefined || title === null) {
+        throw new Error("Missing the required parameter 'title' when calling setPage");
+      }
 
       let pathParams = {
+        'title': title
       };
       let queryParams = {
       };

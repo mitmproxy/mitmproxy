@@ -5,12 +5,11 @@ All URIs are relative to *http://localhost:8088*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
-[**addCustomHarFields**](BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
 [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**setHarPage**](BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
+[**setPage**](BrowserUpProxyApi.md#setPage) | **POST** /har/page | 
 [**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 [**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
@@ -48,53 +47,6 @@ apiInstance.addCounter(counter, (error, data, response) => {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | 
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
-
-
-## addCustomHarFields
-
-> addCustomHarFields(opts)
-
-
-
-Add custom fields to the current HAR.
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let opts = {
-  'body': null // Object | 
-};
-apiInstance.addCustomHarFields(opts, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **body** | **Object**|  | [optional] 
 
 ### Return type
 
@@ -278,13 +230,13 @@ No authorization required
 - **Accept**: application/json
 
 
-## setHarPage
+## setPage
 
-> Har setHarPage()
+> Har setPage(title)
 
 
 
-Starts a fresh HAR Page in the current active HAR
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
 
 ### Example
 
@@ -292,7 +244,8 @@ Starts a fresh HAR Page in the current active HAR
 import BrowserUpProxyClient from 'browserup-proxy-client';
 
 let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.setHarPage((error, data, response) => {
+let title = "title_example"; // String | The unique title for this har page/step.
+apiInstance.setPage(title, (error, data, response) => {
   if (error) {
     console.error(error);
   } else {
@@ -303,7 +256,10 @@ apiInstance.setHarPage((error, data, response) => {
 
 ### Parameters
 
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **String**| The unique title for this har page/step. | 
 
 ### Return type
 

@@ -145,4 +145,12 @@ public class MatchCriteriaTest {
         // TODO: test jsonSchema
     }
 
+    /**
+     * Test the property 'errorIfNoTraffic'
+     */
+    @Test
+    public void errorIfNoTrafficTest() {
+        // TODO: test errorIfNoTraffic
+    }
+
 }

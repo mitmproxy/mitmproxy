@@ -121,10 +121,9 @@ class HarResource(RespondWithHarMixin):
                 schema:
                   $ref: "#/components/schemas/Har"
         """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
+        page_title = req.get_param('title')
 
-        har = self.HarCaptureAddon.new_har(page_ref, page_title, True)
+        har = self.HarCaptureAddon.new_har(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
@@ -157,10 +156,9 @@ class HarPageResource(RespondWithHarMixin):
             204:
                 description: The custom fields were added to the HAR.
         """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
+        page_title = req.get_param('title')
 
-        har = self.HarCaptureAddon.new_page(page_ref, page_title)
+        har = self.HarCaptureAddon.new_page(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
@@ -169,6 +167,14 @@ class HarPageResource(RespondWithHarMixin):
         ---
         description: Starts a fresh HAR Page in the current active HAR
         operationId: setHarPage
+        parameters:
+            - in: path
+              name: title
+              description: The unique name for this verification operation
+              required: true
+              schema:
+                type: string
+                pattern: /[a-zA-Z0-9_]{4,22}/
         tags:
             - BrowserUpProxy
         responses:
@@ -179,10 +185,8 @@ class HarPageResource(RespondWithHarMixin):
                         schema:
                             $ref: "#/components/schemas/Har"
         """
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
-
-        har = self.HarCaptureAddon.new_page(page_ref, page_title)
+        page_title = req.get_param('title')
+        har = self.HarCaptureAddon.new_page(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 

@@ -14,6 +14,8 @@
 package com.browserup.proxy.api;
 
 import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Counter;
+import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.Har;
 import com.browserup.proxy_client.MatchCriteria;
 import com.browserup.proxy_client.VerifyResult;
@@ -37,15 +39,31 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
-     * Add custom fields to the current HAR.
+     * Add Custom Counter to the captured traffic har
      *
      * @throws ApiException
      *          if the Api call fails
      */
     @Test
-    public void addCustomHarFieldsTest() throws ApiException {
-        Object body = null;
-        api.addCustomHarFields(body);
+    public void addCounterTest() throws ApiException {
+        Counter counter = null;
+        api.addCounter(counter);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Add Custom Error to the captured traffic har
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void addErrorTest() throws ApiException {
+        Error error = null;
+        api.addError(error);
 
         // TODO: test validations
     }
@@ -98,14 +116,15 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
-     * Starts a fresh HAR Page in the current active HAR
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
      *
      * @throws ApiException
      *          if the Api call fails
      */
     @Test
-    public void setHarPageTest() throws ApiException {
-        Har response = api.setHarPage();
+    public void setPageTest() throws ApiException {
+        String title = null;
+        Har response = api.setPage(title);
 
         // TODO: test validations
     }
@@ -123,7 +142,7 @@ public class BrowserUpProxyApiTest {
         String name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifyNotPresent(name, matchCriteria);
-        response.
+
         // TODO: test validations
     }
     

@@ -51,8 +51,19 @@ paths:
       x-accepts: application/json
   /har/page:
     post:
-      description: Starts a fresh HAR Page in the current active HAR
-      operationId: setHarPage
+      description: Starts a fresh HAR Page (Step) in the current active HAR to group
+        requests.
+      operationId: setPage
+      parameters:
+      - description: The unique title for this har page/step.
+        explode: false
+        in: path
+        name: title
+        required: true
+        schema:
+          pattern: /[a-zA-Z-_]{4,25}/
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -62,21 +73,6 @@ paths:
           description: The current Har file.
       tags:
       - BrowserUpProxy
-      x-accepts: application/json
-    put:
-      description: Add custom fields to the current HAR.
-      operationId: addCustomHarFields
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CustomHarData'
-      responses:
-        "204":
-          description: The custom fields were added to the HAR.
-      tags:
-      - BrowserUpProxy
-      x-contentType: application/json
       x-accepts: application/json
   /verify/present/{name}:
     post:
@@ -89,7 +85,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z0-9_]{4,16}/
+          pattern: /[a-zA-Z-_]{4,25}/
           type: string
         style: simple
       requestBody:
@@ -123,7 +119,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z0-9_]{4,16}/
+          pattern: /[a-zA-Z-_]{4,25}/
           type: string
         style: simple
       requestBody:
@@ -166,7 +162,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z0-9_]{4,16}/
+          pattern: /[a-zA-Z-_]{4,25}/
           type: string
         style: simple
       requestBody:
@@ -210,7 +206,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z0-9_]{4,16}/
+          pattern: /[a-zA-Z-_]{4,25}/
           type: string
         style: simple
       requestBody:
