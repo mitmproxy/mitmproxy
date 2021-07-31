@@ -70,8 +70,20 @@
     },
     "/har/page": {
       "post": {
-        "description": "Starts a fresh HAR Page in the current active HAR",
-        "operationId": "setHarPage",
+        "description": "Starts a fresh HAR Page (Step) in the current active HAR to group requests.",
+        "operationId": "setPage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "title",
+            "description": "The unique title for this har page/step.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "/[a-zA-Z-_]{4,25}/"
+            }
+          }
+        ],
         "tags": [
           "BrowserUpProxy"
         ],
@@ -85,27 +97,6 @@
                 }
               }
             }
-          }
-        }
-      },
-      "put": {
-        "description": "Add custom fields to the current HAR.",
-        "operationId": "addCustomHarFields",
-        "tags": [
-          "BrowserUpProxy"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CustomHarData"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "The custom fields were added to the HAR."
           }
         }
       }
@@ -125,7 +116,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+              "pattern": "/[a-zA-Z-_]{4,25}/"
             }
           }
         ],
@@ -183,7 +174,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+              "pattern": "/[a-zA-Z-_]{4,25}/"
             }
           }
         ],
@@ -229,7 +220,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+              "pattern": "/[a-zA-Z-_]{4,25}/"
             }
           }
         ],
@@ -286,7 +277,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+              "pattern": "/[a-zA-Z-_]{4,25}/"
             }
           }
         ],
