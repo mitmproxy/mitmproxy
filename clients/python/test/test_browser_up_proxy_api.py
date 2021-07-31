@@ -47,14 +47,14 @@ class TestBrowserUpProxyApi(unittest.TestCase):
         """
         pass
 
-    def test_reset_har_log(self):
-        """Test case for reset_har_log
+    def test_new_page(self):
+        """Test case for new_page
 
         """
         pass
 
-    def test_set_page(self):
-        """Test case for set_page
+    def test_reset_har_log(self):
+        """Test case for reset_har_log
 
         """
         pass

@@ -481,6 +481,118 @@ public class BrowserUpProxyApi {
         return localVarCall;
     }
     /**
+     * Build call for newPage
+     * @param title The unique title for this har page/step. (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call newPageCall(String title, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = null;
+
+        // create path and map variables
+        String localVarPath = "/har/page"
+            .replaceAll("\\{" + "title" + "\\}", localVarApiClient.escapeString(title.toString()));
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call newPageValidateBeforeCall(String title, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'title' is set
+        if (title == null) {
+            throw new ApiException("Missing the required parameter 'title' when calling newPage(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = newPageCall(title, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @return Har
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public Har newPage(String title) throws ApiException {
+        ApiResponse<Har> localVarResp = newPageWithHttpInfo(title);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @return ApiResponse&lt;Har&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<Har> newPageWithHttpInfo(String title) throws ApiException {
+        okhttp3.Call localVarCall = newPageValidateBeforeCall(title, null);
+        Type localVarReturnType = new TypeToken<Har>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param title The unique title for this har page/step. (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call newPageAsync(String title, final ApiCallback<Har> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = newPageValidateBeforeCall(title, _callback);
+        Type localVarReturnType = new TypeToken<Har>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
      * Build call for resetHarLog
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -578,118 +690,6 @@ public class BrowserUpProxyApi {
     public okhttp3.Call resetHarLogAsync(final ApiCallback<Har> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = resetHarLogValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<Har>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for setPage
-     * @param title The unique title for this har page/step. (required)
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setPageCall(String title, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/har/page"
-            .replaceAll("\\{" + "title" + "\\}", localVarApiClient.escapeString(title.toString()));
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setPageValidateBeforeCall(String title, final ApiCallback _callback) throws ApiException {
-        
-        // verify the required parameter 'title' is set
-        if (title == null) {
-            throw new ApiException("Missing the required parameter 'title' when calling setPage(Async)");
-        }
-        
-
-        okhttp3.Call localVarCall = setPageCall(title, _callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     * @param title The unique title for this har page/step. (required)
-     * @return Har
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public Har setPage(String title) throws ApiException {
-        ApiResponse<Har> localVarResp = setPageWithHttpInfo(title);
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     * @param title The unique title for this har page/step. (required)
-     * @return ApiResponse&lt;Har&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Har> setPageWithHttpInfo(String title) throws ApiException {
-        okhttp3.Call localVarCall = setPageValidateBeforeCall(title, null);
-        Type localVarReturnType = new TypeToken<Har>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     * @param title The unique title for this har page/step. (required)
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setPageAsync(String title, final ApiCallback<Har> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setPageValidateBeforeCall(title, _callback);
         Type localVarReturnType = new TypeToken<Har>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;

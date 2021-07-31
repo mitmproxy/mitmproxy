@@ -480,6 +480,130 @@ class BrowserUpProxyApi(object):
             callable=__healthcheck
         )
 
+        def __new_page(
+            self,
+            title,
+            **kwargs
+        ):
+            """new_page  # noqa: E501
+
+            Starts a fresh HAR Page (Step) in the current active HAR to group requests.  # noqa: E501
+            This method makes a synchronous HTTP request by default. To make an
+            asynchronous HTTP request, please pass async_req=True
+
+            >>> thread = api.new_page(title, async_req=True)
+            >>> result = thread.get()
+
+            Args:
+                title (str): The unique title for this har page/step.
+
+            Keyword Args:
+                _return_http_data_only (bool): response data without head status
+                    code and headers. Default is True.
+                _preload_content (bool): if False, the urllib3.HTTPResponse object
+                    will be returned without reading/decoding response data.
+                    Default is True.
+                _request_timeout (int/float/tuple): timeout setting for this request. If
+                    one number provided, it will be total request timeout. It can also
+                    be a pair (tuple) of (connection, read) timeouts.
+                    Default is None.
+                _check_input_type (bool): specifies if type checking
+                    should be done one the data sent to the server.
+                    Default is True.
+                _check_return_type (bool): specifies if type checking
+                    should be done one the data received from the server.
+                    Default is True.
+                _host_index (int/None): specifies the index of the server
+                    that we want to use.
+                    Default is read from the configuration.
+                async_req (bool): execute request asynchronously
+
+            Returns:
+                Har
+                    If the method is called asynchronously, returns the request
+                    thread.
+            """
+            kwargs['async_req'] = kwargs.get(
+                'async_req', False
+            )
+            kwargs['_return_http_data_only'] = kwargs.get(
+                '_return_http_data_only', True
+            )
+            kwargs['_preload_content'] = kwargs.get(
+                '_preload_content', True
+            )
+            kwargs['_request_timeout'] = kwargs.get(
+                '_request_timeout', None
+            )
+            kwargs['_check_input_type'] = kwargs.get(
+                '_check_input_type', True
+            )
+            kwargs['_check_return_type'] = kwargs.get(
+                '_check_return_type', True
+            )
+            kwargs['_host_index'] = kwargs.get('_host_index')
+            kwargs['title'] = \
+                title
+            return self.call_with_http_info(**kwargs)
+
+        self.new_page = _Endpoint(
+            settings={
+                'response_type': (Har,),
+                'auth': [],
+                'endpoint_path': '/har/page',
+                'operation_id': 'new_page',
+                'http_method': 'POST',
+                'servers': None,
+            },
+            params_map={
+                'all': [
+                    'title',
+                ],
+                'required': [
+                    'title',
+                ],
+                'nullable': [
+                ],
+                'enum': [
+                ],
+                'validation': [
+                    'title',
+                ]
+            },
+            root_map={
+                'validations': {
+                    ('title',): {
+
+                        'regex': {
+                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
+                        },
+                    },
+                },
+                'allowed_values': {
+                },
+                'openapi_types': {
+                    'title':
+                        (str,),
+                },
+                'attribute_map': {
+                    'title': 'title',
+                },
+                'location_map': {
+                    'title': 'path',
+                },
+                'collection_format_map': {
+                }
+            },
+            headers_map={
+                'accept': [
+                    'application/json'
+                ],
+                'content_type': [],
+            },
+            api_client=api_client,
+            callable=__new_page
+        )
+
         def __reset_har_log(
             self,
             **kwargs
@@ -583,130 +707,6 @@ class BrowserUpProxyApi(object):
             },
             api_client=api_client,
             callable=__reset_har_log
-        )
-
-        def __set_page(
-            self,
-            title,
-            **kwargs
-        ):
-            """set_page  # noqa: E501
-
-            Starts a fresh HAR Page (Step) in the current active HAR to group requests.  # noqa: E501
-            This method makes a synchronous HTTP request by default. To make an
-            asynchronous HTTP request, please pass async_req=True
-
-            >>> thread = api.set_page(title, async_req=True)
-            >>> result = thread.get()
-
-            Args:
-                title (str): The unique title for this har page/step.
-
-            Keyword Args:
-                _return_http_data_only (bool): response data without head status
-                    code and headers. Default is True.
-                _preload_content (bool): if False, the urllib3.HTTPResponse object
-                    will be returned without reading/decoding response data.
-                    Default is True.
-                _request_timeout (int/float/tuple): timeout setting for this request. If
-                    one number provided, it will be total request timeout. It can also
-                    be a pair (tuple) of (connection, read) timeouts.
-                    Default is None.
-                _check_input_type (bool): specifies if type checking
-                    should be done one the data sent to the server.
-                    Default is True.
-                _check_return_type (bool): specifies if type checking
-                    should be done one the data received from the server.
-                    Default is True.
-                _host_index (int/None): specifies the index of the server
-                    that we want to use.
-                    Default is read from the configuration.
-                async_req (bool): execute request asynchronously
-
-            Returns:
-                Har
-                    If the method is called asynchronously, returns the request
-                    thread.
-            """
-            kwargs['async_req'] = kwargs.get(
-                'async_req', False
-            )
-            kwargs['_return_http_data_only'] = kwargs.get(
-                '_return_http_data_only', True
-            )
-            kwargs['_preload_content'] = kwargs.get(
-                '_preload_content', True
-            )
-            kwargs['_request_timeout'] = kwargs.get(
-                '_request_timeout', None
-            )
-            kwargs['_check_input_type'] = kwargs.get(
-                '_check_input_type', True
-            )
-            kwargs['_check_return_type'] = kwargs.get(
-                '_check_return_type', True
-            )
-            kwargs['_host_index'] = kwargs.get('_host_index')
-            kwargs['title'] = \
-                title
-            return self.call_with_http_info(**kwargs)
-
-        self.set_page = _Endpoint(
-            settings={
-                'response_type': (Har,),
-                'auth': [],
-                'endpoint_path': '/har/page',
-                'operation_id': 'set_page',
-                'http_method': 'POST',
-                'servers': None,
-            },
-            params_map={
-                'all': [
-                    'title',
-                ],
-                'required': [
-                    'title',
-                ],
-                'nullable': [
-                ],
-                'enum': [
-                ],
-                'validation': [
-                    'title',
-                ]
-            },
-            root_map={
-                'validations': {
-                    ('title',): {
-
-                        'regex': {
-                            'pattern': r'[a-zA-Z-_]{4,25}',  # noqa: E501
-                        },
-                    },
-                },
-                'allowed_values': {
-                },
-                'openapi_types': {
-                    'title':
-                        (str,),
-                },
-                'attribute_map': {
-                    'title': 'title',
-                },
-                'location_map': {
-                    'title': 'path',
-                },
-                'collection_format_map': {
-                }
-            },
-            headers_map={
-                'accept': [
-                    'application/json'
-                ],
-                'content_type': [],
-            },
-            api_client=api_client,
-            callable=__set_page
         )
 
         def __verify_not_present(

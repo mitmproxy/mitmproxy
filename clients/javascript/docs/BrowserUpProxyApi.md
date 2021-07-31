@@ -8,8 +8,8 @@ Method | HTTP request | Description
 [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+[**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**setPage**](BrowserUpProxyApi.md#setPage) | **POST** /har/page | 
 [**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 [**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
@@ -189,6 +189,51 @@ No authorization required
 - **Accept**: Not defined
 
 
+## newPage
+
+> Har newPage(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let title = "title_example"; // String | The unique title for this har page/step.
+apiInstance.newPage(title, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **String**| The unique title for this har page/step. | 
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
 ## resetHarLog
 
 > Har resetHarLog()
@@ -215,51 +260,6 @@ apiInstance.resetHarLog((error, data, response) => {
 ### Parameters
 
 This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## setPage
-
-> Har setPage(title)
-
-
-
-Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let title = "title_example"; // String | The unique title for this har page/step.
-apiInstance.setPage(title, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully. Returned data: ' + data);
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **title** | **String**| The unique title for this har page/step. | 
 
 ### Return type
 

@@ -53,7 +53,7 @@ paths:
     post:
       description: Starts a fresh HAR Page (Step) in the current active HAR to group
         requests.
-      operationId: setPage
+      operationId: newPage
       parameters:
       - description: The unique title for this har page/step.
         explode: false
@@ -285,11 +285,11 @@ components:
   schemas:
     NameValuePair:
       properties:
-        name:
-          description: Name to match
-          type: string
         value:
           description: Value to match
+          type: string
+        name:
+          description: Name to match
           type: string
       type: object
     MatchCriteria:
@@ -411,13 +411,13 @@ components:
         name: name
         value: 0.8008281904610115
       properties:
+        value:
+          description: Value for the counter
+          type: number
         name:
           description: Name of Custom Counter value you are adding to the page under
             _counters
           type: string
-        value:
-          description: Value for the counter
-          type: number
       type: object
     Entry:
       example:

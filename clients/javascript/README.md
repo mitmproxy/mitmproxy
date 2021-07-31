@@ -129,8 +129,8 @@ Class | Method | HTTP request | Description
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+*BrowserUpProxyClient.BrowserUpProxyApi* | [**newPage**](docs/BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**setPage**](docs/BrowserUpProxyApi.md#setPage) | **POST** /har/page | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 *BrowserUpProxyClient.BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 

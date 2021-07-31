@@ -8,8 +8,8 @@ Method | HTTP request | Description
 [**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+[**new_page**](BrowserUpProxyApi.md#new_page) | **POST** /har/page | 
 [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
-[**set_page**](BrowserUpProxyApi.md#set_page) | **POST** /har/page | 
 [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
 [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
 [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 
@@ -43,8 +43,8 @@ with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     counter = Counter(
-        name="name_example",
         value=3.14,
+        name="name_example",
     ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
     # example passing only required values which don't have defaults set
@@ -268,6 +268,70 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **new_page**
+> Har new_page(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Example
+
+```python
+import time
+import BrowserUpProxyClient
+from BrowserUpProxyClient.api import browser_up_proxy_api
+from BrowserUpProxyClient.model.har import Har
+from pprint import pprint
+# Defining the host is optional and defaults to http://localhost:8088
+# See configuration.py for a list of all supported configuration parameters.
+configuration = BrowserUpProxyClient.Configuration(
+    host = "http://localhost:8088"
+)
+
+
+# Enter a context with an instance of the API client
+with BrowserUpProxyClient.ApiClient() as api_client:
+    # Create an instance of the API class
+    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    title = "qHXQgLTwLi" # str | The unique title for this har page/step.
+
+    # example passing only required values which don't have defaults set
+    try:
+        api_response = api_instance.new_page(title)
+        pprint(api_response)
+    except BrowserUpProxyClient.ApiException as e:
+        print("Exception when calling BrowserUpProxyApi->new_page: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **str**| The unique title for this har page/step. |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The current Har file. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **reset_har_log**
 > Har reset_har_log()
 
@@ -306,70 +370,6 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
 ### Parameters
 This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **set_page**
-> Har set_page(title)
-
-
-
-Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-
-### Example
-
-```python
-import time
-import BrowserUpProxyClient
-from BrowserUpProxyClient.api import browser_up_proxy_api
-from BrowserUpProxyClient.model.har import Har
-from pprint import pprint
-# Defining the host is optional and defaults to http://localhost:8088
-# See configuration.py for a list of all supported configuration parameters.
-configuration = BrowserUpProxyClient.Configuration(
-    host = "http://localhost:8088"
-)
-
-
-# Enter a context with an instance of the API client
-with BrowserUpProxyClient.ApiClient() as api_client:
-    # Create an instance of the API class
-    api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    title = "qHXQgLTwLi" # str | The unique title for this har page/step.
-
-    # example passing only required values which don't have defaults set
-    try:
-        api_response = api_instance.set_page(title)
-        pprint(api_response)
-    except BrowserUpProxyClient.ApiException as e:
-        print("Exception when calling BrowserUpProxyApi->set_page: %s\n" % e)
-```
-
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **title** | **str**| The unique title for this har page/step. |
 
 ### Return type
 

@@ -30,36 +30,13 @@ import java.math.BigDecimal;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Counter {
-  public static final String SERIALIZED_NAME_NAME = "name";
-  @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
-
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
   private BigDecimal value;
 
-
-  public Counter name(String name) {
-    
-    this.name = name;
-    return this;
-  }
-
-   /**
-   * Name of Custom Counter value you are adding to the page under _counters
-   * @return name
-  **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "Name of Custom Counter value you are adding to the page under _counters")
-
-  public String getName() {
-    return name;
-  }
-
-
-  public void setName(String name) {
-    this.name = name;
-  }
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private String name;
 
 
   public Counter value(BigDecimal value) {
@@ -85,6 +62,29 @@ public class Counter {
   }
 
 
+  public Counter name(String name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name of Custom Counter value you are adding to the page under _counters
+   * @return name
+  **/
+  @javax.annotation.Nullable
+  @ApiModelProperty(value = "Name of Custom Counter value you are adding to the page under _counters")
+
+  public String getName() {
+    return name;
+  }
+
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -94,21 +94,21 @@ public class Counter {
       return false;
     }
     Counter counter = (Counter) o;
-    return Objects.equals(this.name, counter.name) &&
-        Objects.equals(this.value, counter.value);
+    return Objects.equals(this.value, counter.value) &&
+        Objects.equals(this.name, counter.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, value);
+    return Objects.hash(value, name);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Counter {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    value: ").append(toIndentedString(value)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("}");
     return sb.toString();
   }

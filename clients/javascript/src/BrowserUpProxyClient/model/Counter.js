@@ -47,11 +47,11 @@ class Counter {
         if (data) {
             obj = obj || new Counter();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('value')) {
                 obj['value'] = ApiClient.convertToType(data['value'], 'Number');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -61,16 +61,16 @@ class Counter {
 }
 
 /**
- * Name of Custom Counter value you are adding to the page under _counters
- * @member {String} name
- */
-Counter.prototype['name'] = undefined;
-
-/**
  * Value for the counter
  * @member {Number} value
  */
 Counter.prototype['value'] = undefined;
+
+/**
+ * Name of Custom Counter value you are adding to the page under _counters
+ * @member {String} name
+ */
+Counter.prototype['name'] = undefined;
 
 
 

@@ -88,20 +88,20 @@
         done();
       });
     });
-    describe('resetHarLog', function() {
-      it('should call resetHarLog successfully', function(done) {
-        //uncomment below and update the code to test resetHarLog
-        //instance.resetHarLog(function(error) {
+    describe('newPage', function() {
+      it('should call newPage successfully', function(done) {
+        //uncomment below and update the code to test newPage
+        //instance.newPage(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});
         done();
       });
     });
-    describe('setPage', function() {
-      it('should call setPage successfully', function(done) {
-        //uncomment below and update the code to test setPage
-        //instance.setPage(function(error) {
+    describe('resetHarLog', function() {
+      it('should call resetHarLog successfully', function(done) {
+        //uncomment below and update the code to test resetHarLog
+        //instance.resetHarLog(function(error) {
         //  if (error) throw error;
         //expect().to.be();
         //});

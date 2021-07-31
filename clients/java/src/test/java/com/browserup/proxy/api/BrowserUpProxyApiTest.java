@@ -101,6 +101,22 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void newPageTest() throws ApiException {
+        String title = null;
+        Har response = api.newPage(title);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
      * Starts a fresh HAR capture session.
      *
      * @throws ApiException
@@ -109,22 +125,6 @@ public class BrowserUpProxyApiTest {
     @Test
     public void resetHarLogTest() throws ApiException {
         Har response = api.resetHarLog();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setPageTest() throws ApiException {
-        String title = null;
-        Har response = api.setPage(title);
 
         // TODO: test validations
     }

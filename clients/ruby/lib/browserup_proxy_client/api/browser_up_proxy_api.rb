@@ -249,6 +249,72 @@ module BrowserupProxy
       return data, status_code, headers
     end
 
+    # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+    # @param title [String] The unique title for this har page/step.
+    # @param [Hash] opts the optional parameters
+    # @return [Har]
+    def new_page(title, opts = {})
+      data, _status_code, _headers = new_page_with_http_info(title, opts)
+      data
+    end
+
+    # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+    # @param title [String] The unique title for this har page/step.
+    # @param [Hash] opts the optional parameters
+    # @return [Array<(Har, Integer, Hash)>] Har data, response status code and response headers
+    def new_page_with_http_info(title, opts = {})
+      if @api_client.config.debugging
+        @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.new_page ...'
+      end
+      # verify the required parameter 'title' is set
+      if @api_client.config.client_side_validation && title.nil?
+        fail ArgumentError, "Missing the required parameter 'title' when calling BrowserUpProxyApi.new_page"
+      end
+      pattern = Regexp.new(/[a-zA-Z-_]{4,25}/)
+      if @api_client.config.client_side_validation && title !~ pattern
+        fail ArgumentError, "invalid value for 'title' when calling BrowserUpProxyApi.new_page, must conform to the pattern #{pattern}."
+      end
+
+      # resource path
+      local_var_path = '/har/page'.sub('{' + 'title' + '}', CGI.escape(title.to_s))
+
+      # query parameters
+      query_params = opts[:query_params] || {}
+
+      # header parameters
+      header_params = opts[:header_params] || {}
+      # HTTP header 'Accept' (if needed)
+      header_params['Accept'] = @api_client.select_header_accept(['application/json'])
+
+      # form parameters
+      form_params = opts[:form_params] || {}
+
+      # http body (model)
+      post_body = opts[:debug_body]
+
+      # return_type
+      return_type = opts[:debug_return_type] || 'Har'
+
+      # auth_names
+      auth_names = opts[:debug_auth_names] || []
+
+      new_options = opts.merge(
+        :operation => :"BrowserUpProxyApi.new_page",
+        :header_params => header_params,
+        :query_params => query_params,
+        :form_params => form_params,
+        :body => post_body,
+        :auth_names => auth_names,
+        :return_type => return_type
+      )
+
+      data, status_code, headers = @api_client.call_api(:POST, local_var_path, new_options)
+      if @api_client.config.debugging
+        @api_client.config.logger.debug "API called: BrowserUpProxyApi#new_page\nData: #{data.inspect}\nStatus code: #{status_code}\nHeaders: #{headers}"
+      end
+      return data, status_code, headers
+    end
+
     # Starts a fresh HAR capture session.
     # @param [Hash] opts the optional parameters
     # @return [Har]
@@ -300,72 +366,6 @@ module BrowserupProxy
       data, status_code, headers = @api_client.call_api(:PUT, local_var_path, new_options)
       if @api_client.config.debugging
         @api_client.config.logger.debug "API called: BrowserUpProxyApi#reset_har_log\nData: #{data.inspect}\nStatus code: #{status_code}\nHeaders: #{headers}"
-      end
-      return data, status_code, headers
-    end
-
-    # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-    # @param title [String] The unique title for this har page/step.
-    # @param [Hash] opts the optional parameters
-    # @return [Har]
-    def set_page(title, opts = {})
-      data, _status_code, _headers = set_page_with_http_info(title, opts)
-      data
-    end
-
-    # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-    # @param title [String] The unique title for this har page/step.
-    # @param [Hash] opts the optional parameters
-    # @return [Array<(Har, Integer, Hash)>] Har data, response status code and response headers
-    def set_page_with_http_info(title, opts = {})
-      if @api_client.config.debugging
-        @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.set_page ...'
-      end
-      # verify the required parameter 'title' is set
-      if @api_client.config.client_side_validation && title.nil?
-        fail ArgumentError, "Missing the required parameter 'title' when calling BrowserUpProxyApi.set_page"
-      end
-      pattern = Regexp.new(/[a-zA-Z-_]{4,25}/)
-      if @api_client.config.client_side_validation && title !~ pattern
-        fail ArgumentError, "invalid value for 'title' when calling BrowserUpProxyApi.set_page, must conform to the pattern #{pattern}."
-      end
-
-      # resource path
-      local_var_path = '/har/page'.sub('{' + 'title' + '}', CGI.escape(title.to_s))
-
-      # query parameters
-      query_params = opts[:query_params] || {}
-
-      # header parameters
-      header_params = opts[:header_params] || {}
-      # HTTP header 'Accept' (if needed)
-      header_params['Accept'] = @api_client.select_header_accept(['application/json'])
-
-      # form parameters
-      form_params = opts[:form_params] || {}
-
-      # http body (model)
-      post_body = opts[:debug_body]
-
-      # return_type
-      return_type = opts[:debug_return_type] || 'Har'
-
-      # auth_names
-      auth_names = opts[:debug_auth_names] || []
-
-      new_options = opts.merge(
-        :operation => :"BrowserUpProxyApi.set_page",
-        :header_params => header_params,
-        :query_params => query_params,
-        :form_params => form_params,
-        :body => post_body,
-        :auth_names => auth_names,
-        :return_type => return_type
-      )
-
-      data, status_code, headers = @api_client.call_api(:POST, local_var_path, new_options)
-      if @api_client.config.debugging
-        @api_client.config.logger.debug "API called: BrowserUpProxyApi#set_page\nData: #{data.inspect}\nStatus code: #{status_code}\nHeaders: #{headers}"
       end
       return data, status_code, headers
     end

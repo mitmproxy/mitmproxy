@@ -73,8 +73,8 @@ with BrowserUpProxyClient.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     counter = Counter(
-        name="name_example",
         value=3.14,
+        name="name_example",
     ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
     try:
@@ -93,8 +93,8 @@ Class | Method | HTTP request | Description
 *BrowserUpProxyApi* | [**add_error**](docs/BrowserUpProxyApi.md#add_error) | **POST** /har/errors | 
 *BrowserUpProxyApi* | [**get_har_log**](docs/BrowserUpProxyApi.md#get_har_log) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+*BrowserUpProxyApi* | [**new_page**](docs/BrowserUpProxyApi.md#new_page) | **POST** /har/page | 
 *BrowserUpProxyApi* | [**reset_har_log**](docs/BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
-*BrowserUpProxyApi* | [**set_page**](docs/BrowserUpProxyApi.md#set_page) | **POST** /har/page | 
 *BrowserUpProxyApi* | [**verify_not_present**](docs/BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
 *BrowserUpProxyApi* | [**verify_present**](docs/BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
 *BrowserUpProxyApi* | [**verify_size**](docs/BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 

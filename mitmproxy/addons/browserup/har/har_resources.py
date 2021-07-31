@@ -143,7 +143,7 @@ class HarPageResource(RespondWithHarMixin):
         """Creates a new Har Page to begin capturing to, with a new title
         ---
         description: Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-        operationId: setPage
+        operationId: newPage
         parameters:
             - in: path
               name: title

@@ -8,8 +8,8 @@ All URIs are relative to *http://localhost:8088*
 | [**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors |  |
 | [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
+| [**new_page**](BrowserUpProxyApi.md#new_page) | **POST** /har/page |  |
 | [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har |  |
-| [**set_page**](BrowserUpProxyApi.md#set_page) | **POST** /har/page |  |
 | [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} |  |
 | [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} |  |
 | [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} |  |
@@ -263,6 +263,70 @@ No authorization required
 - **Accept**: Not defined
 
 
+## new_page
+
+> <Har> new_page(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_proxy_client'
+
+api_instance = BrowserupProxy::BrowserUpProxyApi.new
+title = 'title_example' # String | The unique title for this har page/step.
+
+begin
+  
+  result = api_instance.new_page(title)
+  p result
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->new_page: #{e}"
+end
+```
+
+#### Using the new_page_with_http_info variant
+
+This returns an Array which contains the response data, status code and headers.
+
+> <Array(<Har>, Integer, Hash)> new_page_with_http_info(title)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.new_page_with_http_info(title)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => <Har>
+rescue BrowserupProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->new_page_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **title** | **String** | The unique title for this har page/step. |  |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
 ## reset_har_log
 
 > <Har> reset_har_log
@@ -309,70 +373,6 @@ end
 ### Parameters
 
 This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## set_page
-
-> <Har> set_page(title)
-
-
-
-Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-
-### Examples
-
-```ruby
-require 'time'
-require 'browserup_proxy_client'
-
-api_instance = BrowserupProxy::BrowserUpProxyApi.new
-title = 'title_example' # String | The unique title for this har page/step.
-
-begin
-  
-  result = api_instance.set_page(title)
-  p result
-rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->set_page: #{e}"
-end
-```
-
-#### Using the set_page_with_http_info variant
-
-This returns an Array which contains the response data, status code and headers.
-
-> <Array(<Har>, Integer, Hash)> set_page_with_http_info(title)
-
-```ruby
-begin
-  
-  data, status_code, headers = api_instance.set_page_with_http_info(title)
-  p status_code # => 2xx
-  p headers # => { ... }
-  p data # => <Har>
-rescue BrowserupProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->set_page_with_http_info: #{e}"
-end
-```
-
-### Parameters
-
-| Name | Type | Description | Notes |
-| ---- | ---- | ----------- | ----- |
-| **title** | **String** | The unique title for this har page/step. |  |
 
 ### Return type
 

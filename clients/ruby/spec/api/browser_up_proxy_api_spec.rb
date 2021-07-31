@@ -74,22 +74,22 @@ describe 'BrowserUpProxyApi' do
     end
   end
 
-  # unit tests for reset_har_log
-  # Starts a fresh HAR capture session.
+  # unit tests for new_page
+  # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+  # @param title The unique title for this har page/step.
   # @param [Hash] opts the optional parameters
   # @return [Har]
-  describe 'reset_har_log test' do
+  describe 'new_page test' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
   end
 
-  # unit tests for set_page
-  # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-  # @param title The unique title for this har page/step.
+  # unit tests for reset_har_log
+  # Starts a fresh HAR capture session.
   # @param [Hash] opts the optional parameters
   # @return [Har]
-  describe 'set_page test' do
+  describe 'reset_har_log test' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end

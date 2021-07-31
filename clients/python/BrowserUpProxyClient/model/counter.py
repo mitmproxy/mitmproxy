@@ -81,8 +81,8 @@ class Counter(ModelNormal):
                 and the value is attribute type.
         """
         return {
-            'name': (str,),  # noqa: E501
             'value': (float,),  # noqa: E501
+            'name': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -91,8 +91,8 @@ class Counter(ModelNormal):
 
 
     attribute_map = {
-        'name': 'name',  # noqa: E501
         'value': 'value',  # noqa: E501
+        'name': 'name',  # noqa: E501
     }
 
     read_only_vars = {
@@ -136,8 +136,8 @@ class Counter(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            name (str): Name of Custom Counter value you are adding to the page under _counters. [optional]  # noqa: E501
             value (float): Value for the counter. [optional]  # noqa: E501
+            name (str): Name of Custom Counter value you are adding to the page under _counters. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -219,8 +219,8 @@ class Counter(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            name (str): Name of Custom Counter value you are adding to the page under _counters. [optional]  # noqa: E501
             value (float): Value for the counter. [optional]  # noqa: E501
+            name (str): Name of Custom Counter value you are adding to the page under _counters. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

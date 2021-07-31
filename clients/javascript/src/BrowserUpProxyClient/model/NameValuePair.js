@@ -47,11 +47,11 @@ class NameValuePair {
         if (data) {
             obj = obj || new NameValuePair();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('value')) {
                 obj['value'] = ApiClient.convertToType(data['value'], 'String');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -61,16 +61,16 @@ class NameValuePair {
 }
 
 /**
- * Name to match
- * @member {String} name
- */
-NameValuePair.prototype['name'] = undefined;
-
-/**
  * Value to match
  * @member {String} value
  */
 NameValuePair.prototype['value'] = undefined;
+
+/**
+ * Name to match
+ * @member {String} name
+ */
+NameValuePair.prototype['name'] = undefined;
 
 
 

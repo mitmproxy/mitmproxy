@@ -190,6 +190,48 @@ export default class BrowserUpProxyApi {
     }
 
     /**
+     * Callback function to receive the result of the newPage operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~newPageCallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/Har} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+     * @param {String} title The unique title for this har page/step.
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~newPageCallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/Har}
+     */
+    newPage(title, callback) {
+      let postBody = null;
+      // verify the required parameter 'title' is set
+      if (title === undefined || title === null) {
+        throw new Error("Missing the required parameter 'title' when calling newPage");
+      }
+
+      let pathParams = {
+        'title': title
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = [];
+      let accepts = ['application/json'];
+      let returnType = Har;
+      return this.apiClient.callApi(
+        '/har/page', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
      * Callback function to receive the result of the resetHarLog operation.
      * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~resetHarLogCallback
      * @param {String} error Error message, if any.
@@ -220,48 +262,6 @@ export default class BrowserUpProxyApi {
       let returnType = Har;
       return this.apiClient.callApi(
         '/har', 'PUT',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the setPage operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setPageCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/Har} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     * @param {String} title The unique title for this har page/step.
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setPageCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/Har}
-     */
-    setPage(title, callback) {
-      let postBody = null;
-      // verify the required parameter 'title' is set
-      if (title === undefined || title === null) {
-        throw new Error("Missing the required parameter 'title' when calling setPage");
-      }
-
-      let pathParams = {
-        'title': title
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = Har;
-      return this.apiClient.callApi(
-        '/har/page', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );

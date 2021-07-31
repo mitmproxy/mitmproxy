@@ -8,8 +8,8 @@ Method | HTTP request | Description
 [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+[**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**setPage**](BrowserUpProxyApi.md#setPage) | **POST** /har/page | 
 [**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
 [**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
@@ -255,6 +255,68 @@ No authorization required
 |-------------|-------------|------------------|
 **200** | OK means all is well. |  -  |
 
+<a name="newPage"></a>
+# **newPage**
+> Har newPage(title)
+
+
+
+Starts a fresh HAR Page (Step) in the current active HAR to group requests.
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:8088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    String title = "title_example"; // String | The unique title for this har page/step.
+    try {
+      Har result = apiInstance.newPage(title);
+      System.out.println(result);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#newPage");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **title** | **String**| The unique title for this har page/step. |
+
+### Return type
+
+[**Har**](Har.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The current Har file. |  -  |
+
 <a name="resetHarLog"></a>
 # **resetHarLog**
 > Har resetHarLog()
@@ -294,68 +356,6 @@ public class Example {
 
 ### Parameters
 This endpoint does not need any parameter.
-
-### Return type
-
-[**Har**](Har.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
-
-<a name="setPage"></a>
-# **setPage**
-> Har setPage(title)
-
-
-
-Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-
-### Example
-```java
-// Import classes:
-import com.browserup.proxy_client.ApiClient;
-import com.browserup.proxy_client.ApiException;
-import com.browserup.proxy_client.Configuration;
-import com.browserup.proxy_client.models.*;
-import com.browserup.proxy.api.BrowserUpProxyApi;
-
-public class Example {
-  public static void main(String[] args) {
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
-
-    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    String title = "title_example"; // String | The unique title for this har page/step.
-    try {
-      Har result = apiInstance.setPage(title);
-      System.out.println(result);
-    } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#setPage");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Reason: " + e.getResponseBody());
-      System.err.println("Response headers: " + e.getResponseHeaders());
-      e.printStackTrace();
-    }
-  }
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **title** | **String**| The unique title for this har page/step. |
 
 ### Return type
 
