@@ -53,32 +53,40 @@ def tcp_flow():
     return tflow.ttcpflow()
 
 
-class TestExportCurlCommand:
-    def test_get(self, get_request):
-        result = """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
-        assert export.curl_command(get_request) == result
+@pytest.fixture(scope="module")
+def export_curl():
+    e = export.Export()
+    with taddons.context() as tctx:
+        tctx.configure(e)
+        yield export.curl_command
 
-    def test_post(self, post_request):
+
+class TestExportCurlCommand:
+    def test_get(self, export_curl, get_request):
+        result = """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        assert export_curl(get_request) == result
+
+    def test_post(self, export_curl, post_request):
         post_request.request.content = b'nobinarysupport'
         result = "curl -X POST http://address:22/path -d nobinarysupport"
-        assert export.curl_command(post_request) == result
+        assert export_curl(post_request) == result
 
-    def test_fails_with_binary_data(self, post_request):
+    def test_fails_with_binary_data(self, export_curl, post_request):
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871
         post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         with pytest.raises(exceptions.CommandError):
-            export.curl_command(post_request)
+            export_curl(post_request)
 
-    def test_patch(self, patch_request):
+    def test_patch(self, export_curl, patch_request):
         result = """curl -H 'header: qvalue' -X PATCH 'http://address:22/path?query=param' -d content"""
-        assert export.curl_command(patch_request) == result
+        assert export_curl(patch_request) == result
 
-    def test_tcp(self, tcp_flow):
+    def test_tcp(self, export_curl, tcp_flow):
         with pytest.raises(exceptions.CommandError):
-            export.curl_command(tcp_flow)
+            export_curl(tcp_flow)
 
-    def test_escape_single_quotes_in_body(self):
+    def test_escape_single_quotes_in_body(self, export_curl):
         request = tflow.tflow(
             req=tutils.treq(
                 method=b'POST',
@@ -86,31 +94,36 @@ class TestExportCurlCommand:
                 content=b"'&#"
             )
         )
-        command = export.curl_command(request)
+        command = export_curl(request)
         assert shlex.split(command)[-2] == '-d'
         assert shlex.split(command)[-1] == "'&#"
 
-    def test_strip_unnecessary(self, get_request):
+    def test_strip_unnecessary(self, export_curl, get_request):
         get_request.request.headers.clear()
         get_request.request.headers["host"] = "address"
         get_request.request.headers[":authority"] = "address"
         get_request.request.headers["accept-encoding"] = "br"
         result = """curl --compressed 'http://address:22/path?a=foo&a=bar&b=baz'"""
-        assert export.curl_command(get_request) == result
+        assert export_curl(get_request) == result
 
     # This tests that we always specify the original host in the URL, which is
     # important for SNI. If option `export_preserve_original_ip` is true, we
     # ensure that we still connect to the same IP by using curl's `--resolve`
     # option.
     def test_correct_host_used(self, get_request):
-        get_request.request.headers["host"] = "domain:22"
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
 
-        result = """curl -H 'header: qvalue' -H 'host: domain:22' 'http://domain:22/path?a=foo&a=bar&b=baz'"""
-        assert export.curl_command(get_request) == result
+            get_request.request.headers["host"] = "domain:22"
 
-        result = """curl --resolve 'domain:22:[192.168.0.1]' -H 'header: qvalue' -H 'host: domain:22' """ \
-                 """'http://domain:22/path?a=foo&a=bar&b=baz'"""
-        assert export.curl_command(get_request, preserve_ip=True) == result
+            result = """curl -H 'header: qvalue' -H 'host: domain:22' 'http://domain:22/path?a=foo&a=bar&b=baz'"""
+            assert export.curl_command(get_request) == result
+
+            tctx.options.export_preserve_original_ip = True
+            result = """curl --resolve 'domain:22:[192.168.0.1]' -H 'header: qvalue' -H 'host: domain:22' """ \
+                     """'http://domain:22/path?a=foo&a=bar&b=baz'"""
+            assert export.curl_command(get_request) == result
 
 
 class TestExportHttpieCommand:
@@ -174,18 +187,11 @@ class TestRaw:
         assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_get_response_present(self, get_response):
-        delattr(get_response, 'request')
         assert b"header-response: svalue" in export.raw(get_response)
 
-    def test_missing_both(self, get_request):
-        delattr(get_request, 'request')
-        delattr(get_request, 'response')
-        with pytest.raises(exceptions.CommandError):
-            export.raw(get_request)
-
     def test_tcp(self, tcp_flow):
-        with pytest.raises(exceptions.CommandError):
-            export.raw_request(tcp_flow)
+        with pytest.raises(exceptions.CommandError, match="Can't export flow with no request or response"):
+            export.raw(tcp_flow)
 
 
 class TestRawRequest:
@@ -221,8 +227,8 @@ def qr(f):
         return fp.read()
 
 
-def test_export(tmpdir):
-    f = str(tmpdir.join("path"))
+def test_export(tmp_path) -> None:
+    f = tmp_path / "outfile"
     e = export.Export()
     with taddons.context() as tctx:
         tctx.configure(e)
