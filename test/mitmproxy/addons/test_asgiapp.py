@@ -27,6 +27,11 @@ def request_check():
     return json.dumps(args)
 
 
+@tapp.route("/requestbody", methods=["POST"])
+def request_body():
+    return json.dumps({"body": request.data.decode()})
+
+
 @tapp.route("/error")
 def error():
     raise ValueError("An exception...")
@@ -70,6 +75,14 @@ async def test_asgi_full():
         assert header.startswith(b"HTTP/1.1 200 OK")
         body = await reader.readuntil(b"}")
         assert body == b'{"param1": "1", "param2": "2"}'
+
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        req = f"POST http://testapp:80/requestbody HTTP/1.1\r\nContent-Length: 6\r\n\r\nHello!"
+        writer.write(req.encode())
+        header = await reader.readuntil(b"\r\n\r\n")
+        assert header.startswith(b"HTTP/1.1 200 OK")
+        body = await reader.readuntil(b"}")
+        assert body == b'{"body": "Hello!"}'
 
         reader, writer = await asyncio.open_connection(*proxy_addr)
         req = f"GET http://errapp:80/?foo=bar HTTP/1.1\r\n\r\n"
