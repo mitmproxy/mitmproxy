@@ -193,6 +193,26 @@ def test_fragmented(ws_testdata):
     assert flow.websocket.messages[-1].content == b"foobar"
 
 
+def test_unfragmented(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+            playbook
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            >> DataReceived(tctx.server, b"\x81\x06foo")
+    )
+    # This already triggers wsproto to emit a wsproto.events.Message, see
+    # https://github.com/mitmproxy/mitmproxy/issues/4701
+    assert(
+            playbook
+            >> DataReceived(tctx.server, b"bar")
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.client, b"\x81\x06foobar")
+    )
+    assert flow.websocket.messages[-1].content == b"foobar"
+
+
 def test_protocol_error(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (

@@ -65,7 +65,7 @@ class WebsocketConnection(wsproto.Connection):
     def __init__(self, *args, conn: connection.Connection, **kwargs):
         super(WebsocketConnection, self).__init__(*args, **kwargs)
         self.conn = conn
-        self.frame_buf = []
+        self.frame_buf = [b""]
 
     def send2(self, event: wsproto.events.Event) -> commands.SendData:
         data = self.send(event)
@@ -155,10 +155,10 @@ class WebsocketLayer(layer.Layer):
                 is_text = isinstance(ws_event.data, str)
                 if is_text:
                     typ = Opcode.TEXT
-                    src_ws.frame_buf.append(ws_event.data.encode())
+                    src_ws.frame_buf[-1] += ws_event.data.encode()
                 else:
                     typ = Opcode.BINARY
-                    src_ws.frame_buf.append(ws_event.data)
+                    src_ws.frame_buf[-1] += ws_event.data
 
                 if ws_event.message_finished:
                     content = b"".join(src_ws.frame_buf)
@@ -173,6 +173,9 @@ class WebsocketLayer(layer.Layer):
                     if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
+
+                elif ws_event.frame_finished:
+                    src_ws.frame_buf.append(b"")
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
                 yield commands.Log(
@@ -209,8 +212,11 @@ class Fragmentizer:
 
     Practice:
         Some WebSocket servers reject large payload sizes.
+        Other WebSocket servers reject CONTINUATION frames.
 
     As a workaround, we either retain the original chunking or, if the payload has been modified, use ~4kB chunks.
+    If one deals with web servers that do not support CONTINUATION frames, addons need to monkeypatch FRAGMENT_SIZE
+    if they need to modify the message.
     """
     # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
