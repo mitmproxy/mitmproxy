@@ -84,6 +84,10 @@ class TestTlsConfig:
             entry = ta.get_cert(ctx)
             assert entry.cert.altnames == ["example.mitmproxy.org", "sni.example"]
 
+            with open(tdata.path("mitmproxy/data/invalid-subject.pem"), "rb") as f:
+                ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
+            assert ta.get_cert(ctx)  # does not raise
+
     def test_tls_clienthello(self):
         # only really testing for coverage here, there's no point in mirroring the individual conditions
         ta = tlsconfig.TlsConfig()
