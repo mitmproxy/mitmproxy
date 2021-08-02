@@ -187,6 +187,7 @@ class TestRaw:
         assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_get_response_present(self, get_response):
+        get_response.request.content = None
         assert b"header-response: svalue" in export.raw(get_response)
 
     def test_tcp(self, tcp_flow):
@@ -199,10 +200,10 @@ class TestRawRequest:
         assert b"header: qvalue" in export.raw_request(get_request)
         assert b"content-length: 0" in export.raw_request(get_request)
 
-    def test_no_request(self, get_response):
-        delattr(get_response, 'request')
+    def test_no_content(self, get_request):
+        get_request.request.content = None
         with pytest.raises(exceptions.CommandError):
-            export.raw_request(get_response)
+            export.raw_request(get_request)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
@@ -213,9 +214,10 @@ class TestRawResponse:
     def test_get(self, get_response):
         assert b"header-response: svalue" in export.raw_response(get_response)
 
-    def test_no_response(self, get_request):
+    def test_no_content(self, get_response):
+        get_response.response.content = None
         with pytest.raises(exceptions.CommandError):
-            export.raw_response(get_request)
+            export.raw_response(get_response)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
