@@ -10,7 +10,7 @@ from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
 
 
-def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
+def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp.TCPFlow:
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -91,7 +91,7 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
     return flow
 
 
-def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
+def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None) -> http.HTTPFlow:
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
     @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
@@ -126,7 +126,7 @@ class DummyFlow(flow.Flow):
         super().__init__("dummy", client_conn, server_conn, live)
 
 
-def tdummyflow(client_conn=True, server_conn=True, err=None):
+def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:

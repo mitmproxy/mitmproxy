@@ -173,7 +173,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
                 assert command.connection.peername
                 if command.connection.address[0] != command.connection.peername[0]:
-                    addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
+                    addr = f"{human.format_address(command.connection.address)} ({human.format_address(command.connection.peername)})"
                 else:
                     addr = human.format_address(command.connection.address)
                 self.log(f"server connect {addr}")

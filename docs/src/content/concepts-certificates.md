@@ -8,13 +8,13 @@ menu:
 # About Certificates
 
 Mitmproxy can decrypt encrypted traffic on the fly, as long as the client trusts
-its built-in certificate authority. Usually this means that the mitmproxy CA
-certificates have to be installed on the client device.
+mitmproxy's built-in certificate authority. Usually this means that the mitmproxy CA
+certificate has to be installed on the client device.
 
 ## Quick Setup
 
-By far the easiest way to install the mitmproxy certificates is to use the
-built-in certificate installation app. To do this, just start mitmproxy and
+By far the easiest way to install the mitmproxy CA certificate is to use the
+built-in certificate installation app. To do this, start mitmproxy and
 configure your target device with the correct proxy settings. Now start a
 browser on the device, and visit the magic domain [mitm.it](http://mitm.it/). You should see
 something like this:
@@ -24,11 +24,33 @@ something like this:
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
 
-## Installing the mitmproxy CA certificate manually
+## The mitmproxy certificate authority
 
-Sometimes using the quick install app is not an option - Java or the iOS
-Simulator spring to mind - or you just need to do it manually for some other
-reason. Below is a list of pointers to manual certificate installation
+The first time mitmproxy is run, it creates the keys for a certificate
+authority (CA) in the config directory (`~/.mitmproxy` by default).
+This CA is used for on-the-fly generation of dummy certificates for each visited website.
+Since your browser won't trust the mitmproxy CA out of the box, you will either need to click through a TLS certificate
+warning on every domain, or install the CA certificate once so that it is trusted.
+
+The following files are created:
+
+| Filename              | Contents                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| mitmproxy-ca.pem      | The certificate **and the private key** in PEM format.                               |
+| mitmproxy-ca-cert.pem | The certificate in PEM format. Use this to distribute on most non-Windows platforms. |
+| mitmproxy-ca-cert.p12 | The certificate in PKCS12 format. For use on Windows.                                |
+| mitmproxy-ca-cert.cer | Same file as .pem, but with an extension expected by some Android devices.           |
+
+For security reasons, the mitmproxy CA is generated uniquely on the first start and
+is not shared between mitmproxy installations on different devices. This makes sure
+that other mitmproxy users cannot intercept your traffic.
+
+
+
+### Installing the mitmproxy CA certificate manually
+
+Sometimes using the [quick install app](#quick-setup) is not an option and you need to install the CA manually. 
+Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
@@ -56,42 +78,38 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx):  
   `certutil -addstore root mitmproxy-ca-cert.cer`
 
-## The mitmproxy certificate authority
+### Upstream Certificate Sniffing
 
-The first time **mitmproxy** or **mitmdump** is run, the mitmproxy Certificate
-Authority (CA) is created in the config directory (`~/.mitmproxy` by default).
-This CA is used for on-the-fly generation of dummy certificates for each of the
-SSL sites that your client visits. Since your browser won't trust the mitmproxy
-CA out of the box, you will see an SSL certificate warning every time you visit
-a new SSL domain through mitmproxy. When you are testing a single site through a
-browser, just accepting the bogus SSL cert manually is not too much trouble, but
-there are many circumstances where you will want to configure your testing
-system or browser to trust the mitmproxy CA as a signing root authority. For
-security reasons, the mitmproxy CA is generated uniquely on the first start and
-is not shared between mitmproxy installations on different devices.
+When mitmproxy receives a request to establish TLS (in the form of a ClientHello message), it puts the client on hold
+and first makes a connection to the upstream server to "sniff" the contents of its TLS certificate.
+The information gained -- Common Name, Organization, Subject Alternative Names -- is then used to generate a new 
+interception certificate on-the-fly, signed by the mitmproxy CA. Mitmproxy then returns to the client and continues
+the handshake with the newly-forged certificate.
+
+Upstream cert sniffing is on by default, and can optionally be disabled by turning the `upstream_cert` option off.
+
 
 ### Certificate Pinning
 
 Some applications employ [Certificate
 Pinning](https://en.wikipedia.org/wiki/HTTP_Public_Key_Pinning) to prevent
-man-in-the-middle attacks. This means that **mitmproxy** and **mitmdump's**
+man-in-the-middle attacks. This means that **mitmproxy's** 
 certificates will not be accepted by these applications without modifying them.
-It is recommended to use the passthrough feature in order to prevent
-**mitmproxy** and **mitmdump** from intercepting traffic to these specific
+If the contents of these connections are not important, it is recommended to use
+the [ignore_hosts]({{< relref "howto-ignoredomains">}}) feature to prevent
+**mitmproxy** from intercepting traffic to these specific
 domains. If you want to intercept the pinned connections, you need to patch the
 application manually. For Android and (jailbroken) iOS devices, various tools
-exist to accomplish this.
+exist to accomplish this:
 
-## CA and cert files
+ - [apk-mitm](https://github.com/shroudedcode/apk-mitm) is a CLI application that automatically removes certificate
+   pinning from Android APK files.
+ - [objection](https://github.com/sensepost/objection) is a runtime mobile exploration toolkit powered by Frida,
+   which supports certificate pinning bypasses on iOS and Android.
+ - [ssl-kill-switch2](https://github.com/nabla-c0d3/ssl-kill-switch2) is a blackbox tool to disable certificate pinning
+   within iOS and macOS applications.
 
-The files created by mitmproxy in the .mitmproxy directory are as follows:
-
-|                       |                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| mitmproxy-ca.pem      | The certificate **and the private key** in PEM format.                               |
-| mitmproxy-ca-cert.pem | The certificate in PEM format. Use this to distribute on most non-Windows platforms. |
-| mitmproxy-ca-cert.p12 | The certificate in PKCS12 format. For use on Windows.                                |
-| mitmproxy-ca-cert.cer | Same file as .pem, but with an extension expected by some Android devices.           |
+*Please propose other useful tools using the "Edit on GitHub" button on the top right of this page.*
 
 ## Using a custom server certificate
 
@@ -177,7 +195,7 @@ use it to generate certificates:
 You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
 option to mitmproxy. Using a directory allows certs to be selected based on
 hostname, while using a filename allows a single specific certificate to be used
-for all SSL connections. Certificate files must be in the PEM format and should
+for all TLS connections. Certificate files must be in the PEM format and should
 contain both the unencrypted private key and the certificate.
 
 ### Multiple client certificates
