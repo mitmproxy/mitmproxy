@@ -1,11 +1,20 @@
 # Release History
 
-## Unreleased: mitmproxy next
+## 3 August 2021: mitmproxy 7.0.1
 
-* Use local IP address as certificate subject if no other info is available (@mhils).
-* Disable HTTP/2 CONNECT for Secure Web Proxies to fix compatibility with Firefox. (@mhils)
-* Allow no-op assignments to `Server.address` when connection is open. (@SaladDais)
-* Performance: Re-use OpenSSL context to enable TLS session resumption. (@mhils)
+* Performance: Re-use OpenSSL contexts to enable TLS session resumption (@mhils)
+* Disable HTTP/2 CONNECT for Secure Web Proxies to fix compatibility with Firefox (@mhils)
+* Use local IP address as certificate subject if no other info is available (@mhils)
+* Make it possible to return multiple chunks for HTTP stream modification (@mhils)
+* Don't send WebSocket CONTINUATION frames when the peer does not send any (@Pilphe)
+* Fix HTTP stream modify example. (@mhils)
+* Fix a crash caused by no-op assignments to `Server.address` (@SaladDais)
+* Fix a crash when encountering invalid certificates (@mhils)
+* Fix a crash when pressing the Home/End keys in some screens (@rbdixon)
+* Fix a crash when reading corrupted flow dumps (@mhils)
+* Fix multiple crashes on flow export (@mhils)
+* Fix a bug where ASGI apps did not see the request body (@mhils)
+* Minor documentation improvements (@mhils)
 
 ## 16 July 2021: mitmproxy 7.0
 
