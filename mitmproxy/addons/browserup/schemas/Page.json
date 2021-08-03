@@ -21,11 +21,13 @@
       "type": "object",
       "properties": {
         "onContentLoad": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "onLoad": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "comment": {

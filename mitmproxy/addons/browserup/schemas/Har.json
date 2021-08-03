@@ -13,7 +13,8 @@
       "required": [
         "version",
         "creator",
-        "entries"
+        "entries",
+        "pages"
       ],
       "properties": {
         "version": {
@@ -59,7 +60,8 @@
           "type": "array",
           "items": {
             "$ref": "#/components/schemas/Page"
-          }
+          },
+          "default": []
         },
         "entries": {
           "type": "array",

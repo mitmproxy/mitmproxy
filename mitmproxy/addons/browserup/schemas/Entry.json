@@ -338,31 +338,38 @@
       ],
       "properties": {
         "dns": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "connect": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "blocked": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "send": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "wait": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "receive": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "ssl": {
-          "type": "number",
+          "type": "integer",
+          "format": "int64",
           "minimum": -1
         },
         "comment": {
