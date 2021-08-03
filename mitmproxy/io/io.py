@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, Iterable, Type, Union, cast, BinaryIO  # noqa
+from typing import Any, Dict, IO, Iterable, Type, Union, cast
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -25,8 +25,8 @@ class FlowWriter:
 
 
 class FlowReader:
-    def __init__(self, fo: BinaryIO):
-        self.fo: BinaryIO = fo
+    def __init__(self, fo: IO[bytes]):
+        self.fo: IO[bytes] = fo
 
     def stream(self) -> Iterable[flow.Flow]:
         """
