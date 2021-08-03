@@ -46,7 +46,7 @@ class FlowReader:
                 if mdata["type"] not in FLOW_TYPES:
                     raise exceptions.FlowReadException("Unknown flow type: {}".format(mdata["type"]))
                 yield FLOW_TYPES[mdata["type"]].from_state(mdata)
-        except ValueError as e:
+        except (ValueError, TypeError) as e:
             if str(e) == "not a tnetstring: empty file":
                 return  # Error is due to EOF
             raise exceptions.FlowReadException("Invalid data format.")
