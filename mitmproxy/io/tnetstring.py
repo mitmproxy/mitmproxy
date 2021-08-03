@@ -58,7 +58,7 @@ def dumps(value: TSerializable) -> bytes:
     return b''.join(q)
 
 
-def dump(value: TSerializable, file_handle: typing.BinaryIO) -> None:
+def dump(value: TSerializable, file_handle: typing.IO[bytes]) -> None:
     """
     This function dumps a python object as a tnetstring and
     writes it to the given file.
@@ -156,7 +156,7 @@ def loads(string: bytes) -> TSerializable:
     return pop(string)[0]
 
 
-def load(file_handle: typing.BinaryIO) -> TSerializable:
+def load(file_handle: typing.IO[bytes]) -> TSerializable:
     """load(file) -> object
 
     This function reads a tnetstring from a file and parses it into a
