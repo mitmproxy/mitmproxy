@@ -19,7 +19,6 @@ menu:
 - [Sticky Auth](#sticky-auth)
 - [Sticky Cookies](#sticky-cookies)
 - [Streaming](#streaming)
-- [Upstream Certificates](#upstream-certificates)
 
 ## Anticache
 
