@@ -95,8 +95,12 @@ def test_upgrade(tctx):
             << websocket.WebsocketMessageHook(flow)
             >> reply()
             << SendData(tctx.client, b"\x82\nhello back")
+            >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello again"))
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.server, masked(b"\x81\x0bhello again"))
     )
-    assert len(flow().websocket.messages) == 2
+    assert len(flow().websocket.messages) == 3
     assert flow().websocket.messages[0].content == b"hello world"
     assert flow().websocket.messages[0].from_client
     assert flow().websocket.messages[0].type == Opcode.TEXT
@@ -189,6 +193,26 @@ def test_fragmented(ws_testdata):
             >> reply()
             << SendData(tctx.client, b"\x01\x03foo")
             << SendData(tctx.client, b"\x80\x03bar")
+    )
+    assert flow.websocket.messages[-1].content == b"foobar"
+
+
+def test_unfragmented(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+            playbook
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            >> DataReceived(tctx.server, b"\x81\x06foo")
+    )
+    # This already triggers wsproto to emit a wsproto.events.Message, see
+    # https://github.com/mitmproxy/mitmproxy/issues/4701
+    assert(
+            playbook
+            >> DataReceived(tctx.server, b"bar")
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.client, b"\x81\x06foobar")
     )
     assert flow.websocket.messages[-1].content == b"foobar"
 

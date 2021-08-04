@@ -7,14 +7,17 @@ Modifying streamed responses is tricky and brittle:
     - If you want to replace all occurrences of "foobar", make sure to catch the cases
       where one chunk ends with [...]foo" and the next starts with "bar[...].
 """
+from typing import Iterable, Union
 
 
-def modify(chunks):
+def modify(data: bytes) -> Union[bytes, Iterable[bytes]]:
     """
-    chunks is a generator that can be used to iterate over all chunks.
+    This function will be called for each chunk of request/response body data that arrives at the proxy,
+    and once at the end of the message with an empty bytes argument (b"").
+
+    It may either return bytes or an iterable of bytes (which would result in multiple HTTP/2 data frames).
     """
-    for chunk in chunks:
-        yield chunk.replace("foo", "bar")
+    return data.replace(b"foo", b"bar")
 
 
 def responseheaders(flow):

@@ -136,7 +136,7 @@ def test_toggler():
         o.toggler("one")
 
 
-class Rec():
+class Rec:
     def __init__(self):
         self.called = None
 

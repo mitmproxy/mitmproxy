@@ -55,14 +55,14 @@ def request_content_for_console(request: http.Request) -> str:
     )
 
 
-def curl_command(f: flow.Flow, preserve_ip: bool = False) -> str:
+def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
     args = ["curl"]
 
     server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
 
-    if preserve_ip and server_addr and request.pretty_host != server_addr:
+    if ctx.options.export_preserve_original_ip and server_addr and request.pretty_host != server_addr:
         resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
         args.append("--resolve")
         args.append(resolve)
@@ -102,30 +102,35 @@ def httpie_command(f: flow.Flow) -> str:
 
 
 def raw_request(f: flow.Flow) -> bytes:
-    return assemble.assemble_request(cleanup_request(f))
+    request = cleanup_request(f)
+    if request.raw_content is None:
+        raise exceptions.CommandError("Request content missing.")
+    return assemble.assemble_request(request)
 
 
 def raw_response(f: flow.Flow) -> bytes:
-    return assemble.assemble_response(cleanup_response(f))
+    response = cleanup_response(f)
+    if response.raw_content is None:
+        raise exceptions.CommandError("Response content missing.")
+    return assemble.assemble_response(response)
 
 
 def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
     """Return either the request or response if only one exists, otherwise return both"""
-    request_present = hasattr(f, "request") and f.request  # type: ignore
-    response_present = hasattr(f, "response") and f.response  # type: ignore
-
-    if not (request_present or response_present):
-        raise exceptions.CommandError("Can't export flow with no request or response.")
+    request_present = isinstance(f, http.HTTPFlow) and f.request and f.request.raw_content is not None
+    response_present = isinstance(f, http.HTTPFlow) and f.response and f.response.raw_content is not None
 
     if request_present and response_present:
         return b"".join([raw_request(f), separator, raw_response(f)])
-    elif not request_present:
+    elif request_present:
+        return raw_request(f)
+    elif response_present:
         return raw_response(f)
     else:
-        return raw_request(f)
+        raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats = dict(
+formats: typing.Dict[str, typing.Callable[[flow.Flow], typing.Union[str, bytes]]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,
@@ -134,7 +139,7 @@ formats = dict(
 )
 
 
-class Export():
+class Export:
     def load(self, loader):
         loader.add_option(
             "export_preserve_original_ip", bool, False,
@@ -162,10 +167,7 @@ class Export():
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func: typing.Any = formats[format]
-        if format == "curl":
-            v = func(flow, preserve_ip=ctx.options.export_preserve_original_ip)
-        else:
-            v = func(flow)
+        v = func(flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
@@ -176,18 +178,16 @@ class Export():
             ctx.log.error(str(e))
 
     @command.command("export.clip")
-    def clip(self, format: str, flow: flow.Flow) -> None:
+    def clip(self, format: str, f: flow.Flow) -> None:
         """
             Export a flow to the system clipboard.
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func: typing.Any = formats[format]
-        if format == "curl":
-            v = strutils.always_str(func(flow, preserve_ip=ctx.options.export_preserve_original_ip))
-        else:
-            v = strutils.always_str(func(flow))
+        func = formats[format]
+
+        val = strutils.always_str(func(f), "utf8", "backslashreplace")
         try:
-            pyperclip.copy(v)
+            pyperclip.copy(val)
         except pyperclip.PyperclipException as e:
             ctx.log.error(str(e))

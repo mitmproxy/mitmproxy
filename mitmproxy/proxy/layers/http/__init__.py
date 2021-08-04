@@ -231,31 +231,32 @@ class HttpStream(layer.Layer):
     def state_stream_request_body(self, event: Union[RequestData, RequestEndOfMessage]) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
-                event.data = self.flow.request.stream(event.data)
+                chunks = self.flow.request.stream(event.data)
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+            else:
+                chunks = [event.data]
+            for chunk in chunks:
+                yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
         elif isinstance(event, RequestTrailers):
-            self.flow.request.trailers = event.trailers
             # we don't do anything further here, we wait for RequestEndOfMessage first to trigger the request hook.
-            return
+            self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
+            if callable(self.flow.request.stream):
+                chunks = self.flow.request.stream(b"")
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+                for chunk in chunks:
+                    yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
+
             self.flow.request.timestamp_end = time.time()
             yield HttpRequestHook(self.flow)
             self.client_state = self.state_done
 
-        # edge case found while fuzzing:
-        # we may arrive here after a hook unpaused the stream,
-        # but the server may have sent us a RST_STREAM in the meantime.
-        # We need to 1) check the server state and 2) peek into the event queue to
-        # see if this is the case.
-        if self.server_state == self.state_errored:
-            return
-        for evt in self._paused_event_queue:
-            if isinstance(evt, ResponseProtocolError):
-                return
-        if self.flow.request.trailers:
-            # we've delayed sending trailers until after `request` has been triggered.
-            assert isinstance(event, RequestEndOfMessage)
-            yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
-        yield SendHttp(event, self.context.server)
+            if self.flow.request.trailers:
+                # we've delayed sending trailers until after `request` has been triggered.
+                yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
+            yield SendHttp(event, self.context.server)
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -322,15 +323,23 @@ class HttpStream(layer.Layer):
         assert self.flow.response
         if isinstance(event, ResponseData):
             if callable(self.flow.response.stream):
-                data = self.flow.response.stream(event.data)
+                chunks = self.flow.response.stream(event.data)
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
             else:
-                data = event.data
-            yield SendHttp(ResponseData(self.stream_id, data), self.context.client)
+                chunks = [event.data]
+            for chunk in chunks:
+                yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
         elif isinstance(event, ResponseTrailers):
-            assert self.flow.response
             self.flow.response.trailers = event.trailers
             # will be sent in send_response() after the response hook.
         elif isinstance(event, ResponseEndOfMessage):
+            if callable(self.flow.response.stream):
+                chunks = self.flow.response.stream(b"")
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+                for chunk in chunks:
+                    yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
