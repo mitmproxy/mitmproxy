@@ -95,8 +95,12 @@ def test_upgrade(tctx):
             << websocket.WebsocketMessageHook(flow)
             >> reply()
             << SendData(tctx.client, b"\x82\nhello back")
+            >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello again"))
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.server, masked(b"\x81\x0bhello again"))
     )
-    assert len(flow().websocket.messages) == 2
+    assert len(flow().websocket.messages) == 3
     assert flow().websocket.messages[0].content == b"hello world"
     assert flow().websocket.messages[0].from_client
     assert flow().websocket.messages[0].type == Opcode.TEXT

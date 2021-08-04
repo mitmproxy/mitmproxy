@@ -164,7 +164,7 @@ class WebsocketLayer(layer.Layer):
                     content = b"".join(src_ws.frame_buf)
 
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
-                    src_ws.frame_buf.clear()
+                    src_ws.frame_buf = [b""]
 
                     message = websocket.WebSocketMessage(typ, from_client, content)
                     self.flow.websocket.messages.append(message)
