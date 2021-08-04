@@ -1,30 +1,34 @@
 import datetime
+import functools
 import ipaddress
 import time
-import functools
 import typing
 
-SIZE_TABLE = [
-    ("b", 1024 ** 0),
-    ("k", 1024 ** 1),
-    ("m", 1024 ** 2),
-    ("g", 1024 ** 3),
-    ("t", 1024 ** 4),
-]
 
-SIZE_UNITS = dict(SIZE_TABLE)
+SIZE_UNITS = {
+    "b": 1024 ** 0,
+    "k": 1024 ** 1,
+    "m": 1024 ** 2,
+    "g": 1024 ** 3,
+    "t": 1024 ** 4,
+}
 
 
-def pretty_size(size):
-    for bottom, top in zip(SIZE_TABLE, SIZE_TABLE[1:]):
-        if bottom[1] <= size < top[1]:
-            suf = bottom[0]
-            lim = bottom[1]
-            x = round(size / lim)
-            if x == int(x):
-                x = int(x)
-            return str(x) + suf
-    return "{}{}".format(size, SIZE_TABLE[0][0])
+def pretty_size(size: int) -> str:
+    """Convert a number of bytes into a human-readable string.
+
+    len(return value) <= 5 always holds true.
+    """
+    s: float = size  # type cast for mypy
+    if s < 1024:
+        return f"{s}b"
+    for suffix in ["k", "m", "g", "t"]:
+        s /= 1024
+        if s < 99.95:
+            return f"{s:.1f}{suffix}"
+        if s < 1024 or suffix == "t":
+            return f"{s:.0f}{suffix}"
+    raise AssertionError
 
 
 @functools.lru_cache()
