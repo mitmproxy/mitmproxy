@@ -250,12 +250,16 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Union[Callable[[bytes], bytes], bool] = False
+    stream: Union[Callable[[bytes], Union[Iterable[bytes], bytes]], bool] = False
     """
+    This attribute controls if the message body should be streamed.
+
+    If `False`, mitmproxy will buffer the entire body before forwarding it to the destination.
+    This makes it possible to perform string replacements on the entire body.
     If `True`, the message body will not be buffered on the proxy
-    but immediately streamed to the destination instead.
-    Alternatively, a transformation function can be specified, but please note
-    that packet should not be relied upon.
+    but immediately forwarded instead.
+    Alternatively, a transformation function can be specified, which will be called for each chunk of data.
+    Please note that packet boundaries generally should not be relied upon.
 
     This attribute must be set in the `requestheaders` or `responseheaders` hook.
     Setting it in `request` or  `response` is already too late, mitmproxy has buffered the message body already.

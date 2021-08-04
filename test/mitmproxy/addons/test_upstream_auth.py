@@ -33,20 +33,18 @@ def test_simple():
         tctx.configure(up, upstream_auth="foo:bar")
 
         f = tflow.tflow()
-        f.mode = "upstream"
-        up.requestheaders(f)
+        up.http_connect_upstream(f)
         assert "proxy-authorization" in f.request.headers
 
         f = tflow.tflow()
         up.requestheaders(f)
         assert "proxy-authorization" not in f.request.headers
+        assert "authorization" not in f.request.headers
+
+        tctx.configure(up, mode="upstream:127.0.0.1")
+        up.requestheaders(f)
+        assert "proxy-authorization" in f.request.headers
 
         tctx.configure(up, mode="reverse:127.0.0.1")
-        f = tflow.tflow()
-        f.mode = "transparent"
         up.requestheaders(f)
         assert "authorization" in f.request.headers
-
-        f = tflow.tflow()
-        up.http_connect_upstream(f)
-        assert "proxy-authorization" in f.request.headers
