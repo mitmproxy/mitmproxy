@@ -20,7 +20,7 @@ def pretty_size(size):
         if bottom[1] <= size < top[1]:
             suf = bottom[0]
             lim = bottom[1]
-            x = round(size / lim, 2)
+            x = round(size / lim)
             if x == int(x):
                 x = int(x)
             return str(x) + suf

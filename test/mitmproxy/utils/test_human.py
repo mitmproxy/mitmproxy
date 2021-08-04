@@ -29,7 +29,7 @@ def test_pretty_size():
     assert human.pretty_size(0) == "0b"
     assert human.pretty_size(100) == "100b"
     assert human.pretty_size(1024) == "1k"
-    assert human.pretty_size(1024 + (1024 / 2.0)) == "1.5k"
+    assert human.pretty_size(1024 + (1024 / 2.0)) == "2k"
     assert human.pretty_size(1024 * 1024) == "1m"
     assert human.pretty_size(10 * 1024 * 1024) == "10m"
 
