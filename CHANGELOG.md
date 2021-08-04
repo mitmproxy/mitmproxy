@@ -1,5 +1,9 @@
 # Release History
 
+## 4 August 2021: mitmproxy 7.0.2
+
+* Fix a WebSocket crash introduced in 7.0.1 (@mhils)
+
 ## 3 August 2021: mitmproxy 7.0.1
 
 * Performance: Re-use OpenSSL contexts to enable TLS session resumption (@mhils)
