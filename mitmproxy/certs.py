@@ -49,6 +49,12 @@ class Cert(serializable.Serializable):
     def __eq__(self, other):
         return self.fingerprint() == other.fingerprint()
 
+    def __repr__(self):
+        return f"<Cert(cn={self.cn!r}, altnames={self.altnames!r})>"
+
+    def __hash__(self):
+        return self._cert.__hash__()
+
     @classmethod
     def from_state(cls, state):
         return cls.from_pem(state)
@@ -302,16 +308,16 @@ class CertStore:
 
         # we could use cryptography for this, but it's unclear how to convert cryptography's object to pyOpenSSL's
         # expected format.
-        bio = OpenSSL.SSL._lib.BIO_new_file(str(path).encode(sys.getfilesystemencoding()), b"r")
-        if bio != OpenSSL.SSL._ffi.NULL:
-            bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
-            dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
+        bio = OpenSSL.SSL._lib.BIO_new_file(str(path).encode(sys.getfilesystemencoding()), b"r")  # type: ignore
+        if bio != OpenSSL.SSL._ffi.NULL:  # type: ignore
+            bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)  # type: ignore
+            dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(  # type: ignore
                 bio,
-                OpenSSL.SSL._ffi.NULL,
-                OpenSSL.SSL._ffi.NULL,
-                OpenSSL.SSL._ffi.NULL
+                OpenSSL.SSL._ffi.NULL,  # type: ignore
+                OpenSSL.SSL._ffi.NULL,  # type: ignore
+                OpenSSL.SSL._ffi.NULL  # type: ignore
             )
-            dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
+            dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)  # type: ignore
             return dh
         raise RuntimeError("Error loading DH Params.")  # pragma: no cover
 

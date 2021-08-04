@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, Iterable, Type, Union, cast  # noqa
+from typing import Any, Dict, IO, Iterable, Type, Union, cast
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -25,8 +25,8 @@ class FlowWriter:
 
 
 class FlowReader:
-    def __init__(self, fo):
-        self.fo = fo
+    def __init__(self, fo: IO[bytes]):
+        self.fo: IO[bytes] = fo
 
     def stream(self) -> Iterable[flow.Flow]:
         """
@@ -46,7 +46,7 @@ class FlowReader:
                 if mdata["type"] not in FLOW_TYPES:
                     raise exceptions.FlowReadException("Unknown flow type: {}".format(mdata["type"]))
                 yield FLOW_TYPES[mdata["type"]].from_state(mdata)
-        except ValueError as e:
+        except (ValueError, TypeError) as e:
             if str(e) == "not a tnetstring: empty file":
                 return  # Error is due to EOF
             raise exceptions.FlowReadException("Invalid data format.")

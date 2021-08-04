@@ -122,7 +122,8 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
         "",
         [
             tls.TlsClienthelloHook,
-            tls.TlsStartHook,
+            tls.TlsStartClientHook,
+            tls.TlsStartServerHook,
         ]
     )
 
@@ -133,7 +134,6 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             websocket.WebsocketStartHook,
             websocket.WebsocketMessageHook,
             websocket.WebsocketEndHook,
-            websocket.WebsocketErrorHook,
         ]
     )
 

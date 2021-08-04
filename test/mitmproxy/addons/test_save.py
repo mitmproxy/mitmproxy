@@ -60,7 +60,7 @@ def test_websocket(tmpdir):
 
         f = tflow.twebsocketflow()
         sa.request(f)
-        sa.websocket_error(f)
+        sa.websocket_end(f)
 
         tctx.configure(sa, save_stream_file=None)
         assert len(rd(p)) == 2

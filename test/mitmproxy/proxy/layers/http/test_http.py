@@ -331,27 +331,49 @@ def test_response_streaming(tctx, why, transfer_encoding):
     assert playbook
 
 
-def test_request_stream_modify(tctx):
-    """Test HTTP response streaming"""
+def test_stream_modify(tctx):
+    """Test HTTP stream modification"""
     server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
 
     def enable_streaming(flow: HTTPFlow):
-        flow.request.stream = lambda x: x.upper()
+        if flow.response is None:
+            flow.request.stream = lambda x: b"[" + x + b"]"
+        else:
+            flow.response.stream = lambda x: b"[" + x + b"]"
 
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular))
         >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
                                      b"Host: example.com\r\n"
-                                     b"Content-Length: 6\r\n\r\n"
-                                     b"abc")
-        << http.HttpRequestHeadersHook(Placeholder(HTTPFlow))
+                                     b"Transfer-Encoding: chunked\r\n\r\n"
+                                     b"3\r\nabc\r\n"
+                                     b"0\r\n\r\n")
+        << http.HttpRequestHeadersHook(flow)
         >> reply(side_effect=enable_streaming)
         << OpenConnection(server)
         >> reply(None)
         << SendData(server, b"POST / HTTP/1.1\r\n"
                             b"Host: example.com\r\n"
-                            b"Content-Length: 6\r\n\r\n"
-                            b"ABC")
+                            b"Transfer-Encoding: chunked\r\n\r\n"
+                            b"5\r\n[abc]\r\n"
+                            b"2\r\n[]\r\n")
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << SendData(server, b"0\r\n\r\n")
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\n"
+                                b"Transfer-Encoding: chunked\r\n\r\n"
+                                b"3\r\ndef\r\n"
+                                b"0\r\n\r\n")
+        << http.HttpResponseHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                 b"Transfer-Encoding: chunked\r\n\r\n"
+                                 b"5\r\n[def]\r\n"
+                                 b"2\r\n[]\r\n")
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, b"0\r\n\r\n")
     )
 
 
@@ -1174,3 +1196,35 @@ def test_reuse_error(tctx):
     )
     assert b"502 Bad Gateway" in error_html()
     assert b"tls verify failed" in error_html()
+
+
+def test_transparent_sni(tctx):
+    """Test that we keep the SNI in lazy transparent mode."""
+    tctx.client.sni = "example.com"
+    tctx.server.address = ("192.0.2.42", 443)
+    tctx.server.tls = True
+
+    flow = Placeholder(HTTPFlow)
+
+    server = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+    )
+    assert server().address == ("192.0.2.42", 443)
+    assert server().sni == "example.com"
+
+
+def test_original_server_disconnects(tctx):
+    """Test that we correctly handle the case where the initial server conn is just closed."""
+    tctx.server.state = ConnectionState.OPEN
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.server)
+    )

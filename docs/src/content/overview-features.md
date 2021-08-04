@@ -19,7 +19,6 @@ menu:
 - [Sticky Auth](#sticky-auth)
 - [Sticky Cookies](#sticky-cookies)
 - [Streaming](#streaming)
-- [Upstream Certificates](#upstream-certificates)
 
 ## Anticache
 
@@ -88,6 +87,9 @@ and transparently returned to the client.
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that additionally constrains which requests will be redirected.
 
+The _separator_ is arbitrary, and is defined by the first character (`|` in the example above).
+
+
 #### Examples
 
 Pattern | Description
@@ -145,9 +147,6 @@ The `map_remote` option lets you specify an arbitrary number of patterns that
 define replacements within HTTP request URLs before they are sent to a server.
 The substituted URL is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
-Note that if the original destination uses HTTP2, the substituted destination
-needs to support HTTP2 as well, otherwise the substituted request may fail.
-As a workaround you can start mitmproxy with the `--no-http2` flag to disable HTTP2.
 `map_remote` patterns look like this:
 
 ```
@@ -162,13 +161,11 @@ that defines which requests the `map_remote` option applies to.
 
 * **replacement** is a string literal that is substituted in.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`|` in the example above).
 
 #### Examples
 
 Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`.
-Note that this might fail if the original HTTP request destination uses HTTP2 but the replaced
-destination does not support HTTP2.
 
 ```
 |.*\.jpg$|https://placedog.net/640/480?random
@@ -200,7 +197,7 @@ that defines which flows a replacement applies to.
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`/` in the example above).
 
 Modify hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
@@ -246,7 +243,7 @@ that defines which flows to modify headers on.
 headers with **name**. If the value string literal starts with `@` as in
 `@file-path`, it is treated as a **file path** from which the replacement is read.
 
-The _separator_ is arbitrary, and is defined by the first character.
+The _separator_ is arbitrary, and is defined by the first character (`/` in the example above).
 
 Existing headers are overwritten by default. This can be changed using a filter expression.
 

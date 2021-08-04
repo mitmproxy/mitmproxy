@@ -6,14 +6,14 @@ import wsproto
 import wsproto.extensions
 import wsproto.frame_protocol
 import wsproto.utilities
-from mitmproxy import connection, flow, http, websocket
+from mitmproxy import connection, http, websocket
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import MessageInjected
 from mitmproxy.proxy.utils import expect
 from wsproto import ConnectionState
-from wsproto.frame_protocol import CloseReason, Opcode
+from wsproto.frame_protocol import Opcode
 
 
 @dataclass
@@ -39,18 +39,9 @@ class WebsocketMessageHook(StartHook):
 class WebsocketEndHook(StartHook):
     """
     A WebSocket connection has ended.
+    You can check `flow.websocket.close_code` to determine why it ended.
     """
 
-    flow: http.HTTPFlow
-
-
-@dataclass
-class WebsocketErrorHook(StartHook):
-    """
-    A WebSocket connection has had an error.
-
-    Every WebSocket flow will receive either a websocket_error or a websocket_end event, but not both.
-    """
     flow: http.HTTPFlow
 
 
@@ -74,7 +65,7 @@ class WebsocketConnection(wsproto.Connection):
     def __init__(self, *args, conn: connection.Connection, **kwargs):
         super(WebsocketConnection, self).__init__(*args, **kwargs)
         self.conn = conn
-        self.frame_buf = []
+        self.frame_buf = [b""]
 
     def send2(self, event: wsproto.events.Event) -> commands.SendData:
         data = self.send(event)
@@ -164,24 +155,27 @@ class WebsocketLayer(layer.Layer):
                 is_text = isinstance(ws_event.data, str)
                 if is_text:
                     typ = Opcode.TEXT
-                    src_ws.frame_buf.append(ws_event.data.encode())
+                    src_ws.frame_buf[-1] += ws_event.data.encode()
                 else:
                     typ = Opcode.BINARY
-                    src_ws.frame_buf.append(ws_event.data)
+                    src_ws.frame_buf[-1] += ws_event.data
 
                 if ws_event.message_finished:
                     content = b"".join(src_ws.frame_buf)
 
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
-                    src_ws.frame_buf.clear()
+                    src_ws.frame_buf = [b""]
 
                     message = websocket.WebSocketMessage(typ, from_client, content)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
-                    if not message.killed:
+                    if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
+
+                elif ws_event.frame_finished:
+                    src_ws.frame_buf.append(b"")
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
                 yield commands.Log(
@@ -200,11 +194,7 @@ class WebsocketLayer(layer.Layer):
                         # response == original event, so no need to differentiate here.
                         yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)
-                if ws_event.code in {1000, 1001, 1005}:
-                    yield WebsocketEndHook(self.flow)
-                else:
-                    self.flow.error = flow.Error(f"WebSocket Error: {format_close_event(ws_event)}")
-                    yield WebsocketErrorHook(self.flow)
+                yield WebsocketEndHook(self.flow)
                 self._handle_event = self.done
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")
@@ -212,16 +202,6 @@ class WebsocketLayer(layer.Layer):
     @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
-
-
-def format_close_event(event: wsproto.events.CloseConnection) -> str:
-    try:
-        ret = CloseReason(event.code).name
-    except ValueError:
-        ret = f"UNKNOWN_ERROR={event.code}"
-    if event.reason:
-        ret += f" (reason: {event.reason})"
-    return ret
 
 
 class Fragmentizer:
@@ -232,8 +212,11 @@ class Fragmentizer:
 
     Practice:
         Some WebSocket servers reject large payload sizes.
+        Other WebSocket servers reject CONTINUATION frames.
 
     As a workaround, we either retain the original chunking or, if the payload has been modified, use ~4kB chunks.
+    If one deals with web servers that do not support CONTINUATION frames, addons need to monkeypatch FRAGMENT_SIZE
+    if they need to modify the message.
     """
     # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
@@ -250,8 +233,6 @@ class Fragmentizer:
             return wsproto.events.BytesMessage(data, message_finished=message_finished)
 
     def __call__(self, content: bytes) -> Iterator[wsproto.events.Message]:
-        if not content:
-            return
         if len(content) == sum(self.fragment_lengths):
             # message has the same length, we can reuse the same sizes
             offset = 0

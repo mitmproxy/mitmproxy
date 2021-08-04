@@ -231,31 +231,32 @@ class HttpStream(layer.Layer):
     def state_stream_request_body(self, event: Union[RequestData, RequestEndOfMessage]) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
-                event.data = self.flow.request.stream(event.data)
+                chunks = self.flow.request.stream(event.data)
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+            else:
+                chunks = [event.data]
+            for chunk in chunks:
+                yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
         elif isinstance(event, RequestTrailers):
-            self.flow.request.trailers = event.trailers
             # we don't do anything further here, we wait for RequestEndOfMessage first to trigger the request hook.
-            return
+            self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
+            if callable(self.flow.request.stream):
+                chunks = self.flow.request.stream(b"")
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+                for chunk in chunks:
+                    yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
+
             self.flow.request.timestamp_end = time.time()
             yield HttpRequestHook(self.flow)
             self.client_state = self.state_done
 
-        # edge case found while fuzzing:
-        # we may arrive here after a hook unpaused the stream,
-        # but the server may have sent us a RST_STREAM in the meantime.
-        # We need to 1) check the server state and 2) peek into the event queue to
-        # see if this is the case.
-        if self.server_state == self.state_errored:
-            return
-        for evt in self._paused_event_queue:
-            if isinstance(evt, ResponseProtocolError):
-                return
-        if self.flow.request.trailers:
-            # we've delayed sending trailers until after `request` has been triggered.
-            assert isinstance(event, RequestEndOfMessage)
-            yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
-        yield SendHttp(event, self.context.server)
+            if self.flow.request.trailers:
+                # we've delayed sending trailers until after `request` has been triggered.
+                yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
+            yield SendHttp(event, self.context.server)
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -322,15 +323,23 @@ class HttpStream(layer.Layer):
         assert self.flow.response
         if isinstance(event, ResponseData):
             if callable(self.flow.response.stream):
-                data = self.flow.response.stream(event.data)
+                chunks = self.flow.response.stream(event.data)
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
             else:
-                data = event.data
-            yield SendHttp(ResponseData(self.stream_id, data), self.context.client)
+                chunks = [event.data]
+            for chunk in chunks:
+                yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
         elif isinstance(event, ResponseTrailers):
-            assert self.flow.response
             self.flow.response.trailers = event.trailers
             # will be sent in send_response() after the response hook.
         elif isinstance(event, ResponseEndOfMessage):
+            if callable(self.flow.response.stream):
+                chunks = self.flow.response.stream(b"")
+                if isinstance(chunks, bytes):
+                    chunks = [chunks]
+                for chunk in chunks:
+                    yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
@@ -710,8 +719,22 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(self.streams[stream_id], event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
-                # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
-                yield commands.CloseConnection(event.connection)
+                # We didn't do anything with this connection yet, now the peer is doing something.
+                if isinstance(event, events.ConnectionClosed):
+                    # The peer has closed it - let's close it too!
+                    yield commands.CloseConnection(event.connection)
+                elif isinstance(event, events.DataReceived):
+                    # The peer has sent data. This can happen with HTTP/2 servers that already send a settings frame.
+                    child_layer: HttpConnection
+                    if self.context.server.alpn == b"h2":
+                        child_layer = Http2Client(self.context.fork())
+                    else:
+                        child_layer = Http1Client(self.context.fork())
+                    self.connections[self.context.server] = child_layer
+                    yield from self.event_to_child(child_layer, events.Start())
+                    yield from self.event_to_child(child_layer, event)
+                else:
+                    raise AssertionError(f"Unexpected event: {event}")
             else:
                 handler = self.connections[event.connection]
                 yield from self.event_to_child(handler, event)
@@ -811,7 +834,12 @@ class HttpLayer(layer.Layer):
                 send_connect = event.tls or self.mode != HTTPMode.upstream
                 stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
-                context.server.sni = event.address[0]
+                # Assume that we are in transparent mode and lazily did not open a connection yet.
+                # We don't want the IP (which is the address) as the upstream SNI, but the client's SNI instead.
+                if self.mode == HTTPMode.transparent and event.address == self.context.server.address:
+                    context.server.sni = self.context.client.sni or event.address[0]
+                else:
+                    context.server.sni = event.address[0]
                 stack /= tls.ServerTLSLayer(context)
 
         stack /= HttpClient(context)

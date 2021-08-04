@@ -193,8 +193,10 @@ class Playbook:
                         setattr(x, name, value())
                 if isinstance(x, events.OpenConnectionCompleted) and not x.reply:
                     x.command.connection.state = ConnectionState.OPEN
+                    x.command.connection.timestamp_start = 1624544785
                 elif isinstance(x, events.ConnectionClosed):
                     x.connection.state &= ~ConnectionState.CAN_READ
+                    x.connection.timestamp_end = 1624544787
 
                 self.actual.append(x)
                 try:

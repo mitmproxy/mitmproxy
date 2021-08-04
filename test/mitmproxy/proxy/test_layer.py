@@ -52,7 +52,8 @@ class TestLayer:
                 << commands.Log(" >! DataReceived(client, b'foo')", "debug")
                 >> tutils.reply(None, to=-3)
                 << commands.Log(" >> Reply(OpenConnection({'connection': Server("
-                                "{'id': '…rverid', 'address': None, 'state': <ConnectionState.OPEN: 3>})}),None)", "debug")
+                                "{'id': '…rverid', 'address': None, 'state': <ConnectionState.OPEN: 3>, "
+                                "'timestamp_start': 1624544785})}), None)", "debug")
                 << commands.Log(" !> DataReceived(client, b'foo')", "debug")
 
                 << commands.Log("baz", "info")

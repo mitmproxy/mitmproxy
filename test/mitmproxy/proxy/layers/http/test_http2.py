@@ -693,3 +693,37 @@ class TestClient:
                 >> DataReceived(tctx.server, frame_factory.build_data_frame(b"foo").serialize())
                 << SendData(tctx.server, frame_factory.build_rst_stream_frame(1, ErrorCodes.STREAM_CLOSED).serialize())
         )  # important: no ResponseData event here!
+
+
+def test_early_server_data(tctx):
+    playbook, cff = start_h2_client(tctx)
+    sff = FrameFactory()
+
+    tctx.server.address = ("example.com", 80)
+    tctx.server.state = ConnectionState.OPEN
+    tctx.server.alpn = b"h2"
+
+    flow = Placeholder(HTTPFlow)
+    server1 = Placeholder(bytes)
+    server2 = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << (h := http.HttpRequestHook(flow))
+            # Surprise! We get data from the server before the request hook finishes.
+            >> DataReceived(tctx.server, sff.build_settings_frame({}).serialize())
+            << SendData(tctx.server, server1)
+            # Request hook finishes...
+            >> reply(to=h)
+            << SendData(tctx.server, server2)
+    )
+    assert [type(x) for x in decode_frames(server1())] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.SettingsFrame,
+    ]
+    assert [type(x) for x in decode_frames(server2())] == [
+        hyperframe.frame.HeadersFrame,
+    ]

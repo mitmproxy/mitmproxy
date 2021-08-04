@@ -136,7 +136,7 @@ def test_toggler():
         o.toggler("one")
 
 
-class Rec():
+class Rec:
     def __init__(self):
         self.called = None
 
@@ -434,13 +434,10 @@ def test_set():
     assert opts.seqstr == []
     opts.set("seqstr=foo")
     assert opts.seqstr == ["foo"]
-    opts.set("seqstr=bar")
+    opts.set("seqstr=foo", "seqstr=bar")
     assert opts.seqstr == ["foo", "bar"]
     opts.set("seqstr")
     assert opts.seqstr == []
-
-    opts.set(*('seqstr=foo', 'seqstr=bar'))
-    assert opts.seqstr == ["foo", "bar"]
 
     with pytest.raises(exceptions.OptionsError):
         opts.set("deferredoption=wobble")

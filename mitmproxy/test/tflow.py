@@ -6,11 +6,11 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.test import tutils
+from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
 
 
-def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
+def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp.TCPFlow:
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -30,7 +30,7 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
     return f
 
 
-def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
+def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') -> http.HTTPFlow:
     flow = http.HTTPFlow(tclient_conn(), tserver_conn())
     flow.request = http.Request(
         "example.com",
@@ -74,14 +74,24 @@ def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
             websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
             websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
         ]
-    if err is True:
-        flow.error = terr()
+
+    flow.websocket.close_reason = close_reason
+
+    if close_code is not None:
+        flow.websocket.close_code = close_code
+    else:
+        if err is True:
+            # ABNORMAL_CLOSURE
+            flow.websocket.close_code = 1006
+        else:
+            # NORMAL_CLOSURE
+            flow.websocket.close_code = 1000
 
     flow.reply = controller.DummyReply()
     return flow
 
 
-def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
+def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None) -> http.HTTPFlow:
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
     @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
@@ -95,9 +105,9 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     if server_conn is True:
         server_conn = tserver_conn()
     if req is True:
-        req = tutils.treq()
+        req = treq()
     if resp is True:
-        resp = tutils.tresp()
+        resp = tresp()
     if err is True:
         err = terr()
 
@@ -116,7 +126,7 @@ class DummyFlow(flow.Flow):
         super().__init__("dummy", client_conn, server_conn, live)
 
 
-def tdummyflow(client_conn=True, server_conn=True, err=None):
+def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:

@@ -1,4 +1,3 @@
-import ast
 import re
 
 import pyparsing
@@ -10,13 +9,9 @@ import pyparsing
 PartialQuotedString = pyparsing.Regex(
     re.compile(
         r'''
-            (["'])  # start quote
-            (?:
-                (?:\\.)  # escape sequence
-                |
-                (?!\1).  # unescaped character that is not our quote nor the begin of an escape sequence. We can't use \1 in []
-            )*
-            (?:\1|$)  # end quote
+            "[^"]*(?:"|$)  # double-quoted string that ends with double quote or EOF
+            |
+            '[^']*(?:'|$)  # single-quoted string that ends with double quote or EOF
         ''',
         re.VERBOSE
     )
@@ -32,18 +27,15 @@ expr = pyparsing.ZeroOrMore(
 def quote(val: str) -> str:
     if val and all(char not in val for char in "'\" \r\n\t"):
         return val
-    return repr(val)  # TODO: More of a hack.
+    if '"' not in val:
+        return f'"{val}"'
+    if "'" not in val:
+        return f"'{val}'"
+    return '"' + val.replace('"', r"\x22") + '"'
 
 
 def unquote(x: str) -> str:
-    quoted = (
-            (x.startswith('"') and x.endswith('"'))
-            or
-            (x.startswith("'") and x.endswith("'"))
-    )
-    if quoted:
-        try:
-            x = ast.literal_eval(x)
-        except Exception:
-            x = x[1:-1]
-    return x
+    if len(x) > 1 and x[0] in "'\"" and x[0] == x[-1]:
+        return x[1:-1]
+    else:
+        return x

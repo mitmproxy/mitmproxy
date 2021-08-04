@@ -76,11 +76,11 @@ def make_scope(flow: http.HTTPFlow) -> dict:
         },
         "http_version": HTTP_VERSION_MAP.get(flow.request.http_version, "1.1"),
         "method": flow.request.method,
-        "scheme": flow.request.scheme,
+        "scheme": flow.request.scheme.upper(),
         "path": path,
         "raw_path": flow.request.path,
         "query_string": query_string,
-        "headers": list(list(x) for x in flow.request.headers.fields),
+        "headers": [(name.lower(), value) for (name, value) in flow.request.headers.fields],
         "client": flow.client_conn.peername,
         "extensions": {
             "mitmproxy.master": ctx.master,

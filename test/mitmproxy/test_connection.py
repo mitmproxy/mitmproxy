@@ -85,3 +85,5 @@ class TestServer:
         s.state = ConnectionState.OPEN
         with pytest.raises(RuntimeError):
             s.address = ("example.com", 80)
+        # No-op assignment, allowed because it might be triggered by a Server.set_state() call.
+        s.address = ("example.com", 443)

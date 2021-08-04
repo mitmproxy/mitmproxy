@@ -51,7 +51,7 @@ class UpstreamAuth:
 
     def requestheaders(self, f: http.HTTPFlow):
         if self.auth:
-            if f.mode == "upstream" and not f.server_conn.via:
+            if ctx.options.mode.startswith("upstream") and f.request.scheme == "http":
                 f.request.headers["Proxy-Authorization"] = self.auth
             elif ctx.options.mode.startswith("reverse"):
                 f.request.headers["Authorization"] = self.auth

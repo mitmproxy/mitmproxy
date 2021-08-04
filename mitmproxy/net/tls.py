@@ -3,10 +3,13 @@ import ipaddress
 import os
 import threading
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Sequence, Tuple, List, Any, BinaryIO
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
 
 import certifi
+
+from OpenSSL.crypto import X509
 from cryptography.hazmat.primitives.asymmetric import rsa
 from kaitaistruct import KaitaiStream
 
@@ -25,12 +28,12 @@ class Method(Enum):
 
 # TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
 try:
-    SSL._lib.TLS_server_method
+    SSL._lib.TLS_server_method  # type: ignore
 except AttributeError as e:  # pragma: no cover
     raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
 
-SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)
-SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)
+SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
+SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)  # type: ignore
 
 
 class Version(Enum):
@@ -100,8 +103,8 @@ def _create_ssl_context(
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
-    ok = SSL._lib.SSL_CTX_set_min_proto_version(context._context, min_version.value)
-    ok += SSL._lib.SSL_CTX_set_max_proto_version(context._context, max_version.value)
+    ok = SSL._lib.SSL_CTX_set_min_proto_version(context._context, min_version.value)  # type: ignore
+    ok += SSL._lib.SSL_CTX_set_max_proto_version(context._context, max_version.value)  # type: ignore
     if ok != 2:
         raise RuntimeError(
             f"Error setting TLS versions ({min_version=}, {max_version=}). "
@@ -125,17 +128,18 @@ def _create_ssl_context(
     return context
 
 
+@lru_cache(256)
 def create_proxy_server_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+        cipher_list: Optional[Tuple[str, ...]],
         verify: Verify,
         hostname: Optional[str],
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
-        alpn_protos: Optional[Sequence[bytes]],
+        alpn_protos: Optional[Tuple[bytes, ...]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -152,22 +156,22 @@ def create_proxy_server_context(
         assert isinstance(hostname, str)
         # Manually enable hostname verification on the context object.
         # https://wiki.openssl.org/index.php/Hostname_validation
-        param = SSL._lib.SSL_CTX_get0_param(context._context)
+        param = SSL._lib.SSL_CTX_get0_param(context._context)  # type: ignore
         # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
         # https://www.chromestatus.com/feature/4981025180483584
-        SSL._lib.X509_VERIFY_PARAM_set_hostflags(
+        SSL._lib.X509_VERIFY_PARAM_set_hostflags(  # type: ignore
             param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
+            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT  # type: ignore
         )
         try:
             ip: bytes = ipaddress.ip_address(hostname).packed
         except ValueError:
-            SSL._openssl_assert(
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1
+            SSL._openssl_assert(  # type: ignore
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1  # type: ignore
             )
         else:
-            SSL._openssl_assert(
-                SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip)) == 1
+            SSL._openssl_assert(  # type: ignore
+                SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip)) == 1  # type: ignore
             )
 
     if ca_path is None and ca_pemfile is None:
@@ -192,17 +196,18 @@ def create_proxy_server_context(
     return context
 
 
+@lru_cache(256)
 def create_client_proxy_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+        cipher_list: Optional[Tuple[str, ...]],
         cert: certs.Cert,
         key: rsa.RSAPrivateKey,
         chain_file: Optional[Path],
         alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
         request_client_cert: bool,
-        extra_chain_certs: Iterable[certs.Cert],
+        extra_chain_certs: Tuple[certs.Cert, ...],
         dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
@@ -238,20 +243,20 @@ def create_client_proxy_context(
         context.set_verify(Verify.VERIFY_NONE.value, None)
 
     for i in extra_chain_certs:
-        context.add_extra_chain_cert(i._cert)
+        context.add_extra_chain_cert(i.to_pyopenssl())
 
     if dhparams:
-        SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)
+        SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
 
     return context
 
 
 def accept_all(
         conn_: SSL.Connection,
-        x509: SSL.X509,
+        x509: X509,
         errno: int,
         err_depth: int,
-        is_cert_verified: bool,
+        is_cert_verified: int,
 ) -> bool:
     # Return true to prevent cert verification error
     return True

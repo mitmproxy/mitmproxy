@@ -40,9 +40,9 @@ These steps assume you are on the correct branch and have a git remote called `o
 
 ### Docs
 
-- `./build.sh`. If everything looks alright, continue with
+- `./build.py`. If everything looks alright, continue with
 - `./upload-stable.sh`,
-- `DOCS_ARCHIVE=true ./build.sh`, and
+- `DOCS_ARCHIVE=true ./build.py`, and
 - `./upload-archive.sh v4`. Doing this now already saves you from switching back to an old state on the next release.
 
 ### Website

@@ -368,24 +368,6 @@ class TestCommand:
                 [],
             ],
             [
-                r'cmd13 "a \"b\" c"',
-                [
-                    command.ParseResult(value="cmd13", type=mitmproxy.types.Cmd, valid=False),
-                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
-                    command.ParseResult(value=r'"a \"b\" c"', type=mitmproxy.types.Unknown, valid=False),
-                ],
-                [],
-            ],
-            [
-                r"cmd14 'a \'b\' c'",
-                [
-                    command.ParseResult(value="cmd14", type=mitmproxy.types.Cmd, valid=False),
-                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
-                    command.ParseResult(value=r"'a \'b\' c'", type=mitmproxy.types.Unknown, valid=False),
-                ],
-                [],
-            ],
-            [
                 "    spaces_at_the_begining_are_not_stripped",
                 [
                     command.ParseResult(value="    ", type=mitmproxy.types.Space, valid=True),
@@ -436,12 +418,6 @@ def test_simple():
             c.call("nonexistent")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("\\")
-        with pytest.raises(exceptions.CommandError, match="Unknown"):
-            c.execute(r"\'")
-        with pytest.raises(exceptions.CommandError, match="Unknown"):
-            c.execute(r"\"")
-        with pytest.raises(exceptions.CommandError, match="Unknown"):
-            c.execute(r"\"")
 
         c.add("empty", a.empty)
         c.execute("empty")

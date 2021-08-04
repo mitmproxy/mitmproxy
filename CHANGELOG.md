@@ -1,8 +1,28 @@
 # Release History
 
-## Unreleased: mitmproxy next
+## 4 August 2021: mitmproxy 7.0.2
 
-### New Proxy Core (@mhils)
+* Fix a WebSocket crash introduced in 7.0.1 (@mhils)
+
+## 3 August 2021: mitmproxy 7.0.1
+
+* Performance: Re-use OpenSSL contexts to enable TLS session resumption (@mhils)
+* Disable HTTP/2 CONNECT for Secure Web Proxies to fix compatibility with Firefox (@mhils)
+* Use local IP address as certificate subject if no other info is available (@mhils)
+* Make it possible to return multiple chunks for HTTP stream modification (@mhils)
+* Don't send WebSocket CONTINUATION frames when the peer does not send any (@Pilphe)
+* Fix HTTP stream modify example. (@mhils)
+* Fix a crash caused by no-op assignments to `Server.address` (@SaladDais)
+* Fix a crash when encountering invalid certificates (@mhils)
+* Fix a crash when pressing the Home/End keys in some screens (@rbdixon)
+* Fix a crash when reading corrupted flow dumps (@mhils)
+* Fix multiple crashes on flow export (@mhils)
+* Fix a bug where ASGI apps did not see the request body (@mhils)
+* Minor documentation improvements (@mhils)
+
+## 16 July 2021: mitmproxy 7.0
+
+### New Proxy Core (@mhils, [blog post](https://www.mitmproxy.org/posts/releases/mitmproxy7/))
 
 Mitmproxy has a completely new proxy core, fixing many longstanding issues:
 
@@ -24,9 +44,8 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   This greatly improves testing capabilities, prevents a wide array of race conditions, and increases
   proper isolation between layers.
 
-### Full Changelog
+### Additional Changes
 
-* New Proxy Core (see section above, @mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
   events have been replaced with new events, see addon documentation for details (@mhils)
@@ -62,14 +81,12 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   characters. (@rbdixon)
 * New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments.
   (@rbdixon)
-* Fix multipart forms losing `boundary` values on edit (@roytu)
+* Fix multipart forms losing `boundary` values on edit. (@roytu)
 * `Transfer-Encoding: chunked` HTTP message bodies are now retained if they are below the stream_large_bodies limit.
   (@mhils)
 * `json()` method for HTTP Request and Response instances will return decoded JSON body. (@rbdixon)
 * Support for HTTP/2 Push Promises has been dropped. (@mhils)
-* Make it possible to set sequence options from the command line (@Yopi)
-* --- TODO: add new PRs above this line ---
-* ... and various other fixes, documentation improvements, dependency version bumps, etc.
+* Make it possible to set sequence options from the command line. (@Yopi)
 
 ## 15 December 2020: mitmproxy 6.0.2
 

@@ -66,7 +66,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
-        "asgiref>=3.2.10,<3.4",
+        "asgiref>=3.2.10,<3.5",
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
@@ -84,7 +84,7 @@ setup(
         "pyOpenSSL>=20.0,<20.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
-        "ruamel.yaml>=0.16,<0.17.10",
+        "ruamel.yaml>=0.16,<0.17.11",
         "sortedcontainers>=2.3,<2.5",
         "tornado>=4.3,<7",
         "urwid>=2.1.1,<2.2",
@@ -100,7 +100,7 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==4.3",
+            "pyinstaller==4.5",
             "pytest-asyncio>=0.10.0,<0.16,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
