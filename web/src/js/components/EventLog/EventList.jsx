@@ -50,7 +50,7 @@ class EventLogList extends Component {
         })
 
         if (!shallowEqual(this.state.vScroll, vScroll)) {
-            this.setState({vScroll})
+            _.debounce(() => this.setState({vScroll}), 200)()
         }
     }
 
