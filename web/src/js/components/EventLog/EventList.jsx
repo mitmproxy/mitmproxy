@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom'
 import shallowEqual from 'shallowequal'
 import AutoScroll from '../helpers/AutoScroll'
 import { calcVScroll } from '../helpers/VirtualScroll'
+import _ from "lodash"
 
 class EventLogList extends Component {
 

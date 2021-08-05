@@ -3,8 +3,8 @@
 exports[`EventList Component should render correctly 1`] = `
 Object {
   "vScroll": Object {
-    "end": 1,
-    "paddingBottom": 18,
+    "end": 0,
+    "paddingBottom": 0,
     "paddingTop": 0,
     "start": 0,
   },
