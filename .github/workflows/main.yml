@@ -66,6 +66,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: ubuntu-latest
+            py: '3.10.0-rc - 3.10'
           - os: windows-latest
             py: 3.9
           - os: macos-latest
