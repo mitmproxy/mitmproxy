@@ -3,6 +3,7 @@
 ## 4 August 2021: mitmproxy 7.0.2
 
 * Fix a WebSocket crash introduced in 7.0.1 (@mhils)
+* Fix a logic error when processing deferred options in optmanager (@af001)
 
 ## 3 August 2021: mitmproxy 7.0.1
 
