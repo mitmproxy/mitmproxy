@@ -100,7 +100,14 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 @dataclass
 class ClientHelloData:
     context: context.Context
+    """The context object for this connection."""
+    client_hello: net_tls.ClientHello
+    """The entire parsed TLS ClientHello."""
     establish_server_tls_first: bool = False
+    """
+    If set to `True`, pause this handshake and establish TLS with an upstream server first.
+    This makes it possible to process the server certificate when generating an interception certificate.
+    """
 
 
 @dataclass
@@ -386,7 +393,7 @@ class ClientTLSLayer(_TLSLayer):
 
         self.conn.sni = client_hello.sni
         self.conn.alpn_offers = client_hello.alpn_protocols
-        tls_clienthello = ClientHelloData(self.context)
+        tls_clienthello = ClientHelloData(self.context, client_hello)
         yield TlsClienthelloHook(tls_clienthello)
 
         if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
