@@ -93,7 +93,7 @@ class TestTlsConfig:
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
-            ch = tls.ClientHelloData(ctx)
+            ch = tls.ClientHelloData(ctx, None)  # type: ignore
             ta.tls_clienthello(ch)
             assert not ch.establish_server_tls_first
 
