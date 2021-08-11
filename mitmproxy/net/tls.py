@@ -5,7 +5,7 @@ import threading
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO, List
 
 import certifi
 
@@ -289,7 +289,7 @@ class ClientHello:
         )
 
     @property
-    def cipher_suites(self):
+    def cipher_suites(self) -> List[int]:
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
