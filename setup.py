@@ -95,7 +95,10 @@ setup(
         "falcon>=2.0.0",
         "marshmallow>=3.0.0",
         "falcon-apispec>=0.4.0",
-        "python-dateutil>=2.8.1"
+        "python-dateutil>=2.8.1",
+        "glom>=20.11.0",
+        "jsonschema>=3.2.0",
+        "jsonpath_ng>=1.5.3",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -115,3 +118,4 @@ setup(
         ]
     }
 )
+
