@@ -139,7 +139,7 @@ class HarManagerMixin():
         return old_har
 
     def add_verification_to_har(self, verification_type, verification_name, result):
-        self.add_custom_value_to_har('_verifications', {'name': verification_name, 'type': verification_type, 'value': result})
+        self.add_custom_value_to_har('_verifications', {'name': verification_name, 'type': verification_type, 'result': result})
 
     def add_counter_to_har(self, counter_dict):
         self.add_custom_value_to_har('_counters', counter_dict)

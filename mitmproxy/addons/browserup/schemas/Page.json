@@ -4,7 +4,8 @@
     "startedDateTime",
     "id",
     "title",
-    "pageTimings"
+    "pageTimings",
+    "_verifications"
   ],
   "properties": {
     "startedDateTime": {
@@ -16,6 +17,27 @@
     },
     "title": {
       "type": "string"
+    },
+    "_verifications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/VerifyResult"
+      },
+      "default": []
+    },
+    "_counters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Counter"
+      },
+      "default": []
+    },
+    "_errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Error"
+      },
+      "default": []
     },
     "pageTimings": {
       "type": "object",
