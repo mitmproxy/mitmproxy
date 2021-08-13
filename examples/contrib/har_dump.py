@@ -154,7 +154,7 @@ def response(flow: mitmproxy.http.HTTPFlow):
         }
 
     if flow.server_conn.connected:
-        entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
+        entry["serverIPAddress"] = str(flow.server_conn.peername[0])
 
     HAR["log"]["entries"].append(entry)
 
