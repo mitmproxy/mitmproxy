@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.browserup.proxy.api.BrowserUpProxyApi;
 import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Counter;
 import com.browserup.proxy_client.Entry;
 import com.browserup.proxy_client.Har;
 import com.browserup.proxy_client.MatchCriteria;
 import com.browserup.proxy_client.VerifyResult;
 import com.browserup.proxy_client.WebSocketMessage;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,20 +88,35 @@ class JavaClientTest {
     // GIVEN
     var targetUrl = "https://google.com";
     var delayMs = 1000;
+    var verificationName = "URL verification";
 
     // WHEN
-    var har = sendRequestAndGetHar(targetUrl, delayMs);
+    sendRequestAndGetHar(targetUrl, delayMs);
     VerifyResult verifyResult;
+    Har harAfterVerificationCall;
     try {
       verifyResult = new BrowserUpProxyApi()
-          .verifyPresent("URL verification", new MatchCriteria().url(targetUrl));
+          .verifyPresent(verificationName, new MatchCriteria().url(targetUrl));
+      var customCounter = new Counter();
+      customCounter.setName("customCounterName");
+      customCounter.setValue(new BigDecimal(10));
+      new BrowserUpProxyApi().addCounter(customCounter);
+      harAfterVerificationCall = new BrowserUpProxyApi().getHarLog();
     } catch (ApiException e) {
       throw new RuntimeException(e);
     }
 
     // THEN
-    assertNotNull(verifyResult.getResult());
+    assertNotNull(verifyResult);
     assertTrue(verifyResult.getResult(), "Expected to pass verification");
+    var page = harAfterVerificationCall.getLog().getPages().stream().findFirst();
+    assertNotNull(page.get());
+
+    var verificationsCount = page.get().getVerifications().stream()
+        .filter(v -> Objects.equals(v.getType(), verificationName))
+        .count();
+    assertEquals(1, verificationsCount,
+        "Expected one verification result with specified verification name");
   }
 
   private Har sendRequestAndGetHar(String url, int delayMs) {

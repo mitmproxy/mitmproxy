@@ -15,6 +15,9 @@ artifactId: browserup-proxy-client
 #  package for generated models (Default: org.openapitools.client.model)
 modelPackage: com.browserup.proxy-client
 
+# No need to use backport for jdk8 date library since we're going to support java 8+
+dateLibrary: java8
+
 #  Make API response's headers case-insensitive. Available on okhttp-gson, jersey2 libraries (Default: false)
 caseInsensitiveResponseHeaders: true
 

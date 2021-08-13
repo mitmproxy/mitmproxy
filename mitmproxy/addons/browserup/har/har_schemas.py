@@ -2,7 +2,9 @@ from marshmallow import Schema, fields
 
 
 class VerifyResultSchema(Schema):
-    result = fields.Boolean(optional=False, description="Result True / False")
+    result = fields.Boolean(required=True, description="Result True / False")
+    name = fields.Str(required=True, description="Name")
+    type = fields.Str(required=True, description="Type")
 
 
 class NameValuePairSchema(Schema):
