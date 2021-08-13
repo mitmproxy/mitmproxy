@@ -18,8 +18,8 @@ class ErrorSchema(Schema):
 
 
 class CounterSchema(Schema):
-    name = fields.Str(optional=False, description="Name of Custom Counter value you are adding to the page under _counters")
-    value = fields.Number(optional=False, format="double", description="Value for the counter")
+    name = fields.Str(required=True, description="Name of Custom Counter value you are adding to the page under _counters")
+    value = fields.Number(required=True, format="double", description="Value for the counter")
 
 
 class MatchCriteriaSchema(Schema):
