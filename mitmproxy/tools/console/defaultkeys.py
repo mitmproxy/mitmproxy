@@ -50,6 +50,7 @@ def map(km):
         "Export this flow to file"
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
+    km.add("R", "set filter_active toggle", ["flowlist"], "Toggle whether the view filter is enabled")
     km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
