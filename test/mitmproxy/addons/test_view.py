@@ -610,6 +610,9 @@ def test_configure():
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
 
+        tctx.configure(v, view_filter="")
+        assert [i.request.method for i in v] == ["GET", "PUT", "GET"]
+
         tctx.configure(v, view_filter="~m get")
         assert [i.request.method for i in v] == ["GET", "GET"]
 
