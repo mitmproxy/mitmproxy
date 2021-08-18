@@ -17,6 +17,7 @@ def test_identity(encoder):
 
 @pytest.mark.parametrize("encoder", [
     'gzip',
+    'GZIP',
     'br',
     'deflate',
     'zstd',

@@ -289,7 +289,7 @@ class ClientHello:
         )
 
     @property
-    def cipher_suites(self):
+    def cipher_suites(self) -> List[int]:
         return self._client_hello.cipher_suites.cipher_suites
 
     @property

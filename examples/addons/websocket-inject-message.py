@@ -13,9 +13,9 @@ from mitmproxy import ctx, http
 def websocket_message(flow: http.HTTPFlow):
     assert flow.websocket is not None  # make type checker happy
     last_message = flow.websocket.messages[-1]
-    if b"secret" in last_message.content:
+    if last_message.is_text and "secret" in last_message.text:
         last_message.drop()
-        ctx.master.commands.call("inject.websocket", flow, last_message.from_client, "ssssssh")
+        ctx.master.commands.call("inject.websocket", flow, last_message.from_client, "ssssssh".encode())
 
 
 # Complex example: Schedule a periodic timer
@@ -24,7 +24,7 @@ async def inject_async(flow: http.HTTPFlow):
     msg = "hello from mitmproxy! "
     assert flow.websocket is not None  # make type checker happy
     while flow.websocket.timestamp_end is None:
-        ctx.master.commands.call("inject.websocket", flow, True, msg)
+        ctx.master.commands.call("inject.websocket", flow, True, msg.encode())
         await asyncio.sleep(1)
         msg = msg[1:] + msg[:1]
 

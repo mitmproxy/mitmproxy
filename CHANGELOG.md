@@ -1,5 +1,11 @@
 # Release History
 
+## Unreleased: mitmproxy next
+
+* fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
+* Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
+  that can be processed simultaneously.
+
 ## 4 August 2021: mitmproxy 7.0.2
 
 * Fix a WebSocket crash introduced in 7.0.1 (@mhils)
