@@ -5,7 +5,7 @@ import threading
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO, List
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
 
 import certifi
 
