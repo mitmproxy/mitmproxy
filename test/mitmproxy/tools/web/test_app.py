@@ -2,17 +2,9 @@ import asyncio
 import json as _json
 import logging
 import os
-import sys
 from unittest import mock
 
 import pytest
-
-if sys.platform == 'win32':
-    # workaround for
-    # https://github.com/tornadoweb/tornado/issues/2751
-    # https://www.tornadoweb.org/en/stable/index.html#installation
-    # (copied multiple times in the codebase, please remove all occurrences)
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import tornado.testing  # noqa
 from tornado import httpclient  # noqa
