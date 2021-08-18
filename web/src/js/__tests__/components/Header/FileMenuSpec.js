@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import FileMenu from '../../../components/Header/FileMenu'
 import {Provider} from "react-redux";

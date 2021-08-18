@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import ToggleEdit from '../../../components/FlowView/ToggleEdit'
 import {TFlow} from '../../ducks/tutils'
 import {render} from "../../test-utils"

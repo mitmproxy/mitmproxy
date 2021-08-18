@@ -1,12 +1,13 @@
 import React, {useState} from 'react'
 import {useDispatch} from 'react-redux'
 import classnames from 'classnames'
-import {RequestUtils, ResponseUtils} from '../../flow/utils'
-import {fetchApi, formatSize, formatTimeDelta, formatTimeStamp} from '../../utils'
+import {endTime, getTotalSize, RequestUtils, ResponseUtils, startTime} from '../../flow/utils'
+import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils'
 import * as flowActions from "../../ducks/flows";
 import {addInterceptFilter} from "../../ducks/options"
 import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
 import {Flow} from "../../flow";
+import {copy} from "../../flow/export";
 
 
 type FlowColumnProps = {
@@ -16,38 +17,38 @@ type FlowColumnProps = {
 interface FlowColumn {
     (props: FlowColumnProps): JSX.Element;
 
-    headerClass: string;
-    headerName: string;
+    headerName: string; // Shown in the UI
+    sortKey: (flow: Flow) => any;
 }
 
-export const TLSColumn: FlowColumn = ({flow}) => {
+export const tls: FlowColumn = ({flow}) => {
     return (
         <td className={classnames('col-tls', flow.client_conn.tls_established ? 'col-tls-https' : 'col-tls-http')}/>
     )
 }
+tls.headerName = ''
+tls.sortKey = flow => flow.type === "http" && flow.request.scheme
 
-TLSColumn.headerClass = 'col-tls'
-TLSColumn.headerName = ''
-
-export const IconColumn: FlowColumn = ({flow}) => {
+export const icon: FlowColumn = ({flow}) => {
     return (
         <td className="col-icon">
             <div className={classnames('resource-icon', getIcon(flow))}/>
         </td>
     )
 }
-
-IconColumn.headerClass = 'col-icon'
-IconColumn.headerName = ''
+icon.headerName = ''
+icon.sortKey = flow => 0
 
 const getIcon = (flow: Flow): string => {
     if (flow.type !== "http" || !flow.response) {
         return 'resource-icon-plain'
     }
+    if (flow.websocket) {
+        return 'resource-icon-websocket'
+    }
 
     var contentType = ResponseUtils.getContentType(flow.response) || ''
 
-    // @todo We should assign a type to the flow somewhere else.
     if (flow.response.status_code === 304) {
         return 'resource-icon-not-modified'
     }
@@ -70,7 +71,7 @@ const getIcon = (flow: Flow): string => {
     return 'resource-icon-plain'
 }
 
-export const PathColumn: FlowColumn = ({flow}) => {
+export const path: FlowColumn = ({flow}) => {
     let err;
     if (flow.error) {
         if (flow.error.msg === "Connection killed.") {
@@ -88,24 +89,23 @@ export const PathColumn: FlowColumn = ({flow}) => {
                 <i className="fa fa-fw fa-pause pull-right"/>
             )}
             {err}
+            <span className="marker pull-right">{flow.marked}</span>
             {flow.type === "http" ? RequestUtils.pretty_url(flow.request) : null}
         </td>
     )
 };
+path.headerName = 'Path'
+path.sortKey = flow => flow.type === "http" && RequestUtils.pretty_url(flow.request)
 
-PathColumn.headerClass = 'col-path'
-PathColumn.headerName = 'Path'
-
-export const MethodColumn: FlowColumn = ({flow}) => {
+export const method: FlowColumn = ({flow}) => {
     return (
         <td className="col-method">{flow.type === "http" ? flow.request.method : flow.type.toLowerCase()}</td>
     )
 };
+method.headerName = 'Method'
+method.sortKey = flow => flow.type === "http" && flow.request.method
 
-MethodColumn.headerClass = 'col-method'
-MethodColumn.headerName = 'Method'
-
-export const StatusColumn: FlowColumn = ({flow}) => {
+export const status: FlowColumn = ({flow}) => {
     let color = 'darkred';
 
     if (flow.type !== "http" || !flow.response)
@@ -127,74 +127,64 @@ export const StatusColumn: FlowColumn = ({flow}) => {
         <td className="col-status" style={{color: color}}>{flow.response.status_code}</td>
     )
 }
+status.headerName = 'Status'
+status.sortKey = flow => flow.type === "http" && flow.response && flow.response.status_code
 
-StatusColumn.headerClass = 'col-status'
-StatusColumn.headerName = 'Status'
-
-export const SizeColumn: FlowColumn = ({flow}) => {
+export const size: FlowColumn = ({flow}) => {
     return (
         <td className="col-size">{formatSize(getTotalSize(flow))}</td>
     )
 };
+size.headerName = 'Size'
+size.sortKey = flow => getTotalSize(flow)
 
-const getTotalSize = (flow: Flow): number => {
-    if (flow.type !== "http")
-        return 0
-    let total = flow.request.contentLength
-    if (flow.response) {
-        total += flow.response.contentLength || 0
-    }
-    return total
-}
 
-SizeColumn.headerClass = 'col-size'
-SizeColumn.headerName = 'Size'
-
-export const TimeColumn: FlowColumn = ({flow}) => {
+export const time: FlowColumn = ({flow}) => {
+    const start = startTime(flow), end = endTime(flow);
     return (
         <td className="col-time">
-            {flow.type === "http" && flow.response?.timestamp_end ? (
-                formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))
+            {start && end ? (
+                formatTimeDelta(1000 * (end - start))
             ) : (
                 '...'
             )}
         </td>
     )
 }
+time.headerName = 'Time'
+time.sortKey = flow => {
+    const start = startTime(flow), end = endTime(flow);
+    return start && end && end - start;
+}
 
-TimeColumn.headerClass = 'col-time'
-TimeColumn.headerName = 'Time'
-
-export const TimeStampColumn: FlowColumn = ({flow}) => {
+export const timestamp: FlowColumn = ({flow}) => {
+    const start = startTime(flow);
     return (
         <td className="col-start">
-            {flow.type === "http" && flow.request.timestamp_start ? (
-                formatTimeStamp(flow.request.timestamp_start)
+            {start ? (
+                formatTimeStamp(start)
             ) : (
                 '...'
             )}
         </td>
     )
 }
+timestamp.headerName = 'Start time'
+timestamp.sortKey = flow => startTime(flow)
 
-TimeStampColumn.headerClass = 'col-timestamp'
-TimeStampColumn.headerName = 'TimeStamp'
+const markers = {
+    ":red_circle:": "🔴",
+    ":orange_circle:": "🟠",
+    ":yellow_circle:": "🟡",
+    ":green_circle:": "🟢",
+    ":large_blue_circle:": "🔵",
+    ":purple_circle:": "🟣",
+    ":brown_circle:": "🟤",
+}
 
-export const QuickActionsColumn: FlowColumn = ({flow}) => {
+export const quickactions: FlowColumn = ({flow}) => {
     const dispatch = useDispatch()
     let [open, setOpen] = useState(false)
-
-    const copy = (format: string) => {
-        if (!flow) {
-            return
-        }
-
-        fetchApi(`/flows/${flow.id}/export/${format}.json`, {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                navigator.clipboard.writeText(data.export)
-            })
-    }
 
     let resume_or_replay: React.ReactNode | null = null;
     if (flow.intercepted) {
@@ -221,11 +211,21 @@ export const QuickActionsColumn: FlowColumn = ({flow}) => {
                           onOpen={setOpen}
                           options={{placement: "bottom-end"}}>
                     <SubMenu title="Copy...">
-                        <MenuItem onClick={() => copy("raw_request")}>Copy raw request</MenuItem>
-                        <MenuItem onClick={() => copy("raw_response")}>Copy raw response</MenuItem>
-                        <MenuItem onClick={() => copy("raw")}>Copy raw request and response</MenuItem>
-                        <MenuItem onClick={() => copy("curl")}>Copy as cURL</MenuItem>
-                        <MenuItem onClick={() => copy("httpie")}>Copy as HTTPie</MenuItem>
+                        <MenuItem onClick={() => copy(flow, "raw_request")}>Copy raw request</MenuItem>
+                        <MenuItem onClick={() => copy(flow, "raw_response")}>Copy raw response</MenuItem>
+                        <MenuItem onClick={() => copy(flow, "raw")}>Copy raw request and response</MenuItem>
+                        <MenuItem onClick={() => copy(flow, "curl")}>Copy as cURL</MenuItem>
+                        <MenuItem onClick={() => copy(flow, "httpie")}>Copy as HTTPie</MenuItem>
+                    </SubMenu>
+                    <SubMenu title="Mark..." className="markers-menu">
+                        <MenuItem onClick={() => dispatch(flowActions.update(flow, {marked: ""}))}>⚪ (no marker)</MenuItem>
+                        {Object.entries(markers).map(([name, sym]) =>
+                            <MenuItem
+                                key={name}
+                                onClick={() => dispatch(flowActions.update(flow, {marked: name}))}>
+                                {sym} {name.replace(/[:_]/g, " ")}
+                            </MenuItem>
+                        )}
                     </SubMenu>
                     <SubMenu title="Intercept requests like this">
                         <MenuItem onClick={() => filt(`~q ${flow.request.host}`)}>
@@ -260,21 +260,5 @@ export const QuickActionsColumn: FlowColumn = ({flow}) => {
     )
 }
 
-QuickActionsColumn.headerClass = 'col-quickactions'
-QuickActionsColumn.headerName = ''
-
-
-export const columns: { [key: string]: FlowColumn } = {};
-for (let col of [
-    TLSColumn,
-    IconColumn,
-    PathColumn,
-    MethodColumn,
-    StatusColumn,
-    TimeStampColumn,
-    SizeColumn,
-    TimeColumn,
-    QuickActionsColumn,
-]) {
-    columns[col.name.replace(/Column$/, "").toLowerCase()] = col;
-}
+quickactions.headerName = ''
+quickactions.sortKey = flow => 0;

@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import FileChooser from '../../../components/common/FileChooser'
 import {render} from '@testing-library/react'
 

@@ -168,9 +168,9 @@ responseFilter.desc = "has response";
 function source(regex){
     regex = new RegExp(regex, "i");
     function sourceFilter(flow){
-        return (!!flow.client_conn.address)
+        return (!!flow.client_conn.peername)
                &&
-               regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
+               regex.test(flow.client_conn.peername[0] + ":" + flow.client_conn.peername[1]);
     }
     sourceFilter.desc = "source address matches " + regex;
     return sourceFilter;

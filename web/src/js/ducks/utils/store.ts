@@ -7,7 +7,28 @@ export const UPDATE = 'LIST_UPDATE'
 export const REMOVE = 'LIST_REMOVE'
 export const RECEIVE = 'LIST_RECEIVE'
 
-const defaultState = {
+export interface Item {
+    id: string
+}
+
+export interface SortFn<S extends Item> {
+    (a: S, b: S): number;
+}
+
+export interface FilterFn<S extends Item> {
+    (x: S): boolean;
+}
+
+export interface State<S extends Item> {
+    byId: { [id: string]: S };
+    list: S[];
+    listIndex: { [id: string]: number };
+    view: S[];
+    viewIndex: { [id: string]: number };
+}
+
+
+export const defaultState = {
     byId: {},
     list: [],
     listIndex: {},
@@ -31,9 +52,9 @@ const defaultState = {
  *          }
  *
  */
-export default function reduce(state = defaultState, action) {
+export function reduce<S extends Item>(state: State<S>, action) {
 
-    let { byId, list, listIndex, view, viewIndex } = state
+    let {byId, list, listIndex, view, viewIndex} = state
 
     switch (action.type) {
         case SET_FILTER:
@@ -57,16 +78,16 @@ export default function reduce(state = defaultState, action) {
                 // we already had that.
                 break
             }
-            byId = { ...byId, [action.item.id]: action.item }
-            listIndex = { ...listIndex, [action.item.id]: list.length }
+            byId = {...byId, [action.item.id]: action.item}
+            listIndex = {...listIndex, [action.item.id]: list.length}
             list = [...list, action.item]
             if (action.filter(action.item)) {
-                ({ view, viewIndex } = sortedInsert(state, action.item, action.sort))
+                ({view, viewIndex} = sortedInsert(state, action.item, action.sort))
             }
             break
 
         case UPDATE:
-            byId = { ...byId, [action.item.id]: action.item }
+            byId = {...byId, [action.item.id]: action.item}
             list = [...list]
             list[listIndex[action.item.id]] = action.item
 
@@ -74,11 +95,9 @@ export default function reduce(state = defaultState, action) {
             let hasNewItem = action.filter(action.item)
             if (hasNewItem && !hasOldItem) {
                 ({view, viewIndex} = sortedInsert(state, action.item, action.sort))
-            }
-            else if (!hasNewItem && hasOldItem) {
+            } else if (!hasNewItem && hasOldItem) {
                 ({data: view, dataIndex: viewIndex} = removeData(view, viewIndex, action.item.id))
-            }
-            else if (hasNewItem && hasOldItem) {
+            } else if (hasNewItem && hasOldItem) {
                 ({view, viewIndex} = sortedUpdate(state, action.item, action.sort))
             }
             break
@@ -111,51 +130,51 @@ export default function reduce(state = defaultState, action) {
             })
             break
     }
-    return { byId, list, listIndex, view, viewIndex }
+    return {byId, list, listIndex, view, viewIndex}
 }
 
 
-export function setFilter(filter = defaultFilter, sort = defaultSort) {
-    return { type: SET_FILTER, filter, sort }
+export function setFilter<S extends Item>(filter: FilterFn<S> = defaultFilter, sort: SortFn<S> = defaultSort) {
+    return {type: SET_FILTER, filter, sort}
 }
 
-export function setSort(sort = defaultSort) {
-    return { type: SET_SORT, sort }
+export function setSort<S extends Item>(sort: SortFn<S> = defaultSort) {
+    return {type: SET_SORT, sort}
 }
 
-export function add(item, filter = defaultFilter, sort = defaultSort) {
-    return { type: ADD, item, filter, sort }
+export function add<S extends Item>(item: S, filter: FilterFn<S> = defaultFilter, sort: SortFn<S> = defaultSort) {
+    return {type: ADD, item, filter, sort}
 }
 
-export function update(item, filter = defaultFilter, sort = defaultSort) {
-    return { type: UPDATE, item, filter, sort }
+export function update<S extends Item>(item: S, filter: FilterFn<S> = defaultFilter, sort: SortFn<S> = defaultSort) {
+    return {type: UPDATE, item, filter, sort}
 }
 
-export function remove(id) {
-    return { type: REMOVE, id }
+export function remove(id: string) {
+    return {type: REMOVE, id}
 }
 
-export function receive(list, filter = defaultFilter, sort = defaultSort) {
-    return { type: RECEIVE, list, filter, sort }
+export function receive<S extends Item>(list: S[], filter: FilterFn<S> = defaultFilter, sort: SortFn<S> = defaultSort) {
+    return {type: RECEIVE, list, filter, sort}
 }
 
-function sortedInsert(state, item, sort) {
+function sortedInsert<S extends Item>(state: State<S>, item: S, sort: SortFn<S>) {
     const index = sortedIndex(state.view, item, sort)
     const view = [...state.view]
-    const viewIndex = { ...state.viewIndex }
+    const viewIndex = {...state.viewIndex}
 
     view.splice(index, 0, item)
     for (let i = view.length - 1; i >= index; i--) {
         viewIndex[view[i].id] = i
     }
 
-    return { view, viewIndex }
+    return {view, viewIndex}
 }
 
-function removeData(currentData, currentDataIndex, id) {
+function removeData<S extends Item>(currentData: S[], currentDataIndex: { [id: string]: number }, id: string) {
     const index = currentDataIndex[id]
     const data = [...currentData]
-    const dataIndex = { ...currentDataIndex }
+    const dataIndex = {...currentDataIndex}
     delete dataIndex[id];
 
     data.splice(index, 1)
@@ -163,12 +182,12 @@ function removeData(currentData, currentDataIndex, id) {
         dataIndex[data[i].id] = i
     }
 
-    return { data, dataIndex }
+    return {data, dataIndex}
 }
 
-function sortedUpdate(state, item, sort) {
+function sortedUpdate<S extends Item>(state: State<S>, item: S, sort: SortFn<S>) {
     let view = [...state.view]
-    let viewIndex = { ...state.viewIndex }
+    let viewIndex = {...state.viewIndex}
     let index = viewIndex[item.id]
     view[index] = item
     while (index + 1 < view.length && sort(view[index], view[index + 1]) > 0) {
@@ -185,7 +204,7 @@ function sortedUpdate(state, item, sort) {
         viewIndex[view[index].id] = index
         --index
     }
-    return { view, viewIndex }
+    return {view, viewIndex}
 }
 
 function sortedIndex(list, item, sort) {

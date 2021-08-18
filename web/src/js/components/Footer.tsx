@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 import {formatSize} from '../utils'
 import HideInStatic from '../components/common/HideInStatic'
 import {useAppSelector} from "../ducks";
@@ -7,7 +7,7 @@ export default function Footer() {
     const version = useAppSelector(state => state.conf.version);
     let {
         mode, intercept, showhost, upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
-        stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, server
+        stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, server, ssl_insecure
     } = useAppSelector(state => state.options);
 
     return (
@@ -17,6 +17,9 @@ export default function Footer() {
             )}
             {intercept && (
                 <span className="label label-success">Intercept: {intercept}</span>
+            )}
+            {ssl_insecure && (
+                <span className="label label-danger">ssl_insecure</span>
             )}
             {showhost && (
                 <span className="label label-success">showhost</span>
@@ -57,8 +60,8 @@ export default function Footer() {
                     </span>)
                     }
                 </HideInStatic>
-                <span className="label label-info" title="Mitmproxy Version">
-            {version}
+                <span className="label label-default" title="Mitmproxy Version">
+            mitmproxy {version}
             </span>
             </div>
         </footer>

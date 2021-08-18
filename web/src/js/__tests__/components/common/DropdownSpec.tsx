@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react";
 import Dropdown, {Divider, MenuItem, SubMenu} from '../../../components/common/Dropdown'
 import {fireEvent, render, screen, waitFor} from '@testing-library/react'
 

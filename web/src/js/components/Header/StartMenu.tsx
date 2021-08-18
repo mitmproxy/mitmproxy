@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react";
 import FilterInput from "./FilterInput"
 import * as flowsActions from "../../ducks/flows"
 import {setFilter, setHighlight} from "../../ducks/flows"
@@ -6,9 +6,9 @@ import Button from "../common/Button"
 import {update as updateOptions} from "../../ducks/options";
 import {useAppDispatch, useAppSelector} from "../../ducks";
 
-MainMenu.title = "Start"
+StartMenu.title = "Start"
 
-export default function MainMenu() {
+export default function StartMenu() {
     return (
         <div className="main-menu">
             <div className="menu-group">

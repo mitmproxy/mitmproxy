@@ -1,18 +1,29 @@
-import reduceStore from "./utils/store"
-import * as storeActions from "./utils/store"
+import * as store from "./utils/store"
 
-export const ADD               = 'EVENTS_ADD'
-export const RECEIVE           = 'EVENTS_RECEIVE'
+export const ADD = 'EVENTS_ADD'
+export const RECEIVE = 'EVENTS_RECEIVE'
 export const TOGGLE_VISIBILITY = 'EVENTS_TOGGLE_VISIBILITY'
-export const TOGGLE_FILTER     = 'EVENTS_TOGGLE_FILTER'
+export const TOGGLE_FILTER = 'EVENTS_TOGGLE_FILTER'
 
-const defaultState = {
-    visible: false,
-    filters: { debug: false, info: true, web: true, warn: true, error: true },
-    ...reduceStore(undefined, {}),
+type LogLevel = 'debug' | 'info' | 'web' | 'warn' | 'error';
+
+interface EventLogItem extends store.Item {
+    message: string
+    level: LogLevel
 }
 
-export default function reduce(state = defaultState, action) {
+interface EventLogState extends store.State<EventLogItem> {
+    visible: boolean,
+    filters: { [level in LogLevel]: boolean }
+}
+
+const defaultState: EventLogState = {
+    visible: false,
+    filters: {debug: false, info: true, web: true, warn: true, error: true},
+    ...store.defaultState
+};
+
+export default function reduce(state: EventLogState = defaultState, action): EventLogState {
     switch (action.type) {
 
         case TOGGLE_VISIBILITY:
@@ -22,18 +33,18 @@ export default function reduce(state = defaultState, action) {
             }
 
         case TOGGLE_FILTER:
-            const filters = { ...state.filters, [action.filter]: !state.filters[action.filter] }
+            const filters = {...state.filters, [action.filter]: !state.filters[action.filter]}
             return {
                 ...state,
                 filters,
-                ...reduceStore(state, storeActions.setFilter(log => filters[log.level]))
+                ...store.reduce(state, store.setFilter<EventLogItem>(log => filters[log.level]))
             }
 
         case ADD:
         case RECEIVE:
             return {
                 ...state,
-                ...reduceStore(state, storeActions[action.cmd](action.data, log => state.filters[log.level]))
+                ...store.reduce(state, store[action.cmd](action.data, log => state.filters[log.level]))
             }
 
         default:
@@ -41,15 +52,15 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-export function toggleFilter(filter) {
-    return { type: TOGGLE_FILTER, filter }
+export function toggleFilter(filter: LogLevel) {
+    return {type: TOGGLE_FILTER, filter}
 }
 
 export function toggleVisibility() {
-    return { type: TOGGLE_VISIBILITY }
+    return {type: TOGGLE_VISIBILITY}
 }
 
-export function add(message, level = 'web') {
+export function add(message: string, level: LogLevel = 'web') {
     let data = {
         id: Math.random().toString(),
         message,

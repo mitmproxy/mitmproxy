@@ -1,51 +1,64 @@
-import { fetchApi } from "../utils"
-import reduceStore from "./utils/store"
-import * as storeActions from "./utils/store"
+import {fetchApi} from "../utils"
+import * as store from "./utils/store"
 import Filt from "../filt/filt"
-import { RequestUtils } from "../flow/utils"
+import {Flow} from "../flow";
+import * as columns from "../components/FlowTable/FlowColumns";
 
-export const ADD            = 'FLOWS_ADD'
-export const UPDATE         = 'FLOWS_UPDATE'
-export const REMOVE         = 'FLOWS_REMOVE'
-export const RECEIVE        = 'FLOWS_RECEIVE'
-export const SELECT         = 'FLOWS_SELECT'
-export const SET_FILTER     = 'FLOWS_SET_FILTER'
-export const SET_SORT       = 'FLOWS_SET_SORT'
-export const SET_HIGHLIGHT  = 'FLOWS_SET_HIGHLIGHT'
+export const ADD = 'FLOWS_ADD'
+export const UPDATE = 'FLOWS_UPDATE'
+export const REMOVE = 'FLOWS_REMOVE'
+export const RECEIVE = 'FLOWS_RECEIVE'
+export const SELECT = 'FLOWS_SELECT'
+export const SET_FILTER = 'FLOWS_SET_FILTER'
+export const SET_SORT = 'FLOWS_SET_SORT'
+export const SET_HIGHLIGHT = 'FLOWS_SET_HIGHLIGHT'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 
-
-const defaultState = {
-    highlight: null,
-    filter: null,
-    sort: { column: null, desc: false },
-    selected: [],
-    ...reduceStore(undefined, {})
+interface FlowSortFn extends store.SortFn<Flow> {
 }
 
-export default function reduce(state = defaultState, action) {
+interface FlowFilterFn extends store.FilterFn<Flow> {
+}
+
+
+interface FlowsState extends store.State<Flow> {
+    highlight?: string,
+    filter?: string,
+    sort: { column?: string, desc: boolean },
+    selected: string[],
+}
+
+const defaultState: FlowsState = {
+    highlight: undefined,
+    filter: undefined,
+    sort: {column: undefined, desc: false},
+    selected: [],
+    ...store.defaultState
+}
+
+export default function reduce(state: FlowsState = defaultState, action): FlowsState {
     switch (action.type) {
 
         case ADD:
         case UPDATE:
         case REMOVE:
         case RECEIVE:
-            let storeAction = storeActions[action.cmd](
+            let storeAction = store[action.cmd](
                 action.data,
                 makeFilter(state.filter),
                 makeSort(state.sort)
             )
 
             let selected = state.selected
-            if(action.type === REMOVE && state.selected.includes(action.data)) {
-                if(state.selected.length > 1){
+            if (action.type === REMOVE && state.selected.includes(action.data)) {
+                if (state.selected.length > 1) {
                     selected = selected.filter(x => x !== action.data)
                 } else {
                     selected = []
                     if (action.data in state.viewIndex && state.view.length > 1) {
                         let currentIndex = state.viewIndex[action.data],
                             nextSelection
-                        if(currentIndex === state.view.length -1){ // last row
+                        if (currentIndex === state.view.length - 1) { // last row
                             nextSelection = state.view[currentIndex - 1]
                         } else {
                             nextSelection = state.view[currentIndex + 1]
@@ -58,14 +71,14 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 selected,
-                ...reduceStore(state, storeAction)
+                ...store.reduce(state, storeAction)
             }
 
         case SET_FILTER:
             return {
                 ...state,
                 filter: action.filter,
-                ...reduceStore(state, storeActions.setFilter(makeFilter(action.filter), makeSort(state.sort)))
+                ...store.reduce(state, store.setFilter(makeFilter(action.filter), makeSort(state.sort)))
             }
 
         case SET_HIGHLIGHT:
@@ -78,7 +91,7 @@ export default function reduce(state = defaultState, action) {
             return {
                 ...state,
                 sort: action.sort,
-                ...reduceStore(state, storeActions.setSort(makeSort(action.sort)))
+                ...store.reduce(state, store.setSort(makeSort(action.sort)))
             }
 
         case SELECT:
@@ -92,37 +105,18 @@ export default function reduce(state = defaultState, action) {
     }
 }
 
-
-const sortKeyFuns = {
-
-    TLSColumn: flow => flow.request.scheme,
-
-    PathColumn: flow => RequestUtils.pretty_url(flow.request),
-
-    MethodColumn: flow => flow.request.method,
-
-    StatusColumn: flow => flow.response && flow.response.status_code,
-
-    TimeColumn: flow => flow.response && flow.response.timestamp_end - flow.request.timestamp_start,
-
-    SizeColumn: flow => {
-        let total = flow.request.contentLength
-        if (flow.response) {
-            total += flow.response.contentLength || 0
-        }
-        return total
-    },
-}
-
-export function makeFilter(filter) {
+export function makeFilter(filter?: string): FlowFilterFn | undefined {
     if (!filter) {
         return
     }
     return Filt.parse(filter)
 }
 
-export function makeSort({ column, desc }) {
-    const sortKeyFun = sortKeyFuns[column]
+export function makeSort({column, desc}: { column?: string, desc: boolean }): FlowSortFn | undefined {
+    if (!column) {
+        return
+    }
+    const sortKeyFun = columns[column].sortKey
     if (!sortKeyFun) {
         return
     }
@@ -139,16 +133,16 @@ export function makeSort({ column, desc }) {
     }
 }
 
-export function setFilter(filter) {
-    return { type: SET_FILTER, filter }
+export function setFilter(filter: string) {
+    return {type: SET_FILTER, filter}
 }
 
-export function setHighlight(highlight) {
-    return { type: SET_HIGHLIGHT, highlight }
+export function setHighlight(highlight: string) {
+    return {type: SET_HIGHLIGHT, highlight}
 }
 
-export function setSort(column, desc) {
-    return { type: SET_SORT, sort: { column, desc } }
+export function setSort(column: string, desc: boolean) {
+    return {type: SET_SORT, sort: {column, desc}}
 }
 
 export function selectRelative(flows, shift) {
@@ -168,70 +162,70 @@ export function selectRelative(flows, shift) {
 }
 
 
-export function resume(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/resume`, { method: 'POST' })
+export function resume(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/resume`, {method: 'POST'})
 }
 
 export function resumeAll() {
-    return dispatch => fetchApi('/flows/resume', { method: 'POST' })
+    return dispatch => fetchApi('/flows/resume', {method: 'POST'})
 }
 
-export function kill(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/kill`, { method: 'POST' })
+export function kill(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/kill`, {method: 'POST'})
 }
 
 export function killAll() {
-    return dispatch => fetchApi('/flows/kill', { method: 'POST' })
+    return dispatch => fetchApi('/flows/kill', {method: 'POST'})
 }
 
 
-export function remove(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}`, { method: 'DELETE' })
+export function remove(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}`, {method: 'DELETE'})
 }
 
-export function duplicate(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, { method: 'POST' })
+export function duplicate(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, {method: 'POST'})
 }
 
-export function replay(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/replay`, { method: 'POST' })
+export function replay(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/replay`, {method: 'POST'})
 }
 
-export function revert(flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/revert`, { method: 'POST' })
+export function revert(flow: Flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/revert`, {method: 'POST'})
 }
 
-export function update(flow, data) {
+export function update(flow: Flow, data) {
     return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
 }
 
-export function uploadContent(flow, file, type) {
+export function uploadContent(flow: Flow, file, type) {
     const body = new FormData()
-    file       = new window.Blob([file], { type: 'plain/text' })
+    file = new window.Blob([file], {type: 'plain/text'})
     body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content.data`, { method: 'POST', body })
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content.data`, {method: 'POST', body})
 }
 
 
 export function clear() {
-    return dispatch => fetchApi('/clear', { method: 'POST' })
+    return dispatch => fetchApi('/clear', {method: 'POST'})
 }
 
 export function download() {
-    if (process.env.NODE_ENV !== 'test'){
+    if (process.env.NODE_ENV !== 'test') {
         window.location.href = '/flows/dump';
     }
-    return { type: REQUEST_ACTION }
+    return {type: REQUEST_ACTION}
 }
 
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    return dispatch => fetchApi('/flows/dump', { method: 'POST', body })
+    return dispatch => fetchApi('/flows/dump', {method: 'POST', body})
 }
 
 
-export function select(id) {
+export function select(id: string) {
     return {
         type: SELECT,
         flowIds: id ? [id] : []

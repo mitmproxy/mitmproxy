@@ -1,5 +1,4 @@
-import React from "react"
-
+import * as React from "react";
 type DocLinkProps = {
     children?: React.ReactNode,
     resource: string

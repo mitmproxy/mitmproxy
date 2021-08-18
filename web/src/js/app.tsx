@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import {render} from 'react-dom'
 import {Provider} from 'react-redux'
 
@@ -11,14 +11,17 @@ import {store} from "./ducks";
 
 
 useUrlState(store)
+// @ts-ignore
 if (window.MITMWEB_STATIC) {
+    // @ts-ignore
     window.backend = new StaticBackend(store)
 } else {
+    // @ts-ignore
     window.backend = new WebSocketBackend(store)
 }
 
-window.addEventListener('error', msg => {
-    store.dispatch(addLog(msg))
+window.addEventListener('error', (e: ErrorEvent) => {
+    store.dispatch(addLog(`${e.message}\n${e.error.stack}`))
 })
 
 document.addEventListener('DOMContentLoaded', () => {

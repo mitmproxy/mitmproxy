@@ -3,7 +3,7 @@ import classnames from 'classnames'
 import {Flow} from "../../flow";
 import {useAppDispatch, useAppSelector} from "../../ducks";
 import {select} from '../../ducks/flows'
-import {columns, QuickActionsColumn} from "./FlowColumns";
+import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
     flow: Flow
@@ -33,7 +33,7 @@ export default React.memo(function FlowRow({flow, selected, highlighted}: FlowRo
         dispatch(select(flow.id));
     }, [flow]);
 
-    const displayColumns = displayColumnNames.map(x => columns[x]).concat(QuickActionsColumn);
+    const displayColumns = displayColumnNames.map(x => columns[x]).filter(x => x).concat(columns.quickactions);
 
     return (
         <tr className={className} onClick={onClick}>

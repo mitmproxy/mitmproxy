@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import FlowRow from '../../../components/FlowTable/FlowRow'
 import {testState} from '../../ducks/tutils'
 import {fireEvent, render, screen} from "../../test-utils";

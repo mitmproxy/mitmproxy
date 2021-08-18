@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import { ContentEmpty, ContentMissing, ContentTooLarge } from '../../../components/ContentView/MetaViews'
 import { TFlow } from '../../ducks/tutils'

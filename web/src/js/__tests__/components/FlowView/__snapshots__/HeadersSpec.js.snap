@@ -19,7 +19,7 @@ exports[`HeaderEditor Component should render correctly 1`] = `
 />
 `;
 
-exports[`Headers Component should handle correctly 1`] = `
+exports[`KeyValueListEditor Component should handle correctly 1`] = `
 <table
   className="header-table"
 >

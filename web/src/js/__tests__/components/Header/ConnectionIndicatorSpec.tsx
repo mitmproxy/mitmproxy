@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import ConnectionIndicator from '../../../components/Header/ConnectionIndicator'
 import * as connectionActions from '../../../ducks/connection'
 import {render} from "../../test-utils"

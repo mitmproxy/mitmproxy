@@ -1,13 +1,14 @@
-import React, {ChangeEvent} from "react"
+import * as React from "react";
 import {useDispatch} from "react-redux"
-import {toggleVisibility} from "../../ducks/eventLog"
-import {useAppDispatch, useAppSelector} from "../../ducks";
-import * as optionsActions from "../../ducks/options";
+import * as eventLogActions from "../../ducks/eventLog"
+import * as commandBarActions from "../../ducks/commandBar"
+import {useAppDispatch, useAppSelector} from "../../ducks"
+import * as optionsActions from "../../ducks/options"
 
 
 type MenuToggleProps = {
     value: boolean
-    onChange: (e: ChangeEvent) => void
+    onChange: (e: React.ChangeEvent) => void
     children: React.ReactNode
 }
 
@@ -51,9 +52,23 @@ export function EventlogToggle() {
     return (
         <MenuToggle
             value={visible}
-            onChange={() => dispatch(toggleVisibility())}
+            onChange={() => dispatch(eventLogActions.toggleVisibility())}
         >
             Display Event Log
+        </MenuToggle>
+    )
+}
+
+export function CommandBarToggle() {
+    const dispatch = useDispatch(),
+        visible = useAppSelector(state => state.commandBar.visible);
+
+    return (
+        <MenuToggle
+            value={visible}
+            onChange={() => dispatch(commandBarActions.toggleVisibility())}
+        >
+            Display Command Bar
         </MenuToggle>
     )
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import FilterInput from '../../../components/Header/FilterInput'
 import FilterDocs from '../../../components/Header/FilterDocs'

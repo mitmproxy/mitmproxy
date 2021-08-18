@@ -2,6 +2,7 @@ import { Key } from "../../utils"
 import { selectTab } from "./flow"
 import * as flowsActions from "../flows"
 import * as modalActions from "./modal"
+import {tabsForFlow} from "../../components/FlowView";
 
 
 export function onKeyDown(e) {
@@ -56,7 +57,7 @@ export function onKeyDown(e) {
 
             case Key.LEFT: {
                 if (!flow) break
-                let tabs       = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
+                let tabs       = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
                     nextTab    = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
                 dispatch(selectTab(nextTab))
@@ -66,7 +67,7 @@ export function onKeyDown(e) {
             case Key.TAB:
             case Key.RIGHT: {
                 if (!flow) break
-                let tabs       = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details']),
+                let tabs       = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
                     nextTab    = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
                 dispatch(selectTab(nextTab))

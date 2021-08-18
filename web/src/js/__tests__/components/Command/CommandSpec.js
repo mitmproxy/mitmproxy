@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import CommandBar from '../../../components/CommandBar'
 import { render } from "../../test-utils"
 import fetchMock from 'fetch-mock';

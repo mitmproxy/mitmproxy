@@ -12,6 +12,7 @@ import flows from "./flows"
 import ui from "./ui/index"
 import connection from "./connection"
 import options from './options'
+import commandBar from "./commandBar";
 import thunk, {ThunkAction, ThunkDispatch, ThunkMiddleware} from "redux-thunk";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import conf from "./conf";
@@ -22,6 +23,7 @@ import options_meta from "./options_meta";
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 export const rootReducer = combineReducers({
+    commandBar,
     eventLog,
     flows,
     connection,

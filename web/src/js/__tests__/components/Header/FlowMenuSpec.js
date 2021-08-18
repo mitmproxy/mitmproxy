@@ -1,6 +1,6 @@
 jest.mock('../../../flow/utils')
 
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import FlowMenu from '../../../components/Header/FlowMenu'
 import { TFlow, TStore }from '../../ducks/tutils'

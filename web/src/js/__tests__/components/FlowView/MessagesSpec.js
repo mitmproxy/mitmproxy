@@ -1,15 +1,15 @@
 jest.mock('../../../components/ContentView', () => () => null)
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
-import {ErrorView, Request, Response} from '../../../components/FlowView/Messages'
+import {ErrorView, Request, Response} from '../../../components/FlowView/HttpMessages'
 import {Provider} from 'react-redux'
 import {TFlow, TStore} from '../../ducks/tutils'
 import {updateEdit} from '../../../ducks/ui/flow'
 import {parseUrl} from '../../../flow/utils'
 import ContentView from '../../../components/ContentView'
 import ContentViewOptions from '../../../components/ContentView/ContentViewOptions'
-import Headers from '../../../components/FlowView/Headers'
-import ValueEditor from '../../../components/ValueEditor/ValueEditor'
+import KeyValueListEditor from '../../../components/editors/KeyValueListEditor'
+import ValueEditor from '../../../components/editors/ValueEditor'
 
 global.fetch = jest.fn()
 
@@ -59,7 +59,7 @@ describe('Request Component', () => {
     })
 
     it('should handle change on flow request header', () => {
-        let headers = provider.root.findAllByType(Headers).filter(headers => headers.props.type === 'headers')[0]
+        let headers = provider.root.findAllByType(KeyValueListEditor).filter(headers => headers.props.type === 'headers')[0]
         headers.props.onChange('foo')
         expect(store.getActions()).toEqual([updateEdit({request: {headers: 'foo'}})])
     })
@@ -118,7 +118,7 @@ describe('Response Component', () => {
     })
 
     it('should handle change on flow response headers', () => {
-        let headers = provider.root.findAllByType(Headers).filter(headers => headers.props.type === 'headers')[0]
+        let headers = provider.root.findAllByType(KeyValueListEditor).filter(headers => headers.props.type === 'headers')[0]
         headers.props.onChange('foo')
         expect(store.getActions()).toEqual([updateEdit({response: {headers: 'foo'}})])
     })

@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import Modal from '../../../components/Modal/Modal'
 import {render} from "../../test-utils"
 import {setActiveModal} from "../../../ducks/ui/modal";

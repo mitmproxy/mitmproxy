@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import {useDispatch} from 'react-redux'
 import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider, MenuItem} from '../common/Dropdown'
@@ -9,10 +9,7 @@ import HideInStatic from "../common/HideInStatic";
 export default React.memo(function FileMenu() {
     const dispatch = useDispatch();
     return (
-        <Dropdown className="pull-left special" text="mitmproxy" options={{"placement": "bottom-start"}}>
-            <MenuItem onClick={() => confirm('Delete all flows?') && dispatch(flowsActions.clear())}>
-                <i className="fa fa-fw fa-trash"/>&nbsp;Clear All
-            </MenuItem>
+        <Dropdown className="pull-left special" text="File" options={{"placement": "bottom-start"}}>
             <li>
                 <FileChooser
                     icon="fa-folder-open"
@@ -29,6 +26,9 @@ export default React.memo(function FileMenu() {
             </li>
             <MenuItem onClick={() => dispatch(flowsActions.download())}>
                 <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save...
+            </MenuItem>
+            <MenuItem onClick={() => confirm('Delete all flows?') && dispatch(flowsActions.clear())}>
+                <i className="fa fa-fw fa-trash"/>&nbsp;Clear All
             </MenuItem>
             <HideInStatic>
                 <Divider/>

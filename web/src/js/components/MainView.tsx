@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import Splitter from './common/Splitter'
 import FlowTable from './FlowTable'
 import FlowView from './FlowView'

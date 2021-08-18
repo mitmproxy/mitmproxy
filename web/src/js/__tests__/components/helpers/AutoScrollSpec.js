@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react";
 import ReactDOM from "react-dom"
 import AutoScroll from '../../../components/helpers/AutoScroll'
 import { calcVScroll } from '../../../components/helpers/VirtualScroll'

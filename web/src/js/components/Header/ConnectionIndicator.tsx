@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react";
 import {ConnectionState} from "../../ducks/connection"
 import {useAppSelector} from "../../ducks";
 

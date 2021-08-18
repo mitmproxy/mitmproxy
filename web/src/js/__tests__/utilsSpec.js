@@ -71,20 +71,3 @@ describe('getDiff', () => {
         expect(utils.getDiff(obj1, obj2)).toEqual({ b: {foo: 2}, c:[4]})
     })
 })
-
-describe('pure', () => {
-    let tFunc = function({ className }) {
-        return (<p className={ className }>foo</p>)
-    },
-        puredFunc = utils.pure(tFunc),
-        f = new puredFunc('bar')
-
-    it('should display function name', () => {
-        expect(utils.pure(tFunc).displayName).toEqual('tFunc')
-    })
-
-    it('should render properties', () => {
-        expect(f.render()).toEqual(tFunc('bar'))
-    })
-
-})

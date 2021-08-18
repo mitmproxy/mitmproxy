@@ -1,6 +1,6 @@
-import React from 'react'
+import * as React from "react"
 import classnames from 'classnames'
-import {columns, QuickActionsColumn} from './FlowColumns'
+import * as columns from './FlowColumns'
 
 import {setSort} from '../../ducks/flows'
 import {useAppDispatch, useAppSelector} from "../../ducks";
@@ -12,12 +12,12 @@ export default React.memo(function FlowTableHead() {
         displayColumnNames = useAppSelector(state => state.options.web_columns);
 
     const sortType = sortDesc ? 'sort-desc' : 'sort-asc'
-    const displayColumns = displayColumnNames.map(x => columns[x]).concat(QuickActionsColumn);
+    const displayColumns = displayColumnNames.map(x => columns[x]).filter(x => x).concat(columns.quickactions);
 
     return (
         <tr>
             {displayColumns.map(Column => (
-                <th className={classnames(Column.headerClass, sortColumn === Column.name && sortType)}
+                <th className={classnames(`col-${Column.name}`, sortColumn === Column.name && sortType)}
                     key={Column.name}
                     onClick={() => dispatch(setSort(Column.name, Column.name !== sortColumn ? false : !sortDesc))}>
                     {Column.headerName}

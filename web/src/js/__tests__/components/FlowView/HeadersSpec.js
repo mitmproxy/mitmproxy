@@ -1,8 +1,8 @@
-import React from 'react'
+import * as React from "react"
 import ReactDOM from 'react-dom'
 import renderer from 'react-test-renderer'
 import TestUtils from 'react-dom/test-utils'
-import Headers, { HeaderEditor } from '../../../components/FlowView/Headers'
+import KeyValueListEditor, { HeaderEditor } from '../../../components/editors/KeyValueListEditor'
 import { Key } from '../../../utils'
 
 describe('HeaderEditor Component', () => {
@@ -54,12 +54,12 @@ describe('Headers Component', () => {
     let changeFn = jest.fn(),
         mockMessage = { headers: [['k1', 'v1'], ['k2', '']] }
     it('should handle correctly', () => {
-        let headers = renderer.create(<Headers onChange={changeFn} message={mockMessage}/>),
+        let headers = renderer.create(<KeyValueListEditor onChange={changeFn} message={mockMessage}/>),
             tree = headers.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
-    let headers = TestUtils.renderIntoDocument(<Headers onChange={changeFn} message={mockMessage}/>),
+    let headers = TestUtils.renderIntoDocument(<KeyValueListEditor onChange={changeFn} message={mockMessage}/>),
         headerEditors = TestUtils.scryRenderedComponentsWithType(headers, HeaderEditor),
         key1Editor = headerEditors[0],
         value1Editor = headerEditors[1],
@@ -123,7 +123,7 @@ describe('Headers Component', () => {
 
     it('should not delete last row when handle remove', () => {
         mockMessage = { headers: [['', '']] }
-        headers = TestUtils.renderIntoDocument(<Headers onChange={changeFn} message={mockMessage}/>)
+        headers = TestUtils.renderIntoDocument(<KeyValueListEditor onChange={changeFn} message={mockMessage}/>)
         headers.onChange(0, 0, '')
         expect(changeFn).toBeCalledWith([['Name', 'Value']])
 

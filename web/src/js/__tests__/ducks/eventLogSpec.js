@@ -1,12 +1,12 @@
 import reduceEventLog, * as eventLogActions from '../../ducks/eventLog'
-import reduceStore from '../../ducks/utils/store'
+import reduce from '../../ducks/utils/store'
 
 describe('event log reducer', () => {
     it('should return initial state', () => {
         expect(reduceEventLog(undefined, {})).toEqual({
             visible: false,
             filters: { debug: false, info: true, web: true, warn: true, error: true },
-            ...reduceStore(undefined, {}),
+            ...reduce(undefined, {}),
         })
     })
 
@@ -15,7 +15,7 @@ describe('event log reducer', () => {
         expect(reduceEventLog(state, eventLogActions.toggleFilter('info'))).toEqual({
             visible: false,
             filters: { ...state.filters, info: false},
-            ...reduceStore(state, {})
+            ...reduce(state, {})
         })
     })
 
@@ -24,7 +24,7 @@ describe('event log reducer', () => {
         expect(reduceEventLog(state, eventLogActions.toggleVisibility())).toEqual({
             visible: true,
             filters: {...state.filters},
-            ...reduceStore(undefined, {})
+            ...reduce(undefined, {})
         })
     })
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import {PureFlowTable as FlowTable} from '../../components/FlowTable'
 import TestUtils from 'react-dom/test-utils'

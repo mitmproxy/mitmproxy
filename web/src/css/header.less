@@ -31,7 +31,10 @@ header {
     height: @menu-height - @menu-legend-height;
     display: flow-root;
 
-    > .btn {
+    > a {
+        display: inline-block;
+    }
+    > .btn, > a > .btn {
         height: @menu-height - @menu-legend-height;
         text-align: center;
         margin: 0 1px;

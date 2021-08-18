@@ -1,7 +1,7 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import TestUtils from 'react-dom/test-utils'
-import ValidateEditor from '../../../components/ValueEditor/ValidateEditor'
+import ValidateEditor from '../../../components/editors/ValidateEditor'
 
 describe('ValidateEditor Component', () => {
     let validateFn = jest.fn( content => content.length == 3),
@@ -9,14 +9,14 @@ describe('ValidateEditor Component', () => {
 
     it('should render correctly', () => {
         let validateEditor = renderer.create(
-            <ValidateEditor content="foo" onDone={doneFn} isValid={validateFn}/>
+            <ValidateEditor content="foo" onEditDone={doneFn} isValid={validateFn}/>
         ),
             tree = validateEditor.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
     let validateEditor = TestUtils.renderIntoDocument(
-        <ValidateEditor content="foo" onDone={doneFn} isValid={validateFn}/>
+        <ValidateEditor content="foo" onEditDone={doneFn} isValid={validateFn}/>
     )
     it('should handle componentWillReceiveProps', () => {
         let mockProps = {

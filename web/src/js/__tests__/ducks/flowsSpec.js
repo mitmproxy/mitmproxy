@@ -2,7 +2,7 @@ jest.mock('../../utils')
 
 import reduceFlows from "../../ducks/flows"
 import * as flowActions from "../../ducks/flows"
-import reduceStore from "../../ducks/utils/store"
+import reduce from "../../ducks/utils/store"
 import { fetchApi } from "../../utils"
 import { createStore } from "./tutils"
 
@@ -18,7 +18,7 @@ describe('flow reducer', () => {
             filter: null,
             sort: { column: null, desc: false },
             selected: [],
-            ...reduceStore(undefined, {})
+            ...reduce(undefined, {})
         })
     })
 

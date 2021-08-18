@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import ToggleButton from '../../../components/common/ToggleButton'
 

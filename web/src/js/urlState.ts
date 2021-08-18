@@ -7,12 +7,14 @@
  */
 import { select, setFilter, setHighlight } from "./ducks/flows"
 import { selectTab } from "./ducks/ui/flow"
-import { toggleVisibility } from "./ducks/eventLog"
+import * as eventLogActions from "./ducks/eventLog"
+import * as commandBarActions from "./ducks/commandBar"
 
 const Query = {
     SEARCH: "s",
     HIGHLIGHT: "h",
-    SHOW_EVENTLOG: "e"
+    SHOW_EVENTLOG: "e",
+    SHOW_COMMANDBAR: "c",
 };
 
 export function updateStoreFromUrl(store) {
@@ -41,7 +43,11 @@ export function updateStoreFromUrl(store) {
                         break
                     case Query.SHOW_EVENTLOG:
                         if (!store.getState().eventLog.visible)
-                            store.dispatch(toggleVisibility())
+                            store.dispatch(eventLogActions.toggleVisibility())
+                        break
+                    case Query.SHOW_COMMANDBAR:
+                        if (!store.getState().commandBar.visible)
+                            store.dispatch(commandBarActions.toggleVisibility())
                         break
                     default:
                         console.error(`unimplemented query arg: ${x}`)
@@ -56,6 +62,7 @@ export function updateUrlFromStore(store) {
         [Query.SEARCH]: state.flows.filter,
         [Query.HIGHLIGHT]: state.flows.highlight,
         [Query.SHOW_EVENTLOG]: state.eventLog.visible,
+        [Query.SHOW_COMMANDBAR]: state.commandBar.visible,
     }
     const queryStr = Object.keys(query)
         .filter(k => query[k])

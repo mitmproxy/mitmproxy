@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import EventLogList from '../../../components/EventLog/EventList'
 import TestUtils from 'react-dom/test-utils'
 

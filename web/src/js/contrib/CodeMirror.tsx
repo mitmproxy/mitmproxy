@@ -1,7 +1,7 @@
 // Adapted from https://www.npmjs.com/package/react-codemirror
 // Copyright (c) 2016 Jed Watson. MIT Licensed.
 
-import React from 'react'
+import * as React from "react"
 import className from 'classnames'
 import codemirror from "codemirror";
 import _ from "lodash";
@@ -52,7 +52,7 @@ export default class CodeMirror extends React.Component<CodeMirrorProps, CodeMir
     }
 
     UNSAFE_componentWillMount() {
-        this.componentWillReceiveProps = _.debounce(this.componentWillReceiveProps, 0);
+        //this.componentWillReceiveProps = _.debounce(this.componentWillReceiveProps, 0);
         if (this.props.path) {
             console.error('Warning: react-codemirror: the `path` prop has been changed to `name`');
         }

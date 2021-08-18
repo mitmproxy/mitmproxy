@@ -1,6 +1,7 @@
 import _ from 'lodash'
-import React from 'react'
+import * as React from 'react'
 
+// @ts-ignore
 window._ = _;
 window.React = React;
 
@@ -57,44 +58,41 @@ export var formatTimeDelta = function (milliseconds) {
 };
 
 
-export var formatTimeStamp = function (seconds, utc_to_local=true) {
-    var utc = new Date(seconds * 1000);
-    if (utc_to_local) {
-        var local = utc.getTime() - utc.getTimezoneOffset() * 60 * 1000;
-        var ts = new Date(local).toISOString();
-    } else {
-        var ts = utc.toISOString();
-    }
-    return ts.replace("T", " ").replace("Z", "");
+export var formatTimeStamp = function (
+    seconds: number,
+    {milliseconds = true} = {}
+) {
+    let utc = new Date(seconds * 1000);
+    let ts = utc.toISOString().replace("T", " ").replace("Z", "");
+    if(!milliseconds)
+        ts = ts.slice(0, -4);
+    return ts;
 };
 
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
 var end = String.fromCharCode(0xffff);
+
 export function reverseString(s) {
     return String.fromCharCode.apply(String,
-            _.map(s.split(""), function (c) {
-                return 0xffff - c.charCodeAt(0);
-            })
-        ) + end;
+        _.map(s.split(""), function (c) {
+            return 0xffff - c.charCodeAt(0);
+        })
+    ) + end;
 }
 
 function getCookie(name) {
     let r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
-const xsrf = `_xsrf=${getCookie("_xsrf")}`;
+
+const xsrf = getCookie("_xsrf");
 
 export function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
     if (options.method && options.method !== "GET") {
-        if (url.indexOf("?") === -1) {
-            url += "?" + xsrf;
-        } else {
-            url += "&" + xsrf;
-        }
-    } else {
-        url += '.json'
+        options.headers = options.headers || {};
+        options.headers["X-XSRFToken"] = xsrf;
     }
     if (url.startsWith("/")) {
         url = "." + url;
@@ -117,27 +115,27 @@ fetchApi.put = (url: string, json: any, options: RequestInit = {}) => fetchApi(
         ...options
     }
 )
+
+export async function runCommand(command: string, ...args): Promise<any> {
+    let response = await fetchApi(`/commands/${command}`, {
+        method: 'POST', headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({"arguments": args})
+    });
+    return await response.json()
+}
+
 // deep comparison of two json objects (dicts). arrays are handeled as a single value.
 // return: json object including only the changed keys value pairs.
 export function getDiff(obj1, obj2) {
     let result = {...obj2};
-    for(let key in obj1) {
-        if(_.isEqual(obj2[key], obj1[key]))
+    for (let key in obj1) {
+        if (_.isEqual(obj2[key], obj1[key]))
             result[key] = undefined
-        else if(Object.prototype.toString.call(obj2[key]) === '[object Object]' &&
-                Object.prototype.toString.call(obj1[key]) === '[object Object]' )
+        else if (Object.prototype.toString.call(obj2[key]) === '[object Object]' &&
+            Object.prototype.toString.call(obj1[key]) === '[object Object]')
             result[key] = getDiff(obj1[key], obj2[key])
     }
     return result
-}
-
-/**
- * @deprecated use React.memo instead.
- */
-export const pure = renderFn => class extends React.PureComponent {
-    static displayName = renderFn.name
-
-    render() {
-        return renderFn(this.props)
-    }
 }

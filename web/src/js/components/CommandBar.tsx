@@ -37,8 +37,8 @@ export function Results({results}: ResultProps) {
 
     useEffect(() => {
         if (resultElement) {
-            resultElement.current.addEventListener('DOMNodeInserted', event => {
-                const { currentTarget: target } = event;
+            resultElement.current.addEventListener('DOMNodeInserted', (event) => {
+                const target = event.currentTarget as Element;
                 target.scroll({ top: target.scrollHeight, behavior: 'auto' });
             });
         }
@@ -99,7 +99,7 @@ export default function CommandBar() {
         .then(data => {
             setAllCommands(data["commands"])
             setCompletionCandidate(getAvailableCommands(data["commands"]))
-            setAvailableCommands(Object.keys(data["commands"]))
+            setAvailableCommands(Object.keys(data))
         })
     }, [])
 

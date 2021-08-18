@@ -19,6 +19,7 @@ export interface HTTPFlow extends _Flow {
     type: "http"
     request: HTTPRequest
     response?: HTTPResponse
+    websocket?: WebSocketData
 }
 
 export interface TCPFlow extends _Flow {
@@ -34,18 +35,14 @@ export type Address = [string, number];
 
 export interface Connection {
     id: string
-    ip_address?: string[]
-    address?: string[]
-    source_address?: string[]
     peername?: Address
     sockname?: Address
 
     tls_established: boolean
+    cert?: Certificate
     sni?: string | boolean
     cipher?: string
-    cipher_name?: string
     alpn?: string
-    alpn_proto_negotiated?: string
     tls_version?: string
 
     timestamp_start?: number
@@ -62,17 +59,29 @@ export interface Client extends Connection {
 
 export interface Server extends Connection {
     address?: Address
+    timestamp_tcp_setup?: number
 }
 
-export type Headers = [string, string][];
+export interface Certificate {
+    keyinfo: [string, number]
+    sha256: string,
+    notbefore: number,
+    notafter: number,
+    serial: string,
+    subject: [string, string][],
+    issuer: [string, string][],
+    altnames: string[],
+}
+
+export type HTTPHeader = [name: string, value: string]
+export type HTTPHeaders = HTTPHeader[];
 
 export interface HTTPMessage {
     http_version: string
-    headers: Headers
-    trailers?: Headers
-    contentLength: number
-    contentHash: string
-    content?: string
+    headers: HTTPHeaders
+    trailers?: HTTPHeaders
+    contentLength?: number
+    contentHash?: string
     timestamp_start: number
     timestamp_end?: number
 }
@@ -89,4 +98,15 @@ export interface HTTPRequest extends HTTPMessage {
 export interface HTTPResponse extends HTTPMessage {
     status_code: number
     reason: string
+}
+
+export interface WebSocketData {
+    messages_meta: {
+        count: number,
+        timestamp_last?: number
+    },
+    closed_by_client?: boolean
+    close_code?: number
+    close_reason?: string
+    timestamp_end?: number
 }

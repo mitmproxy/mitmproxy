@@ -1,13 +1,13 @@
-import React from "react"
+import * as React from "react";
 import classnames from "classnames"
 
-type ButtonProps = {
-    onClick: () => void,
-    children?: React.ReactNode,
-    icon?: string,
-    disabled?: boolean,
-    className?: string,
-    title?: string,
+export interface ButtonProps {
+    onClick: () => void
+    children?: React.ReactNode
+    icon?: string
+    disabled?: boolean
+    className?: string
+    title?: string
 }
 
 export default function Button({ onClick, children, icon, disabled, className, title }: ButtonProps) {
@@ -16,7 +16,7 @@ export default function Button({ onClick, children, icon, disabled, className, t
              onClick={disabled ? undefined : onClick}
              disabled={disabled}
              title={title}>
-            {icon && (<i className={"fa fa-fw " + icon}/> )}
+            {icon && <><i className={"fa " + icon}/>&nbsp;</> }
             {children}
         </button>
     )

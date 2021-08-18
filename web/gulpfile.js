@@ -43,7 +43,7 @@ function styles_app_dev() {
 
 
 function esbuild(dev) {
-    return gulp.src('src/js/app.jsx').pipe(
+    return gulp.src('src/js/app.tsx').pipe(
         gulpEsbuild({
             outfile: 'app.js',
             sourcemap: true,

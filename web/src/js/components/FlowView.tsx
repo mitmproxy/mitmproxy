@@ -1,44 +1,66 @@
-import React from 'react'
-import _ from 'lodash'
+import * as React from "react"
+import {FunctionComponent} from "react"
+import {Request, Response} from './FlowView/HttpMessages'
+import Connection from './FlowView/Connection'
+import Error from "./FlowView/Error"
+import Timing from "./FlowView/Timing"
+import WebSocket from "./FlowView/WebSocket"
 
-import Nav from './FlowView/Nav'
-import { ErrorView as Error, Request, Response } from './FlowView/Messages'
-import Details from './FlowView/Details'
-
-import { selectTab } from '../ducks/ui/flow'
+import {selectTab} from '../ducks/ui/flow'
 import {useAppDispatch, useAppSelector} from "../ducks";
+import {Flow} from "../flow";
+import classnames from "classnames";
 
-export const allTabs = { Request, Response, Error, Details }
+type TabProps = {
+    flow: Flow
+}
+
+export const allTabs: { [name: string]: FunctionComponent<TabProps> } = {
+    request: Request,
+    response: Response,
+    error: Error,
+    connection: Connection,
+    timing: Timing,
+    websocket: WebSocket
+}
+
+export function tabsForFlow(flow: Flow): string[] {
+    const tabs = ['request', 'response', 'websocket', 'error'].filter(k => flow[k])
+    tabs.push("connection")
+    tabs.push("timing")
+    return tabs;
+}
 
 export default function FlowView() {
     const dispatch = useAppDispatch(),
-    flow = useAppSelector(state => state.flows.byId[state.flows.selected[0]])
+        flow = useAppSelector(state => state.flows.byId[state.flows.selected[0]]),
+        tabs = tabsForFlow(flow);
 
-    let tabName = useAppSelector(state => state.ui.flow.tab)
-
-    // only display available tab names
-    const tabs = ['request', 'response', 'error'].filter(k => flow[k])
-    tabs.push("details")
-
-    if (tabs.indexOf(tabName) < 0) {
-        if (tabName === 'response' && flow.error) {
-            tabName = 'error'
-        } else if (tabName === 'error' && flow.response) {
-            tabName = 'response'
+    let active = useAppSelector(state => state.ui.flow.tab)
+    if (tabs.indexOf(active) < 0) {
+        if (active === 'response' && flow.error) {
+            active = 'error'
+        } else if (active === 'error' && "response" in flow) {
+            active = 'response'
         } else {
-            tabName = tabs[0]
+            active = tabs[0]
         }
     }
-
-    const Tab = allTabs[_.capitalize(tabName)]
+    const Tab = allTabs[active];
 
     return (
         <div className="flow-detail">
-            <Nav
-                tabs={tabs}
-                active={tabName}
-                onSelectTab={(tab: string) => dispatch(selectTab(tab))}
-            />
+            <nav className="nav-tabs nav-tabs-sm">
+                {tabs.map(tabId => (
+                    <a key={tabId} href="#" className={classnames({active: active === tabId})}
+                       onClick={event => {
+                           event.preventDefault()
+                           dispatch(selectTab(tabId))
+                       }}>
+                        {allTabs[tabId].name}
+                    </a>
+                ))}
+            </nav>
             <Tab flow={flow}/>
         </div>
     )

@@ -1,6 +1,6 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
-import withContentLoader from '../../../components/ContentView/ContentLoader'
+import withContentLoader from '../../../components/contentviews/useContent'
 import { TFlow } from '../../ducks/tutils'
 import TestUtils from 'react-dom/test-utils'
 import mockXMLHttpRequest from 'mock-xmlhttprequest'

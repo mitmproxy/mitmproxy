@@ -36,18 +36,16 @@ const reducer: Reducer<OptionsState> = (state = defaultState, action) => {
 }
 export default reducer
 
-export function pureSendUpdate(option, value) {
-    return async dispatch => {
-        try {
-            const response = await fetchApi.put('/options', {[option]: value});
-            if (response.status === 200) {
-                dispatch(optionsEditorActions.updateSuccess(option))
-            } else {
-                throw await response.text()
-            }
-        } catch (error) {
-            dispatch(optionsEditorActions.updateError(option, error))
+export async function pureSendUpdate(option: Option, value, dispatch) {
+    try {
+        const response = await fetchApi.put('/options', {[option]: value});
+        if (response.status === 200) {
+            dispatch(optionsEditorActions.updateSuccess(option))
+        } else {
+            throw await response.text()
         }
+    } catch (error) {
+        dispatch(optionsEditorActions.updateError(option, error))
     }
 }
 
@@ -56,7 +54,7 @@ let sendUpdate = _.throttle(pureSendUpdate, 500, {leading: true, trailing: true}
 export function update(name: Option, value: any): AppThunk {
     return dispatch => {
         dispatch(optionsEditorActions.startUpdate(name, value))
-        dispatch(sendUpdate(name, value));
+        sendUpdate(name, value, dispatch);
     }
 }
 

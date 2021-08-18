@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from "react"
 import FlowTableHead from '../../../components/FlowTable/FlowTableHead'
 import {Provider} from 'react-redux'
 import {TStore} from '../../ducks/tutils'
@@ -23,7 +23,7 @@ test("FlowTableHead Component", async () => {
     fireEvent.click(screen.getByText("Size"))
 
     expect(store.getActions()).toStrictEqual([
-            setSort("SizeColumn", false)
+            setSort("size", false)
         ]
     )
 })

@@ -1,7 +1,7 @@
-import React from 'react'
+import * as React from "react"
 import renderer from 'react-test-renderer'
 import TestUtils from 'react-dom/test-utils'
-import ValueEditor from '../../../components/ValueEditor/ValueEditor'
+import ValueEditor from '../../../components/editors/ValueEditor'
 import { Key } from '../../../utils'
 
 describe('ValueEditor Component', () => {
@@ -9,14 +9,14 @@ describe('ValueEditor Component', () => {
     let mockFn = jest.fn()
     it ('should render correctly', () => {
         let valueEditor = renderer.create(
-            <ValueEditor content="foo" onDone={mockFn}/>
+            <ValueEditor content="foo" onEditDone={mockFn}/>
         ),
             tree = valueEditor.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
     let valueEditor = TestUtils.renderIntoDocument(
-        <ValueEditor content="<script>foo</script>" onDone={mockFn}/>
+        <ValueEditor content="<script>foo</script>" onEditDone={mockFn}/>
     )
     it('should handle this.blur', () => {
         valueEditor.input.blur = jest.fn()
