@@ -41,5 +41,5 @@ def test_simple():
 
 def test_render_priority():
     v = css.ViewCSS()
-    assert v.render_priority(b"", content_type="text/css")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="text/css")
+    assert not v.render_priority(b"data", content_type="text/plain")

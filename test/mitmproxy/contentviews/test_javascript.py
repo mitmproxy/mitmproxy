@@ -31,7 +31,7 @@ def test_format_xml(filename, tdata):
 
 def test_render_priority():
     v = javascript.ViewJavaScript()
-    assert v.render_priority(b"", content_type="application/x-javascript")
-    assert v.render_priority(b"", content_type="application/javascript")
-    assert v.render_priority(b"", content_type="text/javascript")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="application/x-javascript")
+    assert v.render_priority(b"data", content_type="application/javascript")
+    assert v.render_priority(b"data", content_type="text/javascript")
+    assert not v.render_priority(b"data", content_type="text/plain")

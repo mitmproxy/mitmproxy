@@ -32,6 +32,6 @@ def test_format_pbuf(filename, tdata):
 
 def test_render_priority():
     v = protobuf.ViewProtobuf()
-    assert v.render_priority(b"", content_type="application/x-protobuf")
-    assert v.render_priority(b"", content_type="application/x-protobuffer")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="application/x-protobuf")
+    assert v.render_priority(b"data", content_type="application/x-protobuffer")
+    assert not v.render_priority(b"data", content_type="text/plain")

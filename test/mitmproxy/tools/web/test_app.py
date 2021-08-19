@@ -14,14 +14,14 @@ import pytest
 from mitmproxy.http import Headers
 
 
-import tornado.testing  # noqa
-from tornado import httpclient  # noqa
-from tornado import websocket  # noqa
+import tornado.testing
+from tornado import httpclient
+from tornado import websocket
 
-from mitmproxy import options, optmanager  # noqa
-from mitmproxy.test import tflow  # noqa
-from mitmproxy.tools.web import app  # noqa
-from mitmproxy.tools.web import master as webmaster  # noqa
+from mitmproxy import options, optmanager
+from mitmproxy.test import tflow
+from mitmproxy.tools.web import app
+from mitmproxy.tools.web import master as webmaster
 
 
 @pytest.fixture(scope="module")
@@ -216,7 +216,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ).headers["Content-Disposition"] == 'attachment; filename=bar.jpg'
 
         f.response.content = b""
-        assert self.fetch("/flows/42/response/content.data").code == 400
+        r = self.fetch("/flows/42/response/content.data")
+        assert r.code == 200
+        assert r.body == b""
 
         f.revert()
 
@@ -268,7 +270,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 500
         resp = self.fetch("/commands/commands.history.get", method="POST")
         assert resp.code == 200
-        assert get_json(resp) == ["unknown", "commands.history.get"]
+        assert get_json(resp) == {"value": []}
 
     def test_events(self):
         resp = self.fetch("/events")

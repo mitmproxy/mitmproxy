@@ -17,5 +17,5 @@ def test_view_urlencoded():
 
 def test_render_priority():
     v = urlencoded.ViewURLEncoded()
-    assert v.render_priority(b"", content_type="application/x-www-form-urlencoded")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="application/x-www-form-urlencoded")
+    assert not v.render_priority(b"data", content_type="text/plain")

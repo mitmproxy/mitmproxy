@@ -13,7 +13,7 @@ import tornado.web
 import tornado.websocket
 
 import mitmproxy.flow
-import mitmproxy.tools.web.master  # noqa
+import mitmproxy.tools.web.master
 from mitmproxy import certs, command, contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
@@ -21,7 +21,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
-from mitmproxy.addons import export
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.tools.console.common import SYMBOL_MARK, render_marker
@@ -533,7 +532,7 @@ class ExecuteCommand(RequestHandler):
         result = self.master.commands.call_strings(cmd, args)
         self.write({
             "value": result,
-            "type": command.typename(type(result)) if result is not None else "none"
+            # "type": command.typename(type(result)) if result is not None else "none"
         })
 
 
@@ -621,7 +620,8 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
                 (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
+                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"
+                    r"content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
                     FlowContentView),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
