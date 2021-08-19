@@ -1,5 +1,5 @@
 import uuid
-from typing import Literal, Union
+from typing import Optional, Union
 
 from mitmproxy import connection
 from mitmproxy import controller
@@ -87,20 +87,22 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
 
 
 def tflow(
-    client_conn: Union[Literal[True], None, connection.Client] = True,
-    server_conn: Union[Literal[True], None, connection.Server] = True,
-    req: Union[Literal[True], None, http.Request] = True,
-    resp: Union[Literal[True], None, http.Response] = None,
-    err: Union[Literal[True], None, flow.Error] = None,
-    ws: Union[Literal[True], None, websocket.WebSocketData] = None,
+    *,
+    client_conn: Optional[connection.Client] = None,
+    server_conn: Optional[connection.Server] = None,
+    req: Optional[http.Request] = None,
+    resp: Union[bool, http.Response] = False,
+    err: Union[bool, flow.Error] = False,
+    ws: Union[bool, websocket.WebSocketData] = False,
 ) -> http.HTTPFlow:
     """Create a flow for testing."""
-    if client_conn is True:
+    if client_conn is None:
         client_conn = tclient_conn()
-    if server_conn is True:
+    if server_conn is None:
         server_conn = tserver_conn()
-    if req is True:
+    if req is None:
         req = treq()
+
     if resp is True:
         resp = tresp()
     if err is True:
@@ -108,11 +110,15 @@ def tflow(
     if ws is True:
         ws = twebsocket()
 
+    assert resp is False or isinstance(resp, http.Response)
+    assert err is False or isinstance(err, flow.Error)
+    assert ws is False or isinstance(ws, websocket.WebSocketData)
+
     f = http.HTTPFlow(client_conn, server_conn)
     f.request = req
-    f.response = resp
-    f.error = err
-    f.websocket = ws
+    f.response = resp or None
+    f.error = err or None
+    f.websocket = ws or None
     f.reply = controller.DummyReply()
     return f
 

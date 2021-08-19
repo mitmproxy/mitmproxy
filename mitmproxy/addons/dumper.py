@@ -129,14 +129,14 @@ class Dumper:
             self.echo("")
 
     def _echo_request_line(self, flow: http.HTTPFlow) -> None:
-        if flow.client_conn:
+        if flow.is_replay == "request":
+            client = click.style("[replay]", fg="yellow", bold=True)
+        elif flow.client_conn.peername:
             client = click.style(
                 strutils.escape_control_characters(
                     human.format_address(flow.client_conn.peername)
                 )
             )
-        elif flow.is_replay == "request":
-            client = click.style("[replay]", fg="yellow", bold=True)
         else:
             client = ""
 

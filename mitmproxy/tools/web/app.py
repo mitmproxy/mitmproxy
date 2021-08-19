@@ -23,7 +23,7 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow, TCPMessage
-from mitmproxy.tools.console.common import SYMBOL_MARK, render_marker
+from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
 
@@ -57,7 +57,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "is_replay": flow.is_replay,
         "type": flow.type,
         "modified": flow.modified(),
-        "marked": render_marker(flow.marked).replace(SYMBOL_MARK, "🔴") if flow.marked else "",
+        "marked": emoji.get(flow.marked, "🔴") if flow.marked else "",
     }
 
     if flow.client_conn:

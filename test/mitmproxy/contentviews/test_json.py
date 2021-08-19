@@ -50,3 +50,4 @@ def test_render_priority():
     assert v.render_priority(b"data", content_type="application/vnd.api+json")
     assert v.render_priority(b"data", content_type="application/acme+json")
     assert not v.render_priority(b"data", content_type="text/plain")
+    assert not v.render_priority(b"", content_type="application/json")
