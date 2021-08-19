@@ -100,7 +100,7 @@ export default function CommandBar() {
             setAllCommands(data["commands"])
             setCompletionCandidate(getAvailableCommands(data["commands"]))
             setAvailableCommands(Object.keys(data))
-        })
+        }).catch(e => console.error(e))
     }, [])
 
     const parseCommand = (originalInput: string, input: string) => {

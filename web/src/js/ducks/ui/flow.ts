@@ -10,7 +10,7 @@ interface UiFlowState {
     contentViewFor: { [messageId: string]: string }
 }
 
-const defaultState: UiFlowState = {
+export const defaultState: UiFlowState = {
     tab: 'request',
     contentViewFor: {},
 }

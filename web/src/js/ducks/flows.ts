@@ -2,7 +2,7 @@ import {fetchApi} from "../utils"
 import * as store from "./utils/store"
 import Filt from "../filt/filt"
 import {Flow} from "../flow";
-import * as columns from "../components/FlowTable/FlowColumns";
+import FlowColumns from "../components/FlowTable/FlowColumns";
 
 export const ADD = 'FLOWS_ADD'
 export const UPDATE = 'FLOWS_UPDATE'
@@ -21,10 +21,10 @@ interface FlowFilterFn extends store.FilterFn<Flow> {
 }
 
 
-interface FlowsState extends store.State<Flow> {
+export interface FlowsState extends store.State<Flow> {
     highlight?: string,
     filter?: string,
-    sort: { column?: string, desc: boolean },
+    sort: { column?: keyof typeof FlowColumns, desc: boolean },
     selected: string[],
 }
 
@@ -112,11 +112,13 @@ export function makeFilter(filter?: string): FlowFilterFn | undefined {
     return Filt.parse(filter)
 }
 
-export function makeSort({column, desc}: { column?: string, desc: boolean }): FlowSortFn | undefined {
+export function makeSort({column, desc}: { column: keyof typeof FlowColumns, desc: boolean }): FlowSortFn;
+export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn | undefined;
+export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn | undefined {
     if (!column) {
         return
     }
-    const sortKeyFun = columns[column].sortKey
+    const sortKeyFun = FlowColumns[column].sortKey
     if (!sortKeyFun) {
         return
     }
@@ -225,7 +227,7 @@ export function upload(file) {
 }
 
 
-export function select(id: string) {
+export function select(id?: string) {
     return {
         type: SELECT,
         flowIds: id ? [id] : []

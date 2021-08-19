@@ -1,0 +1,854 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowView 1`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class="active"
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="request"
+    >
+      <div
+        class="first-line request-line"
+      >
+        <div>
+          <span
+            class="inline-input has-success"
+            tabindex="0"
+          >
+            GET
+          </span>
+           
+          <span
+            class="inline-input has-success"
+            tabindex="0"
+          >
+            http://address:22/second
+          </span>
+           
+          <span
+            class="inline-input has-success"
+            tabindex="0"
+          >
+            HTTP/1.1
+          </span>
+        </div>
+      </div>
+      <div
+        class="kv-editor headers"
+      >
+        <div
+          class="kv-row"
+        >
+          <span
+            class="inline-input kv-key"
+            tabindex="0"
+          >
+            header
+          </span>
+          : 
+          <span
+            class="inline-input kv-value"
+            placeholder="empty"
+            tabindex="0"
+          >
+            qvalue
+          </span>
+        </div>
+        <div
+          class="kv-row"
+        >
+          <span
+            class="inline-input kv-key"
+            tabindex="0"
+          >
+            content-length
+          </span>
+          : 
+          <span
+            class="inline-input kv-value"
+            placeholder="empty"
+            tabindex="0"
+          >
+            7
+          </span>
+        </div>
+        <div
+          aria-label="Add"
+          class="kv-add-row fa fa-plus-square-o"
+          role="button"
+        />
+      </div>
+      <hr />
+      <div
+        class="contentview"
+      >
+        <div
+          class="controls"
+        >
+          <h5>
+            Loading...
+          </h5>
+          <button
+            class="btn-xs btn btn-default"
+          >
+            <i
+              class="fa fa-edit"
+            />
+             Edit
+          </button>
+           
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+            title="Upload a file to replace the content."
+          >
+            <i
+              class="fa fa-fw fa-upload"
+            />
+            Replace
+            <input
+              class="hidden"
+              type="file"
+            />
+          </a>
+           
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+          >
+            <span>
+              <i
+                class="fa fa-fw fa-files-o"
+              />
+               
+              <b>
+                View:
+              </b>
+               auto 
+              <span
+                class="caret"
+              />
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 2`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="response"
+    >
+      <div
+        class="first-line response-line"
+      >
+        <span
+          class="inline-input has-success"
+          tabindex="0"
+        >
+          HTTP/1.1
+        </span>
+         
+        <span
+          class="inline-input has-success"
+          tabindex="0"
+        >
+          200
+        </span>
+         
+        <span
+          class="inline-input"
+          tabindex="0"
+        >
+          OK
+        </span>
+      </div>
+      <div
+        class="kv-editor headers"
+      >
+        <div
+          class="kv-row"
+        >
+          <span
+            class="inline-input kv-key"
+            tabindex="0"
+          >
+            header-response
+          </span>
+          : 
+          <span
+            class="inline-input kv-value"
+            placeholder="empty"
+            tabindex="0"
+          >
+            svalue
+          </span>
+        </div>
+        <div
+          class="kv-row"
+        >
+          <span
+            class="inline-input kv-key"
+            tabindex="0"
+          >
+            content-length
+          </span>
+          : 
+          <span
+            class="inline-input kv-value"
+            placeholder="empty"
+            tabindex="0"
+          >
+            7
+          </span>
+        </div>
+        <div
+          aria-label="Add"
+          class="kv-add-row fa fa-plus-square-o"
+          role="button"
+        />
+      </div>
+      <hr />
+      <div
+        class="contentview"
+      >
+        <div
+          class="controls"
+        >
+          <h5>
+            Loading...
+          </h5>
+          <button
+            class="btn-xs btn btn-default"
+          >
+            <i
+              class="fa fa-edit"
+            />
+             Edit
+          </button>
+           
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+            title="Upload a file to replace the content."
+          >
+            <i
+              class="fa fa-fw fa-upload"
+            />
+            Replace
+            <input
+              class="hidden"
+              type="file"
+            />
+          </a>
+           
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+          >
+            <span>
+              <i
+                class="fa fa-fw fa-files-o"
+              />
+               
+              <b>
+                View:
+              </b>
+               auto 
+              <span
+                class="caret"
+              />
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 3`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="websocket"
+    >
+      <h4>
+        WebSocket
+      </h4>
+      <div
+        class="contentview"
+      >
+        <div
+          class="controls"
+        >
+          <h5>
+            3 Messages
+          </h5>
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+          >
+            <span>
+              <i
+                class="fa fa-fw fa-files-o"
+              />
+               
+              <b>
+                View:
+              </b>
+               auto 
+              <span
+                class="caret"
+              />
+            </span>
+          </a>
+        </div>
+      </div>
+      <div>
+        <i
+          class="fa fa-fw fa-window-close text-muted"
+        />
+          Closed by server with code 1000 (Close Reason).
+        <small
+          class="pull-right"
+        >
+          1999-12-31 23:00:05.000
+        </small>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 4`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="detail"
+    >
+      <h4>
+        Client Connection
+      </h4>
+      <table
+        class="connection-table"
+      >
+        <tbody>
+          <tr>
+            <td>
+              Address:
+            </td>
+            <td>
+              127.0.0.1:22
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <abbr
+                title="TLS Server Name Indication"
+              >
+                SNI
+              </abbr>
+              :
+            </td>
+            <td>
+              address
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <abbr
+                title="ALPN protocol negotiated"
+              >
+                ALPN
+              </abbr>
+              :
+            </td>
+            <td>
+              http/1.1
+            </td>
+          </tr>
+          <tr>
+            <td>
+              TLS Version:
+            </td>
+            <td>
+              TLSv1.2
+            </td>
+          </tr>
+          <tr>
+            <td>
+              TLS Cipher:
+            </td>
+            <td>
+              cipher
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h4>
+        Server Connection
+      </h4>
+      <table
+        class="connection-table"
+      >
+        <tbody>
+          <tr>
+            <td>
+              Address:
+            </td>
+            <td>
+              address:22
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Resolved address:
+            </td>
+            <td>
+              192.168.0.1:22
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Source address:
+            </td>
+            <td>
+              address:22
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <abbr
+                title="TLS Server Name Indication"
+              >
+                SNI
+              </abbr>
+              :
+            </td>
+            <td>
+              address
+            </td>
+          </tr>
+          <tr>
+            <td>
+              TLS Version:
+            </td>
+            <td>
+              TLSv1.2
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 5`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="timing"
+    >
+      <h4>
+        Timing
+      </h4>
+      <table
+        class="timing-table"
+      >
+        <tbody>
+          <tr>
+            <td>
+              Client conn. established:
+            </td>
+            <td>
+              1999-12-31 23:00:00.000
+              <span
+                class="text-muted"
+              >
+                (0ms)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              First request byte:
+            </td>
+            <td>
+              1999-12-31 23:00:00.000
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Client conn. TLS handshake:
+            </td>
+            <td>
+              1999-12-31 23:00:01.000
+              <span
+                class="text-muted"
+              >
+                (1s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Request complete:
+            </td>
+            <td>
+              1999-12-31 23:00:01.000
+              <span
+                class="text-muted"
+              >
+                (1s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Server conn. initiated:
+            </td>
+            <td>
+              1999-12-31 23:00:02.000
+              <span
+                class="text-muted"
+              >
+                (2s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              First response byte:
+            </td>
+            <td>
+              1999-12-31 23:00:02.000
+              <span
+                class="text-muted"
+              >
+                (2s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Server conn. TCP handshake:
+            </td>
+            <td>
+              1999-12-31 23:00:03.000
+              <span
+                class="text-muted"
+              >
+                (3s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Response complete:
+            </td>
+            <td>
+              1999-12-31 23:00:03.000
+              <span
+                class="text-muted"
+              >
+                (3s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Server conn. TLS handshake:
+            </td>
+            <td>
+              1999-12-31 23:00:04.000
+              <span
+                class="text-muted"
+              >
+                (4s)
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 6`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        WebSocket
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="error"
+    >
+      <div
+        class="alert alert-warning"
+      >
+        error
+        <div>
+          <small>
+            1999-12-31 23:00:07.000
+          </small>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;

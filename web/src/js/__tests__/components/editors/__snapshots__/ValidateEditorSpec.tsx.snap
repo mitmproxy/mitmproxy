@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ValidateEditor 1`] = `
+<DocumentFragment>
+  <span
+    class="inline-input has-success"
+    tabindex="0"
+  >
+    ok
+  </span>
+</DocumentFragment>
+`;

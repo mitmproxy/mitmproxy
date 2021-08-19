@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal, Union
 
 from mitmproxy import connection
 from mitmproxy import controller
@@ -66,14 +67,8 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
         timestamp_start=946681202,
         timestamp_end=946681203,
     )
-    flow.websocket = websocket.WebSocketData()
 
-    if messages is True:
-        flow.websocket.messages = [
-            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
-            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
-            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
-        ]
+    flow.websocket = twebsocket()
 
     flow.websocket.close_reason = close_reason
 
@@ -91,15 +86,15 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
     return flow
 
 
-def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None) -> http.HTTPFlow:
-    """
-    @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
-    @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
-    @type req:         bool | None | mitmproxy.proxy.protocol.http.Request
-    @type resp:        bool | None | mitmproxy.proxy.protocol.http.Response
-    @type err:         bool | None | mitmproxy.proxy.protocol.primitives.Error
-    @return:           mitmproxy.proxy.protocol.http.HTTPFlow
-    """
+def tflow(
+    client_conn: Union[Literal[True], None, connection.Client] = True,
+    server_conn: Union[Literal[True], None, connection.Server] = True,
+    req: Union[Literal[True], None, http.Request] = True,
+    resp: Union[Literal[True], None, http.Response] = None,
+    err: Union[Literal[True], None, flow.Error] = None,
+    ws: Union[Literal[True], None, websocket.WebSocketData] = None,
+) -> http.HTTPFlow:
+    """Create a flow for testing."""
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -110,11 +105,14 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None) -> 
         resp = tresp()
     if err is True:
         err = terr()
+    if ws is True:
+        ws = twebsocket()
 
     f = http.HTTPFlow(client_conn, server_conn)
     f.request = req
     f.response = resp
     f.error = err
+    f.websocket = ws
     f.reply = controller.DummyReply()
     return f
 
@@ -197,3 +195,20 @@ def tserver_conn() -> connection.Server:
 def terr(content: str = "error") -> flow.Error:
     err = flow.Error(content, 946681207)
     return err
+
+
+def twebsocket(messages: bool = True) -> websocket.WebSocketData:
+    ws = websocket.WebSocketData()
+
+    if messages:
+        ws.messages = [
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
+            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
+        ]
+    ws.close_reason = "Close Reason"
+    ws.close_code = 1000
+    ws.closed_by_client = False
+    ws.timestamp_end = 946681205
+
+    return ws

@@ -149,3 +149,4 @@ export default function Connection({flow}: { flow: Flow }) {
         </section>
     )
 }
+Connection.displayName = "Connection"

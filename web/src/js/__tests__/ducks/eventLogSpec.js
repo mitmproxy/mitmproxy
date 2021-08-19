@@ -1,5 +1,5 @@
 import reduceEventLog, * as eventLogActions from '../../ducks/eventLog'
-import reduce from '../../ducks/utils/store'
+import {reduce} from '../../ducks/utils/store'
 
 describe('event log reducer', () => {
     it('should return initial state', () => {

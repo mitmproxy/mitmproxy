@@ -52,7 +52,7 @@ export const defaultState = {
  *          }
  *
  */
-export function reduce<S extends Item>(state: State<S>, action) {
+export function reduce<S extends Item>(state: State<S> = defaultState, action) {
 
     let {byId, list, listIndex, view, viewIndex} = state
 

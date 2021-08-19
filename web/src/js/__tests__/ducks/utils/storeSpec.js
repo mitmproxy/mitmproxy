@@ -1,4 +1,5 @@
-import reduce, * as storeActions from '../../../ducks/utils/store'
+import {reduce} from '../../../ducks/utils/store'
+import * as storeActions from '../../../ducks/utils/store'
 
 describe('store reducer', () => {
     it('should return initial state', () => {

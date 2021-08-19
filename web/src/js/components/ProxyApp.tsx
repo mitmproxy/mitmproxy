@@ -84,31 +84,3 @@ export default connect(
         onKeyDown,
     }
 )(ProxyAppMain)
-
-/*
-export default function ProxyAppMain() {
-
-
-    useEffect(() => {
-        window.addEventListener('keydown', (e) => dispatch(onKeyDown(e)));
-        return function cleanup() {
-            window.removeEventListener('keydown', (e) => dispatch(onKeyDown(e)));
-        }
-    }, []);
-
-    return (
-        <div id="container" tabIndex={0}>
-            <Header/>
-            <MainView/>
-            {showCommandBar && (
-                <CommandBar key="commandbar"/>
-            )}
-            {showEventLog && (
-                <EventLog key="eventlog"/>
-            )}
-            <Footer/>
-            <Modal/>
-        </div>
-    )
-}
-*/

@@ -84,13 +84,11 @@ export default class ValueEditor extends Component<ValueEditorProps> {
         });
 
     }
-    cancelEditing = () => {
+    resetValue = () => {
         if (!this.input.current) return console.error("unreachable");
 
         this.input.current.textContent = this.props.content;
         this.props.onInput?.(this.props.content);
-
-        this.finishEditing();
     }
     finishEditing = () => {
         if (!this.input.current) return console.error("unreachable");
@@ -162,7 +160,8 @@ export default class ValueEditor extends Component<ValueEditorProps> {
         switch (e.keyCode) {
             case Key.ESC:
                 e.preventDefault()
-                this.cancelEditing()
+                this.resetValue()
+                this.finishEditing()
                 break
             case Key.ENTER:
                 if (!e.shiftKey) {

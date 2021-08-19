@@ -14,8 +14,9 @@ exports[`OptionMenu Component should render correctly 1`] = `
         title="Open Options"
       >
         <i
-          className="fa fa-fw fa-cogs text-primary"
+          className="fa fa-cogs text-primary"
         />
+         
         Edit Options 
         <sup>
           alpha
@@ -101,6 +102,18 @@ exports[`OptionMenu Component should render correctly 1`] = `
             type="checkbox"
           />
           Display Event Log
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={true}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Display Command Bar
         </label>
       </div>
     </div>

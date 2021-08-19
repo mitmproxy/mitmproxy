@@ -39,8 +39,8 @@ export function useContent(url: string, hash?: string): string | undefined {
 
             setAbort(controller);
             return () => {
-                if (abort)
-                    abort.abort();
+                if (!controller.signal.aborted)
+                    controller.abort();
             }
         },
         [url, hash]

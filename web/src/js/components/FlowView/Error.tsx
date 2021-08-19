@@ -18,3 +18,4 @@ export default function Error({flow}: ErrorProps) {
         </section>
     )
 }
+Error.displayName = "Error";

@@ -18,8 +18,9 @@ exports[`Button Component should render correctly 1`] = `
   title="title"
 >
   <i
-    className="fa fa-fw icon"
+    className="fa icon"
   />
+   
   <a>
     foo
   </a>

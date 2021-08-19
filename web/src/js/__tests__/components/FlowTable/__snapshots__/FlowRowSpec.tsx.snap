@@ -5,7 +5,7 @@ exports[`FlowRow 1`] = `
   <table>
     <tbody>
       <tr
-        class="selected highlighted has-request has-response"
+        class="selected highlighted intercepted has-request has-response"
       >
         <td
           class="col-tls col-tls-https"
@@ -14,16 +14,22 @@ exports[`FlowRow 1`] = `
           class="col-icon"
         >
           <div
-            class="resource-icon resource-icon-plain"
+            class="resource-icon resource-icon-websocket"
           />
         </td>
         <td
           class="col-path"
         >
           <i
+            class="fa fa-fw fa-pause pull-right"
+          />
+          <i
             class="fa fa-fw fa-exclamation pull-right"
           />
-          http://address:22/second
+          <span
+            class="marker pull-right"
+          />
+          http://address:22/path
         </td>
         <td
           class="col-method"
@@ -44,7 +50,7 @@ exports[`FlowRow 1`] = `
         <td
           class="col-time"
         >
-          3s
+          5s
         </td>
         <td
           class="col-quickactions"
@@ -55,7 +61,7 @@ exports[`FlowRow 1`] = `
               href="#"
             >
               <i
-                class="fa fa-fw fa-repeat text-primary"
+                class="fa fa-fw fa-play text-success"
               />
             </a>
             <a

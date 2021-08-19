@@ -1,21 +1,13 @@
-import {applyMiddleware, combineReducers, createStore as createReduxStore} from 'redux'
 import thunk from 'redux-thunk'
 import configureStore, {MockStoreCreator, MockStoreEnhanced} from 'redux-mock-store'
 import {ConnectionState} from '../../ducks/connection'
 import TFlow from './_tflow'
-import {RootState} from "../../ducks";
+import {AppDispatch, RootState} from "../../ducks";
 import {HTTPFlow} from "../../flow";
 import {defaultState as defaultConf} from "../../ducks/conf"
 import {defaultState as defaultOptions} from "../../ducks/options"
 
-const mockStoreCreator: MockStoreCreator<RootState> = configureStore([thunk])
-
-export function createStore(parts) {
-    return createReduxStore(
-        combineReducers(parts),
-        applyMiddleware(...[thunk])
-    )
-}
+const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> = configureStore([thunk])
 
 export {TFlow}
 
@@ -63,17 +55,8 @@ export const testState: RootState = {
     },
     ui: {
         flow: {
-            contentView: 'Auto',
-            displayLarge: false,
-            showFullContent: true,
-            maxContentLines: 10,
-            content: [[['foo', 'bar']]],
-            viewDescription: 'foo',
-            modifiedFlow: undefined,
+            contentViewFor: {},
             tab: 'request'
-        },
-        header: {
-            tab: 'Start'
         },
         modal: {
             activeModal: undefined
@@ -87,15 +70,18 @@ export const testState: RootState = {
     },
     options: defaultOptions,
     flows: {
-        selected: [tflow1.id],
+        selected: [tflow2.id],
         byId: {[tflow1.id]: tflow1, [tflow2.id]: tflow2},
-        filter: '~d address',
+        filter: '~u /second',
         highlight: '~u /path',
         sort: {
             desc: true,
-            column: 'PathColumn'
+            column: "path"
         },
-        view: [tflow1, tflow2]
+        view: [tflow2],
+        list: [tflow1, tflow2],
+        listIndex: {[tflow1.id]: 0, [tflow2.id]: 1},
+        viewIndex: {[tflow2.id]: 0},
     },
     connection: {
         state: ConnectionState.ESTABLISHED
@@ -110,13 +96,20 @@ export const testState: RootState = {
             error: true
         },
         view: [
-            {id: 1, level: 'info', message: 'foo'},
-            {id: 2, level: 'error', message: 'bar'}
-        ]
+            {id: "1", level: 'info', message: 'foo'},
+            {id: "2", level: 'error', message: 'bar'}
+        ],
+        byId: {}, // TODO: incomplete
+        list: [],  // TODO: incomplete
+        listIndex: {},  // TODO: incomplete
+        viewIndex: {},  // TODO: incomplete
+    },
+    commandBar: {
+        visible: true,
     }
 }
 
 
-export function TStore(): MockStoreEnhanced<RootState> {
+export function TStore(): MockStoreEnhanced<RootState, AppDispatch> {
     return mockStoreCreator(testState)
 }

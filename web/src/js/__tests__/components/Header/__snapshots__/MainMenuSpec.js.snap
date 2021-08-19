@@ -26,7 +26,7 @@ exports[`MainMenu 1`] = `
             class="form-control"
             placeholder="Search"
             type="text"
-            value="~d address"
+            value="~u /second"
           />
         </div>
         <div
@@ -86,104 +86,6 @@ exports[`MainMenu 1`] = `
             class="fa fa-forward text-success"
           />
            Resume All
-        </button>
-      </div>
-      <div
-        class="menu-legend"
-      >
-        Intercept
-      </div>
-    </div>
-  </div>
-</DocumentFragment>
-`;
-
-exports[`StartMenu 1`] = `
-<DocumentFragment>
-  <div
-    class="main-menu"
-  >
-    <div
-      class="menu-group"
-    >
-      <div
-        class="menu-content"
-      >
-        <div
-          class="filter-input input-group"
-        >
-          <span
-            class="input-group-addon"
-          >
-            <i
-              class="fa fa-fw fa-search"
-              style="color: black;"
-            />
-          </span>
-          <input
-            class="form-control"
-            placeholder="Search"
-            type="text"
-            value="~d address"
-          />
-        </div>
-        <div
-          class="filter-input input-group"
-        >
-          <span
-            class="input-group-addon"
-          >
-            <i
-              class="fa fa-fw fa-tag"
-              style="color: rgb(0, 0, 0);"
-            />
-          </span>
-          <input
-            class="form-control"
-            placeholder="Highlight"
-            type="text"
-            value="~u /path"
-          />
-        </div>
-      </div>
-      <div
-        class="menu-legend"
-      >
-        Find
-      </div>
-    </div>
-    <div
-      class="menu-group"
-    >
-      <div
-        class="menu-content"
-      >
-        <div
-          class="filter-input input-group"
-        >
-          <span
-            class="input-group-addon"
-          >
-            <i
-              class="fa fa-fw fa-pause"
-              style="color: rgb(68, 68, 68);"
-            />
-          </span>
-          <input
-            class="form-control"
-            placeholder="Intercept"
-            type="text"
-            value=""
-          />
-        </div>
-        <button
-          class="btn-sm btn btn-default"
-          title="[a]ccept all"
-        >
-          <i
-            class="fa fa-fw fa-forward text-success"
-          />
-          Resume All
         </button>
       </div>
       <div

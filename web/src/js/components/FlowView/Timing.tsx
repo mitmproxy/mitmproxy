@@ -92,3 +92,4 @@ export default function Timing({flow}: { flow: Flow }) {
         </section>
     )
 }
+Timing.displayName = "Timing"

@@ -1,6 +1,6 @@
 import * as React from "react";
 import Dropdown, {Divider, MenuItem, SubMenu} from '../../../components/common/Dropdown'
-import {fireEvent, render, screen, waitFor} from '@testing-library/react'
+import {fireEvent, render, screen, waitFor} from "../../test-utils";
 
 
 test('Dropdown', async () => {
@@ -18,11 +18,9 @@ test('Dropdown', async () => {
     await waitFor(() => expect(onOpen).toBeCalledWith(true))
     expect(asFragment()).toMatchSnapshot()
 
-    /*
     onOpen.mockClear()
     fireEvent.click(document.body)
-    await waitFor(() => expect(onOpen).toBeCalledWith(false))
-     */
+    await waitFor(() => expect(onOpen).toBeCalledWith(false));
 })
 
 test('SubMenu', async () => {
@@ -45,9 +43,9 @@ test('SubMenu', async () => {
 test('MenuItem', async () => {
     let click = jest.fn();
     const {asFragment} = render(
-        <MenuItem onClick={click}>click me</MenuItem>
+        <MenuItem onClick={click}>wtf</MenuItem>
     )
     expect(asFragment()).toMatchSnapshot()
-    fireEvent.click(screen.getByText("click me"))
-    expect(click).toBeCalled()
+    fireEvent.click(screen.getByText("wtf"))
+    await waitFor(() => expect(click).toBeCalled());
 })

@@ -48,6 +48,7 @@ export default function WebSocket({flow}: { flow: HTTPFlow & { websocket: WebSoc
         </section>
     )
 }
+WebSocket.displayName = "WebSocket"
 
 
 function CloseSummary({websocket}: {websocket: WebSocketData}){

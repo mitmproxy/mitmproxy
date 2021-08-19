@@ -204,7 +204,7 @@ export const quickactions: FlowColumn = ({flow}) => {
     const ct = flow.response && ResponseUtils.getContentType(flow.response);
 
     return (
-        <td className={classnames("col-quickactions", {hover: open})} onClick={(e) => 0/*e.stopPropagation()*/}>
+        <td className={classnames("col-quickactions", {hover: open})} onClick={() => 0}>
             <div>
                 {resume_or_replay}
                 <Dropdown text={<i className="fa fa-fw fa-ellipsis-h text-muted"/>} className="quickaction"
@@ -262,3 +262,15 @@ export const quickactions: FlowColumn = ({flow}) => {
 
 quickactions.headerName = ''
 quickactions.sortKey = flow => 0;
+
+export default {
+    icon,
+    method,
+    path,
+    quickactions,
+    size,
+    status,
+    time,
+    timestamp,
+    tls
+};

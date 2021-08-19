@@ -11,11 +11,11 @@ type ToggleInputButtonProps = {
     inputType: string,
 }
 
-type ToggleInputButtonStates = {
+type ToggleInputButtonState = {
     txt: string,
 }
 
-export default class ToggleInputButton extends Component<ToggleInputButtonProps, ToggleInputButtonStates> {
+export default class ToggleInputButton extends Component<ToggleInputButtonProps, ToggleInputButtonState> {
     constructor(props) {
         super(props)
         this.state = { txt: props.txt || '' }

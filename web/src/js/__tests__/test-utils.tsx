@@ -6,7 +6,9 @@ import {createAppStore} from '../ducks'
 import {testState} from "./ducks/tutils";
 
 // re-export everything
-export * from '@testing-library/react'
+export {
+    waitFor, fireEvent, act, screen
+} from '@testing-library/react'
 
 export function render(
     ui,

@@ -27,7 +27,7 @@ describe('formatTimeSTamp', () => {
 
 describe('reverseString', () => {
     it('should return reversed string', () => {
-        let str1 = "abc", str2="xyz"
+        let str1 = "abc", str2 = "xyz"
         expect(utils.reverseString(str1) > utils.reverseString(str2)).toBeTruthy()
     })
 })
@@ -36,13 +36,13 @@ describe('fetchApi', () => {
     it('should handle fetch operation', () => {
         utils.fetchApi('http://foo/bar', {method: "POST"})
         expect(fetch.mock.calls[0][0]).toEqual(
-            "http://foo/bar?_xsrf=undefined"
+            "http://foo/bar"
         )
         fetch.mockClear()
 
         utils.fetchApi('http://foo?bar=1', {method: "POST"})
         expect(fetch.mock.calls[0][0]).toEqual(
-            "http://foo?bar=1&_xsrf=undefined"
+            "http://foo?bar=1"
         )
 
     })
@@ -52,11 +52,14 @@ describe('fetchApi', () => {
         utils.fetchApi.put("http://foo", [1, 2, 3], {})
         expect(fetch.mock.calls[0]).toEqual(
             [
-                "http://foo?_xsrf=undefined",
+                "http://foo",
                 {
                     body: "[1,2,3]",
                     credentials: "same-origin",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-XSRFToken": undefined,
+                    },
                     method: "PUT"
                 },
             ]
@@ -66,8 +69,8 @@ describe('fetchApi', () => {
 
 describe('getDiff', () => {
     it('should return json object including only the changed keys value pairs', () => {
-        let obj1 = {a: 1, b:{ foo: 1} , c: [3]},
-            obj2 = {a: 1, b:{ foo: 2} , c: [4]}
-        expect(utils.getDiff(obj1, obj2)).toEqual({ b: {foo: 2}, c:[4]})
+        let obj1 = {a: 1, b: {foo: 1}, c: [3]},
+            obj2 = {a: 1, b: {foo: 2}, c: [4]}
+        expect(utils.getDiff(obj1, obj2)).toEqual({b: {foo: 2}, c: [4]})
     })
 })

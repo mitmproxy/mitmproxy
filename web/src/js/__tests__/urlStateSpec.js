@@ -4,6 +4,7 @@ import { updateStoreFromUrl, updateUrlFromStore } from '../urlState'
 import reduceFlows from '../ducks/flows'
 import reduceUI from '../ducks/ui/index'
 import reduceEventLog from '../ducks/eventLog'
+import reduceCommandBar from '../ducks/commandBar'
 import * as flowsActions from '../ducks/flows'
 
 import configureStore from 'redux-mock-store'
@@ -64,7 +65,8 @@ describe('updateUrlFromStore', () => {
     let initialState = {
         flows:    reduceFlows(undefined, {}),
         ui:       reduceUI(undefined, {}),
-        eventLog: reduceEventLog(undefined, {})
+        eventLog: reduceEventLog(undefined, {}),
+        commandBar: reduceCommandBar(undefined, {}),
     }
 
     it('should update initial url', () => {
@@ -89,7 +91,8 @@ describe('initialize', () => {
     let initialState = {
         flows:    reduceFlows(undefined, {}),
         ui:       reduceUI(undefined, {}),
-        eventLog: reduceEventLog(undefined, {})
+        eventLog: reduceEventLog(undefined, {}),
+        commandBar: reduceCommandBar(undefined, {}),
     }
 
     it('should handle initial state', () => {

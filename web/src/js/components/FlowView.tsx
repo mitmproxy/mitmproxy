@@ -15,7 +15,7 @@ type TabProps = {
     flow: Flow
 }
 
-export const allTabs: { [name: string]: FunctionComponent<TabProps> } = {
+export const allTabs: { [name: string]: FunctionComponent<TabProps> & {displayName: string} } = {
     request: Request,
     response: Response,
     error: Error,
@@ -57,7 +57,7 @@ export default function FlowView() {
                            event.preventDefault()
                            dispatch(selectTab(tabId))
                        }}>
-                        {allTabs[tabId].name}
+                        {allTabs[tabId].displayName}
                     </a>
                 ))}
             </nav>

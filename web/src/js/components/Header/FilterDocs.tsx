@@ -13,7 +13,7 @@ export default class FilterDocs extends Component<FilterDocsProps, FilterDocsSta
 
     // @todo move to redux
 
-    static xhr: Promise<any>
+    static xhr: Promise<any> | null
     static doc: {commands: string[][]}
 
     constructor(props, context) {
@@ -25,7 +25,7 @@ export default class FilterDocs extends Component<FilterDocsProps, FilterDocsSta
         if (!FilterDocs.xhr) {
             FilterDocs.xhr = fetchApi('/filter-help').then(response => response.json())
             FilterDocs.xhr.catch(() => {
-                FilterDocs.xhr = Promise.resolve()
+                FilterDocs.xhr = null
             })
         }
         if (!this.state.doc) {

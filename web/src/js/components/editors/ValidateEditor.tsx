@@ -10,11 +10,11 @@ export default function ValidateEditor(props: ValidateEditorProps) {
     const [isValid, setIsValid] = useState(props.isValid(props.content));
     const editor = useRef<ValueEditor>(null);
 
-    const onChange = (newVal: string) => {
+    const onEditDone = (newVal: string) => {
         if (props.isValid(newVal)) {
             props.onEditDone(newVal);
         } else {
-            editor.current?.cancelEditing();
+            editor.current?.resetValue();
         }
     }
 
@@ -23,7 +23,7 @@ export default function ValidateEditor(props: ValidateEditorProps) {
         {...props}
         className={className}
         onInput={newVal => setIsValid(props.isValid(newVal))}
-        onEditDone={onChange}
+        onEditDone={onEditDone}
         ref={editor}
     />
 }

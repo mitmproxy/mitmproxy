@@ -13,8 +13,6 @@ import LineRenderer from "./LineRenderer";
 import ViewSelector from "./ViewSelector";
 
 
-
-
 type HttpMessageProps = {
     flow: HTTPFlow
     message: HTTPMessage
@@ -37,7 +35,12 @@ export default function HttpMessage({flow, message}: HttpMessageProps) {
     const content = useContent(url, message.contentHash);
     const contentViewData = useMemo<ContentViewData | undefined>(() => {
         if (content && !edit) {
-            return JSON.parse(content)
+            try {
+                return JSON.parse(content)
+            } catch (e) {
+                const err: ContentViewData = {"description": "Network Error", lines: [[["error", `${content}`]]]};
+                return err;
+            }
         } else {
             return undefined
         }

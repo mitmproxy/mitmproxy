@@ -6,6 +6,6 @@ exports[`FileMenu Component should render correctly 1`] = `
   href="#"
   onClick={[Function]}
 >
-  mitmproxy
+  File
 </a>
 `;

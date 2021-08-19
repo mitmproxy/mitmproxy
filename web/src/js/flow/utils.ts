@@ -63,7 +63,8 @@ export class MessageUtils {
         } else if (part === flow.response) {
             part = "response";
         }
-        return `./flows/${flow.id}/${part}/` + (view ? `content/${encodeURIComponent(view)}.json?lines=${lines}` : 'content.data');
+        const lineStr = lines ? `?lines=${lines}` : "";
+        return `./flows/${flow.id}/${part}/` + (view ? `content/${encodeURIComponent(view)}.json${lineStr}` : 'content.data');
     }
 }
 

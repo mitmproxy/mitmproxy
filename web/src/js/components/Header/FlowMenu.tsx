@@ -1,6 +1,6 @@
 import * as React from "react";
 import Button from "../common/Button"
-import {MessageUtils} from "../../flow/utils.js"
+import {MessageUtils} from "../../flow/utils"
 import HideInStatic from "../common/HideInStatic";
 import {useAppDispatch, useAppSelector} from "../../ducks";
 import {

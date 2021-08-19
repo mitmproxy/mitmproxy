@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
 
-type SplitterStates = {
+type SplitterState = {
     applied: boolean,
     startX: number,
     startY: number,
@@ -12,7 +12,7 @@ type SplitterProps = {
     axis: string,
 }
 
-export default class Splitter extends Component<SplitterProps, SplitterStates> {
+export default class Splitter extends Component<SplitterProps, SplitterState> {
 
     static defaultProps = { axis: 'x' }
 
@@ -103,7 +103,7 @@ export default class Splitter extends Component<SplitterProps, SplitterStates> {
     render() {
         return (
             <div className={classnames('splitter', this.props.axis === 'x' ? 'splitter-x' : 'splitter-y')}>
-                <div onMouseDown={this.onMouseDown} draggable="true"></div>
+                <div onMouseDown={this.onMouseDown} draggable="true"/>
             </div>
         )
     }

@@ -82,7 +82,7 @@ describe('onKeyDown', () => {
 
     it('should handle switch to left tab', () => {
         store.dispatch(createKeyEvent(Key.LEFT))
-        expect(store.getActions()).toEqual([{ tab: 'details', type: UIActions.SET_TAB }])
+        expect(store.getActions()).toEqual([{ tab: 'timing', type: UIActions.SET_TAB }])
     })
 
     it('should handle switch to right tab', () => {
