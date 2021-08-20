@@ -282,6 +282,8 @@ class Core:
             Save options to a file.
         """
         try:
+            if not path:
+        	    path = "%s/config.yaml" % opts.confdir
             optmanager.save(ctx.options, path)
         except OSError as e:
             raise exceptions.CommandError(
