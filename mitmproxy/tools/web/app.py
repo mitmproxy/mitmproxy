@@ -529,11 +529,17 @@ class ExecuteCommand(RequestHandler):
             args = self.json['arguments']
         except APIError:
             args = []
-        result = self.master.commands.call_strings(cmd, args)
-        self.write({
-            "value": result,
-            # "type": command.typename(type(result)) if result is not None else "none"
-        })
+        try:
+            result = self.master.commands.call_strings(cmd, args)
+        except Exception as e:
+            self.write({
+                "error": str(e)
+            })
+        else:
+            self.write({
+                "value": result,
+                # "type": command.typename(type(result)) if result is not None else "none"
+            })
 
 
 class Events(RequestHandler):

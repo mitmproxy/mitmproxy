@@ -38,3 +38,29 @@ test("sendUpdate", async () => {
     ])
 
 });
+
+test("save", async () => {
+    enableFetchMocks();
+    fetchMock.mockResponseOnce("");
+    let store = TStore();
+    await store.dispatch(OptionsActions.save());
+    expect(fetchMock).toBeCalled();
+});
+
+test("addInterceptFilter", async () => {
+    enableFetchMocks();
+    fetchMock.mockClear();
+    fetchMock.mockResponses("", "");
+    let store = TStore();
+    await store.dispatch(OptionsActions.addInterceptFilter("~u foo"));
+    expect(fetchMock.mock.calls[0][1]?.body).toEqual('{"intercept":"~u foo"}');
+    store.getState().options.intercept = "~u foo";
+
+    await store.dispatch(OptionsActions.addInterceptFilter("~u foo"));
+    expect(fetchMock.mock.calls).toHaveLength(1);
+
+    await store.dispatch(OptionsActions.addInterceptFilter("~u bar"));
+    expect(fetchMock.mock.calls[1][1]?.body).toEqual('{"intercept":"~u foo | ~u bar"}');
+
+
+});

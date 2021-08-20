@@ -112,16 +112,11 @@ export function makeFilter(filter?: string): FlowFilterFn | undefined {
     return Filt.parse(filter)
 }
 
-export function makeSort({column, desc}: { column: keyof typeof FlowColumns, desc: boolean }): FlowSortFn;
-export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn | undefined;
-export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn | undefined {
+export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn {
     if (!column) {
-        return
+        return (a,b) => 0;
     }
     const sortKeyFun = FlowColumns[column].sortKey
-    if (!sortKeyFun) {
-        return
-    }
     return (a, b) => {
         const ka = sortKeyFun(a)
         const kb = sortKeyFun(b)

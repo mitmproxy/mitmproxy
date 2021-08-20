@@ -116,6 +116,19 @@ fetchApi.put = (url: string, json: any, options: RequestInit = {}) => fetchApi(
     }
 )
 
+
+fetchApi.post = (url: string, json: any, options: RequestInit = {}) => fetchApi(
+    url,
+    {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json),
+        ...options
+    }
+)
+
 export async function runCommand(command: string, ...args): Promise<any> {
     let response = await fetchApi(`/commands/${command}`, {
         method: 'POST', headers: {

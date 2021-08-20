@@ -49,7 +49,7 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
     }
 }
 
-let sendUpdate = _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
+let sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
 
 export function update(name: Option, value: any): AppThunk {
     return dispatch => {

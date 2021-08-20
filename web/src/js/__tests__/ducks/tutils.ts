@@ -105,7 +105,7 @@ export const testState: RootState = {
         viewIndex: {},  // TODO: incomplete
     },
     commandBar: {
-        visible: true,
+        visible: false,
     }
 }
 

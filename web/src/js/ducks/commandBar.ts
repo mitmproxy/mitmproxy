@@ -6,7 +6,7 @@ interface CommandBarState {
     visible: boolean
 }
 
-const defaultState: CommandBarState = {
+export const defaultState: CommandBarState = {
     visible: false,
 };
 

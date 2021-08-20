@@ -84,7 +84,7 @@ exports[`CommandBar 2`] = `
           <p
             class="available-commands"
           >
-            ["flow.decode"]
+            ["flow.decode","flow.encode"]
           </p>
         </div>
       </div>

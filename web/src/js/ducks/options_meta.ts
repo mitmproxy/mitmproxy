@@ -14,7 +14,7 @@ type OptionsMetaState = Partial<{
     [name in keyof OptionsState]: OptionMeta<OptionsState[name]>
 }>
 
-const defaultState: OptionsMetaState = {
+export const defaultState: OptionsMetaState = {
 }
 
 const reducer: Reducer<OptionsMetaState> = (state = defaultState, action) => {

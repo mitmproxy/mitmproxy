@@ -187,10 +187,15 @@ describe('flows actions', () => {
 
 test("makeSort", () => {
     const a = TFlow(), b = TFlow();
+    a.request.scheme = "https";
+    a.request.method = "POST";
+    a.request.path = "/foo";
+    a.response.contentLength = 42;
+    a.response.status_code = 418;
 
-    Object.keys(FlowColumns).forEach((column) => {
+    Object.keys(FlowColumns).forEach((column, i) => {
         // @ts-ignore
-        const sort = flowActions.makeSort({column, desc: true});
+        const sort = flowActions.makeSort({column, desc: i % 2 == 0});
         expect(sort(a, b)).toBeDefined();
     })
 
