@@ -611,6 +611,121 @@ exports[`FlowView 4`] = `
           </tr>
         </tbody>
       </table>
+      <h4>
+        Server Certificate
+      </h4>
+      <table
+        class="certificate-table"
+      >
+        <tbody>
+          <tr>
+            <td>
+              Type
+            </td>
+            <td>
+              RSA, 2048 bits
+            </td>
+          </tr>
+          <tr>
+            <td>
+              SHA256 digest
+            </td>
+            <td>
+              e5f62a1175031b6feb959bc8e6dd0f8e2546dbbf7c32da39534309d8aa92967c
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Valid from
+            </td>
+            <td>
+              2020-11-03 06:03:27
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Valid to
+            </td>
+            <td>
+              2040-10-29 06:03:27
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Subject Alternative Names
+            </td>
+            <td>
+              example.mitmproxy.org
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Subject
+            </td>
+            <td>
+              <dl
+                class="cert-attributes"
+              >
+                <dt>
+                  C
+                </dt>
+                <dd>
+                  AU
+                </dd>
+                <dt>
+                  ST
+                </dt>
+                <dd>
+                  Some-State
+                </dd>
+                <dt>
+                  O
+                </dt>
+                <dd>
+                  Internet Widgits Pty Ltd
+                </dd>
+              </dl>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Issuer
+            </td>
+            <td>
+              <dl
+                class="cert-attributes"
+              >
+                <dt>
+                  C
+                </dt>
+                <dd>
+                  AU
+                </dd>
+                <dt>
+                  ST
+                </dt>
+                <dd>
+                  Some-State
+                </dd>
+                <dt>
+                  O
+                </dt>
+                <dd>
+                  Internet Widgits Pty Ltd
+                </dd>
+              </dl>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Serial
+            </td>
+            <td>
+              247170098335718583458667965517443538258472437317
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </section>
   </div>
 </DocumentFragment>

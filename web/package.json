@@ -1,9 +1,6 @@
 {
     "name": "mitmproxy",
     "private": true,
-    "jest": {
-        "verbose": true
-    },
     "scripts": {
         "test": "tsc --noEmit && jest --coverage",
         "build": "gulp prod",

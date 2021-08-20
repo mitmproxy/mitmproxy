@@ -137,7 +137,8 @@ class Dumper:
                     human.format_address(flow.client_conn.peername)
                 )
             )
-        else:
+        else:  # pragma: no cover
+            # this should not happen, but we're defensive here.
             client = ""
 
         pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''

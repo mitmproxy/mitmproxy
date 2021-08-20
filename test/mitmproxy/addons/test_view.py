@@ -224,22 +224,26 @@ async def test_load(tmpdir):
 def test_resolve():
     v = view.View()
     with taddons.context() as tctx:
+        f = tft(method="get")
         assert tctx.command(v.resolve, "@all") == []
         assert tctx.command(v.resolve, "@focus") == []
         assert tctx.command(v.resolve, "@shown") == []
         assert tctx.command(v.resolve, "@hidden") == []
         assert tctx.command(v.resolve, "@marked") == []
         assert tctx.command(v.resolve, "@unmarked") == []
+        assert tctx.command(v.resolve, f"@{f.id}") == []
         assert tctx.command(v.resolve, "~m get") == []
-        v.request(tft(method="get"))
+        v.request(f)
         assert len(tctx.command(v.resolve, "~m get")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
         assert len(tctx.command(v.resolve, "@all")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 1
         assert len(tctx.command(v.resolve, "@unmarked")) == 1
+        assert len(tctx.command(v.resolve, f"@{f.id}")) == 1
         assert tctx.command(v.resolve, "@hidden") == []
         assert tctx.command(v.resolve, "@marked") == []
         v.request(tft(method="put"))
+        assert len(tctx.command(v.resolve, f"@{f.id}")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 2
         assert len(tctx.command(v.resolve, "@all")) == 2

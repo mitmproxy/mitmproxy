@@ -13,7 +13,8 @@ module.exports = async () => {
         ],
         "coverageDirectory": "./coverage",
         "coveragePathIgnorePatterns": [
-            "<rootDir>/src/js/filt/filt.js"
+            "<rootDir>/src/js/filt/filt.js",
+            "<rootDir>/src/js/filt/command.js"
         ],
         "collectCoverageFrom": [
             "src/js/**/*.{js,jsx,ts,tsx}"
