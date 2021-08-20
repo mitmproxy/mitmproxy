@@ -350,7 +350,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_command_execute(self):
         resp = self.fetch("/commands/unknown", method="POST")
-        assert resp.code == 500
+        assert resp.code == 200
+        assert get_json(resp) == {"error": "Unknown command: unknown"}
         resp = self.fetch("/commands/commands.history.get", method="POST")
         assert resp.code == 200
         assert get_json(resp) == {"value": []}
