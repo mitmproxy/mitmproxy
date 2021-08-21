@@ -283,7 +283,7 @@ class Core:
         """
         try:
             if not path:
-        	    path = "%s/config.yaml" % opts.confdir
+                path = "%s/config.yaml" % ctx.options.confdir
             optmanager.save(ctx.options, path)
         except OSError as e:
             raise exceptions.CommandError(
