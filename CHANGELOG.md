@@ -1,5 +1,9 @@
 # Release History
 
+## 13 September 2021: mitmproxy 7.0.3
+
+* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases
+
 ## 4 August 2021: mitmproxy 7.0.2
 
 * Fix a WebSocket crash introduced in 7.0.1 (@mhils)
