@@ -1,4 +1,11 @@
 # Community-Contributed Examples
 
-Examples in this directory are contributed by the mitmproxy community.
-We do _not_ maintain them, but we welcome PRs that add/fix/modernize/clean up examples.
+Examples in this directory are contributed by the mitmproxy community.  
+If you developed something thats useful for a wider audience, please add it here!
+
+# Maintenance
+
+
+:warning:  The examples in this directory are _not_ actively maintained by the core developers.  
+
+We welcome PRs that add/fix/modernize/clean up code.
