@@ -40,7 +40,7 @@ class Version(Enum):
     UNBOUNDED = 0
     # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
     SSL3 = getattr(SSL, "SSL3_VERSION", 768)
-    TLS1 = getattr(SSL, "TLS1_VERSION", 768)
+    TLS1 = getattr(SSL, "TLS1_VERSION", 769)
     TLS1_1 = getattr(SSL, "TLS1_1_VERSION", 770)
     TLS1_2 = getattr(SSL, "TLS1_2_VERSION", 771)
     TLS1_3 = getattr(SSL, "TLS1_3_VERSION", 772)
