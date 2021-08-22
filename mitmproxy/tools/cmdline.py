@@ -44,6 +44,7 @@ def common_options(parser, opts):
 
     # Basic options
     opts.make_parser(parser, "mode", short="m")
+    opts.make_parser(parser, "socks5auth")
     opts.make_parser(parser, "anticache")
     opts.make_parser(parser, "showhost")
     opts.make_parser(parser, "rfile", metavar="PATH", short="r")

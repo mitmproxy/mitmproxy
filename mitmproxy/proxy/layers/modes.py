@@ -3,7 +3,7 @@ import struct
 from abc import ABCMeta
 from typing import Optional
 
-from mitmproxy import platform
+from mitmproxy import platform, ctx
 from mitmproxy.net import server_spec
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.layers import tls
@@ -76,6 +76,7 @@ class TransparentProxy(DestinationKnown):
 SOCKS5_VERSION = 0x05
 
 SOCKS5_METHOD_NO_AUTHENTICATION_REQUIRED = 0x00
+SOCKS5_METHOD_USER_PASSWORD_AUTHENTICATION = 0x02
 SOCKS5_METHOD_NO_ACCEPTABLE_METHODS = 0xFF
 
 SOCKS5_ATYP_IPV4_ADDRESS = 0x01
@@ -90,11 +91,12 @@ SOCKS5_REP_ADDRESS_TYPE_NOT_SUPPORTED = 0x08
 class Socks5Proxy(DestinationKnown):
     buf: bytes = b""
     greeted: bool = False
+    need_auth: bool = True
 
     def socks_err(
-        self,
-        message: str,
-        reply_code: Optional[int] = None,
+            self,
+            message: str,
+            reply_code: Optional[int] = None,
     ) -> layer.CommandGenerator[None]:
         if reply_code is not None:
             yield commands.SendData(
@@ -104,6 +106,16 @@ class Socks5Proxy(DestinationKnown):
         yield commands.CloseConnection(self.context.client)
         yield commands.Log(message)
         self._handle_event = self.done
+
+    def auth_enable(self):
+        return self.context.options.socks5auth is not None
+
+    def check_auth(self, test_id, test_pwd):
+        if isinstance(test_id, bytes):
+            test_id = test_id.decode()
+            test_pwd = test_pwd.decode()
+        user_id, pwd = self.context.options.socks5auth.split(':')
+        return test_id == user_id and test_pwd == pwd
 
     @expect(events.Start, events.DataReceived, events.ConnectionClosed)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -128,16 +140,46 @@ class Socks5Proxy(DestinationKnown):
                 n_methods = self.buf[1]
                 if len(self.buf) < 2 + n_methods:
                     return
-                if SOCKS5_METHOD_NO_AUTHENTICATION_REQUIRED not in self.buf[2:2 + n_methods]:
-                    yield from self.socks_err("mitmproxy only supports SOCKS without authentication",
-                                              SOCKS5_METHOD_NO_ACCEPTABLE_METHODS)
-                    return
+
+                method = SOCKS5_METHOD_NO_AUTHENTICATION_REQUIRED
+                if self.auth_enable():
+                    if SOCKS5_METHOD_USER_PASSWORD_AUTHENTICATION not in self.buf[2:2+n_methods]:
+                        yield from self.socks_err("mitmproxy only support user password authentication",
+                                                  SOCKS5_METHOD_NO_ACCEPTABLE_METHODS)
+                        return
+                    method = SOCKS5_METHOD_USER_PASSWORD_AUTHENTICATION
 
                 # Send Server Greeting
-                # Ver = SOCKS5, Auth = NO_AUTH
-                yield commands.SendData(self.context.client, b"\x05\x00")
+                if method == SOCKS5_METHOD_NO_AUTHENTICATION_REQUIRED:
+                    # Ver = SOCKS5, Auth = NO_AUTH
+                    yield commands.SendData(self.context.client, b"\x05\x00")
+                    self.need_auth = False
+                else:
+                    # Ver = SOCKS5, Auth = UserPassword
+                    yield commands.SendData(self.context.client, b"\x05\x02")
+                    self.need_auth = True
                 self.buf = self.buf[2 + n_methods:]
                 self.greeted = True
+
+            if self.need_auth:
+                # Parse client authentication request
+                if len(self.buf) < 2:
+                    return
+
+                id_len = self.buf[1]
+                if len(self.buf) < 3 + id_len:
+                    return
+                pw_len = self.buf[2 + id_len]
+                if len(self.buf) < 3 + id_len + pw_len:
+                    return
+                test_id, test_pw = self.buf[2:(2 + id_len)], self.buf[(3 + id_len):(3 + id_len + pw_len)]
+                if self.check_auth(test_id, test_pw):
+                    yield commands.SendData(self.context.client, b"\x01\x00")
+                else:
+                    yield from self.socks_err("authentication failed", 0x01)
+                    return
+                self.buf = self.buf[3 + id_len + pw_len:]
+                self.need_auth = False
 
             # Parse Connect Request
             if len(self.buf) < 4:
