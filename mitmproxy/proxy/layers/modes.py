@@ -3,7 +3,7 @@ import struct
 from abc import ABCMeta
 from typing import Optional
 
-from mitmproxy import platform, ctx
+from mitmproxy import platform
 from mitmproxy.net import server_spec
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.layers import tls
