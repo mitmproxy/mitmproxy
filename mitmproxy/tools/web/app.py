@@ -362,7 +362,10 @@ class FlowHandler(RequestHandler):
                             for header in v:
                                 request.headers.add(*header)
                         elif k == "trailers":
-                            request.trailers.clear()
+                            if request.trailers is not None:
+                                request.trailers.clear()
+                            else:
+                                request.trailers = mitmproxy.http.Headers()
                             for trailer in v:
                                 request.trailers.add(*trailer)
                         elif k == "content":
@@ -382,7 +385,10 @@ class FlowHandler(RequestHandler):
                             for header in v:
                                 response.headers.add(*header)
                         elif k == "trailers":
-                            response.trailers.clear()
+                            if response.trailers is not None:
+                                response.trailers.clear()
+                            else:
+                                response.trailers = mitmproxy.http.Headers()
                             for trailer in v:
                                 response.trailers.add(*trailer)
                         elif k == "content":

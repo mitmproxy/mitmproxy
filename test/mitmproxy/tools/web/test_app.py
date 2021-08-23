@@ -10,15 +10,12 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-
-from mitmproxy.http import Headers
-
-
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
 from mitmproxy import certs, options, optmanager
+from mitmproxy.http import Headers
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
@@ -126,7 +123,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = tflow.tflow(resp=True)
         f.id = "42"
         f.request.content = b"foo\nbar"
-        m.view.add([f])
+        f2 = tflow.tflow(ws=True, resp=True)
+        f2.request.content = None
+        f2.response.content = None
+        f2.id = "43"
+        m.view.add([f, f2])
         m.view.add([tflow.tflow(err=True)])
         m.log.info("test log")
         self.master = m
@@ -158,7 +159,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/flows")
         assert resp.code == 200
         assert get_json(resp)[0]["request"]["contentHash"]
-        assert get_json(resp)[1]["error"]
+        assert get_json(resp)[2]["error"]
 
     def test_flows_dump(self):
         resp = self.fetch("/flows/dump")
@@ -184,7 +185,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         assert self.fetch(
             "/flows/42/resume", method="POST").code == 200
-        assert sum(f.intercepted for f in self.view) == 1
+        assert sum(f.intercepted for f in self.view) >= 1
         assert self.fetch("/flows/resume", method="POST").code == 200
         assert all(not f.intercepted for f in self.view)
 
@@ -194,7 +195,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             f.intercept()
 
         assert self.fetch("/flows/42/kill", method="POST").code == 200
-        assert sum(f.killable for f in self.view) == 1
+        assert sum(f.killable for f in self.view) >= 1
         assert self.fetch("/flows/kill", method="POST").code == 200
         assert all(not f.killable for f in self.view)
         for f in self.view:
@@ -221,12 +222,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "method": "PATCH",
                 "port": 123,
                 "headers": [("foo", "bar")],
+                "trailers": [("foo", "bar")],
                 "content": "req",
             },
             "response": {
                 "msg": "Non-Authorisé",
                 "code": 404,
                 "headers": [("bar", "baz")],
+                "trailers": [("foo", "bar")],
                 "content": "resp",
             },
             "marked": ":red_circle:",
@@ -253,6 +256,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             headers={"Content-Type": "application/json"},
             body="!!"
         ).code == 400
+
+        upd = {
+            "request": {"trailers": [("foo", "baz")],},
+            "response": {"trailers": [("foo", "baz")],},
+        }
+        assert self.put_json("/flows/42", upd).code == 200
+        assert f.request.trailers["foo"] == "baz"
 
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
@@ -342,6 +352,19 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             ],
             "description": "Raw"
         }
+        assert self.fetch("/flows/42/messages/content/raw").code == 400
+
+    def test_flow_contentview_websocket(self):
+        assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
+            {'description': 'Raw',
+             'from_client': True,
+             'lines': [[['text', 'hello binary']]],
+             'timestamp': 946681203},
+            {'description': 'Raw',
+             'from_client': True,
+             'lines': [[['text', 'hello text']]],
+             'timestamp': 946681204}
+        ]
 
     def test_commands(self):
         resp = self.fetch("/commands")
@@ -373,6 +396,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_option_save(self):
         assert self.fetch("/options/save", method="POST").code == 200
+
+    def test_conf(self):
+        assert self.fetch("/conf.js").code == 200
 
     def test_err(self):
         with mock.patch("mitmproxy.tools.web.app.IndexHandler.get") as f:
