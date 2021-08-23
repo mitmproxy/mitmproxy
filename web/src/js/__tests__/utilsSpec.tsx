@@ -1,6 +1,7 @@
 import * as utils from '../utils'
+import {enableFetchMocks} from "jest-fetch-mock";
 
-global.fetch = jest.fn()
+enableFetchMocks();
 
 describe('formatSize', () => {
     it('should return 0 when 0 byte', () => {
@@ -19,9 +20,10 @@ describe('formatTimeDelta', () => {
     })
 })
 
-describe('formatTimeSTamp', () => {
+describe('formatTimeStamp', () => {
     it('should return formatted time', () => {
-        expect(utils.formatTimeStamp(1483228800, false)).toEqual("2017-01-01 00:00:00.000")
+        expect(utils.formatTimeStamp(1483228800, {milliseconds: false})).toEqual("2017-01-01 00:00:00")
+        expect(utils.formatTimeStamp(1483228800, {milliseconds: true})).toEqual("2017-01-01 00:00:00.000")
     })
 })
 
@@ -35,22 +37,22 @@ describe('reverseString', () => {
 describe('fetchApi', () => {
     it('should handle fetch operation', () => {
         utils.fetchApi('http://foo/bar', {method: "POST"})
-        expect(fetch.mock.calls[0][0]).toEqual(
+        expect(fetchMock.mock.calls[0][0]).toEqual(
             "http://foo/bar"
         )
-        fetch.mockClear()
+        fetchMock.mockClear()
 
         utils.fetchApi('http://foo?bar=1', {method: "POST"})
-        expect(fetch.mock.calls[0][0]).toEqual(
+        expect(fetchMock.mock.calls[0][0]).toEqual(
             "http://foo?bar=1"
         )
 
     })
 
     it('should be possible to do put request', () => {
-        fetch.mockClear()
+        fetchMock.mockClear()
         utils.fetchApi.put("http://foo", [1, 2, 3], {})
-        expect(fetch.mock.calls[0]).toEqual(
+        expect(fetchMock.mock.calls[0]).toEqual(
             [
                 "http://foo",
                 {

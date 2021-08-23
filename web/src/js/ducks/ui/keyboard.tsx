@@ -1,130 +1,133 @@
-import { Key } from "../../utils"
-import { selectTab } from "./flow"
+import {selectTab} from "./flow"
 import * as flowsActions from "../flows"
 import * as modalActions from "./modal"
 import {tabsForFlow} from "../../components/FlowView";
 
 
-export function onKeyDown(e) {
+export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
     if (e.ctrlKey || e.metaKey) {
         return () => {
         }
     }
-    let key      = e.keyCode,
-        shiftKey = e.shiftKey
+    const key = e.key;
     e.preventDefault()
     return (dispatch, getState) => {
 
         const flows = getState().flows,
-              flow = flows.byId[getState().flows.selected[0]]
+            flow = flows.byId[getState().flows.selected[0]]
 
         switch (key) {
-            case Key.K:
-            case Key.UP:
+            case "k":
+            case "ArrowUp":
                 dispatch(flowsActions.selectRelative(flows, -1))
                 break
 
-            case Key.J:
-            case Key.DOWN:
+            case "j":
+            case "ArrowDown":
                 dispatch(flowsActions.selectRelative(flows, +1))
                 break
 
-            case Key.SPACE:
-            case Key.PAGE_DOWN:
+            case " ":
+            case "PageDown":
                 dispatch(flowsActions.selectRelative(flows, +10))
                 break
 
-            case Key.PAGE_UP:
+            case "PageUp":
                 dispatch(flowsActions.selectRelative(flows, -10))
                 break
 
-            case Key.END:
+            case "End":
                 dispatch(flowsActions.selectRelative(flows, +1e10))
                 break
 
-            case Key.HOME:
+            case "Home":
                 dispatch(flowsActions.selectRelative(flows, -1e10))
                 break
 
-            case Key.ESC:
-                if(getState().ui.modal.activeModal){
+            case "Escape":
+                if (getState().ui.modal.activeModal) {
                     dispatch(modalActions.hideModal())
                 } else {
-                    dispatch(flowsActions.select(null))
+                    dispatch(flowsActions.select(undefined))
                 }
                 break
 
-            case Key.LEFT: {
+            case "ArrowLeft": {
                 if (!flow) break
-                let tabs       = tabsForFlow(flow),
+                let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab    = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
+                    nextTab = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
                 dispatch(selectTab(nextTab))
                 break
             }
 
-            case Key.TAB:
-            case Key.RIGHT: {
+            case "Tab":
+            case "ArrowRight": {
                 if (!flow) break
-                let tabs       = tabsForFlow(flow),
+                let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab    = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
+                    nextTab = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
                 dispatch(selectTab(nextTab))
                 break
             }
 
-            case Key.D: {
+            case "d": {
                 if (!flow) {
                     return
                 }
-                if (shiftKey) {
-                    dispatch(flowsActions.duplicate(flow))
-                } else {
-                    dispatch(flowsActions.remove(flow))
-                }
+                dispatch(flowsActions.remove(flow))
                 break
             }
 
-            case Key.A: {
-                if (shiftKey) {
-                    dispatch(flowsActions.resumeAll())
-                } else if (flow && flow.intercepted) {
+            case "D": {
+                if (!flow) {
+                    return
+                }
+                dispatch(flowsActions.duplicate(flow))
+                break
+            }
+            case "a": {
+                if (flow && flow.intercepted) {
                     dispatch(flowsActions.resume(flow))
                 }
                 break
             }
+            case "A": {
+                dispatch(flowsActions.resumeAll())
+                break
+            }
 
-            case Key.R: {
-                if (!shiftKey && flow) {
+            case "r": {
+                if (flow) {
                     dispatch(flowsActions.replay(flow))
                 }
                 break
             }
 
-            case Key.V: {
-                if (!shiftKey && flow && flow.modified) {
+            case "v": {
+                if (flow && flow.modified) {
                     dispatch(flowsActions.revert(flow))
                 }
                 break
             }
 
-            case Key.X: {
-                if (shiftKey) {
-                    dispatch(flowsActions.killAll())
-                } else if (flow && flow.intercepted) {
+            case "x": {
+                if (flow && flow.intercepted) {
                     dispatch(flowsActions.kill(flow))
                 }
                 break
             }
 
-            case Key.Z: {
-                if (!shiftKey) {
-                    dispatch(flowsActions.clear())
-                }
+            case "X": {
+                dispatch(flowsActions.killAll())
                 break
             }
 
+            case "z": {
+                dispatch(flowsActions.clear())
+                break
+            }
 
             default:
                 return

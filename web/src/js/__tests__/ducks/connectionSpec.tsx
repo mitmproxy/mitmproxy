@@ -4,7 +4,7 @@ import { ConnectionState } from "../../ducks/connection"
 
 describe('connection reducer', () => {
     it('should return initial state', () => {
-        expect(reduceConnection(undefined, {})).toEqual({
+        expect(reduceConnection(undefined, {type: "other"})).toEqual({
             state: ConnectionState.INIT,
             message: undefined,
         })

@@ -1,5 +1,6 @@
 import reduceOptionsEditor, * as optionsEditorActions from '../../../ducks/ui/optionsEditor'
 import { HIDE_MODAL } from '../../../ducks/ui/modal'
+import {OptionsState} from "../../../ducks/_options_gen";
 
 describe('optionsEditor reducer', () => {
 
@@ -7,17 +8,17 @@ describe('optionsEditor reducer', () => {
         expect(reduceOptionsEditor(undefined, {})).toEqual({})
     })
 
-    let state = undefined
     it('should handle option update start', () => {
-        state = reduceOptionsEditor(undefined, optionsEditorActions.startUpdate('foo', 'bar'))
+        let state = reduceOptionsEditor(undefined, optionsEditorActions.startUpdate('foo', 'bar'))
         expect(state).toEqual({ foo: {error: false, isUpdating: true, value: 'bar'}})
     })
 
     it('should handle option update success', () => {
-        expect(reduceOptionsEditor(state, optionsEditorActions.updateSuccess('foo'))).toEqual({foo: undefined})
+        expect(reduceOptionsEditor(undefined, optionsEditorActions.updateSuccess('foo'))).toEqual({foo: undefined})
     })
 
     it('should handle option update error', () => {
+        let state = reduceOptionsEditor(undefined, optionsEditorActions.startUpdate('foo', 'bar'))
         state = reduceOptionsEditor(state, optionsEditorActions.updateError('foo', 'errorMsg'))
         expect(state).toEqual({ foo: {error: 'errorMsg', isUpdating: false, value: 'bar'}})
         // boolean type

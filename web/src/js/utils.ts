@@ -5,28 +5,6 @@ import * as React from 'react'
 window._ = _;
 window.React = React;
 
-export var Key = {
-    UP: 38,
-    DOWN: 40,
-    PAGE_UP: 33,
-    PAGE_DOWN: 34,
-    HOME: 36,
-    END: 35,
-    LEFT: 37,
-    RIGHT: 39,
-    ENTER: 13,
-    ESC: 27,
-    TAB: 9,
-    SPACE: 32,
-    BACKSPACE: 8,
-    SHIFT: 16
-};
-// Add A-Z
-for (var i = 65; i <= 90; i++) {
-    Key[String.fromCharCode(i)] = i;
-}
-
-
 export var formatSize = function (bytes) {
     if (bytes === 0)
         return "0";
@@ -64,7 +42,7 @@ export var formatTimeStamp = function (
 ) {
     let utc = new Date(seconds * 1000);
     let ts = utc.toISOString().replace("T", " ").replace("Z", "");
-    if(!milliseconds)
+    if (!milliseconds)
         ts = ts.slice(0, -4);
     return ts;
 };

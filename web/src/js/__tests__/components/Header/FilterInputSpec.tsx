@@ -4,11 +4,12 @@ import FilterInput from '../../../components/Header/FilterInput'
 import FilterDocs from '../../../components/Header/FilterDocs'
 import TestUtil from 'react-dom/test-utils'
 import ReactDOM from 'react-dom'
-import { Key } from '../../../utils'
 
 describe('FilterInput Component', () => {
     it('should render correctly', () => {
-        let filterInput = renderer.create(<FilterInput type='foo' color='red' placeholder='bar'/>),
+        let filterInput = renderer.create(
+            <FilterInput type='foo' color='red' placeholder='bar' onChange={() => undefined} value="42"/>
+            ),
             tree = filterInput.toJSON()
         expect(tree).toMatchSnapshot()
     })
@@ -69,7 +70,7 @@ describe('FilterInput Component', () => {
     it('should handle keyDown', () => {
         input.blur = jest.fn()
         let mockEvent = {
-            keyCode: Key.ESC,
+            key: "Escape",
             stopPropagation: jest.fn()
         }
         filterInput.onKeyDown(mockEvent)

@@ -3,12 +3,23 @@
  *  from the REST API and live updates delivered via a WebSocket connection.
  *  An alternative backend may use the REST API only to host static instances.
  */
-import { fetchApi } from "../utils"
+import {fetchApi} from "../utils"
 import * as connectionActions from "../ducks/connection"
+import {Store} from "redux";
+import {RootState} from "../ducks";
 
 const CMD_RESET = 'reset'
 
 export default class WebsocketBackend {
+
+    activeFetches: {
+        flows?: []
+        events?: []
+        options?: []
+    }
+    store: Store<RootState>
+    socket: WebSocket
+
     constructor(store) {
         this.activeFetches = {}
         this.store = store
@@ -51,18 +62,18 @@ export default class WebsocketBackend {
             this.activeFetches[msg.resource].push(msg)
         } else {
             let type = `${msg.resource}_${msg.cmd}`.toUpperCase()
-            this.store.dispatch({ type, ...msg })
+            this.store.dispatch({type, ...msg})
         }
     }
 
     receive(resource, data) {
         let type = `${resource}_RECEIVE`.toUpperCase()
-        this.store.dispatch({ type, cmd: "receive", resource, data })
+        this.store.dispatch({type, cmd: "receive", resource, data})
         let queue = this.activeFetches[resource]
         delete this.activeFetches[resource]
         queue.forEach(msg => this.onMessage(msg))
 
-        if(Object.keys(this.activeFetches).length === 0) {
+        if (Object.keys(this.activeFetches).length === 0) {
             // We have fetched the last resource
             this.store.dispatch(connectionActions.connectionEstablished())
         }
@@ -75,7 +86,7 @@ export default class WebsocketBackend {
         console.error("websocket connection closed", closeEvent)
     }
 
-    onError() {
+    onError(error) {
         // FIXME
         console.error("websocket connection errored", arguments)
     }

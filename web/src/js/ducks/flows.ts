@@ -28,7 +28,7 @@ export interface FlowsState extends store.State<Flow> {
     selected: string[],
 }
 
-const defaultState: FlowsState = {
+export const defaultState: FlowsState = {
     highlight: undefined,
     filter: undefined,
     sort: {column: undefined, desc: false},
@@ -36,7 +36,7 @@ const defaultState: FlowsState = {
     ...store.defaultState
 }
 
-export default function reduce(state: FlowsState = defaultState, action): FlowsState {
+export default function reducer(state: FlowsState = defaultState, action): FlowsState {
     switch (action.type) {
 
         case ADD:

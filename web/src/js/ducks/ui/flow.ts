@@ -1,5 +1,3 @@
-import {Reducer} from "redux";
-
 export const
     SET_TAB = "UI_FLOWVIEW_SET_TAB",
     SET_CONTENT_VIEW_FOR = "SET_CONTENT_VIEW_FOR"
@@ -15,8 +13,7 @@ export const defaultState: UiFlowState = {
     contentViewFor: {},
 }
 
-const reducer: Reducer<UiFlowState> = (state = defaultState, action): UiFlowState => {
-
+export default function reducer(state = defaultState, action): UiFlowState {
     switch (action.type) {
 
         case SET_CONTENT_VIEW_FOR:
@@ -38,7 +35,6 @@ const reducer: Reducer<UiFlowState> = (state = defaultState, action): UiFlowStat
             return state
     }
 }
-export default reducer;
 
 export function selectTab(tab) {
     return {type: SET_TAB, tab}

@@ -7,18 +7,14 @@ describe('ToggleButton Component', () => {
 
     it('should render correctly', () => {
         let checkedButton = renderer.create(
-                <ToggleButton checked={true} onToggle={mockFunc} text="foo">
-                    text
-                </ToggleButton>),
+                <ToggleButton checked={true} onToggle={mockFunc} text="foo"/>),
         tree = checkedButton.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
     it('should handle click action', () => {
         let uncheckButton = renderer.create(
-            <ToggleButton checked={false} onToggle={mockFunc} text="foo">
-                text
-            </ToggleButton>),
+            <ToggleButton checked={false} onToggle={mockFunc} text="foo"/>),
         tree = uncheckButton.toJSON()
         tree.props.onClick()
         expect(mockFunc).toBeCalled()

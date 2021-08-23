@@ -1,7 +1,6 @@
 import reduceModal, * as ModalActions from '../../../ducks/ui/modal'
 
 describe('modal reducer', () => {
-    let state = undefined
 
     it('should return the initial state', () => {
         expect(reduceModal(undefined, {})).toEqual(
@@ -10,14 +9,14 @@ describe('modal reducer', () => {
     })
 
     it('should handle setActiveModal action', () => {
-        state = reduceModal(undefined, ModalActions.setActiveModal('foo'))
+        let state = reduceModal(undefined, ModalActions.setActiveModal('foo'))
         expect(state).toEqual(
             { activeModal: 'foo' }
         )
     })
 
     it('should handle hideModal action', () => {
-        state = reduceModal(state, ModalActions.hideModal())
+        let state = reduceModal(undefined, ModalActions.hideModal())
         expect(state).toEqual(
             { activeModal: undefined }
         )

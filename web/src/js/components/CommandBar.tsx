@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react'
 import classnames from 'classnames'
-import {fetchApi, Key, runCommand} from '../utils'
+import {fetchApi, runCommand} from '../utils'
 import Filt from '../filt/command'
 
 type CommandParameter = {
@@ -151,7 +151,7 @@ export default function CommandBar() {
     }
 
     const onKeyDown = (e) => {
-        if (e.keyCode === Key.ENTER) {
+        if (e.key === "Enter") {
             const [cmd, ...args] = Filt.parse(input);
 
             setHistory([...history, input]);
@@ -184,7 +184,7 @@ export default function CommandBar() {
             setCurrentCompletion(0)
             setCompletionCandidate(availableCommands)
         }
-        if (e.keyCode === Key.UP) {
+        if (e.key === "ArrowUp") {
             let nextPos;
             if (currentPos === undefined) {
                 nextPos = history.length - 1;
@@ -195,7 +195,7 @@ export default function CommandBar() {
             setOriginalInput(history[nextPos])
             setCurrentPos(nextPos)
         }
-        if (e.keyCode === Key.DOWN) {
+        if (e.key === "ArrowDown") {
             if (currentPos === undefined) {
                 return
             } else if (currentPos == history.length - 1) {
@@ -209,7 +209,7 @@ export default function CommandBar() {
                 setCurrentPos(nextPos)
             }
         }
-        if (e.keyCode === Key.TAB) {
+        if (e.key === "Tab") {
             setInput(completionCandidate[currentCompletion])
             setCurrentCompletion((currentCompletion + 1) % completionCandidate.length)
             e.preventDefault()

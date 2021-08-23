@@ -14,7 +14,7 @@ describe('VirtualScroll', () => {
 
     it('should calculate position with itemHeights', () => {
         expect(calcVScroll({itemCount: 5, itemHeights: [100, 100, 100, 100, 100],
-            viewportHeight: 300, viewportTop: 0})).toEqual({
+            viewportHeight: 300, viewportTop: 0, rowHeight: 100})).toEqual({
             start: 0, end: 4, paddingTop: 0, paddingBottom: 100
         })
     })

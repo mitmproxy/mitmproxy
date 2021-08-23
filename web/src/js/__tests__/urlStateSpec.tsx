@@ -63,10 +63,10 @@ describe('updateStoreFromUrl', () => {
 
 describe('updateUrlFromStore', () => {
     let initialState = {
-        flows:    reduceFlows(undefined, {}),
-        ui:       reduceUI(undefined, {}),
-        eventLog: reduceEventLog(undefined, {}),
-        commandBar: reduceCommandBar(undefined, {}),
+        flows:    reduceFlows(undefined, {type: "other"}),
+        ui:       reduceUI(undefined, {type: "other"}),
+        eventLog: reduceEventLog(undefined, {type: "other"}),
+        commandBar: reduceCommandBar(undefined, {type: "other"}),
     }
 
     it('should update initial url', () => {
@@ -76,7 +76,7 @@ describe('updateUrlFromStore', () => {
     })
 
     it('should update url', () => {
-        let flows = reduceFlows(undefined, flowsActions.select(123)),
+        let flows = reduceFlows(undefined, flowsActions.select("123")),
             state = {
                 ...initialState,
                 flows: reduceFlows(flows, flowsActions.setFilter('~u foo'))
@@ -89,10 +89,10 @@ describe('updateUrlFromStore', () => {
 
 describe('initialize', () => {
     let initialState = {
-        flows:    reduceFlows(undefined, {}),
-        ui:       reduceUI(undefined, {}),
-        eventLog: reduceEventLog(undefined, {}),
-        commandBar: reduceCommandBar(undefined, {}),
+        flows:    reduceFlows(undefined, {type: "other"}),
+        ui:       reduceUI(undefined, {type: "other"}),
+        eventLog: reduceEventLog(undefined, {type: "other"}),
+        commandBar: reduceCommandBar(undefined, {type: "other"}),
     }
 
     it('should handle initial state', () => {

@@ -1,5 +1,3 @@
-import {Reducer} from "redux";
-
 export enum ConnectionState {
     INIT = "CONNECTION_INIT",
     FETCHING = "CONNECTION_FETCHING", // WebSocket is established, but still fetching resources.
@@ -19,7 +17,7 @@ const defaultState: ConnState = {
     message: undefined,
 }
 
-const reducer: Reducer<ConnState> = (state = defaultState, action) => {
+export default function reducer(state = defaultState, action): ConnState {
     switch (action.type) {
         case ConnectionState.ESTABLISHED:
         case ConnectionState.FETCHING:
@@ -34,7 +32,6 @@ const reducer: Reducer<ConnState> = (state = defaultState, action) => {
             return state
     }
 }
-export default reducer
 
 export function startFetching() {
     return {type: ConnectionState.FETCHING}

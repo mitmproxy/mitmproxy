@@ -1,16 +1,17 @@
 import * as utils from '../../flow/utils'
+import {TFlow} from "../ducks/tutils";
 
 describe('MessageUtils', () => {
     it('should be possible to get first header', () => {
-        let msg = { headers: [["foo", "bar"]]}
-        expect(utils.MessageUtils.get_first_header(msg, "foo")).toEqual("bar")
-        expect(utils.MessageUtils.get_first_header(msg, "123")).toEqual(undefined)
+        let tflow = TFlow();
+        expect(utils.MessageUtils.get_first_header(tflow.request, /header/)).toEqual("qvalue")
+        expect(utils.MessageUtils.get_first_header(tflow.request, /123/)).toEqual(undefined)
     })
 
     it('should be possible to get Content-Type', () => {
-        let type = "text/html",
-            msg = { headers: [["Content-Type", type]]}
-        expect(utils.MessageUtils.getContentType(msg)).toEqual(type)
+        let tflow = TFlow();
+        tflow.request.headers = [["Content-Type", "text/html"]];
+        expect(utils.MessageUtils.getContentType(tflow.request)).toEqual("text/html");
     })
 
     it('should be possible to match header', () => {
@@ -21,28 +22,27 @@ describe('MessageUtils', () => {
     })
 
     it('should be possible to get content URL', () => {
+        const flow = TFlow();
         // request
-        let msg = "foo", view = "bar",
-            flow = { request: msg, id: 1}
-        expect(utils.MessageUtils.getContentURL(flow, msg, view)).toEqual(
-            "./flows/1/request/content/bar.json"
+        let view = "bar";
+        expect(utils.MessageUtils.getContentURL(flow, flow.request, view)).toEqual(
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content/bar.json"
         )
-        expect(utils.MessageUtils.getContentURL(flow, msg, '')).toEqual(
-            "./flows/1/request/content.data"
+        expect(utils.MessageUtils.getContentURL(flow, flow.request, '')).toEqual(
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content.data"
         )
         // response
-        flow = {response: msg, id: 2}
-        expect(utils.MessageUtils.getContentURL(flow, msg, view)).toEqual(
-            "./flows/2/response/content/bar.json"
+        expect(utils.MessageUtils.getContentURL(flow, flow.response, view)).toEqual(
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content/bar.json"
         )
     })
 })
 
 describe('RequestUtils', () => {
     it('should be possible prettify url', () => {
-        let request = {port: 4444, scheme: "http", pretty_host: "foo", path: "/bar"}
-        expect(utils.RequestUtils.pretty_url(request)).toEqual(
-            "http://foo:4444/bar"
+        let flow = TFlow();
+        expect(utils.RequestUtils.pretty_url(flow.request)).toEqual(
+            "http://address:22/path"
         )
     })
 })

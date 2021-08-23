@@ -7,7 +7,7 @@ export const TOGGLE_FILTER = 'EVENTS_TOGGLE_FILTER'
 
 type LogLevel = 'debug' | 'info' | 'web' | 'warn' | 'error';
 
-interface EventLogItem extends store.Item {
+export interface EventLogItem extends store.Item {
     message: string
     level: LogLevel
 }

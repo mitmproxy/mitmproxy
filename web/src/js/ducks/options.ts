@@ -1,7 +1,5 @@
 import {fetchApi} from "../utils"
 import * as optionsEditorActions from "./ui/optionsEditor"
-import _ from "lodash"
-import {Reducer} from "redux";
 import {defaultState, Option, OptionsState} from "./_options_gen";
 import {AppThunk} from "./index";
 
@@ -11,8 +9,7 @@ export const REQUEST_UPDATE = 'REQUEST_UPDATE'
 
 export {Option, defaultState}
 
-const reducer: Reducer<OptionsState> = (state = defaultState, action) => {
-
+export default function reducer(state = defaultState, action): OptionsState {
     switch (action.type) {
         case RECEIVE:
             let s = <OptionsState>{};
@@ -34,7 +31,6 @@ const reducer: Reducer<OptionsState> = (state = defaultState, action) => {
             return state
     }
 }
-export default reducer
 
 export async function pureSendUpdate(option: Option, value, dispatch) {
     try {

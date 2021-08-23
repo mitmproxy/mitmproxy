@@ -1,5 +1,3 @@
-import {Reducer} from "redux";
-
 export const TOGGLE_VISIBILITY = 'COMMANDBAR_TOGGLE_VISIBILITY'
 
 interface CommandBarState {
@@ -10,7 +8,7 @@ export const defaultState: CommandBarState = {
     visible: false,
 };
 
-const reducer: Reducer<CommandBarState> = (state = defaultState, action): CommandBarState => {
+export default function reducer(state = defaultState, action): CommandBarState {
     switch (action.type) {
         case TOGGLE_VISIBILITY:
             return {
@@ -22,8 +20,7 @@ const reducer: Reducer<CommandBarState> = (state = defaultState, action): Comman
             return state
     }
 }
-export default reducer
 
 export function toggleVisibility() {
-    return { type: TOGGLE_VISIBILITY }
+    return {type: TOGGLE_VISIBILITY}
 }

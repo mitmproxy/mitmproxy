@@ -1,8 +1,6 @@
 import React, {Component} from 'react'
 import classnames from 'classnames'
 
-import {Key} from '../../utils'
-
 export interface ValueEditorProps {
     content: string
     onEditDone: (newVal: string) => void
@@ -157,13 +155,13 @@ export default class ValueEditor extends Component<ValueEditorProps> {
     onKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
         EVENT_DEBUG && console.debug("keydown", e)
         e.stopPropagation()
-        switch (e.keyCode) {
-            case Key.ESC:
+        switch (e.key) {
+            case "Escape":
                 e.preventDefault()
                 this.resetValue()
                 this.finishEditing()
                 break
-            case Key.ENTER:
+            case "Enter":
                 if (!e.shiftKey) {
                     e.preventDefault()
                     this.finishEditing()

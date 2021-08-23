@@ -3,9 +3,19 @@ import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
 import shallowEqual from 'shallowequal'
 import AutoScroll from '../helpers/AutoScroll'
-import { calcVScroll } from '../helpers/VirtualScroll'
+import {calcVScroll, VScroll} from '../helpers/VirtualScroll'
+import {EventLogItem} from "../../ducks/eventLog";
 
-class EventLogList extends Component {
+
+type EventLogListProps = {
+    events: EventLogItem[]
+    rowHeight: number
+}
+type EventLogListState = {
+    vScroll: VScroll
+}
+
+class EventLogList extends Component<EventLogListProps, EventLogListState> {
 
     static propTypes = {
         events: PropTypes.array.isRequired,
@@ -15,6 +25,8 @@ class EventLogList extends Component {
     static defaultProps = {
         rowHeight: 18,
     }
+
+    heights: {[id: string]: number}
 
     constructor(props) {
         super(props)
@@ -70,14 +82,14 @@ class EventLogList extends Component {
 
         return (
             <pre onScroll={this.onViewportUpdate}>
-                <div style={{ height: vScroll.paddingTop }}></div>
+                <div style={{ height: vScroll.paddingTop }}/>
                 {events.slice(vScroll.start, vScroll.end).map(event => (
                     <div key={event.id} ref={node => this.setHeight(event.id, node)}>
                         <LogIcon event={event}/>
                         {event.message}
                     </div>
                 ))}
-                <div style={{ height: vScroll.paddingBottom }}></div>
+                <div style={{ height: vScroll.paddingBottom }}/>
             </pre>
         )
     }
@@ -90,7 +102,7 @@ function LogIcon({ event }) {
       warn: 'exclamation-triangle',
       error: 'ban'
     }[event.level] || 'info'
-    return <i className={`fa fa-fw fa-${icon}`}></i>
+    return <i className={`fa fa-fw fa-${icon}`}/>
 }
 
 export default AutoScroll(EventLogList)

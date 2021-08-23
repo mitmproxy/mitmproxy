@@ -18,7 +18,23 @@
  * - {number} paddingTop
  * - {number} paddingBottom
  */
-export function calcVScroll(opts) {
+
+type VScrollArgs = {
+    itemCount: number
+    rowHeight: number
+    viewportTop: number
+    viewportHeight: number
+    itemHeights?: number[]
+}
+
+export type VScroll = {
+    start: number
+    end: number
+    paddingTop: number
+    paddingBottom: number
+}
+
+export function calcVScroll(opts: VScrollArgs | undefined = undefined) {
     if (!opts) {
         return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
     }

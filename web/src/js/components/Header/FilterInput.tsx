@@ -1,7 +1,6 @@
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
-import {Key} from '../../utils'
 import Filt from '../../filt/filt'
 import FilterDocs from './FilterDocs'
 
@@ -91,7 +90,7 @@ export default class FilterInput extends Component<FilterInputProps, FilterInput
     }
 
     onKeyDown(e) {
-        if (e.keyCode === Key.ESC || e.keyCode === Key.ENTER) {
+        if (e.key === "Escape" || e.key === "Enter") {
             this.blur()
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false})

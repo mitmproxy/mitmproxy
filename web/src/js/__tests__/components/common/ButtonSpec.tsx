@@ -16,7 +16,7 @@ describe('Button Component', () => {
 
     it('should be able to be disabled', () => {
         let button = renderer.create(
-            <Button className="classname" onClick={() => "onclick"} disabled="true" children="children">
+            <Button className="classname" onClick={() => "onclick"} disabled>
                 <a>foo</a>
             </Button>
             ),
