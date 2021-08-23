@@ -190,12 +190,19 @@ class Proxyserver:
         self._connections[event.flow.client_conn.peername].server_event(event)
 
     @command.command("inject.websocket")
-    def inject_websocket(self, flow: Flow, to_client: bool, message: bytes, is_text: bool = True):
+    def inject_websocket(self, flow: Flow, to_client: bool, message: bytes, is_text: bool = True, close_connection: bool = False):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
             ctx.log.warn("Cannot inject WebSocket messages into non-WebSocket flows.")
 
+        if is_text:
+            ws_msg_type = Opcode.TEXT
+        elif close_connection:
+            ws_msg_type = Opcode.CLOSE
+        else:
+            ws_msg_type = Opcode.BINARY
+
         msg = websocket.WebSocketMessage(
-            Opcode.TEXT if is_text else Opcode.BINARY,
+            ws_msg_type,
             not to_client,
             message
         )

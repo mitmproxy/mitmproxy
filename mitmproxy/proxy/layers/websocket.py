@@ -143,7 +143,7 @@ class WebsocketLayer(layer.Layer):
         elif isinstance(event, events.ConnectionClosed):
             src_ws.receive_data(None)
         elif isinstance(event, WebSocketMessageInjected):
-            fragmentizer = Fragmentizer([], event.message.type == Opcode.TEXT)
+            fragmentizer = Fragmentizer([], event.message.type == Opcode.TEXT, event.message.type == Opcode.CLOSE)
             src_ws._events.extend(
                 fragmentizer(event.message.content)
             )
@@ -171,8 +171,11 @@ class WebsocketLayer(layer.Layer):
                     yield WebsocketMessageHook(self.flow)
 
                     if not message.dropped:
-                        for msg in fragmentizer(message.content):
-                            yield dst_ws.send2(msg)
+                        if message.type == Opcode.CLOSE:
+                            yield dst_ws.send2(fragmentizer.msg(message.content, True))
+                        else:
+                            for msg in fragmentizer(message.content):
+                                yield dst_ws.send2(msg)
 
                 elif ws_event.frame_finished:
                     src_ws.frame_buf.append(b"")
@@ -221,14 +224,18 @@ class Fragmentizer:
     # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
 
-    def __init__(self, fragments: List[bytes], is_text: bool):
+    def __init__(self, fragments: List[bytes], is_text: bool, is_close: bool = False):
         self.fragment_lengths = [len(x) for x in fragments]
         self.is_text = is_text
+        self.is_close = is_close
 
     def msg(self, data: bytes, message_finished: bool):
         if self.is_text:
             data_str = data.decode(errors="replace")
             return wsproto.events.TextMessage(data_str, message_finished=message_finished)
+        elif self.is_close:
+            data_str = data.decode(errors="replace")
+            return wsproto.events.CloseConnection(1000, data_str)
         else:
             return wsproto.events.BytesMessage(data, message_finished=message_finished)
 
