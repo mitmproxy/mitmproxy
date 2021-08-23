@@ -244,6 +244,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"
 
+        upd = {
+            "request": {"trailers": [("foo", "baz")], },
+            "response": {"trailers": [("foo", "baz")], },
+        }
+        assert self.put_json("/flows/42", upd).code == 200
+        assert f.request.trailers["foo"] == "baz"
+
         f.revert()
 
         assert self.put_json("/flows/42", {"foo": 42}).code == 400
@@ -256,13 +263,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             headers={"Content-Type": "application/json"},
             body="!!"
         ).code == 400
-
-        upd = {
-            "request": {"trailers": [("foo", "baz")],},
-            "response": {"trailers": [("foo", "baz")],},
-        }
-        assert self.put_json("/flows/42", upd).code == 200
-        assert f.request.trailers["foo"] == "baz"
 
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")

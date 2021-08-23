@@ -49,7 +49,17 @@ test("websocket backend", async () => {
         {type: "EVENTS_RECEIVE", cmd: "receive", data: [], resource: "events"},
         connectionActions.connectionEstablished(),
     ]))
+    store.clearActions()
     expect(fetchMock.mock.calls).toHaveLength(4);
+
+    console.error = jest.fn();
+    backend.onClose(new CloseEvent("Connection closed"));
+    expect(console.error).toBeCalledTimes(1);
+    expect(store.getActions()[0].type).toEqual(connectionActions.ConnectionState.ERROR);
+    store.clearActions();
+
+    backend.onError(null);
+    expect(console.error).toBeCalledTimes(2);
 
     jest.restoreAllMocks();
 });
