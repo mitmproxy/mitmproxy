@@ -37,7 +37,7 @@ export const icon: FlowColumn = ({flow}) => {
     )
 }
 icon.headerName = ''
-icon.sortKey = flow => 0
+icon.sortKey = flow => getIcon(flow)
 
 const getIcon = (flow: Flow): string => {
     if (flow.type !== "http" || !flow.response) {
