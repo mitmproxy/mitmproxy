@@ -40,13 +40,13 @@ class TestCommandHistory:
 
     def test_add_command(self):
         ch = command_history.CommandHistory()
+        with taddons.context(ch):
+            ch.add_command('cmd1')
+            ch.add_command('cmd2')
+            assert ch.history == ['cmd1', 'cmd2']
 
-        ch.add_command('cmd1')
-        ch.add_command('cmd2')
-        assert ch.history == ['cmd1', 'cmd2']
-
-        ch.add_command('')
-        assert ch.history == ['cmd1', 'cmd2']
+            ch.add_command('')
+            assert ch.history == ['cmd1', 'cmd2']
 
     @pytest.mark.asyncio
     async def test_add_command_failed(self):

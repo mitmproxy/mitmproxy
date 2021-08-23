@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass
 
 from mitmproxy import hooks
@@ -61,7 +60,7 @@ class Log:
         self(txt, "error")
 
     def __call__(self, text, level="info"):
-        asyncio.get_event_loop().call_soon(
+        self.master.event_loop.call_soon_threadsafe(
             self.master.addons.trigger, AddLogHook(LogEntry(text, level)),
         )
 
