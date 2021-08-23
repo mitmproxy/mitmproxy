@@ -213,8 +213,12 @@ class _TLSLayer(tunnel.TunnelLayer):
                 err = last_err[2]
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
-            else:  # pragma: no cover
-                # TODO: Add test case once we find one.
+            elif last_err == ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert protocol version'):
+                err = (
+                    f"The remote server and mitmproxy cannot agree on a TLS version to use. "
+                    f"You may need to adjust mitmproxy's tls_version_server_min option."
+                )
+            else:
                 err = f"OpenSSL {e!r}"
             self.conn.error = err
             return False, err
@@ -428,6 +432,11 @@ class ClientTLSLayer(_TLSLayer):
         level: Literal["warn", "info"] = "warn"
         if err.startswith("Cannot parse ClientHello"):
             pass
+        elif "('SSL routines', 'tls_early_post_process_client_hello', 'unsupported protocol')" in err:
+            err = (
+                f"Client and mitmproxy cannot agree on a TLS version to use. "
+                f"You may need to adjust mitmproxy's tls_version_client_min option."
+            )
         elif "unknown ca" in err or "bad certificate" in err:
             err = f"The client does not trust the proxy's certificate for {dest} ({err})"
         elif err == "connection closed":
