@@ -17,14 +17,14 @@
         table-layout: fixed;
     }
 
-    thead {
+    thead tr {
         background-color: #F2F2F2;
+        border-bottom: solid #bebebe 1px;
         line-height: 23px;
     }
 
     th {
         font-weight: normal;
-        box-shadow: 0 1px 0 #a6a6a6;
         position: relative !important;
         padding-left: 1px;
         .user-select(none);
@@ -96,10 +96,6 @@
 
     .fa {
         line-height: inherit;
-
-        &.pull-right {
-            margin-left: 0;
-        }
     }
 
     .col-tls {
@@ -115,6 +111,14 @@
     }
 
     .col-path {
+        .marker {
+        }
+
+        .fa {
+            margin-left: 0;
+            font-size: 16px;
+        }
+
         .fa-repeat {
             color: green;
         }
@@ -155,12 +159,15 @@
     .col-quickactions {
         width: 0;
         direction: rtl;
+        * {
+            direction: ltr;
+        }
         overflow: hidden;
         background-color: inherit;
         font-size: 20px;
     }
 
-    tr:hover .col-quickactions {
+    tr:hover .col-quickactions, .col-quickactions.hover {
         overflow: visible;
     }
 
@@ -170,24 +177,28 @@
         display: inline-flex;
         align-items: center;
 
-        div {
+        > a {
             margin-right: 2px;
             height: 32px;
             width: 32px;
             border-radius: 16px;
+            text-align: center;
 
-            &:hover {
-            background-color: rgba(0, 0, 0, 5%);
+            &:hover, &.open {
+                background-color: rgba(0, 0, 0, 5%);
             }
         }
     }
 
     .col-quickactions .fa-ellipsis-h {
-        transform: translate(-3px, 3px);
+        transform: translate(0, 3px);
     }
 
     .col-quickactions .fa-play {
-        transform: translate(-1px, 2px);
+        transform: translate(1px, 2px);
     }
 
+    .col-quickactions .fa-repeat {
+        transform: translate(-0px, 2px);
+    }
 }

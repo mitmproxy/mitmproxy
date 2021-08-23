@@ -1,24 +1,13 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
+import * as React from "react"
 import ModalList from './ModalList'
+import { useAppSelector } from "../../ducks";
 
-class PureModal extends Component {
 
-    constructor(props, context) {
-        super(props, context)
-    }
+export default function PureModal() {
+    const activeModal = useAppSelector(state => state.ui.modal.activeModal)
+    const ActiveModal = ModalList.find(m => m.name === activeModal )
 
-    render() {
-        const { activeModal } = this.props
-        const ActiveModal = ModalList.find(m => m.name === activeModal )
-        return(
-            activeModal ? <ActiveModal/> : <div/>
-        )
-    }
+    return(
+        activeModal ? <ActiveModal/> : <div/>
+    )
 }
-
-export default connect(
-    state => ({
-        activeModal: state.ui.modal.activeModal
-    })
-)(PureModal)

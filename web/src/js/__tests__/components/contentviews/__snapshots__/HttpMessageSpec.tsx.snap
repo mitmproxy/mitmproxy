@@ -1,0 +1,241 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HttpMessage 1`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Raw
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
+    </div>
+    <pre>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+    </pre>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage 2`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        [Editing]
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-check text-success"
+        />
+         Done
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-times text-danger"
+        />
+         Cancel
+      </button>
+    </div>
+    <div
+      class="codeeditor"
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage 3`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Raw
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
+    </div>
+    <pre>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+    </pre>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`ViewImage 1`] = `
+<DocumentFragment>
+  <div
+    class="flowview-image"
+  >
+    <img
+      alt="preview"
+      class="img-thumbnail"
+      src="./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content.data"
+    />
+  </div>
+</DocumentFragment>
+`;

@@ -21,4 +21,4 @@ class ViewWBXML(base.View):
             return None
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
-        return float(content_type in self.__content_types)
+        return float(bool(data) and content_type in self.__content_types)

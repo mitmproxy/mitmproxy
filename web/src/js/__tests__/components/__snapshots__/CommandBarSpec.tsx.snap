@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CommandBar 1`] = `
+<DocumentFragment>
+  <div
+    class="command"
+  >
+    <div
+      class="command-title"
+    >
+      Command Result
+    </div>
+    <div
+      class="command-result"
+    />
+    <div
+      class="argument-suggestion popover top"
+    >
+      <div
+        class="arrow"
+      />
+      <div
+        class="popover-content"
+      >
+        <div>
+          <strong>
+            Available Commands: 
+          </strong>
+          <p
+            class="available-commands"
+          >
+            []
+          </p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="command-input input-group"
+    >
+      <span
+        class="input-group-addon"
+      >
+        <i
+          class="fa fa-fw fa-terminal"
+        />
+      </span>
+      <input
+        class="form-control"
+        placeholder="Enter command"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CommandBar 2`] = `
+<DocumentFragment>
+  <div
+    class="command"
+  >
+    <div
+      class="command-title"
+    >
+      Command Result
+    </div>
+    <div
+      class="command-result"
+    />
+    <div
+      class="argument-suggestion popover top"
+    >
+      <div
+        class="arrow"
+      />
+      <div
+        class="popover-content"
+      >
+        <div>
+          <strong>
+            Available Commands: 
+          </strong>
+          <p
+            class="available-commands"
+          >
+            ["flow.decode","flow.encode"]
+          </p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="command-input input-group"
+    >
+      <span
+        class="input-group-addon"
+      >
+        <i
+          class="fa fa-fw fa-terminal"
+        />
+      </span>
+      <input
+        class="form-control"
+        placeholder="Enter command"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;

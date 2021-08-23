@@ -235,8 +235,10 @@ class ViewXmlHtml(base.View):
         return t, pretty
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        if not data:
+            return 0
         if content_type in self.__content_types:
             return 1
         elif strutils.is_xml(data):
             return 0.4
-        return float(content_type in self.__content_types)
+        return 0

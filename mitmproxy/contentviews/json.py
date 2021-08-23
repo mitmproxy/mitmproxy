@@ -47,6 +47,8 @@ class ViewJSON(base.View):
             return "JSON", format_json(data)
 
     def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+        if not data:
+            return 0
         if content_type in (
             "application/json",
             "application/json-rpc",

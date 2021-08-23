@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileMenu Component should render correctly 1`] = `
+<a
+  className="pull-left special"
+  href="#"
+  onClick={[Function]}
+>
+  File
+</a>
+`;

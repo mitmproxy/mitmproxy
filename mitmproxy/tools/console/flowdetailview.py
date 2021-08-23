@@ -65,8 +65,8 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             parts = [
                 ("Type", "%s, %s bits" % c.keyinfo),
                 ("SHA256 digest", c.fingerprint().hex(' ')),
-                ("Valid to", str(c.notafter)),
                 ("Valid from", str(c.notbefore)),
+                ("Valid to", str(c.notafter)),
                 ("Serial", str(c.serial)),
                 ("Subject", urwid.Pile(common.format_keyvals(c.subject, key_format="highlight"))),
                 ("Issuer", urwid.Pile(common.format_keyvals(c.issuer, key_format="highlight")))

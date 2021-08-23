@@ -5,30 +5,51 @@ import logging
 import os.path
 import re
 from io import BytesIO
-from typing import ClassVar, Optional
+from itertools import islice
+from typing import ClassVar, Optional, Sequence, Union
 
 import tornado.escape
 import tornado.web
 import tornado.websocket
 
 import mitmproxy.flow
-import mitmproxy.tools.web.master  # noqa
-from mitmproxy import contentviews
+import mitmproxy.tools.web.master
+from mitmproxy import certs, command, contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.http import HTTPFlow
+from mitmproxy.tcp import TCPFlow, TCPMessage
+from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.websocket import WebSocketMessage
+
+
+def cert_to_json(certs: Sequence[certs.Cert]) -> Optional[dict]:
+    if not certs:
+        return None
+    cert = certs[0]
+    return {
+        "keyinfo": cert.keyinfo,
+        "sha256": cert.fingerprint().hex(),
+        "notbefore": int(cert.notbefore.timestamp()),
+        "notafter": int(cert.notafter.timestamp()),
+        "serial": str(cert.serial),
+        "subject": cert.subject,
+        "issuer": cert.issuer,
+        "altnames": cert.altnames,
+    }
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     """
     Remove flow message content and cert to save transmission space.
-
     Args:
         flow: The original flow.
+    Sync with web/src/flow.ts.
     """
     f = {
         "id": flow.id,
@@ -36,32 +57,36 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "is_replay": flow.is_replay,
         "type": flow.type,
         "modified": flow.modified(),
-        "marked": flow.marked,
+        "marked": emoji.get(flow.marked, "🔴") if flow.marked else "",
     }
 
     if flow.client_conn:
         f["client_conn"] = {
             "id": flow.client_conn.id,
-            "address": flow.client_conn.peername,
+            "peername": flow.client_conn.peername,
+            "sockname": flow.client_conn.sockname,
             "tls_established": flow.client_conn.tls_established,
+            "cert": cert_to_json(flow.client_conn.certificate_list),
+            "sni": flow.client_conn.sni,
+            "cipher": flow.client_conn.cipher,
+            "alpn": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.client_conn.tls_version,
             "timestamp_start": flow.client_conn.timestamp_start,
             "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
             "timestamp_end": flow.client_conn.timestamp_end,
-            "sni": flow.client_conn.sni,
-            "cipher_name": flow.client_conn.cipher,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
-            "tls_version": flow.client_conn.tls_version,
         }
 
     if flow.server_conn:
         f["server_conn"] = {
             "id": flow.server_conn.id,
+            "peername": flow.server_conn.peername,
+            "sockname": flow.server_conn.sockname,
             "address": flow.server_conn.address,
-            "ip_address": flow.server_conn.peername,
-            "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
+            "cert": cert_to_json(flow.server_conn.certificate_list),
             "sni": flow.server_conn.sni,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "cipher": flow.server_conn.cipher,
+            "alpn": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
@@ -75,7 +100,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         content_length: Optional[int]
         content_hash: Optional[str]
         if flow.request:
-            if flow.request.raw_content:
+            if flow.request.raw_content is not None:
                 content_length = len(flow.request.raw_content)
                 content_hash = hashlib.sha256(flow.request.raw_content).hexdigest()
             else:
@@ -97,7 +122,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "pretty_host": flow.request.pretty_host,
             }
         if flow.response:
-            if flow.response.raw_content:
+            if flow.response.raw_content is not None:
                 content_length = len(flow.response.raw_content)
                 content_hash = hashlib.sha256(flow.response.raw_content).hexdigest()
             else:
@@ -117,6 +142,18 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             if flow.response.data.trailers:
                 f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
 
+        if flow.websocket:
+            f["websocket"] = {
+                "messages_meta": {
+                    "count": len(flow.websocket.messages),
+                    "timestamp_last": flow.websocket.messages[-1].timestamp if flow.websocket.messages else None,
+                },
+                "closed_by_client": flow.websocket.closed_by_client,
+                "close_code": flow.websocket.close_code,
+                "close_reason": flow.websocket.close_reason,
+                "timestamp_end": flow.websocket.timestamp_end,
+            }
+
     return f
 
 
@@ -135,7 +172,7 @@ class APIError(tornado.web.HTTPError):
 class RequestHandler(tornado.web.RequestHandler):
     application: "Application"
 
-    def write(self, chunk):
+    def write(self, chunk: Union[str, bytes, dict, list]):
         # Writing arrays on the top level is ok nowadays.
         # http://flask.pocoo.org/docs/0.11/security/#json-security
         if isinstance(chunk, list):
@@ -309,12 +346,12 @@ class FlowHandler(RequestHandler):
         self.view.remove([self.flow])
 
     def put(self, flow_id):
-        flow = self.flow
+        flow: mitmproxy.flow.Flow = self.flow
         flow.backup()
         try:
             for a, b in self.json.items():
                 if a == "request" and hasattr(flow, "request"):
-                    request = flow.request
+                    request: mitmproxy.http.Request = flow.request
                     for k, v in b.items():
                         if k in ["method", "scheme", "host", "path", "http_version"]:
                             setattr(request, k, str(v))
@@ -325,7 +362,10 @@ class FlowHandler(RequestHandler):
                             for header in v:
                                 request.headers.add(*header)
                         elif k == "trailers":
-                            request.trailers.clear()
+                            if request.trailers is not None:
+                                request.trailers.clear()
+                            else:
+                                request.trailers = mitmproxy.http.Headers()
                             for trailer in v:
                                 request.trailers.add(*trailer)
                         elif k == "content":
@@ -334,7 +374,7 @@ class FlowHandler(RequestHandler):
                             raise APIError(400, f"Unknown update request.{k}: {v}")
 
                 elif a == "response" and hasattr(flow, "response"):
-                    response = flow.response
+                    response: mitmproxy.http.Response = flow.response
                     for k, v in b.items():
                         if k in ["msg", "http_version"]:
                             setattr(response, k, str(v))
@@ -345,13 +385,18 @@ class FlowHandler(RequestHandler):
                             for header in v:
                                 response.headers.add(*header)
                         elif k == "trailers":
-                            response.trailers.clear()
+                            if response.trailers is not None:
+                                response.trailers.clear()
+                            else:
+                                response.trailers = mitmproxy.http.Headers()
                             for trailer in v:
                                 response.trailers.add(*trailer)
                         elif k == "content":
                             response.text = v
                         else:
                             raise APIError(400, f"Unknown update response.{k}: {v}")
+                elif a == "marked":
+                    flow.marked = b
                 else:
                     raise APIError(400, f"Unknown update {a}: {b}")
         except APIError:
@@ -389,9 +434,6 @@ class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
 
-        if not message.raw_content:
-            raise APIError(400, "No content.")
-
         content_encoding = message.headers.get("Content-Encoding", None)
         if content_encoding:
             content_encoding = re.sub(r"[^\w]", "", content_encoding)
@@ -416,60 +458,99 @@ class FlowContent(RequestHandler):
 
 
 class FlowContentView(RequestHandler):
-    def get(self, flow_id, message, content_view):
-        message = getattr(self.flow, message)
+    def message_to_json(
+        self,
+        viewname: str,
+        message: Union[http.Message, TCPMessage, WebSocketMessage],
+        flow: Union[HTTPFlow, TCPFlow],
+        max_lines: Optional[int] = None
+    ):
+        description, lines, error = contentviews.get_message_content_view(viewname, message, flow)
+        if error:
+            self.master.log.error(error)
+        if max_lines:
+            lines = islice(lines, max_lines)
 
-        description, lines, error = contentviews.get_message_content_view(
-            content_view.replace('_', ' '), message, self.flow
-        )
-        #        if error:
-        #           add event log
-
-        self.write(dict(
+        return dict(
             lines=list(lines),
-            description=description
-        ))
+            description=description,
+        )
+
+    def get(self, flow_id, message, content_view):
+        flow = self.flow
+        assert isinstance(flow, (HTTPFlow, TCPFlow))
+
+        if self.request.arguments.get("lines"):
+            max_lines = int(self.request.arguments["lines"][0])
+        else:
+            max_lines = None
+
+        if message == "messages":
+            if isinstance(flow, HTTPFlow) and flow.websocket:
+                messages = flow.websocket.messages
+            elif isinstance(flow, TCPFlow):
+                messages = flow.messages
+            else:
+                raise APIError(400, f"This flow has no messages.")
+            msgs = []
+            for m in messages:
+                d = self.message_to_json(content_view, m, flow, max_lines)
+                d["from_client"] = m.from_client
+                d["timestamp"] = m.timestamp
+                msgs.append(d)
+                if max_lines:
+                    max_lines -= len(d["lines"])
+                    if max_lines <= 0:
+                        break
+            self.write(msgs)
+        else:
+            message = getattr(self.flow, message)
+            self.write(self.message_to_json(content_view, message, flow, max_lines))
+
+
+class Commands(RequestHandler):
+    def get(self) -> None:
+        commands = {}
+        for (name, cmd) in self.master.commands.commands.items():
+            commands[name] = {
+                "help": cmd.help,
+                "parameters": [
+                    {
+                        "name": param.name,
+                        "type": command.typename(param.type),
+                        "kind": str(param.kind),
+                    }
+                    for param in cmd.parameters
+                ],
+                "return_type": command.typename(cmd.return_type) if cmd.return_type else None,
+                "signature_help": cmd.signature_help(),
+            }
+        self.write(commands)
+
+
+class ExecuteCommand(RequestHandler):
+    def post(self, cmd: str):
+        # TODO: We should parse query strings here, this API is painful.
+        try:
+            args = self.json['arguments']
+        except APIError:
+            args = []
+        try:
+            result = self.master.commands.call_strings(cmd, args)
+        except Exception as e:
+            self.write({
+                "error": str(e)
+            })
+        else:
+            self.write({
+                "value": result,
+                # "type": command.typename(type(result)) if result is not None else "none"
+            })
 
 
 class Events(RequestHandler):
     def get(self):
         self.write([logentry_to_json(e) for e in self.master.events.data])
-
-
-class Settings(RequestHandler):
-    def get(self):
-        self.write(dict(
-            version=version.VERSION,
-            mode=str(self.master.options.mode),
-            intercept_active=self.master.options.intercept_active,
-            intercept=self.master.options.intercept,
-            showhost=self.master.options.showhost,
-            upstream_cert=self.master.options.upstream_cert,
-            rawtcp=self.master.options.rawtcp,
-            http2=self.master.options.http2,
-            websocket=self.master.options.websocket,
-            anticache=self.master.options.anticache,
-            anticomp=self.master.options.anticomp,
-            stickyauth=self.master.options.stickyauth,
-            stickycookie=self.master.options.stickycookie,
-            stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
-            listen_host=self.master.options.listen_host,
-            listen_port=self.master.options.listen_port,
-            server=self.master.options.server,
-        ))
-
-    def put(self):
-        update = self.json
-        allowed_options = {
-            "intercept", "showhost", "upstream_cert", "ssl_insecure",
-            "rawtcp", "http2", "websocket", "anticache", "anticomp",
-            "stickycookie", "stickyauth", "stream_large_bodies"
-        }
-        for k in update:
-            if k not in allowed_options:
-                raise APIError(400, f"Unknown setting {k}")
-        self.master.options.update(**update)
 
 
 class Options(RequestHandler):
@@ -502,6 +583,17 @@ class DnsRebind(RequestHandler):
         )
 
 
+class Conf(RequestHandler):
+    def get(self):
+        conf = {
+            "static": False,
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views if v.name != "Query"]
+        }
+        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
+        self.set_header("content-type", "application/javascript")
+
+
 class Application(tornado.web.Application):
     master: "mitmproxy.tools.web.master.WebMaster"
 
@@ -525,6 +617,8 @@ class Application(tornado.web.Application):
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
                 (r"/updates", ClientConnection),
+                (r"/commands(?:\.json)?", Commands),
+                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
                 (r"/events(?:\.json)?", Events),
                 (r"/flows(?:\.json)?", Flows),
                 (r"/flows/dump", DumpFlows),
@@ -536,13 +630,14 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
                 (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
+                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"
+                    r"content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
                     FlowContentView),
-                (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions)
+                (r"/options/save", SaveOptions),
+                (r"/conf\.js", Conf),
             ]
         )

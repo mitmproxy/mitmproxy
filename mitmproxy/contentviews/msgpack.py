@@ -50,4 +50,4 @@ class ViewMsgPack(base.View):
             return "MsgPack", format_msgpack(data)
 
     def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
-        return float(content_type in self.__content_types)
+        return float(bool(data) and content_type in self.__content_types)

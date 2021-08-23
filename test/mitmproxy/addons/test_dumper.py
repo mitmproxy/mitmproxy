@@ -94,7 +94,7 @@ def test_simple():
 
 
 def test_echo_body():
-    f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
+    f = tflow.tflow(resp=True)
     f.response.headers["content-type"] = "text/html"
     f.response.content = b"foo bar voing\n" * 100
 
@@ -112,7 +112,7 @@ def test_echo_trailer():
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3)
-        f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
+        f = tflow.tflow(resp=True)
 
         f.request.headers["content-type"] = "text/html"
         f.request.headers["transfer-encoding"] = "chunked"
@@ -140,26 +140,26 @@ def test_echo_request_line():
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
-        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        f = tflow.tflow(resp=True)
         f.is_replay = "request"
         d._echo_request_line(f)
         assert "[replay]" in sio.getvalue()
         sio.truncate(0)
 
-        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        f = tflow.tflow(resp=True)
         f.is_replay = None
         d._echo_request_line(f)
         assert "[replay]" not in sio.getvalue()
         sio.truncate(0)
 
-        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        f = tflow.tflow(resp=True)
         f.request.http_version = "nonstandard"
         d._echo_request_line(f)
         assert "nonstandard" in sio.getvalue()
         sio.truncate(0)
 
         ctx.configure(d, flow_detail=0, showhost=True)
-        f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
+        f = tflow.tflow(resp=True)
         terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
         f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
         d._echo_request_line(f)

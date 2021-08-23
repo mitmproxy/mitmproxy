@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewSelector 1`] = `
+<DocumentFragment>
+  <a
+    class="btn btn-default btn-xs"
+    href="#"
+  >
+    <span>
+      <i
+        class="fa fa-fw fa-files-o"
+      />
+       
+      <b>
+        View:
+      </b>
+       auto 
+      <span
+        class="caret"
+      />
+    </span>
+  </a>
+</DocumentFragment>
+`;
+
+exports[`ViewSelector 2`] = `
+<DocumentFragment>
+  <a
+    class="btn btn-default btn-xs open"
+    href="#"
+  >
+    <span>
+      <i
+        class="fa fa-fw fa-files-o"
+      />
+       
+      <b>
+        View:
+      </b>
+       auto 
+      <span
+        class="caret"
+      />
+    </span>
+  </a>
+  <ul
+    class="dropdown-menu show"
+    style="position: absolute; left: 0px; top: 0px;"
+  >
+    <li>
+      <a
+        href="#"
+      >
+        auto
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        raw
+      </a>
+    </li>
+  </ul>
+</DocumentFragment>
+`;
