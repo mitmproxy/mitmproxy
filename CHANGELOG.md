@@ -4,6 +4,7 @@
 
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
 * Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases
+* Improve error message on TLS version mismatch.
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously.
 

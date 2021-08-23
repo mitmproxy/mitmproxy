@@ -2,6 +2,7 @@ import collections.abc
 import difflib
 import itertools
 import re
+import textwrap
 import traceback
 import typing
 
@@ -65,6 +66,7 @@ def _fmt_entry(x: PlaybookEntry):
     x = str(x)
     x = re.sub('Placeholder:None', '<unset placeholder>', x, flags=re.IGNORECASE)
     x = re.sub('Placeholder:', '', x, flags=re.IGNORECASE)
+    x = textwrap.indent(x, "     ")[5:]
     return f"{arrow} {x}"
 
 

@@ -86,8 +86,13 @@ def test_parse_client_hello():
 class SSLTest:
     """Helper container for Python's builtin SSL object."""
 
-    def __init__(self, server_side: bool = False, alpn: typing.Optional[typing.List[str]] = None,
-                 sni: typing.Optional[bytes] = b"example.mitmproxy.org"):
+    def __init__(
+        self,
+        server_side: bool = False,
+        alpn: typing.Optional[typing.List[str]] = None,
+        sni: typing.Optional[bytes] = b"example.mitmproxy.org",
+        max_ver: typing.Optional[ssl.TLSVersion] = None,
+    ):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
         self.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER if server_side else ssl.PROTOCOL_TLS_CLIENT)
@@ -104,6 +109,8 @@ class SSLTest:
                 certfile=tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt"),
                 keyfile=tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key"),
             )
+        if max_ver:
+            self.ctx.maximum_version = max_ver
 
         self.obj = self.ctx.wrap_bio(
             self.inc,
@@ -162,7 +169,10 @@ def reply_tls_start_client(alpn: typing.Optional[bytes] = None, *args, **kwargs)
     """
 
     def make_client_conn(tls_start: tls.TlsStartData) -> None:
+        # ssl_context = SSL.Context(Method.TLS_METHOD)
+        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+        ssl_context.set_options(SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2)
         ssl_context.use_privatekey_file(
             tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
         )
@@ -184,7 +194,10 @@ def reply_tls_start_server(alpn: typing.Optional[bytes] = None, *args, **kwargs)
     """
 
     def make_server_conn(tls_start: tls.TlsStartData) -> None:
+        # ssl_context = SSL.Context(Method.TLS_METHOD)
+        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+        ssl_context.set_options(SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2)
         ssl_context.load_verify_locations(
             cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt")
         )
@@ -335,6 +348,39 @@ class TestServerTLS:
                 >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
                 << commands.Log("Server TLS handshake failed. The remote server does not speak TLS.", "warn")
                 << commands.CloseConnection(tctx.server)
+        )
+
+    def test_unsupported_protocol(self, tctx: context.Context):
+        """Test the scenario where the server only supports an outdated TLS version by default."""
+        playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
+        tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.state = ConnectionState.OPEN
+        tctx.server.sni = "example.mitmproxy.org"
+
+        # noinspection PyTypeChecker
+        tssl = SSLTest(server_side=True, max_ver=ssl.TLSVersion.TLSv1_2)
+
+        # send ClientHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            << tls.TlsStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server()
+            << commands.SendData(tctx.server, data)
+        )
+
+        # receive ServerHello
+        tssl.bio_write(data())
+        with pytest.raises(ssl.SSLError):
+            tssl.do_handshake()
+
+        # send back error
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, tssl.bio_read())
+            << commands.Log("Server TLS handshake failed. The remote server and mitmproxy cannot agree on a TLS version"
+                            " to use. You may need to adjust mitmproxy's tls_version_server_min option.", "warn")
+            << commands.CloseConnection(tctx.server)
         )
 
 
@@ -562,5 +608,22 @@ class TestClientTLS:
             << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
                             "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
                             "client does not trust the proxy's certificate.", "info")
+            << commands.CloseConnection(tctx.client)
+        )
+
+    def test_unsupported_protocol(self, tctx: context.Context):
+        """Test the scenario where the client only supports an outdated TLS version by default."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, max_ver=ssl.TLSVersion.TLSv1_2)
+        playbook.logs = True
+
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << tls.TlsStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.Log("Client TLS handshake failed. Client and mitmproxy cannot agree on a TLS version to "
+                            "use. You may need to adjust mitmproxy's tls_version_client_min option.", "warn")
             << commands.CloseConnection(tctx.client)
         )
