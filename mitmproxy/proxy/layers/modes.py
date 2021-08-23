@@ -97,11 +97,12 @@ class Socks5Proxy(DestinationKnown):
             self,
             message: str,
             reply_code: Optional[int] = None,
+            ver_code: int = SOCKS5_VERSION
     ) -> layer.CommandGenerator[None]:
         if reply_code is not None:
             yield commands.SendData(
                 self.context.client,
-                bytes([SOCKS5_VERSION, reply_code]) + b"\x00\x01\x00\x00\x00\x00\x00\x00"
+                bytes([ver_code, reply_code]) + b"\x00\x01\x00\x00\x00\x00\x00\x00"
             )
         yield commands.CloseConnection(self.context.client)
         yield commands.Log(message)
@@ -176,7 +177,7 @@ class Socks5Proxy(DestinationKnown):
                 if self.check_auth(test_id, test_pw):
                     yield commands.SendData(self.context.client, b"\x01\x00")
                 else:
-                    yield from self.socks_err("authentication failed", 0x01)
+                    yield from self.socks_err("authentication failed", 0x01, ver_code=0x01)
                     return
                 self.buf = self.buf[3 + id_len + pw_len:]
                 self.need_auth = False
