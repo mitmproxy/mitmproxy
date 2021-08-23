@@ -7,6 +7,7 @@
 * Improve error message on TLS version mismatch.
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously.
+* Allow to close WS connections using `inject.websocket` command
 
 ## 4 August 2021: mitmproxy 7.0.2
 
