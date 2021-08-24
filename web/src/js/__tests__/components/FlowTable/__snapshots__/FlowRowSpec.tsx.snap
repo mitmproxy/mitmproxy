@@ -45,7 +45,7 @@ exports[`FlowRow 1`] = `
         <td
           class="col-size"
         >
-          14b
+          43b
         </td>
         <td
           class="col-time"
@@ -62,14 +62,6 @@ exports[`FlowRow 1`] = `
             >
               <i
                 class="fa fa-fw fa-play text-success"
-              />
-            </a>
-            <a
-              class="quickaction"
-              href="#"
-            >
-              <i
-                class="fa fa-fw fa-ellipsis-h text-muted"
               />
             </a>
           </div>

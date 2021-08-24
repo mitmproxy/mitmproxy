@@ -1,6 +1,7 @@
 import * as React from "react"
-import {render, screen, waitFor} from "../test-utils";
+import {render, screen} from "../test-utils";
 import FlowView from "../../components/FlowView";
+import * as flowActions from "../../ducks/flows"
 import fetchMock, {enableFetchMocks} from "jest-fetch-mock";
 import {fireEvent} from "@testing-library/react";
 
@@ -9,7 +10,7 @@ enableFetchMocks();
 test("FlowView", async () => {
     fetchMock.mockReject(new Error("backend missing"));
 
-    const {asFragment} = render(<FlowView/>);
+    const {asFragment, store} = render(<FlowView/>);
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Response"));
@@ -26,4 +27,11 @@ test("FlowView", async () => {
 
     fireEvent.click(screen.getByText("Error"));
     expect(asFragment()).toMatchSnapshot();
+
+    store.dispatch(flowActions.select(store.getState().flows.list[2].id));
+
+    fireEvent.click(screen.getByText("TCP Messages"));
+    expect(asFragment()).toMatchSnapshot();
+
+    fireEvent.click(screen.getByText("Error"));
 });

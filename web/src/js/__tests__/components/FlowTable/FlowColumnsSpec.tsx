@@ -1,7 +1,7 @@
 import * as React from "react"
 import renderer from 'react-test-renderer'
 import FlowColumns from '../../../components/FlowTable/FlowColumns'
-import {TFlow} from '../../ducks/tutils'
+import {TFlow, TTCPFlow} from '../../ducks/tutils'
 import {render} from "../../test-utils";
 
 test("should render columns", async () => {
@@ -19,9 +19,14 @@ test("should render columns", async () => {
 
 describe('Flowcolumns Components', () => {
     it('should render IconColumn', () => {
-        let tflow = {...TFlow(), websocket: undefined},
-            iconColumn = renderer.create(<FlowColumns.icon flow={tflow}/>),
+        let tcpflow = TTCPFlow(),
+            iconColumn = renderer.create(<FlowColumns.icon flow={tcpflow}/>),
             tree = iconColumn.toJSON()
+        expect(tree).toMatchSnapshot()
+
+        let tflow = {...TFlow(), websocket: undefined};
+        iconColumn = renderer.create(<FlowColumns.icon flow={tflow}/>)
+        tree = iconColumn.toJSON()
         // plain
         expect(tree).toMatchSnapshot()
         // not modified

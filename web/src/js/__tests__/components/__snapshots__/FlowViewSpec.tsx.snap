@@ -898,6 +898,32 @@ exports[`FlowView 5`] = `
               </span>
             </td>
           </tr>
+          <tr>
+            <td>
+              Server conn. closed:
+            </td>
+            <td>
+              1999-12-31 23:00:05.000
+              <span
+                class="text-muted"
+              >
+                (5s)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Client conn. closed:
+            </td>
+            <td>
+              1999-12-31 23:00:06.000
+              <span
+                class="text-muted"
+              >
+                (6s)
+              </span>
+            </td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -961,6 +987,79 @@ exports[`FlowView 6`] = `
           <small>
             1999-12-31 23:00:07.000
           </small>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 7`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class="active"
+        href="#"
+      >
+        TCP Messages
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="tcp"
+    >
+      <h4>
+        TCP Data
+      </h4>
+      <div
+        class="contentview"
+      >
+        <div
+          class="controls"
+        >
+          <h5>
+            2 Messages
+          </h5>
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+          >
+            <span>
+              <i
+                class="fa fa-fw fa-files-o"
+              />
+               
+              <b>
+                View:
+              </b>
+               auto 
+              <span
+                class="caret"
+              />
+            </span>
+          </a>
         </div>
       </div>
     </section>

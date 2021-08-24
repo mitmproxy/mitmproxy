@@ -48,6 +48,10 @@ export default function Timing({flow}: { flow: Flow }) {
             t: flow.server_conn?.timestamp_tls_setup,
             deltaTo: ref
         }, {
+            title: "Server conn. closed",
+            t: flow.server_conn?.timestamp_end,
+            deltaTo: ref
+        }, {
             title: "Client conn. established",
             t: flow.client_conn.timestamp_start,
             deltaTo: flow.type === "http" ? ref : undefined
@@ -55,7 +59,11 @@ export default function Timing({flow}: { flow: Flow }) {
             title: "Client conn. TLS handshake",
             t: flow.client_conn.timestamp_tls_setup,
             deltaTo: ref
-        }
+        }, {
+            title: "Client conn. closed",
+            t: flow.client_conn.timestamp_end,
+            deltaTo: ref
+        },
     ]
     if (flow.type === "http") {
         timestamps.push(...[

@@ -19,7 +19,9 @@ export default React.memo(function FlowTableHead() {
             {displayColumns.map(Column => (
                 <th className={classnames(`col-${Column.name}`, sortColumn === Column.name && sortType)}
                     key={Column.name}
-                    onClick={() => dispatch(setSort(Column.name, Column.name !== sortColumn ? false : !sortDesc))}>
+                    onClick={() => dispatch(setSort(
+                        Column.name === sortColumn && sortDesc ? undefined : Column.name,
+                        Column.name !== sortColumn ? false : !sortDesc))}>
                     {Column.headerName}
                 </th>
             ))}

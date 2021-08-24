@@ -24,6 +24,7 @@ export interface HTTPFlow extends _Flow {
 
 export interface TCPFlow extends _Flow {
     type: "tcp"
+    messages_meta: MessagesMeta,
 }
 
 export interface Error {
@@ -100,11 +101,14 @@ export interface HTTPResponse extends HTTPMessage {
     reason: string
 }
 
-export interface WebSocketData {
-    messages_meta: {
+export interface MessagesMeta {
+        contentLength: number,
         count: number,
         timestamp_last?: number
-    },
+}
+
+export interface WebSocketData {
+    messages_meta: MessagesMeta,
     closed_by_client?: boolean
     close_code?: number
     close_reason?: string

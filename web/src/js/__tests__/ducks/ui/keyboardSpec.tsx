@@ -12,7 +12,7 @@ describe('onKeyDown', () => {
     for (let i = 1; i <= 12; i++) {
         flows = reduceFlows(flows, {
             type: flowsActions.ADD,
-            data: {id: i + "", request: true, response: true},
+            data: {id: i + "", request: true, response: true, type: "http"},
             cmd: 'add'
         })
     }

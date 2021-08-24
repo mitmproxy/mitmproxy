@@ -84,6 +84,20 @@ exports[`Header 1`] = `
               />
                Delete
             </button>
+            <a
+              class=""
+              href="#"
+            >
+              <button
+                class="btn btn-default"
+                title="mark flow"
+              >
+                <i
+                  class="fa fa-paint-brush text-success"
+                />
+                 Mark▾
+              </button>
+            </a>
           </div>
           <div
             class="menu-legend"

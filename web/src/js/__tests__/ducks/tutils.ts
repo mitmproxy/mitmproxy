@@ -1,18 +1,19 @@
 import thunk from 'redux-thunk'
 import configureStore, {MockStoreCreator, MockStoreEnhanced} from 'redux-mock-store'
 import {ConnectionState} from '../../ducks/connection'
-import TFlow from './_tflow'
+import {THTTPFlow, TTCPFlow} from './_tflow'
 import {AppDispatch, RootState} from "../../ducks";
-import {HTTPFlow} from "../../flow";
+import {HTTPFlow, TCPFlow} from "../../flow";
 import {defaultState as defaultConf} from "../../ducks/conf"
 import {defaultState as defaultOptions} from "../../ducks/options"
 
 const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> = configureStore([thunk])
 
-export {TFlow}
+export {THTTPFlow as TFlow, TTCPFlow}
 
-const tflow1: HTTPFlow = TFlow();
-const tflow2: HTTPFlow = TFlow();
+const tflow1: HTTPFlow = THTTPFlow();
+const tflow2: HTTPFlow = THTTPFlow();
+const tflow3: TCPFlow = TTCPFlow();
 tflow1.modified = true
 tflow1.intercepted = true
 tflow2.id = "flow2";
@@ -71,17 +72,17 @@ export const testState: RootState = {
     options: defaultOptions,
     flows: {
         selected: [tflow2.id],
-        byId: {[tflow1.id]: tflow1, [tflow2.id]: tflow2},
-        filter: '~u /second',
+        byId: {[tflow1.id]: tflow1, [tflow2.id]: tflow2, [tflow3.id]: tflow3},
+        filter: '~u /second | ~tcp',
         highlight: '~u /path',
         sort: {
             desc: true,
             column: "path"
         },
-        view: [tflow2],
-        list: [tflow1, tflow2],
-        listIndex: {[tflow1.id]: 0, [tflow2.id]: 1},
-        viewIndex: {[tflow2.id]: 0},
+        view: [tflow2, tflow3],
+        list: [tflow1, tflow2, tflow3],
+        listIndex: {[tflow1.id]: 0, [tflow2.id]: 1, [tflow3.id]: 2},
+        viewIndex: {[tflow2.id]: 0, [tflow3.id]: 1},
     },
     connection: {
         state: ConnectionState.ESTABLISHED
