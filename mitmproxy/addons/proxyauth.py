@@ -201,12 +201,6 @@ class ProxyAuth:
                 raise exceptions.OptionsError(
                     "Proxy Authentication not supported in transparent mode."
                 )
-            if ctx.options.mode == "socks5":
-                raise exceptions.OptionsError(
-                    "Proxy Authentication not supported in SOCKS mode. "
-                    "https://github.com/mitmproxy/mitmproxy/issues/738"
-                )
-                # TODO: check for multiple auth options
 
     def http_connect(self, f: http.HTTPFlow) -> None:
         if self.enabled():

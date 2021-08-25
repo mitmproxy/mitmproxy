@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Support proxy authentication for SOCKS v5 mode (@starplanet)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously.

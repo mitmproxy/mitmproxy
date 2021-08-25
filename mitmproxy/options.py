@@ -97,10 +97,6 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "socks5auth", Optional[str], None,
-            "user:password, enabled when mode is socks5"
-        )
-        self.add_option(
             "upstream_cert", bool, True,
             "Connect to upstream server to look up certificate details."
         )
