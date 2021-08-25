@@ -78,7 +78,7 @@ class TestProxyAuth:
         pa = proxyauth.ProxyAuth()
         with taddons.context(pa, loadcore=False) as ctx:
             ctx.configure(pa, proxyauth="foo:bar", mode="regular")
-            data = modes.Socks5AuthData("foo", "baz")
+            data = modes.Socks5AuthData(tflow.tclient_conn(), "foo", "baz")
             pa.socks5_auth(data)
             assert not data.valid
             data.password = "bar"

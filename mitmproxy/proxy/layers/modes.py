@@ -4,7 +4,7 @@ from abc import ABCMeta
 from dataclasses import dataclass
 from typing import Optional
 
-from mitmproxy import platform
+from mitmproxy import connection, platform
 from mitmproxy.net import server_spec
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
@@ -92,6 +92,7 @@ SOCKS5_REP_ADDRESS_TYPE_NOT_SUPPORTED = 0x08
 
 @dataclass
 class Socks5AuthData:
+    client_conn: connection.Client
     username: str
     password: str
     valid: bool = False
@@ -188,7 +189,7 @@ class Socks5Proxy(DestinationKnown):
         user = self.buf[2:(2 + user_len)].decode("utf-8", "backslashreplace")
         password = self.buf[(3 + user_len):(3 + user_len + pass_len)].decode("utf-8", "backslashreplace")
 
-        data = Socks5AuthData(user, password)
+        data = Socks5AuthData(self.context.client, user, password)
         yield Socks5AuthHook(data)
         if not data.valid:
             yield from self.socks_err("authentication failed", 0x01)

@@ -62,12 +62,12 @@ class ProxyAuth:
     def socks5_auth(self, data: modes.Socks5AuthData) -> None:
         if self.validator and self.validator(data.username, data.password):
             data.valid = True
+            self.authenticated[data.client_conn] = data.username, data.password
 
     def http_connect(self, f: http.HTTPFlow) -> None:
-        if self.validator:
-            if self.authenticate_http(f):
-                # Make a note that all further requests over this connection are ok.
-                self.authenticated[f.client_conn] = f.metadata["proxyauth"]
+        if self.validator and self.authenticate_http(f):
+            # Make a note that all further requests over this connection are ok.
+            self.authenticated[f.client_conn] = f.metadata["proxyauth"]
 
     def requestheaders(self, f: http.HTTPFlow) -> None:
         if self.validator:
