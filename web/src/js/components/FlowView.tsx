@@ -10,22 +10,35 @@ import {selectTab} from '../ducks/ui/flow'
 import {useAppDispatch, useAppSelector} from "../ducks";
 import {Flow} from "../flow";
 import classnames from "classnames";
+import TcpMessages from "./FlowView/TcpMessages";
 
 type TabProps = {
     flow: Flow
 }
 
-export const allTabs: { [name: string]: FunctionComponent<TabProps> & {displayName: string} } = {
+export const allTabs: { [name: string]: FunctionComponent<TabProps> & { displayName: string } } = {
     request: Request,
     response: Response,
     error: Error,
     connection: Connection,
     timing: Timing,
-    websocket: WebSocket
+    websocket: WebSocket,
+    messages: TcpMessages,
 }
 
 export function tabsForFlow(flow: Flow): string[] {
-    const tabs = ['request', 'response', 'websocket', 'error'].filter(k => flow[k])
+    let tabs;
+    switch (flow.type) {
+        case "http":
+            tabs = ['request', 'response', 'websocket'].filter(k => flow[k])
+            break
+        case "tcp":
+            tabs = ["messages"]
+            break
+    }
+
+    if (flow.error)
+        tabs.push("error")
     tabs.push("connection")
     tabs.push("timing")
     return tabs;

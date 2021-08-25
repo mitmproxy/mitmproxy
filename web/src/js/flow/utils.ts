@@ -1,4 +1,4 @@
-import {Flow, HTTPFlow, HTTPMessage, HTTPRequest} from "../flow";
+import {Flow, HTTPMessage, HTTPRequest} from "../flow";
 
 const defaultPorts = {
     "http": 80,
@@ -53,14 +53,14 @@ export class MessageUtils {
     }
 
     static getContentURL(
-        flow: HTTPFlow,
+        flow: Flow,
         part: HTTPMessage | "request" | "response" | "messages",
         view?: string,
         lines?: number
     ): string {
-        if (part === flow.request) {
+        if (flow.type === "http" && part === flow.request) {
             part = "request";
-        } else if (part === flow.response) {
+        } else if (flow.type === "http" && part === flow.response) {
             part = "response";
         }
         const lineStr = lines ? `?lines=${lines}` : "";
@@ -129,33 +129,50 @@ export var isValidHttpVersion = function (httpVersion: string): boolean {
 
 
 export function startTime(flow: Flow): number | undefined {
-    if (flow.type === "http") {
-        return flow.request.timestamp_start
+    switch (flow.type) {
+        case "http":
+            return flow.request.timestamp_start
+        case "tcp":
+            return flow.client_conn.timestamp_start
     }
-    return undefined
 }
 
 export function endTime(flow: Flow): number | undefined {
-    if (flow.type === "http") {
-        if (flow.websocket) {
-            if (flow.websocket.timestamp_end)
-                return flow.websocket.timestamp_end
-            if (flow.websocket.messages_meta.timestamp_last)
-                return flow.websocket.messages_meta.timestamp_last
-        }
-        if (flow.response) {
-            return flow.response.timestamp_end
-        }
+    switch (flow.type) {
+        case "http":
+            if (flow.websocket) {
+                if (flow.websocket.timestamp_end)
+                    return flow.websocket.timestamp_end
+                if (flow.websocket.messages_meta.timestamp_last)
+                    return flow.websocket.messages_meta.timestamp_last
+            }
+            if (flow.response) {
+                return flow.response.timestamp_end
+            }
+            return undefined
+        case "tcp":
+            return flow.server_conn?.timestamp_end
     }
-    return undefined
+
 }
 
 export const getTotalSize = (flow: Flow): number => {
-    if (flow.type !== "http")
-        return 0
-    let total = flow.request.contentLength || 0
-    if (flow.response) {
-        total += flow.response.contentLength || 0
+    switch (flow.type) {
+        case "http":
+            let total = flow.request.contentLength || 0
+            if (flow.response) {
+                total += flow.response.contentLength || 0
+            }
+            if (flow.websocket) {
+                total += flow.websocket.messages_meta.contentLength || 0
+            }
+            return total
+        case "tcp":
+            return flow.messages_meta.contentLength || 0
     }
-    return total
+}
+
+
+export const canReplay = (flow: Flow): boolean => {
+    return (flow.type === "http" && !flow.websocket)
 }

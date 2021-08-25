@@ -64,7 +64,7 @@ function scripts_prod() {
     return esbuild(false);
 }
 
-const copy_src = ["src/images/**", "src/fonts/fontawesome-webfont.*"];
+const copy_src = ["src/images/**", "src/fonts/fontawesome-webfont.*", "!**/*.psd"];
 
 function copy() {
     return gulp.src(copy_src, {base: "src/"})

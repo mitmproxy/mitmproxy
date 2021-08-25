@@ -5,7 +5,7 @@ exports[`Flowcolumns Components should render IconColumn 1`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-plain"
+    className="resource-icon resource-icon-tcp"
   />
 </td>
 `;
@@ -15,7 +15,7 @@ exports[`Flowcolumns Components should render IconColumn 2`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-not-modified"
+    className="resource-icon resource-icon-plain"
   />
 </td>
 `;
@@ -25,7 +25,7 @@ exports[`Flowcolumns Components should render IconColumn 3`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-redirect"
+    className="resource-icon resource-icon-not-modified"
   />
 </td>
 `;
@@ -35,7 +35,7 @@ exports[`Flowcolumns Components should render IconColumn 4`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-image"
+    className="resource-icon resource-icon-redirect"
   />
 </td>
 `;
@@ -45,7 +45,7 @@ exports[`Flowcolumns Components should render IconColumn 5`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-js"
+    className="resource-icon resource-icon-image"
   />
 </td>
 `;
@@ -55,7 +55,7 @@ exports[`Flowcolumns Components should render IconColumn 6`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-css"
+    className="resource-icon resource-icon-js"
   />
 </td>
 `;
@@ -65,7 +65,7 @@ exports[`Flowcolumns Components should render IconColumn 7`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-document"
+    className="resource-icon resource-icon-css"
   />
 </td>
 `;
@@ -75,7 +75,7 @@ exports[`Flowcolumns Components should render IconColumn 8`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-plain"
+    className="resource-icon resource-icon-document"
   />
 </td>
 `;
@@ -86,6 +86,16 @@ exports[`Flowcolumns Components should render IconColumn 9`] = `
 >
   <div
     className="resource-icon resource-icon-plain"
+  />
+</td>
+`;
+
+exports[`Flowcolumns Components should render IconColumn 10`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-websocket"
   />
 </td>
 `;
@@ -205,24 +215,7 @@ exports[`should render columns: quickactions 1`] = `
         <td
           class="col-quickactions"
         >
-          <div>
-            <a
-              class="quickaction"
-              href="#"
-            >
-              <i
-                class="fa fa-fw fa-repeat text-primary"
-              />
-            </a>
-            <a
-              class="quickaction"
-              href="#"
-            >
-              <i
-                class="fa fa-fw fa-ellipsis-h text-muted"
-              />
-            </a>
-          </div>
+          <div />
         </td>
       </tr>
     </tbody>
@@ -238,7 +231,7 @@ exports[`should render columns: size 1`] = `
         <td
           class="col-size"
         >
-          14b
+          43b
         </td>
       </tr>
     </tbody>

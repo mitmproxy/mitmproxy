@@ -1,8 +1,9 @@
 import * as React from "react";
 import Button from "../common/Button"
-import {MessageUtils} from "../../flow/utils"
+import {canReplay, MessageUtils} from "../../flow/utils"
 import HideInStatic from "../common/HideInStatic";
 import {useAppDispatch, useAppSelector} from "../../ducks";
+import * as flowActions from "../../ducks/flows"
 import {
     duplicate as duplicateFlow,
     kill as killFlow,
@@ -30,7 +31,7 @@ export default function FlowMenu(): JSX.Element {
                     <div className="menu-content">
                         <Button title="[r]eplay flow" icon="fa-repeat text-primary"
                                 onClick={() => dispatch(replayFlow(flow))}
-                                disabled={!(flow.type === "http" && !flow.websocket)}
+                                disabled={!canReplay(flow)}
                         >
                             Replay
                         </Button>
@@ -46,6 +47,7 @@ export default function FlowMenu(): JSX.Element {
                                 onClick={() => dispatch(removeFlow(flow))}>
                             Delete
                         </Button>
+                        <MarkButton flow={flow}/>
                     </div>
                     <div className="menu-legend">Flow Modification</div>
                 </div>
@@ -54,17 +56,7 @@ export default function FlowMenu(): JSX.Element {
             <div className="menu-group">
                 <div className="menu-content">
                     <DownloadButton flow={flow}/>
-                    <Dropdown className="" text={
-                        <Button title="Export flow." icon="fa-clone" onClick={() => 1}>Export▾</Button>
-                    } options={{"placement": "bottom-start"}}>
-                        <MenuItem onClick={() => copy(flow, "raw_request")}>Copy raw request</MenuItem>
-                        <MenuItem onClick={() => copy(flow, "raw_response")}>Copy raw response</MenuItem>
-                        <MenuItem onClick={() => copy(flow, "raw")}>Copy raw request and response</MenuItem>
-                        <MenuItem onClick={() => copy(flow, "curl")}>Copy as cURL</MenuItem>
-                        <MenuItem onClick={() => copy(flow, "httpie")}>Copy as HTTPie</MenuItem>
-                    </Dropdown>
-
-
+                    <ExportButton flow={flow}/>
                 </div>
                 <div className="menu-legend">Export</div>
             </div>
@@ -91,7 +83,7 @@ export default function FlowMenu(): JSX.Element {
 
 function DownloadButton({flow}: { flow: Flow }) {
     if (flow.type !== "http")
-        return null;
+        return <Button icon="fa-download" onClick={() => 0} disabled>Download</Button>;
 
     if (flow.request.contentLength && !flow.response?.contentLength) {
         return <Button icon="fa-download"
@@ -118,4 +110,45 @@ function DownloadButton({flow}: { flow: Flow }) {
     }
 
     return null;
+}
+
+function ExportButton({flow}: { flow: Flow }) {
+    return <Dropdown className="" text={
+        <Button title="Export flow." icon="fa-clone" onClick={() => 1}
+                disabled={flow.type === "tcp"}>Export▾</Button>
+    } options={{"placement": "bottom-start"}}>
+        <MenuItem onClick={() => copy(flow, "raw_request")}>Copy raw request</MenuItem>
+        <MenuItem onClick={() => copy(flow, "raw_response")}>Copy raw response</MenuItem>
+        <MenuItem onClick={() => copy(flow, "raw")}>Copy raw request and response</MenuItem>
+        <MenuItem onClick={() => copy(flow, "curl")}>Copy as cURL</MenuItem>
+        <MenuItem onClick={() => copy(flow, "httpie")}>Copy as HTTPie</MenuItem>
+    </Dropdown>
+}
+
+
+const markers = {
+    ":red_circle:": "🔴",
+    ":orange_circle:": "🟠",
+    ":yellow_circle:": "🟡",
+    ":green_circle:": "🟢",
+    ":large_blue_circle:": "🔵",
+    ":purple_circle:": "🟣",
+    ":brown_circle:": "🟤",
+}
+
+function MarkButton({flow}: { flow: Flow }) {
+    const dispatch = useAppDispatch();
+    return <Dropdown className="" text={
+        <Button title="mark flow" icon="fa-paint-brush text-success" onClick={() => 1}>Mark▾</Button>
+    } options={{"placement": "bottom-start"}}>
+        <MenuItem onClick={() => dispatch(flowActions.update(flow, {marked: ""}))}>⚪ (no
+            marker)</MenuItem>
+        {Object.entries(markers).map(([name, sym]) =>
+            <MenuItem
+                key={name}
+                onClick={() => dispatch(flowActions.update(flow, {marked: name}))}>
+                {sym} {name.replace(/[:_]/g, " ")}
+            </MenuItem>
+        )}
+    </Dropdown>
 }

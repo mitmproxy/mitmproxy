@@ -57,7 +57,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) break
                 let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab = tabs[(tabs.indexOf(currentTab) - 1 + tabs.length) % tabs.length]
+                    nextTab = tabs[(Math.max(0, tabs.indexOf(currentTab)) - 1 + tabs.length) % tabs.length]
                 dispatch(selectTab(nextTab))
                 break
             }
@@ -67,7 +67,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) break
                 let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab = tabs[(tabs.indexOf(currentTab) + 1) % tabs.length]
+                    nextTab = tabs[(Math.max(0, tabs.indexOf(currentTab)) + 1) % tabs.length]
                 dispatch(selectTab(nextTab))
                 break
             }

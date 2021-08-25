@@ -1,3 +1,6 @@
+import * as flowActions from "../flows";
+import {tabsForFlow} from "../../components/FlowView";
+
 export const
     SET_TAB = "UI_FLOWVIEW_SET_TAB",
     SET_CONTENT_VIEW_FOR = "SET_CONTENT_VIEW_FOR"
