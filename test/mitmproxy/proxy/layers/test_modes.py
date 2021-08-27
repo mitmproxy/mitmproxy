@@ -329,11 +329,11 @@ def test_socks5_trickle(tctx: Context):
     for x in b"\x05\x01\x02":
         playbook >> DataReceived(tctx.client, bytes([x]))
     playbook << SendData(tctx.client, b"\x05\x02")
-    for x in b"\x05\x04user\x08password":
+    for x in b"\x01\x04user\x08password":
         playbook >> DataReceived(tctx.client, bytes([x]))
     playbook << modes.Socks5AuthHook(Placeholder())
     playbook >> reply(side_effect=_valid_socks_auth)
-    playbook << SendData(tctx.client, b"\x05\x00")
+    playbook << SendData(tctx.client, b"\x01\x00")
     for x in b"\x05\x01\x00\x01\x7f\x00\x00\x01\x12\x34":
         playbook >> DataReceived(tctx.client, bytes([x]))
     assert playbook << SendData(tctx.client, b"\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00")
@@ -368,14 +368,14 @@ def test_socks5_err(data: bytes, err: bytes, msg: str, tctx: Context):
 @pytest.mark.parametrize("client_greeting,server_choice,client_auth,server_resp,address,packed", [
     (b"\x05\x01\x02",
      b"\x05\x02",
-     b"\x05\x04user\x08password",
-     b"\x05\x00",
+     b"\x01\x04user\x08password",
+     b"\x01\x00",
      "127.0.0.1",
      b"\x01\x7f\x00\x00\x01"),
     (b"\x05\x02\x01\x02",
      b"\x05\x02",
-     b"\x05\x04user\x08password",
-     b"\x05\x00",
+     b"\x01\x04user\x08password",
+     b"\x01\x00",
      "127.0.0.1",
      b"\x01\x7f\x00\x00\x01"),
 ])
@@ -412,8 +412,8 @@ def test_socks5_auth_success(client_greeting: bytes, server_choice: bytes, clien
      "Client does not support SOCKS5 with user/password authentication."),
     (b"\x05\x02\x00\x02",
      b"\x05\x02",
-     b"\x05\x04" + b"user" + b"\x07" + b"errcode",
-     b"\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00",
+     b"\x01\x04" + b"user" + b"\x07" + b"errcode",
+     b"\x01\x01",
      "authentication failed"),
 ])
 def test_socks5_auth_fail(client_greeting: bytes, server_choice: bytes, client_auth: bytes, err: bytes, msg: str,

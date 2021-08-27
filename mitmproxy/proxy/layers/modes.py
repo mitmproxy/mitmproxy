@@ -192,10 +192,12 @@ class Socks5Proxy(DestinationKnown):
         data = Socks5AuthData(self.context.client, user, password)
         yield Socks5AuthHook(data)
         if not data.valid:
-            yield from self.socks_err("authentication failed", 0x01)
+            # The VER field contains the current **version of the subnegotiation**, which is X'01'.
+            yield commands.SendData(self.context.client, b"\x01\x01")
+            yield from self.socks_err("authentication failed")
             return
 
-        yield commands.SendData(self.context.client, b"\x05\x00")
+        yield commands.SendData(self.context.client, b"\x01\x00")
         self.buf = self.buf[3 + user_len + pass_len:]
         self.state = self.state_connect
         yield from self.state()
