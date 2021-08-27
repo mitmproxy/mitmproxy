@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Support proxy authentication for SOCKS v5 mode (@starplanet)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
 * Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases
 * Improve error message on TLS version mismatch.

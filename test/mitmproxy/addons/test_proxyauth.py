@@ -6,6 +6,7 @@ import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
+from mitmproxy.proxy.layers import modes
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -47,89 +48,42 @@ class TestProxyAuth:
         ('upstream:', True),
         ('upstream:foobar', True),
     ])
-    def test_is_proxy_auth(self, mode, expected):
+    def test_is_http_proxy(self, mode, expected):
         up = proxyauth.ProxyAuth()
         with taddons.context(up, loadcore=False) as ctx:
             ctx.options.mode = mode
-            assert up.is_proxy_auth() is expected
+            assert up.is_http_proxy is expected
 
-    @pytest.mark.parametrize('is_proxy_auth, expected', [
+    @pytest.mark.parametrize('is_http_proxy, expected', [
         (True, 'Proxy-Authorization'),
         (False, 'Authorization'),
     ])
-    def test_which_auth_header(self, is_proxy_auth, expected):
+    def test_which_auth_header(self, is_http_proxy, expected):
         up = proxyauth.ProxyAuth()
-        with mock.patch('mitmproxy.addons.proxyauth.ProxyAuth.is_proxy_auth', return_value=is_proxy_auth):
-            assert up.which_auth_header() == expected
+        with mock.patch('mitmproxy.addons.proxyauth.ProxyAuth.is_http_proxy', new=is_http_proxy):
+            assert up.http_auth_header == expected
 
-    @pytest.mark.parametrize('is_proxy_auth, expected_status_code, expected_header', [
+    @pytest.mark.parametrize('is_http_proxy, expected_status_code, expected_header', [
         (True, 407, 'Proxy-Authenticate'),
         (False, 401, 'WWW-Authenticate'),
     ])
-    def test_auth_required_response(self, is_proxy_auth, expected_status_code, expected_header):
+    def test_auth_required_response(self, is_http_proxy, expected_status_code, expected_header):
         up = proxyauth.ProxyAuth()
-        with mock.patch('mitmproxy.addons.proxyauth.ProxyAuth.is_proxy_auth', return_value=is_proxy_auth):
-            resp = up.auth_required_response()
+        with mock.patch('mitmproxy.addons.proxyauth.ProxyAuth.is_http_proxy', new=is_http_proxy):
+            resp = up.make_auth_required_response()
             assert resp.status_code == expected_status_code
             assert expected_header in resp.headers.keys()
 
-    def test_check(self, tdata):
-        up = proxyauth.ProxyAuth()
-        with taddons.context(up) as ctx:
-            ctx.configure(up, proxyauth="any", mode="regular")
-            f = tflow.tflow()
-            assert not up.check(f)
-            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                "test", "test"
-            )
-            assert up.check(f)
-
-            f.request.headers["Proxy-Authorization"] = "invalid"
-            assert not up.check(f)
-
-            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                "test", "test", scheme="unknown"
-            )
-            assert not up.check(f)
-
-            ctx.configure(up, proxyauth="test:test")
-            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                "test", "test"
-            )
-            assert up.check(f)
-            ctx.configure(up, proxyauth="test:foo")
-            assert not up.check(f)
-
-            ctx.configure(
-                up,
-                proxyauth="@" + tdata.path(
-                    "mitmproxy/net/data/htpasswd"
-                )
-            )
-            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                "test", "test"
-            )
-            assert up.check(f)
-            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                "test", "foo"
-            )
-            assert not up.check(f)
-
-            with mock.patch('ldap3.Server', return_value="ldap://fake_server:389 - cleartext"):
-                with mock.patch('ldap3.Connection', search="test"):
-                    with mock.patch('ldap3.Connection.search', return_value="test"):
-                        ctx.configure(
-                            up,
-                            proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
-                        )
-                        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                            "test", "test"
-                        )
-                        assert up.check(f)
-                        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-                            "", ""
-                        )
-                        assert not up.check(f)
+    def test_socks5(self):
+        pa = proxyauth.ProxyAuth()
+        with taddons.context(pa, loadcore=False) as ctx:
+            ctx.configure(pa, proxyauth="foo:bar", mode="regular")
+            data = modes.Socks5AuthData(tflow.tclient_conn(), "foo", "baz")
+            pa.socks5_auth(data)
+            assert not data.valid
+            data.password = "bar"
+            pa.socks5_auth(data)
+            assert data.valid
 
     def test_authenticate(self):
         up = proxyauth.ProxyAuth()
@@ -138,64 +92,60 @@ class TestProxyAuth:
 
             f = tflow.tflow()
             assert not f.response
-            up.authenticate(f)
+            up.authenticate_http(f)
             assert f.response.status_code == 407
 
             f = tflow.tflow()
             f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
                 "test", "test"
             )
-            up.authenticate(f)
+            up.authenticate_http(f)
             assert not f.response
             assert not f.request.headers.get("Proxy-Authorization")
 
             f = tflow.tflow()
             ctx.configure(up, mode="reverse")
             assert not f.response
-            up.authenticate(f)
+            up.authenticate_http(f)
             assert f.response.status_code == 401
 
             f = tflow.tflow()
             f.request.headers["Authorization"] = proxyauth.mkauth(
                 "test", "test"
             )
-            up.authenticate(f)
+            up.authenticate_http(f)
             assert not f.response
             assert not f.request.headers.get("Authorization")
 
     def test_configure(self, monkeypatch, tdata):
-        monkeypatch.setattr(ldap3, "Server", lambda *_, **__: True)
-        monkeypatch.setattr(ldap3, "Connection", lambda *_, **__: True)
+        monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
+        monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
 
         pa = proxyauth.ProxyAuth()
         with taddons.context(pa) as ctx:
             with pytest.raises(exceptions.OptionsError, match="Invalid proxyauth specification"):
                 ctx.configure(pa, proxyauth="foo")
 
+            ctx.configure(pa, proxyauth="foo:bar")
+            assert isinstance(pa.validator, proxyauth.SingleUser)
+            assert pa.validator("foo", "bar")
+            assert not pa.validator("foo", "baz")
+
             with pytest.raises(exceptions.OptionsError, match="Invalid single-user auth specification."):
                 ctx.configure(pa, proxyauth="foo:bar:baz")
 
-            ctx.configure(pa, proxyauth="foo:bar")
-            assert pa.singleuser == ["foo", "bar"]
-
-            ctx.configure(pa, proxyauth=None)
-            assert pa.singleuser is None
-
             ctx.configure(pa, proxyauth="any")
-            assert pa.nonanonymous
+            assert isinstance(pa.validator, proxyauth.AcceptAll)
+            assert pa.validator("foo", "bar")
+
             ctx.configure(pa, proxyauth=None)
-            assert not pa.nonanonymous
+            assert pa.validator is None
 
             ctx.configure(
                 pa,
                 proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
             )
-            assert pa.ldapserver
-            ctx.configure(
-                pa,
-                proxyauth="ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
-            )
-            assert pa.ldapserver
+            assert isinstance(pa.validator, proxyauth.Ldap)
 
             with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
                 ctx.configure(pa, proxyauth="ldap:test:test:test")
@@ -207,30 +157,18 @@ class TestProxyAuth:
                 ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
 
             with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
-                ctx.configure(
-                    pa,
-                    proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt")
-                )
+                ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt"))
             with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
                 ctx.configure(pa, proxyauth="@nonexistent")
 
-            ctx.configure(
-                pa,
-                proxyauth="@" + tdata.path(
-                    "mitmproxy/net/data/htpasswd"
-                )
-            )
-            assert pa.htpasswd
-            assert pa.htpasswd.check_password("test", "test")
-            assert not pa.htpasswd.check_password("test", "foo")
-            ctx.configure(pa, proxyauth=None)
-            assert not pa.htpasswd
+            ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/htpasswd"))
+            assert isinstance(pa.validator, proxyauth.Htpasswd)
+            assert pa.validator("test", "test")
+            assert not pa.validator("test", "foo")
 
             with pytest.raises(exceptions.OptionsError,
                                match="Proxy Authentication not supported in transparent mode."):
                 ctx.configure(pa, proxyauth="any", mode="transparent")
-            with pytest.raises(exceptions.OptionsError, match="Proxy Authentication not supported in SOCKS mode."):
-                ctx.configure(pa, proxyauth="any", mode="socks5")
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()
@@ -260,3 +198,14 @@ class TestProxyAuth:
             up.requestheaders(f2)
             assert not f2.response
             assert f2.metadata["proxyauth"] == ('test', 'test')
+
+
+def test_ldap(monkeypatch):
+    monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
+    monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
+
+    validator = proxyauth.Ldap("ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+    assert not validator("", "")
+    assert validator("foo", "bar")
+    validator.conn.response = False
+    assert not validator("foo", "bar")
