@@ -45,10 +45,10 @@ def debug2(*_):
     print("Flow References")
     print("=======")
 
-    #gc.collect()
+    # gc.collect()
 
     objs = tuple(gc.get_objects())
-    ignore = {id(objs)}
+    ignore = {id(objs)}  # noqa
     flows = 0
     for i in range(len(objs)):
         try:
@@ -57,8 +57,8 @@ def debug2(*_):
             continue
         if is_flow:
             flows += 1
-            #print_refs(objs[i], ignore, set())
-            #break
+            # print_refs(objs[i], ignore, set())
+            # break
     del objs
 
     print(f"{flows} flows found.")

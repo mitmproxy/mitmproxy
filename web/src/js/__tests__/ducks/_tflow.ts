@@ -191,7 +191,7 @@ export function TTCPFlow(): Required<TCPFlow> {
         "messages_meta": {
             "contentLength": 12,
             "count": 2,
-            "timestamp_last": 1629806221.58518
+            "timestamp_last": 946681204.5
         },
         "modified": false,
         "server_conn": {

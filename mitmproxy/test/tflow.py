@@ -18,8 +18,8 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp
         server_conn = tserver_conn()
     if messages is True:
         messages = [
-            tcp.TCPMessage(True, b"hello"),
-            tcp.TCPMessage(False, b"it's me"),
+            tcp.TCPMessage(True, b"hello", 946681204.2),
+            tcp.TCPMessage(False, b"it's me", 946681204.5),
         ]
     if err is True:
         err = terr()
