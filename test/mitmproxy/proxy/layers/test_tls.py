@@ -153,13 +153,17 @@ class TlsEchoLayer(tutils.EchoLayer):
             yield from super()._handle_event(event)
 
 
-def interact(playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest):
+def finish_handshake(playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest):
     data = tutils.Placeholder(bytes)
+    tls_hook_data = tutils.Placeholder(tls.TlsHookData)
     assert (
             playbook
             >> events.DataReceived(conn, tssl.bio_read())
+            << tls.TlsHandshakeHook(tls_hook_data)
+            >> tutils.reply()
             << commands.SendData(conn, data)
     )
+    assert tls_hook_data().conn.error is None
     tssl.bio_write(data())
 
 
@@ -168,7 +172,7 @@ def reply_tls_start_client(alpn: typing.Optional[bytes] = None, *args, **kwargs)
     Helper function to simplify the syntax for tls_start_client hooks.
     """
 
-    def make_client_conn(tls_start: tls.TlsStartData) -> None:
+    def make_client_conn(tls_start: tls.TlsHookData) -> None:
         # ssl_context = SSL.Context(Method.TLS_METHOD)
         # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
@@ -193,7 +197,7 @@ def reply_tls_start_server(alpn: typing.Optional[bytes] = None, *args, **kwargs)
     Helper function to simplify the syntax for tls_start_server hooks.
     """
 
-    def make_server_conn(tls_start: tls.TlsStartData) -> None:
+    def make_server_conn(tls_start: tls.TlsHookData) -> None:
         # ssl_context = SSL.Context(Method.TLS_METHOD)
         # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
@@ -251,7 +255,7 @@ class TestServerTLS:
 
         tssl = SSLTest(server_side=True)
 
-        # send ClientHello
+        # send ClientHello, receive ClientHello
         data = tutils.Placeholder(bytes)
         assert (
                 playbook
@@ -259,14 +263,14 @@ class TestServerTLS:
                 >> reply_tls_start_server()
                 << commands.SendData(tctx.server, data)
         )
-
-        # receive ServerHello, finish client handshake
         tssl.bio_write(data())
         with pytest.raises(ssl.SSLWantReadError):
             tssl.do_handshake()
-        interact(playbook, tctx.server, tssl)
 
-        # finish server handshake
+        # finish handshake (mitmproxy)
+        finish_handshake(playbook, tctx.server, tssl)
+
+        # finish handshake (locally)
         tssl.do_handshake()
         assert (
                 playbook
@@ -323,14 +327,18 @@ class TestServerTLS:
         with pytest.raises(ssl.SSLWantReadError):
             tssl.do_handshake()
 
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl.bio_read())
                 << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch", "warn")
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.server)
                 << commands.SendData(tctx.client,
                                      b"open-connection failed: Certificate verify failed: Hostname mismatch")
         )
+        assert tls_hook_data().conn.error == "Certificate verify failed: Hostname mismatch"
         assert not tctx.server.tls_established
 
     def test_remote_speaks_no_tls(self, tctx):
@@ -340,6 +348,7 @@ class TestServerTLS:
 
         # send ClientHello, receive random garbage back
         data = tutils.Placeholder(bytes)
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
         assert (
                 playbook
                 << tls.TlsStartServerHook(tutils.Placeholder())
@@ -347,8 +356,11 @@ class TestServerTLS:
                 << commands.SendData(tctx.server, data)
                 >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
                 << commands.Log("Server TLS handshake failed. The remote server does not speak TLS.", "warn")
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.server)
         )
+        assert tls_hook_data().conn.error == "The remote server does not speak TLS."
 
     def test_unsupported_protocol(self, tctx: context.Context):
         """Test the scenario where the server only supports an outdated TLS version by default."""
@@ -375,13 +387,17 @@ class TestServerTLS:
             tssl.do_handshake()
 
         # send back error
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
         assert (
             playbook
             >> events.DataReceived(tctx.server, tssl.bio_read())
             << commands.Log("Server TLS handshake failed. The remote server and mitmproxy cannot agree on a TLS version"
                             " to use. You may need to adjust mitmproxy's tls_version_server_min option.", "warn")
+            << tls.TlsHandshakeHook(tls_hook_data)
+            >> tutils.reply()
             << commands.CloseConnection(tctx.server)
         )
+        assert tls_hook_data().conn.error
 
 
 def make_client_tls_layer(
@@ -429,7 +445,7 @@ class TestClientTLS:
         tssl_client.bio_write(data())
         tssl_client.do_handshake()
         # Finish Handshake
-        interact(playbook, tctx.client, tssl_client)
+        finish_handshake(playbook, tctx.client, tssl_client)
 
         assert tssl_client.obj.getpeercert(True)
         assert tctx.client.tls_established
@@ -488,6 +504,8 @@ class TestClientTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl_server.bio_read())
+                << tls.TlsHandshakeHook(tutils.Placeholder())
+                >> tutils.reply()
                 << commands.SendData(tctx.server, data)
                 << tls.TlsStartClientHook(tutils.Placeholder())
         )
@@ -503,7 +521,7 @@ class TestClientTLS:
         )
         tssl_client.bio_write(data())
         tssl_client.do_handshake()
-        interact(playbook, tctx.client, tssl_client)
+        finish_handshake(playbook, tctx.client, tssl_client)
 
         # Both handshakes completed!
         assert tctx.client.tls_established
@@ -517,6 +535,7 @@ class TestClientTLS:
     def test_cannot_parse_clienthello(self, tctx: context.Context):
         """Test the scenario where we cannot parse the ClientHello"""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
 
         invalid = b"\x16\x03\x01\x00\x00"
 
@@ -524,8 +543,11 @@ class TestClientTLS:
                 playbook
                 >> events.DataReceived(tctx.client, invalid)
                 << commands.Log(f"Client TLS handshake failed. Cannot parse ClientHello: {invalid.hex()}", level="warn")
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
         )
+        assert tls_hook_data().conn.error
         assert not tctx.client.tls_established
 
         # Make sure that an active server connection does not cause child layers to spawn.
@@ -556,15 +578,19 @@ class TestClientTLS:
         with pytest.raises(ssl.SSLCertVerificationError):
             tssl_client.do_handshake()
         # Finish Handshake
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.bio_read())
                 << commands.Log("Client TLS handshake failed. The client does not trust the proxy's certificate "
                                 "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)", "warn")
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
                 >> events.ConnectionClosed(tctx.client)
         )
         assert not tctx.client.tls_established
+        assert tls_hook_data().conn.error
 
     @pytest.mark.parametrize("close_at", ["tls_clienthello", "tls_start_client", "handshake"])
     def test_immediate_disconnect(self, tctx: context.Context, close_at):
@@ -573,6 +599,7 @@ class TestClientTLS:
         the proxy certificate."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
         playbook.logs = True
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
 
         playbook >> events.DataReceived(tctx.client, tssl_client.bio_read())
         playbook << tls.TlsClienthelloHook(tutils.Placeholder())
@@ -584,8 +611,11 @@ class TestClientTLS:
                 >> tutils.reply(to=-2)
                 << tls.TlsStartClientHook(tutils.Placeholder())
                 >> reply_tls_start_client()
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
             )
+            assert tls_hook_data().conn.error
             return
 
         playbook >> tutils.reply()
@@ -596,8 +626,11 @@ class TestClientTLS:
                 playbook
                 >> events.ConnectionClosed(tctx.client)
                 >> reply_tls_start_client(to=-2)
+                << tls.TlsHandshakeHook(tls_hook_data)
+                >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
             )
+            assert tls_hook_data().conn.error
             return
 
         assert (
@@ -608,14 +641,18 @@ class TestClientTLS:
             << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
                             "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
                             "client does not trust the proxy's certificate.", "info")
+            << tls.TlsHandshakeHook(tls_hook_data)
+            >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
+        assert tls_hook_data().conn.error
 
     def test_unsupported_protocol(self, tctx: context.Context):
         """Test the scenario where the client only supports an outdated TLS version by default."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, max_ver=ssl.TLSVersion.TLSv1_2)
         playbook.logs = True
 
+        tls_hook_data = tutils.Placeholder(tls.TlsHookData)
         assert (
             playbook
             >> events.DataReceived(tctx.client, tssl_client.bio_read())
@@ -625,5 +662,8 @@ class TestClientTLS:
             >> reply_tls_start_client()
             << commands.Log("Client TLS handshake failed. Client and mitmproxy cannot agree on a TLS version to "
                             "use. You may need to adjust mitmproxy's tls_version_client_min option.", "warn")
+            << tls.TlsHandshakeHook(tls_hook_data)
+            >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
+        assert tls_hook_data().conn.error

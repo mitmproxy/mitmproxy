@@ -3,11 +3,13 @@
 ## Unreleased: mitmproxy next
 
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
+* Make it possible to ignore connections in the tls_clienthello event hook (@mhils)
+* Add `tls_handshake` event hook to record negotiation success/failure (@mhils)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
-* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases
-* Improve error message on TLS version mismatch.
+* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases (@mhils)
+* Improve error message on TLS version mismatch. (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
-  that can be processed simultaneously.
+  that can be processed simultaneously (@mhils)
 
 ## 4 August 2021: mitmproxy 7.0.2
 

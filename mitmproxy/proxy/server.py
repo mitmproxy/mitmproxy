@@ -414,7 +414,7 @@ if __name__ == "__main__":  # pragma: no cover
             if "redirect" in flow.request.path:
                 flow.request.host = "httpbin.org"
 
-        def tls_start_client(tls_start: tls.TlsStartData):
+        def tls_start_client(tls_start: tls.TlsHookData):
             # INSECURE
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             ssl_context.use_privatekey_file(
@@ -426,7 +426,7 @@ if __name__ == "__main__":  # pragma: no cover
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_accept_state()
 
-        def tls_start_server(tls_start: tls.TlsStartData):
+        def tls_start_server(tls_start: tls.TlsHookData):
             # INSECURE
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             tls_start.ssl_conn = SSL.Connection(ssl_context)

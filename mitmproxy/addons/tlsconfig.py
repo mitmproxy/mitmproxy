@@ -112,7 +112,7 @@ class TlsConfig:
                 ctx.options.upstream_cert
         )
 
-    def tls_start_client(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_client(self, tls_start: tls.TlsHookData) -> None:
         """Establish TLS between client and proxy."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
@@ -159,7 +159,7 @@ class TlsConfig:
         ))
         tls_start.ssl_conn.set_accept_state()
 
-    def tls_start_server(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_server(self, tls_start: tls.TlsHookData) -> None:
         """Establish TLS between proxy and server."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server

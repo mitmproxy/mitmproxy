@@ -130,7 +130,7 @@ class TestTlsConfig:
             )
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
-            tls_start = tls.TlsStartData(ctx.client, context=ctx)
+            tls_start = tls.TlsHookData(ctx.client, context=ctx)
             ta.tls_start_client(tls_start)
             tssl_server = tls_start.ssl_conn
             tssl_client = test_tls.SSLTest()
@@ -145,7 +145,7 @@ class TestTlsConfig:
             ctx.client.cipher_list = ["TLS_AES_256_GCM_SHA384", "ECDHE-RSA-AES128-SHA"]
             ctx.server.address = ("example.mitmproxy.org", 443)
 
-            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+            tls_start = tls.TlsHookData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
@@ -160,7 +160,7 @@ class TestTlsConfig:
             tctx.configure(ta, ssl_verify_upstream_trusted_ca=tdata.path(
                 "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
 
-            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+            tls_start = tls.TlsHookData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
@@ -179,7 +179,7 @@ class TestTlsConfig:
                 http2=False,
                 ciphers_server="ALL"
             )
-            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+            tls_start = tls.TlsHookData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
@@ -190,7 +190,7 @@ class TestTlsConfig:
         with taddons.context(ta) as tctx:
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
-            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+            tls_start = tls.TlsHookData(ctx.server, context=ctx)
 
             def assert_alpn(http2, client_offers, expected):
                 tctx.configure(ta, http2=http2)
@@ -222,7 +222,7 @@ class TestTlsConfig:
                 modes.HttpProxy(ctx),
                 123
             ]
-            tls_start = tls.TlsStartData(ctx.client, context=ctx)
+            tls_start = tls.TlsHookData(ctx.client, context=ctx)
             ta.tls_start_client(tls_start)
             assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"http/1.1"
 
@@ -244,7 +244,7 @@ class TestTlsConfig:
                 ssl_verify_upstream_trusted_ca=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt"),
             )
 
-            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+            tls_start = tls.TlsHookData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
