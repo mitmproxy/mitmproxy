@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Iterator, Literal, Optional, Tuple
 
 from OpenSSL import SSL
+from mitmproxy.tls import ClientHello
 from mitmproxy import certs, connection
-from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
 from mitmproxy.proxy.commands import StartHook
@@ -70,7 +70,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
+def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -86,7 +86,7 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     client_hello = get_client_hello(data)
     if client_hello:
         try:
-            return net_tls.ClientHello(client_hello[4:])
+            return ClientHello(client_hello[4:])
         except EOFError as e:
             raise ValueError("Invalid ClientHello") from e
     return None
@@ -102,7 +102,7 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 class ClientHelloData:
     context: context.Context
     """The context object for this connection."""
-    client_hello: net_tls.ClientHello
+    client_hello: ClientHello
     """The entire parsed TLS ClientHello."""
     ignore_connection: bool = False
     """
