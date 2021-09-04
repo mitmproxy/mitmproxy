@@ -1,4 +1,5 @@
 import ssl
+import time
 import typing
 
 import pytest
@@ -459,13 +460,13 @@ class TestClientTLS:
                 << commands.SendData(other_server, b"plaintext")
         )
 
-    @pytest.mark.parametrize("eager", ["eager", ""])
-    def test_server_required(self, tctx, eager):
+    @pytest.mark.parametrize("server_state", ["open", "closed"])
+    def test_server_required(self, tctx, server_state):
         """
         Test the scenario where a server connection is required (for example, because of an unknown ALPN)
         to establish TLS with the client.
         """
-        if eager:
+        if server_state == "open":
             tctx.server.state = ConnectionState.OPEN
         tssl_server = SSLTest(server_side=True, alpn=["quux"])
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
@@ -482,7 +483,7 @@ class TestClientTLS:
                 << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply(side_effect=require_server_conn)
         )
-        if not eager:
+        if server_state == "closed":
             (
                 playbook
                 << commands.OpenConnection(tctx.server)
@@ -531,6 +532,40 @@ class TestClientTLS:
         assert tctx.server.alpn == b"quux"
         _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
+
+    @pytest.mark.parametrize("server_state", ["open", "closed"])
+    def test_passthrough_from_clienthello(self, tctx, server_state):
+        """
+        Test the scenario where the connection is moved to passthrough mode in the tls_clienthello hook.
+        """
+        if server_state == "open":
+            tctx.server.timestamp_start = time.time()
+            tctx.server.state = ConnectionState.OPEN
+
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+
+        def make_passthrough(client_hello: tls.ClientHelloData) -> None:
+            client_hello.ignore_connection = True
+
+        client_hello = tssl_client.bio_read()
+        (
+            playbook
+            >> events.DataReceived(tctx.client, client_hello)
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=make_passthrough)
+        )
+        if server_state == "closed":
+            (
+                playbook
+                << commands.OpenConnection(tctx.server)
+                >> tutils.reply(None)
+            )
+        assert (
+            playbook
+            << commands.SendData(tctx.server, client_hello)  # passed through unmodified
+            >> events.DataReceived(tctx.server, b"ServerHello")  # and the same for the serverhello.
+            << commands.SendData(tctx.client, b"ServerHello")
+        )
 
     def test_cannot_parse_clienthello(self, tctx: context.Context):
         """Test the scenario where we cannot parse the ClientHello"""

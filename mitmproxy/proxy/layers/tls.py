@@ -424,7 +424,7 @@ class ClientTLSLayer(_TLSLayer):
             # we've figured out that we don't want to intercept this connection, so we assign fake connection objects
             # to all TLS layers. This makes the real connection contents just go through.
             self.conn = self.tunnel_connection = connection.Client(("ignore-conn", 0), ("ignore-conn", 0), time.time())
-            parent_layer = self.context.layers[-2]
+            parent_layer = self.context.layers[self.context.layers.index(self) - 1]
             if isinstance(parent_layer, ServerTLSLayer):
                 parent_layer.conn = parent_layer.tunnel_connection = connection.Server(None)
             self.child_layer = tcp.TCPLayer(self.context, ignore=True)

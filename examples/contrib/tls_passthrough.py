@@ -97,7 +97,7 @@ class MaybeTls:
 
     def tls_handshake(self, data: tls.TlsHookData):
         if isinstance(data.conn, connection.Server):
-            return
+            return  # we are only interested in failing client connections here.
         server_address = data.context.server.peername
         if data.conn.error is None:
             ctx.log(f"TLS handshake successful: {human.format_address(server_address)}")
