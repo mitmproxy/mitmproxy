@@ -30,8 +30,10 @@ modules = [
     "mitmproxy.flow",
     "mitmproxy.http",
     "mitmproxy.net.server_spec",
+    "mitmproxy.proxy.context",
     "mitmproxy.proxy.server_hooks",
     "mitmproxy.tcp",
+    "mitmproxy.tls",
     "mitmproxy.websocket",
     here / ".." / "src" / "generated" / "events.py",
 ]

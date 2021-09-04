@@ -16,17 +16,23 @@ class ClientHello:
     A TLS ClientHello is the first message sent by the client when initiating TLS.
     """
 
-    def __init__(self, raw_client_hello):
+    def __init__(self, raw_client_hello: bytes):
+        """Create a TLS ClientHello object from raw bytes."""
         self._client_hello = tls_client_hello.TlsClientHello(
             KaitaiStream(io.BytesIO(raw_client_hello))
         )
 
     @property
     def cipher_suites(self) -> List[int]:
+        """The cipher suites offered by the client (as raw ints)."""
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
     def sni(self) -> Optional[str]:
+        """
+        The [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication),
+        which indicates which hostname the client wants to connect to.
+        """
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
@@ -41,6 +47,10 @@ class ClientHello:
 
     @property
     def alpn_protocols(self) -> List[bytes]:
+        """
+        The application layer protocols offered by the client as part of the
+        [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation) TLS extension.
+        """
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 if extension.type == 0x10:
@@ -49,6 +59,7 @@ class ClientHello:
 
     @property
     def extensions(self) -> List[Tuple[int, bytes]]:
+        """The raw list of extensions in the form of `(extension_type, raw_bytes)` tuples."""
         ret = []
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
