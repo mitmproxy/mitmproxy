@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Iterator, Literal, Optional, Tuple
 
 from OpenSSL import SSL
-from mitmproxy.tls import ClientHello
+from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 from mitmproxy import certs, connection
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
@@ -98,22 +98,6 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 
 # We need these classes as hooks can only have one argument at the moment.
 
-@dataclass
-class ClientHelloData:
-    context: context.Context
-    """The context object for this connection."""
-    client_hello: ClientHello
-    """The entire parsed TLS ClientHello."""
-    ignore_connection: bool = False
-    """
-    If set to `True`, do not intercept this connection and forward encrypted contents unmodified.
-    """
-    establish_server_tls_first: bool = False
-    """
-    If set to `True`, pause this handshake and establish TLS with an upstream server first.
-    This makes it possible to process the server certificate when generating an interception certificate.
-    """
-
 
 @dataclass
 class TlsClienthelloHook(StartHook):
@@ -127,13 +111,6 @@ class TlsClienthelloHook(StartHook):
 
 
 @dataclass
-class TlsHookData:
-    conn: connection.Connection
-    context: context.Context
-    ssl_conn: Optional[SSL.Connection] = None
-
-
-@dataclass
 class TlsStartClientHook(StartHook):
     """
     TLS negotation between mitmproxy and a client is about to start.
@@ -141,7 +118,7 @@ class TlsStartClientHook(StartHook):
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
-    data: TlsHookData
+    data: TlsData
 
 
 @dataclass
@@ -152,7 +129,7 @@ class TlsStartServerHook(StartHook):
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
-    data: TlsHookData
+    data: TlsData
 
 
 @dataclass
@@ -162,7 +139,7 @@ class TlsHandshakeHook(StartHook):
 
     If `data.conn.error` is `None`, negotiation was successful.
     """
-    data: TlsHookData
+    data: TlsData
 
 
 class _TLSLayer(tunnel.TunnelLayer):
@@ -184,7 +161,7 @@ class _TLSLayer(tunnel.TunnelLayer):
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
-        tls_start = TlsHookData(self.conn, self.context)
+        tls_start = TlsData(self.conn, self.context)
         if tls_start.conn == tls_start.context.client:
             yield TlsStartClientHook(tls_start)
         else:
@@ -256,13 +233,13 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
-            yield TlsHandshakeHook(TlsHookData(self.conn, self.context, self.tls))
+            yield TlsHandshakeHook(TlsData(self.conn, self.context, self.tls))
             yield from self.receive_data(b"")
             return True, None
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         self.conn.error = err
-        yield TlsHandshakeHook(TlsHookData(self.conn, self.context, self.tls))
+        yield TlsHandshakeHook(TlsData(self.conn, self.context, self.tls))
         yield from super().on_handshake_error(err)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:

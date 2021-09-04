@@ -16,12 +16,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 from OpenSSL import SSL
-from mitmproxy import http, options as moptions
+from mitmproxy import http, options as moptions, tls
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
 from mitmproxy.connection import Address, Client, Connection, ConnectionState
-from mitmproxy.proxy.layers import tls
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
@@ -414,7 +413,7 @@ if __name__ == "__main__":  # pragma: no cover
             if "redirect" in flow.request.path:
                 flow.request.host = "httpbin.org"
 
-        def tls_start_client(tls_start: tls.TlsHookData):
+        def tls_start_client(tls_start: tls.TlsData):
             # INSECURE
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             ssl_context.use_privatekey_file(
@@ -426,7 +425,7 @@ if __name__ == "__main__":  # pragma: no cover
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_accept_state()
 
-        def tls_start_server(tls_start: tls.TlsHookData):
+        def tls_start_server(tls_start: tls.TlsData):
             # INSECURE
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             tls_start.ssl_conn = SSL.Connection(ssl_context)

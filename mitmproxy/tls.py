@@ -1,13 +1,20 @@
 import io
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from kaitaistruct import KaitaiStream
 
+from OpenSSL import SSL
+from mitmproxy import connection
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
+from mitmproxy.proxy import context
 
 
 class ClientHello:
+    """
+    A TLS ClientHello is the first message sent by the client when initiating TLS.
+    """
 
     def __init__(self, raw_client_hello):
         self._client_hello = tls_client_hello.TlsClientHello(
@@ -23,10 +30,10 @@ class ClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
-                        extension.type == 0x00 and
-                        len(extension.body.server_names) == 1 and
-                        extension.body.server_names[0].name_type == 0 and
-                        check.is_valid_host(extension.body.server_names[0].host_name)
+                    extension.type == 0x00 and
+                    len(extension.body.server_names) == 1 and
+                    extension.body.server_names[0].name_type == 0 and
+                    check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
                     return extension.body.server_names[0].host_name.decode("ascii")
@@ -51,3 +58,39 @@ class ClientHello:
 
     def __repr__(self):
         return f"ClientHello(sni: {self.sni}, alpn_protocols: {self.alpn_protocols})"
+
+
+@dataclass
+class ClientHelloData:
+    """
+    Event data for `tls_clienthello` event hooks.
+    """
+    context: context.Context
+    """The context object for this connection."""
+    client_hello: ClientHello
+    """The entire parsed TLS ClientHello."""
+    ignore_connection: bool = False
+    """
+    If set to `True`, do not intercept this connection and forward encrypted contents unmodified.
+    """
+    establish_server_tls_first: bool = False
+    """
+    If set to `True`, pause this handshake and establish TLS with an upstream server first.
+    This makes it possible to process the server certificate when generating an interception certificate.
+    """
+
+
+@dataclass
+class TlsData:
+    """
+    Event data for `tls_start_client`, `tls_start_server`, and `tls_handshake` event hooks.
+    """
+    conn: connection.Connection
+    """The affected connection."""
+    context: context.Context
+    """The context object for this connection."""
+    ssl_conn: Optional[SSL.Connection] = None
+    """
+    The associated pyOpenSSL `SSL.Connection` object.
+    This will be set by an addon in the `tls_start_*` event hooks.
+    """

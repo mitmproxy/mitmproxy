@@ -19,8 +19,7 @@ import random
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from mitmproxy import connection, ctx
-from mitmproxy.proxy.layers import tls
+from mitmproxy import connection, ctx, tls
 from mitmproxy.utils import human
 
 
@@ -95,7 +94,7 @@ class MaybeTls:
             data.ignore_connection = True
             self.strategy.record_skipped(server_address)
 
-    def tls_handshake(self, data: tls.TlsHookData):
+    def tls_handshake(self, data: tls.TlsData):
         if isinstance(data.conn, connection.Server):
             return  # we are only interested in failing client connections here.
         server_address = data.context.server.peername
