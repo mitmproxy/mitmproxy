@@ -81,6 +81,7 @@ def run(
             opts,
             os.path.join(opts.confdir, "config-ruby.yaml"),
             os.path.join(opts.confdir, "config.yml"),
+            os.path.join(opts.confdir, "config.yaml"),
         )
         process_options(parser, opts, args)
 
