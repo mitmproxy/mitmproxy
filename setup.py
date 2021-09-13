@@ -85,7 +85,7 @@ setup(
         "pyOpenSSL>=20.0,<20.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
-        "ruamel.yaml>=0.16,<0.17.11",
+        "ruamel.yaml>=0.16,<0.17.17",
         "sortedcontainers>=2.3,<2.5",
         "tornado>=4.3,<7",
         "urwid>=2.1.1,<2.2",
@@ -101,7 +101,7 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==4.5",
+            "pyinstaller==4.5.1",
             "pytest-asyncio>=0.10.0,<0.16,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
@@ -109,7 +109,7 @@ setup(
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
-            "wheel>=0.36.2,<0.37"
+            "wheel>=0.36.2,<0.38"
         ],
     }
 )
