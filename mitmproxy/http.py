@@ -98,7 +98,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         *Args:*
          - *fields:* (optional) list of ``(name, value)`` header byte tuples,
            e.g. ``[(b"Host", b"example.com")]``. All names and values must be bytes.
-         - *\*\*headers:* Additional headers to set. Will overwrite existing values from `fields`.
+         - *\\*\\*headers:* Additional headers to set. Will overwrite existing values from `fields`.
            For convenience, underscores in header names will be transformed to dashes -
            this behaviour does not extend to other methods.
 
