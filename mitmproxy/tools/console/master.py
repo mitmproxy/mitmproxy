@@ -13,6 +13,8 @@ import typing  # noqa
 import contextlib
 import threading
 
+from tornado.platform.asyncio import AddThreadSelectorEventLoop
+
 import urwid
 
 from mitmproxy import addons
@@ -22,6 +24,7 @@ from mitmproxy.addons import intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
+from mitmproxy.tools.console import common
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
@@ -199,9 +202,13 @@ class ConsoleMaster(master.Master):
             self.set_palette,
             ["console_palette", "console_palette_transparent"]
         )
+        loop = asyncio.get_event_loop()
+        if common.IS_WINDOWS:
+            # fix for https://bugs.python.org/issue37373
+            loop = AddThreadSelectorEventLoop(loop)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
-            event_loop=urwid.AsyncioEventLoop(loop=asyncio.get_event_loop()),
+            event_loop=urwid.AsyncioEventLoop(loop=loop),
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
