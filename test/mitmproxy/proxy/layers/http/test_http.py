@@ -1228,3 +1228,32 @@ def test_original_server_disconnects(tctx):
             >> ConnectionClosed(tctx.server)
             << CloseConnection(tctx.server)
     )
+
+
+def test_request_smuggling(tctx):
+    """Test that we reject request smuggling"""
+    err = Placeholder(bytes)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
+                                     b"Host: example.com\r\n"
+                                     b"Content-Length: 42\r\n"
+                                     b"Transfer-Encoding: chunked\r\n\r\n")
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+    )
+    assert b"Received both a Transfer-Encoding and a Content-Length header" in err()
+
+
+def test_request_smuggling_te_te(tctx):
+    """Test that we reject transfer-encoding headers that are weird in some way"""
+    err = Placeholder(bytes)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
+                                      "Host: example.com\r\n"
+                                      "Transfer-Encoding: chunKed\r\n\r\n").encode())  # note the non-standard "K"
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+    )
+    assert b"Invalid transfer encoding" in err()
