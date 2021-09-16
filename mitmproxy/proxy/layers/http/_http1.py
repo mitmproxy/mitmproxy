@@ -212,17 +212,7 @@ class Http1Server(Http1Connection):
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not self.response and event.code != status_codes.NO_RESPONSE:
-                resp = http.Response.make(
-                    event.code,
-                    format_error(event.code, event.message),
-                    http.Headers(
-                        Server=version.MITMPROXY,
-                        Connection="close",
-                        Content_Type="text/html",
-                    )
-                )
-                raw = http1.assemble_response(resp)
-                yield commands.SendData(self.conn, raw)
+                yield commands.SendData(self.conn, make_error_response(event.code, event.message))
             if self.conn.state & ConnectionState.CAN_WRITE:
                 yield commands.CloseConnection(self.conn)
         else:
@@ -238,6 +228,7 @@ class Http1Server(Http1Connection):
                     expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
                     yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
+                    yield commands.SendData(self.conn, make_error_response(400, str(e)))
                     yield commands.CloseConnection(self.conn)
                     self.state = self.done
                     return
@@ -376,8 +367,8 @@ def make_body_reader(expected_size: Optional[int]) -> TBodyReader:
 def make_error_response(
     status_code: int,
     message: str = "",
-) -> http.Response:
-    return http.Response.make(
+) -> bytes:
+    resp = http.Response.make(
         status_code,
         format_error(status_code, message),
         http.Headers(
@@ -386,6 +377,7 @@ def make_error_response(
             Content_Type="text/html",
         )
     )
+    return http1.assemble_response(resp)
 
 
 __all__ = [
