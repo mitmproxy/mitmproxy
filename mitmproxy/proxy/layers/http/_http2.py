@@ -139,7 +139,7 @@ class Http2Connection(HttpConnection):
             try:
                 try:
                     events = self.h2_conn.receive_data(event.data)
-                except ValueError as e:  # pragma: no cover
+                except (ValueError, IndexError) as e:  # pragma: no cover
                     # this should never raise a ValueError, but we triggered one while fuzzing:
                     # https://github.com/python-hyper/hyper-h2/issues/1231
                     # this stays here as defense-in-depth.
