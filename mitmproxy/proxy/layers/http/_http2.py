@@ -32,6 +32,9 @@ class StreamState(Enum):
     HEADERS_RECEIVED = 2
 
 
+CATCH_HYPER_H2_ERRORS = (ValueError, IndexError)
+
+
 class Http2Connection(HttpConnection):
     h2_conf: ClassVar[h2.config.H2Configuration]
     h2_conf_defaults = dict(
@@ -139,7 +142,7 @@ class Http2Connection(HttpConnection):
             try:
                 try:
                     events = self.h2_conn.receive_data(event.data)
-                except (ValueError, IndexError) as e:  # pragma: no cover
+                except CATCH_HYPER_H2_ERRORS as e:  # pragma: no cover
                     # this should never raise a ValueError, but we triggered one while fuzzing:
                     # https://github.com/python-hyper/hyper-h2/issues/1231
                     # this stays here as defense-in-depth.
