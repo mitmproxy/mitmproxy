@@ -4,10 +4,16 @@
 
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
-* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases
-* Improve error message on TLS version mismatch.
+* Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
-  that can be processed simultaneously.
+  that can be processed simultaneously (@mhils)
+
+## 16 September 2021: mitmproxy 7.0.3
+
+* [CVE-2021-39214](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-22gh-3r9q-xf38):
+  Fix request smuggling vulnerabilities reported by @chinchila (@mhils)
+* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases (@mhils)
+* Fix compatibility with Python 3.10 (@mhils)
 
 ## 4 August 2021: mitmproxy 7.0.2
 
