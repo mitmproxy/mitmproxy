@@ -101,7 +101,7 @@ jobs:
             platform: macos
           - image: windows-2019
             platform: windows
-          - image: ubuntu-16.04  # Old Ubuntu version for old glibc
+          - image: ubuntu-18.04  # Old Ubuntu version for old glibc
             platform: linux
     runs-on: ${{ matrix.image }}
     env:
