@@ -310,7 +310,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         f.revert()
 
-    def test_flow_content_reutrns_raw_content_when_decoding_fails(self):
+    def test_flow_content_returns_raw_content_when_decoding_fails(self):
         f = self.view.get_by_id("42")
         f.backup()
 
