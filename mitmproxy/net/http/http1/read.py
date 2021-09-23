@@ -155,10 +155,13 @@ def expected_http_body_size(
         sizes = headers.get_all("content-length")
         different_content_length_headers = any(x != sizes[0] for x in sizes)
         if different_content_length_headers:
-            raise ValueError("Conflicting Content Length Headers")
-        size = int(sizes[0])
+            raise ValueError(f"Conflicting Content-Length headers: {sizes!r}")
+        try:
+            size = int(sizes[0])
+        except ValueError:
+            raise ValueError(f"Invalid Content-Length header: {sizes[0]!r}")
         if size < 0:
-            raise ValueError("Negative Content Length")
+            raise ValueError(f"Negative Content-Length header: {sizes[0]!r}")
         return size
 
     #    6.  If this is a request message and none of the above are true, then

@@ -32,7 +32,7 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode, request) -> Optional[str]:
+def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
