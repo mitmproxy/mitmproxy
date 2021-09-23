@@ -4,6 +4,7 @@
 
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
+* Trigger event hooks for flows with semantically invalid requests, for example invalid content-length headers (@mhils)
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously (@mhils)
