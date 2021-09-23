@@ -127,16 +127,25 @@ def test_expected_http_body_size():
     assert expected_http_body_size(
         treq(headers=Headers(content_length="42"))
     ) == 42
-
-    # more than 1 content-length headers with same value
+    # multiple content-length headers with same value
     assert expected_http_body_size(
         treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'42')]))
     ) == 42
-
-    # more than 1 content-length headers with conflicting value
-    with pytest.raises(ValueError):
+    # multiple content-length headers with conflicting value
+    with pytest.raises(ValueError, match="Conflicting Content-Length headers"):
         expected_http_body_size(
             treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'45')]))
+        )
+
+    # non-int content-length
+    with pytest.raises(ValueError, match="Invalid Content-Length header"):
+        expected_http_body_size(
+            treq(headers=Headers([(b'content-length', b'NaN')]))
+        )
+    # negative content-length
+    with pytest.raises(ValueError, match="Negative Content-Length header"):
+        expected_http_body_size(
+            treq(headers=Headers([(b'content-length', b'-1')]))
         )
 
     # no length

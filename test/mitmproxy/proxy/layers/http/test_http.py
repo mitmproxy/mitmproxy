@@ -1257,3 +1257,22 @@ def test_request_smuggling_te_te(tctx):
         << CloseConnection(tctx.client)
     )
     assert b"Invalid transfer encoding" in err()
+
+
+def test_invalid_content_length(tctx):
+    """Test that we still trigger flow hooks for requests with semantic errors"""
+    err = Placeholder(bytes)
+    flow = Placeholder(HTTPFlow)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
+                                      "Host: example.com\r\n"
+                                      "Content-Length: NaN\r\n\r\n").encode())
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpErrorHook(flow)
+        >> reply()
+    )
+    assert b"Invalid Content-Length header" in err()

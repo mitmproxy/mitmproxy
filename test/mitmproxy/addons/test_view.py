@@ -75,7 +75,7 @@ def test_simple():
     v = view.View()
     f = tft(start=1)
     assert v.store_count() == 0
-    v.request(f)
+    v.requestheaders(f)
     assert list(v) == [f]
     assert v.get_by_id(f.id)
     assert not v.get_by_id("nonexistent")
@@ -88,15 +88,15 @@ def test_simple():
     v.kill(f)
     assert list(v) == [f]
 
-    v.request(f)
+    v.requestheaders(f)
     assert list(v) == [f]
     assert len(v._store) == 1
     assert v.store_count() == 1
 
     f2 = tft(start=3)
-    v.request(f2)
+    v.requestheaders(f2)
     assert list(v) == [f, f2]
-    v.request(f2)
+    v.requestheaders(f2)
     assert list(v) == [f, f2]
     assert len(v._store) == 2
 
@@ -105,9 +105,9 @@ def test_simple():
     assert not v.inbounds(100)
 
     f3 = tft(start=2)
-    v.request(f3)
+    v.requestheaders(f3)
     assert list(v) == [f, f3, f2]
-    v.request(f3)
+    v.requestheaders(f3)
     assert list(v) == [f, f3, f2]
     assert len(v._store) == 3
 
@@ -140,10 +140,10 @@ def test_simple_tcp():
 
 def test_filter():
     v = view.View()
-    v.request(tft(method="get"))
-    v.request(tft(method="put"))
-    v.request(tft(method="get"))
-    v.request(tft(method="put"))
+    v.requestheaders(tft(method="get"))
+    v.requestheaders(tft(method="put"))
+    v.requestheaders(tft(method="get"))
+    v.requestheaders(tft(method="put"))
     assert(len(v)) == 4
     v.set_filter_cmd("~m get")
     assert [i.request.method for i in v] == ["GET", "GET"]
@@ -233,7 +233,7 @@ def test_resolve():
         assert tctx.command(v.resolve, "@unmarked") == []
         assert tctx.command(v.resolve, f"@{f.id}") == []
         assert tctx.command(v.resolve, "~m get") == []
-        v.request(f)
+        v.requestheaders(f)
         assert len(tctx.command(v.resolve, "~m get")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
         assert len(tctx.command(v.resolve, "@all")) == 1
@@ -242,7 +242,7 @@ def test_resolve():
         assert len(tctx.command(v.resolve, f"@{f.id}")) == 1
         assert tctx.command(v.resolve, "@hidden") == []
         assert tctx.command(v.resolve, "@marked") == []
-        v.request(tft(method="put"))
+        v.requestheaders(tft(method="put"))
         assert len(tctx.command(v.resolve, f"@{f.id}")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 2
@@ -250,8 +250,8 @@ def test_resolve():
         assert tctx.command(v.resolve, "@hidden") == []
         assert tctx.command(v.resolve, "@marked") == []
 
-        v.request(tft(method="get"))
-        v.request(tft(method="put"))
+        v.requestheaders(tft(method="get"))
+        v.requestheaders(tft(method="put"))
 
         f = flowfilter.parse("~m get")
         v.set_filter(f)
@@ -342,10 +342,10 @@ def test_setgetval():
 
 def test_order():
     v = view.View()
-    v.request(tft(method="get", start=1))
-    v.request(tft(method="put", start=2))
-    v.request(tft(method="get", start=3))
-    v.request(tft(method="put", start=4))
+    v.requestheaders(tft(method="get", start=1))
+    v.requestheaders(tft(method="put", start=2))
+    v.requestheaders(tft(method="get", start=3))
+    v.requestheaders(tft(method="put", start=4))
     assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
     v.set_order("method")
@@ -366,9 +366,9 @@ def test_order():
 
 def test_reversed():
     v = view.View()
-    v.request(tft(start=1))
-    v.request(tft(start=2))
-    v.request(tft(start=3))
+    v.requestheaders(tft(start=1))
+    v.requestheaders(tft(start=2))
+    v.requestheaders(tft(start=3))
     v.set_reversed(True)
 
     assert v[0].request.timestamp_start == 3
@@ -389,7 +389,7 @@ def test_update():
     v.set_filter(flt)
 
     f = tft(method="get")
-    v.request(f)
+    v.requestheaders(f)
     assert f in v
 
     f.request.method = "put"
@@ -596,7 +596,7 @@ def test_settings():
 def test_properties():
     v = view.View()
     f = tft()
-    v.request(f)
+    v.requestheaders(f)
     assert v.get_length() == 1
     assert not v.get_marked()
     v.toggle_marked()

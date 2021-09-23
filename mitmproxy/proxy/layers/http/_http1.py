@@ -227,9 +227,14 @@ class Http1Server(Http1Connection):
                     self.request = http1.read_request_head(request_head)
                     expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
-                    yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
                     yield commands.CloseConnection(self.conn)
+                    if self.request:
+                        # we have headers that we can show in the ui
+                        yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, False))
+                        yield ReceiveHttp(RequestProtocolError(self.stream_id, str(e), 400))
+                    else:
+                        yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     self.state = self.done
                     return
                 yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, expected_body_size == 0))

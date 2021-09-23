@@ -564,7 +564,7 @@ class View(collections.abc.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
-    def request(self, f):
+    def requestheaders(self, f):
         self.add([f])
 
     def error(self, f):
