@@ -1,5 +1,6 @@
 import asyncio
 import io
+import gzip
 import json
 import logging
 import textwrap
@@ -290,12 +291,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_flow_content(self):
         f = self.view.get_by_id("42")
         f.backup()
-        f.response.headers["Content-Encoding"] = "ran\x00dom"
         f.response.headers["Content-Disposition"] = 'inline; filename="filename.jpg"'
 
         r = self.fetch("/flows/42/response/content.data")
         assert r.body == b"message"
-        assert r.headers["Content-Encoding"] == "random"
         assert r.headers["Content-Disposition"] == 'attachment; filename="filename.jpg"'
 
         del f.response.headers["Content-Disposition"]
@@ -308,6 +307,21 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         r = self.fetch("/flows/42/response/content.data")
         assert r.code == 200
         assert r.body == b""
+
+        f.revert()
+
+    def test_flow_content_returns_raw_content_when_decoding_fails(self):
+        f = self.view.get_by_id("42")
+        f.backup()
+
+        f.response.headers["Content-Encoding"] = "gzip"
+        # replace gzip magic number with garbage
+        invalid_encoded_content = gzip.compress(b"Hello world!").replace(b"\x1f\x8b", b"\xff\xff")
+        f.response.raw_content = invalid_encoded_content
+
+        r = self.fetch("/flows/42/response/content.data")
+        assert r.body == invalid_encoded_content
+        assert r.code == 200
 
         f.revert()
 
