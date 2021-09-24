@@ -1,10 +1,10 @@
 #package for generated api classes (Default: org.openapitools.client.api)
 
 apiPackage: com.browserup.proxy.api
-artifactDescription: browserup-proxy-client
+artifactDescription: browserup-mitmproxy-client
 
 # artifactId in generated pom.xml. This also becomes part of the generated library's filename (Default: openapi-java-client)
-artifactId: browserup-proxy-client
+artifactId: browserup-mitmproxy-client
 
 #  artifact URL in generated pom.xml (Default: https://github.com/openapitools/openapi-generator)
 # artifactUrl

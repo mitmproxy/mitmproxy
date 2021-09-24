@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation name: 'browserup-proxy-client-1.0.0'
+    implementation name: 'browserup-mitmproxy-client-1.0.0'
 
     implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
     implementation 'io.github.bonigarcia:webdrivermanager:4.4.3'

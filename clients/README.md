@@ -30,7 +30,10 @@ different. So see them, follow this pattern:
 # Generating Clients
 
 ## Java
-`openapi-generator generate --package-name BrowserUpProxyClient  -g java -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o java -c config-java.yaml`
+`openapi-generator generate --package-name BrowserUpProxyClient  \
+-g java -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json \
+-o java -c config-java.yaml \
+--template-dir clients/java-overlay`
 
 ## JavaScript
 `openapi-generator generate --package-name BrowserUpProxyClient  -g javascript -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o javascript -c config-javascript.yaml`
