@@ -38,8 +38,9 @@ jobs:
           gpg --pinentry-mode loopback --passphrase=$GPG_PASSPHRASE --export-secret-key $GPG_PUBLIC_KEY_SIGN > /tmp/secring.gpg
       - working-directory: clients/java
         name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Build with Gradle
+        run: chmod +x ./gradlew
+      - working-directory: clients/java
+        name: Build with Gradle
         run: |
           ./gradlew --project-prop "ossrhUsername=${OSSRH_JIRA_USERNAME}" \
           --project-prop "ossrhPassword=${OSSRH_JIRA_PASSWORD}" \
