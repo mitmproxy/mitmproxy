@@ -21,8 +21,10 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
-      - name: setup-gpg
-        uses: olafurpg/setup-gpg@v2
+      - name: Set up GPG agent
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg-agent
       - name: Prepare GPG key ring file
         run: |
           export GPG_TTY=$(tty)
