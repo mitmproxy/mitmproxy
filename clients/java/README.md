@@ -44,7 +44,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.browserup</groupId>
   <artifactId>browserup-mitmproxy-client</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.0-SNAPSHOT</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -54,7 +54,7 @@ Add this dependency to your project's POM:
 Add this dependency to your project's build file:
 
 ```groovy
-compile "com.browserup:browserup-mitmproxy-client:1.0.0"
+compile "com.browserup:browserup-mitmproxy-client:1.0.0-SNAPSHOT"
 ```
 
 ### Others
@@ -67,7 +67,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/browserup-mitmproxy-client-1.0.0.jar`
+* `target/browserup-mitmproxy-client-1.0.0-SNAPSHOT.jar`
 * `target/lib/*.jar`
 
 ## Getting Started

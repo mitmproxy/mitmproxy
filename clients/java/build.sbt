@@ -2,7 +2,7 @@ lazy val root = (project in file(".")).
   settings(
     organization := "com.browserup",
     name := "browserup-mitmproxy-client",
-    version := "1.0.0",
+    version := "1.0.0-SNAPSHOT",
     scalaVersion := "2.11.4",
     scalacOptions ++= Seq("-feature"),
     javacOptions in compile ++= Seq("-Xlint:deprecation"),
