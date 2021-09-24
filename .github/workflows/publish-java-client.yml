@@ -47,4 +47,4 @@ jobs:
           --project-prop "signing.keyId=${GPG_PUBLIC_KEY_SIGN}" \
           --project-prop "signing.password=${GPG_PASSPHRASE}" \
           --project-prop "signing.secretKeyRingFile=/tmp/secring.gpg" \
-          --project-prop "sign=true" build uploadArchives --info;
+          --project-prop "sign=true" build publish --info;

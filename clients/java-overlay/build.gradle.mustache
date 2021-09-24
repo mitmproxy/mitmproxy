@@ -5,6 +5,7 @@ apply plugin: 'java'
 {{/sourceFolder}}
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'maven-publish'
 
 group = '{{groupId}}'
 version = '{{artifactVersion}}'
@@ -115,49 +116,51 @@ signing {
     }
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-
-                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-            }
-
-            pom.project {
-                name 'browserup-mitmproxy-client'
-                description 'BrowserUp Proxy Client'
-                url 'https://github.com/browserup/mitmproxy'
-                packaging 'jar'
+publishing {
+    publications {
+        MyPub(MavenPublication) {
+            groupId = 'com.browserup'
+            artifactId = 'browserup-mitmproxy-client'
+            version = "1.0.0-SNAPSHOT"
+            from components.java
+//
+            pom {
+                name = 'browserup-mitmproxy-client'
+                description = 'BrowserUp Proxy Client'
+                url = 'https://github.com/browserup/mitmproxy'
+                packaging = 'jar'
 
                 scm {
-                    connection 'scm:git:git@github.com:browserup/mitmproxy.git'
-                    developerConnection 'scm:git:git@github.com:browserup/mitmproxy.git'
-                    url 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
+                    connection = 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    developerConnection = 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    url = 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
                 }
-
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'browserup'
-                        name 'BrowserUp, Inc.'
-                        email 'developers@browserup.com'
+                        id = 'browserup'
+                        name = 'BrowserUp, Inc.'
+                        email = 'developers@browserup.com'
                     }
                 }
             }
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+            def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
+            url =  version.endsWith('SNAPSHOT')  ? snapshotRepository : releaseRepository
         }
     }
 }
