@@ -154,13 +154,15 @@ publishing {
     }
     repositories {
         maven {
-            credentials {
-                username = ossrhUsername
-                password = ossrhPassword
+            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+                def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
+                url =  version.endsWith('SNAPSHOT')  ? snapshotRepository : releaseRepository
             }
-            def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
-            url =  version.endsWith('SNAPSHOT')  ? snapshotRepository : releaseRepository
         }
     }
 }
