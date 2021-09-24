@@ -48,11 +48,11 @@ public class EntryResponse {
 
   public static final String SERIALIZED_NAME_COOKIES = "cookies";
   @SerializedName(SERIALIZED_NAME_COOKIES)
-  private List<EntryRequestCookies> cookies = new ArrayList<EntryRequestCookies>();
+  private List<EntryRequestCookies> cookies = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_HEADERS = "headers";
   @SerializedName(SERIALIZED_NAME_HEADERS)
-  private List<Header> headers = new ArrayList<Header>();
+  private List<Header> headers = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_CONTENT = "content";
   @SerializedName(SERIALIZED_NAME_CONTENT)

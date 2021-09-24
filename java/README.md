@@ -1,4 +1,4 @@
-# browserup-proxy-client
+# browserup-mitmproxy-client
 
 BrowserUp Proxy
 - API version: 1.0.0
@@ -17,7 +17,7 @@ ___
 ## Requirements
 
 Building the API client library requires:
-1. Java 1.7+
+1. Java 1.8+
 2. Maven/Gradle
 
 ## Installation
@@ -43,7 +43,7 @@ Add this dependency to your project's POM:
 ```xml
 <dependency>
   <groupId>com.browserup</groupId>
-  <artifactId>browserup-proxy-client</artifactId>
+  <artifactId>browserup-mitmproxy-client</artifactId>
   <version>1.0.0</version>
   <scope>compile</scope>
 </dependency>
@@ -54,7 +54,7 @@ Add this dependency to your project's POM:
 Add this dependency to your project's build file:
 
 ```groovy
-compile "com.browserup:browserup-proxy-client:1.0.0"
+compile "com.browserup:browserup-mitmproxy-client:1.0.0"
 ```
 
 ### Others
@@ -67,7 +67,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/browserup-proxy-client-1.0.0.jar`
+* `target/browserup-mitmproxy-client-1.0.0.jar`
 * `target/lib/*.jar`
 
 ## Getting Started

@@ -52,7 +52,7 @@ public class HarLog {
 
   public static final String SERIALIZED_NAME_ENTRIES = "entries";
   @SerializedName(SERIALIZED_NAME_ENTRIES)
-  private List<Entry> entries = new ArrayList<Entry>();
+  private List<Entry> entries = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
@@ -134,7 +134,7 @@ public class HarLog {
 
   public HarLog addPagesItem(Page pagesItem) {
     if (this.pages == null) {
-      this.pages = new ArrayList<Page>();
+      this.pages = new ArrayList<>();
     }
     this.pages.add(pagesItem);
     return this;

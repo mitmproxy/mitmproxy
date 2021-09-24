@@ -1,6 +1,8 @@
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 group = 'com.browserup'
 version = '1.0.0'
@@ -87,13 +89,72 @@ if(hasProperty('target') && target == 'android') {
 
     install {
         repositories.mavenInstaller {
-            pom.artifactId = 'browserup-proxy-client'
+            pom.artifactId = 'browserup-mitmproxy-client'
         }
     }
 
     task execute(type:JavaExec) {
        main = System.getProperty('mainClass')
        classpath = sourceSets.main.runtimeClasspath
+    }
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// To sign files before release add property: --project-prop "sign=true"
+signing {
+    if (project.hasProperty("sign")) {
+        sign configurations.archives
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+            }
+
+            pom.project {
+                name 'browserup-mitmproxy-client'
+                description 'BrowserUp Proxy Client'
+                url 'https://github.com/browserup/mitmproxy'
+                packaging 'jar'
+
+                scm {
+                    connection 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    developerConnection 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    url 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'browserup'
+                        name 'BrowserUp, Inc.'
+                        email 'developers@browserup.com'
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -104,8 +165,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'io.gsonfire:gson-fire:1.8.4'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.1'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
-    implementation 'org.threeten:threetenbp:1.4.3'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     testImplementation 'junit:junit:4.13.1'
 }

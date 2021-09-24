@@ -28,9 +28,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.threeten.bp.OffsetDateTime;
 
 /**
  * Entry
@@ -269,7 +269,7 @@ public class Entry {
 
   public Entry addWebSocketMessagesItem(WebSocketMessage webSocketMessagesItem) {
     if (this.webSocketMessages == null) {
-      this.webSocketMessages = new ArrayList<WebSocketMessage>();
+      this.webSocketMessages = new ArrayList<>();
     }
     this.webSocketMessages.add(webSocketMessagesItem);
     return this;

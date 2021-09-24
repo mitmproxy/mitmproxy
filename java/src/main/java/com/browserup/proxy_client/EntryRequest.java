@@ -49,15 +49,15 @@ public class EntryRequest {
 
   public static final String SERIALIZED_NAME_COOKIES = "cookies";
   @SerializedName(SERIALIZED_NAME_COOKIES)
-  private List<EntryRequestCookies> cookies = new ArrayList<EntryRequestCookies>();
+  private List<EntryRequestCookies> cookies = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_HEADERS = "headers";
   @SerializedName(SERIALIZED_NAME_HEADERS)
-  private List<Header> headers = new ArrayList<Header>();
+  private List<Header> headers = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_QUERY_STRING = "queryString";
   @SerializedName(SERIALIZED_NAME_QUERY_STRING)
-  private List<EntryRequestQueryString> queryString = new ArrayList<EntryRequestQueryString>();
+  private List<EntryRequestQueryString> queryString = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_POST_DATA = "postData";
   @SerializedName(SERIALIZED_NAME_POST_DATA)
