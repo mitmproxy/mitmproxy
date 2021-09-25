@@ -372,7 +372,13 @@ class Message(serializable.Serializable):
             # Let's remove it!
             del self.headers["content-encoding"]
             self.raw_content = value
-        self.headers["content-length"] = str(len(self.raw_content))
+
+        if "transfer-encoding" in self.headers:
+            # https://httpwg.org/specs/rfc7230.html#header.content-length
+            # don't set content-length if a transfer-encoding is provided
+            pass
+        else:
+            self.headers["content-length"] = str(len(self.raw_content))
 
     def get_content(self, strict: bool = True) -> Optional[bytes]:
         """

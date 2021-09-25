@@ -1,5 +1,9 @@
 # Release History
 
+## 28 September 2021: mitmproxy 7.0.4
+
+* Do not add a Content-Length header for chunked HTTP/1 messages (@matthewhughes934)
+
 ## 16 September 2021: mitmproxy 7.0.3
 
 * [CVE-2021-39214](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-22gh-3r9q-xf38):
