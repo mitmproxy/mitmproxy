@@ -96,7 +96,7 @@ class OptManager:
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
-        # error for attribute assigment to unknown options.
+        # error for attribute assignment to unknown options.
         self._options: typing.Dict[str, typing.Any] = {}
 
     def add_option(
