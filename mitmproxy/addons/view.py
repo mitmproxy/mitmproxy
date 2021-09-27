@@ -550,10 +550,6 @@ class View(collections.abc.Sequence):
     def configure(self, updated):
         if "view_filter" in updated:
             if ctx.options.view_filter:
-                if not flowfilter.parse(ctx.options.view_filter):
-                    raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
-                    )
                 ctx.options.view_filter_active = True
             else:
                 ctx.options.view_filter_active = False

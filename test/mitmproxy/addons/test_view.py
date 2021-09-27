@@ -603,6 +603,7 @@ def test_properties():
     assert v.get_length() == 0
     assert v.get_marked()
 
+
 def test_configure():
     v = view.View()
     v.add([
@@ -615,6 +616,7 @@ def test_configure():
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
+        tctx.configure(v, view_filter_active=True)
 
         tctx.configure(v, view_filter="")
         assert [i.request.method for i in v] == ["GET", "PUT", "GET"]
