@@ -1,8 +1,10 @@
 name: Publish Java Client
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 jobs:
   build:

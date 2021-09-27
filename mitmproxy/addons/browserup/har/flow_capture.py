@@ -69,7 +69,7 @@ class FlowCaptureMixin(object):
 
         t = HarBuilder.entry_timings()
         t['send'] = self.diff_millis(flow.request.timestamp_end, flow.request.timestamp_start)
-        t['wait'] = self.diff_millis(flow.request.timestamp_end, flow.response.timestamp_start)
+        t['wait'] = self.diff_millis(flow.response.timestamp_start, flow.request.timestamp_end)
         t['receive'] = self.diff_millis(flow.response.timestamp_end, flow.response.timestamp_start)
 
         if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
