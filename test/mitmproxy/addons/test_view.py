@@ -603,12 +603,14 @@ def test_properties():
     assert v.get_length() == 0
     assert v.get_marked()
 
-
 def test_configure():
     v = view.View()
-    v.request(tft(method="get"))
-    v.request(tft(method="put"))
-    v.request(tft(method="get"))
+    v.add([
+        tft(method="get", start=0),
+        tft(method="put", start=1),
+        tft(method="get", start=2)
+    ])
+
     with taddons.context(v) as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
@@ -620,9 +622,9 @@ def test_configure():
         tctx.configure(v, view_filter="~m get")
         assert [i.request.method for i in v] == ["GET", "GET"]
 
-        tctx.configure(v, filter_active=False)
+        tctx.configure(v, view_filter_active=False)
         assert [i.request.method for i in v] == ["GET", "PUT", "GET"]
-        tctx.configure(v, filter_active=True)
+        tctx.configure(v, view_filter_active=True)
         assert [i.request.method for i in v] == ["GET", "GET"]
 
         tctx.configure(v, view_order="method")

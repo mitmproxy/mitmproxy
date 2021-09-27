@@ -71,6 +71,7 @@ export interface OptionsState {
     upstream_auth: string | undefined
     upstream_cert: boolean
     view_filter: string | undefined
+    view_filter_active: boolean
     view_order: string
     view_order_reversed: boolean
     web_columns: string[]
@@ -155,7 +156,8 @@ export const defaultState: OptionsState = {
     tls_version_server_min: "TLS1_2",
     upstream_auth: undefined,
     upstream_cert: true,
-    view_filter: undefined,
+    view_filter: "",
+    view_filter_active: false,
     view_order: "time",
     view_order_reversed: false,
     web_columns: ["tls", "icon", "path", "method", "status", "size", "time"],

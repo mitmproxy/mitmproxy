@@ -240,7 +240,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append(":%s]" % self.master.options.intercept)
         if self.master.options.view_filter:
             r.append("[")
-            if not self.master.options.filter_active:
+            if not self.master.options.view_filter_active:
                 r.append("X")
             r.append(("heading_key", "f"))
             r.append(":%s]" % self.master.options.view_filter)

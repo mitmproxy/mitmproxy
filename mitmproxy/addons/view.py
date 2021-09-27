@@ -185,7 +185,7 @@ class View(collections.abc.Sequence):
             "Focus follows new flows."
         )
         loader.add_option(
-            "filter_active", bool, False,
+            "view_filter_active", bool, False,
             "Toggle whether the view filter is enabled."
         )
 
@@ -550,9 +550,13 @@ class View(collections.abc.Sequence):
     def configure(self, updated):
         if "view_filter" in updated:
             if ctx.options.view_filter:
-                ctx.options.filter_active = True
+                if not flowfilter.parse(ctx.options.view_filter):
+                    raise exceptions.OptionsError(
+                        "Invalid interception filter: %s" % ctx.options.view_filter
+                    )
+                ctx.options.view_filter_active = True
             else:
-                ctx.options.filter_active = False
+                ctx.options.view_filter_active = False
         if "view_order" in updated:
             if ctx.options.view_order not in self.orders:
                 raise exceptions.OptionsError(
@@ -563,9 +567,9 @@ class View(collections.abc.Sequence):
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
-        if "filter_active" in updated:
+        if "view_filter_active" in updated:
             filt = None
-            if ctx.options.filter_active:
+            if ctx.options.view_filter_active:
                 filt = flowfilter.parse(ctx.options.view_filter)
                 if not filt:
                     raise exceptions.OptionsError(
