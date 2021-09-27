@@ -1276,3 +1276,46 @@ def test_invalid_content_length(tctx):
         >> reply()
     )
     assert b"Invalid Content-Length header" in err()
+
+
+def test_chunked_and_content_length_set_by_addon(tctx):
+    """Test that we don't crash when an addon sets a transfer-encoding header
+
+    We reject a request with both transfer-encoding and content-length header to
+    thwart request smuggling, but if a user explicitly sets it we should not crash.
+    """
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+
+    def make_chunked(flow: HTTPFlow):
+        if flow.response:
+            flow.response.headers["Transfer-Encoding"] = "chunked"
+        else:
+            flow.request.headers["Transfer-Encoding"] = "chunked"
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n"
+                                         b"Content-Length: 0\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply(side_effect=make_chunked)
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"POST / HTTP/1.1\r\n"
+                                b"Host: example.com\r\n"
+                                b"Content-Length: 0\r\n"
+                                b"Transfer-Encoding: chunked\r\n\r\n"
+                                b"0\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply(side_effect=make_chunked)
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                     b"Content-Length: 0\r\n"
+                                     b"Transfer-Encoding: chunked\r\n\r\n"
+                                     b"0\r\n\r\n")
+    )
