@@ -916,6 +916,13 @@ class TestMessage:
         assert resp.data.content == b"bar"
         assert resp.headers["content-length"] == "0"
 
+    def test_content_length_not_added_for_response_with_transfer_encoding(self):
+        headers = Headers(((b"transfer-encoding", b"chunked"),))
+        resp = tresp(headers=headers)
+        resp.content = b"bar"
+
+        assert "content-length" not in resp.headers
+
     def test_headers(self):
         _test_passthrough_attr(tresp(), "headers")
 

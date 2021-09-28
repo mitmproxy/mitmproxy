@@ -145,8 +145,14 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             if should_make_pipe(self.request, self.response):
                 yield from self.make_pipe()
                 return
+            try:
+                read_until_eof_semantics = http1.expected_http_body_size(self.request, self.response) == -1
+            except ValueError:
+                # this may raise only now (and not earlier) because an addon set invalid headers,
+                # in which case it's not really clear what we are supposed to do.
+                read_until_eof_semantics = False
             connection_done = (
-                http1.expected_http_body_size(self.request, self.response) == -1
+                read_until_eof_semantics
                 or http1.connection_close(self.request.http_version, self.request.headers)
                 or http1.connection_close(self.response.http_version, self.response.headers)
                 # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
