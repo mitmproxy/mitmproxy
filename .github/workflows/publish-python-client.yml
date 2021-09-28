@@ -37,4 +37,4 @@ jobs:
       - name: Upload dependencies
         working-directory: clients/python
         run: |
-          python3 -m twine upload --repository BrowserUpMitmProxyClient dist/*
+          python3 -m twine upload dist/*
