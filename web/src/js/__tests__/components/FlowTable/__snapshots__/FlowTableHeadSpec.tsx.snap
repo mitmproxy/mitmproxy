@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowTableHead Component 1`] = `
+<DocumentFragment>
+  <table>
+    <thead>
+      <tr>
+        <th
+          class="col-tls"
+        />
+        <th
+          class="col-icon"
+        />
+        <th
+          class="col-path sort-desc"
+        >
+          Path
+        </th>
+        <th
+          class="col-method"
+        >
+          Method
+        </th>
+        <th
+          class="col-status"
+        >
+          Status
+        </th>
+        <th
+          class="col-size"
+        >
+          Size
+        </th>
+        <th
+          class="col-time"
+        >
+          Time
+        </th>
+        <th
+          class="col-quickactions"
+        />
+      </tr>
+    </thead>
+  </table>
+</DocumentFragment>
+`;

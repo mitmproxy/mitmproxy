@@ -16,4 +16,4 @@ class ViewURLEncoded(base.View):
         return "URLEncoded form", base.format_pairs(d)
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
-        return float(content_type == "application/x-www-form-urlencoded")
+        return float(bool(data) and content_type == "application/x-www-form-urlencoded")

@@ -22,5 +22,5 @@ Larry
 
 def test_render_priority():
     v = multipart.ViewMultipart()
-    assert v.render_priority(b"", content_type="multipart/form-data")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="multipart/form-data")
+    assert not v.render_priority(b"data", content_type="text/plain")

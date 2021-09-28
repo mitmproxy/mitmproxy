@@ -1,0 +1,118 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dropdown 1`] = `
+<DocumentFragment>
+  <a
+    class=""
+    href="#"
+  >
+    open me
+  </a>
+</DocumentFragment>
+`;
+
+exports[`Dropdown 2`] = `
+<DocumentFragment>
+  <a
+    class="open"
+    href="#"
+  >
+    open me
+  </a>
+  <ul
+    class="dropdown-menu show"
+    data-popper-escaped="true"
+    data-popper-placement="bottom"
+    data-popper-reference-hidden="true"
+    style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
+  >
+    <li>
+      <a
+        href="#"
+      >
+        click me
+      </a>
+    </li>
+    <li
+      class="divider"
+      role="separator"
+    />
+    <li>
+      <a
+        href="#"
+      >
+        click me
+      </a>
+    </li>
+  </ul>
+</DocumentFragment>
+`;
+
+exports[`MenuItem 1`] = `
+<DocumentFragment>
+  <li>
+    <a
+      href="#"
+    >
+      wtf
+    </a>
+  </li>
+</DocumentFragment>
+`;
+
+exports[`SubMenu 1`] = `
+<DocumentFragment>
+  <li>
+    <a>
+      <i
+        aria-hidden="true"
+        class="fa fa-caret-right pull-right"
+      />
+       submenu
+    </a>
+  </li>
+</DocumentFragment>
+`;
+
+exports[`SubMenu 2`] = `
+<DocumentFragment>
+  <li>
+    <a>
+      <i
+        aria-hidden="true"
+        class="fa fa-caret-right pull-right"
+      />
+       submenu
+    </a>
+    <ul
+      class="dropdown-menu show"
+      data-popper-escaped="true"
+      data-popper-placement="right-start"
+      data-popper-reference-hidden="true"
+      style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
+    >
+      <li>
+        <a
+          href="#"
+        >
+          click me
+        </a>
+      </li>
+    </ul>
+  </li>
+</DocumentFragment>
+`;
+
+exports[`SubMenu 3`] = `
+<DocumentFragment>
+  <li>
+    <a>
+      <i
+        aria-hidden="true"
+        class="fa fa-caret-right pull-right"
+      />
+       submenu
+    </a>
+  </li>
+</DocumentFragment>
+`;

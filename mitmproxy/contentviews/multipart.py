@@ -21,4 +21,4 @@ class ViewMultipart(base.View):
             return "Multipart form", self._format(v)
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
-        return float(content_type == "multipart/form-data")
+        return float(bool(data) and content_type == "multipart/form-data")

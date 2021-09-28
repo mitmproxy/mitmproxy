@@ -129,15 +129,16 @@ class Dumper:
             self.echo("")
 
     def _echo_request_line(self, flow: http.HTTPFlow) -> None:
-        if flow.client_conn:
+        if flow.is_replay == "request":
+            client = click.style("[replay]", fg="yellow", bold=True)
+        elif flow.client_conn.peername:
             client = click.style(
                 strutils.escape_control_characters(
                     human.format_address(flow.client_conn.peername)
                 )
             )
-        elif flow.is_replay == "request":
-            client = click.style("[replay]", fg="yellow", bold=True)
-        else:
+        else:  # pragma: no cover
+            # this should not happen, but we're defensive here.
             client = ""
 
         pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''

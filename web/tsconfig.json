@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "jsx": "react",
+        "strictNullChecks": true,
+    }
+}

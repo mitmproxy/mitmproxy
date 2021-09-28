@@ -1,11 +1,6 @@
-//TODO: Move into some utils
-.monospace() {
-    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
 .flow-detail {
     width: 100%;
-    overflow:hidden;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 
@@ -15,45 +10,52 @@
 
     section {
         overflow-y: scroll;
-        >article{
-            overflow: auto;
-            padding: 5px 12px 0;
-        }
-        >footer {
+        flex: 1;
+        padding: 5px 12px 10px;
+
+        > footer {
             box-shadow: 0 0 3px gray;
             padding: 2px;
             margin: 0;
-            height:23px;
+            height: 23px;
         }
-    }
-
-    section.detail, section.error{
-        overflow: auto;
-        padding: 5px 12px 0;
     }
 
 
     .first-line {
-        .monospace();
+        font-family: @font-family-monospace;
         background-color: #428bca;
         color: white;
-        margin: 0 -8px;
+        margin: 0 -8px 2px;
         padding: 4px 8px;
         border-radius: 5px;
         word-break: break-all;
         max-height: 100px;
         overflow-y: auto;
-
-        .inline-input.editable {
-            border-color: rgba(255,255,255,0.5);
-        }
     }
-    .request-line {
-        margin-bottom: 2px;
+
+    .contentview {
+        margin: 0 -12px;
+        padding: 0 12px;
+
+        .controls {
+            display: flex;
+            align-items: center;
+            h5 {
+                flex: 1;
+                font-size: 12px;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+        }
+
+        pre button:not(:only-child) {
+            margin-top: 6px;
+        }
     }
 
     hr {
-        margin: 0 0 5px;
+        margin: 0;
     }
 }
 
@@ -64,30 +66,40 @@
     padding: 0 3px;
 
     border: solid transparent 1px;
-    &.editable {
-        border-color: #ccc;
+
+    &:hover {
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 1.25%), 0 2px 4px rgba(0, 0, 0, 5%), 0 2px 6px rgba(0, 0, 0, 2.5%);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &[placeholder]:empty:not(:focus-visible):before {
+        content: attr(placeholder);
+        color: lightgray;
+        font-style: italic;
     }
 
     &[contenteditable] {
-
+        outline-width: 0;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 5%), 0 2px 4px rgba(0, 0, 0, 20%), 0 2px 6px rgba(0, 0, 0, 10%);
         background-color: rgba(255, 255, 255, 0.2);
+
 
         &.has-warning {
             color: rgb(255, 184, 184);
         }
+
         &.has-success {
             //color: green;
         }
     }
 }
 
-.view-all-content-btn{
-    float: right;
-    margin-bottom: 12px;
-}
-
 .flow-detail table {
-    .monospace();
+    td:nth-child(2) {
+        font-family: @font-family-monospace;
+        width: 70%;
+    }
+
     width: 100%;
     table-layout: fixed;
     word-break: break-all;
@@ -109,34 +121,45 @@
 
 .connection-table {
     td:first-child {
-        width: 50%;
         padding-right: 1em;
     }
 }
 
-.header-table {
-    td {
-        line-height: 1.3em;
-    }
-    .header-name {
-        width: 33%;
-    }
-    .header-value {
-
+.headers, .trailers {
+    .kv-row {
+        margin-bottom: .3em;
+        max-height: 12.4ex;
+        overflow-y: auto;
     }
 
-    // This exists so that you can copy
-    // and paste headers out of mitmweb.
-    .header-colon {
-        position: absolute;
-        opacity: 0;
+    .kv-key {
+        font-weight: bold;
+    }
+
+    .kv-value {
+        font-family: @font-family-monospace;
     }
 
     .inline-input {
-        display: inline-block;
-        width: 100%;
-        height: 100%;
+        background-color: white;
     }
+
+    .kv-add-row {
+        opacity: 0;
+        color: #666;
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        transition: all 100ms ease-in-out;
+    }
+
+    &:hover .kv-add-row {
+        opacity: 1;
+    }
+
+    position: relative;
+    min-height: 2ex;
+    overflow-wrap: break-word;
 }
 
 .connection-table, .timing-table {
@@ -144,5 +167,25 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+}
+
+dl.cert-attributes {
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+
+    dt, dd {
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    dt {
+        flex: 0 0 2em;
+    }
+
+    dd {
+        flex: 0 0 calc(100% - 2em);
     }
 }

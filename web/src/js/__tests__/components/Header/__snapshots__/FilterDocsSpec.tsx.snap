@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FilterDocs Component 1`] = `
+<DocumentFragment>
+  <i
+    class="fa fa-spinner fa-spin"
+  />
+</DocumentFragment>
+`;
+
+exports[`FilterDocs Component 2`] = `
+<DocumentFragment>
+  <table
+    class="table table-condensed"
+  >
+    <tbody>
+      <tr>
+        <td>
+          cmd1
+        </td>
+        <td>
+          foo
+        </td>
+      </tr>
+      <tr>
+        <td>
+          cmd2
+        </td>
+        <td>
+          bar
+        </td>
+      </tr>
+      <tr>
+        <td
+          colspan="2"
+        >
+          <a
+            href="https://mitmproxy.org/docs/latest/concepts-filters/"
+            target="_blank"
+          >
+            <i
+              class="fa fa-external-link"
+            />
+              mitmproxy docs
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;

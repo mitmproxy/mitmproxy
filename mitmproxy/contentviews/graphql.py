@@ -45,7 +45,7 @@ class ViewGraphQL(base.View):
                 return "GraphQL", base.format_text(format_query_list(data))
 
     def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
-        if content_type != "application/json":
+        if content_type != "application/json" or not data:
             return 0
 
         data = parse_json(data)

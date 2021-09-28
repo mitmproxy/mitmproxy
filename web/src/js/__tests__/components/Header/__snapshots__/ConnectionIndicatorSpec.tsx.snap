@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConnectionIndicator 1`] = `
+<DocumentFragment>
+  <span
+    class="connection-indicator established"
+  >
+    connected
+  </span>
+</DocumentFragment>
+`;
+
+exports[`ConnectionIndicator 2`] = `
+<DocumentFragment>
+  <span
+    class="connection-indicator fetching"
+  >
+    fetching data…
+  </span>
+</DocumentFragment>
+`;
+
+exports[`ConnectionIndicator 3`] = `
+<DocumentFragment>
+  <span
+    class="connection-indicator established"
+  >
+    connected
+  </span>
+</DocumentFragment>
+`;
+
+exports[`ConnectionIndicator 4`] = `
+<DocumentFragment>
+  <span
+    class="connection-indicator error"
+    title="wat"
+  >
+    connection lost
+  </span>
+</DocumentFragment>
+`;
+
+exports[`ConnectionIndicator 5`] = `
+<DocumentFragment>
+  <span
+    class="connection-indicator offline"
+  >
+    offline
+  </span>
+</DocumentFragment>
+`;

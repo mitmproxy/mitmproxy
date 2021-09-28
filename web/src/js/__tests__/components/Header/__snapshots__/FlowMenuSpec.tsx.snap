@@ -1,0 +1,148 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowMenu 1`] = `
+<DocumentFragment>
+  <div
+    class="flow-menu"
+  >
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <button
+          class="btn btn-default"
+          disabled=""
+          title="[r]eplay flow"
+        >
+          <i
+            class="fa fa-repeat text-primary"
+          />
+           Replay
+        </button>
+        <button
+          class="btn btn-default"
+          title="[D]uplicate flow"
+        >
+          <i
+            class="fa fa-copy text-info"
+          />
+           Duplicate
+        </button>
+        <button
+          class="btn btn-default"
+          disabled=""
+          title="revert changes to flow [V]"
+        >
+          <i
+            class="fa fa-history text-warning"
+          />
+           Revert
+        </button>
+        <button
+          class="btn btn-default"
+          title="[d]elete flow"
+        >
+          <i
+            class="fa fa-trash text-danger"
+          />
+           Delete
+        </button>
+        <a
+          class=""
+          href="#"
+        >
+          <button
+            class="btn btn-default"
+            title="mark flow"
+          >
+            <i
+              class="fa fa-paint-brush text-success"
+            />
+             Mark▾
+          </button>
+        </a>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Flow Modification
+      </div>
+    </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <a
+          class=""
+          href="#"
+        >
+          <button
+            class="btn btn-default"
+          >
+            <i
+              class="fa fa-download"
+            />
+             Download▾
+          </button>
+        </a>
+        <a
+          class=""
+          href="#"
+        >
+          <button
+            class="btn btn-default"
+            title="Export flow."
+          >
+            <i
+              class="fa fa-clone"
+            />
+             Export▾
+          </button>
+        </a>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Export
+      </div>
+    </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <button
+          class="btn btn-default"
+          disabled=""
+          title="[a]ccept intercepted flow"
+        >
+          <i
+            class="fa fa-play text-success"
+          />
+           Resume
+        </button>
+        <button
+          class="btn btn-default"
+          disabled=""
+          title="kill intercepted flow [x]"
+        >
+          <i
+            class="fa fa-times text-danger"
+          />
+           Abort
+        </button>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Interception
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

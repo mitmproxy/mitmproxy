@@ -182,12 +182,18 @@ class Export:
         """
             Export a flow to the system clipboard.
         """
+        try:
+            pyperclip.copy(self.export_str(format, f))
+        except pyperclip.PyperclipException as e:
+            ctx.log.error(str(e))
+
+    @command.command("export")
+    def export_str(self, format: str, f: flow.Flow) -> str:
+        """
+            Export a flow and return the result.
+        """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func = formats[format]
 
-        val = strutils.always_str(func(f), "utf8", "backslashreplace")
-        try:
-            pyperclip.copy(val)
-        except pyperclip.PyperclipException as e:
-            ctx.log.error(str(e))
+        return strutils.always_str(func(f), "utf8", "backslashreplace")

@@ -52,11 +52,16 @@
     </ol>
     {% endcall %}
     {% call entry('macOS', 'apple') %}
+    <h5>Manual Installation</h5>
     <ol>
         <li>Double-click the PEM file to open the <samp>Keychain Access</samp> application.</li>
         <li>Locate the new certificate "mitmproxy" in the list and double-click it.</li>
         <li>Change <samp>Secure Socket Layer (SSL)</samp> to <samp>Always Trust</samp>.</li>
         <li>Close the dialog window and enter your password if prompted.</li>
+    </ol>
+    <h5>Automated Installation</h5>
+    <ol>
+        <li><code>sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain mitmproxy-ca-cert.pem</code></li>
     </ol>
     {% endcall %}
     {% call entry('iOS <small>– please read the instructions!</small>', 'apple') %}

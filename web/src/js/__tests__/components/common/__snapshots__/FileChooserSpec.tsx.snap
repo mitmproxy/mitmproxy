@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileChooser 1`] = `
+<DocumentFragment>
+  <a
+    href="#"
+  >
+    <i
+      class="fa fa-fw play"
+    />
+    open
+    <input
+      class="hidden"
+      type="file"
+    />
+  </a>
+</DocumentFragment>
+`;

@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`FilterDocs Component should render correctly when fetch success 1`] = `
-<i
-  className="fa fa-spinner fa-spin"
-/>
-`;
