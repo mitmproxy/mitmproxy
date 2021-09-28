@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.custom_har_data import CustomHarData
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.custom_har_data import CustomHarData
 
 
 class TestCustomHarData(unittest.TestCase):

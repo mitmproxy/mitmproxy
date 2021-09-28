@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_request_cookies import EntryRequestCookies
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_request_cookies import EntryRequestCookies
 
 
 class TestEntryRequestCookies(unittest.TestCase):

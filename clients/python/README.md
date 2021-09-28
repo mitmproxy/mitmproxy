@@ -1,7 +1,7 @@
-# BrowserUpProxyClient
+# BrowserUpMitmProxyClient
 ___
-This is the REST API for controlling the BrowserUp Proxy.
-The BrowserUp Proxy is a swiss army knife for automated testing that
+This is the REST API for controlling the BrowserUp MitmProxy.
+The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 
@@ -28,7 +28,7 @@ pip install git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git
 
 Then import the package:
 ```python
-import BrowserUpProxyClient
+import BrowserUpMitmProxyClient
 ```
 
 ### Setuptools
@@ -42,7 +42,7 @@ python setup.py install --user
 
 Then import the package:
 ```python
-import BrowserUpProxyClient
+import BrowserUpMitmProxyClient
 ```
 
 ## Getting Started
@@ -52,24 +52,24 @@ Please follow the [installation procedure](#installation--usage) and then run th
 ```python
 
 import time
-import BrowserUpProxyClient
+import BrowserUpMitmProxyClient
 from pprint import pprint
-from BrowserUpProxyClient.api import browser_up_proxy_api
-from BrowserUpProxyClient.model.counter import Counter
-from BrowserUpProxyClient.model.error import Error
-from BrowserUpProxyClient.model.har import Har
-from BrowserUpProxyClient.model.match_criteria import MatchCriteria
-from BrowserUpProxyClient.model.verify_result import VerifyResult
+from BrowserUpMitmProxyClient.api import browser_up_proxy_api
+from BrowserUpMitmProxyClient.model.counter import Counter
+from BrowserUpMitmProxyClient.model.error import Error
+from BrowserUpMitmProxyClient.model.har import Har
+from BrowserUpMitmProxyClient.model.match_criteria import MatchCriteria
+from BrowserUpMitmProxyClient.model.verify_result import VerifyResult
 # Defining the host is optional and defaults to http://localhost:8088
 # See configuration.py for a list of all supported configuration parameters.
-configuration = BrowserUpProxyClient.Configuration(
+configuration = BrowserUpMitmProxyClient.Configuration(
     host = "http://localhost:8088"
 )
 
 
 
 # Enter a context with an instance of the API client
-with BrowserUpProxyClient.ApiClient(configuration) as api_client:
+with BrowserUpMitmProxyClient.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     counter = Counter(
@@ -79,7 +79,7 @@ with BrowserUpProxyClient.ApiClient(configuration) as api_client:
 
     try:
         api_instance.add_counter(counter)
-    except BrowserUpProxyClient.ApiException as e:
+    except BrowserUpMitmProxyClient.ApiException as e:
         print("Exception when calling BrowserUpProxyApi->add_counter: %s\n" % e)
 ```
 
@@ -131,25 +131,25 @@ Class | Method | HTTP request | Description
 
 ## Author
 
-
+developers@browserup.com
 
 
 ## Notes for Large OpenAPI documents
-If the OpenAPI document is large, imports in BrowserUpProxyClient.apis and BrowserUpProxyClient.models may fail with a
+If the OpenAPI document is large, imports in BrowserUpMitmProxyClient.apis and BrowserUpMitmProxyClient.models may fail with a
 RecursionError indicating the maximum recursion limit has been exceeded. In that case, there are a couple of solutions:
 
 Solution 1:
 Use specific imports for apis and models like:
-- `from BrowserUpProxyClient.api.default_api import DefaultApi`
-- `from BrowserUpProxyClient.model.pet import Pet`
+- `from BrowserUpMitmProxyClient.api.default_api import DefaultApi`
+- `from BrowserUpMitmProxyClient.model.pet import Pet`
 
 Solution 2:
 Before importing the package, adjust the maximum recursion limit as shown below:
 ```
 import sys
 sys.setrecursionlimit(1500)
-import BrowserUpProxyClient
-from BrowserUpProxyClient.apis import *
-from BrowserUpProxyClient.models import *
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.apis import *
+from BrowserUpMitmProxyClient.models import *
 ```
 

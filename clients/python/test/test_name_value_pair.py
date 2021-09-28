@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.name_value_pair import NameValuePair
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.name_value_pair import NameValuePair
 
 
 class TestNameValuePair(unittest.TestCase):

@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.header import Header
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.header import Header
 
 
 class TestHeader(unittest.TestCase):

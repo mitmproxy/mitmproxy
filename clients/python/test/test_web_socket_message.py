@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.web_socket_message import WebSocketMessage
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.web_socket_message import WebSocketMessage
 
 
 class TestWebSocketMessage(unittest.TestCase):

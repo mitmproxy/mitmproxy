@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_response_content import EntryResponseContent
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_response_content import EntryResponseContent
 
 
 class TestEntryResponseContent(unittest.TestCase):

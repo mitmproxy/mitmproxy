@@ -8,7 +8,7 @@ stages:
   script:
    - pip install -r requirements.txt
    - pip install -r test-requirements.txt
-   - pytest --cov=BrowserUpProxyClient
+   - pytest --cov=BrowserUpMitmProxyClient
 
 test-3.6:
   extends: .tests

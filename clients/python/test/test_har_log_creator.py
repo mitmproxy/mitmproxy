@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.har_log_creator import HarLogCreator
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.har_log_creator import HarLogCreator
 
 
 class TestHarLogCreator(unittest.TestCase):

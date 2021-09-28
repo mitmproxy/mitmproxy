@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.match_criteria import MatchCriteria
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.match_criteria import MatchCriteria
 
 
 class TestMatchCriteria(unittest.TestCase):

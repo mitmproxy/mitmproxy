@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.page_page_timings import PagePageTimings
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.page_page_timings import PagePageTimings
 
 
 class TestPagePageTimings(unittest.TestCase):

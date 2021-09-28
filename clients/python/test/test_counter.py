@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.counter import Counter
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.counter import Counter
 
 
 class TestCounter(unittest.TestCase):

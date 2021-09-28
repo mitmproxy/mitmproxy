@@ -11,16 +11,16 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_request import EntryRequest
-from BrowserUpProxyClient.model.entry_response import EntryResponse
-from BrowserUpProxyClient.model.entry_timings import EntryTimings
-from BrowserUpProxyClient.model.web_socket_message import WebSocketMessage
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_request import EntryRequest
+from BrowserUpMitmProxyClient.model.entry_response import EntryResponse
+from BrowserUpMitmProxyClient.model.entry_timings import EntryTimings
+from BrowserUpMitmProxyClient.model.web_socket_message import WebSocketMessage
 globals()['EntryRequest'] = EntryRequest
 globals()['EntryResponse'] = EntryResponse
 globals()['EntryTimings'] = EntryTimings
 globals()['WebSocketMessage'] = WebSocketMessage
-from BrowserUpProxyClient.model.entry import Entry
+from BrowserUpMitmProxyClient.model.entry import Entry
 
 
 class TestEntry(unittest.TestCase):

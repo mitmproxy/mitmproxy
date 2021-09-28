@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_timings import EntryTimings
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_timings import EntryTimings
 
 
 class TestEntryTimings(unittest.TestCase):

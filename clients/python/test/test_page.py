@@ -11,10 +11,10 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.page_page_timings import PagePageTimings
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.page_page_timings import PagePageTimings
 globals()['PagePageTimings'] = PagePageTimings
-from BrowserUpProxyClient.model.page import Page
+from BrowserUpMitmProxyClient.model.page import Page
 
 
 class TestPage(unittest.TestCase):

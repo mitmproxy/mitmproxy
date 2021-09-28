@@ -11,10 +11,10 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.har_log import HarLog
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.har_log import HarLog
 globals()['HarLog'] = HarLog
-from BrowserUpProxyClient.model.har import Har
+from BrowserUpMitmProxyClient.model.har import Har
 
 
 class TestHar(unittest.TestCase):

@@ -1,5 +1,15 @@
 moduleName: "browserup_mitmproxy_client"
-appDescription: "BrowserUp Proxy Client"
+appDescription: "BrowserUp MitmProxy Client"
+infoEmail: developers@browserup.com
+infoName: BrowserUp, Inc.
+
+packageUrl: https://github.com/browserup/mitmproxy
+
+
+templateDir: python-overlay
+files:
+  LICENSE: {}
+  pyproject.toml: {}
 
 # Python
 #packageName: "browserup-proxy"

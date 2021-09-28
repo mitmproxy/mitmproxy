@@ -11,14 +11,14 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_request_cookies import EntryRequestCookies
-from BrowserUpProxyClient.model.entry_request_query_string import EntryRequestQueryString
-from BrowserUpProxyClient.model.header import Header
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_request_cookies import EntryRequestCookies
+from BrowserUpMitmProxyClient.model.entry_request_query_string import EntryRequestQueryString
+from BrowserUpMitmProxyClient.model.header import Header
 globals()['EntryRequestCookies'] = EntryRequestCookies
 globals()['EntryRequestQueryString'] = EntryRequestQueryString
 globals()['Header'] = Header
-from BrowserUpProxyClient.model.entry_request import EntryRequest
+from BrowserUpMitmProxyClient.model.entry_request import EntryRequest
 
 
 class TestEntryRequest(unittest.TestCase):

@@ -11,14 +11,14 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry import Entry
-from BrowserUpProxyClient.model.har_log_creator import HarLogCreator
-from BrowserUpProxyClient.model.page import Page
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry import Entry
+from BrowserUpMitmProxyClient.model.har_log_creator import HarLogCreator
+from BrowserUpMitmProxyClient.model.page import Page
 globals()['Entry'] = Entry
 globals()['HarLogCreator'] = HarLogCreator
 globals()['Page'] = Page
-from BrowserUpProxyClient.model.har_log import HarLog
+from BrowserUpMitmProxyClient.model.har_log import HarLog
 
 
 class TestHarLog(unittest.TestCase):

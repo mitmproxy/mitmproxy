@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.entry_request_query_string import EntryRequestQueryString
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.entry_request_query_string import EntryRequestQueryString
 
 
 class TestEntryRequestQueryString(unittest.TestCase):

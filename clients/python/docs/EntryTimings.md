@@ -4,13 +4,13 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**send** | **float** |  | 
-**wait** | **float** |  | 
-**receive** | **float** |  | 
-**dns** | **float** |  | [optional] 
-**connect** | **float** |  | [optional] 
-**blocked** | **float** |  | [optional] 
-**ssl** | **float** |  | [optional] 
+**dns** | **int** |  | defaults to -1
+**connect** | **int** |  | defaults to -1
+**blocked** | **int** |  | defaults to -1
+**send** | **int** |  | defaults to -1
+**wait** | **int** |  | defaults to -1
+**receive** | **int** |  | defaults to -1
+**ssl** | **int** |  | defaults to -1
 **comment** | **str** |  | [optional] 
 **any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]
 

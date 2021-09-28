@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **started_date_time** | **datetime** |  | 
-**time** | **float** |  | 
+**time** | **int** |  | 
 **request** | [**EntryRequest**](EntryRequest.md) |  | 
 **response** | [**EntryResponse**](EntryResponse.md) |  | 
 **cache** | **dict** |  | 

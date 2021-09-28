@@ -44,17 +44,17 @@ class BrowserUpAddonsManagerAddOn:
 
     def basic_spec(self, app):
         return APISpec(
-            title='BrowserUp Proxy',
+            title='BrowserUp MitmProxy',
             version='1.0.0',
             servers = [{"url": "http://localhost:{port}/",
                         "description": "The development API server",
                         "variables": {"port": {"enum": ["8088"], "default": '8088'}}
                         }],
-            tags = [{"name": 'The BrowserUp Proxy API', "description": "BrowserUp Proxy REST API"}],
+            tags = [{"name": 'The BrowserUp MitmProxy API', "description": "BrowserUp MitmProxy REST API"}],
             info= {"description":
                    """___
-This is the REST API for controlling the BrowserUp Proxy.
-The BrowserUp Proxy is a swiss army knife for automated testing that
+This is the REST API for controlling the BrowserUp MitmProxy.
+The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 """, "x-logo": {"url": "logo.png"}},

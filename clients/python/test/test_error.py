@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.error import Error
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.error import Error
 
 
 class TestError(unittest.TestCase):

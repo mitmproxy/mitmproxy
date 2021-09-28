@@ -15,16 +15,16 @@
   ],
   "tags": [
     {
-      "name": "The BrowserUp Proxy API",
-      "description": "BrowserUp Proxy REST API"
+      "name": "The BrowserUp MitmProxy API",
+      "description": "BrowserUp MitmProxy REST API"
     }
   ],
   "info": {
-    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy.\nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
+    "description": "___\nThis is the REST API for controlling the BrowserUp MitmProxy.\nThe BrowserUp MitmProxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
     "x-logo": {
       "url": "logo.png"
     },
-    "title": "BrowserUp Proxy",
+    "title": "BrowserUp MitmProxy",
     "version": "1.0.0"
   },
   "paths": {
@@ -513,11 +513,24 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name"
+          },
           "result": {
             "type": "boolean",
             "description": "Result True / False"
           }
-        }
+        },
+        "required": [
+          "name",
+          "result",
+          "type"
+        ]
       },
       "Error": {
         "type": "object",
@@ -537,13 +550,18 @@
         "properties": {
           "value": {
             "type": "number",
+            "format": "double",
             "description": "Value for the counter"
           },
           "name": {
             "type": "string",
             "description": "Name of Custom Counter value you are adding to the page under _counters"
           }
-        }
+        },
+        "required": [
+          "name",
+          "value"
+        ]
       },
       "WebSocketMessage": {
         "type": "object",
@@ -583,7 +601,8 @@
             "required": [
               "version",
               "creator",
-              "entries"
+              "entries",
+              "pages"
             ],
             "properties": {
               "version": {
@@ -629,7 +648,8 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/Page"
-                }
+                },
+                "default": []
               },
               "entries": {
                 "type": "array",
@@ -668,7 +688,8 @@
           "startedDateTime",
           "id",
           "title",
-          "pageTimings"
+          "pageTimings",
+          "_verifications"
         ],
         "properties": {
           "startedDateTime": {
@@ -681,16 +702,45 @@
           "title": {
             "type": "string"
           },
+          "_verifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerifyResult"
+            },
+            "default": []
+          },
+          "_counters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Counter"
+            },
+            "default": []
+          },
+          "_errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "default": []
+          },
           "pageTimings": {
             "type": "object",
+            "required": [
+              "onLoad",
+              "onContentLoad"
+            ],
             "properties": {
               "onContentLoad": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "onLoad": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "comment": {
                 "type": "string"
@@ -725,7 +775,8 @@
             "format": "date-time"
           },
           "time": {
-            "type": "number",
+            "type": "integer",
+            "format": "int64",
             "minimum": 0
           },
           "request": {
@@ -1044,36 +1095,54 @@
             "required": [
               "send",
               "wait",
-              "receive"
+              "receive",
+              "dns",
+              "blocked",
+              "ssl",
+              "connect"
             ],
             "properties": {
               "dns": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "connect": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "blocked": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "send": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "wait": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "receive": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "ssl": {
-                "type": "number",
-                "minimum": -1
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
               },
               "comment": {
                 "type": "string"

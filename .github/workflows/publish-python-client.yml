@@ -1,0 +1,40 @@
+name: Publish Python Client
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: ${{ secrets.PYTHON_TWINE_USERNAME }}
+      TWINE_PASSWORD: ${{ secrets.PYTHON_TWINE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        working-directory: clients/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r test-requirements.txt
+          pip install --upgrade twine
+          pip install build
+      - name: Test with pytest
+        working-directory: clients/python
+        run: |
+          pytest --cov=BrowserUpProxyClient
+      - name: Build dist
+        working-directory: clients/python
+        run: |
+          python -m build
+      - name: Upload dependencies
+        working-directory: clients/python
+        run: |
+          python3 -m twine upload --repository BrowserUpMitmProxyClient dist/*

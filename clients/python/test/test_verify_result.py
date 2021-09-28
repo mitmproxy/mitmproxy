@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.model.verify_result import VerifyResult
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.model.verify_result import VerifyResult
 
 
 class TestVerifyResult(unittest.TestCase):

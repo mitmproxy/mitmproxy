@@ -7,8 +7,8 @@ Name | Type | Description | Notes
 **version** | **str** |  | 
 **creator** | [**HarLogCreator**](HarLogCreator.md) |  | 
 **entries** | [**[Entry]**](Entry.md) |  | 
+**pages** | [**[Page]**](Page.md) |  | defaults to []
 **browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] 
-**pages** | [**[Page]**](Page.md) |  | [optional] 
 **comment** | **str** |  | [optional] 
 **any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]
 

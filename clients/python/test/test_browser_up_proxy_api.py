@@ -10,8 +10,8 @@
 
 import unittest
 
-import BrowserUpProxyClient
-from BrowserUpProxyClient.api.browser_up_proxy_api import BrowserUpProxyApi  # noqa: E501
+import BrowserUpMitmProxyClient
+from BrowserUpMitmProxyClient.api.browser_up_proxy_api import BrowserUpProxyApi  # noqa: E501
 
 
 class TestBrowserUpProxyApi(unittest.TestCase):
