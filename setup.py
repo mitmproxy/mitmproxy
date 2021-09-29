@@ -82,7 +82,7 @@ setup(
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<3.19",
-        "pyOpenSSL>=21.0,<21.1",
+        "pyOpenSSL>=20.0,<21.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.17.17",
