@@ -1,7 +1,7 @@
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -38,8 +38,8 @@ module BrowserupProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'on_content_load' => :'Float',
-        :'on_load' => :'Float',
+        :'on_content_load' => :'Integer',
+        :'on_load' => :'Integer',
         :'comment' => :'String'
       }
     end
@@ -67,10 +67,14 @@ module BrowserupProxy
 
       if attributes.key?(:'on_content_load')
         self.on_content_load = attributes[:'on_content_load']
+      else
+        self.on_content_load = -1
       end
 
       if attributes.key?(:'on_load')
         self.on_load = attributes[:'on_load']
+      else
+        self.on_load = -1
       end
 
       if attributes.key?(:'comment')
@@ -82,11 +86,19 @@ module BrowserupProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if !@on_content_load.nil? && @on_content_load < -1
+      if @on_content_load.nil?
+        invalid_properties.push('invalid value for "on_content_load", on_content_load cannot be nil.')
+      end
+
+      if @on_content_load < -1
         invalid_properties.push('invalid value for "on_content_load", must be greater than or equal to -1.')
       end
 
-      if !@on_load.nil? && @on_load < -1
+      if @on_load.nil?
+        invalid_properties.push('invalid value for "on_load", on_load cannot be nil.')
+      end
+
+      if @on_load < -1
         invalid_properties.push('invalid value for "on_load", must be greater than or equal to -1.')
       end
 
@@ -96,15 +108,21 @@ module BrowserupProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if !@on_content_load.nil? && @on_content_load < -1
-      return false if !@on_load.nil? && @on_load < -1
+      return false if @on_content_load.nil?
+      return false if @on_content_load < -1
+      return false if @on_load.nil?
+      return false if @on_load < -1
       true
     end
 
     # Custom attribute writer method with validation
     # @param [Object] on_content_load Value to be assigned
     def on_content_load=(on_content_load)
-      if !on_content_load.nil? && on_content_load < -1
+      if on_content_load.nil?
+        fail ArgumentError, 'on_content_load cannot be nil'
+      end
+
+      if on_content_load < -1
         fail ArgumentError, 'invalid value for "on_content_load", must be greater than or equal to -1.'
       end
 
@@ -114,7 +132,11 @@ module BrowserupProxy
     # Custom attribute writer method with validation
     # @param [Object] on_load Value to be assigned
     def on_load=(on_load)
-      if !on_load.nil? && on_load < -1
+      if on_load.nil?
+        fail ArgumentError, 'on_load cannot be nil'
+      end
+
+      if on_load < -1
         fail ArgumentError, 'invalid value for "on_load", must be greater than or equal to -1.'
       end
 

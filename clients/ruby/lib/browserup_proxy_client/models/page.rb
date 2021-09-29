@@ -1,7 +1,7 @@
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -21,6 +21,12 @@ module BrowserupProxy
 
     attr_accessor :title
 
+    attr_accessor :_verifications
+
+    attr_accessor :_counters
+
+    attr_accessor :_errors
+
     attr_accessor :page_timings
 
     attr_accessor :comment
@@ -31,6 +37,9 @@ module BrowserupProxy
         :'started_date_time' => :'startedDateTime',
         :'id' => :'id',
         :'title' => :'title',
+        :'_verifications' => :'_verifications',
+        :'_counters' => :'_counters',
+        :'_errors' => :'_errors',
         :'page_timings' => :'pageTimings',
         :'comment' => :'comment'
       }
@@ -47,6 +56,9 @@ module BrowserupProxy
         :'started_date_time' => :'Time',
         :'id' => :'String',
         :'title' => :'String',
+        :'_verifications' => :'Array<VerifyResult>',
+        :'_counters' => :'Array<Counter>',
+        :'_errors' => :'Array<Error>',
         :'page_timings' => :'PagePageTimings',
         :'comment' => :'String'
       }
@@ -85,6 +97,24 @@ module BrowserupProxy
         self.title = attributes[:'title']
       end
 
+      if attributes.key?(:'_verifications')
+        if (value = attributes[:'_verifications']).is_a?(Array)
+          self._verifications = value
+        end
+      end
+
+      if attributes.key?(:'_counters')
+        if (value = attributes[:'_counters']).is_a?(Array)
+          self._counters = value
+        end
+      end
+
+      if attributes.key?(:'_errors')
+        if (value = attributes[:'_errors']).is_a?(Array)
+          self._errors = value
+        end
+      end
+
       if attributes.key?(:'page_timings')
         self.page_timings = attributes[:'page_timings']
       end
@@ -110,6 +140,10 @@ module BrowserupProxy
         invalid_properties.push('invalid value for "title", title cannot be nil.')
       end
 
+      if @_verifications.nil?
+        invalid_properties.push('invalid value for "_verifications", _verifications cannot be nil.')
+      end
+
       if @page_timings.nil?
         invalid_properties.push('invalid value for "page_timings", page_timings cannot be nil.')
       end
@@ -123,6 +157,7 @@ module BrowserupProxy
       return false if @started_date_time.nil?
       return false if @id.nil?
       return false if @title.nil?
+      return false if @_verifications.nil?
       return false if @page_timings.nil?
       true
     end
@@ -135,6 +170,9 @@ module BrowserupProxy
           started_date_time == o.started_date_time &&
           id == o.id &&
           title == o.title &&
+          _verifications == o._verifications &&
+          _counters == o._counters &&
+          _errors == o._errors &&
           page_timings == o.page_timings &&
           comment == o.comment
     end
@@ -148,7 +186,7 @@ module BrowserupProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [started_date_time, id, title, page_timings, comment].hash
+      [started_date_time, id, title, _verifications, _counters, _errors, page_timings, comment].hash
     end
 
     # Builds the object from hash

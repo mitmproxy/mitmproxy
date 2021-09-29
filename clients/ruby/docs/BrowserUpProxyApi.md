@@ -31,7 +31,7 @@ require 'time'
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
-counter = BrowserupProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+counter = BrowserupProxy::Counter.new({value: 3.56, name: 'name_example'}) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
 begin
   

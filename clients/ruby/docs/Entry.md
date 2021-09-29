@@ -6,7 +6,7 @@
 | ---- | ---- | ----------- | ----- |
 | **pageref** | **String** |  | [optional] |
 | **started_date_time** | **Time** |  |  |
-| **time** | **Float** |  |  |
+| **time** | **Integer** |  |  |
 | **request** | [**EntryRequest**](EntryRequest.md) |  |  |
 | **response** | [**EntryResponse**](EntryResponse.md) |  |  |
 | **cache** | **Object** |  |  |

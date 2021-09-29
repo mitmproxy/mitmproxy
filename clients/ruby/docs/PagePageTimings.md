@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **on_content_load** | **Float** |  | [optional] |
-| **on_load** | **Float** |  | [optional] |
+| **on_content_load** | **Integer** |  | [default to -1] |
+| **on_load** | **Integer** |  | [default to -1] |
 | **comment** | **String** |  | [optional] |
 
 ## Example

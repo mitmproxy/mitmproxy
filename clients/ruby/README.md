@@ -1,10 +1,10 @@
 # browserup_proxy_client
 
-BrowserupProxy - the Ruby gem for the BrowserUp Proxy
+BrowserupProxy - the Ruby gem for the BrowserUp MitmProxy
 
 ___
-This is the REST API for controlling the BrowserUp Proxy.
-The BrowserUp Proxy is a swiss army knife for automated testing that
+This is the REST API for controlling the BrowserUp MitmProxy.
+The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 
@@ -62,7 +62,7 @@ Please follow the [installation](#installation) procedure and then run the follo
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
-counter = BrowserupProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+counter = BrowserupProxy::Counter.new({value: 3.56, name: 'name_example'}) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
 begin
   api_instance.add_counter(counter)

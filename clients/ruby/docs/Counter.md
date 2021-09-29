@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **value** | **Float** | Value for the counter | [optional] |
-| **name** | **String** | Name of Custom Counter value you are adding to the page under _counters | [optional] |
+| **value** | **Float** | Value for the counter |  |
+| **name** | **String** | Name of Custom Counter value you are adding to the page under _counters |  |
 
 ## Example
 

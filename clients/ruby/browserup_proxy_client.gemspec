@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 

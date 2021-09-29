@@ -1,7 +1,7 @@
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -53,13 +53,13 @@ module BrowserupProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'dns' => :'Float',
-        :'connect' => :'Float',
-        :'blocked' => :'Float',
-        :'_send' => :'Float',
-        :'wait' => :'Float',
-        :'receive' => :'Float',
-        :'ssl' => :'Float',
+        :'dns' => :'Integer',
+        :'connect' => :'Integer',
+        :'blocked' => :'Integer',
+        :'_send' => :'Integer',
+        :'wait' => :'Integer',
+        :'receive' => :'Integer',
+        :'ssl' => :'Integer',
         :'comment' => :'String'
       }
     end
@@ -87,30 +87,44 @@ module BrowserupProxy
 
       if attributes.key?(:'dns')
         self.dns = attributes[:'dns']
+      else
+        self.dns = -1
       end
 
       if attributes.key?(:'connect')
         self.connect = attributes[:'connect']
+      else
+        self.connect = -1
       end
 
       if attributes.key?(:'blocked')
         self.blocked = attributes[:'blocked']
+      else
+        self.blocked = -1
       end
 
       if attributes.key?(:'_send')
         self._send = attributes[:'_send']
+      else
+        self._send = -1
       end
 
       if attributes.key?(:'wait')
         self.wait = attributes[:'wait']
+      else
+        self.wait = -1
       end
 
       if attributes.key?(:'receive')
         self.receive = attributes[:'receive']
+      else
+        self.receive = -1
       end
 
       if attributes.key?(:'ssl')
         self.ssl = attributes[:'ssl']
+      else
+        self.ssl = -1
       end
 
       if attributes.key?(:'comment')
@@ -122,15 +136,27 @@ module BrowserupProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if !@dns.nil? && @dns < -1
+      if @dns.nil?
+        invalid_properties.push('invalid value for "dns", dns cannot be nil.')
+      end
+
+      if @dns < -1
         invalid_properties.push('invalid value for "dns", must be greater than or equal to -1.')
       end
 
-      if !@connect.nil? && @connect < -1
+      if @connect.nil?
+        invalid_properties.push('invalid value for "connect", connect cannot be nil.')
+      end
+
+      if @connect < -1
         invalid_properties.push('invalid value for "connect", must be greater than or equal to -1.')
       end
 
-      if !@blocked.nil? && @blocked < -1
+      if @blocked.nil?
+        invalid_properties.push('invalid value for "blocked", blocked cannot be nil.')
+      end
+
+      if @blocked < -1
         invalid_properties.push('invalid value for "blocked", must be greater than or equal to -1.')
       end
 
@@ -158,7 +184,11 @@ module BrowserupProxy
         invalid_properties.push('invalid value for "receive", must be greater than or equal to -1.')
       end
 
-      if !@ssl.nil? && @ssl < -1
+      if @ssl.nil?
+        invalid_properties.push('invalid value for "ssl", ssl cannot be nil.')
+      end
+
+      if @ssl < -1
         invalid_properties.push('invalid value for "ssl", must be greater than or equal to -1.')
       end
 
@@ -168,23 +198,31 @@ module BrowserupProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if !@dns.nil? && @dns < -1
-      return false if !@connect.nil? && @connect < -1
-      return false if !@blocked.nil? && @blocked < -1
+      return false if @dns.nil?
+      return false if @dns < -1
+      return false if @connect.nil?
+      return false if @connect < -1
+      return false if @blocked.nil?
+      return false if @blocked < -1
       return false if @_send.nil?
       return false if @_send < -1
       return false if @wait.nil?
       return false if @wait < -1
       return false if @receive.nil?
       return false if @receive < -1
-      return false if !@ssl.nil? && @ssl < -1
+      return false if @ssl.nil?
+      return false if @ssl < -1
       true
     end
 
     # Custom attribute writer method with validation
     # @param [Object] dns Value to be assigned
     def dns=(dns)
-      if !dns.nil? && dns < -1
+      if dns.nil?
+        fail ArgumentError, 'dns cannot be nil'
+      end
+
+      if dns < -1
         fail ArgumentError, 'invalid value for "dns", must be greater than or equal to -1.'
       end
 
@@ -194,7 +232,11 @@ module BrowserupProxy
     # Custom attribute writer method with validation
     # @param [Object] connect Value to be assigned
     def connect=(connect)
-      if !connect.nil? && connect < -1
+      if connect.nil?
+        fail ArgumentError, 'connect cannot be nil'
+      end
+
+      if connect < -1
         fail ArgumentError, 'invalid value for "connect", must be greater than or equal to -1.'
       end
 
@@ -204,7 +246,11 @@ module BrowserupProxy
     # Custom attribute writer method with validation
     # @param [Object] blocked Value to be assigned
     def blocked=(blocked)
-      if !blocked.nil? && blocked < -1
+      if blocked.nil?
+        fail ArgumentError, 'blocked cannot be nil'
+      end
+
+      if blocked < -1
         fail ArgumentError, 'invalid value for "blocked", must be greater than or equal to -1.'
       end
 
@@ -256,7 +302,11 @@ module BrowserupProxy
     # Custom attribute writer method with validation
     # @param [Object] ssl Value to be assigned
     def ssl=(ssl)
-      if !ssl.nil? && ssl < -1
+      if ssl.nil?
+        fail ArgumentError, 'ssl cannot be nil'
+      end
+
+      if ssl < -1
         fail ArgumentError, 'invalid value for "ssl", must be greater than or equal to -1.'
       end
 

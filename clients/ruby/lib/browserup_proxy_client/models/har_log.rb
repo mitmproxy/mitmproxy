@@ -1,7 +1,7 @@
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -118,6 +118,10 @@ module BrowserupProxy
         invalid_properties.push('invalid value for "creator", creator cannot be nil.')
       end
 
+      if @pages.nil?
+        invalid_properties.push('invalid value for "pages", pages cannot be nil.')
+      end
+
       if @entries.nil?
         invalid_properties.push('invalid value for "entries", entries cannot be nil.')
       end
@@ -130,6 +134,7 @@ module BrowserupProxy
     def valid?
       return false if @version.nil?
       return false if @creator.nil?
+      return false if @pages.nil?
       return false if @entries.nil?
       true
     end

@@ -1,7 +1,7 @@
 =begin
-#BrowserUp Proxy
+#BrowserUp MitmProxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -15,12 +15,20 @@ require 'time'
 
 module BrowserupProxy
   class VerifyResult
+    # Type
+    attr_accessor :type
+
+    # Name
+    attr_accessor :name
+
     # Result True / False
     attr_accessor :result
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
+        :'type' => :'type',
+        :'name' => :'name',
         :'result' => :'result'
       }
     end
@@ -33,6 +41,8 @@ module BrowserupProxy
     # Attribute type mapping.
     def self.openapi_types
       {
+        :'type' => :'String',
+        :'name' => :'String',
         :'result' => :'Boolean'
       }
     end
@@ -58,6 +68,14 @@ module BrowserupProxy
         h[k.to_sym] = v
       }
 
+      if attributes.key?(:'type')
+        self.type = attributes[:'type']
+      end
+
+      if attributes.key?(:'name')
+        self.name = attributes[:'name']
+      end
+
       if attributes.key?(:'result')
         self.result = attributes[:'result']
       end
@@ -67,12 +85,27 @@ module BrowserupProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @type.nil?
+        invalid_properties.push('invalid value for "type", type cannot be nil.')
+      end
+
+      if @name.nil?
+        invalid_properties.push('invalid value for "name", name cannot be nil.')
+      end
+
+      if @result.nil?
+        invalid_properties.push('invalid value for "result", result cannot be nil.')
+      end
+
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @type.nil?
+      return false if @name.nil?
+      return false if @result.nil?
       true
     end
 
@@ -81,6 +114,8 @@ module BrowserupProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
+          type == o.type &&
+          name == o.name &&
           result == o.result
     end
 
@@ -93,7 +128,7 @@ module BrowserupProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [result].hash
+      [type, name, result].hash
     end
 
     # Builds the object from hash
