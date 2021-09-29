@@ -37,7 +37,7 @@ jobs:
         run: |-
           cat << EOF > ~/.gem/credentials
           ---
-          :rubygems_api_key: ${secrets.RUBY_RUBYGEMS_API_TOKEN}
+          :rubygems_api_key: ${{ secrets.RUBY_RUBYGEMS_API_TOKEN }}
           EOF
           chmod 0600 ~/.gem/credentials
       - name: Publish gem
