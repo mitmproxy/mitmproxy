@@ -1,0 +1,45 @@
+name: Publish Ruby Client
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ['2.3']
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        working-directory: clients/ruby
+        # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
+        # change this to (see https://github.com/ruby/setup-ruby#versioning):
+        # uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+        run:
+          bundle install
+      - name: Run tests
+        working-directory: clients/ruby
+        run: bundle exec rake
+      - name: Build gem
+        working-directory: clients/ruby
+        run: bundle exec gem build browserup_proxy_client.gemspec
+      - name: Prepare credentials
+        working-directory: clients/ruby
+        run: |-
+          cat << EOF > ~/.gem/credentials
+          ---
+          :rubygems_api_key: ${secrets.RUBY_RUBYGEMS_API_TOKEN}
+          EOF
+          chmod 0600 ~/.gem/credentials
+      - name: Publish gem
+        working-directory: clients/ruby
+        run: gem push browserup_proxy_client-1.1.gem
