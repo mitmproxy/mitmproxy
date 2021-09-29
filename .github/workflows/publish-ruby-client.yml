@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Ruby
-        working-directory: clients/ruby
         # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
         # change this to (see https://github.com/ruby/setup-ruby#versioning):
         # uses: ruby/setup-ruby@v1
@@ -24,8 +23,9 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
-        run:
-          bundle install
+      - name: Install dependencies
+        working-directory: clients/ruby
+        run: bundle install
       - name: Run tests
         working-directory: clients/ruby
         run: bundle exec rake
