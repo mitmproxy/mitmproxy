@@ -31,7 +31,7 @@ jobs:
         run: bundle exec rake
       - name: Build gem
         working-directory: clients/ruby
-        run: bundle exec gem build browserup_proxy_client.gemspec
+        run: bundle exec gem build browserup_mitmproxy_client.gemspec
       - name: Prepare credentials
         working-directory: clients/ruby
         run: |-
