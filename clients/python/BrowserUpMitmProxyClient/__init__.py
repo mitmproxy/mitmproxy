@@ -11,7 +11,7 @@
 """
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # import ApiClient
 from BrowserUpMitmProxyClient.api_client import ApiClient

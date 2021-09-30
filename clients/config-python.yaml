@@ -3,6 +3,8 @@ appDescription: "BrowserUp MitmProxy Client"
 infoEmail: developers@browserup.com
 infoName: BrowserUp, Inc.
 
+packageVersion: "1.0.1"
+
 packageUrl: https://github.com/browserup/mitmproxy
 
 

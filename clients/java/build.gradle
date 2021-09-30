@@ -1,6 +1,9 @@
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
 
 group = 'com.browserup'
 version = '1.0.0-SNAPSHOT'
@@ -97,6 +100,69 @@ if(hasProperty('target') && target == 'android') {
     }
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// To sign files before release add property: --project-prop "sign=true"
+signing {
+    if (project.hasProperty("sign")) {
+        sign configurations.archives
+    }
+}
+
+publishing {
+    publications {
+        MyPub(MavenPublication) {
+            groupId = 'com.browserup'
+            artifactId = 'browserup-mitmproxy-client'
+            version = "1.0.0-SNAPSHOT"
+            from components.java
+//
+            pom {
+                name = 'browserup-mitmproxy-client'
+                description = 'BrowserUp Proxy Client'
+                url = 'https://github.com/browserup/mitmproxy'
+                packaging = 'jar'
+
+                scm {
+                    connection = 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    developerConnection = 'scm:git:git@github.com:browserup/mitmproxy.git'
+                    url = 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
+                }
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'browserup'
+                        name = 'BrowserUp, Inc.'
+                        email = 'developers@browserup.com'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+                def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
+                url =  version.endsWith('SNAPSHOT')  ? snapshotRepository : releaseRepository
+            }
+        }
+    }
+}
+
 dependencies {
     implementation 'io.swagger:swagger-annotations:1.5.24'
     implementation "com.google.code.findbugs:jsr305:3.0.2"
@@ -104,6 +170,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'io.gsonfire:gson-fire:1.8.4'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.1'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     testImplementation 'junit:junit:4.13.1'

@@ -66,5 +66,7 @@ licenseName: MIT
 #    microprofileFramework
 #    Framework for microprofile. Possible values "kumuluzee"
 
+templateDir: java-overlay
+
 
 
