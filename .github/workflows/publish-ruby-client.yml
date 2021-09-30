@@ -42,4 +42,4 @@ jobs:
           chmod 0600 ~/.gem/credentials
       - name: Publish gem
         working-directory: clients/ruby
-        run: gem push browserup_proxy_client-1.1.gem
+        run: gem push browserup_mitmproxy_client-1.1.gem

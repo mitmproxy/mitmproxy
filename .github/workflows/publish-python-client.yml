@@ -29,7 +29,7 @@ jobs:
       - name: Test with pytest
         working-directory: clients/python
         run: |
-          pytest --cov=BrowserUpProxyClient
+          pytest --cov=BrowserUpMitmProxyClient
       - name: Build dist
         working-directory: clients/python
         run: |
