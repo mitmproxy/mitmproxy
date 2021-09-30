@@ -24,6 +24,7 @@ class TestBrowserupMitmProxyPythonClient(unittest.TestCase):
         )
         self.api_client = BrowserUpMitmProxyClient.ApiClient(self.configuration)
         self.api_instance = browser_up_proxy_api.BrowserUpProxyApi(self.api_client)
+        self.api_instance.reset_har_log()
 
     def tearDown(self):
         """Tear down test fixtures, if any."""
