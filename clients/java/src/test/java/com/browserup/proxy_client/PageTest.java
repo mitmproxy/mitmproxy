@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -13,7 +13,10 @@
 
 package com.browserup.proxy_client;
 
+import com.browserup.proxy_client.Counter;
+import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.PagePageTimings;
+import com.browserup.proxy_client.VerifyResult;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
@@ -23,6 +26,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -64,6 +69,30 @@ public class PageTest {
     @Test
     public void titleTest() {
         // TODO: test title
+    }
+
+    /**
+     * Test the property 'verifications'
+     */
+    @Test
+    public void verificationsTest() {
+        // TODO: test verifications
+    }
+
+    /**
+     * Test the property 'counters'
+     */
+    @Test
+    public void countersTest() {
+        // TODO: test counters
+    }
+
+    /**
+     * Test the property 'errors'
+     */
+    @Test
+    public void errorsTest() {
+        // TODO: test errors
     }
 
     /**
