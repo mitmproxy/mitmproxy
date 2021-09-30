@@ -1,4 +1,4 @@
-# BrowserupProxy::MatchCriteria
+# BrowserupMitmProxy::MatchCriteria
 
 ## Properties
 
@@ -22,9 +22,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::MatchCriteria.new(
+instance = BrowserupMitmProxy::MatchCriteria.new(
   url: null,
   page: null,
   status: null,

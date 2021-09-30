@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -23,7 +23,6 @@ import com.google.gson.stream.JsonWriter;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
-import java.math.BigDecimal;
 
 /**
  * Counter
@@ -32,14 +31,14 @@ import java.math.BigDecimal;
 public class Counter {
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
-  private BigDecimal value;
+  private Double value;
 
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
 
-  public Counter value(BigDecimal value) {
+  public Counter value(Double value) {
     
     this.value = value;
     return this;
@@ -49,15 +48,14 @@ public class Counter {
    * Value for the counter
    * @return value
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "Value for the counter")
+  @ApiModelProperty(required = true, value = "Value for the counter")
 
-  public BigDecimal getValue() {
+  public Double getValue() {
     return value;
   }
 
 
-  public void setValue(BigDecimal value) {
+  public void setValue(Double value) {
     this.value = value;
   }
 
@@ -72,8 +70,7 @@ public class Counter {
    * Name of Custom Counter value you are adding to the page under _counters
    * @return name
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "Name of Custom Counter value you are adding to the page under _counters")
+  @ApiModelProperty(required = true, value = "Name of Custom Counter value you are adding to the page under _counters")
 
   public String getName() {
     return name;

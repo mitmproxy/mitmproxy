@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.MatchCriteria
+# BrowserUpMitmProxyClient.MatchCriteria
 
 ## Properties
 

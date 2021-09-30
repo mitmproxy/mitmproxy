@@ -2,11 +2,11 @@ openapi: 3.0.3
 info:
   description: |
     ___
-    This is the REST API for controlling the BrowserUp Proxy.
-    The BrowserUp Proxy is a swiss army knife for automated testing that
+    This is the REST API for controlling the BrowserUp MitmProxy.
+    The BrowserUp MitmProxy is a swiss army knife for automated testing that
     captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
     ___
-  title: BrowserUp Proxy
+  title: BrowserUp MitmProxy
   version: 1.0.0
   x-logo:
     url: logo.png
@@ -19,8 +19,8 @@ servers:
       enum:
       - "8088"
 tags:
-- description: BrowserUp Proxy REST API
-  name: The BrowserUp Proxy API
+- description: BrowserUp MitmProxy REST API
+  name: The BrowserUp MitmProxy API
 paths:
   /har:
     get:
@@ -388,10 +388,22 @@ components:
     VerifyResult:
       example:
         result: true
+        name: name
+        type: type
       properties:
+        type:
+          description: Type
+          type: string
+        name:
+          description: Name
+          type: string
         result:
           description: Result True / False
           type: boolean
+      required:
+      - name
+      - result
+      - type
       type: object
     Error:
       example:
@@ -412,18 +424,22 @@ components:
       properties:
         value:
           description: Value for the counter
+          format: double
           type: number
         name:
           description: Name of Custom Counter value you are adding to the page under
             _counters
           type: string
+      required:
+      - name
+      - value
       type: object
     WebSocketMessage:
       example:
         data: data
-        time: 4.965218492984954
+        time: 5.025004791520295
         type: type
-        opcode: 1.1730742509559433
+        opcode: 4.965218492984954
       properties:
         type:
           type: string
@@ -459,7 +475,7 @@ components:
               httpVersion: httpVersion
               method: method
               headersSize: 5
-              bodySize: 5
+              bodySize: 2
               comment: comment
               queryString:
               - name: name
@@ -490,13 +506,13 @@ components:
             cache: '{}'
             _webSocketMessages:
             - data: data
-              time: 4.965218492984954
+              time: 5.025004791520295
               type: type
-              opcode: 1.1730742509559433
+              opcode: 4.965218492984954
             - data: data
-              time: 4.965218492984954
+              time: 5.025004791520295
               type: type
-              opcode: 1.1730742509559433
+              opcode: 4.965218492984954
             response:
               headers:
               - name: name
@@ -508,8 +524,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 3
-              bodySize: 2
+              headersSize: 2
+              bodySize: 4
               comment: comment
               cookies:
               - path: path
@@ -529,26 +545,26 @@ components:
                 secure: true
                 value: value
               content:
-                size: 7
+                size: 9
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 9
+                compression: 3
                 encoding: encoding
-              status: 2
+              status: 7
             serverIPAddress: serverIPAddress
             timings:
-              receive: -0.315314730164736
-              wait: -0.851058409014583
-              blocked: -0.8768486463222744
-              dns: -0.5854391970116064
+              receive: 0
+              wait: 0
+              blocked: 0
+              dns: 0
               comment: comment
-              send: -0.8975354299855842
-              ssl: -0.25422552263162346
-              connect: -0.26137180516141156
+              send: 0
+              ssl: 0
+              connect: 0
             connection: connection
             comment: comment
-            time: 0.14658129805029452
+            time: 0
             pageref: pageref
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             request:
@@ -562,7 +578,7 @@ components:
               httpVersion: httpVersion
               method: method
               headersSize: 5
-              bodySize: 5
+              bodySize: 2
               comment: comment
               queryString:
               - name: name
@@ -593,13 +609,13 @@ components:
             cache: '{}'
             _webSocketMessages:
             - data: data
-              time: 4.965218492984954
+              time: 5.025004791520295
               type: type
-              opcode: 1.1730742509559433
+              opcode: 4.965218492984954
             - data: data
-              time: 4.965218492984954
+              time: 5.025004791520295
               type: type
-              opcode: 1.1730742509559433
+              opcode: 4.965218492984954
             response:
               headers:
               - name: name
@@ -611,8 +627,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 3
-              bodySize: 2
+              headersSize: 2
+              bodySize: 4
               comment: comment
               cookies:
               - path: path
@@ -632,44 +648,78 @@ components:
                 secure: true
                 value: value
               content:
-                size: 7
+                size: 9
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 9
+                compression: 3
                 encoding: encoding
-              status: 2
+              status: 7
             serverIPAddress: serverIPAddress
             timings:
-              receive: -0.315314730164736
-              wait: -0.851058409014583
-              blocked: -0.8768486463222744
-              dns: -0.5854391970116064
+              receive: 0
+              wait: 0
+              blocked: 0
+              dns: 0
               comment: comment
-              send: -0.8975354299855842
-              ssl: -0.25422552263162346
-              connect: -0.26137180516141156
+              send: 0
+              ssl: 0
+              connect: 0
             connection: connection
             comment: comment
-            time: 0.14658129805029452
+            time: 0
             pageref: pageref
           pages:
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
-              onContentLoad: -0.9199171809538988
-              onLoad: -0.3972543816929597
+              onContentLoad: 0
+              onLoad: 0
               comment: comment
             comment: comment
             id: id
+            _verifications:
+            - result: true
+              name: name
+              type: type
+            - result: true
+              name: name
+              type: type
             title: title
+            _counters:
+            - name: name
+              value: 0.8008281904610115
+            - name: name
+              value: 0.8008281904610115
+            _errors:
+            - name: name
+              details: details
+            - name: name
+              details: details
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
-              onContentLoad: -0.9199171809538988
-              onLoad: -0.3972543816929597
+              onContentLoad: 0
+              onLoad: 0
               comment: comment
             comment: comment
             id: id
+            _verifications:
+            - result: true
+              name: name
+              type: type
+            - result: true
+              name: name
+              type: type
             title: title
+            _counters:
+            - name: name
+              value: 0.8008281904610115
+            - name: name
+              value: 0.8008281904610115
+            _errors:
+            - name: name
+              details: details
+            - name: name
+              details: details
           browser:
             name: name
             comment: comment
@@ -702,12 +752,29 @@ components:
       example:
         startedDateTime: 2000-01-23T04:56:07.000+00:00
         pageTimings:
-          onContentLoad: -0.9199171809538988
-          onLoad: -0.3972543816929597
+          onContentLoad: 0
+          onLoad: 0
           comment: comment
         comment: comment
         id: id
+        _verifications:
+        - result: true
+          name: name
+          type: type
+        - result: true
+          name: name
+          type: type
         title: title
+        _counters:
+        - name: name
+          value: 0.8008281904610115
+        - name: name
+          value: 0.8008281904610115
+        _errors:
+        - name: name
+          details: details
+        - name: name
+          details: details
       properties:
         startedDateTime:
           format: date-time
@@ -716,11 +783,27 @@ components:
           type: string
         title:
           type: string
+        _verifications:
+          default: []
+          items:
+            $ref: '#/components/schemas/VerifyResult'
+          type: array
+        _counters:
+          default: []
+          items:
+            $ref: '#/components/schemas/Counter'
+          type: array
+        _errors:
+          default: []
+          items:
+            $ref: '#/components/schemas/Error'
+          type: array
         pageTimings:
           $ref: '#/components/schemas/Page_pageTimings'
         comment:
           type: string
       required:
+      - _verifications
       - id
       - pageTimings
       - startedDateTime
@@ -743,7 +826,7 @@ components:
           httpVersion: httpVersion
           method: method
           headersSize: 5
-          bodySize: 5
+          bodySize: 2
           comment: comment
           queryString:
           - name: name
@@ -774,13 +857,13 @@ components:
         cache: '{}'
         _webSocketMessages:
         - data: data
-          time: 4.965218492984954
+          time: 5.025004791520295
           type: type
-          opcode: 1.1730742509559433
+          opcode: 4.965218492984954
         - data: data
-          time: 4.965218492984954
+          time: 5.025004791520295
           type: type
-          opcode: 1.1730742509559433
+          opcode: 4.965218492984954
         response:
           headers:
           - name: name
@@ -792,8 +875,8 @@ components:
           httpVersion: httpVersion
           redirectURL: redirectURL
           statusText: statusText
-          headersSize: 3
-          bodySize: 2
+          headersSize: 2
+          bodySize: 4
           comment: comment
           cookies:
           - path: path
@@ -813,26 +896,26 @@ components:
             secure: true
             value: value
           content:
-            size: 7
+            size: 9
             comment: comment
             mimeType: mimeType
             text: text
-            compression: 9
+            compression: 3
             encoding: encoding
-          status: 2
+          status: 7
         serverIPAddress: serverIPAddress
         timings:
-          receive: -0.315314730164736
-          wait: -0.851058409014583
-          blocked: -0.8768486463222744
-          dns: -0.5854391970116064
+          receive: 0
+          wait: 0
+          blocked: 0
+          dns: 0
           comment: comment
-          send: -0.8975354299855842
-          ssl: -0.25422552263162346
-          connect: -0.26137180516141156
+          send: 0
+          ssl: 0
+          connect: 0
         connection: connection
         comment: comment
-        time: 0.14658129805029452
+        time: 0
         pageref: pageref
       properties:
         pageref:
@@ -841,8 +924,9 @@ components:
           format: date-time
           type: string
         time:
+          format: int64
           minimum: 0
-          type: number
+          type: integer
         request:
           $ref: '#/components/schemas/Entry_request'
         response:
@@ -944,7 +1028,7 @@ components:
             httpVersion: httpVersion
             method: method
             headersSize: 5
-            bodySize: 5
+            bodySize: 2
             comment: comment
             queryString:
             - name: name
@@ -975,13 +1059,13 @@ components:
           cache: '{}'
           _webSocketMessages:
           - data: data
-            time: 4.965218492984954
+            time: 5.025004791520295
             type: type
-            opcode: 1.1730742509559433
+            opcode: 4.965218492984954
           - data: data
-            time: 4.965218492984954
+            time: 5.025004791520295
             type: type
-            opcode: 1.1730742509559433
+            opcode: 4.965218492984954
           response:
             headers:
             - name: name
@@ -993,8 +1077,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 3
-            bodySize: 2
+            headersSize: 2
+            bodySize: 4
             comment: comment
             cookies:
             - path: path
@@ -1014,26 +1098,26 @@ components:
               secure: true
               value: value
             content:
-              size: 7
+              size: 9
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 9
+              compression: 3
               encoding: encoding
-            status: 2
+            status: 7
           serverIPAddress: serverIPAddress
           timings:
-            receive: -0.315314730164736
-            wait: -0.851058409014583
-            blocked: -0.8768486463222744
-            dns: -0.5854391970116064
+            receive: 0
+            wait: 0
+            blocked: 0
+            dns: 0
             comment: comment
-            send: -0.8975354299855842
-            ssl: -0.25422552263162346
-            connect: -0.26137180516141156
+            send: 0
+            ssl: 0
+            connect: 0
           connection: connection
           comment: comment
-          time: 0.14658129805029452
+          time: 0
           pageref: pageref
         - startedDateTime: 2000-01-23T04:56:07.000+00:00
           request:
@@ -1047,7 +1131,7 @@ components:
             httpVersion: httpVersion
             method: method
             headersSize: 5
-            bodySize: 5
+            bodySize: 2
             comment: comment
             queryString:
             - name: name
@@ -1078,13 +1162,13 @@ components:
           cache: '{}'
           _webSocketMessages:
           - data: data
-            time: 4.965218492984954
+            time: 5.025004791520295
             type: type
-            opcode: 1.1730742509559433
+            opcode: 4.965218492984954
           - data: data
-            time: 4.965218492984954
+            time: 5.025004791520295
             type: type
-            opcode: 1.1730742509559433
+            opcode: 4.965218492984954
           response:
             headers:
             - name: name
@@ -1096,8 +1180,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 3
-            bodySize: 2
+            headersSize: 2
+            bodySize: 4
             comment: comment
             cookies:
             - path: path
@@ -1117,44 +1201,78 @@ components:
               secure: true
               value: value
             content:
-              size: 7
+              size: 9
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 9
+              compression: 3
               encoding: encoding
-            status: 2
+            status: 7
           serverIPAddress: serverIPAddress
           timings:
-            receive: -0.315314730164736
-            wait: -0.851058409014583
-            blocked: -0.8768486463222744
-            dns: -0.5854391970116064
+            receive: 0
+            wait: 0
+            blocked: 0
+            dns: 0
             comment: comment
-            send: -0.8975354299855842
-            ssl: -0.25422552263162346
-            connect: -0.26137180516141156
+            send: 0
+            ssl: 0
+            connect: 0
           connection: connection
           comment: comment
-          time: 0.14658129805029452
+          time: 0
           pageref: pageref
         pages:
         - startedDateTime: 2000-01-23T04:56:07.000+00:00
           pageTimings:
-            onContentLoad: -0.9199171809538988
-            onLoad: -0.3972543816929597
+            onContentLoad: 0
+            onLoad: 0
             comment: comment
           comment: comment
           id: id
+          _verifications:
+          - result: true
+            name: name
+            type: type
+          - result: true
+            name: name
+            type: type
           title: title
+          _counters:
+          - name: name
+            value: 0.8008281904610115
+          - name: name
+            value: 0.8008281904610115
+          _errors:
+          - name: name
+            details: details
+          - name: name
+            details: details
         - startedDateTime: 2000-01-23T04:56:07.000+00:00
           pageTimings:
-            onContentLoad: -0.9199171809538988
-            onLoad: -0.3972543816929597
+            onContentLoad: 0
+            onLoad: 0
             comment: comment
           comment: comment
           id: id
+          _verifications:
+          - result: true
+            name: name
+            type: type
+          - result: true
+            name: name
+            type: type
           title: title
+          _counters:
+          - name: name
+            value: 0.8008281904610115
+          - name: name
+            value: 0.8008281904610115
+          _errors:
+          - name: name
+            details: details
+          - name: name
+            details: details
         browser:
           name: name
           comment: comment
@@ -1172,6 +1290,7 @@ components:
         browser:
           $ref: '#/components/schemas/Har_log_creator'
         pages:
+          default: []
           items:
             $ref: '#/components/schemas/Page'
           type: array
@@ -1184,22 +1303,30 @@ components:
       required:
       - creator
       - entries
+      - pages
       - version
       type: object
     Page_pageTimings:
       example:
-        onContentLoad: -0.9199171809538988
-        onLoad: -0.3972543816929597
+        onContentLoad: 0
+        onLoad: 0
         comment: comment
       properties:
         onContentLoad:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         onLoad:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         comment:
           type: string
+      required:
+      - onContentLoad
+      - onLoad
       type: object
     Entry_request_cookies:
       example:
@@ -1260,7 +1387,7 @@ components:
         httpVersion: httpVersion
         method: method
         headersSize: 5
-        bodySize: 5
+        bodySize: 2
         comment: comment
         queryString:
         - name: name
@@ -1350,11 +1477,11 @@ components:
       type: object
     Entry_response_content:
       example:
-        size: 7
+        size: 9
         comment: comment
         mimeType: mimeType
         text: text
-        compression: 9
+        compression: 3
         encoding: encoding
       properties:
         size:
@@ -1385,8 +1512,8 @@ components:
         httpVersion: httpVersion
         redirectURL: redirectURL
         statusText: statusText
-        headersSize: 3
-        bodySize: 2
+        headersSize: 2
+        bodySize: 4
         comment: comment
         cookies:
         - path: path
@@ -1406,13 +1533,13 @@ components:
           secure: true
           value: value
         content:
-          size: 7
+          size: 9
           comment: comment
           mimeType: mimeType
           text: text
-          compression: 9
+          compression: 3
           encoding: encoding
-        status: 2
+        status: 7
       properties:
         status:
           type: integer
@@ -1451,41 +1578,59 @@ components:
       type: object
     Entry_timings:
       example:
-        receive: -0.315314730164736
-        wait: -0.851058409014583
-        blocked: -0.8768486463222744
-        dns: -0.5854391970116064
+        receive: 0
+        wait: 0
+        blocked: 0
+        dns: 0
         comment: comment
-        send: -0.8975354299855842
-        ssl: -0.25422552263162346
-        connect: -0.26137180516141156
+        send: 0
+        ssl: 0
+        connect: 0
       properties:
         dns:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         connect:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         blocked:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         send:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         wait:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         receive:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         ssl:
+          default: -1
+          format: int64
           minimum: -1
-          type: number
+          type: integer
         comment:
           type: string
       required:
+      - blocked
+      - connect
+      - dns
       - receive
       - send
+      - ssl
       - wait
       type: object
 

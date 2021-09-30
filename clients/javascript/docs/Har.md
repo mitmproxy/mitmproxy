@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.Har
+# BrowserUpMitmProxyClient.Har
 
 ## Properties
 

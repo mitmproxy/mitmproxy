@@ -1,9 +1,11 @@
-# BrowserUpProxyClient.VerifyResult
+# BrowserUpMitmProxyClient.VerifyResult
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**result** | **Boolean** | Result True / False | [optional] 
+**type** | **String** | Type | 
+**name** | **String** | Name | 
+**result** | **Boolean** | Result True / False | 
 
 

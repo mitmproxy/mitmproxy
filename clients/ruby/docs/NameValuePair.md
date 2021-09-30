@@ -1,4 +1,4 @@
-# BrowserupProxy::NameValuePair
+# BrowserupMitmProxy::NameValuePair
 
 ## Properties
 
@@ -10,9 +10,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::NameValuePair.new(
+instance = BrowserupMitmProxy::NameValuePair.new(
   value: null,
   name: null
 )

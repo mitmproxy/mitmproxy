@@ -1,4 +1,4 @@
-# BrowserupProxy::EntryResponseContent
+# BrowserupMitmProxy::EntryResponseContent
 
 ## Properties
 
@@ -14,9 +14,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::EntryResponseContent.new(
+instance = BrowserupMitmProxy::EntryResponseContent.new(
   size: null,
   compression: null,
   mime_type: null,

@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.WebSocketMessage
+# BrowserUpMitmProxyClient.WebSocketMessage
 
 ## Properties
 

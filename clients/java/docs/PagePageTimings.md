@@ -7,8 +7,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**onContentLoad** | **BigDecimal** |  |  [optional]
-**onLoad** | **BigDecimal** |  |  [optional]
+**onContentLoad** | **Long** |  | 
+**onLoad** | **Long** |  | 
 **comment** | **String** |  |  [optional]
 
 

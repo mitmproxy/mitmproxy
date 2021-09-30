@@ -1,4 +1,4 @@
-# BrowserupProxy::EntryRequestCookies
+# BrowserupMitmProxy::EntryRequestCookies
 
 ## Properties
 
@@ -16,9 +16,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::EntryRequestCookies.new(
+instance = BrowserupMitmProxy::EntryRequestCookies.new(
   name: null,
   value: null,
   path: null,

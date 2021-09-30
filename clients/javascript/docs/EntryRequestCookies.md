@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.EntryRequestCookies
+# BrowserUpMitmProxyClient.EntryRequestCookies
 
 ## Properties
 

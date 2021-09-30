@@ -1,4 +1,4 @@
-# BrowserupProxy::Counter
+# BrowserupMitmProxy::Counter
 
 ## Properties
 
@@ -10,9 +10,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::Counter.new(
+instance = BrowserupMitmProxy::Counter.new(
   value: null,
   name: null
 )

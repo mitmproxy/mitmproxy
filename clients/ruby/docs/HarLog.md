@@ -1,4 +1,4 @@
-# BrowserupProxy::HarLog
+# BrowserupMitmProxy::HarLog
 
 ## Properties
 
@@ -14,9 +14,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::HarLog.new(
+instance = BrowserupMitmProxy::HarLog.new(
   version: null,
   creator: null,
   browser: null,

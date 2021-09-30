@@ -1,4 +1,4 @@
-# BrowserupProxy::EntryRequestQueryString
+# BrowserupMitmProxy::EntryRequestQueryString
 
 ## Properties
 
@@ -11,9 +11,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::EntryRequestQueryString.new(
+instance = BrowserupMitmProxy::EntryRequestQueryString.new(
   name: null,
   value: null,
   comment: null

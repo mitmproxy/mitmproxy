@@ -1,4 +1,4 @@
-# BrowserupProxy::Page
+# BrowserupMitmProxy::Page
 
 ## Properties
 
@@ -16,9 +16,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::Page.new(
+instance = BrowserupMitmProxy::Page.new(
   started_date_time: null,
   id: null,
   title: null,

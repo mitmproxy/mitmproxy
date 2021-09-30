@@ -1,9 +1,9 @@
 {
-  "name": "browserup-proxy-client",
+  "name": "browserup-mitmproxy-client",
   "version": "1.0.0",
   "description": "REST client for the BrowserUp Proxy",
   "license": "MIT",
-  "main": "dist/BrowserUpProxyClient/index.js",
+  "main": "dist/BrowserUpMitmProxyClient/index.js",
   "scripts": {
     "build": "babel src -d dist",
     "prepare": "npm run build",

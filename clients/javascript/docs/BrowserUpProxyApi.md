@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.BrowserUpProxyApi
+# BrowserUpMitmProxyClient.BrowserUpProxyApi
 
 All URIs are relative to *http://localhost:8088*
 
@@ -28,10 +28,10 @@ Add Custom Counter to the captured traffic har
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let counter = new BrowserUpProxyClient.Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
+let counter = new BrowserUpMitmProxyClient.Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 apiInstance.addCounter(counter, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -73,10 +73,10 @@ Add Custom Error to the captured traffic har
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let error = new BrowserUpProxyClient.Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
+let error = new BrowserUpMitmProxyClient.Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
 apiInstance.addError(error, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -118,9 +118,9 @@ Get the current HAR.
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 apiInstance.getHarLog((error, data, response) => {
   if (error) {
     console.error(error);
@@ -159,9 +159,9 @@ Get the healthcheck
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 apiInstance.healthcheck((error, data, response) => {
   if (error) {
     console.error(error);
@@ -200,9 +200,9 @@ Starts a fresh HAR Page (Step) in the current active HAR to group requests.
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 let title = "title_example"; // String | The unique title for this har page/step.
 apiInstance.newPage(title, (error, data, response) => {
   if (error) {
@@ -245,9 +245,9 @@ Starts a fresh HAR capture session.
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 apiInstance.resetHarLog((error, data, response) => {
   if (error) {
     console.error(error);
@@ -286,11 +286,11 @@ Verify no matching items are present in the captured traffic
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 let name = "name_example"; // String | The unique name for this verification operation
-let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifyNotPresent(name, matchCriteria, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -333,11 +333,11 @@ Verify at least one matching item is present in the captured traffic
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 let name = "name_example"; // String | The unique name for this verification operation
-let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifyPresent(name, matchCriteria, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -380,12 +380,12 @@ Verify each traffic item matching the criteria meets is below SLA time
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 let time = 56; // Number | The time used for comparison
 let name = "name_example"; // String | The unique name for this verification operation
-let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifySLA(time, name, matchCriteria, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -429,12 +429,12 @@ Verify matching items in the captured traffic meet the size criteria
 ### Example
 
 ```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
 let size = 56; // Number | The size used for comparison, in kilobytes
 let name = "name_example"; // String | The unique name for this verification operation
-let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifySize(size, name, matchCriteria, (error, data, response) => {
   if (error) {
     console.error(error);

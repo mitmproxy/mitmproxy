@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -48,7 +48,7 @@ public class HarLog {
 
   public static final String SERIALIZED_NAME_PAGES = "pages";
   @SerializedName(SERIALIZED_NAME_PAGES)
-  private List<Page> pages = null;
+  private List<Page> pages = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_ENTRIES = "entries";
   @SerializedName(SERIALIZED_NAME_ENTRIES)
@@ -133,9 +133,6 @@ public class HarLog {
   }
 
   public HarLog addPagesItem(Page pagesItem) {
-    if (this.pages == null) {
-      this.pages = new ArrayList<>();
-    }
     this.pages.add(pagesItem);
     return this;
   }
@@ -144,8 +141,7 @@ public class HarLog {
    * Get pages
    * @return pages
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "")
 
   public List<Page> getPages() {
     return pages;

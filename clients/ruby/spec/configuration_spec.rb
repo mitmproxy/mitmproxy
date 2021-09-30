@@ -12,14 +12,14 @@ OpenAPI Generator version: 5.2.0
 
 require 'spec_helper'
 
-describe BrowserupProxy::Configuration do
-  let(:config) { BrowserupProxy::Configuration.default }
+describe BrowserupMitmProxy::Configuration do
+  let(:config) { BrowserupMitmProxy::Configuration.default }
 
   before(:each) do
     # uncomment below to setup host and base_path
     # require 'URI'
     # uri = URI.parse("http://localhost:8088")
-    # BrowserupProxy.configure do |c|
+    # BrowserupMitmProxy.configure do |c|
     #   c.host = uri.host
     #   c.base_path = uri.path
     # end

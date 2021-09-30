@@ -1,4 +1,4 @@
-# BrowserupProxy::EntryTimings
+# BrowserupMitmProxy::EntryTimings
 
 ## Properties
 
@@ -16,9 +16,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::EntryTimings.new(
+instance = BrowserupMitmProxy::EntryTimings.new(
   dns: null,
   connect: null,
   blocked: null,

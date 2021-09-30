@@ -1,4 +1,4 @@
-# BrowserupProxy::PagePageTimings
+# BrowserupMitmProxy::PagePageTimings
 
 ## Properties
 
@@ -11,9 +11,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::PagePageTimings.new(
+instance = BrowserupMitmProxy::PagePageTimings.new(
   on_content_load: null,
   on_load: null,
   comment: null

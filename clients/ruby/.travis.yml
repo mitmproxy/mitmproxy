@@ -7,5 +7,5 @@ rvm:
 script:
   - bundle install --path vendor/bundle
   - bundle exec rspec
-  - gem build browserup_proxy_client.gemspec
-  - gem install ./browserup_proxy_client-1.1.gem
+  - gem build browserup_mitmproxy_client.gemspec
+  - gem install ./browserup_mitmproxy_client-1.1.gem

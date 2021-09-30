@@ -1,9 +1,9 @@
-# browserup-proxy-client
+# browserup-mitmproxy-client
 
-BrowserUpProxyClient - JavaScript client for browserup-proxy-client
+BrowserUpMitmProxyClient - JavaScript client for browserup-mitmproxy-client
 ___
-This is the REST API for controlling the BrowserUp Proxy.
-The BrowserUp Proxy is a swiss army knife for automated testing that
+This is the REST API for controlling the BrowserUp MitmProxy.
+The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 
@@ -24,7 +24,7 @@ To publish the library as a [npm](https://www.npmjs.com/), please follow the pro
 Then install it via:
 
 ```shell
-npm install browserup-proxy-client --save
+npm install browserup-mitmproxy-client --save
 ```
 
 Finally, you need to build the module:
@@ -47,7 +47,7 @@ Next, [link](https://docs.npmjs.com/cli/link) it globally in npm with the follow
 npm link
 ```
 
-To use the link you just defined in your project, switch to the directory you want to use your browserup-proxy-client from, and run:
+To use the link you just defined in your project, switch to the directory you want to use your browserup-mitmproxy-client from, and run:
 
 ```shell
 npm link /path/to/<JAVASCRIPT_CLIENT_DIR>
@@ -103,11 +103,11 @@ module: {
 Please follow the [installation](#installation) instruction and execute the following JS code:
 
 ```javascript
-var BrowserUpProxyClient = require('browserup-proxy-client');
+var BrowserUpMitmProxyClient = require('browserup-mitmproxy-client');
 
 
-var api = new BrowserUpProxyClient.BrowserUpProxyApi()
-var counter = new BrowserUpProxyClient.Counter(); // {Counter} Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+var api = new BrowserUpMitmProxyClient.BrowserUpProxyApi()
+var counter = new BrowserUpMitmProxyClient.Counter(); // {Counter} Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 var callback = function(error, data, response) {
   if (error) {
     console.error(error);
@@ -125,39 +125,39 @@ All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**newPage**](docs/BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
-*BrowserUpProxyClient.BrowserUpProxyApi* | [**verifySize**](docs/BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**newPage**](docs/BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
+*BrowserUpMitmProxyClient.BrowserUpProxyApi* | [**verifySize**](docs/BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
 
 ## Documentation for Models
 
- - [BrowserUpProxyClient.Counter](docs/Counter.md)
- - [BrowserUpProxyClient.Entry](docs/Entry.md)
- - [BrowserUpProxyClient.EntryRequest](docs/EntryRequest.md)
- - [BrowserUpProxyClient.EntryRequestCookies](docs/EntryRequestCookies.md)
- - [BrowserUpProxyClient.EntryRequestQueryString](docs/EntryRequestQueryString.md)
- - [BrowserUpProxyClient.EntryResponse](docs/EntryResponse.md)
- - [BrowserUpProxyClient.EntryResponseContent](docs/EntryResponseContent.md)
- - [BrowserUpProxyClient.EntryTimings](docs/EntryTimings.md)
- - [BrowserUpProxyClient.Error](docs/Error.md)
- - [BrowserUpProxyClient.Har](docs/Har.md)
- - [BrowserUpProxyClient.HarLog](docs/HarLog.md)
- - [BrowserUpProxyClient.HarLogCreator](docs/HarLogCreator.md)
- - [BrowserUpProxyClient.Header](docs/Header.md)
- - [BrowserUpProxyClient.MatchCriteria](docs/MatchCriteria.md)
- - [BrowserUpProxyClient.NameValuePair](docs/NameValuePair.md)
- - [BrowserUpProxyClient.Page](docs/Page.md)
- - [BrowserUpProxyClient.PagePageTimings](docs/PagePageTimings.md)
- - [BrowserUpProxyClient.VerifyResult](docs/VerifyResult.md)
- - [BrowserUpProxyClient.WebSocketMessage](docs/WebSocketMessage.md)
+ - [BrowserUpMitmProxyClient.Counter](docs/Counter.md)
+ - [BrowserUpMitmProxyClient.Entry](docs/Entry.md)
+ - [BrowserUpMitmProxyClient.EntryRequest](docs/EntryRequest.md)
+ - [BrowserUpMitmProxyClient.EntryRequestCookies](docs/EntryRequestCookies.md)
+ - [BrowserUpMitmProxyClient.EntryRequestQueryString](docs/EntryRequestQueryString.md)
+ - [BrowserUpMitmProxyClient.EntryResponse](docs/EntryResponse.md)
+ - [BrowserUpMitmProxyClient.EntryResponseContent](docs/EntryResponseContent.md)
+ - [BrowserUpMitmProxyClient.EntryTimings](docs/EntryTimings.md)
+ - [BrowserUpMitmProxyClient.Error](docs/Error.md)
+ - [BrowserUpMitmProxyClient.Har](docs/Har.md)
+ - [BrowserUpMitmProxyClient.HarLog](docs/HarLog.md)
+ - [BrowserUpMitmProxyClient.HarLogCreator](docs/HarLogCreator.md)
+ - [BrowserUpMitmProxyClient.Header](docs/Header.md)
+ - [BrowserUpMitmProxyClient.MatchCriteria](docs/MatchCriteria.md)
+ - [BrowserUpMitmProxyClient.NameValuePair](docs/NameValuePair.md)
+ - [BrowserUpMitmProxyClient.Page](docs/Page.md)
+ - [BrowserUpMitmProxyClient.PagePageTimings](docs/PagePageTimings.md)
+ - [BrowserUpMitmProxyClient.VerifyResult](docs/VerifyResult.md)
+ - [BrowserUpMitmProxyClient.WebSocketMessage](docs/WebSocketMessage.md)
 
 
 ## Documentation for Authorization

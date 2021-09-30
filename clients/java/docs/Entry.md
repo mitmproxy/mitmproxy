@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **pageref** | **String** |  |  [optional]
 **startedDateTime** | **OffsetDateTime** |  | 
-**time** | **BigDecimal** |  | 
+**time** | **Long** |  | 
 **request** | [**EntryRequest**](EntryRequest.md) |  | 
 **response** | [**EntryResponse**](EntryResponse.md) |  | 
 **cache** | [**Object**](Object.md) |  | 

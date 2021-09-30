@@ -1,11 +1,11 @@
-# BrowserUpProxyClient.PagePageTimings
+# BrowserUpMitmProxyClient.PagePageTimings
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**onContentLoad** | **Number** |  | [optional] 
-**onLoad** | **Number** |  | [optional] 
+**onContentLoad** | **Number** |  | [default to -1]
+**onLoad** | **Number** |  | [default to -1]
 **comment** | **String** |  | [optional] 
 
 

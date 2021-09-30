@@ -1,4 +1,4 @@
-# BrowserUpProxyClient.Error
+# BrowserUpMitmProxyClient.Error
 
 ## Properties
 

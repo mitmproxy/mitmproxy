@@ -1,4 +1,4 @@
-# BrowserupProxy::WebSocketMessage
+# BrowserupMitmProxy::WebSocketMessage
 
 ## Properties
 
@@ -12,9 +12,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::WebSocketMessage.new(
+instance = BrowserupMitmProxy::WebSocketMessage.new(
   type: null,
   opcode: null,
   data: null,

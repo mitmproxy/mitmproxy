@@ -1,4 +1,4 @@
-# BrowserupProxy::Error
+# BrowserupMitmProxy::Error
 
 ## Properties
 
@@ -10,9 +10,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::Error.new(
+instance = BrowserupMitmProxy::Error.new(
   name: null,
   details: null
 )

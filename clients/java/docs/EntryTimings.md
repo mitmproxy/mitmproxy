@@ -7,13 +7,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**dns** | **BigDecimal** |  |  [optional]
-**connect** | **BigDecimal** |  |  [optional]
-**blocked** | **BigDecimal** |  |  [optional]
-**send** | **BigDecimal** |  | 
-**wait** | **BigDecimal** |  | 
-**receive** | **BigDecimal** |  | 
-**ssl** | **BigDecimal** |  |  [optional]
+**dns** | **Long** |  | 
+**connect** | **Long** |  | 
+**blocked** | **Long** |  | 
+**send** | **Long** |  | 
+**wait** | **Long** |  | 
+**receive** | **Long** |  | 
+**ssl** | **Long** |  | 
 **comment** | **String** |  |  [optional]
 
 

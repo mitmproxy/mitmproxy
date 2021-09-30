@@ -1,11 +1,11 @@
 # browserup-mitmproxy-client
 
-BrowserUp Proxy
+BrowserUp MitmProxy
 - API version: 1.0.0
 
 ___
 This is the REST API for controlling the BrowserUp MitmProxy.
-The BrowserUp Proxy is a swiss army knife for automated testing that
+The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 

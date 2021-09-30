@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -23,7 +23,6 @@ import com.google.gson.stream.JsonWriter;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
-import java.math.BigDecimal;
 
 /**
  * EntryTimings
@@ -32,38 +31,38 @@ import java.math.BigDecimal;
 public class EntryTimings {
   public static final String SERIALIZED_NAME_DNS = "dns";
   @SerializedName(SERIALIZED_NAME_DNS)
-  private BigDecimal dns;
+  private Long dns = -1l;
 
   public static final String SERIALIZED_NAME_CONNECT = "connect";
   @SerializedName(SERIALIZED_NAME_CONNECT)
-  private BigDecimal connect;
+  private Long connect = -1l;
 
   public static final String SERIALIZED_NAME_BLOCKED = "blocked";
   @SerializedName(SERIALIZED_NAME_BLOCKED)
-  private BigDecimal blocked;
+  private Long blocked = -1l;
 
   public static final String SERIALIZED_NAME_SEND = "send";
   @SerializedName(SERIALIZED_NAME_SEND)
-  private BigDecimal send;
+  private Long send = -1l;
 
   public static final String SERIALIZED_NAME_WAIT = "wait";
   @SerializedName(SERIALIZED_NAME_WAIT)
-  private BigDecimal wait;
+  private Long wait = -1l;
 
   public static final String SERIALIZED_NAME_RECEIVE = "receive";
   @SerializedName(SERIALIZED_NAME_RECEIVE)
-  private BigDecimal receive;
+  private Long receive = -1l;
 
   public static final String SERIALIZED_NAME_SSL = "ssl";
   @SerializedName(SERIALIZED_NAME_SSL)
-  private BigDecimal ssl;
+  private Long ssl = -1l;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
   private String comment;
 
 
-  public EntryTimings dns(BigDecimal dns) {
+  public EntryTimings dns(Long dns) {
     
     this.dns = dns;
     return this;
@@ -74,20 +73,19 @@ public class EntryTimings {
    * minimum: -1
    * @return dns
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getDns() {
+  public Long getDns() {
     return dns;
   }
 
 
-  public void setDns(BigDecimal dns) {
+  public void setDns(Long dns) {
     this.dns = dns;
   }
 
 
-  public EntryTimings connect(BigDecimal connect) {
+  public EntryTimings connect(Long connect) {
     
     this.connect = connect;
     return this;
@@ -98,20 +96,19 @@ public class EntryTimings {
    * minimum: -1
    * @return connect
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getConnect() {
+  public Long getConnect() {
     return connect;
   }
 
 
-  public void setConnect(BigDecimal connect) {
+  public void setConnect(Long connect) {
     this.connect = connect;
   }
 
 
-  public EntryTimings blocked(BigDecimal blocked) {
+  public EntryTimings blocked(Long blocked) {
     
     this.blocked = blocked;
     return this;
@@ -122,20 +119,19 @@ public class EntryTimings {
    * minimum: -1
    * @return blocked
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getBlocked() {
+  public Long getBlocked() {
     return blocked;
   }
 
 
-  public void setBlocked(BigDecimal blocked) {
+  public void setBlocked(Long blocked) {
     this.blocked = blocked;
   }
 
 
-  public EntryTimings send(BigDecimal send) {
+  public EntryTimings send(Long send) {
     
     this.send = send;
     return this;
@@ -148,17 +144,17 @@ public class EntryTimings {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getSend() {
+  public Long getSend() {
     return send;
   }
 
 
-  public void setSend(BigDecimal send) {
+  public void setSend(Long send) {
     this.send = send;
   }
 
 
-  public EntryTimings wait(BigDecimal wait) {
+  public EntryTimings wait(Long wait) {
     
     this.wait = wait;
     return this;
@@ -171,17 +167,17 @@ public class EntryTimings {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getWait() {
+  public Long getWait() {
     return wait;
   }
 
 
-  public void setWait(BigDecimal wait) {
+  public void setWait(Long wait) {
     this.wait = wait;
   }
 
 
-  public EntryTimings receive(BigDecimal receive) {
+  public EntryTimings receive(Long receive) {
     
     this.receive = receive;
     return this;
@@ -194,17 +190,17 @@ public class EntryTimings {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getReceive() {
+  public Long getReceive() {
     return receive;
   }
 
 
-  public void setReceive(BigDecimal receive) {
+  public void setReceive(Long receive) {
     this.receive = receive;
   }
 
 
-  public EntryTimings ssl(BigDecimal ssl) {
+  public EntryTimings ssl(Long ssl) {
     
     this.ssl = ssl;
     return this;
@@ -215,15 +211,14 @@ public class EntryTimings {
    * minimum: -1
    * @return ssl
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getSsl() {
+  public Long getSsl() {
     return ssl;
   }
 
 
-  public void setSsl(BigDecimal ssl) {
+  public void setSsl(Long ssl) {
     this.ssl = ssl;
   }
 

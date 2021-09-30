@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -29,9 +29,61 @@ import java.io.IOException;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class VerifyResult {
+  public static final String SERIALIZED_NAME_TYPE = "type";
+  @SerializedName(SERIALIZED_NAME_TYPE)
+  private String type;
+
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private String name;
+
   public static final String SERIALIZED_NAME_RESULT = "result";
   @SerializedName(SERIALIZED_NAME_RESULT)
   private Boolean result;
+
+
+  public VerifyResult type(String type) {
+    
+    this.type = type;
+    return this;
+  }
+
+   /**
+   * Type
+   * @return type
+  **/
+  @ApiModelProperty(required = true, value = "Type")
+
+  public String getType() {
+    return type;
+  }
+
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+
+  public VerifyResult name(String name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name
+   * @return name
+  **/
+  @ApiModelProperty(required = true, value = "Name")
+
+  public String getName() {
+    return name;
+  }
+
+
+  public void setName(String name) {
+    this.name = name;
+  }
 
 
   public VerifyResult result(Boolean result) {
@@ -44,8 +96,7 @@ public class VerifyResult {
    * Result True / False
    * @return result
   **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "Result True / False")
+  @ApiModelProperty(required = true, value = "Result True / False")
 
   public Boolean getResult() {
     return result;
@@ -66,18 +117,22 @@ public class VerifyResult {
       return false;
     }
     VerifyResult verifyResult = (VerifyResult) o;
-    return Objects.equals(this.result, verifyResult.result);
+    return Objects.equals(this.type, verifyResult.type) &&
+        Objects.equals(this.name, verifyResult.name) &&
+        Objects.equals(this.result, verifyResult.result);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(result);
+    return Objects.hash(type, name, result);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class VerifyResult {\n");
+    sb.append("    type: ").append(toIndentedString(type)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("}");
     return sb.toString();

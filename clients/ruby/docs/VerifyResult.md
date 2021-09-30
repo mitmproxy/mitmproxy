@@ -1,4 +1,4 @@
-# BrowserupProxy::VerifyResult
+# BrowserupMitmProxy::VerifyResult
 
 ## Properties
 
@@ -11,9 +11,9 @@
 ## Example
 
 ```ruby
-require 'browserup_proxy_client'
+require 'browserup_mitmproxy_client'
 
-instance = BrowserupProxy::VerifyResult.new(
+instance = BrowserupMitmProxy::VerifyResult.new(
   type: null,
   name: null,
   result: null

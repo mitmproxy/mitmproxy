@@ -1,6 +1,6 @@
 /*
- * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * BrowserUp MitmProxy
+ * ___ This is the REST API for controlling the BrowserUp MitmProxy. The BrowserUp MitmProxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -27,7 +27,6 @@ import com.google.gson.stream.JsonWriter;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +46,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
-  private BigDecimal time;
+  private Long time;
 
   public static final String SERIALIZED_NAME_REQUEST = "request";
   @SerializedName(SERIALIZED_NAME_REQUEST)
@@ -127,7 +126,7 @@ public class Entry {
   }
 
 
-  public Entry time(BigDecimal time) {
+  public Entry time(Long time) {
     
     this.time = time;
     return this;
@@ -140,12 +139,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public BigDecimal getTime() {
+  public Long getTime() {
     return time;
   }
 
 
-  public void setTime(BigDecimal time) {
+  public void setTime(Long time) {
     this.time = time;
   }
 
