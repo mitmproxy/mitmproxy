@@ -1,0 +1,16 @@
+{
+  "name": "javascript",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "keywords": [],
+  "scripts": {
+    "test": "mocha --recursive"
+  },
+  "author": "",
+  "license": "Apache",
+  "dependencies": {
+    "browserup-mitmproxy-client": "1.0.0",
+    "mocha": "^8.0.1"
+  }
+}

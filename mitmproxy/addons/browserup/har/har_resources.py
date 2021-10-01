@@ -29,6 +29,7 @@ class HealthCheckResource:
                 description: OK means all is well.
         """
         resp.body = 'OK'
+        resp.content_type = falcon.MEDIA_TEXT
         resp.status = falcon.HTTP_200
 
 
