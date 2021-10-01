@@ -1,0 +1,23 @@
+name: Publish JS Client
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: Npm install
+        working-directory: clients/javascript
+        run: npm install
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.JS_NPM_TOKEN }}
+          package: ./clients/javascript/package.json
