@@ -156,7 +156,7 @@ class Dumper:
         else:
             url = flow.request.url
 
-        if ctx.options.flow_detail <= 1:
+        if ctx.options.flow_detail < 1:
             # We need to truncate before applying styles, so we just focus on the URL.
             terminal_width_limit = max(shutil.get_terminal_size()[0] - 25, 50)
             if len(url) > terminal_width_limit:
