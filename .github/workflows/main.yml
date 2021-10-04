@@ -257,4 +257,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.BINARY_PUBLISH_AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.BINARY_PUBLISH_AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'us-east-2'
-          SOURCE_DIR: 'release/dist'
+          SOURCE_DIR: './release/dist'
