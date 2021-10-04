@@ -98,7 +98,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         *Args:*
          - *fields:* (optional) list of ``(name, value)`` header byte tuples,
            e.g. ``[(b"Host", b"example.com")]``. All names and values must be bytes.
-         - *\*\*headers:* Additional headers to set. Will overwrite existing values from `fields`.
+         - *\\*\\*headers:* Additional headers to set. Will overwrite existing values from `fields`.
            For convenience, underscores in header names will be transformed to dashes -
            this behaviour does not extend to other methods.
 
@@ -372,7 +372,13 @@ class Message(serializable.Serializable):
             # Let's remove it!
             del self.headers["content-encoding"]
             self.raw_content = value
-        self.headers["content-length"] = str(len(self.raw_content))
+
+        if "transfer-encoding" in self.headers:
+            # https://httpwg.org/specs/rfc7230.html#header.content-length
+            # don't set content-length if a transfer-encoding is provided
+            pass
+        else:
+            self.headers["content-length"] = str(len(self.raw_content))
 
     def get_content(self, strict: bool = True) -> Optional[bytes]:
         """
@@ -408,13 +414,13 @@ class Message(serializable.Serializable):
             if "json" in self.headers.get("content-type", ""):
                 enc = "utf8"
         if not enc:
-            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content)
+            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
             if meta_charset:
                 enc = meta_charset.group(1).decode("ascii", "ignore")
         if not enc:
             if "text/css" in self.headers.get("content-type", ""):
                 # @charset rule must be the very first thing.
-                css_charset = re.match(rb"""@charset "([^"]+)";""", content)
+                css_charset = re.match(rb"""@charset "([^"]+)";""", content, re.IGNORECASE)
                 if css_charset:
                     enc = css_charset.group(1).decode("ascii", "ignore")
         if not enc:

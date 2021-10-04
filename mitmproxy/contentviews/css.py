@@ -58,7 +58,7 @@ class ViewCSS(base.View):
         return "CSS", base.format_text(beautified)
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
-        return float(content_type == "text/css")
+        return float(bool(data) and content_type == "text/css")
 
 
 if __name__ == "__main__":  # pragma: no cover

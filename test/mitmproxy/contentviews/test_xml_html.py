@@ -38,8 +38,9 @@ def test_format_xml(filename, tdata):
 
 def test_render_priority():
     v = xml_html.ViewXmlHtml()
-    assert v.render_priority(b"", content_type="text/xml")
-    assert v.render_priority(b"", content_type="text/xml")
-    assert v.render_priority(b"", content_type="text/html")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="text/xml")
+    assert v.render_priority(b"data", content_type="text/xml")
+    assert v.render_priority(b"data", content_type="text/html")
+    assert not v.render_priority(b"data", content_type="text/plain")
+    assert not v.render_priority(b"", content_type="text/xml")
     assert v.render_priority(b"<html/>")

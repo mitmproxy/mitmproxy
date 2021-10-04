@@ -48,6 +48,6 @@ def test_view_msgpack_doesnt_crash(data):
 
 def test_render_priority():
     v = msgpack.ViewMsgPack()
-    assert v.render_priority(b"", content_type="application/msgpack")
-    assert v.render_priority(b"", content_type="application/x-msgpack")
-    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"data", content_type="application/msgpack")
+    assert v.render_priority(b"data", content_type="application/x-msgpack")
+    assert not v.render_priority(b"data", content_type="text/plain")

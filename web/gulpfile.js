@@ -6,6 +6,7 @@ const cleanCSS = require('gulp-clean-css');
 const notify = require("gulp-notify");
 const compilePeg = require("gulp-peg");
 const plumber = require("gulp-plumber");
+const replace = require('gulp-replace');
 const sourcemaps = require('gulp-sourcemaps');
 const through = require("through2");
 
@@ -42,7 +43,7 @@ function styles_app_dev() {
 
 
 function esbuild(dev) {
-    return gulp.src('src/js/app.jsx').pipe(
+    return gulp.src('src/js/app.tsx').pipe(
         gulpEsbuild({
             outfile: 'app.js',
             sourcemap: true,
@@ -63,7 +64,7 @@ function scripts_prod() {
     return esbuild(false);
 }
 
-const copy_src = ["src/images/**", "src/fonts/fontawesome-webfont.*"];
+const copy_src = ["src/images/**", "src/fonts/fontawesome-webfont.*", "!**/*.psd"];
 
 function copy() {
     return gulp.src(copy_src, {base: "src/"})
@@ -77,12 +78,15 @@ function templates() {
         .pipe(gulp.dest("../mitmproxy/tools/web"));
 }
 
-const peg_src = "src/js/filt/filt.peg";
+const peg_src = "src/js/filt/*.peg";
 
 function peg() {
     return gulp.src(peg_src, {base: "src/"})
         .pipe(plumber(handleError))
         .pipe(compilePeg())
+        .pipe(replace('module.exports = ',
+            'import * as flowutils from "../flow/utils"\n' +
+            'export default '))
         .pipe(gulp.dest("src/"));
 }
 

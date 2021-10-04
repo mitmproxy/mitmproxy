@@ -1,4 +1,5 @@
-module.exports = (function() {
+import * as flowutils from "../flow/utils"
+export default (function() {
   "use strict";
 
   /*
@@ -1858,8 +1859,6 @@ module.exports = (function() {
     }
 
 
-    var flowutils = require("../flow/utils.js");
-
     function or(first, second) {
         // Add explicit function names to ease debugging.
         function orFilter() {
@@ -2027,9 +2026,9 @@ module.exports = (function() {
     function source(regex){
         regex = new RegExp(regex, "i");
         function sourceFilter(flow){
-            return (!!flow.client_conn.address)
+            return (!!flow.client_conn.peername)
                    &&
-                   regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
+                   regex.test(flow.client_conn.peername[0] + ":" + flow.client_conn.peername[1]);
         }
         sourceFilter.desc = "source address matches " + regex;
         return sourceFilter;

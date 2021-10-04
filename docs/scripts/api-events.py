@@ -8,7 +8,7 @@ from typing import List, Type
 import mitmproxy.addons.next_layer  # noqa
 from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer
-from mitmproxy.proxy.layers import http, tcp, tls, websocket
+from mitmproxy.proxy.layers import http, modes, tcp, tls, websocket
 
 known = set()
 
@@ -134,6 +134,14 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             websocket.WebsocketStartHook,
             websocket.WebsocketMessageHook,
             websocket.WebsocketEndHook,
+        ]
+    )
+
+    category(
+        "SOCKSv5",
+        "",
+        [
+            modes.Socks5AuthHook,
         ]
     )
 

@@ -28,7 +28,6 @@ class WebMaster(master.Master):
         self.events.sig_refresh.connect(self._sig_events_refresh)
 
         self.options.changed.connect(self._sig_options_update)
-        self.options.changed.connect(self._sig_settings_update)
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
@@ -91,13 +90,6 @@ class WebMaster(master.Master):
             resource="options",
             cmd="update",
             data=options_dict
-        )
-
-    def _sig_settings_update(self, options, updated):
-        app.ClientConnection.broadcast(
-            resource="settings",
-            cmd="update",
-            data={k: getattr(options, k) for k in updated}
         )
 
     def run(self):  # pragma: no cover

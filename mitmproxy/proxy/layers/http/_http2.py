@@ -37,8 +37,8 @@ class Http2Connection(HttpConnection):
     h2_conf_defaults = dict(
         header_encoding=False,
         validate_outbound_headers=False,
-        validate_inbound_headers=False,  # changing these two to True is required to pass h2spec
-        normalize_inbound_headers=False,  # changing these two to True is required to pass h2spec
+        validate_inbound_headers=True,
+        normalize_inbound_headers=False,  # changing this to True is required to pass h2spec
         normalize_outbound_headers=False,
     )
     h2_conn: BufferedH2Connection
@@ -139,7 +139,7 @@ class Http2Connection(HttpConnection):
             try:
                 try:
                     events = self.h2_conn.receive_data(event.data)
-                except ValueError as e:  # pragma: no cover
+                except (ValueError, IndexError) as e:  # pragma: no cover
                     # this should never raise a ValueError, but we triggered one while fuzzing:
                     # https://github.com/python-hyper/hyper-h2/issues/1231
                     # this stays here as defense-in-depth.

@@ -1,0 +1,32 @@
+Expr
+  = s:StringLiteral ws+ rest:Expr { return [s, ...rest]; }
+  / s:StringLiteral { return [s]; }
+  / ws* { return ""; }
+
+StringLiteral "string"
+  = '"' chars:DoubleStringChar* '"' { return chars.join(""); }
+  / "'" chars:SingleStringChar* "'" { return chars.join(""); }
+  / !cc chars:UnquotedStringChar+ { return chars.join(""); }
+  / '"' chars:DoubleStringChar* { return chars.join(""); }
+  / "'" chars:SingleStringChar* { return chars.join(""); }
+
+DoubleStringChar
+  = !["\\] char:. { return char; }
+  / "\\" char:EscapeSequence { return char; }
+
+SingleStringChar
+  = !['\\] char:. { return char; }
+  / "\\" char:EscapeSequence { return char; }
+
+UnquotedStringChar
+  = !ws char:. { return char; }
+
+EscapeSequence
+  = ['"\\]
+  / "n" { return "\n"; }
+  / "r" { return "\r"; }
+  / "t" { return "\t"; }
+
+ws "whitespace" = [ \t\n\r]
+cc "control character" = [|&!()~"]
+__ "optional whitespace" = ws*

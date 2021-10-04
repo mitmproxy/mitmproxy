@@ -34,7 +34,7 @@ def test_save_settings(tmpdir):
 
 
 def test_save_flows(tmpdir):
-    flows = [tflow.tflow(req=True, resp=None), tflow.tflow(req=True, resp=True)]
+    flows = [tflow.tflow(resp=False), tflow.tflow(resp=True)]
     static_viewer.save_flows(tmpdir, flows)
     assert tmpdir.join('flows.json').check(file=1)
     assert tmpdir.join('flows.json').read() == json.dumps([flow_to_json(f) for f in flows])
@@ -42,7 +42,7 @@ def test_save_flows(tmpdir):
 
 @mock.patch('mitmproxy.ctx.log')
 def test_save_flows_content(ctx, tmpdir):
-    flows = [tflow.tflow(req=True, resp=None), tflow.tflow(req=True, resp=True)]
+    flows = [tflow.tflow(resp=False), tflow.tflow(resp=True)]
     with mock.patch('time.time', mock.Mock(side_effect=[1, 2, 2] * 4)):
         static_viewer.save_flows_content(tmpdir, flows)
     flows_path = tmpdir.join('flows')

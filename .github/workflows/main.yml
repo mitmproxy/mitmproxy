@@ -57,6 +57,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: ubuntu-latest
+            py: '3.10.0-rc - 3.10'
           - os: windows-latest
             py: 3.9
           - os: macos-latest
@@ -137,17 +139,20 @@ jobs:
         with:
           persist-credentials: false
       - run: git rev-parse --abbrev-ref HEAD
-      - uses: actions/setup-node@v1
-      - id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/cache@v1
+      - uses: actions/setup-node@v2
         with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          node-version: '14'
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - working-directory: ./web
-        run: yarn
+        run: npm ci
       - working-directory: ./web
         run: npm test
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27

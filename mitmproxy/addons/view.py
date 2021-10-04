@@ -9,6 +9,7 @@ The View:
   removed from the store.
 """
 import collections
+import re
 import typing
 
 import blinker
@@ -449,6 +450,9 @@ class View(collections.abc.Sequence):
             return [i for i in self._store.values() if i.marked]
         elif flow_spec == "@unmarked":
             return [i for i in self._store.values() if not i.marked]
+        elif re.match(r"@[0-9a-f\-,]{36,}", flow_spec):
+            ids = flow_spec[1:].split(",")
+            return [i for i in self._store.values() if i.id in ids]
         else:
             filt = flowfilter.parse(flow_spec)
             if not filt:
@@ -560,7 +564,7 @@ class View(collections.abc.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
-    def request(self, f):
+    def requestheaders(self, f):
         self.add([f])
 
     def error(self, f):

@@ -394,8 +394,8 @@ def build_pyinstaller(be: BuildEnviron) -> None:  # pragma: no cover
 def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "20.12.0"
-    IB_SETUP_SHA256 = "657f4785c7d70f140468435b99e79ced813e7e051106e7525e0c819efffb40d3"
+    IB_VERSION = "21.6.0"
+    IB_SETUP_SHA256 = "2bc9f9945cb727ad176aa31fa2fa5a8c57a975bad879c169b93e312af9d05814"
     IB_DIR = be.release_dir / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(fr"C:\Program Files\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe")

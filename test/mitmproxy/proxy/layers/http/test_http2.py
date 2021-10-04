@@ -352,6 +352,7 @@ def test_http2_client_aborts(tctx, stream, when, how):
         assert "peer closed connection" in flow().error.msg
 
 
+@pytest.mark.xfail(reason="inbound validation turned on to protect against request smuggling")
 def test_no_normalization(tctx):
     """Test that we don't normalize headers when we just pass them through."""
 
@@ -727,3 +728,51 @@ def test_early_server_data(tctx):
     assert [type(x) for x in decode_frames(server2())] == [
         hyperframe.frame.HeadersFrame,
     ]
+
+
+def test_request_smuggling_cl(tctx):
+    playbook, cff = start_h2_client(tctx)
+    playbook.hooks = False
+    err = Placeholder(bytes)
+
+    headers = (
+        (b':method', b'POST'),
+        (b':scheme', b'http'),
+        (b':path', b'/'),
+        (b':authority', b'example.com'),
+        (b'content-length', b'3')
+    )
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(headers).serialize())
+            >> DataReceived(tctx.client,
+                            cff.build_data_frame(b"abcPOST / HTTP/1.1 ...", flags=["END_STREAM"]).serialize())
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
+    )
+    assert b"InvalidBodyLengthError" in err()
+
+
+def test_request_smuggling_te(tctx):
+    playbook, cff = start_h2_client(tctx)
+    playbook.hooks = False
+    err = Placeholder(bytes)
+
+    headers = (
+        (b':method', b'POST'),
+        (b':scheme', b'http'),
+        (b':path', b'/'),
+        (b':authority', b'example.com'),
+        (b'transfer-encoding', b'chunked')
+    )
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(headers, flags=["END_STREAM"]).serialize())
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
+    )
+    assert b"Connection-specific header field present" in err()

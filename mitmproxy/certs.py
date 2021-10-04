@@ -89,11 +89,13 @@ class Cert(serializable.Serializable):
 
     @property
     def notbefore(self) -> datetime.datetime:
-        return self._cert.not_valid_before
+        # x509.Certificate.not_valid_before is a naive datetime in UTC
+        return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
 
     @property
     def notafter(self) -> datetime.datetime:
-        return self._cert.not_valid_after
+        # x509.Certificate.not_valid_after is a naive datetime in UTC
+        return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
 
     def has_expired(self) -> bool:
         return datetime.datetime.utcnow() > self._cert.not_valid_after

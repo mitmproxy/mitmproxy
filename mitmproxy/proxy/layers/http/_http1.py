@@ -145,8 +145,14 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             if should_make_pipe(self.request, self.response):
                 yield from self.make_pipe()
                 return
+            try:
+                read_until_eof_semantics = http1.expected_http_body_size(self.request, self.response) == -1
+            except ValueError:
+                # this may raise only now (and not earlier) because an addon set invalid headers,
+                # in which case it's not really clear what we are supposed to do.
+                read_until_eof_semantics = False
             connection_done = (
-                http1.expected_http_body_size(self.request, self.response) == -1
+                read_until_eof_semantics
                 or http1.connection_close(self.request.http_version, self.request.headers)
                 or http1.connection_close(self.response.http_version, self.response.headers)
                 # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
@@ -212,17 +218,7 @@ class Http1Server(Http1Connection):
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not self.response and event.code != status_codes.NO_RESPONSE:
-                resp = http.Response.make(
-                    event.code,
-                    format_error(event.code, event.message),
-                    http.Headers(
-                        Server=version.MITMPROXY,
-                        Connection="close",
-                        Content_Type="text/html",
-                    )
-                )
-                raw = http1.assemble_response(resp)
-                yield commands.SendData(self.conn, raw)
+                yield commands.SendData(self.conn, make_error_response(event.code, event.message))
             if self.conn.state & ConnectionState.CAN_WRITE:
                 yield commands.CloseConnection(self.conn)
         else:
@@ -237,8 +233,14 @@ class Http1Server(Http1Connection):
                     self.request = http1.read_request_head(request_head)
                     expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
-                    yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
+                    yield commands.SendData(self.conn, make_error_response(400, str(e)))
                     yield commands.CloseConnection(self.conn)
+                    if self.request:
+                        # we have headers that we can show in the ui
+                        yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, False))
+                        yield ReceiveHttp(RequestProtocolError(self.stream_id, str(e), 400))
+                    else:
+                        yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     self.state = self.done
                     return
                 yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, expected_body_size == 0))
@@ -376,8 +378,8 @@ def make_body_reader(expected_size: Optional[int]) -> TBodyReader:
 def make_error_response(
     status_code: int,
     message: str = "",
-) -> http.Response:
-    return http.Response.make(
+) -> bytes:
+    resp = http.Response.make(
         status_code,
         format_error(status_code, message),
         http.Headers(
@@ -386,6 +388,7 @@ def make_error_response(
             Content_Type="text/html",
         )
     )
+    return http1.assemble_response(resp)
 
 
 __all__ = [

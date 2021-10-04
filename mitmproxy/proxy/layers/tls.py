@@ -100,7 +100,14 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 @dataclass
 class ClientHelloData:
     context: context.Context
+    """The context object for this connection."""
+    client_hello: net_tls.ClientHello
+    """The entire parsed TLS ClientHello."""
     establish_server_tls_first: bool = False
+    """
+    If set to `True`, pause this handshake and establish TLS with an upstream server first.
+    This makes it possible to process the server certificate when generating an interception certificate.
+    """
 
 
 @dataclass
@@ -206,8 +213,12 @@ class _TLSLayer(tunnel.TunnelLayer):
                 err = last_err[2]
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
-            else:  # pragma: no cover
-                # TODO: Add test case once we find one.
+            elif last_err == ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert protocol version'):
+                err = (
+                    f"The remote server and mitmproxy cannot agree on a TLS version to use. "
+                    f"You may need to adjust mitmproxy's tls_version_server_min option."
+                )
+            else:
                 err = f"OpenSSL {e!r}"
             self.conn.error = err
             return False, err
@@ -386,7 +397,7 @@ class ClientTLSLayer(_TLSLayer):
 
         self.conn.sni = client_hello.sni
         self.conn.alpn_offers = client_hello.alpn_protocols
-        tls_clienthello = ClientHelloData(self.context)
+        tls_clienthello = ClientHelloData(self.context, client_hello)
         yield TlsClienthelloHook(tls_clienthello)
 
         if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
@@ -421,7 +432,12 @@ class ClientTLSLayer(_TLSLayer):
         level: Literal["warn", "info"] = "warn"
         if err.startswith("Cannot parse ClientHello"):
             pass
-        elif "unknown ca" in err or "bad certificate" in err:
+        elif "('SSL routines', 'tls_early_post_process_client_hello', 'unsupported protocol')" in err:
+            err = (
+                f"Client and mitmproxy cannot agree on a TLS version to use. "
+                f"You may need to adjust mitmproxy's tls_version_client_min option."
+            )
+        elif "unknown ca" in err or "bad certificate" in err or "certificate unknown" in err:
             err = f"The client does not trust the proxy's certificate for {dest} ({err})"
         elif err == "connection closed":
             err = (

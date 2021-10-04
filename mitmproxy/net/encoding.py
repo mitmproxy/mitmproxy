@@ -52,6 +52,7 @@ def decode(
     """
     if encoded is None:
         return None
+    encoding = encoding.lower()
 
     global _cache
     cached = (
@@ -67,7 +68,7 @@ def decode(
             decoded = custom_decode[encoding](encoded)
         except KeyError:
             decoded = codecs.decode(encoded, encoding, errors)  # type: ignore
-        if encoding in ("gzip", "deflate", "br", "zstd"):
+        if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return decoded
     except TypeError:
@@ -108,6 +109,7 @@ def encode(decoded: Union[None, str, bytes], encoding, errors='strict') -> Union
     """
     if decoded is None:
         return None
+    encoding = encoding.lower()
 
     global _cache
     cached = (
@@ -123,7 +125,7 @@ def encode(decoded: Union[None, str, bytes], encoding, errors='strict') -> Union
             encoded = custom_encode[encoding](decoded)
         except KeyError:
             encoded = codecs.encode(decoded, encoding, errors)  # type: ignore
-        if encoding in ("gzip", "deflate", "br", "zstd"):
+        if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return encoded
     except TypeError:
@@ -216,7 +218,7 @@ custom_decode = {
     "identity": identity,
     "gzip": decode_gzip,
     "deflate": decode_deflate,
-    "deflateRaw": decode_deflate,
+    "deflateraw": decode_deflate,
     "br": decode_brotli,
     "zstd": decode_zstd,
 }
@@ -225,7 +227,7 @@ custom_encode = {
     "identity": identity,
     "gzip": encode_gzip,
     "deflate": encode_deflate,
-    "deflateRaw": encode_deflate,
+    "deflateraw": encode_deflate,
     "br": encode_brotli,
     "zstd": encode_zstd,
 }

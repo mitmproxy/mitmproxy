@@ -52,36 +52,127 @@ def expected_http_body_size(
         Raises:
             ValueError, if the content length header is invalid
     """
-    # Determine response size according to
-    # http://tools.ietf.org/html/rfc7230#section-3.3
+    # Determine response size according to http://tools.ietf.org/html/rfc7230#section-3.3, which is inlined below.
     if not response:
         headers = request.headers
-        if request.method.upper() == "CONNECT":
-            return 0
     else:
         headers = response.headers
+
+        #    1.  Any response to a HEAD request and any response with a 1xx
+        #        (Informational), 204 (No Content), or 304 (Not Modified) status
+        #        code is always terminated by the first empty line after the
+        #        header fields, regardless of the header fields present in the
+        #        message, and thus cannot contain a message body.
         if request.method.upper() == "HEAD":
             return 0
         if 100 <= response.status_code <= 199:
             return 0
-        if response.status_code == 200 and request.method.upper() == "CONNECT":
-            return 0
         if response.status_code in (204, 304):
             return 0
 
+        #    2.  Any 2xx (Successful) response to a CONNECT request implies that
+        #        the connection will become a tunnel immediately after the empty
+        #        line that concludes the header fields.  A client MUST ignore any
+        #        Content-Length or Transfer-Encoding header fields received in
+        #        such a message.
+        if 200 <= response.status_code <= 299 and request.method.upper() == "CONNECT":
+            return 0
+
+    #    3.  If a Transfer-Encoding header field is present and the chunked
+    #        transfer coding (Section 4.1) is the final encoding, the message
+    #        body length is determined by reading and decoding the chunked
+    #        data until the transfer coding indicates the data is complete.
+    #
+    #        If a Transfer-Encoding header field is present in a response and
+    #        the chunked transfer coding is not the final encoding, the
+    #        message body length is determined by reading the connection until
+    #        it is closed by the server.  If a Transfer-Encoding header field
+    #        is present in a request and the chunked transfer coding is not
+    #        the final encoding, the message body length cannot be determined
+    #        reliably; the server MUST respond with the 400 (Bad Request)
+    #        status code and then close the connection.
+    #
+    #        If a message is received with both a Transfer-Encoding and a
+    #        Content-Length header field, the Transfer-Encoding overrides the
+    #        Content-Length.  Such a message might indicate an attempt to
+    #        perform request smuggling (Section 9.5) or response splitting
+    #        (Section 9.4) and ought to be handled as an error.  A sender MUST
+    #        remove the received Content-Length field prior to forwarding such
+    #        a message downstream.
+    #
+    if "transfer-encoding" in headers:
+        if "content-length" in headers:
+            raise ValueError("Received both a Transfer-Encoding and a Content-Length header, "
+                             "refusing as recommended in RFC 7230 Section 3.3.3. "
+                             "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details.")
+
+        te: str = headers["transfer-encoding"]
+        if not te.isascii():
+            # guard against .lower() transforming non-ascii to ascii
+            raise ValueError(f"Invalid transfer encoding: {te!r}")
+        te = te.lower().strip("\t ")
+        te = re.sub(r"[\t ]*,[\t ]*", ",", te)
+        if te in (
+            "chunked",
+            "compress,chunked",
+            "deflate,chunked",
+            "gzip,chunked",
+        ):
+            return None
+        elif te in (
+            "compress",
+            "deflate",
+            "gzip",
+            "identity",
+        ):
+            if response:
+                return -1
+            else:
+                raise ValueError(f"Invalid request transfer encoding, message body cannot be determined reliably.")
+        else:
+            raise ValueError(f"Unknown transfer encoding: {headers['transfer-encoding']!r}")
+
+    #    4.  If a message is received without Transfer-Encoding and with
+    #        either multiple Content-Length header fields having differing
+    #        field-values or a single Content-Length header field having an
+    #        invalid value, then the message framing is invalid and the
+    #        recipient MUST treat it as an unrecoverable error.  If this is a
+    #        request message, the server MUST respond with a 400 (Bad Request)
+    #        status code and then close the connection.  If this is a response
+    #        message received by a proxy, the proxy MUST close the connection
+    #        to the server, discard the received response, and send a 502 (Bad
+    #        Gateway) response to the client.  If this is a response message
+    #        received by a user agent, the user agent MUST close the
+    #        connection to the server and discard the received response.
+    #
+    #    5.  If a valid Content-Length header field is present without
+    #        Transfer-Encoding, its decimal value defines the expected message
+    #        body length in octets.  If the sender closes the connection or
+    #        the recipient times out before the indicated number of octets are
+    #        received, the recipient MUST consider the message to be
+    #        incomplete and close the connection.
     if "content-length" in headers:
         sizes = headers.get_all("content-length")
         different_content_length_headers = any(x != sizes[0] for x in sizes)
         if different_content_length_headers:
-            raise ValueError("Conflicting Content Length Headers")
-        size = int(sizes[0])
+            raise ValueError(f"Conflicting Content-Length headers: {sizes!r}")
+        try:
+            size = int(sizes[0])
+        except ValueError:
+            raise ValueError(f"Invalid Content-Length header: {sizes[0]!r}")
         if size < 0:
-            raise ValueError("Negative Content Length")
+            raise ValueError(f"Negative Content-Length header: {sizes[0]!r}")
         return size
-    if "chunked" in headers.get("transfer-encoding", "").lower():
-        return None
+
+    #    6.  If this is a request message and none of the above are true, then
+    #        the message body length is zero (no message body is present).
     if not response:
         return 0
+
+    #    7.  Otherwise, this is a response message without a declared message
+    #        body length, so the message body length is determined by the
+    #        number of octets received prior to the server closing the
+    #        connection.
     return -1
 
 
