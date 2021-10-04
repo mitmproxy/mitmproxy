@@ -1,10 +1,6 @@
 name: Publish Python Client
 
-on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+on: release
 
 jobs:
   build:
