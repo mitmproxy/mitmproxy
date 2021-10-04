@@ -120,6 +120,15 @@ jobs:
         with:
           name: binaries.${{ matrix.platform }}
           path: release/dist
+      - uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.BINARY_PUBLISH_AWS_S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BINARY_PUBLISH_AWS_SECRET_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BINARY_PUBLISH_AWS_ACCESS_KEY }}
+          AWS_REGION: 'us-east-2'
+          SOURCE_DIR: 'release/dist'
 
   test-web-ui:
     runs-on: ubuntu-latest
