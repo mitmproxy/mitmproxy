@@ -103,7 +103,7 @@ setup(
             "pdoc>=4.0.0",
             "pyinstaller==4.5.1",
             "pytest-asyncio>=0.10.0,<0.16,!=0.14",
-            "pytest-cov>=2.7.1,<3",
+            "pytest-cov>=3.0,<3.1",
             "pytest-timeout>=1.3.3,<2",
             "pytest-xdist>=2.1.0,<3",
             "pytest>=6.1.0,<7",
