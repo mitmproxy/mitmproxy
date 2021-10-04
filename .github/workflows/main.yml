@@ -39,18 +39,19 @@ jobs:
           python-version: '3.9'
       - run: pip install tox
       - run: tox -e mypy
-  individual-coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - run: pip install tox
-      - run: tox -e individual_coverage
+
+#  individual-coverage:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          persist-credentials: false
+#          fetch-depth: 0
+#      - uses: actions/setup-python@v2
+#        with:
+#          python-version: '3.9'
+#      - run: pip install tox
+#      - run: tox -e individual_coverage
   test:
     strategy:
       fail-fast: false
