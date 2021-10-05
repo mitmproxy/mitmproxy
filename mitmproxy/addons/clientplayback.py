@@ -175,7 +175,7 @@ class ClientPlayback:
             except exceptions.FlowReadException as e:
                 raise exceptions.OptionsError(str(e))
             self.start_replay(flows)
-        
+
         if "client_replay_concurrency" in updated:
             if ctx.options.client_replay_concurrency not in [-1, 1]:
                 raise exceptions.OptionsError("Valid client_replay_concurrency values are -1 and 1")

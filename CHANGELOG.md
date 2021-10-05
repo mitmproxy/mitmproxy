@@ -8,6 +8,7 @@
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously (@mhils)
+* Add `client_replay_concurrency` option, which allows more than one client replay request to be in-flight at a time. (@rbdixon)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
