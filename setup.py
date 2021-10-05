@@ -109,7 +109,8 @@ setup(
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
-            "wheel>=0.36.2,<0.38"
+            "wheel>=0.36.2,<0.38",
+            "coverage==5.5", # workaround issue with import errors introduced in 5.6b1/6.0
         ],
     }
 )
