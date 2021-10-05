@@ -245,6 +245,7 @@ jobs:
       - run: ./release/deploy.py
 
   deployBinaries:
+    if: github.event_name == 'release' && github.event.action == 'created'
     needs:
       - test
       - test-web-ui
