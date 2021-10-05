@@ -706,10 +706,15 @@ def test_upstream_proxy(tctx, redirect, scheme):
 
     assert playbook
 
-    if redirect == "change-proxy":
-        assert server2().address == ("other-proxy", 1234)
+    if redirect == "change-destination":
+        assert flow().server_conn.address[0] == "other-server"
     else:
-        assert server2().address == ("proxy", 8080)
+        assert flow().server_conn.address[0] == "example.com"
+
+    if redirect == "change-proxy":
+        assert server2().address == flow().server_conn.via.address == ("other-proxy", 1234)
+    else:
+        assert server2().address == flow().server_conn.via.address == ("proxy", 8080)
 
     assert (
             playbook
