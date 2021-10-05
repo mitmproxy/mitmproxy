@@ -165,7 +165,7 @@ class ClientPlayback:
         )
         loader.add_option(
             "client_replay_concurrency", int, 1,
-            "Concurrency limit on in-flight client replay requests. Valid values are 1 and -1 (no limit)"
+            "Concurrency limit on in-flight client replay requests. Currently the only valid values are 1 and -1 (no limit)."
         )
 
     def configure(self, updated):
@@ -178,7 +178,7 @@ class ClientPlayback:
 
         if "client_replay_concurrency" in updated:
             if ctx.options.client_replay_concurrency not in [-1, 1]:
-                raise exceptions.OptionsError("Valid client_replay_concurrency values are -1 and 1")
+                raise exceptions.OptionsError("Currently the only valid client_replay_concurrency values are -1 and 1.")
 
     @command.command("replay.client.count")
     def count(self) -> int:
