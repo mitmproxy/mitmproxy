@@ -2,6 +2,7 @@ import contextlib
 import datetime
 import ipaddress
 import os
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -342,9 +343,10 @@ class CertStore:
     def from_files(cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None) -> "CertStore":
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
-        ca = Cert.from_pem(raw)
         dh = cls.load_dhparam(dhparam_file)
-        if raw.count(b"BEGIN CERTIFICATE") != 1:
+        certs = re.split(rb"(?=-----BEGIN CERTIFICATE-----)", raw)
+        ca = Cert.from_pem(certs[1])
+        if len(certs) > 2:
             chain_file: Optional[Path] = ca_file
         else:
             chain_file = None

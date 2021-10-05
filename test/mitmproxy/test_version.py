@@ -19,7 +19,9 @@ def test_version(capsys):
 def test_get_version():
     version.VERSION = "3.0.0rc2"
 
-    with mock.patch('subprocess.check_output') as m:
+    with mock.patch('subprocess.check_output') as m, mock.patch('subprocess.run') as m2:
+        m2.return_value = True
+
         m.return_value = b"tag-0-cafecafe"
         assert version.get_dev_version() == "3.0.0rc2"
 
