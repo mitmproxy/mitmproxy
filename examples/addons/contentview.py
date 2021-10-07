@@ -14,7 +14,15 @@ from mitmproxy import http
 class ViewSwapCase(contentviews.View):
     name = "swapcase"
 
-    def __call__(self, data, **metadata) -> contentviews.TViewResult:
+    def __call__(
+        self,
+        data: bytes,
+        *,
+        content_type: Optional[str] = None,
+        flow: Optional[flow.Flow] = None,
+        http_message: Optional[http.Message] = None,
+        **unknown_metadata,
+    ) -> contentviews.TViewResult:
         return "case-swapped text", contentviews.format_text(data.swapcase())
 
     def render_priority(
