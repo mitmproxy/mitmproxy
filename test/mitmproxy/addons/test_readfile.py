@@ -45,6 +45,7 @@ class TestReadFile:
             tctx.configure(rf, readfile_filter="~q")
             with pytest.raises(Exception, match="Invalid filter expression"):
                 tctx.configure(rf, readfile_filter="~~")
+            tctx.configure(rf, readfile_filter="")
 
     @pytest.mark.asyncio
     async def test_read(self, tmpdir, data, corrupt_data):

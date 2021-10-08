@@ -13,9 +13,11 @@ class TestParsing:
         assert c.getvalue()
 
     def test_parse_err(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Empty filter"):
+            flowfilter.parse("")
+        with pytest.raises(ValueError, match="Invalid filter"):
             flowfilter.parse("~b")
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid filter"):
             flowfilter.parse("~h [")
 
     def test_simple(self):
@@ -569,6 +571,8 @@ class TestMatchingDummyFlow:
         e = self.err()
         f = self.flow()
         f.server_conn = tflow.tserver_conn()
+
+        assert self.q("~all", f)
 
         assert not self.q("~a", f)
 

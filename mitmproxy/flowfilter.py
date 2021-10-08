@@ -35,7 +35,7 @@
 import functools
 import re
 import sys
-from typing import Callable, ClassVar, Optional, Sequence, Type, Protocol, Union
+from typing import ClassVar, Sequence, Type, Protocol, Union
 import pyparsing as pp
 
 from mitmproxy import flow, http, tcp
@@ -598,7 +598,7 @@ class TFilter(Protocol):
     pattern: str
 
     def __call__(self, f: flow.Flow) -> bool:
-        ...
+        ...  # pragma: no cover
 
 
 def parse(s: str) -> TFilter:

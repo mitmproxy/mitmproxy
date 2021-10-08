@@ -114,6 +114,7 @@ class OrderKeySize(_OrderKey):
         else:
             raise NotImplementedError()
 
+
 orders = [
     ("t", "time"),
     ("m", "method"),
