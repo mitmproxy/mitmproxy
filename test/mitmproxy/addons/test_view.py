@@ -268,7 +268,7 @@ def test_resolve():
         assert m(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
         assert m(tctx.command(v.resolve, "@all")) == ["GET", "PUT", "GET", "PUT"]
 
-        with pytest.raises(exceptions.CommandError, match="Invalid flow filter"):
+        with pytest.raises(exceptions.CommandError, match="Invalid filter expression"):
             tctx.command(v.resolve, "~")
 
 
@@ -608,7 +608,7 @@ def test_configure():
     v = view.View()
     with taddons.context(v) as tctx:
         tctx.configure(v, view_filter="~q")
-        with pytest.raises(Exception, match="Invalid interception filter"):
+        with pytest.raises(Exception, match="Invalid filter expression"):
             tctx.configure(v, view_filter="~~")
 
         tctx.configure(v, view_order="method")

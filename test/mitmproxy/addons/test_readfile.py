@@ -43,7 +43,7 @@ class TestReadFile:
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
             tctx.configure(rf, readfile_filter="~q")
-            with pytest.raises(Exception, match="Invalid readfile filter"):
+            with pytest.raises(Exception, match="Invalid filter expression"):
                 tctx.configure(rf, readfile_filter="~~")
 
     @pytest.mark.asyncio

@@ -14,7 +14,6 @@ export interface OptionsState {
     ciphers_server: string | undefined
     client_certs: string | undefined
     client_replay: string[]
-    client_replay_concurrency: number
     command_history: boolean
     confdir: string
     connection_strategy: string
@@ -100,7 +99,6 @@ export const defaultState: OptionsState = {
     ciphers_server: undefined,
     client_certs: undefined,
     client_replay: [],
-    client_replay_concurrency: 1,
     command_history: true,
     confdir: "~/.mitmproxy",
     connection_strategy: "eager",

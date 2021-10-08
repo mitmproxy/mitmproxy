@@ -19,12 +19,10 @@ class StickyAuth:
     def configure(self, updated):
         if "stickyauth" in updated:
             if ctx.options.stickyauth:
-                flt = flowfilter.parse(ctx.options.stickyauth)
-                if not flt:
-                    raise exceptions.OptionsError(
-                        "stickyauth: invalid filter expression: %s" % ctx.options.stickyauth
-                    )
-                self.flt = flt
+                try:
+                    self.flt = flowfilter.parse(ctx.options.stickyauth)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             else:
                 self.flt = None
 

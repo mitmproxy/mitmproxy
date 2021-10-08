@@ -59,11 +59,10 @@ class Dumper:
     def configure(self, updated):
         if "dumper_filter" in updated:
             if ctx.options.dumper_filter:
-                self.filter = flowfilter.parse(ctx.options.dumper_filter)
-                if not self.filter:
-                    raise exceptions.OptionsError(
-                        "Invalid filter expression: %s" % ctx.options.dumper_filter
-                    )
+                try:
+                    self.filter = flowfilter.parse(ctx.options.dumper_filter)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filter = None
 

@@ -114,9 +114,6 @@ class OrderKeySize(_OrderKey):
         else:
             raise NotImplementedError()
 
-
-matchall = flowfilter.parse("~http | ~tcp")
-
 orders = [
     ("t", "time"),
     ("m", "method"),
@@ -129,7 +126,7 @@ class View(collections.abc.Sequence):
     def __init__(self):
         super().__init__()
         self._store = collections.OrderedDict()
-        self.filter = matchall
+        self.filter = flowfilter.match_all
         # Should we show only marked flows?
         self.show_marked = False
 
@@ -326,11 +323,10 @@ class View(collections.abc.Sequence):
         """
         filt = None
         if filter_expr:
-            filt = flowfilter.parse(filter_expr)
-            if not filt:
-                raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % filter_expr
-                )
+            try:
+                filt = flowfilter.parse(filter_expr)
+            except ValueError as e:
+                raise exceptions.CommandError(str(e)) from e
         self.set_filter(filt)
 
     def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
@@ -454,9 +450,10 @@ class View(collections.abc.Sequence):
             ids = flow_spec[1:].split(",")
             return [i for i in self._store.values() if i.id in ids]
         else:
-            filt = flowfilter.parse(flow_spec)
-            if not filt:
-                raise exceptions.CommandError("Invalid flow filter: %s" % flow_spec)
+            try:
+                filt = flowfilter.parse(flow_spec)
+            except ValueError as e:
+                raise exceptions.CommandError(str(e)) from e
             return [i for i in self._store.values() if filt(i)]
 
     @command.command("view.flows.create")
@@ -547,11 +544,10 @@ class View(collections.abc.Sequence):
         if "view_filter" in updated:
             filt = None
             if ctx.options.view_filter:
-                filt = flowfilter.parse(ctx.options.view_filter)
-                if not filt:
-                    raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
-                    )
+                try:
+                    filt = flowfilter.parse(ctx.options.view_filter)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             self.set_filter(filt)
         if "view_order" in updated:
             if ctx.options.view_order not in self.orders:

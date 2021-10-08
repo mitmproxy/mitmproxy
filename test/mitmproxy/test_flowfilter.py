@@ -13,10 +13,12 @@ class TestParsing:
         assert c.getvalue()
 
     def test_parse_err(self):
-        assert flowfilter.parse("~h [") is None
+        with pytest.raises(ValueError):
+            flowfilter.parse("~b")
+        with pytest.raises(ValueError):
+            flowfilter.parse("~h [")
 
     def test_simple(self):
-        assert not flowfilter.parse("~b")
         assert flowfilter.parse("~q")
         assert flowfilter.parse("~c 10")
         assert flowfilter.parse("~m foobar")
