@@ -22,6 +22,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "comment": "I'm a comment!",
         "error": {
             "msg": "error",
             "timestamp": 946681207.0
@@ -180,6 +181,7 @@ export function TTCPFlow(): Required<TCPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "comment": "",
         "error": {
             "msg": "error",
             "timestamp": 946681207.0

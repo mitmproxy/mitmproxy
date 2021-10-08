@@ -330,7 +330,7 @@ class View(collections.abc.Sequence):
         self.set_filter(filt)
 
     def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
-        self.filter = flt or matchall
+        self.filter = flt or flowfilter.match_all
         self._refilter()
 
     # View Updates

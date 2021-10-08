@@ -48,6 +48,7 @@ def test_generate_tflow_js(tdata):
     ]
     tf_http.request.trailers = Headers(trailer="qvalue")
     tf_http.response.trailers = Headers(trailer="qvalue")
+    tf_http.comment = "I'm a comment!"
 
     tf_tcp = tflow.ttcpflow(err=True)
     tf_tcp.id = "2ea7012b-21b5-4f8f-98cd-d49819954001"
