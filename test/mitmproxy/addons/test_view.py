@@ -606,10 +606,28 @@ def test_properties():
 
 def test_configure():
     v = view.View()
+    v.add([
+        tft(method="get", start=0),
+        tft(method="put", start=1),
+        tft(method="get", start=2)
+    ])
+
     with taddons.context(v) as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
+        tctx.configure(v, view_filter_active=True)
+
+        tctx.configure(v, view_filter="")
+        assert [i.request.method for i in v] == ["GET", "PUT", "GET"]
+
+        tctx.configure(v, view_filter="~m get")
+        assert [i.request.method for i in v] == ["GET", "GET"]
+
+        tctx.configure(v, view_filter_active=False)
+        assert [i.request.method for i in v] == ["GET", "PUT", "GET"]
+        tctx.configure(v, view_filter_active=True)
+        assert [i.request.method for i in v] == ["GET", "GET"]
 
         tctx.configure(v, view_order="method")
         with pytest.raises(Exception, match="Unknown flow order"):

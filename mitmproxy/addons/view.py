@@ -168,7 +168,7 @@ class View(collections.abc.Sequence):
 
     def load(self, loader):
         loader.add_option(
-            "view_filter", typing.Optional[str], None,
+            "view_filter", typing.Optional[str], "",
             "Limit the view to matching flows."
         )
         loader.add_option(
@@ -183,6 +183,10 @@ class View(collections.abc.Sequence):
         loader.add_option(
             "console_focus_follow", bool, False,
             "Focus follows new flows."
+        )
+        loader.add_option(
+            "view_filter_active", bool, False,
+            "Toggle whether the view filter is enabled."
         )
 
     def store_count(self):
@@ -545,14 +549,10 @@ class View(collections.abc.Sequence):
     # Event handlers
     def configure(self, updated):
         if "view_filter" in updated:
-            filt = None
             if ctx.options.view_filter:
-                filt = flowfilter.parse(ctx.options.view_filter)
-                if not filt:
-                    raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
-                    )
-            self.set_filter(filt)
+                ctx.options.view_filter_active = True
+            else:
+                ctx.options.view_filter_active = False
         if "view_order" in updated:
             if ctx.options.view_order not in self.orders:
                 raise exceptions.OptionsError(
@@ -563,6 +563,17 @@ class View(collections.abc.Sequence):
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
+        if "view_filter_active" in updated:
+            filt = None
+            if ctx.options.view_filter_active:
+                filt = flowfilter.parse(ctx.options.view_filter)
+                if not filt:
+                    raise exceptions.OptionsError(
+                        "Invalid interception filter: %s" % ctx.options.view_filter
+                    )
+                self.set_filter(filt)
+            else:
+                self.set_filter(filt)
 
     def requestheaders(self, f):
         self.add([f])
