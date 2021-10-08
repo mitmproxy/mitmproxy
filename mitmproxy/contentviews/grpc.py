@@ -1,20 +1,15 @@
-from dataclasses import Field
-import io
 from typing import Optional
 import typing
 
-from kaitaistruct import KaitaiStream
-
-from mitmproxy.tools.cmdline import mitmproxy
 from . import base
-from mitmproxy.contrib.kaitaistruct import google_protobuf
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
-from mitmproxy import contentviews, flow, http, ctx
+from mitmproxy import flow, http
 from enum import Enum
 
 import struct
 import gzip
+
 
 class ProtoParserFlat:
     def __init__(self, data) -> None:
@@ -42,7 +37,7 @@ class ProtoParserFlat:
                 if wt == GoogleProtobuf.Pair.WireTypes.group_start or wt == GoogleProtobuf.Pair.WireTypes.group_end:
                     # ignore deprecated types without values
                     continue
-                v = pair.value # for WireType bit-32 and bit-64
+                v = pair.value  # for WireType bit-32 and bit-64
                 decoding = ProtoParserFlat.Field.DecodedTypes.unknown
                 # see: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
                 if wt == GoogleProtobuf.Pair.WireTypes.len_delimited:
@@ -69,7 +64,7 @@ class ProtoParserFlat:
 
         def to_string(self) -> str:
             return "\n".join([f.to_string() for f in self.parsed])
-            
+
     class Field:
         class DecodedTypes(Enum):
             # varint
@@ -77,8 +72,8 @@ class ProtoParserFlat:
             int64 = 1
             uint32 = 2
             uint64 = 3
-            sint32 = 4 # ZigZag encoding
-            sint64 = 5 # ZigZag encoding
+            sint32 = 4  # ZigZag encoding
+            sint64 = 5  # ZigZag encoding
             bool = 6
             enum = 7
             # bit_32
@@ -94,11 +89,11 @@ class ProtoParserFlat:
             bytes = 15
             messages = 16
             packed_repeated_field = 17
-            # 
+
             unknown = 18
 
         def __init__(
-            self, 
+            self,
             wire_type: GoogleProtobuf.Pair.WireTypes,
             decoding: DecodedTypes,
             tag: int,
@@ -163,9 +158,9 @@ class ProtoParserFlat:
         def value_as_utf8(self, escape_invalid=True, escape_newline=True) -> str:
             if isinstance(self.value, bytes):
                 res = self.value.decode("utf-8", "backslashreplace") if escape_invalid else self.value.decode("utf-8")
-                return res.replace("\n","\\n") if escape_newline else res
+                return res.replace("\n", "\\n") if escape_newline else res
             return str(self.value)
-                
+
         # ToDo: Test implementation, rework (only acts on string, not data struct)
         @property
         def value_as_message_str(self) -> str:
@@ -185,36 +180,33 @@ class ProtoParserFlat:
                 self.decoding = ProtoParserFlat.Field.DecodedTypes.string
                 return self.value_as_utf8()
 
-
-
         def to_string(self):
             v = self.value_as_message_str
             return "{} [{}-->{}]: {}".format(self._gen_tag_str(), self.wire_type_str, self.decoding_str, v)
-
-
 
 
 def grpc_parse_message(data, compression):
     while data:
         try:
             compressed, length = struct.unpack('!?i', data[:5])
-            message = struct.unpack('!%is'%length, data[5:5+length])[0]
+            message = struct.unpack('!%is' % length, data[5:5 + length])[0]
             if compressed:
                 # assume gzip, actual compression has to be parsed from 'grpc-encoding' header
                 # see also: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
                 message = gzip.decompress(message)
-        except: 
+        except:
             print("Invalid gRPC message: ", (data,))
             break
-        #p = ProtoParserFlat(message)
-        #ctx.log.info(p.to_string())
-        #yield compressed, message
+        # p = ProtoParserFlat(message)
+        # ctx.log.info(p.to_string())
+        # yield compressed, message
         yield compressed, ProtoParserFlat(message).to_string()
-        data = data[5+length:]
+        data = data[5 + length:]
 
 
 def format_pbuf(message):
     yield [("text", ProtoParserFlat(message).to_string())]
+
 
 def format_grpc(data, compression="gzip"):
     message_count = 0
@@ -223,6 +215,7 @@ def format_grpc(data, compression="gzip"):
 
         yield [("text", headline)]
         yield [("text", pb_str)]
+
 
 class ViewGrpcProtobuf(base.View):
     """Human friendly view of protocol buffers
@@ -262,8 +255,9 @@ class ViewGrpcProtobuf(base.View):
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
             try:
-                grpc_encoding = http_message.headers["grpc-encoding"] if http_message.headers["grpc-encoding"] in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
-            except Exception as e:
+                h = http_message.headers["grpc-encoding"]
+                grpc_encoding = h if h in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
+            except:
                 grpc_encoding = self.__valid_grpc_encodings[0]
 
             decoded = format_grpc(data, grpc_encoding)
@@ -292,4 +286,3 @@ class ViewGrpcProtobuf(base.View):
             return 1.5
         else:
             return 0
-
