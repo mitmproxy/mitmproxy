@@ -87,7 +87,7 @@ class ProtoParserFlat:
             # len_delimited
             string = 14
             bytes = 15
-            messages = 16
+            message = 16
             packed_repeated_field = 17
 
             unknown = 18
@@ -170,14 +170,16 @@ class ProtoParserFlat:
                 parent_tags.append(self.tag)
                 try:
                     m = ProtoParserFlat.Message(data=self.value, parent_tags=parent_tags)
-                    self.decoding = ProtoParserFlat.Field.DecodedTypes.messages
+                    self.decoding = ProtoParserFlat.Field.DecodedTypes.message
+                    if len(m.parsed) == 0:
+                        return ""
                     return "\n" + m.to_string()
                 except:
                     # failed to parse
                     self.decoding = ProtoParserFlat.Field.DecodedTypes.string
                     return self.value_as_utf8()
             else:
-                self.decoding = ProtoParserFlat.Field.DecodedTypes.string
+                # self.decoding = ProtoParserFlat.Field.DecodedTypes.string
                 return self.value_as_utf8()
 
         def to_string(self):
@@ -283,6 +285,7 @@ class ViewGrpcProtobuf(base.View):
         if bool(data) and content_type in self.__content_types_grpc:
             return 1
         if bool(data) and content_type in self.__content_types_pb:
+            # replace existing protobuf renderer preference (adjust by option)
             return 1.5
         else:
             return 0
