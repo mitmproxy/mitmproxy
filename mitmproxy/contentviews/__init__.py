@@ -20,7 +20,7 @@ from mitmproxy import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack, graphql
+    urlencoded, multipart, image, query, protobuf, msgpack, graphql, grpc
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
@@ -187,6 +187,7 @@ add(image.ViewImage())
 add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
+add(grpc.ViewGrpcProtobuf())
 
 __all__ = [
     "View", "KEY_MAX", "format_text", "format_dict", "TViewResult",
