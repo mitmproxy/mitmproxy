@@ -87,7 +87,13 @@ class ProtoParser:
                     # exists in Protobuf for efficient encoding, when decoded comes down to uint32
                     preferred_decoding = ProtoParser.DecodedTypes.fixed32
 
-                field = ProtoParser.Field(preferred_decoding=preferred_decoding, wire_type=wt, tag=tag, wire_value=v, parent_tags=parent_tags)
+                field = ProtoParser.Field(
+                    preferred_decoding=preferred_decoding,
+                    wire_type=wt,
+                    tag=tag,
+                    wire_value=v,
+                    parent_tags=parent_tags
+                )
                 res.append(field)
             return res
 
