@@ -1,12 +1,12 @@
 from __future__ import annotations  # for typing with forward declarations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 import typing
 
 from . import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
-from mitmproxy import flow, http, ctx
+from mitmproxy import flow, http, ctx, contentviews
 from enum import Enum
 
 import struct
@@ -15,13 +15,55 @@ import gzip
 
 class ProtoParser:
     @dataclass
+    class ParserRule:
+        field_definitions: typing.List[ProtoParser.ParserFieldDefinition]
+
+    @dataclass
+    class ParserFieldDefinition:
+        # the tag of the field to apply the definition to
+        # while a field tag is a single number, this parameter takes the "full qualified" tag
+        # to uniquely identify a message field (f.e. '1.2.1.3')
+        tag: str
+
+        # the 'field_tag' could be considered as "absolute path" to match a unique field, yet
+        # protobuf allows to uses the same nested message in different positions of the parent message
+        # The 'root_tag' parameter allows to apply the field definition to different "leafs nodes"
+        # of a message.
+        #
+        # Example 1:
+        # ----------
+        # tag = '1.2'
+        # root_tags = [] (default)
+        #
+        # applies to: tag '1.2'
+        #
+        # Example 2:
+        # ----------
+        # tag = '1.3'
+        # root_tags = ['1.2', '2.5']
+        #
+        # applies to: tag '1.2.1.3' and tag '2.5.1.3'
+        # does not apply to: '1.3', unless root_tag is extended to root_tag = ['1.2', '2.5', '']
+        root_tags: typing.List[str] = field(default_factory=list)
+
+        # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
+        intended_decoding: ProtoParser.DecodedTypes = None
+
+        # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
+        name: ProtoParser.DecodedTypes = None
+
+    @dataclass
     class ParserOptions:
         # output should contain wiretype of fields
-        include_wiretype: bool = False
+        include_wiretype: bool = True
+
         # output should contain the fields which describe nested messages
         # (the nested messages bodies are always included, but the "header fields" could
         # add unnecessary output overhead)
         exclude_message_headers: bool = False
+
+        # optional: rules
+        rules: typing.List[ProtoParser.ParserRule] = field(default_factory=list)
 
     class DecodedTypes(Enum):
         # varint
@@ -132,7 +174,7 @@ class ProtoParser:
                 for field_val in f.gen_list():
                     yield field_val
 
-        def gen_string_lines(self) -> typing.Generator[typing.String]:
+        def gen_string_lines(self) -> typing.Generator[str]:
             # Excluding fields containing message headers simplifies the view, but without
             # knowing the message tags, they can not be used in a custom definition, in order
             # to declare a different interpretation for the message (the message is a length-delimeted
@@ -155,6 +197,24 @@ class ProtoParser:
                         field_dict["decoding"],
                         field_dict["val"],
                     )
+
+        def gen_string_rows(self) -> typing.Generator[typing.Tuple[str, ...]]:
+            # Excluding fields containing message headers simplifies the view, but without
+            # knowing the message tags, they can not be used in a custom definition, in order
+            # to declare a different interpretation for the message (the message is a length-delimeted
+            # field value, which could alternatively be parsed as 'str' or 'bytes' if the field tag
+            # is known)
+            for field_dict in self.gen_list():
+                if self.options.exclude_message_headers and field_dict["decoding"] == "message":
+                    continue
+
+                if self.options.include_wiretype:
+                    col1 = "[{}->{}]".format(field_dict["wireType"], field_dict["decoding"])
+                else:
+                    col1 = "[{}]".format(field_dict["decoding"])
+                col2 = field_dict["tag"]
+                col3 = field_dict["val"]
+                yield col1, col2, col3
 
     class Field:
         """represents a single field of a protobuf message and handles the varios encodings.
@@ -428,48 +488,92 @@ class ProtoParser:
         self.options = parser_options
         self.root_message: ProtoParser.Message = ProtoParser.Message(data, options=self.options)
 
-    def gen_string(self) -> typing.Generator[str]:
+    def gen_str_lines(self) -> typing.Generator[str]:
         for f in self.root_message.gen_string_lines():
             yield f
 
+    def gen_str_rows(self) -> typing.Generator[str]:
+        for f in self.root_message.gen_string_rows():
+            yield f
 
-def parse_grpc_messages(data, compression) -> typing.Generator[typing.Tuple[bool, ProtoParser]]:
+
+# Note: all content view formating functionality is kept out of the ProtoParser class, to
+#       allow it to be use independently
+def format_table(
+    table_rows: typing.Iterable[typing.Tuple[str, ...]]
+) -> typing.Iterator[base.TViewLine]:
+    """
+    Helper function to render tables with variable column count (move to contentview base, if needed elsewhere)
+
+    Note: The function has to copy all values from a generator to a list, as the list of rows has to be
+          processed twice (to determin the column widths first). The same is true for 'base.format_pairs'.
+    """
+    rows: typing.List[typing.Tuple[str, ...]] = []
+    col_count = 0
+    cols_width: typing.List[int] = []
+    for row in table_rows:
+        col_count = max(col_count, len(row))
+        while len(cols_width) < col_count:
+            cols_width.append(0)
+        for col_num in range(len(row)):
+            cols_width[col_num] = max(len(row[col_num]), cols_width[col_num])
+
+        # store row in list
+        rows.append(row)
+
+    # ToDo: width of contentview has to be fetched to limit the width of columns to a usable value
+    ctx.log.info("col widths counts {}".format(str(cols_width)))
+    for i in range(len(cols_width)):
+        cols_width[i] = min(cols_width[i], 100)
+
+    for row in rows:
+        line: base.TViewLine = []
+        for col_num in range(len(row)):
+            col_val = row[col_num].ljust(cols_width[col_num] + 2)
+            line.append(("text", col_val))
+        ctx.log.info(repr(line))
+        yield line
+
+
+def parse_grpc_messages(data, compression_scheme) -> typing.Generator[typing.Tuple[bool, bytes]]:
+    """Generator iterates over body data and returns a boolean indicating if the messages
+    was compressed, along with the raw message data (decompressed) for each gRPC message
+    contained in the body data"""
     while data:
         try:
-            compressed, length = struct.unpack('!?i', data[:5])
-            message = struct.unpack('!%is' % length, data[5:5 + length])[0]
-        except:
-            raise ValueError("invalid gRPC message")
+            msg_is_compressed, length = struct.unpack('!?i', data[:5])
+            decoded_message = struct.unpack('!%is' % length, data[5:5 + length])[0]
+        except Exception as e:
+            raise ValueError("invalid gRPC message") from e
 
-        if compressed:
-            if compression == "gzip":
+        if msg_is_compressed:
+            if compression_scheme == "gzip":
                 try:
-                    message = gzip.decompress(message)
+                    decoded_message = gzip.decompress(decoded_message)
                 except:
                     raise ValueError("Failed to decompress gRPC message with gzip")
-            elif compression == "deflate":
+            elif compression_scheme == "deflate":
                 raise NotImplementedError("no real-world example to test with, yet")
             else:
-                raise NotImplementedError("unknown/invalid compression algorithm: " + compression)
+                raise NotImplementedError("unknown/invalid compression algorithm: " + compression_scheme)
 
-        pb_msg_parser = ProtoParser(message)
-        yield compressed, pb_msg_parser
+        yield msg_is_compressed, decoded_message
         data = data[5 + length:]
 
 
-def format_pbuf(message):
-    for line in ProtoParser(message).gen_string():
-        yield [("text", line)]
+def format_pbuf(message, parser_options: ProtoParser.ParserOptions):
+    for l in format_table(ProtoParser(message, parser_options).gen_str_rows()):
+        yield l
 
 
-def format_grpc(data, compression="gzip"):
+def format_grpc(data, parser_options: ProtoParser.ParserOptions, compression_scheme="gzip"):
     message_count = 0
-    for compressed, pb_message in parse_grpc_messages(data, compression):
+    for compressed, pb_message in parse_grpc_messages(data, compression_scheme):
         headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(compressed) + ')'
 
         yield [("text", headline)]
-        for line in pb_message.gen_string():
-            yield [("text", line)]
+        for l in format_pbuf(pb_message, parser_options):
+            yield l
 
 
 class ViewGrpcProtobuf(base.View):
@@ -487,14 +591,27 @@ class ViewGrpcProtobuf(base.View):
         "application/grpc",
     ]
 
-    # first value serves as default for compressed messages, if 'grpc-encoding' header is missing
+    # first value serves as default algorithm for compressed messages, if 'grpc-encoding' header is missing
     __valid_grpc_encodings = [
         "gzip",
         "identity",
         "deflate",
     ]
 
-    # Note: result '-> contentviews.TViewResult' does not work at the stage where built-in content views get added
+    # allows to take external ParserOptions object. goes with defaults otherwise
+    def __init__(self, parser_options: ProtoParser.ParserOptions=None) -> None:
+        super().__init__()
+        self.parser_options = parser_options if parser_options else ProtoParser.ParserOptions()
+
+    # remove this
+    def test(self):
+        ProtoParser.ParserRule(
+            field_definitions=[
+                ProtoParser.ParserFieldDefinition(tag="3.1.6.1.1", name="setting"),
+                ProtoParser.ParserFieldDefinition(tag="3.1.6.1.1", name="value"),
+            ]
+        )
+
     def __call__(
         self,
         data: bytes,
@@ -503,7 +620,7 @@ class ViewGrpcProtobuf(base.View):
         flow: Optional[flow.Flow] = None,
         http_message: Optional[http.Message] = None,
         **unknown_metadata,
-    ) -> any:
+    ) -> contentviews.TViewResult:
         decoded = None
         format = ""
         if content_type in self.__content_types_grpc:
@@ -522,10 +639,14 @@ class ViewGrpcProtobuf(base.View):
             except:
                 grpc_encoding = self.__valid_grpc_encodings[0]
 
-            decoded = format_grpc(data, grpc_encoding)
+            decoded = format_grpc(
+                data=data,
+                parser_options=self.parser_options,
+                compression_scheme=grpc_encoding
+            )
             format = "gRPC"
         else:
-            decoded = format_pbuf(data)
+            decoded = format_pbuf(data, self.parser_options)
             format = "Protobuf (flattened)"
 
         if not decoded:
@@ -542,6 +663,7 @@ class ViewGrpcProtobuf(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata,
     ) -> float:
+
         if bool(data) and content_type in self.__content_types_grpc:
             return 1
         if bool(data) and content_type in self.__content_types_pb:
