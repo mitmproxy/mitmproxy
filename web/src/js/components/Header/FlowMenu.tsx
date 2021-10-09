@@ -80,6 +80,11 @@ export default function FlowMenu(): JSX.Element {
     )
 }
 
+// Reference: https://stackoverflow.com/a/63627688/9921431
+const openInNewTab = (url) => {
+  const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+  if (newWindow) newWindow.opener = null
+}
 
 function DownloadButton({flow}: { flow: Flow }) {
     if (flow.type !== "http")
@@ -87,23 +92,23 @@ function DownloadButton({flow}: { flow: Flow }) {
 
     if (flow.request.contentLength && !flow.response?.contentLength) {
         return <Button icon="fa-download"
-                       onClick={() => window.location.href = MessageUtils.getContentURL(flow, flow.request)}
+                       onClick={() => openInNewTab(MessageUtils.getContentURL(flow, flow.request))}
         >Download</Button>
     }
     if (flow.response) {
         const response = flow.response;
         if (!flow.request.contentLength && flow.response.contentLength) {
             return <Button icon="fa-download"
-                           onClick={() => window.location.href = MessageUtils.getContentURL(flow, response)}
+                           onClick={() => openInNewTab(MessageUtils.getContentURL(flow, response))}
             >Download</Button>
         }
         if (flow.request.contentLength && flow.response.contentLength) {
             return <Dropdown text={
                 <Button icon="fa-download" onClick={() => 1}>Download▾</Button>
             } options={{"placement": "bottom-start"}}>
-                <MenuItem onClick={() => window.location.href = MessageUtils.getContentURL(flow, flow.request)}>Download
+                <MenuItem onClick={() => openInNewTab(MessageUtils.getContentURL(flow, flow.request))}>Download
                     request</MenuItem>
-                <MenuItem onClick={() => window.location.href = MessageUtils.getContentURL(flow, response)}>Download
+                <MenuItem onClick={() => openInNewTab(MessageUtils.getContentURL(flow, response))}>Download
                     response</MenuItem>
             </Dropdown>
         }
