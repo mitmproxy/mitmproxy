@@ -66,27 +66,28 @@ class ProtoParser:
                     # ignore deprecated types without values
                     continue
                 v = pair.value  # for WireType bit-32 and bit-64
-                decoding = ProtoParser.DecodedTypes.unknown
+                preferred_decoding = ProtoParser.DecodedTypes.unknown
                 # see: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
                 if wt == GoogleProtobuf.Pair.WireTypes.len_delimited:
                     v: GoogleProtobuf.DelimitedBytes = v
                     v = v.body
-                    decoding = ProtoParser.DecodedTypes.bytes
+                    # always try to parse length delimited data as nested protobuf message
+                    preferred_decoding = ProtoParser.DecodedTypes.message
                 if wt == GoogleProtobuf.Pair.WireTypes.varint:
                     v: VlqBase128Le = v
                     v = v.value
                     if int(v).bit_length() > 32:
-                        decoding = ProtoParser.DecodedTypes.uint64
+                        preferred_decoding = ProtoParser.DecodedTypes.uint64
                     else:
-                        decoding = ProtoParser.DecodedTypes.uint32
+                        preferred_decoding = ProtoParser.DecodedTypes.uint32
                 if wt == GoogleProtobuf.Pair.WireTypes.bit_64:
                     # exists in Protobuf for efficient encoding, when decoded comes down to uint64
-                    decoding = ProtoParser.DecodedTypes.fixed64
+                    preferred_decoding = ProtoParser.DecodedTypes.fixed64
                 if wt == GoogleProtobuf.Pair.WireTypes.bit_32:
                     # exists in Protobuf for efficient encoding, when decoded comes down to uint32
-                    decoding = ProtoParser.DecodedTypes.fixed32
+                    preferred_decoding = ProtoParser.DecodedTypes.fixed32
 
-                field = ProtoParser.Field(decoded_as=decoding, wire_type=wt, tag=tag, wire_value=v, parent_tags=parent_tags)
+                field = ProtoParser.Field(preferred_decoding=preferred_decoding, wire_type=wt, tag=tag, wire_value=v, parent_tags=parent_tags)
                 res.append(field)
             return res
 
@@ -170,13 +171,13 @@ class ProtoParser:
         def __init__(
             self,
             wire_type: GoogleProtobuf.Pair.WireTypes,
-            decoded_as: ProtoParser.DecodedTypes,
+            preferred_decoding: ProtoParser.DecodedTypes,
             tag: int,
             wire_value: GoogleProtobuf.Pair.WireTypes,
             parent_tags: typing.List[int] = [],
         ) -> None:
             self.wire_type: GoogleProtobuf.Pair.WireTypes = wire_type
-            self.decoded_as: ProtoParser.DecodedTypes = decoded_as
+            self.preferred_decoding: ProtoParser.DecodedTypes = preferred_decoding
             self.wire_value: any = wire_value
             self.tag: int = tag
             self.parent_tags: typing.List[int] = parent_tags
@@ -345,7 +346,7 @@ class ProtoParser:
             return str(self.wire_value)
 
         def value_as_dict(self):
-            selected_decoding, decoded_val = self.safe_decode_as(self.decode_as)
+            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
             return {
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
@@ -354,7 +355,7 @@ class ProtoParser:
             }
 
         def gen_list(self):
-            selected_decoding, decoded_val = self.safe_decode_as(self.decode_as)
+            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
             if isinstance(decoded_val, ProtoParser.Message):
                 yield {
                         "tag": self._gen_tag_str(),
