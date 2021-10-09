@@ -10,7 +10,7 @@ from mitmproxy import controller
 from mitmproxy import hooks
 from mitmproxy import exceptions
 from mitmproxy import flow
-from . import ctx
+from mitmproxy import ctx
 
 
 def _get_name(itm):

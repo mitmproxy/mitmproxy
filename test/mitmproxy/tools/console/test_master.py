@@ -5,7 +5,7 @@ import pytest
 from mitmproxy import options, hooks
 from mitmproxy.tools import console
 
-from ... import tservers
+from .. import tservers
 
 
 @pytest.mark.asyncio

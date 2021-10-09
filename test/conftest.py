@@ -1,9 +1,17 @@
 import os
 import socket
+import logging
+
+import pytest
 
 from mitmproxy.utils import data
 
-import pytest
+
+# Silence third-party modules
+logging.getLogger("hyper").setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("passlib").setLevel(logging.WARNING)
+logging.getLogger("tornado").setLevel(logging.WARNING)
 
 pytest_plugins = ('test.full_coverage_plugin',)
 

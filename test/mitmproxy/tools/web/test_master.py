@@ -3,7 +3,7 @@ import pytest
 from mitmproxy import options
 from mitmproxy.tools.web import master
 
-from ... import tservers
+from .. import tservers
 
 
 class TestWebMaster(tservers.MasterTest):
