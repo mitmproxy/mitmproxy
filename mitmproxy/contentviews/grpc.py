@@ -1,11 +1,12 @@
 from __future__ import annotations  # for typing with forward declarations
+from dataclasses import dataclass
 from typing import Optional
 import typing
 
 from . import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
-from mitmproxy import flow, http
+from mitmproxy import flow, http, ctx
 from enum import Enum
 
 import struct
@@ -13,13 +14,14 @@ import gzip
 
 
 class ProtoParser:
-    def __init__(self, data) -> None:
-        self.data: bytes = data
-        self.root_message: ProtoParser.Message = ProtoParser.Message(data)
-
-    def gen_string(self) -> typing.Generator[str]:
-        for f in self.root_message.gen_string():
-            yield f
+    @dataclass
+    class ParserOptions:
+        # output should contain wiretype of fields
+        include_wiretype: bool = False
+        # output should contain the fields which describe nested messages
+        # (the nested messages bodies are always included, but the "header fields" could
+        # add unnecessary output overhead)
+        exclude_message_headers: bool = False
 
     class DecodedTypes(Enum):
         # varint
@@ -48,13 +50,40 @@ class ProtoParser:
         unknown = 18
 
     class Message:
-        def __init__(self, data: bytes, parent_tags: typing.List[int] = []) -> None:
+        def __init__(
+            self,
+            data: bytes,
+            options: ProtoParser.ParserOptions,
+            parent_field: ProtoParser.Field = None,
+        ) -> None:
             self.data: bytes = data
-            self.parent_tags: typing.List[int] = parent_tags
-            self.fields: typing.List[ProtoParser.Field] = self.parse_message_fields(data, parent_tags=parent_tags)
+            self.parent_field: ProtoParser.Field = parent_field
+            self.options: ProtoParser.ParserOptions = options
+            try:
+                self.fields: typing.List[ProtoParser.Field] = self.parse_message_fields(data)
+            except:
+                raise ValueError("not a valid protobuf message")
 
-        @staticmethod
-        def parse_message_fields(message: bytes, parent_tags = []) -> typing.List:
+        @property
+        def is_root_message(self):
+            return False if self.parent_field else True
+
+        @property
+        def root_message(self):
+            if self.is_root_message:
+                return self
+            else:
+                return self.parent_field.root_message
+
+        @property
+        def tag_history(self):
+            if self.is_root_message:
+                return []
+            else:
+                tags = self.parent_field.tag_history()[:]
+                return tags
+
+        def parse_message_fields(self, message: bytes) -> typing.List:
             res: typing.List[ProtoParser.Field] = []
 
             pb = GoogleProtobuf.from_bytes(message)
@@ -92,30 +121,28 @@ class ProtoParser:
                     wire_type=wt,
                     tag=tag,
                     wire_value=v,
-                    parent_tags=parent_tags
+                    owning_message=self,
+                    options=self.options
                 )
                 res.append(field)
             return res
-
-        # def to_string(self) -> str:
-        #     return "\n".join([f.to_string() for f in self.fields])
 
         def gen_list(self) -> typing.Generator[typing.Dict]:
             for f in self.fields:
                 for field_val in f.gen_list():
                     yield field_val
 
-        def gen_string(self, include_wiretype=False, exclude_message_headers=True) -> typing.Generator[typing.String]:
+        def gen_string_lines(self) -> typing.Generator[typing.String]:
             # Excluding fields containing message headers simplifies the view, but without
             # knowing the message tags, they can not be used in a custom definition, in order
             # to declare a different interpretation for the message (the message is a length-delimeted
             # field value, which could alternatively be parsed as 'str' or 'bytes' if the field tag
             # is known)
             for field_dict in self.gen_list():
-                if exclude_message_headers and field_dict["decoding"] == "message":
+                if self.options.exclude_message_headers and field_dict["decoding"] == "message":
                     continue
 
-                if include_wiretype:
+                if self.options.include_wiretype:
                     yield "{} [{}->{}]: {}".format(
                         field_dict["tag"],
                         field_dict["wireType"],
@@ -180,13 +207,25 @@ class ProtoParser:
             preferred_decoding: ProtoParser.DecodedTypes,
             tag: int,
             wire_value: GoogleProtobuf.Pair.WireTypes,
-            parent_tags: typing.List[int] = [],
+            owning_message: ProtoParser.Message,
+            options: ProtoParser.ParserOptions,
         ) -> None:
             self.wire_type: GoogleProtobuf.Pair.WireTypes = wire_type
             self.preferred_decoding: ProtoParser.DecodedTypes = preferred_decoding
             self.wire_value: any = wire_value
             self.tag: int = tag
-            self.parent_tags: typing.List[int] = parent_tags
+            self.owning_message: ProtoParser.Message = owning_message
+            self.options: ProtoParser.ParserOptions = options
+            if self.owning_message.is_root_message:
+                self.parent_tags = []
+            else:
+                self.parent_tags = self.owning_message.parent_field.parent_tags[:]
+                self.parent_tags.append(self.owning_message.parent_field.tag)
+
+        def _gen_tag_str(self):
+            tags = self.parent_tags[:]
+            tags.append(self.tag)
+            return ".".join([str(tag) for tag in tags])
 
         def safe_decode_as(
             self,
@@ -225,81 +264,91 @@ class ProtoParser:
                         ProtoParser.DecodedTypes.bytes  # should always work
                     ]
                     for failover_decoding in len_delimited_strategy:
+                        if failover_decoding == intended_decoding:
+                            continue  # don't try it twice
                         try:
                             return failover_decoding, self.decode_as(failover_decoding)
                         except:
+                            # move on with next
                             pass
 
             # we should never get here
             return ProtoParser.DecodedTypes.unknown, self.wire_value
 
         def decode_as(self, intended_decoding: ProtoParser.DecodedTypes):
-            if self.wire_type == GoogleProtobuf.Pair.WireTypes.varint:
-                if intended_decoding == ProtoParser.DecodedTypes.bool:
-                    return self.wire_value != 0
-                elif intended_decoding == ProtoParser.DecodedTypes.int32:
-                    if self.wire_value.bit_length() > 32:
-                        raise TypeError("wire value too large for int32")
-                    return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
-                elif intended_decoding == ProtoParser.DecodedTypes.int64:
-                    if self.wire_value.bit_length() > 64:
-                        raise TypeError("wire value too large for int64")
-                    return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
-                elif (
-                    intended_decoding == ProtoParser.DecodedTypes.uint32 or
-                    intended_decoding == ProtoParser.DecodedTypes.uint64 or
-                    intended_decoding == ProtoParser.DecodedTypes.enum
-                ):
-                    if self.wire_value.bit_length() > 64:
-                        raise TypeError("wire value too large")
-                    return self.wire_value  # already 'int' which was parsed as unsigned
-                elif intended_decoding == ProtoParser.DecodedTypes.sint32:
-                    if self.wire_value.bit_length() > 32:
-                        raise TypeError("wire value too large for sint32")
-                    return (self.wire_value >> 1) ^ -(self.wire_value & 1)  # zigzag_decode
-                elif intended_decoding == ProtoParser.DecodedTypes.sint64:
-                    if self.wire_value.bit_length() > 64:
-                        raise TypeError("wire value too large for sint64")
-                    # ZigZag decode
-                    # Ref: https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba
-                    return (self.wire_value >> 1) ^ -(self.wire_value & 1)
-                elif (
-                    intended_decoding == ProtoParser.DecodedTypes.float or
-                    intended_decoding == ProtoParser.DecodedTypes.double
-                ):
-                    # special case, not complying to protobuf specs
-                    return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_64:
-                if intended_decoding == ProtoParser.DecodedTypes.fixed64:
-                    return self.wire_value
-                elif intended_decoding == ProtoParser.DecodedTypes.sfixed64:
-                    return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
-                elif intended_decoding == ProtoParser.DecodedTypes.double:
-                    return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_32:
-                if intended_decoding == ProtoParser.DecodedTypes.fixed32:
-                    return self.wire_value
-                elif intended_decoding == ProtoParser.DecodedTypes.sfixed32:
-                    return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
-                elif intended_decoding == ProtoParser.DecodedTypes.float:
-                    return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.len_delimited:
-                if intended_decoding == ProtoParser.DecodedTypes.string:
-                    # According to specs, a protobuf string HAS TO be UTF-8 parsable
-                    # throw exception on invalid UTF-8 chars, but escape linebreaks
-                    return self.wire_value_as_utf8(escape_invalid=False, escape_newline=True)
-                elif intended_decoding == ProtoParser.DecodedTypes.bytes:
-                    # always works, assure to hand back a copy
-                    return self.wire_value[:]
-                elif intended_decoding == ProtoParser.DecodedTypes.packed_repeated_field:
-                    raise NotImplementedError("currently not needed")
-                elif intended_decoding == ProtoParser.DecodedTypes.message:
-                    inheriting_tags = self.parent_tags[:]
-                    inheriting_tags.append(self.tag)
-                    return ProtoParser.Message(data=self.wire_value, parent_tags=inheriting_tags)
+            try:
+                if self.wire_type == GoogleProtobuf.Pair.WireTypes.varint:
+                    if intended_decoding == ProtoParser.DecodedTypes.bool:
+                        return self.wire_value != 0
+                    elif intended_decoding == ProtoParser.DecodedTypes.int32:
+                        if self.wire_value.bit_length() > 32:
+                            raise TypeError("wire value too large for int32")
+                        return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
+                    elif intended_decoding == ProtoParser.DecodedTypes.int64:
+                        if self.wire_value.bit_length() > 64:
+                            raise TypeError("wire value too large for int64")
+                        return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
+                    elif (
+                        intended_decoding == ProtoParser.DecodedTypes.uint32 or
+                        intended_decoding == ProtoParser.DecodedTypes.uint64 or
+                        intended_decoding == ProtoParser.DecodedTypes.enum
+                    ):
+                        if self.wire_value.bit_length() > 64:
+                            raise TypeError("wire value too large")
+                        return self.wire_value  # already 'int' which was parsed as unsigned
+                    elif intended_decoding == ProtoParser.DecodedTypes.sint32:
+                        if self.wire_value.bit_length() > 32:
+                            raise TypeError("wire value too large for sint32")
+                        return (self.wire_value >> 1) ^ -(self.wire_value & 1)  # zigzag_decode
+                    elif intended_decoding == ProtoParser.DecodedTypes.sint64:
+                        if self.wire_value.bit_length() > 64:
+                            raise TypeError("wire value too large for sint64")
+                        # ZigZag decode
+                        # Ref: https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba
+                        return (self.wire_value >> 1) ^ -(self.wire_value & 1)
+                    elif (
+                        intended_decoding == ProtoParser.DecodedTypes.float or
+                        intended_decoding == ProtoParser.DecodedTypes.double
+                    ):
+                        # special case, not complying to protobuf specs
+                        return self._wire_value_as_float()
+                elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_64:
+                    if intended_decoding == ProtoParser.DecodedTypes.fixed64:
+                        return self.wire_value
+                    elif intended_decoding == ProtoParser.DecodedTypes.sfixed64:
+                        return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
+                    elif intended_decoding == ProtoParser.DecodedTypes.double:
+                        return self._wire_value_as_float()
+                elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_32:
+                    if intended_decoding == ProtoParser.DecodedTypes.fixed32:
+                        return self.wire_value
+                    elif intended_decoding == ProtoParser.DecodedTypes.sfixed32:
+                        return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
+                    elif intended_decoding == ProtoParser.DecodedTypes.float:
+                        return self._wire_value_as_float()
+                elif self.wire_type == GoogleProtobuf.Pair.WireTypes.len_delimited:
+                    if intended_decoding == ProtoParser.DecodedTypes.string:
+                        # According to specs, a protobuf string HAS TO be UTF-8 parsable
+                        # throw exception on invalid UTF-8 chars, but escape linebreaks
+                        return self.wire_value_as_utf8(escape_invalid=False, escape_newline=True)
+                    elif intended_decoding == ProtoParser.DecodedTypes.bytes:
+                        # always works, assure to hand back a copy
+                        return self.wire_value[:]
+                    elif intended_decoding == ProtoParser.DecodedTypes.packed_repeated_field:
+                        raise NotImplementedError("currently not needed")
+                    elif intended_decoding == ProtoParser.DecodedTypes.message:
+                        return ProtoParser.Message(
+                            data=self.wire_value,
+                            options=self.options,
+                            parent_field=self
+                        )
 
-            # if here, there is no valid decoding
-            raise TypeError("intended decoding mismatches wire type")
+                # if here, there is no valid decoding
+                raise TypeError("intended decoding mismatches wire type")
+            except Exception as e:
+                # catch exception for logging and pass it on
+                ctx.log.warn("Failed decoding length delimited message {} as {}".format(self._gen_tag_str(), str(intended_decoding)))
+                raise e
 
         def encode_from(inputval, intended_encoding: ProtoParser.DecodedTypes):
             raise NotImplementedError("Future work, needed to manipulate and re-encode protobuf message, with respect to given wire types")
@@ -333,11 +382,6 @@ class ProtoParser:
                 else:
                     # packing uses network byte order (to assure consistent results across architectures)
                     return struct.pack("!I", self.wire_value)
-
-        def _gen_tag_str(self):
-            tags = self.parent_tags[:]
-            tags.append(self.tag)
-            return ".".join([str(tag) for tag in tags])
 
         def _wire_type_str(self):
             return str(self.wire_type).split(".")[-1]
@@ -378,6 +422,15 @@ class ProtoParser:
                     "decoding": self._decoding_str(selected_decoding),
                     "val": str(decoded_val)
                 }
+
+    def __init__(self, data: bytes, parser_options=ParserOptions()) -> None:
+        self.data: bytes = data
+        self.options = parser_options
+        self.root_message: ProtoParser.Message = ProtoParser.Message(data, options=self.options)
+
+    def gen_string(self) -> typing.Generator[str]:
+        for f in self.root_message.gen_string_lines():
+            yield f
 
 
 def parse_grpc_messages(data, compression) -> typing.Generator[typing.Tuple[bool, ProtoParser]]:
@@ -456,6 +509,13 @@ class ViewGrpcProtobuf(base.View):
         if content_type in self.__content_types_grpc:
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
+            # Try to find select compression algorithm base on head 'grpc-encoding' header.
+            # If the header is not present or contains an unsupported compression, fall back to
+            # 'gzip' (__valid_grpc_encodings[0]).
+            # The compression scheme is only used if a gRPC message is flagged to be compressed, but
+            # 'format_grpc' expects it to be always set (compression scheme could no be determined based
+            # on the body data, unless additional logic gets added to analyse magic numbers of the message
+            # blob)
             try:
                 h = http_message.headers["grpc-encoding"]
                 grpc_encoding = h if h in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
