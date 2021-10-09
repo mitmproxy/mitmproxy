@@ -1,5 +1,4 @@
 // PEG.js filter rules - see https://pegjs.org/
-
 {
 function or(first, second) {
     // Add explicit function names to ease debugging.
@@ -9,6 +8,7 @@ function or(first, second) {
     orFilter.desc = first.desc + " or " + second.desc;
     return orFilter;
 }
+
 function and(first, second) {
     function andFilter() {
         return first.apply(this, arguments) && second.apply(this, arguments);
@@ -16,6 +16,7 @@ function and(first, second) {
     andFilter.desc = first.desc + " and " + second.desc;
     return andFilter;
 }
+
 function not(expr) {
     function notFilter() {
         return !expr.apply(this, arguments);
@@ -23,6 +24,7 @@ function not(expr) {
     notFilter.desc = "not " + expr.desc;
     return notFilter;
 }
+
 function binding(expr) {
     function bindingFilter() {
         return expr.apply(this, arguments);
@@ -30,22 +32,20 @@ function binding(expr) {
     bindingFilter.desc = "(" + expr.desc + ")";
     return bindingFilter;
 }
-function trueFilter(flow) {
+
+// ~all
+function allFilter(flow) {
     return true;
 }
-trueFilter.desc = "true";
-function falseFilter(flow) {
-    return false;
-}
-falseFilter.desc = "false";
+allFilter.desc = "all flows";
 
+// ~a
 var ASSET_TYPES = [
     new RegExp("text/javascript"),
     new RegExp("application/x-javascript"),
     new RegExp("application/javascript"),
     new RegExp("text/css"),
-    new RegExp("image/.*"),
-    new RegExp("application/x-shockwave-flash")
+    new RegExp("image/.*")
 ];
 function assetFilter(flow) {
     if (flow.response) {
@@ -60,13 +60,8 @@ function assetFilter(flow) {
     return false;
 }
 assetFilter.desc = "is asset";
-function responseCode(code){
-    function responseCodeFilter(flow){
-        return flow.response && flow.response.status_code === code;
-    }
-    responseCodeFilter.desc = "resp. code is " + code;
-    return responseCodeFilter;
-}
+
+// ~b
 function body(regex){
     regex = new RegExp(regex, "i");
     function bodyFilter(flow){
@@ -75,6 +70,8 @@ function body(regex){
     bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
     return bodyFilter;
 }
+
+// ~bq
 function requestBody(regex){
     regex = new RegExp(regex, "i");
     function requestBodyFilter(flow){
@@ -83,6 +80,8 @@ function requestBody(regex){
     requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
     return requestBodyFilter;
 }
+
+// ~bs
 function responseBody(regex){
     regex = new RegExp(regex, "i");
     function responseBodyFilter(flow){
@@ -91,6 +90,27 @@ function responseBody(regex){
     responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
     return responseBodyFilter;
 }
+
+// ~c
+function responseCode(code){
+    function responseCodeFilter(flow){
+        return flow.response && flow.response.status_code === code;
+    }
+    responseCodeFilter.desc = "resp. code is " + code;
+    return responseCodeFilter;
+}
+
+// ~comment
+function comment(regex){
+    regex = new RegExp(regex, "i");
+    function commentFilter(flow){
+        return regex.test(flow.comment)
+    }
+    commentFilter.desc = "comment matches " + regex;
+    return commentFilter;
+}
+
+// ~d
 function domain(regex){
     regex = new RegExp(regex, "i");
     function domainFilter(flow){
@@ -99,6 +119,8 @@ function domain(regex){
     domainFilter.desc = "domain matches " + regex;
     return domainFilter;
 }
+
+// ~dst
 function destination(regex){
     regex = new RegExp(regex, "i");
     function destinationFilter(flow){
@@ -109,10 +131,14 @@ function destination(regex){
     destinationFilter.desc = "destination address matches " + regex;
     return destinationFilter;
 }
+
+// ~e
 function errorFilter(flow){
     return !!flow.error;
 }
 errorFilter.desc = "has error";
+
+// ~h
 function header(regex){
     regex = new RegExp(regex, "i");
     function headerFilter(flow){
@@ -125,6 +151,8 @@ function header(regex){
     headerFilter.desc = "header matches " + regex;
     return headerFilter;
 }
+
+// ~hq
 function requestHeader(regex){
     regex = new RegExp(regex, "i");
     function requestHeaderFilter(flow){
@@ -133,6 +161,8 @@ function requestHeader(regex){
     requestHeaderFilter.desc = "req. header matches " + regex;
     return requestHeaderFilter;
 }
+
+// ~hs
 function responseHeader(regex){
     regex = new RegExp(regex, "i");
     function responseHeaderFilter(flow){
@@ -141,10 +171,30 @@ function responseHeader(regex){
     responseHeaderFilter.desc = "resp. header matches " + regex;
     return responseHeaderFilter;
 }
+
+// ~http
 function httpFilter(flow){
     return flow.type === "http";
 }
 httpFilter.desc = "is an HTTP Flow";
+
+// ~marked
+function markedFilter(flow){
+    return flow.marked;
+}
+markedFilter.desc = "is marked";
+
+// ~marker
+function marker(regex){
+    regex = new RegExp(regex, "i");
+    function markerFilter(flow){
+        return regex.test(flow.marked)
+    }
+    markerFilter.desc = "marker matches " + regex;
+    return markerFilter;
+}
+
+// ~m
 function method(regex){
     regex = new RegExp(regex, "i");
     function methodFilter(flow){
@@ -153,18 +203,32 @@ function method(regex){
     methodFilter.desc = "method matches " + regex;
     return methodFilter;
 }
-function markedFilter(flow){
-    return flow.marked;
-}
-markedFilter.desc = "is marked";
+
+// ~q
 function noResponseFilter(flow){
     return flow.request && !flow.response;
 }
 noResponseFilter.desc = "has no response";
-function responseFilter(flow){
-    return !!flow.response;
+
+// ~replayq
+function clientReplayFilter(flow){
+    return flow.is_replay === "request";
 }
-responseFilter.desc = "has response";
+clientReplayFilter.desc = "request has been replayed";
+
+// ~replays
+function serverReplayFilter(flow){
+    return flow.is_replay === "response";
+}
+serverReplayFilter.desc = "response has been replayed";
+
+// ~replay
+function replayFilter(flow){
+    return !!flow.is_replay;
+}
+replayFilter.desc = "flow has been replayed";
+
+// ~src
 function source(regex){
     regex = new RegExp(regex, "i");
     function sourceFilter(flow){
@@ -175,6 +239,40 @@ function source(regex){
     sourceFilter.desc = "source address matches " + regex;
     return sourceFilter;
 }
+
+// ~s
+function responseFilter(flow){
+    return !!flow.response;
+}
+responseFilter.desc = "has response";
+
+// ~tcp
+function tcpFilter(flow){
+    return flow.type === "tcp";
+}
+tcpFilter.desc = "is a TCP Flow";
+
+// ~tq
+function requestContentType(regex){
+    regex = new RegExp(regex, "i");
+    function requestContentTypeFilter(flow){
+        return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
+    }
+    requestContentTypeFilter.desc = "req. content type matches " + regex;
+    return requestContentTypeFilter;
+}
+
+// ~ts
+function responseContentType(regex){
+    regex = new RegExp(regex, "i");
+    function responseContentTypeFilter(flow){
+        return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
+    }
+    responseContentTypeFilter.desc = "resp. content type matches " + regex;
+    return responseContentTypeFilter;
+}
+
+// ~t
 function contentType(regex){
     regex = new RegExp(regex, "i");
     function contentTypeFilter(flow){
@@ -187,26 +285,8 @@ function contentType(regex){
     contentTypeFilter.desc = "content type matches " + regex;
     return contentTypeFilter;
 }
-function tcpFilter(flow){
-    return flow.type === "tcp";
-}
-tcpFilter.desc = "is a TCP Flow";
-function requestContentType(regex){
-    regex = new RegExp(regex, "i");
-    function requestContentTypeFilter(flow){
-        return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
-    }
-    requestContentTypeFilter.desc = "req. content type matches " + regex;
-    return requestContentTypeFilter;
-}
-function responseContentType(regex){
-    regex = new RegExp(regex, "i");
-    function responseContentTypeFilter(flow){
-        return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
-    }
-    responseContentTypeFilter.desc = "resp. content type matches " + regex;
-    return responseContentTypeFilter;
-}
+
+// ~u
 function url(regex){
     regex = new RegExp(regex, "i");
     function urlFilter(flow){
@@ -215,6 +295,8 @@ function url(regex){
     urlFilter.desc = "url matches " + regex;
     return urlFilter;
 }
+
+// ~websocket
 function websocketFilter(flow){
     return flow.type === "websocket";
 }
@@ -250,19 +332,18 @@ BindingExpr
     { return binding(expr); }
   / Expr
 
-/* All the filters except "~s" and "~src" are arranged in the ascending order as
-   given in the docs(https://mitmproxy.org/docs/latest/concepts-filters/).
-   "~s" and "~src" are so arranged as "~s" caused problems in the evaluation of
-   "~src". */
+/* All the filters are generally arranged in the order as they are described
+   on https://docs.mitmproxy.org/dev/concepts-filters/, with the exception of
+    single-letter filters, which are moved to the bottom so that they evaluate properly */
 
 Expr
-  = "true" { return trueFilter; }
-  / "false" { return falseFilter; }
+  = "~all" { return allFilter; }
   / "~a" { return assetFilter; }
   / "~b" ws+ s:StringLiteral { return body(s); }
   / "~bq" ws+ s:StringLiteral { return requestBody(s); }
   / "~bs" ws+ s:StringLiteral { return responseBody(s); }
   / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
+  / "~comment" ws+ s:StringLiteral { return comment(s); }
   / "~d" ws+ s:StringLiteral { return domain(s); }
   / "~dst" ws+ s:StringLiteral { return destination(s); }
   / "~e" { return errorFilter; }
@@ -270,15 +351,19 @@ Expr
   / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
   / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
   / "~http" { return httpFilter; }
-  / "~m" ws+ s:StringLiteral { return method(s); }
   / "~marked" { return markedFilter; }
+  / "~marker" ws+ s:StringLiteral { return marker(s); }
+  / "~m" ws+ s:StringLiteral { return method(s); }
   / "~q" { return noResponseFilter; }
+  / "~replayq" { return clientReplayFilter; }
+  / "~replays" { return serverReplayFilter; }
+  / "~replay" { return replayFilter; }
   / "~src" ws+ s:StringLiteral { return source(s); }
   / "~s" { return responseFilter; }
-  / "~t" ws+ s:StringLiteral { return contentType(s); }
   / "~tcp" { return tcpFilter; }
   / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
   / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
+  / "~t" ws+ s:StringLiteral { return contentType(s); }
   / "~u" ws+ s:StringLiteral { return url(s); }
   / "~websocket" { return websocketFilter; }
   / s:StringLiteral { return url(s); }

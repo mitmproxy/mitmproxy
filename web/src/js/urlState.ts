@@ -33,7 +33,8 @@ export function updateStoreFromUrl(store) {
         query
             .split("&")
             .forEach((x) => {
-                const [key, value] = x.split("=", 2)
+                let [key, value] = x.split("=", 2)
+                value = decodeURIComponent(value)
                 switch (key) {
                     case Query.SEARCH:
                         store.dispatch(setFilter(value))
@@ -66,7 +67,7 @@ export function updateUrlFromStore(store) {
     }
     const queryStr = Object.keys(query)
         .filter(k => query[k])
-        .map(k => `${k}=${query[k]}`)
+        .map(k => `${k}=${encodeURIComponent(query[k])}`)
         .join("&")
 
     let url

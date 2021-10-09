@@ -8,6 +8,7 @@ interface _Flow {
     type: string
     modified: boolean
     marked: string
+    comment: string
     client_conn: Client
     server_conn?: Server
     error?: Error

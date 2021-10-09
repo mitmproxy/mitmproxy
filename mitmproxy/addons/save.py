@@ -48,11 +48,10 @@ class Save:
         # We're already streaming - stop the previous stream and restart
         if "save_stream_filter" in updated:
             if ctx.options.save_stream_filter:
-                self.filt = flowfilter.parse(ctx.options.save_stream_filter)
-                if not self.filt:
-                    raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % ctx.options.save_stream_filter
-                    )
+                try:
+                    self.filt = flowfilter.parse(ctx.options.save_stream_filter)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filt = None
         if "save_stream_file" in updated or "save_stream_filter" in updated:

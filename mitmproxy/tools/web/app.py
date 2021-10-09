@@ -58,6 +58,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "type": flow.type,
         "modified": flow.modified(),
         "marked": emoji.get(flow.marked, "🔴") if flow.marked else "",
+        "comment": flow.comment,
     }
 
     if flow.client_conn:

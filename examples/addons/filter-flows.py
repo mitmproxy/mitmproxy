@@ -10,7 +10,8 @@ class Filter:
         self.filter: flowfilter.TFilter = None
 
     def configure(self, updated):
-        self.filter = flowfilter.parse(ctx.options.flowfilter)
+        if "flowfilter" in updated:
+            self.filter = flowfilter.parse(ctx.options.flowfilter)
 
     def load(self, l):
         l.add_option(
