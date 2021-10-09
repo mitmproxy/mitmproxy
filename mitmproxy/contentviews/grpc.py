@@ -338,10 +338,6 @@ class ProtoParser:
         def _decoding_str(self, decoding: ProtoParser.DecodedTypes):
             return str(decoding).split(".")[-1]
 
-        @property
-        def wire_value_as_hexstr(self, prefix="0x") -> str:
-            return prefix + self._value_as_bytes.hex()
-
         def wire_value_as_utf8(self, escape_invalid=True, escape_newline=True) -> str:
             if isinstance(self.wire_value, bytes):
                 res = self.wire_value.decode("utf-8", "backslashreplace") if escape_invalid else self.wire_value.decode("utf-8")
@@ -382,13 +378,19 @@ def parse_grpc_messages(data, compression) -> typing.Generator[typing.Tuple[bool
         try:
             compressed, length = struct.unpack('!?i', data[:5])
             message = struct.unpack('!%is' % length, data[5:5 + length])[0]
-            if compressed:
-                # assume gzip, actual compression has to be parsed from 'grpc-encoding' header
-                # see also: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
-                message = gzip.decompress(message)
         except:
-            print("Invalid gRPC message: ", (data,))
-            break
+            raise ValueError("invalid gRPC message")
+
+        if compressed:
+            if compression == "gzip":
+                try:
+                    message = gzip.decompress(message)
+                except:
+                    raise ValueError("Failed to decompress gRPC message with gzip")
+            elif compression == "deflate":
+                raise NotImplementedError("no real-world example to test with, yet")
+            else:
+                raise NotImplementedError("unknown/invalid compression algorithm: " + compression)
 
         pb_msg_parser = ProtoParser(message)
         yield compressed, pb_msg_parser
