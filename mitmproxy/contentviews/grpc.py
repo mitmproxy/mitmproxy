@@ -21,12 +21,14 @@ class ProtoParser:
         description: str = ""
         # rule is only applied if flow filter matches
         filter: str = ""
-        # if True, rule is  applied to request messages
-        apply_request: bool = True
-        # if False, rule is  applied to request messages
-        apply_response: bool = False
-        # only used internally
-        _applies: bool = False
+
+    @dataclass
+    class ParserRuleResponse(ParserRule):
+        pass
+
+    @dataclass
+    class ParserRuleRequest(ParserRule):
+        pass
 
     @dataclass
     class ParserFieldDefinition:
@@ -76,7 +78,7 @@ class ProtoParser:
         exclude_message_headers: bool = False
 
         # optional: rules
-        rules: List[ProtoParser.ParserRule] = field(default_factory=list)
+        # rules: List[ProtoParser.ParserRule] = field(default_factory=list)
 
     class DecodedTypes(Enum):
         # varint
@@ -109,11 +111,13 @@ class ProtoParser:
             self,
             data: bytes,
             options: ProtoParser.ParserOptions,
+            rules: List[ProtoParser.ParserRule],
             parent_field: ProtoParser.Field = None,
         ) -> None:
             self.data: bytes = data
             self.parent_field: ProtoParser.Field = parent_field
             self.options: ProtoParser.ParserOptions = options
+            self.rules: List[ProtoParser.ParserRule] = rules
             try:
                 self.fields: List[ProtoParser.Field] = self.parse_message_fields(data)
             except:
@@ -177,7 +181,8 @@ class ProtoParser:
                     tag=tag,
                     wire_value=v,
                     owning_message=self,
-                    options=self.options
+                    options=self.options,
+                    rules=self.rules
                 )
                 res.append(field)
             return res
@@ -283,6 +288,7 @@ class ProtoParser:
             wire_value: GoogleProtobuf.Pair.WireTypes,
             owning_message: ProtoParser.Message,
             options: ProtoParser.ParserOptions,
+            rules: List[ProtoParser.ParserRule]
         ) -> None:
             self.wire_type: GoogleProtobuf.Pair.WireTypes = wire_type
             self.preferred_decoding: ProtoParser.DecodedTypes = preferred_decoding
@@ -291,6 +297,7 @@ class ProtoParser:
             self.owning_message: ProtoParser.Message = owning_message
             self.options: ProtoParser.ParserOptions = options
             self.name: str = ""
+            self.rules: List[ProtoParser.ParserRule] = rules
             if self.owning_message.is_root_message:
                 self.parent_tags = []
             else:
@@ -303,11 +310,8 @@ class ProtoParser:
             tag_str = self._gen_tag_str()
             name = None
             decoding = None
-
             try:
-                for rule in self.options.rules:
-                    if not rule._applies:
-                        continue
+                for rule in self.rules:
                     for fd in rule.field_definitions:
                         match = False
                         if len(fd.tag_prefixes) == 0 and fd.tag == tag_str:
@@ -335,6 +339,7 @@ class ProtoParser:
                     self.preferred_decoding = decoding
             except Exception as e:
                 ctx.log.warn(e)
+                pass
 
         def _gen_tag_str(self):
             tags = self.parent_tags[:]
@@ -453,7 +458,8 @@ class ProtoParser:
                     return ProtoParser.Message(
                         data=self.wire_value,
                         options=self.options,
-                        parent_field=self
+                        parent_field=self,
+                        rules=self.rules
                     )
 
             # if here, there is no valid decoding
@@ -522,10 +528,15 @@ class ProtoParser:
                 field_dict["val"] = str(decoded_val)
                 yield field_dict
 
-    def __init__(self, data: bytes, parser_options=ParserOptions()) -> None:
+    def __init__(self, data: bytes, rules: List[ProtoParser.ParserRule]=[], parser_options=ParserOptions()) -> None:
         self.data: bytes = data
         self.options = parser_options
-        self.root_message: ProtoParser.Message = ProtoParser.Message(data, options=self.options)
+        self.rules = rules
+        self.root_message: ProtoParser.Message = ProtoParser.Message(
+            data=data,
+            options=self.options,
+            rules=self.rules
+        )
 
     def gen_str_lines(self) -> Generator[str]:
         for f in self.root_message.gen_string_lines():
@@ -628,25 +639,32 @@ def hack_generator_to_list(generator_func):
     return [x for x in generator_func]
 
 
-def format_pbuf(message, parser_options: ProtoParser.ParserOptions):
-    for l in format_table(ProtoParser(message, parser_options).gen_str_rows()):
+def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule]):
+    for l in format_table(ProtoParser(data=message, parser_options=parser_options, rules=rules).gen_str_rows()):
         yield l
 
 
-def format_grpc(data, parser_options: ProtoParser.ParserOptions, compression_scheme="gzip"):
+def format_grpc(data: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule], compression_scheme="gzip"):
     message_count = 0
-    for compressed, pb_message in parse_grpc_messages(data, compression_scheme):
+    for compressed, pb_message in parse_grpc_messages(data=data, compression_scheme=compression_scheme):
         headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(compressed) + ')'
 
         yield [("text", headline)]
-        for l in format_pbuf(pb_message, parser_options):
+        for l in format_pbuf(
+            message=pb_message,
+            parser_options=parser_options,
+            rules=rules
+        ):
             yield l
 
 
 class ViewGrpcProtobuf(base.View):
-    """Human friendly view of protocol buffers
-    The view uses the protoc compiler to decode the binary
-    """
+    """Human friendly view of protocol buffers"""
+
+    @dataclass
+    class ViewConfig:
+        parser_options: ProtoParser.ParserOptions = ProtoParser.ParserOptions()
+        parser_rules: List[ProtoParser.ParserRule] = field(default_factory=list)
 
     name = "gRPC/Protocol Buffer"
     __content_types_pb = [
@@ -666,20 +684,30 @@ class ViewGrpcProtobuf(base.View):
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
-    def __init__(self, parser_options: ProtoParser.ParserOptions=None) -> None:
+    def __init__(self, config: ViewGrpcProtobuf.ViewConfig=ViewConfig()) -> None:
         super().__init__()
-        self.parser_options = parser_options if parser_options else ProtoParser.ParserOptions()
-        self.test()
+        self.config = config
+        self.test()  # ToDo: remove me
 
     # ToDo: remove me
     def test(self):
         # overwrites options handed in to view
         rules = [
-            ProtoParser.ParserRule(
+            # Note: first two rules use the same flow filter. Even with '~s' and '~q' filter expressions, the whole flow would be matched
+            #       (for '~s') or not matched (for '~q'), if the contentview displays a http.Message belonging to a flow with request
+            #       and response. The rules have to be applied on per-message,basis, though.
+            #       Thus different ParserRule classes are used:
+            #
+            #       - ParserRule: applied to requests and responses
+            #       - ParserRuleRequest: applies to requests only
+            #       - ParserRuleResponse: applies to responses only
+            #
+            #       The actual filter definition in the rule, would still match the whole flow. This means '~u' expressions could
+            #       be used, even if the response message is displayed in the contentview.
+
+            ProtoParser.ParserRuleRequest(
                 name = "Google reverse Geo coordinate lookup request",
                 filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
-                apply_request=True,
-                apply_response=False,
                 field_definitions=[
                     ProtoParser.ParserFieldDefinition(tag="1", name="position"),
                     ProtoParser.ParserFieldDefinition(tag="1.1", name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),
@@ -688,11 +716,9 @@ class ViewGrpcProtobuf(base.View):
                     ProtoParser.ParserFieldDefinition(tag="7", name="app"),
                 ]
             ),
-            ProtoParser.ParserRule(
+            ProtoParser.ParserRuleResponse(
                 name = "Google reverse Geo coordinate lookup response",
                 filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
-                apply_request=False,
-                apply_response=True,
                 field_definitions=[
                     ProtoParser.ParserFieldDefinition(tag="1.2", name="address"),
                     ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
@@ -704,11 +730,9 @@ class ViewGrpcProtobuf(base.View):
                     ProtoParser.ParserFieldDefinition(tag="7", name="app"),
                 ]
             ),
-            ProtoParser.ParserRule(
+            ProtoParser.ParserRuleRequest(
                 name = "Snapchat targeting query request",
                 filter = "api.snapchat.com/snapchat.cdp.cof.CircumstancesService/targetingQuery",
-                apply_request=True,
-                apply_response=False,
                 field_definitions=[
                     ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["5", "8"], name="res_x"),
                     ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["6", "9"], name="res_y"),
@@ -719,7 +743,44 @@ class ViewGrpcProtobuf(base.View):
             ),
         ]
 
-        self.parser_options.rules = rules
+        self.config.parser_rules = rules
+
+    def _matching_rules(self, rules: List[ProtoParser.ParserRule], message: http.Message, flow: flow.Flow) -> List[ProtoParser.ParserRule]:
+        """Checks which of the give rules applies and returns a List only containing those rules
+
+        Each rule defines a flow filter in rule.filter which is usually matched against a flow.
+        When it comes to protobuf parsing, in most cases request messages differ from response messages.
+        Thus, it has to be possible to apply a rule to a http.Request or a http.Response, only.
+
+        As the name flowfilter suggests, filters are working on a flow-level, not on message-level.
+        This means:
+
+        - the filter expression '~q' matches all flows with a request, but no response
+        - the filter expression '~s' matches all flows with a response
+
+        In result, for complete flows (with a gRPC message in the request and the response), ParserRules would
+        either be applied to request and response at the same time ('~s') or neither would match request, nor
+        response (~q).
+
+        To distinguish between rules which should be applied to response messages, request messages or both
+        (while being applied to the whole flow), different classes with same behavior are used to wrap rules:
+
+            - ParserRule: applies to requests and responses
+            - ParserRuleRequest: applies to requests only
+            - ParserRuleResponse: applies to responses only
+        """
+        is_request = isinstance(message, http.Request)
+        res: List[ProtoParser.ParserRule] = []
+        for rule in rules:
+            # message based rule matching
+            if is_request and isinstance(rule, ProtoParser.ParserRuleResponse):
+                continue
+            elif not is_request and isinstance(rule, ProtoParser.ParserRuleRequest):
+                continue
+            # flow based rule matching
+            if flowfilter.match(rule.filter, flow=flow):
+                res.append(rule)
+        return res
 
     def __call__(
         self,
@@ -730,23 +791,7 @@ class ViewGrpcProtobuf(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata,
     ) -> contentviews.TViewResult:
-        # activate / deactivate rules depending on flowfilter
-        # not optimal, as this acts on an global options instance, but only used by a single view at a given time
-        is_request = isinstance(http_message, http.Request)
-        for rule in self.parser_options.rules:
-            if is_request and not rule.apply_request:
-                rule._applies = False
-                continue
-            if not is_request and not rule.apply_response:
-                rule._applies = False
-                continue
-            if flowfilter.match(rule.filter, flow=flow):
-                ctx.log.info("match: " + rule.name)
-                rule._applies = True
-            else:
-                ctx.log.info("no match: " + rule.name + " for " + flow.id)
-                rule._applies = False
-
+        applicabble_rules = self._matching_rules(rules=self.config.parser_rules, flow=flow, message=http_message)
         if content_type in self.__content_types_grpc:
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
@@ -765,12 +810,17 @@ class ViewGrpcProtobuf(base.View):
 
             text_iter = format_grpc(
                 data=data,
-                parser_options=self.parser_options,
-                compression_scheme=grpc_encoding
+                parser_options=self.config.parser_options,
+                compression_scheme=grpc_encoding,
+                rules=applicabble_rules
             )
             title = "gRPC"
         else:
-            text_iter = format_pbuf(data, self.parser_options)
+            text_iter = format_pbuf(
+                message=data,
+                parser_options=self.config.parser_options,
+                rules=applicabble_rules
+            )
             title = "Protobuf (flattened)"
 
         # hacky bugfix, see description above generator functions format_pbuf/format_grpc
