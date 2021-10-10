@@ -16,23 +16,61 @@ import struct
 class ProtoParser:
     @dataclass
     class ParserRule:
+        """
+        A parser rule lists Field definitions which are applied if the filter rule matches the flow.
+
+        Matching on flow-level also means, a match applies to request AND response messages.
+        To restrict a rule to a requests only use 'ParserRuleRequest', instead.
+        To restrict a rule to a responses only use 'ParserRuleResponse', instead.
+        """
+
         field_definitions: List[ProtoParser.ParserFieldDefinition]
+        """List of field definitions for this rule """
+
         name: str = ""
-        description: str = ""
-        # rule is only applied if flow filter matches
+        """Name of this rule, only used for debugging"""
+
         filter: str = ""
+        """
+        Flowfilter to select which flows to apply to ('~q' and '~s' can not be used to distinguish
+        if the rule should apply to the request or response of a flow. To do so, use ParserRuleRequest
+        or ParserRuleResponse. ParserRule always applies to request and response.)
+        """
 
     @dataclass
     class ParserRuleResponse(ParserRule):
+        """
+        A parser rule lists Field definitions which are applied if the filter rule matches the flow.
+
+        The rule only applies if the processed message is a server response.
+        """
         pass
 
     @dataclass
     class ParserRuleRequest(ParserRule):
+        """
+        A parser rule lists Field definitions which are applied if the filter rule matches the flow.
+
+        The rule only applies if the processed message is a client request.
+        """
         pass
 
     @dataclass
     class ParserFieldDefinition:
-        # the 'tag' could be considered as "absolute path" to match a unique field, yet
+        """
+        Defines how to parse a field (or fields of the same type) in a protobuf messages.
+
+        This allows to apply an intended decoding (f.e. decode uint4 as double instead) and a descriptive
+        name to a field. Field definitions are aggregated into rules, which also hold filters matching
+        to messages.
+
+        The most natural way to use this, is to describe known parts of a single protobuf message
+        in a set of field descriptors, pack them into a rule and set the filter of the rule in a way,
+        that it only applies to proper protobuf messages (f.e. to request traffic against an API endpoint
+        matched by an URL flowfilter)
+        """
+
+        # A 'tag' could be considered as "absolute path" to match a unique field, yet
         # protobuf allows to uses the same nested message in different positions of the parent message
         # The 'tag_prefixes' parameter allows to apply the field definition to different "leafs nodes"
         # of a message.
@@ -58,14 +96,18 @@ class ProtoParser:
         # tag_prefixes = ['1.2', '2.5']
         #
         # applies to: tag '1.2' and tag '1.5'
+
         tag: str
+        """Field tag for which this description applies (including flattened tag path, f.e. '1.2.2.4')"""
+
         tag_prefixes: List[str] = field(default_factory=list)
+        """List of prefixes for tag matching (f.e. tag_prefixes=['1.2.', '2.2.'] with tag='1' matches '1.2.1' and '2.2.1')"""
 
-        # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
         intended_decoding: ProtoParser.DecodedTypes = None
+        """optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)"""
 
-        # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
-        name: ProtoParser.DecodedTypes = None
+        name: str = None
+        """optional: intended field for visualization (parser fails over to alternate decoding if not possible)"""
 
     @dataclass
     class ParserOptions:
@@ -127,21 +169,6 @@ class ProtoParser:
         def is_root_message(self) -> bool:
             return False if self.parent_field else True
 
-        @property
-        def root_message(self) -> ProtoParser.Message:
-            if self.is_root_message:
-                return self
-            else:
-                return self.parent_field.root_message
-
-        @property
-        def tag_history(self) -> List[int]:
-            if self.is_root_message:
-                return []
-            else:
-                tags = self.parent_field.tag_history()[:]
-                return tags
-
         def parse_message_fields(self, message: bytes) -> List:
             res: List[ProtoParser.Field] = []
 
@@ -187,10 +214,16 @@ class ProtoParser:
                 res.append(field)
             return res
 
-        def gen_list(self) -> Generator[Dict]:
+        def gen_fields(self) -> Generator[ProtoParser.Field]:
             for f in self.fields:
-                for field_val in f.gen_field_dicts():
-                    yield field_val
+                yield f
+
+        def gen_flat_decoded_field_dicts(self) -> Generator[Dict]:
+            # iterate over fields
+            for f in self.gen_fields():
+                # convert field and nested fields to dicts
+                for d in f.gen_flat_decoded_field_dicts():
+                    yield d
 
         def gen_string_lines(self) -> Generator[str]:
             # Excluding fields containing message headers simplifies the view, but without
@@ -198,7 +231,7 @@ class ProtoParser:
             # to declare a different interpretation for the message (the message is a length-delimeted
             # field value, which could alternatively be parsed as 'str' or 'bytes' if the field tag
             # is known)
-            for field_dict in self.gen_list():
+            for field_dict in self.gen_flat_decoded_field_dicts():
                 if self.options.exclude_message_headers and field_dict["decoding"] == "message":
                     continue
 
@@ -222,7 +255,7 @@ class ProtoParser:
             # to declare a different interpretation for the message (the message is a length-delimeted
             # field value, which could alternatively be parsed as 'str' or 'bytes' if the field tag
             # is known)
-            for field_dict in self.gen_list():
+            for field_dict in self.gen_flat_decoded_field_dicts():
                 if self.options.exclude_message_headers and field_dict["decoding"] == "message":
                     continue
 
@@ -236,7 +269,8 @@ class ProtoParser:
                 yield col1, col2, col3, col4
 
     class Field:
-        """represents a single field of a protobuf message and handles the varios encodings.
+        """
+        Represents a single field of a protobuf message and handles the varios encodings.
 
         As mitmproxy sees the data passing by as raw protobuf message, it only knows the
         WireTypes. Each of the WireTypes could represent different Protobuf field types.
@@ -350,9 +384,11 @@ class ProtoParser:
             self,
             intended_decoding: ProtoParser.DecodedTypes
         ) -> Tuple[ProtoParser.DecodedTypes, any]:
-            """Tries to decode as intended, applies failover, if not possible
+            """
+            Tries to decode as intended, applies failover, if not possible
 
-            Returns selected decoding and decoded value"""
+            Returns selected decoding and decoded value
+            """
             if self.wire_type == GoogleProtobuf.Pair.WireTypes.varint:
                 try:
                     return intended_decoding, self.decode_as(intended_decoding)
@@ -469,13 +505,19 @@ class ProtoParser:
             raise NotImplementedError("Future work, needed to manipulate and re-encode protobuf message, with respect to given wire types")
 
         def _wire_value_as_float(self) -> float:
-            # handles double (64bit) and float (32bit)
-            # assumes Network Byte Order (big endian)
-            # usable for (WireType --> Protobuf Type):
-            #   varint --> double/float (not intended by ProtoBuf, but used in the wild)
-            #   bit_32 --> float
-            #   bit_64 --> double
-            #   len_delimited --> 4 bytes: float / 8 bytes: double / other sizes return NaN
+            """
+            Handles double (64bit) and float (32bit).
+            Assumes Network Byte Order (big endian).
+
+            Usable for:
+
+               WireType --> Protobuf Type):
+               ----------------------------
+               varint        --> double/float (not intended by ProtoBuf, but used in the wild)
+               bit_32        --> float
+               bit_64        --> double
+               len_delimited --> 4 bytes: float / 8 bytes: double / other sizes return NaN
+            """
             v = self._value_as_bytes()
             if len(v) == 4:
                 return struct.unpack("!f", v)[0]
@@ -510,23 +552,32 @@ class ProtoParser:
                 return res.replace("\n", "\\n") if escape_newline else res
             return str(self.wire_value)
 
-        def gen_field_dicts(self) -> Generator[Dict]:
+        def gen_flat_decoded_field_dicts(self) -> Generator[Dict]:
+            """Returns a generator which passes the field as a dict.
+
+            In order to return the field value it gets decoded (based on a failover strategy and
+            provided ParserRules).
+            If the field holds a nested message, the fields contained in the message are appended.
+            Ultimately this flattens all fields recursively.
+            """
             selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
-            field_dict = {
+            field_desc_dict = {
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
                 "decoding": self._decoding_str(selected_decoding),
                 "name": self.name,
             }
             if isinstance(decoded_val, ProtoParser.Message):
-                field_dict["val"] = ""
-                yield field_dict
+                field_desc_dict["val"] = ""  # message has no value, because contained fields get appended (flattened)
+                yield field_desc_dict
                 # the value is an embedded message, thus add the message fields
-                for field_dict in decoded_val.gen_list():
-                    yield field_dict
+                decoded_val: ProtoParser.Message = decoded_val
+                for f in decoded_val.gen_fields():
+                    for field_dict in f.gen_flat_decoded_field_dicts():
+                        yield field_dict
             else:
-                field_dict["val"] = str(decoded_val)
-                yield field_dict
+                field_desc_dict["val"] = str(decoded_val)
+                yield field_desc_dict
 
     def __init__(self, data: bytes, rules: List[ProtoParser.ParserRule]=[], parser_options=ParserOptions()) -> None:
         self.data: bytes = data
@@ -548,9 +599,11 @@ class ProtoParser:
 
 
 # Note: all content view formating functionality is kept out of the ProtoParser class, to
-#       allow it to be use independently
+#       allow it to be use independently.
+#       This function is generic enough, to consider moving it to mitmproxy.contentviews.base
 def format_table(
-    table_rows: Iterable[Tuple[str, ...]]
+    table_rows: Iterable[Tuple[str, ...]],
+    max_col_width=100,
 ) -> Iterator[base.TViewLine]:
     """
     Helper function to render tables with variable column count (move to contentview base, if needed elsewhere)
@@ -571,9 +624,8 @@ def format_table(
         # store row in list
         rows.append(row)
 
-    # ToDo: width of contentview has to be fetched to limit the width of columns to a usable value
     for i in range(len(cols_width)):
-        cols_width[i] = min(cols_width[i], 100)
+        cols_width[i] = min(cols_width[i], max_col_width)
 
     for row in rows:
         line: base.TViewLine = []
@@ -636,7 +688,7 @@ def parse_grpc_messages(data, compression_scheme) -> Generator[Tuple[bool, bytes
 # __call__ function. Ultimately, exceptions are raised directly from within __call__
 # instead in cases where the generator is accessed externally without exception handling.
 def hack_generator_to_list(generator_func):
-    return [x for x in generator_func]
+    return list(generator_func)
 
 
 def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule]):
@@ -647,7 +699,7 @@ def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules
 def format_grpc(data: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule], compression_scheme="gzip"):
     message_count = 0
     for compressed, pb_message in parse_grpc_messages(data=data, compression_scheme=compression_scheme):
-        headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(compressed) + ')'
+        headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(compression_scheme if compressed else compressed) + ')'
 
         yield [("text", headline)]
         for l in format_pbuf(
@@ -658,13 +710,14 @@ def format_grpc(data: bytes, parser_options: ProtoParser.ParserOptions, rules: L
             yield l
 
 
+@dataclass
+class ViewConfig:
+    parser_options: ProtoParser.ParserOptions = ProtoParser.ParserOptions()
+    parser_rules: List[ProtoParser.ParserRule] = field(default_factory=list)
+
+
 class ViewGrpcProtobuf(base.View):
     """Human friendly view of protocol buffers"""
-
-    @dataclass
-    class ViewConfig:
-        parser_options: ProtoParser.ParserOptions = ProtoParser.ParserOptions()
-        parser_rules: List[ProtoParser.ParserRule] = field(default_factory=list)
 
     name = "gRPC/Protocol Buffer"
     __content_types_pb = [
@@ -684,69 +737,13 @@ class ViewGrpcProtobuf(base.View):
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
-    def __init__(self, config: ViewGrpcProtobuf.ViewConfig=ViewConfig()) -> None:
+    def __init__(self, config: ViewConfig=ViewConfig()) -> None:
         super().__init__()
         self.config = config
-        self.test()  # ToDo: remove me
-
-    # ToDo: remove me
-    def test(self):
-        # overwrites options handed in to view
-        rules = [
-            # Note: first two rules use the same flow filter. Even with '~s' and '~q' filter expressions, the whole flow would be matched
-            #       (for '~s') or not matched (for '~q'), if the contentview displays a http.Message belonging to a flow with request
-            #       and response. The rules have to be applied on per-message,basis, though.
-            #       Thus different ParserRule classes are used:
-            #
-            #       - ParserRule: applied to requests and responses
-            #       - ParserRuleRequest: applies to requests only
-            #       - ParserRuleResponse: applies to responses only
-            #
-            #       The actual filter definition in the rule, would still match the whole flow. This means '~u' expressions could
-            #       be used, even if the response message is displayed in the contentview.
-
-            ProtoParser.ParserRuleRequest(
-                name = "Google reverse Geo coordinate lookup request",
-                filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
-                field_definitions=[
-                    ProtoParser.ParserFieldDefinition(tag="1", name="position"),
-                    ProtoParser.ParserFieldDefinition(tag="1.1", name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),
-                    ProtoParser.ParserFieldDefinition(tag="1.2", name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),
-                    ProtoParser.ParserFieldDefinition(tag="3", name="country"),
-                    ProtoParser.ParserFieldDefinition(tag="7", name="app"),
-                ]
-            ),
-            ProtoParser.ParserRuleResponse(
-                name = "Google reverse Geo coordinate lookup response",
-                filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
-                field_definitions=[
-                    ProtoParser.ParserFieldDefinition(tag="1.2", name="address"),
-                    ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
-                    ProtoParser.ParserFieldDefinition(tag="1.3.2", name="element value long"),
-                    ProtoParser.ParserFieldDefinition(tag="1.3.3", name="element value short"),
-                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
-                    ProtoParser.ParserFieldDefinition(tag=".1", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
-                    ProtoParser.ParserFieldDefinition(tag=".2", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
-                    ProtoParser.ParserFieldDefinition(tag="7", name="app"),
-                ]
-            ),
-            ProtoParser.ParserRuleRequest(
-                name = "Snapchat targeting query request",
-                filter = "api.snapchat.com/snapchat.cdp.cof.CircumstancesService/targetingQuery",
-                field_definitions=[
-                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["5", "8"], name="res_x"),
-                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["6", "9"], name="res_y"),
-                    ProtoParser.ParserFieldDefinition(tag="16", name="guid"),
-                    ProtoParser.ParserFieldDefinition(tag="24", name="source lib"),
-                    ProtoParser.ParserFieldDefinition(tag="29", name="timestamp"),
-                ]
-            ),
-        ]
-
-        self.config.parser_rules = rules
 
     def _matching_rules(self, rules: List[ProtoParser.ParserRule], message: http.Message, flow: flow.Flow) -> List[ProtoParser.ParserRule]:
-        """Checks which of the give rules applies and returns a List only containing those rules
+        """
+        Checks which of the give rules applies and returns a List only containing those rules
 
         Each rule defines a flow filter in rule.filter which is usually matched against a flow.
         When it comes to protobuf parsing, in most cases request messages differ from response messages.
@@ -795,13 +792,15 @@ class ViewGrpcProtobuf(base.View):
         if content_type in self.__content_types_grpc:
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
-            # Try to find select compression algorithm base on head 'grpc-encoding' header.
-            # If the header is not present or contains an unsupported compression, fall back to
-            # 'gzip' (__valid_grpc_encodings[0]).
-            # The compression scheme is only used if a gRPC message is flagged to be compressed, but
-            # 'format_grpc' expects it to be always set (compression scheme could no be determined based
-            # on the body data, unless additional logic gets added to analyse magic numbers of the message
-            # blob)
+            #
+            # The following code tries to determin the compression algorithm base on this header.
+            # If the header is not present or contains an unsupported compression, the logic falls back to
+            # 'gzip'.
+            #
+            # If a compressed gRPC message is found in the body data (compressed flag set), the information
+            # on the compression scheme is needed (even if not set by a header), in order to process the message.
+            # Thus we assure there is always an encoding selected. An encoding of 'Identity' would not make
+            # sense, if a message is flagged as being compressed, that's why a default is chosen.
             try:
                 h = http_message.headers["grpc-encoding"]
                 grpc_encoding = h if h in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
@@ -827,7 +826,8 @@ class ViewGrpcProtobuf(base.View):
         try:
             text_iter = hack_generator_to_list(text_iter)
         except Exception as e:
-            ctx.log.warn("gRPC contentview: {}".format(e))
+            import traceback
+            ctx.log.warn("gRPC contentview: {}".format(traceback.format_exc()))
             raise e
 
         return title, text_iter
