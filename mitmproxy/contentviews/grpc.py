@@ -6,7 +6,7 @@ import typing
 from . import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
-from mitmproxy import flow, http, contentviews, ctx
+from mitmproxy import flow, http, contentviews, ctx, flowfilter
 from enum import Enum
 
 import struct
@@ -17,6 +17,16 @@ class ProtoParser:
     @dataclass
     class ParserRule:
         field_definitions: typing.List[ProtoParser.ParserFieldDefinition]
+        name: str = ""
+        description: str = ""
+        # rule is only applied if flow filter matches
+        filter: str = ""
+        # should rule be applied to request messages
+        apply_request: bool = True
+        # should rule be applied to response messages
+        apply_response: bool = False
+        # only used internally
+        _applies: bool = False
 
     @dataclass
     class ParserFieldDefinition:
@@ -55,7 +65,7 @@ class ProtoParser:
     @dataclass
     class ParserOptions:
         # output should contain wiretype of fields
-        include_wiretype: bool = True
+        include_wiretype: bool = False
 
         # output should contain the fields which describe nested messages
         # (the nested messages bodies are always included, but the "header fields" could
@@ -212,9 +222,10 @@ class ProtoParser:
                     col1 = "[{}->{}]".format(field_dict["wireType"], field_dict["decoding"])
                 else:
                     col1 = "[{}]".format(field_dict["decoding"])
-                col2 = field_dict["tag"]
-                col3 = field_dict["val"]
-                yield col1, col2, col3
+                col2 = field_dict["name"]  # empty string if not set (consumes no space)
+                col3 = field_dict["tag"]
+                col4 = field_dict["val"]
+                yield col1, col2, col3, col4
 
     class Field:
         """represents a single field of a protobuf message and handles the varios encodings.
@@ -276,11 +287,51 @@ class ProtoParser:
             self.tag: int = tag
             self.owning_message: ProtoParser.Message = owning_message
             self.options: ProtoParser.ParserOptions = options
+            self.name: str = ""
             if self.owning_message.is_root_message:
                 self.parent_tags = []
             else:
                 self.parent_tags = self.owning_message.parent_field.parent_tags[:]
                 self.parent_tags.append(self.owning_message.parent_field.tag)
+
+            self.apply_rules()
+
+        def apply_rules(self, only_first_hit=True):
+            tag_str = self._gen_tag_str()
+            name = None
+            decoding = None
+
+            try:
+                for rule in self.options.rules:
+                    if not rule._applies:
+                        continue
+                    for fd in rule.field_definitions:
+                        match = False
+                        if len(fd.root_tags) == 0 and fd.tag == tag_str:
+                            match = True
+                        else:
+                            for rt in fd.root_tags:
+                                if rt + fd.tag == tag_str:
+                                    match = True
+                                    break
+                        if match:
+                            if only_first_hit:
+                                # only first match
+                                self.name = fd.name
+                                self.preferred_decoding = fd.intended_decoding
+                                return
+                            else:
+                                # overwrite matches till last rule was inspected
+                                # (f.e. allows to define name in one rule and intended_decoding in another one)
+                                name = fd.name if fd.name else name
+                                decoding = fd.intended_decoding if fd.intended_decoding else decoding
+
+                if name:
+                    self.name = name
+                if decoding:
+                    self.preferred_decoding = decoding
+            except Exception as e:
+                ctx.log.warn(e)
 
         def _gen_tag_str(self):
             tags = self.parent_tags[:]
@@ -416,7 +467,7 @@ class ProtoParser:
             #   bit_32 --> float
             #   bit_64 --> double
             #   len_delimited --> 4 bytes: float / 8 bytes: double / other sizes return NaN
-            v = self._value_as_bytes
+            v = self._value_as_bytes()
             if len(v) == 4:
                 return struct.unpack("!f", v)[0]
             elif len(v) == 8:
@@ -456,6 +507,7 @@ class ProtoParser:
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
                 "decoding": self._decoding_str(selected_decoding),
+                "name": self.name,
                 "val": str(decoded_val)
             }
 
@@ -466,6 +518,7 @@ class ProtoParser:
                         "tag": self._gen_tag_str(),
                         "wireType": self._wire_type_str(),
                         "decoding": self._decoding_str(selected_decoding),
+                        "name": self.name,
                         "val": ""
                 }
                 for field_dict in decoded_val.gen_list():
@@ -475,6 +528,7 @@ class ProtoParser:
                     "tag": self._gen_tag_str(),
                     "wireType": self._wire_type_str(),
                     "decoding": self._decoding_str(selected_decoding),
+                    "name": self.name,
                     "val": str(decoded_val)
                 }
 
@@ -630,15 +684,57 @@ class ViewGrpcProtobuf(base.View):
     def __init__(self, parser_options: ProtoParser.ParserOptions=None) -> None:
         super().__init__()
         self.parser_options = parser_options if parser_options else ProtoParser.ParserOptions()
+        self.test()
 
-    # remove this
+    # ToDo: remove me
     def test(self):
-        ProtoParser.ParserRule(
-            field_definitions=[
-                ProtoParser.ParserFieldDefinition(tag="3.1.6.1.1", name="setting"),
-                ProtoParser.ParserFieldDefinition(tag="3.1.6.1.1", name="value"),
-            ]
-        )
+        # overwrites options handed in to view
+        rules = [
+            ProtoParser.ParserRule(
+                name = "Google reverse Geo coordinate lookup request",
+                filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
+                apply_request=True,
+                apply_response=False,
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(tag="1", name="position"),
+                    ProtoParser.ParserFieldDefinition(tag="1.1", name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),
+                    ProtoParser.ParserFieldDefinition(tag="1.2", name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),
+                    ProtoParser.ParserFieldDefinition(tag="3", name="country"),
+                    ProtoParser.ParserFieldDefinition(tag="7", name="app"),
+                ]
+            ),
+            ProtoParser.ParserRule(
+                name = "Google reverse Geo coordinate lookup response",
+                filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
+                apply_request=False,
+                apply_response=True,
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(tag="1.2", name="address"),
+                    ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
+                    ProtoParser.ParserFieldDefinition(tag="1.3.2", name="element value long"),
+                    ProtoParser.ParserFieldDefinition(tag="1.3.3", name="element value short"),
+                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
+                    ProtoParser.ParserFieldDefinition(tag=".1", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
+                    ProtoParser.ParserFieldDefinition(tag=".2", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
+                    ProtoParser.ParserFieldDefinition(tag="7", name="app"),
+                ]
+            ),
+            ProtoParser.ParserRule(
+                name = "Snapchat targeting query request",
+                filter = "api.snapchat.com/snapchat.cdp.cof.CircumstancesService/targetingQuery",
+                apply_request=True,
+                apply_response=False,
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["5", "8"], name="res_x"),
+                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["6", "9"], name="res_y"),
+                    ProtoParser.ParserFieldDefinition(tag="16", name="guid"),
+                    ProtoParser.ParserFieldDefinition(tag="24", name="source lib"),
+                    ProtoParser.ParserFieldDefinition(tag="29", name="timestamp"),
+                ]
+            ),
+        ]
+
+        self.parser_options.rules = rules
 
     def __call__(
         self,
@@ -649,6 +745,23 @@ class ViewGrpcProtobuf(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata,
     ) -> contentviews.TViewResult:
+        # activate / deactivate rules depending on flowfilter
+        # not optimal, as this acts on an global options instance, but only used by a single view at a given time
+        is_request = isinstance(http_message, http.Request)
+        for rule in self.parser_options.rules:
+            if is_request and not rule.apply_request:
+                rule._applies = False
+                continue
+            if not is_request and not rule.apply_response:
+                rule._applies = False
+                continue
+            if flowfilter.match(rule.filter, flow=flow):
+                ctx.log.info("match: " + rule.name)
+                rule._applies = True
+            else:
+                ctx.log.info("no match: " + rule.name + " for " + flow.id)
+                rule._applies = False
+
         if content_type in self.__content_types_grpc:
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
