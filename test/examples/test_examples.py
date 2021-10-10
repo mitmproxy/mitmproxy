@@ -22,6 +22,12 @@ class TestScripts(tservers.MasterTest):
             _, fmt = swapcase(b"<html>Test!</html>")
             assert any(b'tEST!' in val[0][1] for val in fmt)
 
+    def test_custom_grpc_contentview(self, tdata):
+        with taddons.context() as tctx:
+            tctx.script(tdata.path("../examples/addons/custom-grpc-contentview.py"))
+            # ToDo: test requires proper body content data, to which the rules could be applied
+            pass
+
     def test_modify_form(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(tdata.path("../examples/addons/http-modify-form.py"))
