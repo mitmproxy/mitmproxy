@@ -8,6 +8,8 @@
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously (@mhils)
+* New content view to handle gRPC/protobuf. Allows to apply custom definitions to visualize different field decodings.
+  Includes example addon with applying custom definitions for selected gRPC traffic (@mame82)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
