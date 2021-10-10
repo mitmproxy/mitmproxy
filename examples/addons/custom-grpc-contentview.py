@@ -76,7 +76,8 @@ class ViewGrpcWithRules(ViewGrpcProtobuf):
 
     def render_priority(self, *args, **kwargs) -> float:
         # increase priority above default gRPC view
-        return super().render_priority(*args, **kwargs) + 1
+        s_prio = super().render_priority(*args, **kwargs)
+        return s_prio + 1 if s_prio > 0 else s_prio
 
 
 view = ViewGrpcWithRules()
