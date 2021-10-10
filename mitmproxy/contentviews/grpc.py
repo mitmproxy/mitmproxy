@@ -219,35 +219,22 @@ class ProtoParser:
                 yield f
 
         def gen_flat_decoded_field_dicts(self) -> Generator[Dict]:
+            """
+            This generator returns a flattened version of the fields from a message (including nested fields)
+
+            A single entry has the form:
+            {
+                "tag": str       # fully qualified tag (all tags starting from the root message, concatenated with '.' delimiter)
+                "wireType": str  # describes the wire encoding used by the field
+                "decoding": str  # describes the chosen decoding (interpretation of wire encoding, according to protobuf types)
+                "val": str|bytes|int|float # the decoded value in python representation
+            }
+            """
             # iterate over fields
             for f in self.gen_fields():
                 # convert field and nested fields to dicts
                 for d in f.gen_flat_decoded_field_dicts():
                     yield d
-
-        def gen_string_lines(self) -> Generator[str]:
-            # Excluding fields containing message headers simplifies the view, but without
-            # knowing the message tags, they can not be used in a custom definition, in order
-            # to declare a different interpretation for the message (the message is a length-delimeted
-            # field value, which could alternatively be parsed as 'str' or 'bytes' if the field tag
-            # is known)
-            for field_dict in self.gen_flat_decoded_field_dicts():
-                if self.options.exclude_message_headers and field_dict["decoding"] == "message":
-                    continue
-
-                if self.options.include_wiretype:
-                    yield "{} [{}->{}]: {}".format(
-                        field_dict["tag"],
-                        field_dict["wireType"],
-                        field_dict["decoding"],
-                        field_dict["val"],
-                    )
-                else:
-                    yield "{} [{}]: {}".format(
-                        field_dict["tag"],
-                        field_dict["decoding"],
-                        field_dict["val"],
-                    )
 
         def gen_string_rows(self) -> Generator[Tuple[str, ...]]:
             # Excluding fields containing message headers simplifies the view, but without
@@ -265,7 +252,7 @@ class ProtoParser:
                     col1 = "[{}]".format(field_dict["decoding"])
                 col2 = field_dict["name"]  # empty string if not set (consumes no space)
                 col3 = field_dict["tag"]
-                col4 = field_dict["val"]
+                col4 = str(field_dict["val"])
                 yield col1, col2, col3, col4
 
     class Field:
@@ -576,7 +563,7 @@ class ProtoParser:
                     for field_dict in f.gen_flat_decoded_field_dicts():
                         yield field_dict
             else:
-                field_desc_dict["val"] = str(decoded_val)
+                field_desc_dict["val"] = decoded_val
                 yield field_desc_dict
 
     def __init__(self, data: bytes, rules: List[ProtoParser.ParserRule]=[], parser_options=ParserOptions()) -> None:
@@ -588,10 +575,6 @@ class ProtoParser:
             options=self.options,
             rules=self.rules
         )
-
-    def gen_str_lines(self) -> Generator[str]:
-        for f in self.root_message.gen_string_lines():
-            yield f
 
     def gen_str_rows(self) -> Generator[str]:
         for f in self.root_message.gen_string_rows():
