@@ -1,7 +1,7 @@
 from __future__ import annotations  # for typing with forward declarations
 from dataclasses import dataclass, field
 from typing import Optional
-import typing
+from typing import List, Tuple, Generator, Dict, Iterable, Iterator
 
 from . import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
@@ -16,7 +16,7 @@ import struct
 class ProtoParser:
     @dataclass
     class ParserRule:
-        field_definitions: typing.List[ProtoParser.ParserFieldDefinition]
+        field_definitions: List[ProtoParser.ParserFieldDefinition]
         name: str = ""
         description: str = ""
         # rule is only applied if flow filter matches
@@ -54,7 +54,7 @@ class ProtoParser:
         #
         # applies to: tag '1.2.1.3' and tag '2.5.1.3'
         # does not apply to: '1.3', unless root_tag is extended to root_tag = ['1.2', '2.5', '']
-        root_tags: typing.List[str] = field(default_factory=list)
+        root_tags: List[str] = field(default_factory=list)
 
         # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
         intended_decoding: ProtoParser.DecodedTypes = None
@@ -73,7 +73,7 @@ class ProtoParser:
         exclude_message_headers: bool = False
 
         # optional: rules
-        rules: typing.List[ProtoParser.ParserRule] = field(default_factory=list)
+        rules: List[ProtoParser.ParserRule] = field(default_factory=list)
 
     class DecodedTypes(Enum):
         # varint
@@ -112,7 +112,7 @@ class ProtoParser:
             self.parent_field: ProtoParser.Field = parent_field
             self.options: ProtoParser.ParserOptions = options
             try:
-                self.fields: typing.List[ProtoParser.Field] = self.parse_message_fields(data)
+                self.fields: List[ProtoParser.Field] = self.parse_message_fields(data)
             except:
                 raise ValueError("not a valid protobuf message")
 
@@ -135,8 +135,8 @@ class ProtoParser:
                 tags = self.parent_field.tag_history()[:]
                 return tags
 
-        def parse_message_fields(self, message: bytes) -> typing.List:
-            res: typing.List[ProtoParser.Field] = []
+        def parse_message_fields(self, message: bytes) -> List:
+            res: List[ProtoParser.Field] = []
 
             pb = GoogleProtobuf.from_bytes(message)
             for pair in pb.pairs:
@@ -179,12 +179,12 @@ class ProtoParser:
                 res.append(field)
             return res
 
-        def gen_list(self) -> typing.Generator[typing.Dict]:
+        def gen_list(self) -> Generator[Dict]:
             for f in self.fields:
                 for field_val in f.gen_list():
                     yield field_val
 
-        def gen_string_lines(self) -> typing.Generator[str]:
+        def gen_string_lines(self) -> Generator[str]:
             # Excluding fields containing message headers simplifies the view, but without
             # knowing the message tags, they can not be used in a custom definition, in order
             # to declare a different interpretation for the message (the message is a length-delimeted
@@ -208,7 +208,7 @@ class ProtoParser:
                         field_dict["val"],
                     )
 
-        def gen_string_rows(self) -> typing.Generator[typing.Tuple[str, ...]]:
+        def gen_string_rows(self) -> Generator[Tuple[str, ...]]:
             # Excluding fields containing message headers simplifies the view, but without
             # knowing the message tags, they can not be used in a custom definition, in order
             # to declare a different interpretation for the message (the message is a length-delimeted
@@ -341,7 +341,7 @@ class ProtoParser:
         def safe_decode_as(
             self,
             intended_decoding: ProtoParser.DecodedTypes
-        ) -> typing.Tuple[ProtoParser.DecodedTypes, any]:
+        ) -> Tuple[ProtoParser.DecodedTypes, any]:
             """Tries to decode as intended, applies failover, if not possible
 
             Returns selected decoding and decoded value"""
@@ -369,7 +369,7 @@ class ProtoParser:
                     return intended_decoding, self.decode_as(intended_decoding)
                 except:
                     # failover strategy: message --> string (valid UTF-8) --> bytes
-                    len_delimited_strategy: typing.List[ProtoParser.DecodedTypes] = [
+                    len_delimited_strategy: List[ProtoParser.DecodedTypes] = [
                         ProtoParser.DecodedTypes.message,
                         ProtoParser.DecodedTypes.string,
                         ProtoParser.DecodedTypes.bytes  # should always work
@@ -537,11 +537,11 @@ class ProtoParser:
         self.options = parser_options
         self.root_message: ProtoParser.Message = ProtoParser.Message(data, options=self.options)
 
-    def gen_str_lines(self) -> typing.Generator[str]:
+    def gen_str_lines(self) -> Generator[str]:
         for f in self.root_message.gen_string_lines():
             yield f
 
-    def gen_str_rows(self) -> typing.Generator[str]:
+    def gen_str_rows(self) -> Generator[str]:
         for f in self.root_message.gen_string_rows():
             yield f
 
@@ -549,17 +549,17 @@ class ProtoParser:
 # Note: all content view formating functionality is kept out of the ProtoParser class, to
 #       allow it to be use independently
 def format_table(
-    table_rows: typing.Iterable[typing.Tuple[str, ...]]
-) -> typing.Iterator[base.TViewLine]:
+    table_rows: Iterable[Tuple[str, ...]]
+) -> Iterator[base.TViewLine]:
     """
     Helper function to render tables with variable column count (move to contentview base, if needed elsewhere)
 
     Note: The function has to copy all values from a generator to a list, as the list of rows has to be
           processed twice (to determin the column widths first). The same is true for 'base.format_pairs'.
     """
-    rows: typing.List[typing.Tuple[str, ...]] = []
+    rows: List[Tuple[str, ...]] = []
     col_count = 0
-    cols_width: typing.List[int] = []
+    cols_width: List[int] = []
     for row in table_rows:
         col_count = max(col_count, len(row))
         while len(cols_width) < col_count:
@@ -582,7 +582,7 @@ def format_table(
         yield line
 
 
-def parse_grpc_messages(data, compression_scheme) -> typing.Generator[typing.Tuple[bool, bytes]]:
+def parse_grpc_messages(data, compression_scheme) -> Generator[Tuple[bool, bytes]]:
     """Generator iterates over body data and returns a boolean indicating if the messages
     was compressed, along with the raw message data (decompressed) for each gRPC message
     contained in the body data"""
@@ -598,7 +598,7 @@ def parse_grpc_messages(data, compression_scheme) -> typing.Generator[typing.Tup
                 decoded_message = decode(encoded=decoded_message, encoding=compression_scheme)
             except Exception as e:
                 raise ValueError("Failed to decompress gRPC message with gzip") from e
-   
+
         yield msg_is_compressed, decoded_message
         data = data[5 + length:]
 
