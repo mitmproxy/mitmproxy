@@ -21,40 +21,43 @@ class ProtoParser:
         description: str = ""
         # rule is only applied if flow filter matches
         filter: str = ""
-        # should rule be applied to request messages
+        # if True, rule is  applied to request messages
         apply_request: bool = True
-        # should rule be applied to response messages
+        # if False, rule is  applied to request messages
         apply_response: bool = False
         # only used internally
         _applies: bool = False
 
     @dataclass
     class ParserFieldDefinition:
-        # the tag of the field to apply the definition to
-        # while a field tag is a single number, this parameter takes the "full qualified" tag
-        # to uniquely identify a message field (f.e. '1.2.1.3')
-        tag: str
-
-        # the 'field_tag' could be considered as "absolute path" to match a unique field, yet
+        # the 'tag' could be considered as "absolute path" to match a unique field, yet
         # protobuf allows to uses the same nested message in different positions of the parent message
-        # The 'root_tag' parameter allows to apply the field definition to different "leafs nodes"
+        # The 'tag_prefixes' parameter allows to apply the field definition to different "leafs nodes"
         # of a message.
         #
-        # Example 1:
+        # Example 1: match a single, absolute tag
         # ----------
         # tag = '1.2'
-        # root_tags = [] (default)
+        # tag_prefixes = [] (default)
         #
         # applies to: tag '1.2'
         #
-        # Example 2:
+        # Example 2: match multiple tags with same ending
         # ----------
         # tag = '1.3'
-        # root_tags = ['1.2', '2.5']
+        # tag_prefixes = ['1.2.', '2.5.']
         #
         # applies to: tag '1.2.1.3' and tag '2.5.1.3'
-        # does not apply to: '1.3', unless root_tag is extended to root_tag = ['1.2', '2.5', '']
-        root_tags: List[str] = field(default_factory=list)
+        # does not apply to: '1.3', unless tag_prefixes is extended to tag_prefixes = ['1.2', '2.5', '']
+        #
+        # Example 3: match multiple tags
+        # ----------
+        # tag = ''
+        # tag_prefixes = ['1.2', '2.5']
+        #
+        # applies to: tag '1.2' and tag '1.5'
+        tag: str
+        tag_prefixes: List[str] = field(default_factory=list)
 
         # optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)
         intended_decoding: ProtoParser.DecodedTypes = None
@@ -117,18 +120,18 @@ class ProtoParser:
                 raise ValueError("not a valid protobuf message")
 
         @property
-        def is_root_message(self):
+        def is_root_message(self) -> bool:
             return False if self.parent_field else True
 
         @property
-        def root_message(self):
+        def root_message(self) -> ProtoParser.Message:
             if self.is_root_message:
                 return self
             else:
                 return self.parent_field.root_message
 
         @property
-        def tag_history(self):
+        def tag_history(self) -> List[int]:
             if self.is_root_message:
                 return []
             else:
@@ -181,7 +184,7 @@ class ProtoParser:
 
         def gen_list(self) -> Generator[Dict]:
             for f in self.fields:
-                for field_val in f.gen_list():
+                for field_val in f.gen_field_dicts():
                     yield field_val
 
         def gen_string_lines(self) -> Generator[str]:
@@ -307,10 +310,10 @@ class ProtoParser:
                         continue
                     for fd in rule.field_definitions:
                         match = False
-                        if len(fd.root_tags) == 0 and fd.tag == tag_str:
+                        if len(fd.tag_prefixes) == 0 and fd.tag == tag_str:
                             match = True
                         else:
-                            for rt in fd.root_tags:
+                            for rt in fd.tag_prefixes:
                                 if rt + fd.tag == tag_str:
                                     match = True
                                     break
@@ -501,36 +504,23 @@ class ProtoParser:
                 return res.replace("\n", "\\n") if escape_newline else res
             return str(self.wire_value)
 
-        def value_as_dict(self):
+        def gen_field_dicts(self) -> Generator[Dict]:
             selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
-            return {
+            field_dict = {
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
                 "decoding": self._decoding_str(selected_decoding),
                 "name": self.name,
-                "val": str(decoded_val)
             }
-
-        def gen_list(self):
-            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
             if isinstance(decoded_val, ProtoParser.Message):
-                yield {
-                        "tag": self._gen_tag_str(),
-                        "wireType": self._wire_type_str(),
-                        "decoding": self._decoding_str(selected_decoding),
-                        "name": self.name,
-                        "val": ""
-                }
+                field_dict["val"] = ""
+                yield field_dict
+                # the value is an embedded message, thus add the message fields
                 for field_dict in decoded_val.gen_list():
                     yield field_dict
             else:
-                yield {
-                    "tag": self._gen_tag_str(),
-                    "wireType": self._wire_type_str(),
-                    "decoding": self._decoding_str(selected_decoding),
-                    "name": self.name,
-                    "val": str(decoded_val)
-                }
+                field_dict["val"] = str(decoded_val)
+                yield field_dict
 
     def __init__(self, data: bytes, parser_options=ParserOptions()) -> None:
         self.data: bytes = data
@@ -708,9 +698,9 @@ class ViewGrpcProtobuf(base.View):
                     ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
                     ProtoParser.ParserFieldDefinition(tag="1.3.2", name="element value long"),
                     ProtoParser.ParserFieldDefinition(tag="1.3.3", name="element value short"),
-                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
-                    ProtoParser.ParserFieldDefinition(tag=".1", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
-                    ProtoParser.ParserFieldDefinition(tag=".2", root_tags=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
+                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
+                    ProtoParser.ParserFieldDefinition(tag=".1", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
+                    ProtoParser.ParserFieldDefinition(tag=".2", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
                     ProtoParser.ParserFieldDefinition(tag="7", name="app"),
                 ]
             ),
@@ -720,8 +710,8 @@ class ViewGrpcProtobuf(base.View):
                 apply_request=True,
                 apply_response=False,
                 field_definitions=[
-                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["5", "8"], name="res_x"),
-                    ProtoParser.ParserFieldDefinition(tag="", root_tags=["6", "9"], name="res_y"),
+                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["5", "8"], name="res_x"),
+                    ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["6", "9"], name="res_y"),
                     ProtoParser.ParserFieldDefinition(tag="16", name="guid"),
                     ProtoParser.ParserFieldDefinition(tag="24", name="source lib"),
                     ProtoParser.ParserFieldDefinition(tag="29", name="timestamp"),
