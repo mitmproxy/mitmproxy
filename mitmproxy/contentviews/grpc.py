@@ -6,11 +6,11 @@ import typing
 from . import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
+from mitmproxy.net.encoding import decode
 from mitmproxy import flow, http, contentviews, ctx, flowfilter
 from enum import Enum
 
 import struct
-import gzip
 
 
 class ProtoParser:
@@ -594,16 +594,11 @@ def parse_grpc_messages(data, compression_scheme) -> typing.Generator[typing.Tup
             raise ValueError("invalid gRPC message") from e
 
         if msg_is_compressed:
-            if compression_scheme == "gzip":
-                try:
-                    decoded_message = gzip.decompress(decoded_message)
-                except:
-                    raise ValueError("Failed to decompress gRPC message with gzip")
-            elif compression_scheme == "deflate":
-                raise NotImplementedError("no real-world example to test with, yet")
-            else:
-                raise NotImplementedError("unknown/invalid compression algorithm: " + compression_scheme)
-
+            try:
+                decoded_message = decode(encoded=decoded_message, encoding=compression_scheme)
+            except Exception as e:
+                raise ValueError("Failed to decompress gRPC message with gzip") from e
+   
         yield msg_is_compressed, decoded_message
         data = data[5 + length:]
 
