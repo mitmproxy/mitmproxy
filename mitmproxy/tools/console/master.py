@@ -4,6 +4,7 @@ import mimetypes
 import os
 import os.path
 import shlex
+import shutil
 import signal
 import stat
 import subprocess
@@ -24,7 +25,6 @@ from mitmproxy.addons import intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
@@ -116,13 +116,26 @@ class ConsoleMaster(master.Master):
             self.loop.screen_size = None
             self.loop.draw_screen()
 
+    def get_editor(self) -> str:
+        # based upon https://github.com/pallets/click/blob/main/src/click/_termui_impl.py
+        if m := os.environ.get("MITMPROXY_EDITOR"):
+            return m
+        if m := os.environ.get("EDITOR"):
+            return m
+        for editor in "sensible-editor", "nano", "vim":
+            if shutil.which(editor):
+                return editor
+        if os.name == "nt":
+            return "notepad"
+        else:
+            return "vi"
+
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
-        fd, name = tempfile.mkstemp('', "mproxy", text=text)
+        fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        # if no EDITOR is set, assume 'vi'
-        c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("EDITOR") or "vi"
+        c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():
@@ -203,7 +216,7 @@ class ConsoleMaster(master.Master):
             ["console_palette", "console_palette_transparent"]
         )
         loop = asyncio.get_event_loop()
-        if common.IS_WINDOWS:
+        if isinstance(loop, getattr(asyncio, "ProactorEventLoop", tuple())):
             # fix for https://bugs.python.org/issue37373
             loop = AddThreadSelectorEventLoop(loop)
         self.loop = urwid.MainLoop(
