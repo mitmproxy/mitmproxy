@@ -432,8 +432,11 @@ class ProtoParser:
                     if self.wire_value.bit_length() > 64:
                         raise TypeError("wire value too large for int64")
                     return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
+                elif intended_decoding == ProtoParser.DecodedTypes.uint32:
+                    if self.wire_value.bit_length() > 32:
+                        raise TypeError("wire value too large for uint32")
+                    return self.wire_value  # already 'int' which was parsed as unsigned
                 elif (
-                    intended_decoding == ProtoParser.DecodedTypes.uint32 or
                     intended_decoding == ProtoParser.DecodedTypes.uint64 or
                     intended_decoding == ProtoParser.DecodedTypes.enum
                 ):

@@ -7,7 +7,6 @@ from mitmproxy.test import tflow, tutils
 import struct
 from . import full_eval
 
-
 datadir = "mitmproxy/contentviews/test_grpc_data/"
 
 
@@ -239,6 +238,115 @@ def test_view_grpc_compressed(tdata):
         [('text', '[uint32]   '), ('text', '  '), ('text', '6    '), ('text', '1                              ')],
         [('text', '[string]   '), ('text', '  '), ('text', '7    '), ('text', 'de.mcdonalds.mcdonaldsinfoapp  ')]
     ]
+
+
+def helper_encode_base128le(val: int):
+    # hacky base128le encoding
+    if val <= 0:
+        return b'\x00'
+    res = []
+    while val > 0:
+        part = val & 0b1111111
+        val = val >> 7
+        if val > 0:
+            res.append(part + 0x80)
+        else:
+            res.append(part)
+    return bytes(res)
+
+
+def helper_gen_varint_msg_field(f_idx: int, f_val: int):
+    # manual encoding of protobuf data
+    f_wt = 0  # field type 0 (varint)
+    tag = (f_idx << 3) | f_wt  # combined tag
+    msg = helper_encode_base128le(tag)  # add encoded tag to message
+    msg = msg + helper_encode_base128le(f_val)  # add varint encoded field value
+    return msg
+
+
+def helper_gen_bits32_msg_field(f_idx: int, f_val: int):
+    # manual encoding of protobuf data
+    f_wt = 5  # field type 5 (bits32)
+    tag = (f_idx << 3) | f_wt  # combined tag
+    msg = helper_encode_base128le(tag)  # add encoded tag to message
+    msg = msg + struct.pack("<I", f_val)  # add varint encoded field value
+    return msg
+
+
+def helper_gen_bits64_msg_field(f_idx: int, f_val: int):
+    # manual encoding of protobuf data
+    f_wt = 1  # field type 1 (bits32)
+    tag = (f_idx << 3) | f_wt  # combined tag
+    msg = helper_encode_base128le(tag)  # add encoded tag to message
+    msg = msg + struct.pack("<Q", f_val)  # add varint encoded field value
+    return msg
+
+
+def test_special_decoding():
+    from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
+
+    msg = helper_gen_varint_msg_field(1, 1)  # small varint
+    msg += helper_gen_varint_msg_field(2, 1 << 32)  # varint > 32bit
+    msg += helper_gen_varint_msg_field(3, 1 << 64)  # varint > 64bit (returned as 0x0 by Kaitai protobuf decoder)
+    msg += helper_gen_bits32_msg_field(4, 0xbf8ccccd)  # bits32
+    msg += helper_gen_bits64_msg_field(5, 0xbff199999999999a)  # bits64
+    msg += helper_gen_varint_msg_field(6, 0xffffffff)  # 32 bit varint negative
+
+    parser = ProtoParser.Message(
+        data=msg,
+        parent_field=[],
+        rules=[],
+        options=ProtoParser.ParserOptions()
+    )
+    # print(list(parser.gen_string_rows()))
+    # return
+
+    fields = list(parser.gen_fields())
+    assert fields[0].wire_value == 1
+    assert fields[1].wire_value == 1 << 32
+    as_bool = fields[1].decode_as(ProtoParser.DecodedTypes.bool)
+    assert isinstance(as_bool, bool)
+    assert as_bool
+    as_bool = fields[2].decode_as(ProtoParser.DecodedTypes.bool)
+    assert isinstance(as_bool, bool)
+    assert not as_bool
+    assert fields[1].decode_as(ProtoParser.DecodedTypes.float) == 2.121995791e-314
+    assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.uint32) == (ProtoParser.DecodedTypes.uint64, 1 << 32)
+    assert fields[0].safe_decode_as(ProtoParser.DecodedTypes.sfixed32) == (ProtoParser.DecodedTypes.uint32, 1)
+    assert fields[3].wire_type == GoogleProtobuf.Pair.WireTypes.bit_32
+    assert fields[4].wire_type == GoogleProtobuf.Pair.WireTypes.bit_64
+    # signed 32 bit int (standard encoding)
+    assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.int32) == (ProtoParser.DecodedTypes.int32, -1)
+    # fixed (signed) 32bit int (ZigZag encoding)
+    assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.sint32) == (ProtoParser.DecodedTypes.sint32, -2147483648)
+    # sint64
+    assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.sint64) == (ProtoParser.DecodedTypes.sint64, 2147483648)
+    print(fields[4].safe_decode_as(ProtoParser.DecodedTypes.double))
+
+    # bits64 to sfixed64
+    assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.sfixed64) == (ProtoParser.DecodedTypes.sfixed64, -4615739258092021350)
+    # bits64 to fixed64
+    assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.fixed64) == (ProtoParser.DecodedTypes.fixed64, 0xbff199999999999a)
+    # bits64 to double
+    assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.double) == (ProtoParser.DecodedTypes.double, -1.1)
+
+    # bits32 to sfixed32
+    assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.sfixed32) == (ProtoParser.DecodedTypes.sfixed32, -1081291571)
+    # bits32 to fixed32
+    assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.fixed32) == (ProtoParser.DecodedTypes.fixed32, 0xbf8ccccd)
+    # bits32 to float
+    assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.float) == (ProtoParser.DecodedTypes.float, -1.100000023841858)
+
+
+    with pytest.raises(TypeError, match="intended decoding mismatches wire type"):
+        fields[0].decode_as(ProtoParser.DecodedTypes.sfixed32)
+    with pytest.raises(TypeError, match="wire value too large for int32"):
+        fields[1].decode_as(ProtoParser.DecodedTypes.int32)
+    with pytest.raises(TypeError, match="wire value too large for sint32"):
+        fields[1].decode_as(ProtoParser.DecodedTypes.sint32)
+    with pytest.raises(TypeError, match="wire value too large for uint32"):
+        fields[1].decode_as(ProtoParser.DecodedTypes.uint32)
+
 
 
 def test_render_priority():
