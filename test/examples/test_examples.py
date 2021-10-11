@@ -26,7 +26,7 @@ class TestScripts(tservers.MasterTest):
         with taddons.context() as tctx:
             tctx.script(tdata.path("../examples/addons/custom-grpc-contentview.py"))
             # ToDo: test requires proper body content data, to which the rules could be applied
-            pass
+            assert 1 == 1
 
     def test_modify_form(self, tdata):
         with taddons.context() as tctx:

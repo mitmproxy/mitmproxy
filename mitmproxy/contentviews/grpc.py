@@ -809,8 +809,10 @@ class ViewGrpcProtobuf(base.View):
         try:
             text_iter = hack_generator_to_list(text_iter)
         except Exception as e:
-            import traceback
-            ctx.log.warn("gRPC contentview: {}".format(traceback.format_exc()))
+            # hook to log exception tracebacks on iterators
+
+            # import traceback
+            # ctx.log.warn("gRPC contentview: {}".format(traceback.format_exc()))
             raise e
 
         return title, text_iter
