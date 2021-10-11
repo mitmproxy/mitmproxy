@@ -326,6 +326,7 @@ class ProtoParser:
 
             self.apply_rules()
 
+        # no tests for only_first_hit=False, as not user-changable
         def apply_rules(self, only_first_hit=True):
             tag_str = self._gen_tag_str()
             name = None
@@ -413,7 +414,7 @@ class ProtoParser:
                             # move on with next
                             pass
 
-            # we should never get here
+            # we should never get here (could not be added to tests)
             return ProtoParser.DecodedTypes.unknown, self.wire_value
 
         def decode_as(
@@ -430,6 +431,7 @@ class ProtoParser:
                     return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
                 elif intended_decoding == ProtoParser.DecodedTypes.int64:
                     if self.wire_value.bit_length() > 64:
+                        # currently avoided by kaitai decoder (can not be added to tests)
                         raise TypeError("wire value too large for int64")
                     return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
                 elif intended_decoding == ProtoParser.DecodedTypes.uint32:
@@ -441,6 +443,7 @@ class ProtoParser:
                     intended_decoding == ProtoParser.DecodedTypes.enum
                 ):
                     if self.wire_value.bit_length() > 64:
+                        # currently avoided by kaitai decoder (can not be added to tests)
                         raise TypeError("wire value too large")
                     return self.wire_value  # already 'int' which was parsed as unsigned
                 elif intended_decoding == ProtoParser.DecodedTypes.sint32:
@@ -449,6 +452,7 @@ class ProtoParser:
                     return (self.wire_value >> 1) ^ -(self.wire_value & 1)  # zigzag_decode
                 elif intended_decoding == ProtoParser.DecodedTypes.sint64:
                     if self.wire_value.bit_length() > 64:
+                        # currently avoided by kaitai decoder (can not be added to tests)
                         raise TypeError("wire value too large for sint64")
                     # ZigZag decode
                     # Ref: https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba
@@ -518,14 +522,15 @@ class ProtoParser:
             elif len(v) == 8:
                 return struct.unpack("!d", v)[0]
             # no need to raise an Exception
-            raise TypeError()
+            raise TypeError("can not be converted to floatingpoint representation")
 
         def _value_as_bytes(self) -> bytes:
             if isinstance(self.wire_value, bytes):
                 return self.wire_value
             elif isinstance(self.wire_value, int):
                 if self.wire_value.bit_length() > 64:
-                    # originates from wiretype varint/bit_32/bit64 and should never convert to types >64bit
+                    # source for a python int are wiretypes varint/bit_32/bit64 and should never convert to int values 64bit
+                    # currently avoided by kaitai decoder (can not be added to tests)
                     raise ValueError("Value exceeds 64bit, violating protobuf specs")
                 elif self.wire_value.bit_length() > 32:
                     # packing uses network byte order (to assure consistent results across architectures)
@@ -534,6 +539,7 @@ class ProtoParser:
                     # packing uses network byte order (to assure consistent results across architectures)
                     return struct.pack("!I", self.wire_value)
             else:
+                # should never happen, no tests
                 raise ValueError("can not be converted to bytes")
 
         def _wire_type_str(self):
@@ -800,7 +806,7 @@ class ViewGrpcProtobuf(base.View):
             # Thus we assure there is always an encoding selected. An encoding of 'Identity' would not make
             # sense, if a message is flagged as being compressed, that's why a default is chosen.
             try:
-                assert http_message
+                assert http_message is not None
                 h = http_message.headers["grpc-encoding"]
                 grpc_encoding = h if h in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
             except:

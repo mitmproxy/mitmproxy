@@ -1,7 +1,7 @@
 import pytest
 
 from mitmproxy.contentviews import grpc
-from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser
+from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
 from mitmproxy.net.encoding import encode
 from mitmproxy.test import tflow, tutils
 import struct
@@ -61,7 +61,7 @@ sim_msg_req = tutils.treq(
     host="example.com",
     path="/ReverseGeocode"
 )
-
+sim_msg_req.headers["grpc-encoding"] = "gzip"
 sim_msg_resp = tutils.tresp()
 
 sim_flow = tflow.tflow(
@@ -200,7 +200,7 @@ def test_view_grpc(tdata):
         # pack into protobuf message
         raw = helper_pack_grpc_message(raw)
 
-    view_text, output = v(raw, content_type="application/grpc")
+    view_text, output = v(raw, content_type="application/grpc", http_message=sim_msg_req)
     assert view_text == "gRPC"
     output = list(output)  # assure list conversion if generator
 
@@ -213,6 +213,10 @@ def test_view_grpc(tdata):
         [('text', '[uint32]   '), ('text', '  '), ('text', '6    '), ('text', '1                              ')],
         [('text', '[string]   '), ('text', '  '), ('text', '7    '), ('text', 'de.mcdonalds.mcdonaldsinfoapp  ')]
     ]
+    with pytest.raises(ValueError, match='invalid gRPC message'):
+        v(b'foobar', content_type="application/grpc")
+    with pytest.raises(ValueError, match='Failed to decompress gRPC message with gzip'):
+        list(parse_grpc_messages(data=b'\x01\x00\x00\x00\x01foobar', compression_scheme="gzip"))
 
 
 def test_view_grpc_compressed(tdata):
@@ -281,6 +285,16 @@ def helper_gen_bits64_msg_field(f_idx: int, f_val: int):
     return msg
 
 
+def helper_gen_lendel_msg_field(f_idx: int, f_val: bytes):
+    # manual encoding of protobuf data
+    f_wt = 2  # field type 2 (length delimited messag)
+    tag = (f_idx << 3) | f_wt  # combined tag
+    msg = helper_encode_base128le(tag)  # add encoded tag to message
+    msg = msg + helper_encode_base128le(len(f_val))  # add length of message
+    msg = msg + f_val
+    return msg
+
+
 def test_special_decoding():
     from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 
@@ -290,6 +304,7 @@ def test_special_decoding():
     msg += helper_gen_bits32_msg_field(4, 0xbf8ccccd)  # bits32
     msg += helper_gen_bits64_msg_field(5, 0xbff199999999999a)  # bits64
     msg += helper_gen_varint_msg_field(6, 0xffffffff)  # 32 bit varint negative
+    msg += helper_gen_lendel_msg_field(7, b"hello world")  # length delimted message, UTF-8 parsable
 
     parser = ProtoParser.Message(
         data=msg,
@@ -320,7 +335,9 @@ def test_special_decoding():
     assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.sint32) == (ProtoParser.DecodedTypes.sint32, -2147483648)
     # sint64
     assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.sint64) == (ProtoParser.DecodedTypes.sint64, 2147483648)
-    print(fields[4].safe_decode_as(ProtoParser.DecodedTypes.double))
+
+    # varint 64bit to enum
+    assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.enum) == (ProtoParser.DecodedTypes.enum, 4294967296)
 
     # bits64 to sfixed64
     assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.sfixed64) == (ProtoParser.DecodedTypes.sfixed64, -4615739258092021350)
@@ -328,6 +345,8 @@ def test_special_decoding():
     assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.fixed64) == (ProtoParser.DecodedTypes.fixed64, 0xbff199999999999a)
     # bits64 to double
     assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.double) == (ProtoParser.DecodedTypes.double, -1.1)
+    # bits64 to float --> failover fixed64 (64bit to large for double)
+    assert fields[4].safe_decode_as(ProtoParser.DecodedTypes.float) == (ProtoParser.DecodedTypes.fixed64, 0xbff199999999999a)
 
     # bits32 to sfixed32
     assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.sfixed32) == (ProtoParser.DecodedTypes.sfixed32, -1081291571)
@@ -335,6 +354,15 @@ def test_special_decoding():
     assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.fixed32) == (ProtoParser.DecodedTypes.fixed32, 0xbf8ccccd)
     # bits32 to float
     assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.float) == (ProtoParser.DecodedTypes.float, -1.100000023841858)
+    # bits32 to string --> failover fixed32
+    assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.string) == (ProtoParser.DecodedTypes.fixed32, 0xbf8ccccd)
+
+    # length delimeted to string
+    assert fields[6].safe_decode_as(ProtoParser.DecodedTypes.string) == (ProtoParser.DecodedTypes.string, "hello world")
+    # length delimeted to bytes
+    assert fields[6].safe_decode_as(ProtoParser.DecodedTypes.bytes) == (ProtoParser.DecodedTypes.bytes, b"hello world")
+
+    assert fields[0].wire_value_as_utf8() == "1"
 
     with pytest.raises(TypeError, match="intended decoding mismatches wire type"):
         fields[0].decode_as(ProtoParser.DecodedTypes.sfixed32)
@@ -344,6 +372,10 @@ def test_special_decoding():
         fields[1].decode_as(ProtoParser.DecodedTypes.sint32)
     with pytest.raises(TypeError, match="wire value too large for uint32"):
         fields[1].decode_as(ProtoParser.DecodedTypes.uint32)
+    with pytest.raises(TypeError, match="can not be converted to floatingpoint representation"):
+        fields[6]._wire_value_as_float()
+
+    print(fields[6])
 
 
 def test_render_priority():
