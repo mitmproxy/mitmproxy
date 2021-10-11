@@ -30,14 +30,13 @@ class ReadFile:
 
     def configure(self, updated):
         if "readfile_filter" in updated:
-            filt = None
             if ctx.options.readfile_filter:
-                filt = flowfilter.parse(ctx.options.readfile_filter)
-                if not filt:
-                    raise exceptions.OptionsError(
-                        "Invalid readfile filter: %s" % ctx.options.readfile_filter
-                    )
-            self.filter = filt
+                try:
+                    self.filter = flowfilter.parse(ctx.options.readfile_filter)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
+            else:
+                self.filter = None
 
     async def load_flows(self, fo: typing.IO[bytes]) -> int:
         cnt = 0

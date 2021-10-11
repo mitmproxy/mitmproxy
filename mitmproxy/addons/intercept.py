@@ -21,9 +21,10 @@ class Intercept:
     def configure(self, updated):
         if "intercept" in updated:
             if ctx.options.intercept:
-                self.filt = flowfilter.parse(ctx.options.intercept)
-                if not self.filt:
-                    raise exceptions.OptionsError(f"Invalid interception filter: {ctx.options.intercept}")
+                try:
+                    self.filt = flowfilter.parse(ctx.options.intercept)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
                 ctx.options.intercept_active = True
             else:
                 self.filt = None

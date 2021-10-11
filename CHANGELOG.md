@@ -8,6 +8,7 @@
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously (@mhils)
+* Add `client_replay_concurrency` option, which allows more than one client replay request to be in-flight at a time. (@rbdixon)
 * New content view to handle gRPC/protobuf. Allows to apply custom definitions to visualize different field decodings.
   Includes example addon with applying custom definitions for selected gRPC traffic (@mame82)
 

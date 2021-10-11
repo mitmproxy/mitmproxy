@@ -35,7 +35,7 @@
 import functools
 import re
 import sys
-from typing import Callable, ClassVar, Optional, Sequence, Type
+from typing import ClassVar, Sequence, Type, Protocol, Union
 import pyparsing as pp
 
 from mitmproxy import flow, http, tcp
@@ -133,6 +133,14 @@ class FResp(_Action):
     @only(http.HTTPFlow)
     def __call__(self, f):
         return bool(f.response)
+
+
+class FAll(_Action):
+    code = "all"
+    help = "Match all flows"
+
+    def __call__(self, f: flow.Flow):
+        return True
 
 
 class _Rex(_Action):
@@ -504,6 +512,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FResp,
     FTCP,
     FWebSocket,
+    FAll,
 ]
 filter_rex: Sequence[Type[_Rex]] = [
     FBod,
@@ -583,21 +592,31 @@ def _make():
 
 
 bnf = _make()
-TFilter = Callable[[flow.Flow], bool]
 
 
-def parse(s: str) -> Optional[TFilter]:
+class TFilter(Protocol):
+    pattern: str
+
+    def __call__(self, f: flow.Flow) -> bool:
+        ...  # pragma: no cover
+
+
+def parse(s: str) -> TFilter:
+    """
+    Parse a filter expression and return the compiled filter function.
+    If the filter syntax is invalid, `ValueError` is raised.
+    """
+    if not s:
+        raise ValueError("Empty filter expression")
     try:
         flt = bnf.parseString(s, parseAll=True)[0]
         flt.pattern = s
         return flt
-    except pp.ParseException:
-        return None
-    except ValueError:
-        return None
+    except (pp.ParseException, ValueError) as e:
+        raise ValueError(f"Invalid filter expression: {s!r}") from e
 
 
-def match(flt, flow):
+def match(flt: Union[str, TFilter], flow: flow.Flow) -> bool:
     """
         Matches a flow against a compiled filter expression.
         Returns True if matched, False if not.
@@ -607,11 +626,13 @@ def match(flt, flow):
     """
     if isinstance(flt, str):
         flt = parse(flt)
-        if not flt:
-            raise ValueError("Invalid filter expression.")
     if flt:
         return flt(flow)
     return True
+
+
+match_all: TFilter = parse("~all")
+"""A filter function that matches all flows"""
 
 
 help = []

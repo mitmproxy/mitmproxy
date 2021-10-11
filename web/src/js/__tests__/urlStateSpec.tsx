@@ -83,7 +83,7 @@ describe('updateUrlFromStore', () => {
             },
             store = mockStore(state)
         updateUrlFromStore(store)
-        expect(history.replaceState).toBeCalledWith(undefined, '', '/#/flows/123/request?s=~u foo')
+        expect(history.replaceState).toBeCalledWith(undefined, '', '/#/flows/123/request?s=~u%20foo')
     })
 })
 

@@ -22,7 +22,8 @@ async def tcp_server(handle_conn) -> Address:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
-async def test_playback(mode):
+@pytest.mark.parametrize("concurrency", [-1, 1])
+async def test_playback(mode, concurrency):
     handler_ok = asyncio.Event()
 
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -50,6 +51,7 @@ async def test_playback(mode):
     cp = ClientPlayback()
     ps = Proxyserver()
     with taddons.context(cp, ps) as tctx:
+        tctx.configure(cp, client_replay_concurrency=concurrency)
         async with tcp_server(handler) as addr:
 
             cp.running()
@@ -140,3 +142,6 @@ def test_configure(tdata):
         tctx.configure(cp, client_replay=[])
         with pytest.raises(OptionsError):
             tctx.configure(cp, client_replay=["nonexistent"])
+        tctx.configure(cp, client_replay_concurrency=-1)
+        with pytest.raises(OptionsError):
+            tctx.configure(cp, client_replay_concurrency=-2)
