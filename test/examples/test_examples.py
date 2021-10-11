@@ -24,7 +24,7 @@ class TestScripts(tservers.MasterTest):
 
     def test_custom_grpc_contentview(self, tdata):
         with taddons.context() as tctx:
-            tctx.script(tdata.path("../examples/addons/custom-grpc-contentview.py"))
+            tctx.script(tdata.path("../examples/addons/contentview-custom-grpc.py"))
             v = contentviews.get("customized gRPC/protobuf")
 
             p = tdata.path("mitmproxy/contentviews/test_grpc_data/msg1.bin")

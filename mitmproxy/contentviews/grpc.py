@@ -588,13 +588,15 @@ class ProtoParser:
     def __init__(
         self,
         data: bytes,
-        rules: List[ProtoParser.ParserRule] = (),
+        rules: List[ProtoParser.ParserRule] = None,
         parser_options: ParserOptions = None
     ) -> None:
         self.data: bytes = data
         if parser_options is None:
             parser_options = ProtoParser.ParserOptions()
         self.options = parser_options
+        if rules is None:
+            rules = []
         self.rules = rules
         self.root_message: ProtoParser.Message = ProtoParser.Message(
             data=data,
