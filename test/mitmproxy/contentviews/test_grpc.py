@@ -94,7 +94,6 @@ def test_view_protobuf(tdata):
 def test_view_protobuf_custom_parsing_request(tdata):
     v = full_eval(ViewGrpcProtobuf(custom_view_config_parser_rules))
     p = tdata.path(datadir + "msg1.bin")
-
     with open(p, "rb") as f:
         raw = f.read()
     view_text, output = v(raw, flow=sim_flow, http_message=sim_flow.request)  # simulate request message
@@ -337,7 +336,6 @@ def test_special_decoding():
     # bits32 to float
     assert fields[3].safe_decode_as(ProtoParser.DecodedTypes.float) == (ProtoParser.DecodedTypes.float, -1.100000023841858)
 
-
     with pytest.raises(TypeError, match="intended decoding mismatches wire type"):
         fields[0].decode_as(ProtoParser.DecodedTypes.sfixed32)
     with pytest.raises(TypeError, match="wire value too large for int32"):
@@ -346,7 +344,6 @@ def test_special_decoding():
         fields[1].decode_as(ProtoParser.DecodedTypes.sint32)
     with pytest.raises(TypeError, match="wire value too large for uint32"):
         fields[1].decode_as(ProtoParser.DecodedTypes.uint32)
-
 
 
 def test_render_priority():

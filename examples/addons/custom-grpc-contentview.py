@@ -26,8 +26,9 @@ config.parser_rules = [
     # be used, to match the URL from the request of a flow, while the ParserRuleResponse is only applied to the response.
 
     ProtoParser.ParserRuleRequest(
-        name = "Google reverse Geo coordinate lookup request",
-        filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
+        name = "Geo coordinate lookup request",
+        # note on flowfilter: for tflow the port gets appended to the URL's host part
+        filter = "example\\.com.*/ReverseGeocode",
         field_definitions=[
             ProtoParser.ParserFieldDefinition(tag="1", name="position"),
             ProtoParser.ParserFieldDefinition(tag="1.1", name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),
@@ -37,28 +38,19 @@ config.parser_rules = [
         ]
     ),
     ProtoParser.ParserRuleResponse(
-        name = "Google reverse Geo coordinate lookup response",
-        filter = "geomobileservices-pa.googleapis.com/google.internal.maps.geomobileservices.geocoding.v3mobile.GeocodingService/ReverseGeocode",  # noqa: E501
+        name = "Geo coordinate lookup response",
+        # note on flowfilter: for tflow the port gets appended to the URL's host part
+        filter = "example\\.com.*/ReverseGeocode",
         field_definitions=[
             ProtoParser.ParserFieldDefinition(tag="1.2", name="address"),
             ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
+            ProtoParser.ParserFieldDefinition(tag="1.3.1", name="unknown bytes", intended_decoding=ProtoParser.DecodedTypes.bytes),
             ProtoParser.ParserFieldDefinition(tag="1.3.2", name="element value long"),
             ProtoParser.ParserFieldDefinition(tag="1.3.3", name="element value short"),
             ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
             ProtoParser.ParserFieldDefinition(tag=".1", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
             ProtoParser.ParserFieldDefinition(tag=".2", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
             ProtoParser.ParserFieldDefinition(tag="7", name="app"),
-        ]
-    ),
-    ProtoParser.ParserRuleRequest(
-        name = "Snapchat targeting query request",
-        filter = "api.snapchat.com/snapchat.cdp.cof.CircumstancesService/targetingQuery",
-        field_definitions=[
-            ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["5", "8"], name="res_x"),
-            ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["6", "9"], name="res_y"),
-            ProtoParser.ParserFieldDefinition(tag="16", name="guid"),
-            ProtoParser.ParserFieldDefinition(tag="24", name="source lib"),
-            ProtoParser.ParserFieldDefinition(tag="29", name="timestamp"),
         ]
     ),
 ]

@@ -25,6 +25,37 @@ class TestScripts(tservers.MasterTest):
     def test_custom_grpc_contentview(self, tdata):
         with taddons.context() as tctx:
             tctx.script(tdata.path("../examples/addons/custom-grpc-contentview.py"))
+            v = contentviews.get("customized gRPC/protobuf")
+
+            p = tdata.path("mitmproxy/contentviews/test_grpc_data/msg1.bin")
+            with open(p, "rb") as f:
+                raw = f.read()
+
+            sim_msg_req = tutils.treq(
+                port=443,
+                host="example.com",
+                path="/ReverseGeocode"
+            )
+
+            sim_msg_resp = tutils.tresp()
+
+            sim_flow = tflow.tflow(
+                req=sim_msg_req,
+                resp=sim_msg_resp
+            )
+
+            view_text, output = v(raw, flow=sim_flow, http_message=sim_flow.request)  # simulate request message
+            assert view_text == "Protobuf (flattened) (addon with custom rules)"
+            output = list(output)  # assure list conversion if generator
+            assert output == [
+                [('text', '[message]  '), ('text', 'position   '), ('text', '1    '), ('text', '                               ')],
+                [('text', '[double]   '), ('text', 'latitude   '), ('text', '1.1  '), ('text', '38.89816675798073              ')],
+                [('text', '[double]   '), ('text', 'longitude  '), ('text', '1.2  '), ('text', '-77.03829828366696             ')],
+                [('text', '[string]   '), ('text', 'country    '), ('text', '3    '), ('text', 'de_DE                          ')],
+                [('text', '[uint32]   '), ('text', '           '), ('text', '6    '), ('text', '1                              ')],
+                [('text', '[string]   '), ('text', 'app        '), ('text', '7    '), ('text', 'de.mcdonalds.mcdonaldsinfoapp  ')]
+            ]
+
             # ToDo: test requires proper body content data, to which the rules could be applied
             assert 1 == 1
 
