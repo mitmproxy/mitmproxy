@@ -444,7 +444,10 @@ class Screen(BaseScreen, RealTerminal):
             self._input_thread = None
 
         for handle in self._current_event_loop_handles:
-            event_loop.remove_watch_file(handle)
+            try:
+                event_loop.remove_watch_file(handle)
+            except KeyError:
+                pass
 
         if self._input_timeout:
             event_loop.remove_alarm(self._input_timeout)
