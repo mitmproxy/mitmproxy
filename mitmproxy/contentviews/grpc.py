@@ -1,15 +1,15 @@
-from __future__ import annotations  # for typing with forward declarations
-from dataclasses import dataclass, field
-from typing import List, Tuple, Generator, Dict, Iterable, Iterator, Optional, Union
+from __future__ import annotations
 
-from . import base
+import struct
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Dict, Generator, Iterable, Iterator, List, Optional, Tuple, Union
+
+from mitmproxy import contentviews, ctx, flow, flowfilter, http
+from mitmproxy.contentviews import base
 from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
 from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
 from mitmproxy.net.encoding import decode
-from mitmproxy import flow, http, contentviews, ctx, flowfilter
-from enum import Enum
-
-import struct
 
 
 class ProtoParser:
@@ -500,7 +500,9 @@ class ProtoParser:
             raise TypeError("intended decoding mismatches wire type")
 
         def encode_from(inputval, intended_encoding: ProtoParser.DecodedTypes):
-            raise NotImplementedError("Future work, needed to manipulate and re-encode protobuf message, with respect to given wire types")
+            raise NotImplementedError(
+                "Future work, needed to manipulate and re-encode protobuf message, with respect to given wire types"
+            )
 
         def _wire_value_as_float(self) -> float:
             """
@@ -550,7 +552,10 @@ class ProtoParser:
 
         def wire_value_as_utf8(self, escape_invalid=True, escape_newline=True) -> str:
             if isinstance(self.wire_value, bytes):
-                res = self.wire_value.decode("utf-8", "backslashreplace") if escape_invalid else self.wire_value.decode("utf-8")
+                if escape_invalid:
+                    res = self.wire_value.decode("utf-8", "backslashreplace")
+                else:
+                    res = self.wire_value.decode("utf-8")
                 return res.replace("\n", "\\n") if escape_newline else res
             return str(self.wire_value)
 
@@ -580,8 +585,15 @@ class ProtoParser:
                 field_desc_dict["val"] = decoded_val
                 yield field_desc_dict
 
-    def __init__(self, data: bytes, rules: List[ProtoParser.ParserRule]=[], parser_options=ParserOptions()) -> None:
+    def __init__(
+        self,
+        data: bytes,
+        rules: List[ProtoParser.ParserRule] = (),
+        parser_options: ParserOptions = None
+    ) -> None:
         self.data: bytes = data
+        if parser_options is None:
+            parser_options = ProtoParser.ParserOptions()
         self.options = parser_options
         self.rules = rules
         self.root_message: ProtoParser.Message = ProtoParser.Message(
@@ -693,10 +705,16 @@ def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules
         yield l
 
 
-def format_grpc(data: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule], compression_scheme="gzip"):
+def format_grpc(
+    data: bytes,
+    parser_options: ProtoParser.ParserOptions,
+    rules: List[ProtoParser.ParserRule],
+    compression_scheme="gzip"
+):
     message_count = 0
     for compressed, pb_message in parse_grpc_messages(data=data, compression_scheme=compression_scheme):
-        headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(compression_scheme if compressed else compressed) + ')'
+        headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(
+            compression_scheme if compressed else compressed) + ')'
 
         yield [("text", headline)]
         for l in format_pbuf(
@@ -734,8 +752,10 @@ class ViewGrpcProtobuf(base.View):
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
-    def __init__(self, config: ViewConfig=ViewConfig()) -> None:
+    def __init__(self, config: ViewConfig = None) -> None:
         super().__init__()
+        if config is None:
+            config = ViewConfig()
         self.config = config
 
     def _matching_rules(
@@ -797,7 +817,7 @@ class ViewGrpcProtobuf(base.View):
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
             #
-            # The following code tries to determin the compression algorithm base on this header.
+            # The following code tries to determine the compression algorithm base on this header.
             # If the header is not present or contains an unsupported compression, the logic falls back to
             # 'gzip'.
             #

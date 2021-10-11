@@ -56,9 +56,6 @@ class TestScripts(tservers.MasterTest):
                 [('text', '[string]   '), ('text', 'app        '), ('text', '7    '), ('text', 'de.mcdonalds.mcdonaldsinfoapp  ')]
             ]
 
-            # ToDo: test requires proper body content data, to which the rules could be applied
-            assert 1 == 1
-
     def test_modify_form(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(tdata.path("../examples/addons/http-modify-form.py"))
