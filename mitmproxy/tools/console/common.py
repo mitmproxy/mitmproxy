@@ -14,7 +14,7 @@ from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
 
 # Detect Windows Subsystem for Linux and Windows
-IS_WINDOWS = "Microsoft" in platform.platform() or "Windows" in platform.platform()
+IS_WINDOWS_OR_WSL = "Microsoft" in platform.platform() or "Windows" in platform.platform()
 
 
 def is_keypress(k):
