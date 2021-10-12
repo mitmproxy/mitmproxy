@@ -57,11 +57,11 @@ class ProtoParser:
     @dataclass
     class ParserFieldDefinition:
         """
-        Defines how to parse a field (or fields of the same type) in a protobuf messages.
+        Defines how to parse a field (or multiple fields with the same tag) in a protobuf messages.
 
-        This allows to apply an intended decoding (f.e. decode uint4 as double instead) and a descriptive
-        name to a field. Field definitions are aggregated into rules, which also hold filters matching
-        to messages.
+        This allows to apply an intended decoding (f.e. decode uint64 as double instead) and to assign
+        a descriptive name to a field. Field definitions are aggregated into rules, which also holds
+        a filter to match selected HTTP messages.
 
         The most natural way to use this, is to describe known parts of a single protobuf message
         in a set of field descriptors, pack them into a rule and set the filter of the rule in a way,
@@ -225,7 +225,7 @@ class ProtoParser:
                 "tag": str       # fully qualified tag (all tags starting from the root message, concatenated with '.' delimiter)
                 "wireType": str  # describes the wire encoding used by the field
                 "decoding": str  # describes the chosen decoding (interpretation of wire encoding, according to protobuf types)
-                "val": str|bytes|int|float # the decoded value in python representation
+                "val": Union[bool, str, bytes, int, float]  # the decoded value in python representation
             }
             """
             # iterate over fields
@@ -288,7 +288,7 @@ class ProtoParser:
         (*) Note 1:  Conversion between WireType and intermediary python representation
                      is handled by Kaitai protobuf decoder and always uses the python
                      representation marked with (*). Converting to alternative representations
-                     is handled by this class.
+                     is handled inside this class.
         (**) Note 2: Varint is not used to represent floating point values, but some applications
                      store native floats in uint32 protobuf types (or native double in uint64).
                      Thus we allow conversion of varint to floating point values for convenience
@@ -560,7 +560,8 @@ class ProtoParser:
             return str(self.wire_value)
 
         def gen_flat_decoded_field_dicts(self) -> Generator[Dict, None, None]:
-            """Returns a generator which passes the field as a dict.
+            """
+            Returns a generator which passes the field as a dict.
 
             In order to return the field value it gets decoded (based on a failover strategy and
             provided ParserRules).
@@ -619,8 +620,8 @@ def format_table(
     """
     Helper function to render tables with variable column count (move to contentview base, if needed elsewhere)
 
-    Note: The function has to copy all values from a generator to a list, as the list of rows has to be
-          processed twice (to determin the column widths first). The same is true for 'base.format_pairs'.
+    Note: The function has to convert generators to a list, as all rows have to be processed twice (to determine
+    the column widths first).
     """
     rows: List[Tuple[str, ...]] = []
     col_count = 0
