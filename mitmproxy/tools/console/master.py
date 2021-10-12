@@ -13,6 +13,7 @@ import tempfile
 import typing  # noqa
 import contextlib
 import threading
+import binascii
 
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
@@ -31,6 +32,7 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
+from mitmproxy.utils.strutils import always_str, escape_control_characters
 
 
 class ConsoleMaster(master.Master):
@@ -130,9 +132,83 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
-    def spawn_editor(self, data):
+    def helper_editor_data_is_binary(self, data):
+        try:
+            data.decode("utf-8")
+            return False
+        except:
+            return True
+
+    def helper_editor_data_to_readable_hex(self, data: bytes) -> bytes:
+        # Note: don't distinguish OS, always use CRLF as linebreak (not only LF)
+        LB = b"\r\n"
+        info = b""
+        info += b"# The data you want to edit is in binary format and was converted to a hexadecimal representation to allow editing." + LB
+        info += b"# You can edit the hexadecimal representation as you like and save changes. The data will be converted back to" + LB
+        info += b"# binary,once you close the editor." + LB
+        info += b"# Whitespaces, Linebreaks and everything prefixed with '#' will be ignored when converting back to binary." + LB + LB
+
+        dhex = binascii.hexlify(data)
+        # some formatting
+        token_count = 0
+        line = b""
+        while len(dhex) > 0:
+            slice = dhex[:4]
+            info += slice
+            dhex = dhex[4:]
+            token_count += 1
+            line += slice
+            if token_count == 16:
+                part = binascii.unhexlify(line)
+                part_repr = always_str(
+                    escape_control_characters(
+                        part.decode("ascii", "replace").replace("\ufffd", "."),
+                        False
+                    )
+                )
+                info += b"  # " + part_repr.encode("utf-8")
+                info += LB
+                token_count = 0
+                line = b""
+            elif token_count == 8:
+                info += b"  "
+            else:
+                info += b" "
+
+        return info
+
+    def helper_editor_data_from_readable_hex(self, data: bytes) -> bytes:
+        lines = [e.replace(b"\r", b"") for e in data.split(b"\n")]
+        result = b""
+        for line in lines:
+            # remove comments
+            line = line.split(b"#")[0]
+            # append everything [0-9a-fA-F] to result, don't us regexp for this task
+            for c in line:
+                # note: type(c) == int
+                if (
+                    (c >= ord("0") and c <= ord("9")) or
+                    (c >= ord("a") and c <= ord("f")) or
+                    (c >= ord("A") and c <= ord("F"))
+                ):
+                    # convert back to byte and append to result
+                    result += bytes([c])
+
+        # assure result has even length (append b"0" if not the case)
+        if len(result) & 0x1 == 1:
+            result += b"0"
+
+        return binascii.unhexlify(result)
+
+    def spawn_editor(self, data, convert_bin_to_readable=True):
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
+        if convert_bin_to_readable:
+            is_data_bin = self.helper_editor_data_is_binary(data)
+        else:
+            is_data_bin = False
+        if is_data_bin:
+            data = self.helper_editor_data_to_readable_hex(data)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         c = self.get_editor()
@@ -148,6 +224,8 @@ class ConsoleMaster(master.Master):
             else:
                 with open(name, "r" if text else "rb") as f:
                     data = f.read()
+                    if is_data_bin:
+                        data = self.helper_editor_data_from_readable_hex(data)
         os.unlink(name)
         return data
 
