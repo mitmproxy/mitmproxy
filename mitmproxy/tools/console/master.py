@@ -32,7 +32,8 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
-from mitmproxy.utils.strutils import always_str, escape_control_characters
+from mitmproxy.utils import strutils
+from mitmproxy.utils.strutils import hexdump
 
 
 class ConsoleMaster(master.Master):
@@ -148,33 +149,8 @@ class ConsoleMaster(master.Master):
         info += b"# binary,once you close the editor." + LB
         info += b"# Whitespaces, Linebreaks and everything prefixed with '#' will be ignored when converting back to binary." + LB + LB
 
-        dhex = binascii.hexlify(data)
-        # some formatting
-        token_count = 0
-        line = b""
-        while len(dhex) > 0:
-            slice = dhex[:4]
-            info += slice
-            dhex = dhex[4:]
-            token_count += 1
-            line += slice
-            if token_count == 16:
-                part = binascii.unhexlify(line)
-                part_repr = always_str(
-                    escape_control_characters(
-                        part.decode("ascii", "replace").replace("\ufffd", "."),
-                        False
-                    )
-                )
-                info += b"  # " + part_repr.encode("utf-8")
-                info += LB
-                token_count = 0
-                line = b""
-            elif token_count == 8:
-                info += b"  "
-            else:
-                info += b" "
-
+        for offset, hexa, s in strutils.hexdump(data):
+            info += "{} # @{}: {}".format(hexa, offset, s).encode("utf-8") + LB
         return info
 
     def helper_editor_data_from_readable_hex(self, data: bytes) -> bytes:
