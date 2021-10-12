@@ -145,7 +145,7 @@ class ConsoleMaster(master.Master):
         info = b""
         info += b"# The data you want to edit is in binary format and was converted to a hexadecimal representation to allow editing." + LB
         info += b"# You can edit the hexadecimal representation as you like and save changes. The data will be converted back to" + LB
-        info += b"# binary,once you close the editor." + LB
+        info += b"# binary, once you save changes close the editor ." + LB
         info += b"# Whitespaces, Linebreaks and everything prefixed with '#' will be ignored when converting back to binary." + LB + LB
 
         for offset, hexa, s in strutils.hexdump(data):
