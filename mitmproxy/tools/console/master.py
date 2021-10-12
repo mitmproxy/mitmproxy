@@ -33,7 +33,6 @@ from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
 from mitmproxy.utils import strutils
-from mitmproxy.utils.strutils import hexdump
 
 
 class ConsoleMaster(master.Master):
