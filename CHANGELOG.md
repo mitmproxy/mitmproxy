@@ -11,6 +11,7 @@
 * Add `client_replay_concurrency` option, which allows more than one client replay request to be in-flight at a time. (@rbdixon)
 * New content view which handles gRPC/protobuf. Allows to apply custom definitions to visualize different field decodings.
   Includes example addon which applies custom definitions for selected gRPC traffic (@mame82)
+* Fix a crash caused when editing string option (#4852, @rbdixon)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
