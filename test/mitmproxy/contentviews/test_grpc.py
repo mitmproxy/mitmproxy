@@ -112,7 +112,8 @@ def test_view_protobuf_custom_parsing_request(tdata):
 def test_view_protobuf_custom_parsing_response(tdata):
     # expect to parse 1.3.2 and 1.3.3 as string automatically
     # even if there is a length delimeted field containing `b"DC"`, which would translate to
-    # two deprecated fields [4: group_start, 4: group_end]
+    # two deprecated fields [8: group_start, 8: group_end] (and thus represent a valid nested message,
+    # but containing deprecated wire types)
     custom_view_config_parser_rules.parser_rules[1].field_definitions[3].intended_decoding = None
     custom_view_config_parser_rules.parser_rules[1].field_definitions[4].intended_decoding = None
 
