@@ -172,8 +172,8 @@ class ProtoParser:
                 tag = pair.field_tag
                 wt = pair.wire_type
                 if wt == GoogleProtobuf.Pair.WireTypes.group_start or wt == GoogleProtobuf.Pair.WireTypes.group_end:
-                    # ignore deprecated types without values
-                    continue
+                    # raise error on deprecated types without values
+                    raise ValueError("deprecated field: {}".format(wt))
                 v: Union[GoogleProtobuf.DelimitedBytes, VlqBase128Le] = pair.value  # for WireType bit-32 and bit-64
                 preferred_decoding = ProtoParser.DecodedTypes.unknown
                 # see: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
