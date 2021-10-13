@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import contextlib
 import copy
-import os
 import pprint
 import textwrap
 import weakref
@@ -10,6 +9,7 @@ from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from typing import Optional
 from typing import TextIO
@@ -541,31 +541,38 @@ def parse(text):
     return data
 
 
-def load(opts: OptManager, text: str) -> None:
+def load(opts: OptManager, text: str, cwd: Path | str | None = None) -> None:
     """
     Load configuration from text, over-writing options already set in
     this object. May raise OptionsError if the config file is invalid.
     """
     data = parse(text)
+
+    scripts = data.get("scripts")
+    if scripts is not None and cwd is not None:
+        data["scripts"] = [
+            str(relative_path(Path(path), relative_to=Path(cwd))) for path in scripts
+        ]
+
     opts.update_defer(**data)
 
 
-def load_paths(opts: OptManager, *paths: str) -> None:
+def load_paths(opts: OptManager, *paths: Path | str) -> None:
     """
     Load paths in order. Each path takes precedence over the previous
     path. Paths that don't exist are ignored, errors raise an
     OptionsError.
     """
     for p in paths:
-        p = os.path.expanduser(p)
-        if os.path.exists(p) and os.path.isfile(p):
-            with open(p, encoding="utf8") as f:
+        p = Path(p).expanduser()
+        if p.exists() and p.is_file():
+            with p.open(encoding="utf8") as f:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise exceptions.OptionsError(f"Error reading {p}: {e}")
             try:
-                load(opts, txt)
+                load(opts, txt, cwd=p.absolute().parent)
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(f"Error reading {p}: {e}")
 
@@ -594,15 +601,15 @@ def serialize(
     ruamel.yaml.YAML().dump(data, file)
 
 
-def save(opts: OptManager, path: str, defaults: bool = False) -> None:
+def save(opts: OptManager, path: Path | str, defaults: bool = False) -> None:
     """
     Save to path. If the destination file exists, modify it in-place.
 
     Raises OptionsError if the existing data is corrupt.
     """
-    path = os.path.expanduser(path)
-    if os.path.exists(path) and os.path.isfile(path):
-        with open(path, encoding="utf8") as f:
+    path = Path(path).expanduser()
+    if path.exists() and path.is_file():
+        with path.open(encoding="utf8") as f:
             try:
                 data = f.read()
             except UnicodeDecodeError as e:
@@ -610,5 +617,17 @@ def save(opts: OptManager, path: str, defaults: bool = False) -> None:
     else:
         data = ""
 
-    with open(path, "w", encoding="utf8") as f:
+    with path.open("w", encoding="utf8") as f:
         serialize(opts, f, data, defaults)
+
+
+def relative_path(script_path: Path | str, *, relative_to: Path | str) -> Path:
+    """
+    Make relative paths found in config files relative to said config file,
+    instead of relative to where the command is ran.
+    """
+    script_path = Path(script_path)
+    # Edge case when $HOME is not an absolute path
+    if script_path.expanduser() != script_path and not script_path.is_absolute():
+        script_path = script_path.expanduser().absolute()
+    return (relative_to / script_path.expanduser()).absolute()
