@@ -110,6 +110,9 @@ def test_view_protobuf_custom_parsing_request(tdata):
 
 
 def test_view_protobuf_custom_parsing_response(tdata):
+    custom_view_config_parser_rules.parser_rules[1].field_definitions[3].intended_decoding = None
+    custom_view_config_parser_rules.parser_rules[1].field_definitions[4].intended_decoding = None
+
     v = full_eval(ViewGrpcProtobuf(custom_view_config_parser_rules))
     p = tdata.path(datadir + "msg3.bin")
 
@@ -141,7 +144,75 @@ def test_view_protobuf_custom_parsing_response(tdata):
         [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
         [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x06\\x04'                                             ")],  # noqa: E501
         [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'District of Columbia                                    ')],  # noqa: E501
-        [('text', '[message]  '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'DC                                                      ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x05\\x04'                                             ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'USA                                                     ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'US                                                      ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x17'                                                 ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', '20502                                                   ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', '20502                                                   ')],  # noqa: E501
+        [('text', '[message]  '), ('text', '                       '), ('text', '1.5      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'position               '), ('text', '1.5.1    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'latitude               '), ('text', '1.5.1.1  '), ('text', '38.8970309                                              ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'longitude              '), ('text', '1.5.1.2  '), ('text', '-77.03872559999999                                      ')],  # noqa: E501
+        [('text', '[uint32]   '), ('text', '                       '), ('text', '1.5.2    '), ('text', '1                                                       ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'position               '), ('text', '1.5.3    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'latitude               '), ('text', '1.5.3.1  '), ('text', '38.8962271697085                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'longitude              '), ('text', '1.5.3.2  '), ('text', '-77.0400511802915                                       ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'position               '), ('text', '1.5.4    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'latitude               '), ('text', '1.5.4.1  '), ('text', '38.8989251302915                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'longitude              '), ('text', '1.5.4.2  '), ('text', '-77.03735321970849                                      ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'position               '), ('text', '1.5.5    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'latitude               '), ('text', '1.5.5.1  '), ('text', '38.896898                                               ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'longitude              '), ('text', '1.5.5.2  '), ('text', '-77.03917229999999                                      ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'position               '), ('text', '1.5.6    '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'latitude               '), ('text', '1.5.6.1  '), ('text', '38.8982543                                              ')],  # noqa: E501
+        [('text', '[double]   '), ('text', 'longitude              '), ('text', '1.5.6.2  '), ('text', '-77.0382321                                             ')],  # noqa: E501
+        [('text', '[string]   '), ('text', '                       '), ('text', '1.7      '), ('text', 'ChIJAXiAory3t4kRpkrvas9dYmQ                             ')],  # noqa: E501
+        [('text', '[message]  '), ('text', '                       '), ('text', '2        '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[uint32]   '), ('text', '                       '), ('text', '2.1      '), ('text', '21                                                      ')],  # noqa: E501
+    ]
+
+
+def test_view_protobuf_custom_parsing_response2(tdata):
+    # try to parse 1.3.2 and 1.3.3 as string
+    custom_view_config_parser_rules.parser_rules[1].field_definitions[3].intended_decoding = ProtoParser.DecodedTypes.string  # 1.3.2
+    custom_view_config_parser_rules.parser_rules[1].field_definitions[4].intended_decoding = ProtoParser.DecodedTypes.string  # 1.3.3
+
+    v = full_eval(ViewGrpcProtobuf(custom_view_config_parser_rules))
+    p = tdata.path(datadir + "msg3.bin")
+
+    with open(p, "rb") as f:
+        raw = f.read()
+    view_text, output = v(raw, flow=sim_flow, http_message=sim_flow.response)  # simulate response message
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                       '), ('text', '1        '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[string]   '), ('text', '                       '), ('text', '1.1      '), ('text', '\x15                                                       ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'address                '), ('text', '1.2      '), ('text', '1650 Pennsylvania Avenue NW, Washington, DC 20502, USA  ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', 'b\'"\'                                                    ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', '1650                                                    ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', '1650                                                    ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x02'                                                 ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'Pennsylvania Avenue Northwest                           ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'Pennsylvania Avenue NW                                  ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x14\\x04'                                             ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'Northwest Washington                                    ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'Northwest Washington                                    ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x0c\\x04'                                             ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'Washington                                              ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'Washington                                              ')],  # noqa: E501
+        [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x06\\x04'                                             ")],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'District of Columbia                                    ')],  # noqa: E501
+        [('text', '[string]   '), ('text', 'element value short    '), ('text', '1.3.3    '), ('text', 'DC                                                      ')],  # noqa: E501
         [('text', '[message]  '), ('text', 'address array element  '), ('text', '1.3      '), ('text', '                                                        ')],  # noqa: E501
         [('text', '[bytes]    '), ('text', 'unknown bytes          '), ('text', '1.3.1    '), ('text', "b'\\x05\\x04'                                             ")],  # noqa: E501
         [('text', '[string]   '), ('text', 'element value long     '), ('text', '1.3.2    '), ('text', 'USA                                                     ')],  # noqa: E501
