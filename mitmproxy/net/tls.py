@@ -230,7 +230,7 @@ def create_client_proxy_context(
             NoEncryption,
             PrivateFormat
         )
-        key_bytes = key.private_bytes(
+        key_bytes = key.private_bytes( # type: ignore
             Encoding.PEM,
             PrivateFormat.PKCS8,
             NoEncryption()
