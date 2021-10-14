@@ -237,7 +237,7 @@ def create_client_proxy_context(
         )
         private_key = crypto.load_privatekey(crypto.FILETYPE_PEM, key_bytes)
     except Exception as e:
-        raise RuntimeError("Cannot load privtae key.") from e
+        raise RuntimeError("Cannot load private key.") from e
 
     context.use_privatekey(private_key)
 
