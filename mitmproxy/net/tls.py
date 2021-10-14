@@ -218,7 +218,29 @@ def create_client_proxy_context(
     )
 
     context.use_certificate(cert.to_pyopenssl())
-    context.use_privatekey(crypto.PKey.from_cryptography_key(key))
+    try:
+        private_key = crypto.PKey.from_cryptography_key(key)
+    except TypeError:
+        """
+            The key type is unsupported by `from_cryptography_key`
+            If it is an EC key for example, we can try to load it anyway...
+        """
+        from cryptography.hazmat.primitives.serialization import (
+            Encoding,
+            NoEncryption,
+            PrivateFormat
+        )
+        key_bytes = key.private_bytes(
+            Encoding.PEM,
+            PrivateFormat.PKCS8,
+            NoEncryption()
+        )
+        private_key = crypto.load_privatekey(crypto.FILETYPE_PEM, key_bytes)
+    except Exception as e:
+        raise RuntimeError("Cannot load privtae key.") from e
+
+    context.use_privatekey(private_key)
+
     if chain_file is not None:
         try:
             context.load_verify_locations(str(chain_file), None)
