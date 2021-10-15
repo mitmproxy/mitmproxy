@@ -760,6 +760,7 @@ class ViewGrpcProtobuf(base.View):
         "application/x-protobuf",
         "application/x-protobuffer",
         "application/grpc-proto",
+        "application/grpc+proto",
     ]
     __content_types_grpc = [
         "application/grpc",
