@@ -380,6 +380,10 @@ def test_special_decoding():
     msg += helper_gen_bits64_msg_field(5, 0xbff199999999999a)  # bits64
     msg += helper_gen_varint_msg_field(6, 0xffffffff)  # 32 bit varint negative
     msg += helper_gen_lendel_msg_field(7, b"hello world")  # length delimted message, UTF-8 parsable
+    # ad a nested message prefixed with its length (as seen on google api traffic)
+    nested_msg = helper_gen_lendel_msg_field(1, b"nested with length prefix")  # length delimted message, UTF-8 parsable
+    len_prefix = helper_encode_base128le(len(nested_msg))
+    msg += helper_gen_lendel_msg_field(8, len_prefix + nested_msg)  # length delimted nested  message with length prefix
 
     parser = ProtoParser.Message(
         data=msg,
@@ -437,6 +441,14 @@ def test_special_decoding():
     # length delimeted to bytes
     assert fields[6].safe_decode_as(ProtoParser.DecodedTypes.bytes) == (ProtoParser.DecodedTypes.bytes, b"hello world")
 
+    # length delimeted nested message with length prefix
+    nested_res = fields[7].safe_decode_as(ProtoParser.DecodedTypes.len_prefixed_message)
+    assert nested_res[0] == ProtoParser.DecodedTypes.len_prefixed_message
+    assert isinstance(nested_res[1], ProtoParser.Message)
+    nested_res[1]
+    nested_fields = list(nested_res[1].gen_fields())
+    assert nested_fields[0].safe_decode_as(ProtoParser.DecodedTypes.bytes) == (ProtoParser.DecodedTypes.bytes, b"nested with length prefix")
+
     assert fields[0].wire_value_as_utf8() == "1"
 
     with pytest.raises(TypeError, match="intended decoding mismatches wire type"):
@@ -449,8 +461,6 @@ def test_special_decoding():
         fields[1].decode_as(ProtoParser.DecodedTypes.uint32)
     with pytest.raises(TypeError, match="can not be converted to floatingpoint representation"):
         fields[6]._wire_value_as_float()
-
-    print(fields[6])
 
 
 def test_render_priority():
