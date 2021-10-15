@@ -146,6 +146,9 @@ class ProtoParser:
         packed_repeated_field = 17
         # helper
         unknown = 18
+        # special
+        # googleapis traffic has found to include varint length prefixes to nested messages in some cases
+        len_prefixed_message = 19
 
     class Message:
         def __init__(
@@ -402,6 +405,7 @@ class ProtoParser:
                     # failover strategy: message --> string (valid UTF-8) --> bytes
                     len_delimited_strategy: List[ProtoParser.DecodedTypes] = [
                         ProtoParser.DecodedTypes.message,
+                        ProtoParser.DecodedTypes.len_prefixed_message,
                         ProtoParser.DecodedTypes.string,
                         ProtoParser.DecodedTypes.bytes  # should always work
                     ]
@@ -495,6 +499,20 @@ class ProtoParser:
                         parent_field=self,
                         rules=self.rules
                     )
+                elif intended_decoding == ProtoParser.DecodedTypes.len_prefixed_message:
+                    # read prefix as varint
+                    b128le = VlqBase128Le.from_bytes(self.wire_value)
+                    vl = b128le.len
+                    ml = b128le.value
+                    if vl + ml == len(self.wire_value):
+                        return ProtoParser.Message(
+                            data=self.wire_value[vl:],
+                            options=self.options,
+                            parent_field=self,
+                            rules=self.rules
+                        )
+                    else:
+                        raise ValueError("could not be decoded as length prefixed message")
 
             # if here, there is no valid decoding
             raise TypeError("intended decoding mismatches wire type")
