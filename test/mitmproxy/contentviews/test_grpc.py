@@ -445,7 +445,6 @@ def test_special_decoding():
     nested_res = fields[7].safe_decode_as(ProtoParser.DecodedTypes.len_prefixed_message)
     assert nested_res[0] == ProtoParser.DecodedTypes.len_prefixed_message
     assert isinstance(nested_res[1], ProtoParser.Message)
-    nested_res[1]
     nested_fields = list(nested_res[1].gen_fields())
     assert nested_fields[0].safe_decode_as(ProtoParser.DecodedTypes.bytes) == (ProtoParser.DecodedTypes.bytes, b"nested with length prefix")
 

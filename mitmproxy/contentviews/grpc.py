@@ -147,7 +147,7 @@ class ProtoParser:
         # helper
         unknown = 18
         # special
-        # googleapis traffic has found to include varint length prefixes to nested messages in some cases
+        # googleapis traffic was found to include varint length prefixes to nested messages in some cases
         len_prefixed_message = 19
 
     class Message:
