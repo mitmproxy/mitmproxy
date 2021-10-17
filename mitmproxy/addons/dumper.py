@@ -38,10 +38,10 @@ class Dumper:
         loader.add_option(
             "flow_detail", int, 1,
             """
-            The display detail level for flows in mitmdump: 0 (almost quiet) to 3 (very verbose).
-              0: shortened request URL, response status code, WebSocket and TCP message notifications.
-              1: full request URL with response status code
-              2: 1 + HTTP headers
+            The display detail level for flows in mitmdump: 0 (no output) to 3 (very verbose).
+              0: no output
+              1: shortened request URL, response status code
+              2: full request URL + headers
               3: 2 + truncated response content, content of WebSocket and TCP messages
               4: 3 + nothing is truncated
             """
