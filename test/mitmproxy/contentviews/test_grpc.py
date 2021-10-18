@@ -1,7 +1,7 @@
 import pytest
 
 from mitmproxy.contentviews import grpc
-from mitmproxy.contentviews.grpc import ProtobufWireParser, ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
+from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
 from mitmproxy.net.encoding import encode
 from mitmproxy.test import tflow, tutils
 import struct
@@ -400,8 +400,8 @@ def test_special_decoding():
     assert fields[1].decode_as(ProtoParser.DecodedTypes.float) == 2.121995791e-314
     assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.uint32) == (ProtoParser.DecodedTypes.uint64, 1 << 32)
     assert fields[0].safe_decode_as(ProtoParser.DecodedTypes.sfixed32) == (ProtoParser.DecodedTypes.uint32, 1)
-    assert fields[3].wire_type == ProtobufWireParser.WireTypes.bit_32
-    assert fields[4].wire_type == ProtobufWireParser.WireTypes.bit_64
+    assert fields[3].wire_type == ProtoParser.WireTypes.bit_32
+    assert fields[4].wire_type == ProtoParser.WireTypes.bit_64
     # signed 32 bit int (standard encoding)
     assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.int32) == (ProtoParser.DecodedTypes.int32, -1)
     # fixed (signed) 32bit int (ZigZag encoding)
