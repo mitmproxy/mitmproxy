@@ -7,9 +7,89 @@ from typing import Dict, Generator, Iterable, Iterator, List, Optional, Tuple, U
 
 from mitmproxy import contentviews, ctx, flow, flowfilter, http
 from mitmproxy.contentviews import base
-from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
-from mitmproxy.contrib.kaitaistruct.vlq_base128_le import VlqBase128Le
 from mitmproxy.net.encoding import decode
+
+
+class ProtobufWireParser:
+    @staticmethod
+    def _read_base128le(data: bytes) -> Tuple[int, int]:
+        res = 0
+        offset = 0
+        while offset < 9:
+            o = data[offset]
+            res += ((o & 0x7f) << (7 * offset))
+            offset += 1
+            if o < 0x80:
+                return offset, res
+        # do not allow varint fields with len > 8 bytes, return 0 as value in this case
+        raise ValueError("varint exceeds 8 byte bounds")
+
+    @staticmethod
+    def _read_u32(data: bytes) -> Tuple[int, int]:
+        return 4, struct.unpack("<I", data[:4])[0]
+
+    @staticmethod
+    def _read_u64(data: bytes) -> Tuple[int, int]:
+        return 8, struct.unpack("<Q", data[:8])[0]
+
+    class WireTypes(Enum):
+        varint = 0
+        bit_64 = 1
+        len_delimited = 2
+        group_start = 3
+        group_end = 4
+        bit_32 = 5
+
+    @dataclass
+    class WireField:
+        wire_value: Union[bytes, int]
+        wire_type: ProtobufWireParser.WireTypes
+        tag: int
+        is_packed: bool
+
+    def __init__(self, message: bytes) -> None:
+        self.message = message
+
+    def read_fields(self) -> List[ProtobufWireParser.WireField]:
+        wire_data = self.message
+        res: List[ProtobufWireParser.WireField] = []
+        pos = 0
+        while pos < len(wire_data):
+            # read field key (tag and wire_type)
+            offset, key = ProtobufWireParser._read_base128le(wire_data[pos:])
+            # casting raises exception for invalid WireTypes
+            wt = ProtobufWireParser.WireTypes((key & 7))
+            tag = (key >> 3)
+            pos += offset
+
+            val: Union[bytes, int]
+            if wt == ProtobufWireParser.WireTypes.varint:
+                offset, val = ProtobufWireParser._read_base128le(wire_data[pos:])
+                pos += offset
+            elif wt == ProtobufWireParser.WireTypes.bit_64:
+                offset, val = ProtobufWireParser._read_u64(wire_data[pos:])
+                pos += offset
+            elif wt == ProtobufWireParser.WireTypes.len_delimited:
+                offset, length = ProtobufWireParser._read_base128le(wire_data[pos:])
+                pos += offset
+                if length > len(wire_data[pos:]):
+                    raise ValueError("length delimited field exceeds data size")
+                val = wire_data[pos:pos + length]
+                pos += length
+            elif (
+                wt == ProtobufWireParser.WireTypes.group_start or
+                wt == ProtobufWireParser.WireTypes.group_end
+            ):
+                val = 0  # pseudo value
+            elif wt == ProtobufWireParser.WireTypes.bit_32:
+                offset, val = ProtobufWireParser._read_u32(wire_data[pos:])
+                pos += offset
+            else:
+                raise ValueError("invalid WireType for protobuf messsage field")
+
+            field = ProtobufWireParser.WireField(val, wt, tag, False)
+            res.append(field)
+        return res
 
 
 class ProtoParser:
@@ -167,35 +247,35 @@ class ProtoParser:
         def parse_message_fields(self, message: bytes) -> List:
             res: List[ProtoParser.Field] = []
 
-            pb: GoogleProtobuf = GoogleProtobuf.from_bytes(message)
-            for pair in pb.pairs:
-                tag = pair.field_tag
-                wt = pair.wire_type
-                if wt == GoogleProtobuf.Pair.WireTypes.group_start or wt == GoogleProtobuf.Pair.WireTypes.group_end:
+            try:
+                wp: ProtobufWireParser = ProtobufWireParser(message)
+                wire_fields = wp.read_fields()
+            except Exception as e:
+                ctx.log.warn("Failed parse " + str(e))
+            for wire_field in wire_fields:
+                tag = wire_field.tag
+                wt: ProtobufWireParser.WireTypes = wire_field.wire_type
+                if wt == ProtobufWireParser.WireTypes.group_start or wt == ProtobufWireParser.WireTypes.group_end:
                     # raise error on deprecated types without values
                     raise ValueError("deprecated field: {}".format(wt))
-                v: Union[GoogleProtobuf.DelimitedBytes, VlqBase128Le] = pair.value  # for WireType bit-32 and bit-64
+                v: Union[bytes, int] = wire_field.wire_value  # for WireType bit-32 and bit-64
                 preferred_decoding = ProtoParser.DecodedTypes.unknown
                 # see: https://www.oreilly.com/library/view/grpc-up-and/9781492058328/ch04.html
-                if wt == GoogleProtobuf.Pair.WireTypes.len_delimited:
-                    assert isinstance(v, GoogleProtobuf.DelimitedBytes)
-                    v = v.body
+                if wt == ProtobufWireParser.WireTypes.len_delimited:
                     assert isinstance(v, bytes)
                     # always try to parse length delimited data as nested protobuf message
                     preferred_decoding = ProtoParser.DecodedTypes.message
-                if wt == GoogleProtobuf.Pair.WireTypes.varint:
-                    assert isinstance(v, VlqBase128Le)
-                    v = v.value
+                if wt == ProtobufWireParser.WireTypes.varint:
                     assert isinstance(v, int)
                     if v.bit_length() > 32:
                         preferred_decoding = ProtoParser.DecodedTypes.uint64
                     else:
                         preferred_decoding = ProtoParser.DecodedTypes.uint32
-                if wt == GoogleProtobuf.Pair.WireTypes.bit_64:
+                if wt == ProtobufWireParser.WireTypes.bit_64:
                     # exists in Protobuf for efficient encoding, when decoded comes down to uint64
                     assert isinstance(v, int)
                     preferred_decoding = ProtoParser.DecodedTypes.fixed64
-                if wt == GoogleProtobuf.Pair.WireTypes.bit_32:
+                if wt == ProtobufWireParser.WireTypes.bit_32:
                     # exists in Protobuf for efficient encoding, when decoded comes down to uint32
                     assert isinstance(v, int)
                     preferred_decoding = ProtoParser.DecodedTypes.fixed32
@@ -301,7 +381,7 @@ class ProtoParser:
 
         def __init__(
             self,
-            wire_type: GoogleProtobuf.Pair.WireTypes,
+            wire_type: ProtobufWireParser.WireTypes,
             preferred_decoding: ProtoParser.DecodedTypes,
             tag: int,
             wire_value: Union[int, bytes],
@@ -309,7 +389,7 @@ class ProtoParser:
             options: ProtoParser.ParserOptions,
             rules: List[ProtoParser.ParserRule]
         ) -> None:
-            self.wire_type: GoogleProtobuf.Pair.WireTypes = wire_type
+            self.wire_type: ProtobufWireParser.WireTypes = wire_type
             self.preferred_decoding: ProtoParser.DecodedTypes = preferred_decoding
             self.wire_value: Union[int, bytes] = wire_value
             self.tag: int = tag
@@ -376,7 +456,7 @@ class ProtoParser:
 
             Returns selected decoding and decoded value
             """
-            if self.wire_type == GoogleProtobuf.Pair.WireTypes.varint:
+            if self.wire_type == ProtobufWireParser.WireTypes.varint:
                 try:
                     return intended_decoding, self.decode_as(intended_decoding)
                 except:
@@ -385,17 +465,17 @@ class ProtoParser:
                         return ProtoParser.DecodedTypes.uint64, self.wire_value
                     else:
                         return ProtoParser.DecodedTypes.uint32, self.wire_value
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_64:
+            elif self.wire_type == ProtobufWireParser.WireTypes.bit_64:
                 try:
                     return intended_decoding, self.decode_as(intended_decoding)
                 except:
                     return ProtoParser.DecodedTypes.fixed64, self.wire_value
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_32:
+            elif self.wire_type == ProtobufWireParser.WireTypes.bit_32:
                 try:
                     return intended_decoding, self.decode_as(intended_decoding)
                 except:
                     return ProtoParser.DecodedTypes.fixed32, self.wire_value
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.len_delimited:
+            elif self.wire_type == ProtobufWireParser.WireTypes.len_delimited:
                 try:
                     return intended_decoding, self.decode_as(intended_decoding)
                 except:
@@ -421,7 +501,7 @@ class ProtoParser:
             self,
             intended_decoding: ProtoParser.DecodedTypes
         ) -> Union[bool, int, float, bytes, str, ProtoParser.Message]:
-            if self.wire_type == GoogleProtobuf.Pair.WireTypes.varint:
+            if self.wire_type == ProtobufWireParser.WireTypes.varint:
                 assert isinstance(self.wire_value, int)
                 if intended_decoding == ProtoParser.DecodedTypes.bool:
                     return self.wire_value != 0
@@ -463,21 +543,21 @@ class ProtoParser:
                 ):
                     # special case, not complying to protobuf specs
                     return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_64:
+            elif self.wire_type == ProtobufWireParser.WireTypes.bit_64:
                 if intended_decoding == ProtoParser.DecodedTypes.fixed64:
                     return self.wire_value
                 elif intended_decoding == ProtoParser.DecodedTypes.sfixed64:
                     return struct.unpack("!q", struct.pack("!Q", self.wire_value))[0]
                 elif intended_decoding == ProtoParser.DecodedTypes.double:
                     return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.bit_32:
+            elif self.wire_type == ProtobufWireParser.WireTypes.bit_32:
                 if intended_decoding == ProtoParser.DecodedTypes.fixed32:
                     return self.wire_value
                 elif intended_decoding == ProtoParser.DecodedTypes.sfixed32:
                     return struct.unpack("!i", struct.pack("!I", self.wire_value))[0]
                 elif intended_decoding == ProtoParser.DecodedTypes.float:
                     return self._wire_value_as_float()
-            elif self.wire_type == GoogleProtobuf.Pair.WireTypes.len_delimited:
+            elif self.wire_type == ProtobufWireParser.WireTypes.len_delimited:
                 assert isinstance(self.wire_value, bytes)
                 if intended_decoding == ProtoParser.DecodedTypes.string:
                     # According to specs, a protobuf string HAS TO be UTF-8 parsable
