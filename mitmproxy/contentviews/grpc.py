@@ -144,9 +144,9 @@ class ProtoParser:
         string = 14
         bytes = 15
         message = 16
-        packed_repeated_field = 17
+
         # helper
-        unknown = 18
+        unknown = 17
 
     @staticmethod
     def _read_base128le(data: bytes) -> Tuple[int, int]:
@@ -186,12 +186,6 @@ class ProtoParser:
         group_start = 3
         group_end = 4
         bit_32 = 5
-
-    @dataclass
-    class WireField:
-        wire_value: Union[bytes, int]
-        wire_type: ProtoParser.WireTypes
-        tag: int
 
     @staticmethod
     def read_fields(
@@ -264,30 +258,62 @@ class ProtoParser:
         wire_data: bytes,
         wt: ProtoParser.WireTypes,
         tag: int,
-        owning_message: ProtoParser.Message
-    ) -> List[ProtoParser.WireField]:
-        res: List[ProtoParser.WireField] = []
+        owning_message: ProtoParser.Message,
+        decoding: ProtoParser.DecodedTypes,
+    ) -> List[ProtoParser.Field]:
+        res: List[ProtoParser.Field] = []
         pos = 0
         val: Union[bytes, int]
         if wt == ProtoParser.WireTypes.varint:
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_base128le(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.WireField(val, wt, tag))
+                res.append(ProtoParser.Field(
+                    owning_message=owning_message,
+                    options=owning_message.options,
+                    preferred_decoding=decoding,
+                    rules=owning_message.rules,
+                    tag=tag,
+                    wire_type=wt,
+                    wire_value=val
+                ))
         elif wt == ProtoParser.WireTypes.bit_64:
             if len(wire_data) % 8 != 0:
                 raise ValueError("can not parse as packed bit64")
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_u64(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.WireField(val, wt, tag))
+                res.append(ProtoParser.Field(
+                    owning_message=owning_message,
+                    options=owning_message.options,
+                    preferred_decoding=decoding,
+                    rules=owning_message.rules,
+                    tag=tag,
+                    wire_type=wt,
+                    wire_value=val
+                ))
         elif wt == ProtoParser.WireTypes.len_delimited:
             while pos < len(wire_data):
                 offset, length = ProtoParser._read_base128le(wire_data[pos:])
                 pos += offset
+                val = wire_data[pos: pos + length]
                 if length > len(wire_data[pos:]):
-                    raise ValueError("packed length delimited field exceeds data size")
-                res.append(ProtoParser.WireField(val, wt, tag))
+                    ctx.log.warn("repeated field: {}".format(wire_data.hex()))
+                    raise ValueError("packed length delimited field exceeds data size (pos={} len={} size={})".format(
+                        pos,
+                        length,
+                        len(wire_data[pos:])
+                    ))
+                res.append(ProtoParser.Field(
+                    owning_message=owning_message,
+                    options=owning_message.options,
+                    preferred_decoding=decoding,
+                    rules=owning_message.rules,
+                    tag=tag,
+                    wire_type=wt,
+                    wire_value=val
+                ))
+                pos += length
         elif (
             wt == ProtoParser.WireTypes.group_start or
             wt == ProtoParser.WireTypes.group_end
@@ -299,7 +325,15 @@ class ProtoParser:
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_u32(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.WireField(val, wt, tag))
+                res.append(ProtoParser.Field(
+                    owning_message=owning_message,
+                    options=owning_message.options,
+                    preferred_decoding=decoding,
+                    rules=owning_message.rules,
+                    tag=tag,
+                    wire_type=wt,
+                    wire_value=val
+                ))
         else:
             raise ValueError("invalid WireType for protobuf messsage field")
 
@@ -437,6 +471,7 @@ class ProtoParser:
             self.name: str = ""
             self.rules: List[ProtoParser.ParserRule] = rules
             self.parent_tags: List[int]
+            self.as_packed = False
             if not self.owning_message.parent_field:
                 self.parent_tags = []
             else:
@@ -450,6 +485,7 @@ class ProtoParser:
             tag_str = self._gen_tag_str()
             name = None
             decoding = None
+            as_packed = False
             try:
                 for rule in self.rules:
                     for fd in rule.field_definitions:
@@ -466,17 +502,21 @@ class ProtoParser:
                                 # only first match
                                 self.name = fd.name
                                 self.preferred_decoding = fd.intended_decoding
+                                self.as_packed = fd.as_packed
                                 return
                             else:
                                 # overwrite matches till last rule was inspected
                                 # (f.e. allows to define name in one rule and intended_decoding in another one)
                                 name = fd.name if fd.name else name
                                 decoding = fd.intended_decoding if fd.intended_decoding else decoding
+                                if fd.as_packed:
+                                    as_packed = True
 
                 if name:
                     self.name = name
                 if decoding:
                     self.preferred_decoding = decoding
+                self.as_packed = as_packed
             except Exception as e:
                 ctx.log.warn(e)
                 pass
@@ -490,7 +530,7 @@ class ProtoParser:
             self,
             intended_decoding: ProtoParser.DecodedTypes,
             as_packed: bool = False
-        ) -> Tuple[ProtoParser.DecodedTypes, Union[bool, float, int, bytes, str, ProtoParser.Message]]:
+        ) -> Tuple[ProtoParser.DecodedTypes, Union[bool, float, int, bytes, str, ProtoParser.Message, List[ProtoParser.Field]]]:
             """
             Tries to decode as intended, applies failover, if not possible
 
@@ -541,7 +581,60 @@ class ProtoParser:
             self,
             intended_decoding: ProtoParser.DecodedTypes,
             as_packed: bool = False
-        ) -> Union[bool, int, float, bytes, str, ProtoParser.Message]:
+        ) -> Union[bool, int, float, bytes, str, ProtoParser.Message, List[ProtoParser.Field]]:
+            if as_packed is True:
+                if self.wire_type != ProtoParser.WireTypes.len_delimited or not isinstance(self.wire_value, bytes):
+                    raise ValueError("packed fields have to be embedded in a length delimited message")
+                # wiretype to read has to be determined from intended decoding
+                wt: ProtoParser.WireTypes
+                if (
+                    intended_decoding == ProtoParser.DecodedTypes.int32 or
+                    intended_decoding == ProtoParser.DecodedTypes.int64 or
+                    intended_decoding == ProtoParser.DecodedTypes.uint32 or
+                    intended_decoding == ProtoParser.DecodedTypes.uint64 or
+                    intended_decoding == ProtoParser.DecodedTypes.sint32 or
+                    intended_decoding == ProtoParser.DecodedTypes.sint64 or
+                    intended_decoding == ProtoParser.DecodedTypes.bool or
+                    intended_decoding == ProtoParser.DecodedTypes.enum
+                ):
+                    wt = ProtoParser.WireTypes.varint
+                elif (
+                    intended_decoding == ProtoParser.DecodedTypes.fixed32 or
+                    intended_decoding == ProtoParser.DecodedTypes.sfixed32 or
+                    intended_decoding == ProtoParser.DecodedTypes.float
+                ):
+                    wt = ProtoParser.WireTypes.bit_32
+                elif (
+                    intended_decoding == ProtoParser.DecodedTypes.fixed64 or
+                    intended_decoding == ProtoParser.DecodedTypes.sfixed64 or
+                    intended_decoding == ProtoParser.DecodedTypes.double
+                ):
+                    wt = ProtoParser.WireTypes.bit_64
+                elif (
+                    intended_decoding == ProtoParser.DecodedTypes.string or
+                    intended_decoding == ProtoParser.DecodedTypes.bytes or
+                    intended_decoding == ProtoParser.DecodedTypes.message
+                ):
+                    wt = ProtoParser.WireTypes.len_delimited
+                else:
+                    raise TypeError("Wire type could not be determined from packed decoding type")
+
+                ctx.log.info("try packed for {} as {} (wt={})".format(self._gen_tag_str(), intended_decoding, wt))
+
+                try:
+                    ctx.log.warn(intended_decoding)
+                    unpacked_fields = ProtoParser.read_packed_fields(
+                        owning_message=self.owning_message,
+                        tag=self.tag,
+                        wire_data=self.wire_value,
+                        wt=wt,
+                        decoding=intended_decoding
+                    )
+                except Exception as e:
+                    ctx.log.warn("packed failed {}".format(e))
+                    raise e
+                return unpacked_fields
+
             if self.wire_type == ProtoParser.WireTypes.varint:
                 assert isinstance(self.wire_value, int)
                 if intended_decoding == ProtoParser.DecodedTypes.bool:
@@ -608,8 +701,6 @@ class ProtoParser:
                 elif intended_decoding == ProtoParser.DecodedTypes.bytes:
                     # always works, assure to hand back a copy
                     return self.wire_value[:]
-                elif intended_decoding == ProtoParser.DecodedTypes.packed_repeated_field:
-                    raise NotImplementedError("currently not needed")
                 elif intended_decoding == ProtoParser.DecodedTypes.message:
                     return ProtoParser.Message(
                         data=self.wire_value,
@@ -690,7 +781,7 @@ class ProtoParser:
             If the field holds a nested message, the fields contained in the message are appended.
             Ultimately this flattens all fields recursively.
             """
-            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding)
+            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding, self.as_packed)
             field_desc_dict = {
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
@@ -703,6 +794,12 @@ class ProtoParser:
                 # the value is an embedded message, thus add the message fields
                 for f in decoded_val.gen_fields():
                     for field_dict in f.gen_flat_decoded_field_dicts():
+                        yield field_dict
+            elif isinstance(decoded_val, list):
+                # the value is an embedded message, thus add the message fields
+                for f in decoded_val:
+                    for field_dict in f.gen_flat_decoded_field_dicts():
+                        field_desc_dict
                         yield field_dict
             else:
                 field_desc_dict["val"] = decoded_val
