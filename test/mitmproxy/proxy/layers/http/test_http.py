@@ -1324,3 +1324,23 @@ def test_chunked_and_content_length_set_by_addon(tctx):
                                      b"Transfer-Encoding: chunked\r\n\r\n"
                                      b"0\r\n\r\n")
     )
+
+
+def test_connect_more_newlines(tctx):
+    """Ignore superfluous \r\n in CONNECT request, https://github.com/mitmproxy/mitmproxy/issues/4870"""
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+    nl = Placeholder(layer.NextLayer)
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n\r\n")
+        << http.HttpConnectHook(Placeholder())
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
+        >> DataReceived(tctx.client, b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03")
+        << layer.NextLayerHook(nl)
+    )
+    assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"
