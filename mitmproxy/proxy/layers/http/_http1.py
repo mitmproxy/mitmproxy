@@ -122,7 +122,10 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         self.state = self.passthrough
         if self.buf:
             already_received = self.buf.maybe_extract_at_most(len(self.buf))
-            yield from self.state(events.DataReceived(self.conn, already_received))
+            # Some clients send superfluous newlines after CONNECT, we want to eat those.
+            already_received = already_received.lstrip(b"\r\n")
+            if already_received:
+                yield from self.state(events.DataReceived(self.conn, already_received))
 
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.stream_id
