@@ -28,19 +28,6 @@ config.parser_rules = [
     ProtoParser.ParserRuleRequest(
         name = "Geo coordinate lookup request",
         # note on flowfilter: for tflow the port gets appended to the URL's host part
-        filter = "play.googleapis.com/log/batch",
-        field_definitions=[
-            ProtoParser.ParserFieldDefinition(
-                tag="1.5",
-                name="repeated",
-                intended_decoding=ProtoParser.DecodedTypes.message,
-                as_packed=True
-            ),
-        ]
-    ),
-    ProtoParser.ParserRuleRequest(
-        name = "Geo coordinate lookup request",
-        # note on flowfilter: for tflow the port gets appended to the URL's host part
         filter = "example\\.com.*/ReverseGeocode",
         field_definitions=[
             ProtoParser.ParserFieldDefinition(tag="1", name="position"),
