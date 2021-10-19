@@ -502,7 +502,7 @@ def test_special_decoding():
             rules=[]
         )
         fields[0]._value_as_bytes()
-    with pytest.raises(ValueError, match=".* is not a valid ProtoParser.WireTypes"):
+    with pytest.raises(ValueError, match=".* is not a valid .*WireTypes"):
         ProtoParser.read_fields(
             wire_data=helper_encode_base128le(0x7),  # invalid wiretype 0x7
             options=ProtoParser.ParserOptions(),
