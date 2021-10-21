@@ -1,5 +1,6 @@
 import pytest
 
+from typing import List
 from mitmproxy.contentviews import grpc
 from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
 from mitmproxy.net.encoding import encode
@@ -353,7 +354,7 @@ def helper_gen_bits32_msg_field(f_idx: int, f_val: int):
 
 def helper_gen_bits64_msg_field(f_idx: int, f_val: int):
     # manual encoding of protobuf data
-    f_wt = 1  # field type 1 (bits32)
+    f_wt = 1  # field type 1 (bits64)
     tag = (f_idx << 3) | f_wt  # combined tag
     msg = helper_encode_base128le(tag)  # add encoded tag to message
     msg = msg + struct.pack("<Q", f_val)  # add varint encoded field value
@@ -370,9 +371,40 @@ def helper_gen_lendel_msg_field(f_idx: int, f_val: bytes):
     return msg
 
 
-def test_special_decoding():
-    from mitmproxy.contrib.kaitaistruct.google_protobuf import GoogleProtobuf
+def helper_gen_bits64_msg_field_packed(f_idx: int, values: List[int]):
+    # manual encoding of protobuf data
+    msg_inner = b""
+    for f_val in values:
+        msg_inner = msg_inner + struct.pack("<Q", f_val)  # add bits64 encoded field value
+    return helper_gen_lendel_msg_field(f_idx, msg_inner)
 
+
+def helper_gen_bits32_msg_field_packed(f_idx: int, values: List[int]):
+    # manual encoding of protobuf data
+    msg_inner = b""
+    for f_val in values:
+        msg_inner = msg_inner + struct.pack("<I", f_val)  # add bits32 encoded field value
+    return helper_gen_lendel_msg_field(f_idx, msg_inner)
+
+
+def helper_gen_varint_msg_field_packed(f_idx: int, values: List[int]):
+    # manual encoding of protobuf data
+    msg_inner = b""
+    for f_val in values:
+        msg_inner = msg_inner + helper_encode_base128le(f_val)  # add varint encoded field value
+    return helper_gen_lendel_msg_field(f_idx, msg_inner)
+
+
+def helper_gen_lendel_msg_field_packed(f_idx: int, values: List[bytes]):
+    # manual encoding of protobuf data
+    msg_inner = b""
+    for f_val in values:
+        msg_inner = msg_inner + helper_encode_base128le(len(f_val))  # add length of message
+        msg_inner = msg_inner + f_val
+    return helper_gen_lendel_msg_field(f_idx, msg_inner)
+
+
+def test_special_decoding():
     msg = helper_gen_varint_msg_field(1, 1)  # small varint
     msg += helper_gen_varint_msg_field(2, 1 << 32)  # varint > 32bit
     msg += helper_gen_varint_msg_field(3, 1 << 64)  # varint > 64bit (returned as 0x0 by Kaitai protobuf decoder)
@@ -380,17 +412,15 @@ def test_special_decoding():
     msg += helper_gen_bits64_msg_field(5, 0xbff199999999999a)  # bits64
     msg += helper_gen_varint_msg_field(6, 0xffffffff)  # 32 bit varint negative
     msg += helper_gen_lendel_msg_field(7, b"hello world")  # length delimted message, UTF-8 parsable
+    msg += helper_gen_varint_msg_field(8, 1 << 128)  # oversized varint
 
-    parser = ProtoParser.Message(
+    parser = ProtoParser(
         data=msg,
-        parent_field=[],
-        rules=[],
-        options=ProtoParser.ParserOptions()
+        parser_options=ProtoParser.ParserOptions(),
+        rules=[]
     )
-    # print(list(parser.gen_string_rows()))
-    # return
 
-    fields = list(parser.gen_fields())
+    fields = parser.root_fields
     assert fields[0].wire_value == 1
     assert fields[1].wire_value == 1 << 32
     as_bool = fields[1].decode_as(ProtoParser.DecodedTypes.bool)
@@ -402,14 +432,16 @@ def test_special_decoding():
     assert fields[1].decode_as(ProtoParser.DecodedTypes.float) == 2.121995791e-314
     assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.uint32) == (ProtoParser.DecodedTypes.uint64, 1 << 32)
     assert fields[0].safe_decode_as(ProtoParser.DecodedTypes.sfixed32) == (ProtoParser.DecodedTypes.uint32, 1)
-    assert fields[3].wire_type == GoogleProtobuf.Pair.WireTypes.bit_32
-    assert fields[4].wire_type == GoogleProtobuf.Pair.WireTypes.bit_64
+    assert fields[3].wire_type == ProtoParser.WireTypes.bit_32
+    assert fields[4].wire_type == ProtoParser.WireTypes.bit_64
     # signed 32 bit int (standard encoding)
     assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.int32) == (ProtoParser.DecodedTypes.int32, -1)
     # fixed (signed) 32bit int (ZigZag encoding)
     assert fields[5].safe_decode_as(ProtoParser.DecodedTypes.sint32) == (ProtoParser.DecodedTypes.sint32, -2147483648)
     # sint64
     assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.sint64) == (ProtoParser.DecodedTypes.sint64, 2147483648)
+    # int64
+    assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.int64) == (ProtoParser.DecodedTypes.int64, 4294967296)
 
     # varint 64bit to enum
     assert fields[1].safe_decode_as(ProtoParser.DecodedTypes.enum) == (ProtoParser.DecodedTypes.enum, 4294967296)
@@ -449,8 +481,308 @@ def test_special_decoding():
         fields[1].decode_as(ProtoParser.DecodedTypes.uint32)
     with pytest.raises(TypeError, match="can not be converted to floatingpoint representation"):
         fields[6]._wire_value_as_float()
+    with pytest.raises(TypeError, match="wire value too large for int64"):
+        fields[7].decode_as(ProtoParser.DecodedTypes.int64)
+    with pytest.raises(TypeError, match="wire value too large"):
+        fields[7].decode_as(ProtoParser.DecodedTypes.uint64)
+    with pytest.raises(TypeError, match="wire value too large for sint64"):
+        fields[7].decode_as(ProtoParser.DecodedTypes.sint64)
+    with pytest.raises(ValueError, match="varint exceeds bounds of provided data"):
+        ProtoParser.read_fields(
+            wire_data=helper_encode_base128le(1 << 128),
+            options=ProtoParser.ParserOptions(),
+            parent_field=None,
+            rules=[]
+        )
+    with pytest.raises(ValueError, match="value exceeds 64bit, violating protobuf specs"):
+        fields = ProtoParser.read_fields(
+            wire_data=helper_gen_varint_msg_field(1, 1 << 128),
+            options=ProtoParser.ParserOptions(),
+            parent_field=None,
+            rules=[]
+        )
+        fields[0]._value_as_bytes()
+    with pytest.raises(ValueError, match=".* is not a valid .*WireTypes"):
+        ProtoParser.read_fields(
+            wire_data=helper_encode_base128le(0x7),  # invalid wiretype 0x7
+            options=ProtoParser.ParserOptions(),
+            parent_field=None,
+            rules=[]
+        )
 
-    print(fields[6])
+
+def test_view_protobuf_custom_config_packed(tdata):
+    # message with repeated field fixed64
+    msg_inner1 = helper_gen_bits64_msg_field(2, 12)
+    msg_inner1 += helper_gen_bits64_msg_field(2, 23)
+    msg_inner1 += helper_gen_bits64_msg_field(2, 456789012345678)
+    msg1 = helper_gen_lendel_msg_field(1, msg_inner1)
+
+    v = full_eval(ViewGrpcProtobuf())
+    view_text, output = v(msg1)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '  '), ('text', '1    '), ('text', '                 ')],
+        [('text', '[fixed64]  '), ('text', '  '), ('text', '1.2  '), ('text', '12               ')],
+        [('text', '[fixed64]  '), ('text', '  '), ('text', '1.2  '), ('text', '23               ')],
+        [('text', '[fixed64]  '), ('text', '  '), ('text', '1.2  '), ('text', '456789012345678  ')]
+    ]
+
+    # same message as above, but fixed64 values are packed
+    # Note: the decoded has no type indication, as packed values are always contained in
+    #       a length delimited field. The packed fields contain no individual type header
+
+    # decoder has no knowledge of packed repeated field
+    msg_inner2 = helper_gen_bits64_msg_field_packed(2, [12, 23, 456789012345678])
+    msg2 = helper_gen_lendel_msg_field(1, msg_inner2)
+    view_text, output = v(msg2)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '  '), ('text', '1    '), ('text', '                                                                                         ')],  # noqa: E501
+        [('text', '[bytes]    '), ('text', '  '), ('text', '1.2  '), ('text', "b'\\x0c\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x17\\x00\\x00\\x00\\x00\\x00\\x00\\x00Ns\\xd1zr\\x9f\\x01\\x00'  ")]  # noqa: E501
+    ]
+
+    # decoder uses custom definition to decode as 1.2 as "packed, repeated fixed64"
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated fixed64",
+                        tag="1.2",
+                        intended_decoding=ProtoParser.DecodedTypes.fixed64,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    msg_inner2 = helper_gen_bits64_msg_field_packed(2, [12, 23, 456789012345678])
+    msg2 = helper_gen_lendel_msg_field(1, msg_inner2)
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg2, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                         '), ('text', '1    '), ('text', '                 ')],
+        [('text', '[fixed64]  '), ('text', 'packed repeated fixed64  '), ('text', '1.2  '), ('text', '12               ')],
+        [('text', '[fixed64]  '), ('text', 'packed repeated fixed64  '), ('text', '1.2  '), ('text', '23               ')],
+        [('text', '[fixed64]  '), ('text', 'packed repeated fixed64  '), ('text', '1.2  '), ('text', '456789012345678  ')]
+    ]
+
+    # message with packed repeated messages in field 1.5
+    # Note: protobuf v3 only allows packed encoding for scalar field types, but packed messages
+    #       were spotted in traffic to google gRPC endpoints (f.e. https://play.googleapis.com/log/batch)
+    p_msg1 = helper_gen_lendel_msg_field(1, b"inner message 1")
+    p_msg1 += helper_gen_varint_msg_field(2, 1)
+    p_msg2 = helper_gen_lendel_msg_field(1, b"inner message 2")
+    p_msg2 += helper_gen_varint_msg_field(2, 2)
+    p_msg3 = helper_gen_lendel_msg_field(1, b"inner message 3")
+    p_msg3 += helper_gen_varint_msg_field(2, 3)
+    msg_inner3 = helper_gen_lendel_msg_field_packed(5, [p_msg1, p_msg2, p_msg3])
+    msg3 = helper_gen_lendel_msg_field(1, msg_inner3)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated message",
+                        tag="1.5",
+                        intended_decoding=ProtoParser.DecodedTypes.message,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg3, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                         '), ('text', '1      '), ('text', '                 ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 1  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '1                ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 2  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '2                ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 3  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '3                ')]
+    ]
+
+    # message with repeated messages in field 1.5 (not packed), has to be detected by failover parsing
+    msg_inner4 = helper_gen_lendel_msg_field(5, p_msg1)
+    msg_inner4 += helper_gen_lendel_msg_field(5, p_msg2)
+    msg_inner4 += helper_gen_lendel_msg_field(5, p_msg3)
+    msg4 = helper_gen_lendel_msg_field(1, msg_inner4)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated message",
+                        tag="1.5",
+                        intended_decoding=ProtoParser.DecodedTypes.message,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg4, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                         '), ('text', '1      '), ('text', '                 ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 1  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '1                ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 2  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '2                ')],
+        [('text', '[message]  '), ('text', 'packed repeated message  '), ('text', '1.5    '), ('text', '                 ')],
+        [('text', '[string]   '), ('text', '                         '), ('text', '1.5.1  '), ('text', 'inner message 3  ')],
+        [('text', '[uint32]   '), ('text', '                         '), ('text', '1.5.2  '), ('text', '3                ')]
+    ]
+
+    # packed bit32
+    msg_inner = helper_gen_bits32_msg_field_packed(2, [12, 23, 4567890])
+    msg = helper_gen_lendel_msg_field(1, msg_inner)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated fixed32",
+                        tag="1.2",
+                        intended_decoding=ProtoParser.DecodedTypes.fixed32,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                         '), ('text', '1    '), ('text', '         ')],
+        [('text', '[fixed32]  '), ('text', 'packed repeated fixed32  '), ('text', '1.2  '), ('text', '12       ')],
+        [('text', '[fixed32]  '), ('text', 'packed repeated fixed32  '), ('text', '1.2  '), ('text', '23       ')],
+        [('text', '[fixed32]  '), ('text', 'packed repeated fixed32  '), ('text', '1.2  '), ('text', '4567890  ')]
+    ]
+
+    # packed bit32, invalid
+    msg_inner = helper_gen_bits32_msg_field_packed(2, [12, 23, 4567890]) + b"\x01"  # data not divisible by 4
+    msg = helper_gen_lendel_msg_field(1, msg_inner)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated fixed32",
+                        tag="1.2",
+                        intended_decoding=ProtoParser.DecodedTypes.fixed32,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[bytes]  '), ('text', '  '), ('text', '1  '), ('text', "b'\\x12\\x0c\\x0c\\x00\\x00\\x00\\x17\\x00\\x00\\x00R\\xb3E\\x00\\x01'  ")]  # noqa: E501
+    ]
+
+    # packed bit64, invalid
+    msg_inner = helper_gen_bits64_msg_field_packed(2, [12, 23, 4567890]) + b"\x01"  # data not divisible by 8
+    msg = helper_gen_lendel_msg_field(1, msg_inner)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated fixed64",
+                        tag="1.2",
+                        intended_decoding=ProtoParser.DecodedTypes.fixed64,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[bytes]  '), ('text', '  '), ('text', '1  '), ('text', "b'\\x12\\x18\\x0c\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x17\\x00\\x00\\x00\\x00\\x00\\x00\\x00R\\xb3E\\x00\\x00\\x00\\x00\\x00\\x01'")]  # noqa: E501
+    ]
+
+    # packed varint
+    msg_inner = helper_gen_varint_msg_field_packed(2, [12, 23, 4567890])
+    msg = helper_gen_lendel_msg_field(1, msg_inner)
+    view_config = ViewConfig(
+        parser_options=ProtoParser.ParserOptions(),
+        parser_rules=[
+            ProtoParser.ParserRule(
+                filter=".*",
+                name="parse packed field",
+                field_definitions=[
+                    ProtoParser.ParserFieldDefinition(
+                        name="packed repeated varint",
+                        tag="1.2",
+                        intended_decoding=ProtoParser.DecodedTypes.uint32,
+                        as_packed=True
+                    )
+                ]
+            )
+        ]
+    )
+    v = full_eval(ViewGrpcProtobuf(view_config))
+    # provide the view a flow and response message dummies, to allow custom rules to work
+    view_text, output = v(msg, flow=sim_flow, http_message=sim_flow.response)
+    assert view_text == "Protobuf (flattened)"
+    output = list(output)  # assure list conversion if generator
+    assert output == [
+        [('text', '[message]  '), ('text', '                        '), ('text', '1    '), ('text', '         ')],
+        [('text', '[uint32]   '), ('text', 'packed repeated varint  '), ('text', '1.2  '), ('text', '12       ')],
+        [('text', '[uint32]   '), ('text', 'packed repeated varint  '), ('text', '1.2  '), ('text', '23       ')],
+        [('text', '[uint32]   '), ('text', 'packed repeated varint  '), ('text', '1.2  '), ('text', '4567890  ')]
+    ]
 
 
 def test_render_priority():
