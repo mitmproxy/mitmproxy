@@ -31,10 +31,6 @@ async def test_playback(mode, concurrency):
             writer.close()
             handler_ok.set()
             return
-        if mode == "upstream":
-            conn_req = await reader.readuntil(b"\r\n\r\n")
-            assert conn_req == b'CONNECT address:22 HTTP/1.1\r\n\r\n'
-            writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
         req = await reader.readuntil(b"data")
         assert req == (
             b'GET /path HTTP/1.1\r\n'
