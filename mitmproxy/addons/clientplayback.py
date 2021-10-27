@@ -78,7 +78,10 @@ class ReplayHandler(server.ConnectionHandler):
 
         super().__init__(context)
 
-        self.layer = layers.HttpLayer(context, HTTPMode.transparent)
+        if options.mode.startswith("upstream:"):
+            self.layer = layers.HttpLayer(context, HTTPMode.upstream)
+        else:
+            self.layer = layers.HttpLayer(context, HTTPMode.transparent)
         self.layer.connections[client] = MockServer(flow, context.fork())
         self.flow = flow
         self.done = asyncio.Event()
