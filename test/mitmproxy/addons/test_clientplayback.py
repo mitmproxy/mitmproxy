@@ -31,9 +31,14 @@ async def test_playback(mode, concurrency):
             writer.close()
             handler_ok.set()
             return
+        req = await reader.readline()
+        if mode == "upstream":
+            print(req)
+            assert req == b'GET http://address:22/path HTTP/1.1\r\n'
+        else:
+            assert req == b'GET /path HTTP/1.1\r\n'
         req = await reader.readuntil(b"data")
         assert req == (
-            b'GET /path HTTP/1.1\r\n'
             b'header: qvalue\r\n'
             b'content-length: 4\r\n'
             b'\r\n'
@@ -55,6 +60,8 @@ async def test_playback(mode, concurrency):
             flow.request.content = b"data"
             if mode == "upstream":
                 tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+                flow.request.authority = f"{addr[0]}:{addr[1]}"
+                flow.request.host, flow.request.port = 'address', 22
             else:
                 flow.request.host, flow.request.port = addr
             cp.start_replay([flow])
