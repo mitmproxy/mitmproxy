@@ -19,6 +19,7 @@ async def tcp_server(handle_conn) -> Address:
     finally:
         server.close()
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
