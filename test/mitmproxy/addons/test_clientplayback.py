@@ -19,7 +19,6 @@ async def tcp_server(handle_conn) -> Address:
     finally:
         server.close()
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
@@ -33,7 +32,6 @@ async def test_playback(mode, concurrency):
             return
         req = await reader.readline()
         if mode == "upstream":
-            print(req)
             assert req == b'GET http://address:22/path HTTP/1.1\r\n'
         else:
             assert req == b'GET /path HTTP/1.1\r\n'
