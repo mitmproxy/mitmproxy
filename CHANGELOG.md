@@ -13,6 +13,7 @@
   Includes example addon which applies custom definitions for selected gRPC traffic (@mame82)
 * Fix a crash caused when editing string option (#4852, @rbdixon)
 * Base container image bumped to Debian 11 Bullseye (@Kriechi)
+* Upstream replays don't do CONNECT on plaintext HTTP requests (#4876, @HoffmannP)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
