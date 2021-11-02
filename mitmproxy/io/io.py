@@ -1,4 +1,6 @@
 import os
+import sys
+import shutil
 from typing import Any, Dict, IO, Iterable, Type, Union, cast
 
 from mitmproxy import exceptions
@@ -6,6 +8,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy import ctx
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 
@@ -61,6 +64,13 @@ class FilteredFlowWriter:
         if self.flt and not flowfilter.match(self.flt, f):
             return
         d = f.get_state()
+        disk = shutil.disk_usage(self.fo.name)
+        used,total = disk.used , disk.total
+        usage = used/total*100
+        ctx.log.warn("Usage: {}".format(usage))
+        if usage > 98:
+            ctx.log.error("Error: Disk is 99% full. Stopping mitmdump to prevent corruption to {}".format(self.fo.name))
+            sys.exit(1)
         tnetstring.dump(d, self.fo)
 
 
