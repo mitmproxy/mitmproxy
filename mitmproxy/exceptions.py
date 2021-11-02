@@ -28,9 +28,6 @@ class MitmproxyException(Exception):
 class FlowReadException(MitmproxyException):
     pass
 
-class FlowWriteException(MitmproxyException):
-    pass   
-
 
 class ControlException(MitmproxyException):
     pass
