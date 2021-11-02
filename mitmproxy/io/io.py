@@ -69,7 +69,7 @@ class FilteredFlowWriter:
         usage = used/total*100
         ctx.log.warn("Usage: {}".format(usage))
         if usage > 98:
-            ctx.log.error("Error: Disk is 99% full. Stopping mitmdump to prevent corruption to {}".format(self.fo.name))
+            ctx.log.error("Error: Disk is 99% full. Stopping mitmdump to prevent corruption")
             sys.exit(1)
         tnetstring.dump(d, self.fo)
 
