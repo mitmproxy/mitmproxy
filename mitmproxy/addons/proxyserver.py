@@ -217,6 +217,7 @@ class Proxyserver:
             ctx.log.warn(str(e))
 
     def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
+        return # :)
         assert ctx.server.address
         self_connect = (
             ctx.server.address[1] == self.options.listen_port
