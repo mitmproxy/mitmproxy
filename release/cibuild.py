@@ -269,7 +269,7 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
         "--dist-dir", be.dist_dir,
     ])
     all_dist = be.dist_dir.glob('*')
-    click.echo(f"Found distributions: {all_dist}")
+    click.echo(f"Found distributions: {[*all_dist]}")
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     click.echo(f"Found wheel package: {whl}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
