@@ -21,7 +21,7 @@ class ServerPlayback:
     def load(self, loader):
         loader.add_option(
             "server_replay_kill_extra", bool, False,
-            "Kill extra requests during replay."
+            "Kill extra requests during replay (for which no replayable response was found)."
         )
         loader.add_option(
             "server_replay_nopop", bool, False,
@@ -39,7 +39,10 @@ class ServerPlayback:
         )
         loader.add_option(
             "server_replay_use_headers", typing.Sequence[str], [],
-            "Request headers to be considered during replay."
+            """
+            Request headers that need to match while searching for a saved flow
+            to replay.
+            """
         )
         loader.add_option(
             "server_replay", typing.Sequence[str], [],
@@ -47,19 +50,19 @@ class ServerPlayback:
         )
         loader.add_option(
             "server_replay_ignore_content", bool, False,
-            "Ignore request's content while searching for a saved flow to replay."
+            "Ignore request content while searching for a saved flow to replay."
         )
         loader.add_option(
             "server_replay_ignore_params", typing.Sequence[str], [],
             """
-            Request's parameters to be ignored while searching for a saved flow
+            Request parameters to be ignored while searching for a saved flow
             to replay.
             """
         )
         loader.add_option(
             "server_replay_ignore_payload_params", typing.Sequence[str], [],
             """
-            Request's payload parameters (application/x-www-form-urlencoded or
+            Request payload parameters (application/x-www-form-urlencoded or
             multipart/form-data) to be ignored while searching for a saved flow
             to replay.
             """
@@ -67,14 +70,14 @@ class ServerPlayback:
         loader.add_option(
             "server_replay_ignore_host", bool, False,
             """
-            Ignore request's destination host while searching for a saved flow
+            Ignore request destination host while searching for a saved flow
             to replay.
             """
         )
         loader.add_option(
             "server_replay_ignore_port", bool, False,
             """
-            Ignore request's destination port while searching for a saved flow
+            Ignore request destination port while searching for a saved flow
             to replay.
             """
         )
