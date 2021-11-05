@@ -263,7 +263,7 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
     subprocess.check_call([
         "python",
         "setup.py",
-        "-q",
+        # "-q",
         "sdist",
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
