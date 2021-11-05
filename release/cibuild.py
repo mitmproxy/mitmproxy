@@ -264,6 +264,7 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
         "python",
         "setup.py",
         "-q",
+        "sdist",
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
     ])
