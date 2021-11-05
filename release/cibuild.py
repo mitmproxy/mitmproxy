@@ -270,6 +270,8 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
     ])
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     click.echo(f"Found wheel package: {whl}")
+    sdist, = be.dist_dir.glob('mitmproxy-*.tar.gz')
+    click.echo(f"Found sdist package: {sdist}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
 
 
