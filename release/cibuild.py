@@ -268,12 +268,12 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
     ])
+    all_dist = be.dist_dir.glob('*')
+    click.echo(f"Found distributions: {all_dist}")
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     click.echo(f"Found wheel package: {whl}")
-    sdist, = be.dist_dir.glob('mitmproxy-*.tar.gz')
-    click.echo(f"Found sdist package: {sdist}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
-
+    
 
 DOCKER_PLATFORMS = "linux/amd64,linux/arm64"
 
