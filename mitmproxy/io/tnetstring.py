@@ -42,6 +42,10 @@ all other strings are returned as plain bytes.
 
 import collections
 import typing
+from mitmproxy import ctx
+import io
+import shutil
+import sys
 
 TSerializable = typing.Union[None, str, bool, int, float, bytes, list, tuple, dict]
 
@@ -63,6 +67,13 @@ def dump(value: TSerializable, file_handle: typing.IO[bytes]) -> None:
     This function dumps a python object as a tnetstring and
     writes it to the given file.
     """
+    if type(file_handle) is not io.BytesIO:
+        disk = shutil.disk_usage(file_handle.name)
+        used, total = disk.used, disk.total
+        usage = used / total * 100
+        if usage > 98:
+            ctx.log.error("Error: Disk is 99% full. Stopping mitmdump to prevent corruption")
+            sys.exit(1)
     file_handle.write(dumps(value))
 
 
