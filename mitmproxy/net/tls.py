@@ -21,29 +21,19 @@ from mitmproxy.net import check
 
 # redeclared here for strict type checking
 class Method(Enum):
-    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
-    TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD", 8)
-    TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD", 9)
-
-
-# TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
-try:
-    SSL._lib.TLS_server_method  # type: ignore
-except AttributeError as e:  # pragma: no cover
-    raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
+    TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD")
+    TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD")
 
 SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
 SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)  # type: ignore
 
-
 class Version(Enum):
     UNBOUNDED = 0
-    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
-    SSL3 = getattr(SSL, "SSL3_VERSION", 768)
-    TLS1 = getattr(SSL, "TLS1_VERSION", 769)
-    TLS1_1 = getattr(SSL, "TLS1_1_VERSION", 770)
-    TLS1_2 = getattr(SSL, "TLS1_2_VERSION", 771)
-    TLS1_3 = getattr(SSL, "TLS1_3_VERSION", 772)
+    SSL3 = getattr(SSL, "SSL3_VERSION")
+    TLS1 = getattr(SSL, "TLS1_VERSION")
+    TLS1_1 = getattr(SSL, "TLS1_1_VERSION")
+    TLS1_2 = getattr(SSL, "TLS1_2_VERSION")
+    TLS1_3 = getattr(SSL, "TLS1_3_VERSION")
 
 
 class Verify(Enum):
