@@ -24,8 +24,10 @@ class Method(Enum):
     TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD")
     TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD")
 
+
 SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
 SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)  # type: ignore
+
 
 class Version(Enum):
     UNBOUNDED = 0
