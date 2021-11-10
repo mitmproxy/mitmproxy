@@ -25,8 +25,10 @@ class Method(Enum):
     TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
 
 
-SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
-SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)  # type: ignore
+try:
+    SSL._lib.TLS_server_method  # type: ignore
+except AttributeError as e:  # pragma: no cover
+    raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
 
 
 class Version(Enum):
