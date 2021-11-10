@@ -16,9 +16,8 @@ class Search:
 
     @command.command('search')
     def _search(self,
-        flows: typing.Sequence[flow.Flow],
-        regex: str,
-    ) -> None:
+                flows: typing.Sequence[flow.Flow],
+                regex: str) -> None:
         """
         Defines a command named "search" that matches
         the given regular expression against most parts
@@ -91,4 +90,5 @@ class Search:
                     {'response_body': self.exp.findall(_flow.response.text)})
         return results
 
+    
 addons = [Search()]
