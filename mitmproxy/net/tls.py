@@ -21,8 +21,8 @@ from mitmproxy.net import check
 
 # redeclared here for strict type checking
 class Method(Enum):
-    TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD")
-    TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD")
+    TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
+    TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
 
 
 SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
@@ -31,11 +31,11 @@ SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_cli
 
 class Version(Enum):
     UNBOUNDED = 0
-    SSL3 = getattr(SSL, "SSL3_VERSION")
-    TLS1 = getattr(SSL, "TLS1_VERSION")
-    TLS1_1 = getattr(SSL, "TLS1_1_VERSION")
-    TLS1_2 = getattr(SSL, "TLS1_2_VERSION")
-    TLS1_3 = getattr(SSL, "TLS1_3_VERSION")
+    SSL3 = SSL.SSL3_VERSION
+    TLS1 = SSL.TLS1_VERSION
+    TLS1_1 = SSL.TLS1_1_VERSION
+    TLS1_2 = SSL.TLS1_2_VERSION
+    TLS1_3 = SSL.TLS1_3_VERSION
 
 
 class Verify(Enum):
