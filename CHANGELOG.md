@@ -14,6 +14,7 @@
 * Fix a crash caused when editing string option (#4852, @rbdixon)
 * Base container image bumped to Debian 11 Bullseye (@Kriechi)
 * Upstream replays don't do CONNECT on plaintext HTTP requests (#4876, @HoffmannP)
+* Remove workarounds for old pyOpenSSL versions (#4831, @KarlParkinson)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
