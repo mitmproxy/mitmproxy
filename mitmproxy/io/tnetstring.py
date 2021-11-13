@@ -74,8 +74,6 @@ def dump(value: TSerializable, file_handle: typing.IO[bytes]) -> None:
             sys.exit(1)
         else:
             raise e
-       
-       
 
 
 def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
