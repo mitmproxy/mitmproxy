@@ -9,6 +9,8 @@ from mitmproxy import ctx
 from mitmproxy import flow
 from mitmproxy import http
 import mitmproxy.types
+import sys
+import errno
 
 
 class Save:
@@ -71,10 +73,17 @@ class Save:
         except OSError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
-        for i in flows:
-            stream.add(i)
-        f.close()
-        ctx.log.alert("Saved %s flows." % len(flows))
+        try:
+            for i in flows:
+                stream.add(i)
+            f.close()
+            ctx.log.alert("Saved %s flows." % len(flows))
+        except OSError as e:
+            if e.errno == errno.ENOSPC:
+                ctx.log.error("Exiting due to insufficient space on disk")
+                sys.exit(1)
+            else:
+                raise e
 
     def tcp_start(self, flow):
         if self.stream:
@@ -101,8 +110,15 @@ class Save:
         # websocket flows will receive a websocket_end,
         # we don't want to persist them here already
         if self.stream and flow.websocket is None:
-            self.stream.add(flow)
-            self.active_flows.discard(flow)
+            try:
+                  self.stream.add(flow)
+                  self.active_flows.discard(flow)
+            except OSError as e:
+                if e.errno == errno.ENOSPC:
+                    ctx.log.error("Exiting due to insufficient space on disk")
+                    sys.exit(1)
+                else:
+                    raise e
 
     def error(self, flow: http.HTTPFlow):
         self.response(flow)

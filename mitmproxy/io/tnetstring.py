@@ -42,9 +42,6 @@ all other strings are returned as plain bytes.
 
 import collections
 import typing
-from mitmproxy import ctx
-import sys
-import errno
 
 TSerializable = typing.Union[None, str, bool, int, float, bytes, list, tuple, dict]
 
@@ -66,14 +63,7 @@ def dump(value: TSerializable, file_handle: typing.IO[bytes]) -> None:
     This function dumps a python object as a tnetstring and
     writes it to the given file.
     """
-    try:
-        file_handle.write(dumps(value))
-    except OSError as e:
-        if e.errno == errno.ENOSPC:
-            ctx.log.error("Exiting due to insufficient space on disk")
-            sys.exit(1)
-        else:
-            raise e
+    file_handle.write(dumps(value))
 
 
 def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
