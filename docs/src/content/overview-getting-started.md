@@ -47,6 +47,6 @@ new flow and you can inspect it.
 
 ## Resources
 
-* [**StackOverflow**](https://stackoverflow.com/questions/tagged/mitmproxy): If you want to ask usage questions, please do so on StackOverflow.
-* [**GitHub**](https://github.com/mitmproxy/): If you want to contribute to mitmproxy or submit a bug report, please do so on GitHub.
-* [**Slack**](https://mitmproxy.slack.com): If you want to get in touch with the developers or other users, please use our Slack channel.
+* [**GitHub**](https://github.com/mitmproxy/mitmproxy): If you want to ask usage questions, contribute
+  to mitmproxy, or submit a bug report, please use GitHub.
+* [**Slack**](https://mitmproxy.slack.com): For ephemeral development questions/coordination, please use our Slack channel.
