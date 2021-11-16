@@ -73,17 +73,10 @@ class Save:
         except OSError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
-        try:
-            for i in flows:
-                stream.add(i)
-            f.close()
-            ctx.log.alert("Saved %s flows." % len(flows))
-        except OSError as e:
-            if e.errno == errno.ENOSPC:
-                ctx.log.error("Exiting due to insufficient space on disk")
-                sys.exit(1)
-            else:
-                raise e
+        for i in flows:
+            stream.add(i)
+        f.close()
+        ctx.log.alert("Saved %s flows." % len(flows))
 
     def tcp_start(self, flow):
         if self.stream:
