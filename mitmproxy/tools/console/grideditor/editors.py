@@ -213,7 +213,7 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
             vals: typing.Union[
                 typing.List[typing.List[typing.Any]],
                 typing.List[typing.Any],
-                str,
+                typing.Any,
             ]) -> None:
         if vals:
             # Whatever vals is, make it a list of rows containing lists of column values.
