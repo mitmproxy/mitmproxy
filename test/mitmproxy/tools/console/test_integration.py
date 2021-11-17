@@ -55,6 +55,7 @@ def test_options_home_end(console):
 def test_keybindings_home_end(console):
     console.type("K<home><end>")
 
+
 @pytest.mark.asyncio
 def test_replay_count(console):
     console.type(":replay.server.count<enter>")
