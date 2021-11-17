@@ -158,7 +158,7 @@ def test_echo_request_line():
         assert "nonstandard" in sio.getvalue()
         sio.truncate(0)
 
-        ctx.configure(d, flow_detail=0, showhost=True)
+        ctx.configure(d, flow_detail=1, showhost=True)
         f = tflow.tflow(resp=True)
         terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
         f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
