@@ -215,7 +215,7 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
                 typing.List[typing.Any],
                 typing.Any,
             ]) -> None:
-        if vals:
+        if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.
             if not isinstance(vals, list):
                 vals = [vals]

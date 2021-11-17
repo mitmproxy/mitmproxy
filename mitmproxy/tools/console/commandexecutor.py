@@ -19,7 +19,7 @@ class CommandExecutor:
             except exceptions.CommandError as e:
                 ctx.log.error(str(e))
             else:
-                if ret:
+                if ret is not None:
                     if type(ret) == typing.Sequence[flow.Flow]:
                         signals.status_message.send(
                             message="Command returned %s flows" % len(ret)
