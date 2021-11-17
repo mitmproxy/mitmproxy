@@ -213,11 +213,11 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
             vals: typing.Union[
                 typing.List[typing.List[typing.Any]],
                 typing.List[typing.Any],
-                str,
+                typing.Any,
             ]) -> None:
-        if vals:
+        if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.
-            if isinstance(vals, str):
+            if not isinstance(vals, list):
                 vals = [vals]
             if not isinstance(vals[0], list):
                 vals = [[i] for i in vals]
