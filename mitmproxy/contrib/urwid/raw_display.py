@@ -260,7 +260,9 @@ class Screen(BaseScreen, RealTerminal):
             )
 
             ok = win32.SetConsoleMode(hOut, dwOutMode)
-            assert ok
+            if not ok:
+                raise RuntimeError("Error enabling virtual terminal processing, "
+                                   "mitmproxy's console interface requires Windows 10 Build 10586 or above.")
             ok = win32.SetConsoleMode(hIn, dwInMode)
             assert ok
         else:
