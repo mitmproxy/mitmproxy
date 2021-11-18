@@ -278,6 +278,11 @@ sudo -u nobody mitmproxy --mode transparent --showhost
 
 ## "Full" transparent mode on Linux
 
+{{% note %}}
+This feature is currently unavailable in mitmproxy 7 and above
+(<a href="https://github.com/mitmproxy/mitmproxy/discussions/4914">#4914</a>).
+{{% /note %}}
+
 By default mitmproxy will use its own local IP address for its server-side
 connections. In case this isn't desired, the --spoof-source-address argument can
 be used to use the client's IP address for server-side connections. The
