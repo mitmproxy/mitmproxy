@@ -61,9 +61,17 @@ class Reply:
         self.obj.error = flow.Error(flow.Error.KILLED_MESSAGE)
 
     def __del__(self):
-        if self.state != "committed":
+        if self.state != "committed" and self.obj is not None:
             # This will be ignored by the interpreter, but emit a warning
             raise exceptions.ControlException(f"Uncommitted reply: {self.obj}")
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        result.obj = None
+        result._state = self._state
+        return result
 
 
 class DummyReply(Reply):
@@ -89,3 +97,8 @@ class DummyReply(Reply):
 
     def __del__(self):
         pass
+
+    def __deepcopy__(self, memo):
+        result = super().__deepcopy__(memo)
+        result._should_reset = self._should_reset
+        return result
