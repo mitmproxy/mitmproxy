@@ -344,6 +344,16 @@ class OptManager:
                 raise exceptions.OptionsError("Option is required: %s" % o.name)
             else:
                 return None
+        elif o.typespec in (float, typing.Optional[float]):
+            if optstr:
+                try:
+                    return float(optstr)
+                except ValueError:
+                    raise exceptions.OptionsError("Not a float: %s" % optstr)
+            elif o.typespec == float:
+                raise exceptions.OptionsError("Option is float: %s" % o.name)
+            else:
+                return None
         elif o.typespec == bool:
             if optstr == "toggle":
                 return not o.current()
