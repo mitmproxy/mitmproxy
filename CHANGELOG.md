@@ -15,7 +15,7 @@
 * Base container image bumped to Debian 11 Bullseye (@Kriechi)
 * Upstream replays don't do CONNECT on plaintext HTTP requests (#4876, @HoffmannP)
 * Remove workarounds for old pyOpenSSL versions (#4831, @KarlParkinson)
-* Add fonts to asset filter (~a) (#TODO, @elespike)
+* Add fonts to asset filter (~a) (#4928, @elespike)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
