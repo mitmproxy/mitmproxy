@@ -107,8 +107,11 @@ class TestMatchingHTTPFlow:
     def test_asset(self):
         s = self.resp()
         assert not self.q("~a", s)
-        s.response.headers["content-type"] = "text/javascript"
-        assert self.q("~a", s)
+        for asset_regex in flowfilter.FAsset.ASSET_TYPES:
+            asset_str = asset_regex.pattern.decode()
+            asset_str = asset_str.replace(".*", "test")
+            s.response.headers["content-type"] = asset_str
+            assert self.q("~a", s)
 
     def test_fcontenttype(self):
         q = self.req()
