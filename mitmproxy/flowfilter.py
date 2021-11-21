@@ -15,7 +15,6 @@
                         application/javascript
                         text/css
                         image/*
-                        application/x-shockwave-flash ?
                         font/*
                         application/font-*
         ~h rex      Header line in either request or response
