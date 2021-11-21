@@ -116,7 +116,7 @@ Short pointers and instructions to get started with hacking `mitmproxy` using po
      
           python -m debugpy --listen 5678 /path/to/mitmproxy
 
-     The mitmproxy TUI should open as regular, you can also use it to debug `mitmdump` or `mitmweb`
+    The mitmproxy TUI should open as regular, you can also use it to debug `mitmdump` or `mitmweb`
 
   5. Create a VSCode Launch process attach configuration:
       

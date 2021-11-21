@@ -16,6 +16,9 @@ class TO(optmanager.OptManager):
         self.add_option("two", typing.Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("required_int", int, 2, "help")
+        self.add_option("onef", typing.Optional[float], None, "help")
+        self.add_option("twof", typing.Optional[float], 0.5, "help")
+        self.add_option("required_float", float, 0.5, "help")
 
 
 class TD(optmanager.OptManager):
@@ -74,6 +77,12 @@ def test_required_int():
         o.parse_setval(o._options["required_int"], None, None)
 
 
+def test_required_float():
+    o = TO()
+    with pytest.raises(exceptions.OptionsError):
+        o.parse_setval(o._options["required_float"], None, None)
+
+
 def test_deepcopy():
     o = TD()
     copy.deepcopy(o)
@@ -81,12 +90,17 @@ def test_deepcopy():
 
 def test_options():
     o = TO()
-    assert o.keys() == {"bool", "one", "two", "required_int"}
+    assert o.keys() == {"bool", "one", "two", "required_int", "onef", "twof", "required_float"}
 
     assert o.one is None
     assert o.two == 2
     o.one = 1
     assert o.one == 1
+
+    assert o.onef is None
+    assert o.twof == 0.5
+    o.onef = 10.4
+    assert o.onef == 10.4
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")

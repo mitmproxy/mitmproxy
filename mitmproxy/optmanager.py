@@ -334,26 +334,8 @@ class OptManager:
         """
         if o.typespec in (str, typing.Optional[str]):
             return optstr
-        elif o.typespec in (int, typing.Optional[int]):
-            if optstr:
-                try:
-                    return int(optstr)
-                except ValueError:
-                    raise exceptions.OptionsError("Not an integer: %s" % optstr)
-            elif o.typespec == int:
-                raise exceptions.OptionsError("Option is required: %s" % o.name)
-            else:
-                return None
-        elif o.typespec in (float, typing.Optional[float]):
-            if optstr:
-                try:
-                    return float(optstr)
-                except ValueError:
-                    raise exceptions.OptionsError("Not a float: %s" % optstr)
-            elif o.typespec == float:
-                raise exceptions.OptionsError("Option is float: %s" % o.name)
-            else:
-                return None
+        elif o.typespec in (int, typing.Optional[int], float, typing.Optional[float]):
+            return type(self)._parse_numeric(optstr, o.name, o.typespec)
         elif o.typespec == bool:
             if optstr == "toggle":
                 return not o.current()
@@ -374,6 +356,20 @@ class OptManager:
                 else:
                     return [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
+
+    @staticmethod
+    def _parse_numeric(optstr: str, name: str, typespec: type) -> typing.Union[int, float, None]:
+        """Helper method to parse a numeric option value from a string"""
+        if optstr:
+            try:
+                return typespec(optstr)
+            except ValueError:
+                typename = str(typespec).split("'")[1]
+                raise exceptions.OptionsError(f"Not an {typename}: {optstr}")
+        elif typespec in (int, float):
+            raise exceptions.OptionsError(f"Option is required: {name}")
+        else:
+            return None
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """
