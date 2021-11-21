@@ -15,7 +15,8 @@
                         application/javascript
                         text/css
                         image/*
-                        application/x-shockwave-flash
+                        font/*
+                        application/font-*
         ~h rex      Header line in either request or response
         ~hq rex     Header in request
         ~hs rex     Header in response
@@ -167,13 +168,15 @@ def _check_content_type(rex, message):
 
 class FAsset(_Action):
     code = "a"
-    help = "Match asset in response: CSS, JavaScript, images."
+    help = "Match asset in response: CSS, JavaScript, images, fonts."
     ASSET_TYPES = [re.compile(x) for x in [
         b"text/javascript",
         b"application/x-javascript",
         b"application/javascript",
         b"text/css",
-        b"image/.*"
+        b"image/.*",
+        b"font/.*",
+        b"application/font-.*",
     ]]
 
     @only(http.HTTPFlow)
