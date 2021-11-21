@@ -335,7 +335,7 @@ class OptManager:
         if o.typespec in (str, typing.Optional[str]):
             return optstr
         elif o.typespec in (int, typing.Optional[int], float, typing.Optional[float]):
-            return type(self)._parse_numeric(optstr, o.name, o.typespec)
+            return type(self)._parse_numeric(optstr, o.name, typing.cast(type, o.typespec))
         elif o.typespec == bool:
             if optstr == "toggle":
                 return not o.current()
@@ -358,7 +358,7 @@ class OptManager:
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     @staticmethod
-    def _parse_numeric(optstr: str, name: str, typespec: type) -> typing.Union[int, float, None]:
+    def _parse_numeric(optstr: typing.Optional[str], name: str, typespec: type) -> typing.Union[int, float, None]:
         """Helper method to parse a numeric option value from a string"""
         if optstr:
             try:
