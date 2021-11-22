@@ -99,7 +99,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
 
         print("****************************************************")
 
-    if not testing:
+    if not testing and not os.getenv("MITMPROXY_DEBUG_STAY_ALIVE"):  # pragma: no cover
         sys.exit(1)
 
 
@@ -117,7 +117,7 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
             if line:
                 code.append("  %s" % (line.strip()))
     print("\n".join(code), file=file)
-    if not testing:  # pragma: no cover
+    if not testing and not os.getenv("MITMPROXY_DEBUG_STAY_ALIVE"):  # pragma: no cover
         sys.exit(1)
 
 
