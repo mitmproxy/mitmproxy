@@ -94,16 +94,15 @@ class MaybeTls:
             data.ignore_connection = True
             self.strategy.record_skipped(server_address)
 
-    def tls_handshake(self, data: tls.TlsData):
-        if isinstance(data.conn, connection.Server):
-            return  # we are only interested in failing client connections here.
+    def tls_established_client(self, data: tls.TlsData):
         server_address = data.context.server.peername
-        if data.conn.error is None:
-            ctx.log(f"TLS handshake successful: {human.format_address(server_address)}")
-            self.strategy.record_success(server_address)
-        else:
-            ctx.log(f"TLS handshake failed: {human.format_address(server_address)}")
-            self.strategy.record_failure(server_address)
+        ctx.log(f"TLS handshake successful: {human.format_address(server_address)}")
+        self.strategy.record_success(server_address)
+
+    def tls_failed_client(self, data: tls.TlsData):
+        server_address = data.context.server.peername
+        ctx.log(f"TLS handshake failed: {human.format_address(server_address)}")
+        self.strategy.record_failure(server_address)
 
 
 addons = [MaybeTls()]

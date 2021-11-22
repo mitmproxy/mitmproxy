@@ -133,11 +133,33 @@ class TlsStartServerHook(StartHook):
 
 
 @dataclass
-class TlsHandshakeHook(StartHook):
+class TlsEstablishedClientHook(StartHook):
     """
-    A TLS handshake has been completed.
+    The TLS handshake with the client has been completed successfully.
+    """
+    data: TlsData
 
-    If `data.conn.error` is `None`, negotiation was successful.
+
+@dataclass
+class TlsEstablishedServerHook(StartHook):
+    """
+    The TLS handshake with the server has been completed successfully.
+    """
+    data: TlsData
+
+
+@dataclass
+class TlsFailedClientHook(StartHook):
+    """
+    The TLS handshake with the client has failed.
+    """
+    data: TlsData
+
+
+@dataclass
+class TlsFailedServerHook(StartHook):
+    """
+    The TLS handshake with the server has failed.
     """
     data: TlsData
 
@@ -162,7 +184,7 @@ class _TLSLayer(tunnel.TunnelLayer):
         assert not self.tls
 
         tls_start = TlsData(self.conn, self.context)
-        if tls_start.conn == tls_start.context.client:
+        if self.conn == self.context.client:
             yield TlsStartClientHook(tls_start)
         else:
             yield TlsStartServerHook(tls_start)
@@ -234,13 +256,19 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
-            yield TlsHandshakeHook(TlsData(self.conn, self.context, self.tls))
+            if self.conn == self.context.client:
+                yield TlsEstablishedClientHook(TlsData(self.conn, self.context, self.tls))
+            else:
+                yield TlsEstablishedServerHook(TlsData(self.conn, self.context, self.tls))
             yield from self.receive_data(b"")
             return True, None
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         self.conn.error = err
-        yield TlsHandshakeHook(TlsData(self.conn, self.context, self.tls))
+        if self.conn == self.context.client:
+            yield TlsFailedClientHook(TlsData(self.conn, self.context, self.tls))
+        else:
+            yield TlsFailedServerHook(TlsData(self.conn, self.context, self.tls))
         yield from super().on_handshake_error(err)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:

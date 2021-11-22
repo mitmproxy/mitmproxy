@@ -158,10 +158,14 @@ class TlsEchoLayer(tutils.EchoLayer):
 def finish_handshake(playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest):
     data = tutils.Placeholder(bytes)
     tls_hook_data = tutils.Placeholder(TlsData)
+    if isinstance(conn, connection.Client):
+        established_hook = tls.TlsEstablishedClientHook(tls_hook_data)
+    else:
+        established_hook = tls.TlsEstablishedServerHook(tls_hook_data)
     assert (
         playbook
         >> events.DataReceived(conn, tssl.bio_read())
-        << tls.TlsHandshakeHook(tls_hook_data)
+        << established_hook
         >> tutils.reply()
         << commands.SendData(conn, data)
     )
@@ -334,7 +338,7 @@ class TestServerTLS:
             playbook
             >> events.DataReceived(tctx.server, tssl.bio_read())
             << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch", "warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.server)
             << commands.SendData(tctx.client,
@@ -358,7 +362,7 @@ class TestServerTLS:
             << commands.SendData(tctx.server, data)
             >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
             << commands.Log("Server TLS handshake failed. The remote server does not speak TLS.", "warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.server)
         )
@@ -395,7 +399,7 @@ class TestServerTLS:
             >> events.DataReceived(tctx.server, tssl.bio_read())
             << commands.Log("Server TLS handshake failed. The remote server and mitmproxy cannot agree on a TLS version"
                             " to use. You may need to adjust mitmproxy's tls_version_server_min option.", "warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.server)
         )
@@ -506,7 +510,7 @@ class TestClientTLS:
         assert (
             playbook
             >> events.DataReceived(tctx.server, tssl_server.bio_read())
-            << tls.TlsHandshakeHook(tutils.Placeholder())
+            << tls.TlsEstablishedServerHook(tutils.Placeholder())
             >> tutils.reply()
             << commands.SendData(tctx.server, data)
             << tls.TlsStartClientHook(tutils.Placeholder())
@@ -579,7 +583,7 @@ class TestClientTLS:
             playbook
             >> events.DataReceived(tctx.client, invalid)
             << commands.Log(f"Client TLS handshake failed. Cannot parse ClientHello: {invalid.hex()}", level="warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
@@ -620,7 +624,7 @@ class TestClientTLS:
             >> events.DataReceived(tctx.client, tssl_client.bio_read())
             << commands.Log("Client TLS handshake failed. The client does not trust the proxy's certificate "
                             "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)", "warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
             >> events.ConnectionClosed(tctx.client)
@@ -647,7 +651,7 @@ class TestClientTLS:
                 >> tutils.reply(to=-2)
                 << tls.TlsStartClientHook(tutils.Placeholder())
                 >> reply_tls_start_client()
-                << tls.TlsHandshakeHook(tls_hook_data)
+                << tls.TlsFailedClientHook(tls_hook_data)
                 >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
             )
@@ -662,7 +666,7 @@ class TestClientTLS:
                 playbook
                 >> events.ConnectionClosed(tctx.client)
                 >> reply_tls_start_client(to=-2)
-                << tls.TlsHandshakeHook(tls_hook_data)
+                << tls.TlsFailedClientHook(tls_hook_data)
                 >> tutils.reply()
                 << commands.CloseConnection(tctx.client)
             )
@@ -677,7 +681,7 @@ class TestClientTLS:
             << commands.Log("Client TLS handshake failed. The client disconnected during the handshake. "
                             "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
                             "client does not trust the proxy's certificate.", "info")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
@@ -698,7 +702,7 @@ class TestClientTLS:
             >> reply_tls_start_client()
             << commands.Log("Client TLS handshake failed. Client and mitmproxy cannot agree on a TLS version to "
                             "use. You may need to adjust mitmproxy's tls_version_client_min option.", "warn")
-            << tls.TlsHandshakeHook(tls_hook_data)
+            << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
