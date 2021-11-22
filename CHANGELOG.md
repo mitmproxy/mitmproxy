@@ -3,6 +3,8 @@
 ## Unreleased: mitmproxy next
 
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
+* Make it possible to ignore connections in the tls_clienthello event hook (@mhils)
+* Add `tls_established/failed_client/server` event hooks to record negotiation success/failure (@mhils)
 * fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
 * Trigger event hooks for flows with semantically invalid requests, for example invalid content-length headers (@mhils)
 * Improve error message on TLS version mismatch (@mhils)

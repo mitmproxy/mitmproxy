@@ -4,11 +4,12 @@ from dataclasses import dataclass
 from typing import Iterator, Literal, Optional, Tuple
 
 from OpenSSL import SSL
+from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 from mitmproxy import certs, connection
-from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
 from mitmproxy.proxy.commands import StartHook
+from mitmproxy.proxy.layers import tcp
 from mitmproxy.utils import human
 
 
@@ -69,7 +70,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
+def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -85,7 +86,7 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     client_hello = get_client_hello(data)
     if client_hello:
         try:
-            return net_tls.ClientHello(client_hello[4:])
+            return ClientHello(client_hello[4:])
         except EOFError as e:
             raise ValueError("Invalid ClientHello") from e
     return None
@@ -96,18 +97,6 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 
 
 # We need these classes as hooks can only have one argument at the moment.
-
-@dataclass
-class ClientHelloData:
-    context: context.Context
-    """The context object for this connection."""
-    client_hello: net_tls.ClientHello
-    """The entire parsed TLS ClientHello."""
-    establish_server_tls_first: bool = False
-    """
-    If set to `True`, pause this handshake and establish TLS with an upstream server first.
-    This makes it possible to process the server certificate when generating an interception certificate.
-    """
 
 
 @dataclass
@@ -122,32 +111,57 @@ class TlsClienthelloHook(StartHook):
 
 
 @dataclass
-class TlsStartData:
-    conn: connection.Connection
-    context: context.Context
-    ssl_conn: Optional[SSL.Connection] = None
-
-
-@dataclass
 class TlsStartClientHook(StartHook):
     """
-    TLS Negotation between mitmproxy and a client is about to start.
+    TLS negotation between mitmproxy and a client is about to start.
 
     An addon is expected to initialize data.ssl_conn.
-    (by default, this is done by mitmproxy.addons.TlsConfig)
+    (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
-    data: TlsStartData
+    data: TlsData
 
 
 @dataclass
 class TlsStartServerHook(StartHook):
     """
-    TLS Negotation between mitmproxy and a server is about to start.
+    TLS negotation between mitmproxy and a server is about to start.
 
     An addon is expected to initialize data.ssl_conn.
-    (by default, this is done by mitmproxy.addons.TlsConfig)
+    (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
-    data: TlsStartData
+    data: TlsData
+
+
+@dataclass
+class TlsEstablishedClientHook(StartHook):
+    """
+    The TLS handshake with the client has been completed successfully.
+    """
+    data: TlsData
+
+
+@dataclass
+class TlsEstablishedServerHook(StartHook):
+    """
+    The TLS handshake with the server has been completed successfully.
+    """
+    data: TlsData
+
+
+@dataclass
+class TlsFailedClientHook(StartHook):
+    """
+    The TLS handshake with the client has failed.
+    """
+    data: TlsData
+
+
+@dataclass
+class TlsFailedServerHook(StartHook):
+    """
+    The TLS handshake with the server has failed.
+    """
+    data: TlsData
 
 
 class _TLSLayer(tunnel.TunnelLayer):
@@ -169,8 +183,8 @@ class _TLSLayer(tunnel.TunnelLayer):
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
-        tls_start = TlsStartData(self.conn, self.context)
-        if tls_start.conn == tls_start.context.client:
+        tls_start = TlsData(self.conn, self.context)
+        if self.conn == self.context.client:
             yield TlsStartClientHook(tls_start)
         else:
             yield TlsStartServerHook(tls_start)
@@ -221,7 +235,6 @@ class _TLSLayer(tunnel.TunnelLayer):
                 )
             else:
                 err = f"OpenSSL {e!r}"
-            self.conn.error = err
             return False, err
         else:
             # Here we set all attributes that are only known *after* the handshake.
@@ -243,8 +256,20 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
+            if self.conn == self.context.client:
+                yield TlsEstablishedClientHook(TlsData(self.conn, self.context, self.tls))
+            else:
+                yield TlsEstablishedServerHook(TlsData(self.conn, self.context, self.tls))
             yield from self.receive_data(b"")
             return True, None
+
+    def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
+        self.conn.error = err
+        if self.conn == self.context.client:
+            yield TlsFailedClientHook(TlsData(self.conn, self.context, self.tls))
+        else:
+            yield TlsFailedServerHook(TlsData(self.conn, self.context, self.tls))
+        yield from super().on_handshake_error(err)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
         if data:
@@ -401,6 +426,17 @@ class ClientTLSLayer(_TLSLayer):
         tls_clienthello = ClientHelloData(self.context, client_hello)
         yield TlsClienthelloHook(tls_clienthello)
 
+        if tls_clienthello.ignore_connection:
+            # we've figured out that we don't want to intercept this connection, so we assign fake connection objects
+            # to all TLS layers. This makes the real connection contents just go through.
+            self.conn = self.tunnel_connection = connection.Client(("ignore-conn", 0), ("ignore-conn", 0), time.time())
+            parent_layer = self.context.layers[self.context.layers.index(self) - 1]
+            if isinstance(parent_layer, ServerTLSLayer):
+                parent_layer.conn = parent_layer.tunnel_connection = connection.Server(None)
+            self.child_layer = tcp.TCPLayer(self.context, ignore=True)
+            yield from self.event_to_child(events.DataReceived(self.context.client, bytes(self.recv_buffer)))
+            self.recv_buffer.clear()
+            return True, None
         if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
             err = yield from self.start_server_tls()
             if err:

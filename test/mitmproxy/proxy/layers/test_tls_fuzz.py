@@ -1,7 +1,7 @@
 from hypothesis import given, example
 from hypothesis.strategies import binary, integers
 
-from mitmproxy.net.tls import ClientHello
+from mitmproxy.tls import ClientHello
 from mitmproxy.proxy.layers.tls import parse_client_hello
 
 client_hello_with_extensions = bytes.fromhex(
@@ -17,7 +17,7 @@ client_hello_with_extensions = bytes.fromhex(
 
 @given(i=integers(0, len(client_hello_with_extensions)), data=binary())
 @example(i=183, data=b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-def test_fuzz_h2_request_chunks(i, data):
+def test_fuzz_parse_client_hello(i, data):
     try:
         ch = parse_client_hello(client_hello_with_extensions[:i] + data)
     except ValueError:

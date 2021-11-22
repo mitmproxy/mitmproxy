@@ -124,6 +124,10 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             tls.TlsClienthelloHook,
             tls.TlsStartClientHook,
             tls.TlsStartServerHook,
+            tls.TlsEstablishedClientHook,
+            tls.TlsEstablishedServerHook,
+            tls.TlsFailedClientHook,
+            tls.TlsFailedServerHook,
         ]
     )
 

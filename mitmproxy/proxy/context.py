@@ -9,13 +9,26 @@ if TYPE_CHECKING:
 
 class Context:
     """
-    The context object provided to each `mitmproxy.proxy.layer.Layer` by its parent layer.
+    The context object provided to each protocol layer in the proxy core.
     """
 
     client: connection.Client
+    """The client connection."""
     server: connection.Server
+    """
+    The server connection.
+
+    For practical reasons this attribute is always set, even if there is not server connection yet.
+    In this case the server address is `None`.
+    """
     options: Options
+    """
+    Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
+    """
     layers: List["mitmproxy.proxy.layer.Layer"]
+    """
+    The protocol layer stack.
+    """
 
     def __init__(
         self,

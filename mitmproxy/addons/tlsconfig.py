@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import List, Optional, TypedDict, Any
 
 from OpenSSL import SSL
-from mitmproxy import certs, ctx, exceptions, connection
+from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
-from mitmproxy.proxy.layers import tls, modes
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import tls as proxy_tls
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -46,7 +47,7 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
         # We do have a server connection, but the remote server refused to negotiate a protocol:
         # We need to mirror this on the client connection.
         return SSL.NO_OVERLAPPING_PROTOCOLS
-    http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
+    http_alpns = proxy_tls.HTTP_ALPNS if http2 else proxy_tls.HTTP1_ALPNS
     for alpn in options:  # client sends in order of preference, so we are nice and respect that.
         if alpn in http_alpns:
             return alpn
@@ -112,7 +113,7 @@ class TlsConfig:
                 ctx.options.upstream_cert
         )
 
-    def tls_start_client(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_client(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between client and proxy."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
@@ -159,7 +160,7 @@ class TlsConfig:
         ))
         tls_start.ssl_conn.set_accept_state()
 
-    def tls_start_server(self, tls_start: tls.TlsStartData) -> None:
+    def tls_start_server(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between proxy and server."""
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
