@@ -75,19 +75,21 @@ setup(
         "cryptography>=3.3,<3.5",
         "flask>=1.1.1,<2.1",
         "h11>=0.11,<0.13",
-        "h2>=4.0,<5",
+        "h2>=4.1,<5",
         "hyperframe>=6.0,<7",
         "kaitaistruct>=0.7,<0.10",
         "ldap3>=2.8,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.14,<3.18",
-        "pyOpenSSL>=20.0,<20.1",
+        "protobuf>=3.14,<3.19",
+        "pyOpenSSL>=21.0,<21.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
-        "ruamel.yaml>=0.16,<0.17.14",
+        "ruamel.yaml>=0.16,<0.17.17",
+        # Kaitai parsers depend on setuptools, remove once https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/62 is fixed
+        "setuptools",
         "sortedcontainers>=2.3,<2.5",
-        "tornado>=4.3,<7",
+        "tornado>=6.1,<7",
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.1",
         "publicsuffix2>=2.20190812,<3",
@@ -109,7 +111,8 @@ setup(
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
-            "wheel>=0.36.2,<0.38"
+            "wheel>=0.36.2,<0.38",
+            "coverage==5.5",  # workaround issue with import errors introduced in 5.6b1/6.0
         ],
     }
 )

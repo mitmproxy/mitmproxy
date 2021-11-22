@@ -15,12 +15,14 @@ import traceback
 from typing import List, Union
 from typing import Optional
 
+import blinker
+
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack, graphql
+    urlencoded, multipart, image, query, protobuf, msgpack, graphql, grpc
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
@@ -28,6 +30,9 @@ from ..tcp import TCPMessage, TCPFlow
 from ..websocket import WebSocketMessage
 
 views: List[View] = []
+
+on_add = blinker.Signal()
+"""A new contentview has been added."""
 
 
 def get(name: str) -> Optional[View]:
@@ -44,6 +49,7 @@ def add(view: View) -> None:
             raise ValueError("Duplicate view: " + view.name)
 
     views.append(view)
+    on_add.send(view)
 
 
 def remove(view: View) -> None:
@@ -187,6 +193,7 @@ add(image.ViewImage())
 add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
+add(grpc.ViewGrpcProtobuf())
 
 __all__ = [
     "View", "KEY_MAX", "format_text", "format_dict", "TViewResult",

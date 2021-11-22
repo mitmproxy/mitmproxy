@@ -706,10 +706,15 @@ def test_upstream_proxy(tctx, redirect, scheme):
 
     assert playbook
 
-    if redirect == "change-proxy":
-        assert server2().address == ("other-proxy", 1234)
+    if redirect == "change-destination":
+        assert flow().server_conn.address[0] == "other-server"
     else:
-        assert server2().address == ("proxy", 8080)
+        assert flow().server_conn.address[0] == "example.com"
+
+    if redirect == "change-proxy":
+        assert server2().address == flow().server_conn.via.address == ("other-proxy", 1234)
+    else:
+        assert server2().address == flow().server_conn.via.address == ("proxy", 8080)
 
     assert (
             playbook
@@ -1228,3 +1233,114 @@ def test_original_server_disconnects(tctx):
             >> ConnectionClosed(tctx.server)
             << CloseConnection(tctx.server)
     )
+
+
+def test_request_smuggling(tctx):
+    """Test that we reject request smuggling"""
+    err = Placeholder(bytes)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
+                                     b"Host: example.com\r\n"
+                                     b"Content-Length: 42\r\n"
+                                     b"Transfer-Encoding: chunked\r\n\r\n")
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+    )
+    assert b"Received both a Transfer-Encoding and a Content-Length header" in err()
+
+
+def test_request_smuggling_te_te(tctx):
+    """Test that we reject transfer-encoding headers that are weird in some way"""
+    err = Placeholder(bytes)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
+                                      "Host: example.com\r\n"
+                                      "Transfer-Encoding: chunKed\r\n\r\n").encode())  # note the non-standard "K"
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+    )
+    assert b"Invalid transfer encoding" in err()
+
+
+def test_invalid_content_length(tctx):
+    """Test that we still trigger flow hooks for requests with semantic errors"""
+    err = Placeholder(bytes)
+    flow = Placeholder(HTTPFlow)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
+                                      "Host: example.com\r\n"
+                                      "Content-Length: NaN\r\n\r\n").encode())
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpErrorHook(flow)
+        >> reply()
+    )
+    assert b"Invalid Content-Length header" in err()
+
+
+def test_chunked_and_content_length_set_by_addon(tctx):
+    """Test that we don't crash when an addon sets a transfer-encoding header
+
+    We reject a request with both transfer-encoding and content-length header to
+    thwart request smuggling, but if a user explicitly sets it we should not crash.
+    """
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+
+    def make_chunked(flow: HTTPFlow):
+        if flow.response:
+            flow.response.headers["Transfer-Encoding"] = "chunked"
+        else:
+            flow.request.headers["Transfer-Encoding"] = "chunked"
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n"
+                                         b"Content-Length: 0\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply(side_effect=make_chunked)
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"POST / HTTP/1.1\r\n"
+                                b"Host: example.com\r\n"
+                                b"Content-Length: 0\r\n"
+                                b"Transfer-Encoding: chunked\r\n\r\n"
+                                b"0\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply(side_effect=make_chunked)
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                     b"Content-Length: 0\r\n"
+                                     b"Transfer-Encoding: chunked\r\n\r\n"
+                                     b"0\r\n\r\n")
+    )
+
+
+def test_connect_more_newlines(tctx):
+    """Ignore superfluous \r\n in CONNECT request, https://github.com/mitmproxy/mitmproxy/issues/4870"""
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+    nl = Placeholder(layer.NextLayer)
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n\r\n")
+        << http.HttpConnectHook(Placeholder())
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
+        >> DataReceived(tctx.client, b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03")
+        << layer.NextLayerHook(nl)
+    )
+    assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"

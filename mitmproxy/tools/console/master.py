@@ -4,6 +4,7 @@ import mimetypes
 import os
 import os.path
 import shlex
+import shutil
 import signal
 import stat
 import subprocess
@@ -12,6 +13,8 @@ import tempfile
 import typing  # noqa
 import contextlib
 import threading
+
+from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
 import urwid
 
@@ -113,13 +116,26 @@ class ConsoleMaster(master.Master):
             self.loop.screen_size = None
             self.loop.draw_screen()
 
+    def get_editor(self) -> str:
+        # based upon https://github.com/pallets/click/blob/main/src/click/_termui_impl.py
+        if m := os.environ.get("MITMPROXY_EDITOR"):
+            return m
+        if m := os.environ.get("EDITOR"):
+            return m
+        for editor in "sensible-editor", "nano", "vim":
+            if shutil.which(editor):
+                return editor
+        if os.name == "nt":
+            return "notepad"
+        else:
+            return "vi"
+
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
-        fd, name = tempfile.mkstemp('', "mproxy", text=text)
+        fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        # if no EDITOR is set, assume 'vi'
-        c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("EDITOR") or "vi"
+        c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():
@@ -199,9 +215,13 @@ class ConsoleMaster(master.Master):
             self.set_palette,
             ["console_palette", "console_palette_transparent"]
         )
+        loop = asyncio.get_event_loop()
+        if isinstance(loop, getattr(asyncio, "ProactorEventLoop", tuple())):
+            # fix for https://bugs.python.org/issue37373
+            loop = AddThreadSelectorEventLoop(loop)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
-            event_loop=urwid.AsyncioEventLoop(loop=asyncio.get_event_loop()),
+            event_loop=urwid.AsyncioEventLoop(loop=loop),
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )

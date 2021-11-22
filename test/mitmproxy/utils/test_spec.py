@@ -16,5 +16,5 @@ def test_parse_spec():
     with pytest.raises(ValueError, match="Invalid number of parameters"):
         parse_spec("/")
 
-    with pytest.raises(ValueError, match="Invalid filter pattern"):
+    with pytest.raises(ValueError, match="Invalid filter expression"):
         parse_spec("/~b/one/two")

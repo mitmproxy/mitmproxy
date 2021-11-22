@@ -183,7 +183,10 @@ class DummyConsole:
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         if spec == "err":
             raise mitmproxy.exceptions.CommandError()
-        n = int(spec)
+        try:
+            n = int(spec)
+        except ValueError:
+            n = 1
         return [tflow.tflow(resp=True)] * n
 
     @command.command("cut")
@@ -201,6 +204,7 @@ def test_flow():
         b = mitmproxy.types._FlowType()
         assert len(b.completion(tctx.master.commands, flow.Flow, "")) == len(b.valid_prefixes)
         assert b.parse(tctx.master.commands, flow.Flow, "1")
+        assert b.parse(tctx.master.commands, flow.Flow, "has space")
         assert b.is_valid(tctx.master.commands, flow.Flow, tflow.tflow()) is True
         assert b.is_valid(tctx.master.commands, flow.Flow, "xx") is False
         with pytest.raises(mitmproxy.exceptions.TypeError):
@@ -224,6 +228,7 @@ def test_flows():
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "0")) == 0
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "1")) == 1
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "2")) == 2
+        assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "has space")) == 1
         with pytest.raises(mitmproxy.exceptions.TypeError):
             b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "err")
 

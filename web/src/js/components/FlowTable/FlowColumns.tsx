@@ -169,7 +169,7 @@ time.sortKey = flow => {
 export const timestamp: FlowColumn = ({flow}) => {
     const start = startTime(flow);
     return (
-        <td className="col-start">
+        <td className="col-timestamp">
             {start ? (
                 formatTimeStamp(start)
             ) : (

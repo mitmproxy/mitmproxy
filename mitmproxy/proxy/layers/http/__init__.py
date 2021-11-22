@@ -32,7 +32,7 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode, request) -> Optional[str]:
+def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
@@ -592,11 +592,11 @@ class HttpStream(layer.Layer):
             )
 
         if 200 <= self.flow.response.status_code < 300:
-            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, True), self.context.client)
-            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, True), self.context.client)
+            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
         else:
             yield from self.send_response()
 

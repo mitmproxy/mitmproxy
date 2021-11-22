@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
-      - uses: TrueBrain/actions-flake8@9a43ff1b2c7b96f3edffc48a49973ce3de116ba1
+      - uses: TrueBrain/actions-flake8@c2deca24d388aa5aedd6478332aa9df4600b5eac # v2.1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
     if: github.event_name == 'push'
@@ -103,7 +103,7 @@ jobs:
             platform: macos
           - image: windows-2019
             platform: windows
-          - image: ubuntu-16.04  # Old Ubuntu version for old glibc
+          - image: ubuntu-18.04  # Old Ubuntu version for old glibc
             platform: linux
     runs-on: ${{ matrix.image }}
     env:
@@ -171,8 +171,8 @@ jobs:
         with:
           python-version: '3.9'
       - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
-          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.88.1/hugo_extended_0.88.1_Linux-64bit.deb
+          echo "865ab9a930e0a9e4957e7dbfdf91c32847324f022e33271b5661d5717600bc2b hugo_extended_0.88.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py
@@ -210,8 +210,8 @@ jobs:
         with:
           name: binaries.linux
           path: release/dist
-      - uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
-      - uses: docker/setup-buildx-action@b1f1f719c7cd5364be7c82e366366da322d01f7c
+      - uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # v1.2.0
+      - uses: docker/setup-buildx-action@b1f1f719c7cd5364be7c82e366366da322d01f7c # v1.6.0
       - run: pip install -e .[dev]
       - run: python release/cibuild.py build
       - run: python release/cibuild.py upload

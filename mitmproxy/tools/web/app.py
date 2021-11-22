@@ -58,6 +58,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "type": flow.type,
         "modified": flow.modified(),
         "marked": emoji.get(flow.marked, "🔴") if flow.marked else "",
+        "comment": flow.comment,
     }
 
     if flow.client_conn:
@@ -439,11 +440,6 @@ class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
 
-        content_encoding = message.headers.get("Content-Encoding", None)
-        if content_encoding:
-            content_encoding = re.sub(r"[^\w]", "", content_encoding)
-            self.set_header("Content-Encoding", content_encoding)
-
         original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
@@ -459,7 +455,7 @@ class FlowContent(RequestHandler):
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
-        self.write(message.raw_content)
+        self.write(message.get_content(strict=False))
 
 
 class FlowContentView(RequestHandler):

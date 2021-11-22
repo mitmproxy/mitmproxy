@@ -22,6 +22,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "comment": "I'm a comment!",
         "error": {
             "msg": "error",
             "timestamp": 946681207.0
@@ -107,8 +108,8 @@ export function THTTPFlow(): Required<HTTPFlow> {
                     "RSA",
                     2048
                 ],
-                "notafter": 2235103407,
-                "notbefore": 1604383407,
+                "notafter": 2235107007,
+                "notbefore": 1604387007,
                 "serial": "247170098335718583458667965517443538258472437317",
                 "sha256": "e5f62a1175031b6feb959bc8e6dd0f8e2546dbbf7c32da39534309d8aa92967c",
                 "subject": [
@@ -180,6 +181,7 @@ export function TTCPFlow(): Required<TCPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "comment": "",
         "error": {
             "msg": "error",
             "timestamp": 946681207.0

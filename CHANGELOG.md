@@ -10,6 +10,29 @@
 * Improve error message on TLS version mismatch. (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
   that can be processed simultaneously (@mhils)
+* Trigger event hooks for flows with semantically invalid requests, for example invalid content-length headers (@mhils)
+* Improve error message on TLS version mismatch (@mhils)
+* Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
+  that can be processed simultaneously (@mhils)
+* Add `client_replay_concurrency` option, which allows more than one client replay request to be in-flight at a time. (@rbdixon)
+* New content view which handles gRPC/protobuf. Allows to apply custom definitions to visualize different field decodings.
+  Includes example addon which applies custom definitions for selected gRPC traffic (@mame82)
+* Fix a crash caused when editing string option (#4852, @rbdixon)
+* Base container image bumped to Debian 11 Bullseye (@Kriechi)
+* Upstream replays don't do CONNECT on plaintext HTTP requests (#4876, @HoffmannP)
+* Remove workarounds for old pyOpenSSL versions (#4831, @KarlParkinson)
+* Add fonts to asset filter (~a) (#4928, @elespike)
+
+## 28 September 2021: mitmproxy 7.0.4
+
+* Do not add a Content-Length header for chunked HTTP/1 messages (@matthewhughes934)
+
+## 16 September 2021: mitmproxy 7.0.3
+
+* [CVE-2021-39214](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-22gh-3r9q-xf38):
+  Fix request smuggling vulnerabilities reported by @chinchila (@mhils)
+* Expose TLS 1.0 as possible minimum version on older pyOpenSSL releases (@mhils)
+* Fix compatibility with Python 3.10 (@mhils)
 
 ## 4 August 2021: mitmproxy 7.0.2
 

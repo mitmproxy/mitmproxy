@@ -169,6 +169,7 @@ class _TLSLayer(tunnel.TunnelLayer):
         if not tls_start.ssl_conn:
             yield commands.Log("No TLS context was provided, failing connection.", "error")
             yield commands.CloseConnection(self.conn)
+            return
         assert tls_start.ssl_conn
         self.tls = tls_start.ssl_conn
 
@@ -445,7 +446,7 @@ class ClientTLSLayer(_TLSLayer):
                 f"Client and mitmproxy cannot agree on a TLS version to use. "
                 f"You may need to adjust mitmproxy's tls_version_client_min option."
             )
-        elif "unknown ca" in err or "bad certificate" in err:
+        elif "unknown ca" in err or "bad certificate" in err or "certificate unknown" in err:
             err = f"The client does not trust the proxy's certificate for {dest} ({err})"
         elif err == "connection closed":
             err = (

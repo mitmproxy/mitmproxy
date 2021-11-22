@@ -136,10 +136,10 @@ class Proxyserver:
             except ValueError:
                 raise exceptions.OptionsError(f"Invalid body_size_limit specification: "
                                               f"{ctx.options.body_size_limit}")
-        if not self.is_running:
-            return
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
             platform.init_transparent_mode()
+        if not self.is_running:
+            return
         if any(x in updated for x in ["server", "listen_host", "listen_port"]):
             asyncio.create_task(self.refresh_server())
 

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import NameOID
@@ -173,8 +174,24 @@ class TestCert:
         assert c2.cn == "www.inode.co.nz"
         assert len(c2.altnames) == 2
         assert c2.fingerprint()
-        assert c2.notbefore
-        assert c2.notafter
+        assert c2.notbefore == datetime(
+            year=2010,
+            month=1,
+            day=11,
+            hour=19,
+            minute=27,
+            second=36,
+            tzinfo=timezone.utc,
+        )
+        assert c2.notafter == datetime(
+            year=2011,
+            month=1,
+            day=12,
+            hour=9,
+            minute=14,
+            second=55,
+            tzinfo=timezone.utc,
+        )
         assert c2.subject
         assert c2.keyinfo == ("RSA", 2048)
         assert c2.serial

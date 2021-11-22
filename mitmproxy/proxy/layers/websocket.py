@@ -86,7 +86,6 @@ class WebsocketLayer(layer.Layer):
     def __init__(self, context: Context, flow: http.HTTPFlow):
         super().__init__(context)
         self.flow = flow
-        assert context.server.connected
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:

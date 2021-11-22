@@ -324,7 +324,7 @@ class Window(urwid.Frame):
 class Screen(raw_display.Screen):
 
     def write(self, data):
-        if common.IS_WINDOWS:
+        if common.IS_WINDOWS_OR_WSL:
             # replace urwid's SI/SO, which produce artifacts under WSL.
             # at some point we may figure out what they actually do.
             data = re.sub("[\x0e\x0f]", "", data)

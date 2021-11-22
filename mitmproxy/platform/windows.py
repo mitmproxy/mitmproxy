@@ -32,6 +32,8 @@ REDIRECT_API_PORT = 8085
 
 def read(rfile: io.BufferedReader) -> typing.Any:
     x = rfile.readline().strip()
+    if not x:
+        return None
     return json.loads(x)
 
 
@@ -89,11 +91,15 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
         proxifier: TransparentProxy = self.server.proxifier
         try:
             pid: int = read(self.rfile)
+            if pid is None:
+                return
             with proxifier.exempt(pid):
                 while True:
-                    client = tuple(read(self.rfile))
+                    c = read(self.rfile)
+                    if c is None:
+                        return
                     try:
-                        server = proxifier.client_server_map[client]
+                        server = proxifier.client_server_map[tuple(c)]
                     except KeyError:
                         server = None
                     write(server, self.wfile)
@@ -575,7 +581,7 @@ def redirect(**options):
     proxy = TransparentProxy(**options)
     proxy.start()
     print(f" * Redirection active.")
-    print(f"   Filter: {proxy.request_filter}")
+    print(f"   Filter: {proxy.filter}")
     try:
         while True:
             time.sleep(1)
