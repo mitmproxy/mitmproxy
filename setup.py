@@ -72,7 +72,7 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8.1",
-        "cryptography>=3.3,<3.5",
+        "cryptography>=3.3,<37,!=35",
         "flask>=1.1.1,<2.1",
         "h11>=0.11,<0.13",
         "h2>=4.1,<5",
@@ -81,11 +81,11 @@ setup(
         "ldap3>=2.8,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.14,<3.19",
+        "protobuf>=3.14,<3.20",
         "pyOpenSSL>=21.0,<21.1",
-        "pyparsing>=2.4.2,<2.5",
+        "pyparsing>=2.4.2,<3.1",
         "pyperclip>=1.6.0,<1.9",
-        "ruamel.yaml>=0.16,<0.17.17",
+        "ruamel.yaml>=0.16,<0.18",
         # Kaitai parsers depend on setuptools, remove once https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/62 is fixed
         "setuptools",
         "sortedcontainers>=2.3,<2.5",
@@ -93,7 +93,7 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.1",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11,<0.16",
+        "zstandard>=0.11,<0.17",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -103,16 +103,15 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==4.5.1",
+            "pyinstaller==4.7",
             "pytest-asyncio>=0.10.0,<0.16,!=0.14",
-            "pytest-cov>=2.7.1,<3",
-            "pytest-timeout>=1.3.3,<2",
+            "pytest-cov>=2.7.1,<3.1",
+            "pytest-timeout>=1.3.3,<2.1",
             "pytest-xdist>=2.1.0,<3",
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
             "wheel>=0.36.2,<0.38",
-            "coverage==5.5",  # workaround issue with import errors introduced in 5.6b1/6.0
         ],
     }
 )

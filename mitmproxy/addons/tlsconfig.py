@@ -284,18 +284,11 @@ class TlsConfig:
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:
             upstream_cert = conn_context.server.certificate_list[0]
-            try:
-                # a bit clunky: access to .cn can fail, see https://github.com/mitmproxy/mitmproxy/issues/4713
-                if upstream_cert.cn:
-                    altnames.append(upstream_cert.cn)
-            except ValueError:
-                pass
+            if upstream_cert.cn:
+                altnames.append(upstream_cert.cn)
             altnames.extend(upstream_cert.altnames)
-            try:
-                if upstream_cert.organization:
-                    organization = upstream_cert.organization
-            except ValueError:
-                pass
+            if upstream_cert.organization:
+                organization = upstream_cert.organization
 
         # Add SNI. If not available, try the server address as well.
         if conn_context.client.sni:
