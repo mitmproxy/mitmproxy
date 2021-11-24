@@ -46,6 +46,17 @@ class Save:
         self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
 
+    def add(self,flow):
+        try:
+            self.stream.add(flow)
+        except OSError as e:
+            if e.errno == errno.ENOSPC:
+               ctx.log.error("Exiting due to insufficient space on disk")
+               if isinstance(self.stream,FilteredFlowWriter)
+                  sys.exit(1)
+            else:
+               raise e
+
     def configure(self, updated):
         # We're already streaming - stop the previous stream and restart
         if "save_stream_filter" in updated:
@@ -84,7 +95,7 @@ class Save:
 
     def tcp_end(self, flow):
         if self.stream:
-            self.stream.add(flow)
+            self.add(flow)
             self.active_flows.discard(flow)
 
     def tcp_error(self, flow):
@@ -92,7 +103,7 @@ class Save:
 
     def websocket_end(self, flow: http.HTTPFlow):
         if self.stream:
-            self.stream.add(flow)
+            self.add(flow)
             self.active_flows.discard(flow)
 
     def request(self, flow: http.HTTPFlow):
@@ -103,15 +114,8 @@ class Save:
         # websocket flows will receive a websocket_end,
         # we don't want to persist them here already
         if self.stream and flow.websocket is None:
-            try:
-                  self.stream.add(flow)
-                  self.active_flows.discard(flow)
-            except OSError as e:
-                if e.errno == errno.ENOSPC:
-                    ctx.log.error("Exiting due to insufficient space on disk")
-                    sys.exit(1)
-                else:
-                    raise e
+            self.add(flow)
+            self.active_flows.discard(flow)
 
     def error(self, flow: http.HTTPFlow):
         self.response(flow)
