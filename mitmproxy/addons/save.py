@@ -46,16 +46,16 @@ class Save:
         self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
 
-    def add(self,flow):
+    def add(self, flow):
         try:
             self.stream.add(flow)
         except OSError as e:
             if e.errno == errno.ENOSPC:
-               ctx.log.error("Exiting due to insufficient space on disk")
-               if isinstance(self.stream,FilteredFlowWriter)
-                  sys.exit(1)
+                ctx.log.error("Exiting due to insufficient space on disk")
+                if isinstance(self.stream, io.FilteredFlowWriter):
+                    sys.exit(1)
             else:
-               raise e
+                raise e
 
     def configure(self, updated):
         # We're already streaming - stop the previous stream and restart
