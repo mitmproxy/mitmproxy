@@ -76,7 +76,7 @@ class Resolver:
                 if addr is None:
                     raise RuntimeError("Cannot resolve original destination.")
                 return tuple(addr)
-            except (EOFError, OSError):
+            except (EOFError, OSError, AttributeError):
                 self._connect()
                 return self.original_addr(csock)
 
