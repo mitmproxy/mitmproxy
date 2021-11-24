@@ -61,7 +61,7 @@ class Reply:
         self.obj.error = flow.Error(flow.Error.KILLED_MESSAGE)
 
     def __del__(self):
-        if self.state != "committed" and self.obj is not None:
+        if self.state != "committed":
             # This will be ignored by the interpreter, but emit a warning
             raise exceptions.ControlException(f"Uncommitted reply: {self.obj}")
 
