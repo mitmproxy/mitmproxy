@@ -24,6 +24,7 @@ Then, do the following:
 python3 --version
 python3 -m pip --help
 python3 -m venv --help
+
 # 2) Install:
 git clone https://github.com/mitmproxy/mitmproxy.git
 cd mitmproxy
@@ -100,41 +101,3 @@ If a linting error is detected, the automated pull request checks will fail and 
 ## Documentation
 
 Please check [docs/README.md](./docs/README.md) for instructions.
-
-
-## Editor or IDE Setups
-
-Short pointers and instructions to get started with hacking `mitmproxy` using popular text editors and IDEs.
-### VSCode 
-
-> NOTE: These particular instructions were tested in macOS
-
-  1. Install `debugpy` by running: `pip install debugpy`
-  2. Follow the instructions of the `Development Setup` section in this document
-  3. Locate where is the `mitmproxy` command installed, you can find this by running `which mitmproxy`. If you're using [pyenv](https://github.com/pyenv/pyenv#simple-python-version-management-pyenv) it will be located at `$HOME/.pyenv/versions/$(pyenv global)/bin/mitmproxy` (full executable path)
-  4. Run the `mitmproxy` in debug mode by executing the following:
-     
-          python -m debugpy --listen 5678 /path/to/mitmproxy
-
-    The mitmproxy TUI should open as regular, you can also use it to debug `mitmdump` or `mitmweb`
-
-  5. Create a VSCode Launch process attach configuration:
-      
-          {
-            "name": "Python: Remote Attach",
-            "type": "python",
-            "request": "attach",
-            "connect": {
-              "host": "localhost",
-              "port": 5678
-            },
-            "pathMappings": [
-              {
-                "localRoot": "${workspaceFolder}",
-                "remoteRoot": "."
-              }
-            ]  
-          }
-
-  6. Run the attach configuration (F5) after starting mitmproxy in debug mode, after the vscode debugger attaches
-     you should be able to set break points and debug away.

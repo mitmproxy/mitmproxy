@@ -42,6 +42,39 @@ class TM(optmanager.OptManager):
         self.add_option("one", typing.Optional[str], None, "help")
 
 
+def test_parse_numeric():
+    # (InputStr, Type, ExpectedResult, ExpectedException)
+    tests = [
+        # int
+        ("10", int, 10, None),
+        ("x", int, None, exceptions.OptionsError),
+        (None, int, None, exceptions.OptionsError),
+        (None, typing.Optional[int], None, None),
+        ("10", typing.Optional[int], 10, None),
+        ("x", typing.Optional[int], None, None),
+
+        # float
+        ("0.5", float, 0.5, None),
+        ("x", float, None, exceptions.OptionsError),
+        (None, float, None, exceptions.OptionsError),
+        (None, typing.Optional[float], None, None),
+        ("0.5", typing.Optional[float], 0.5, None),
+        ("x", typing.Optional[float], None, None)
+    ]
+
+    for test in tests:
+        optstr, typespec, expected_value, expected_ex = test
+        try:
+            result = optmanager.OptManager._parse_numeric(optstr, "OptionName", typespec)
+            if expected_ex is not None:
+                assert False
+
+            assert result == expected_value
+        except exceptions.OptionsError as ex:
+            if expected_ex is None:
+                assert False
+
+
 def test_defaults():
     o = TD2()
     defaults = {
