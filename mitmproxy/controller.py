@@ -65,6 +65,10 @@ class Reply:
             # This will be ignored by the interpreter, but emit a warning
             raise exceptions.ControlException(f"Uncommitted reply: {self.obj}")
 
+    def __deepcopy__(self, memo):
+        # some parts of the console ui may use deepcopy, see https://github.com/mitmproxy/mitmproxy/issues/4916
+        return memo.setdefault(id(self), DummyReply())
+
 
 class DummyReply(Reply):
     """
