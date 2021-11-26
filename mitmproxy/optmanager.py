@@ -358,17 +358,17 @@ class OptManager:
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     @staticmethod
-    def _parse_numeric(optstr: typing.Optional[str], name: str, 
+    def _parse_numeric(optstr: typing.Optional[str], name: str,
                        typespec: type) -> typing.Union[int, float, None]:
         """Helper method to parse a numeric option value from a string"""
         is_optional = typespec in (typing.Optional[int], typing.Optional[float])
-        if optstr: 
+        if optstr:
             try:
                 if typespec in (int, typing.Optional[int]):
                     return int(optstr)
                 elif typespec in (float, typing.Optional[float]):
                     return float(optstr)
-                else: 
+                else:
                     return None
             except ValueError:
                 if not is_optional:

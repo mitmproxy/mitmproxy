@@ -70,7 +70,7 @@ def test_parse_numeric():
                 assert False
 
             assert result == expected_value
-        except exceptions.OptionsError as ex:
+        except exceptions.OptionsError:
             if expected_ex is None:
                 assert False
 
