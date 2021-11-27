@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import sys
 import traceback
 
@@ -11,6 +12,7 @@ from mitmproxy.addons import script
 from mitmproxy.proxy.layers.http import HttpRequestHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.tools import main
 
 
 # We want this to be speedy for testing
@@ -90,7 +92,7 @@ class TestScript:
         )
         with taddons.context(sc) as tctx:
             tctx.configure(sc)
-            await tctx.master.await_log("recorder running")
+            await tctx.master.await_log("recorder configure")
             rec = tctx.master.addons.get("recorder")
 
             assert rec.call_log[0][0:2] == ("recorder", "load")
@@ -128,7 +130,7 @@ class TestScript:
                 True,
             )
             tctx.master.addons.add(sc)
-            await tctx.master.await_log("error running")
+            await tctx.master.await_log("error load")
             tctx.configure(sc)
 
             f = tflow.tflow(resp=True)
@@ -331,3 +333,21 @@ class TestScriptLoader:
                 'e running',
                 'e configure',
             ]
+
+
+def test_order(event_loop, tdata, capsys):
+    """Integration test: Make sure that the runtime hooks are triggered on startup in the correct order."""
+    asyncio.set_event_loop(event_loop)
+    main.mitmdump([
+        "-n",
+        "-s", tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py"),
+        "-s", tdata.path("mitmproxy/data/addonscripts/shutdown.py"),
+    ])
+    assert re.match(
+        r"Loading script.+recorder.py\n"
+        r"\('recorder', 'load', .+\n"
+        r"\('recorder', 'configure', .+\n"
+        r"Loading script.+shutdown.py\n"
+        r"\('recorder', 'running', .+\n$",
+        capsys.readouterr().out,
+    )

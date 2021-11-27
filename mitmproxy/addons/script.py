@@ -75,6 +75,7 @@ class Script:
             path.strip("'\" ")
         )
         self.ns = None
+        self.is_running = False
 
         if not os.path.isfile(self.fullpath):
             raise exceptions.OptionsError('No such script')
@@ -84,6 +85,9 @@ class Script:
             self.reloadtask = asyncio.ensure_future(self.watcher())
         else:
             self.loadscript()
+
+    def running(self):
+        self.is_running = True
 
     def done(self):
         if self.reloadtask:
@@ -105,7 +109,8 @@ class Script:
         if self.ns:
             # We're already running, so we have to explicitly register and
             # configure the addon
-            ctx.master.addons.invoke_addon(self.ns, hooks.RunningHook())
+            if self.is_running:
+                ctx.master.addons.invoke_addon(self.ns, hooks.RunningHook())
             try:
                 ctx.master.addons.invoke_addon(
                     self.ns,
