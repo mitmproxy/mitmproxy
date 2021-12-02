@@ -42,7 +42,7 @@ class TM(optmanager.OptManager):
         self.add_option("one", typing.Optional[str], None, "help")
 
 
-def test_parse_numeric():
+def test__parse_numeric():
     # (InputStr, Type, ExpectedResult, ExpectedException)
     tests = [
         # int
@@ -59,7 +59,10 @@ def test_parse_numeric():
         (None, float, None, exceptions.OptionsError),
         (None, typing.Optional[float], None, None),
         ("0.5", typing.Optional[float], 0.5, None),
-        ("x", typing.Optional[float], None, None)
+        ("x", typing.Optional[float], None, None),
+
+        # Other type
+        ("string", str, None, None)
     ]
 
     for test in tests:
@@ -67,12 +70,12 @@ def test_parse_numeric():
         try:
             result = optmanager.OptManager._parse_numeric(optstr, "OptionName", typespec)
             if expected_ex is not None:
-                assert False
+                pytest.fail("Expected exception {} to be raised".format(str(expected_ex)))
 
             assert result == expected_value
-        except exceptions.OptionsError:
+        except exceptions.OptionsError as ex:
             if expected_ex is None:
-                assert False
+                pytest.fail("Unexpected exception {}".format(str(ex)))
 
 
 def test_defaults():

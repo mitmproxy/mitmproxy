@@ -335,7 +335,7 @@ class OptManager:
         if o.typespec in (str, typing.Optional[str]):
             return optstr
         elif o.typespec in (int, typing.Optional[int], float, typing.Optional[float]):
-            return type(self)._parse_numeric(optstr, o.name, typing.cast(type, o.typespec))
+            return OptManager._parse_numeric(optstr, o.name, typing.cast(type, o.typespec))
         elif o.typespec == bool:
             if optstr == "toggle":
                 return not o.current()
