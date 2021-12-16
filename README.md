@@ -1,14 +1,16 @@
-# The BrowserUp Proxy
+# The BrowserUp MITM Proxy
 
-The BrowserUp Proxy allows you to capture HTTP requests and responses and content, 
-and export performance data as a HAR file. The BrowserUp proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), 
+The BrowserUp MITM Proxy allows you to capture HTTP requests, and responses and content, 
+and export performance data as a HAR file. 
+
+The BrowserUp MITM Proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), 
 with an added performance testing, QA and DevOps flavor. 
 
-Along with the standard mitmproxy features, the BrowserUp Proxy offers adds a REST control API and native language clients in 
-Java, JavaScript, Python and Ruby. It allows HAR capture (websockets too), and provides the ability to 
+Along with the standard mitmproxy features, the BrowserUp MITM Proxy offers adds a REST control API and native language clients in 
+Java, JavaScript, Python and Ruby. It allows HAR capture (websockets and HTTP/2 too), and provides the ability to 
 verify (assert) about network traffic.
 
-BrowserUp Proxy is especially useful when used with Selenium or Cypress tests.
+BrowserUp MITM Proxy is especially useful when used with Selenium or Cypress tests.
 
 The REST API is documented [here](./doc.html) 
 
@@ -18,16 +20,24 @@ Clone our fork:
 
 `git clone https://github.com/browserup/mitmproxy.git`
 
-
 Follow the mitmproxy [certificate setup instructions](https://docs.mitmproxy.org/stable/concepts-certificates/)
-
 
 Run one of our [examples in clients/examples](clients/examples)
 
-
 The standard mitmproxy executables are also shipped, and should work as normal.
 
+BrowserUp is a code contributor to the upstream project, and we hope to continue to support them with 
+code contributions where possible.
+
+Our fork for HAR, and clients are in the browserup addons.s
+
+mitmproxy/tree/main/mitmproxy/addons/browserup/
+mitmproxy/tree/main/test/mitmproxy/addons/browserup
+
+The standard MITMProxy documentation follows below.
+
 ----------------
+
 
 # mitmproxy
 
