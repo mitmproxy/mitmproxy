@@ -171,7 +171,7 @@ def load(file_handle: typing.IO[bytes]) -> TSerializable:
     data_length = b""
     while c.isdigit():
         data_length += c
-        if len(data_length) > 9:
+        if len(data_length) > 12:
             raise ValueError("not a tnetstring: absurdly large length prefix")
         c = file_handle.read(1)
     if c != b":":
