@@ -1,3 +1,4 @@
+import time
 from enum import Enum, auto
 from typing import List, Optional, Tuple, Union
 
@@ -62,16 +63,20 @@ class TunnelLayer(layer.Layer):
                     if done:
                         if self.conn != self.tunnel_connection:
                             self.conn.state = connection.ConnectionState.OPEN
+                            self.conn.timestamp_start = time.time()
                     if err:
                         if self.conn != self.tunnel_connection:
                             self.conn.state = connection.ConnectionState.CLOSED
+                            self.conn.timestamp_start = time.time()
                         yield from self.on_handshake_error(err)
                     if done or err:
                         yield from self._handshake_finished(err)
                 else:
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
-                self.conn.state &= ~connection.ConnectionState.CAN_READ
+                if self.conn != self.tunnel_connection:
+                    self.conn.state &= ~connection.ConnectionState.CAN_READ
+                    self.conn.timestamp_end = time.time()
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:

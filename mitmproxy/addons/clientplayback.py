@@ -74,7 +74,7 @@ class ReplayHandler(server.ConnectionHandler):
         )
         context.server.tls = flow.request.scheme == "https"
         if options.mode.startswith("upstream:"):
-            context.server.via = server_spec.parse_with_mode(options.mode)[1]
+            context.server.via = flow.server_conn.via = server_spec.parse_with_mode(options.mode)[1]
 
         super().__init__(context)
 

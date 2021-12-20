@@ -541,7 +541,7 @@ class HttpStream(layer.Layer):
         connection, err = yield GetHttpConnection(
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https",
-            self.context.server.via,
+            self.flow.server_conn.via,
         )
         if err:
             yield from self.handle_protocol_error(ResponseProtocolError(self.stream_id, err))
