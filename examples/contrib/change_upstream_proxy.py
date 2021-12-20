@@ -1,10 +1,18 @@
-from mitmproxy import http
 import typing
+
+from mitmproxy import http
+from mitmproxy.connection import Server
+from mitmproxy.net.server_spec import ServerSpec
+
 
 # This scripts demonstrates how mitmproxy can switch to a second/different upstream proxy
 # in upstream proxy mode.
 #
-# Usage: mitmdump -U http://default-upstream-proxy.local:8080/ -s change_upstream_proxy.py
+# Usage: mitmdump
+#   -s change_upstream_proxy.py
+#   --mode upstream:http://default-upstream-proxy:8080/
+#   --set connection_strategy=lazy
+#   --set upstream_cert=false
 #
 # If you want to change the target server, you should modify flow.request.host and flow.request.port
 
@@ -18,10 +26,12 @@ def proxy_address(flow: http.HTTPFlow) -> typing.Tuple[str, int]:
 
 
 def request(flow: http.HTTPFlow) -> None:
-    if flow.request.method == "CONNECT":
-        # If the decision is done by domain, one could also modify the server address here.
-        # We do it after CONNECT here to have the request data available as well.
-        return
     address = proxy_address(flow)
-    if flow.live:
-        flow.live.change_upstream_proxy_server(address)  # type: ignore
+
+    is_proxy_change = address != flow.server_conn.via.address
+    server_connection_already_open = flow.server_conn.timestamp_start is not None
+    if is_proxy_change and server_connection_already_open:
+        # server_conn already refers to an existing connection (which cannot be modified),
+        # so we need to replace it with a new server connection object.
+        flow.server_conn = Server(flow.server_conn.address)
+    flow.server_conn.via = ServerSpec("http", address)
