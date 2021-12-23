@@ -204,7 +204,7 @@ class Socks5Proxy(DestinationKnown):
 
     def state_connect(self):
         # Parse Connect Request
-        if len(self.buf) < 4:
+        if len(self.buf) < 5:
             return
 
         if self.buf[:3] != b"\x05\x01\x00":
