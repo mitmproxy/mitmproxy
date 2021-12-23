@@ -16,6 +16,17 @@ class ExifLe(KaitaiStruct):
         self._read()
 
     def _read(self):
+        """
+        This function reads an IFD entry from a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads the next field in an IFD.
+
+        :param self: The object to read from.
+        """
         self.version = self._io.read_u2le()
         self.ifd0_ofs = self._io.read_u4le()
 
@@ -27,6 +38,17 @@ class ExifLe(KaitaiStruct):
             self._read()
 
         def _read(self):
+        """
+        This function reads an IFD entry from a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads the next field in an IFD.
+
+        :param self: The object to read from.
+        """
             self.num_fields = self._io.read_u2le()
             self.fields = [None] * (self.num_fields)
             for i in range(self.num_fields):
@@ -36,6 +58,9 @@ class ExifLe(KaitaiStruct):
 
         @property
         def next_ifd(self):
+            """
+            :raises NotImplementedError: if the ``next_ifd`` field is not 0.
+            """
             if hasattr(self, '_m_next_ifd'):
                 return self._m_next_ifd if hasattr(self, '_m_next_ifd') else None
 
@@ -526,6 +551,17 @@ class ExifLe(KaitaiStruct):
             self._read()
 
         def _read(self):
+        """
+        This function reads an IFD entry from a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads the next field in an IFD.
+
+        :param self: The object to read from.
+        """
             self.tag = self._root.IfdField.TagEnum(self._io.read_u2le())
             self.field_type = self._root.IfdField.FieldTypeEnum(self._io.read_u2le())
             self.length = self._io.read_u4le()
@@ -533,6 +569,9 @@ class ExifLe(KaitaiStruct):
 
         @property
         def type_byte_length(self):
+            """
+            :returns: *(int)* -- The number of bytes that are used to store the value of this field.
+            """
             if hasattr(self, '_m_type_byte_length'):
                 return self._m_type_byte_length if hasattr(self, '_m_type_byte_length') else None
 
@@ -541,6 +580,9 @@ class ExifLe(KaitaiStruct):
 
         @property
         def byte_length(self):
+            """
+            This function returns the number of bytes that a variable of this type will take up in memory.
+            """
             if hasattr(self, '_m_byte_length'):
                 return self._m_byte_length if hasattr(self, '_m_byte_length') else None
 
@@ -549,6 +591,9 @@ class ExifLe(KaitaiStruct):
 
         @property
         def is_immediate_data(self):
+            """
+            :return: Whether the data is immediate.
+            """
             if hasattr(self, '_m_is_immediate_data'):
                 return self._m_is_immediate_data if hasattr(self, '_m_is_immediate_data') else None
 
@@ -557,6 +602,9 @@ class ExifLe(KaitaiStruct):
 
         @property
         def data(self):
+            """
+            This function returns the data of a `section` if it is not an immediate data section.
+            """
             if hasattr(self, '_m_data'):
                 return self._m_data if hasattr(self, '_m_data') else None
 
@@ -572,6 +620,14 @@ class ExifLe(KaitaiStruct):
 
     @property
     def ifd0(self):
+        """
+        This function returns the Ifd object at the given offset.
+
+        :param ifd0_ofs: The offset of the IFD to return.
+
+        :return: The IFD at that offset, or None
+        if there is no such IFD.
+        """
         if hasattr(self, '_m_ifd0'):
             return self._m_ifd0 if hasattr(self, '_m_ifd0') else None
 

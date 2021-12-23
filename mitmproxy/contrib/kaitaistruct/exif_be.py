@@ -16,6 +16,15 @@ class ExifBe(KaitaiStruct):
         self._read()
 
     def _read(self):
+        """
+        This function reads the next field in the TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
         self.version = self._io.read_u2be()
         self.ifd0_ofs = self._io.read_u4be()
 
@@ -27,6 +36,15 @@ class ExifBe(KaitaiStruct):
             self._read()
 
         def _read(self):
+        """
+        This function reads the next field in the TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
             self.num_fields = self._io.read_u2be()
             self.fields = [None] * (self.num_fields)
             for i in range(self.num_fields):
@@ -36,6 +54,10 @@ class ExifBe(KaitaiStruct):
 
         @property
         def next_ifd(self):
+            """
+            :raises NotImplementedError:
+                If the ``next_ifd`` field is not 0.
+            """
             if hasattr(self, '_m_next_ifd'):
                 return self._m_next_ifd if hasattr(self, '_m_next_ifd') else None
 
@@ -526,6 +548,15 @@ class ExifBe(KaitaiStruct):
             self._read()
 
         def _read(self):
+        """
+        This function reads the next field in the TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
+        """
+        This function reads an IFD entry from the beginning of a TIFF file.
+        """
             self.tag = self._root.IfdField.TagEnum(self._io.read_u2be())
             self.field_type = self._root.IfdField.FieldTypeEnum(self._io.read_u2be())
             self.length = self._io.read_u4be()
@@ -533,6 +564,9 @@ class ExifBe(KaitaiStruct):
 
         @property
         def type_byte_length(self):
+            """
+            This function returns the number of bytes that should be read to retrieve the value of a field.
+            """
             if hasattr(self, '_m_type_byte_length'):
                 return self._m_type_byte_length if hasattr(self, '_m_type_byte_length') else None
 
@@ -541,6 +575,12 @@ class ExifBe(KaitaiStruct):
 
         @property
         def byte_length(self):
+            """
+            Returns the byte length of a value.
+
+            :param self: The value to return the byte length for.
+            :return: The byte length of a value.
+            """
             if hasattr(self, '_m_byte_length'):
                 return self._m_byte_length if hasattr(self, '_m_byte_length') else None
 
@@ -549,6 +589,14 @@ class ExifBe(KaitaiStruct):
 
         @property
         def is_immediate_data(self):
+            """
+            :raises:
+                ValueError - If the byte length is not between 1 and 4, inclusive.
+
+            :returns:
+                True if the byte length is less than or equal to 4,
+            False otherwise.
+            """
             if hasattr(self, '_m_is_immediate_data'):
                 return self._m_is_immediate_data if hasattr(self, '_m_is_immediate_data') else None
 
@@ -557,6 +605,9 @@ class ExifBe(KaitaiStruct):
 
         @property
         def data(self):
+            """
+            This function returns the data of a `SectionHeader64` object.
+            """
             if hasattr(self, '_m_data'):
                 return self._m_data if hasattr(self, '_m_data') else None
 
@@ -572,6 +623,13 @@ class ExifBe(KaitaiStruct):
 
     @property
     def ifd0(self):
+        """
+        Reads the IFD with the given index from the TIFF file.
+
+        :param idx: The index of the IFD to read. This is usually 0, but can be 1 for some images
+        (usually when there are multiple images in a single TIFF).
+        :return: An object representing an image file directory (IFD) with all its entries.
+        """
         if hasattr(self, '_m_ifd0'):
             return self._m_ifd0 if hasattr(self, '_m_ifd0') else None
 

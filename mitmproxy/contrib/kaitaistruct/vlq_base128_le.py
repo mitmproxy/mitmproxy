@@ -57,6 +57,10 @@ class VlqBase128Le(KaitaiStruct):
 
         @property
         def has_next(self):
+            """
+            has_next(self)
+                If true, then we have more bytes to read.
+            """
             """If true, then we have more bytes to read."""
             if hasattr(self, '_m_has_next'):
                 return self._m_has_next if hasattr(self, '_m_has_next') else None
@@ -66,6 +70,26 @@ class VlqBase128Le(KaitaiStruct):
 
         @property
         def value(self):
+            """
+            This function takes a string of bytes and returns the resulting value as an integer.
+
+            The first byte is split into its most significant 7 bits and
+            least significant 1 bit, then each following byte is split into its most significant 7 bits and least signficant 1 bit, until all bytes have been
+            processed.  The result of this process is that the final value will be equal to:
+
+                (((((((first_byte[0] << 7) + second_byte[0]) << 14) +
+            third_byte[0]) << 21) + fourth_byte[0]) << 28) ...
+
+            where `first`, `second`, etc are the individual groups of seven bits from each byte in order from
+            left to right.  If there are less than 8 bytes in total, then any missing leading zeros are assumed to be 0s (i.e., no shift occurs).
+            """
+            """
+            :raises:
+                ValueError - If the string is not valid.
+
+            :returns:
+                int - The resulting value as normal integer.
+            """
             """The 7-bit (base128) numeric value of this group."""
             if hasattr(self, '_m_value'):
                 return self._m_value if hasattr(self, '_m_value') else None
@@ -76,6 +100,9 @@ class VlqBase128Le(KaitaiStruct):
 
     @property
     def len(self):
+        """
+        This function returns the length of a list.
+        """
         if hasattr(self, '_m_len'):
             return self._m_len if hasattr(self, '_m_len') else None
 
@@ -84,6 +111,26 @@ class VlqBase128Le(KaitaiStruct):
 
     @property
     def value(self):
+            """
+            This function takes a string of bytes and returns the resulting value as an integer.
+
+            The first byte is split into its most significant 7 bits and
+            least significant 1 bit, then each following byte is split into its most significant 7 bits and least signficant 1 bit, until all bytes have been
+            processed.  The result of this process is that the final value will be equal to:
+
+                (((((((first_byte[0] << 7) + second_byte[0]) << 14) +
+            third_byte[0]) << 21) + fourth_byte[0]) << 28) ...
+
+            where `first`, `second`, etc are the individual groups of seven bits from each byte in order from
+            left to right.  If there are less than 8 bytes in total, then any missing leading zeros are assumed to be 0s (i.e., no shift occurs).
+            """
+            """
+            :raises:
+                ValueError - If the string is not valid.
+
+            :returns:
+                int - The resulting value as normal integer.
+            """
         """Resulting value as normal integer."""
         if hasattr(self, '_m_value'):
             return self._m_value if hasattr(self, '_m_value') else None

@@ -44,6 +44,26 @@ from mitmproxy import flow, http, tcp
 
 def only(*types):
     def decorator(fn):
+        """
+        Decorator that applies a function to a Flow object only if it is of the specified type.
+
+        :param fn: The function to apply.
+        :type fn: callable(Flow) ->
+        bool
+
+            :returns filter_types(self, flow): A method that will return True if the flow is of one of the specified types and False otherwise.  This
+        method has been decorated with functools.wraps so its __name__ and __doc__ attributes are preserved from `fn`.
+
+                :param self: The FilterTypes
+        instance being called on (i.e., this instance).  This parameter must be included in any decorator for methods in classes inheriting from FilterBase or
+        else your decorator will not be applied to those methods when you inherit them using multiple inheritance as described at
+        http://stackoverflow.com/a/11192256 .
+                :type self: FilterTypes
+
+                :param flow: The Flow object being filtered by this method (i.e.,
+        either an HTTPRequest or HTTPResponse).  Note that this parameter may have any type, not just HTTPRequest or HTTPResponse; however, it must have
+        attributes named "request" and "response", each
+        """
         @functools.wraps(fn)
         def filter_types(self, flow):
             if isinstance(flow, types):
@@ -542,6 +562,13 @@ filter_int = [
 
 
 def _make():
+    """
+    Parse a filter expression into a stream of ``Filter`` objects.
+
+    :param str expr: The filter expression to parse.
+    :returns: A list of ``Filter``
+    objects, one for each part of the expression.
+    """
     # Order is important - multi-char expressions need to come before narrow
     # ones.
     parts = []

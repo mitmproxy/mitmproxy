@@ -73,6 +73,14 @@ class Gif(KaitaiStruct):
 
         @property
         def has_color_table(self):
+            """
+            :param self:
+            :return:
+            """
+            """
+            :type flags: int
+            :param flags: The number of attributes in the object.
+            """
             if hasattr(self, '_m_has_color_table'):
                 return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
@@ -81,6 +89,16 @@ class Gif(KaitaiStruct):
 
         @property
         def color_table_size(self):
+            """
+            .. function: color_table_size()
+                Returns the size of the color table, in entries.
+
+                The value is derived from `flags` and can be 2, 4 or 8.
+            """
+            """
+            :param self:
+            :type self: GIF_FILE_INPUT
+            """
             if hasattr(self, '_m_color_table_size'):
                 return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
@@ -107,6 +125,14 @@ class Gif(KaitaiStruct):
 
         @property
         def has_color_table(self):
+            """
+            :param self:
+            :return:
+            """
+            """
+            :type flags: int
+            :param flags: The number of attributes in the object.
+            """
             if hasattr(self, '_m_has_color_table'):
                 return self._m_has_color_table if hasattr(self, '_m_has_color_table') else None
 
@@ -115,6 +141,9 @@ class Gif(KaitaiStruct):
 
         @property
         def has_interlace(self):
+            """
+            :raises: ``AttributeError`` if the file has no header.
+            """
             if hasattr(self, '_m_has_interlace'):
                 return self._m_has_interlace if hasattr(self, '_m_has_interlace') else None
 
@@ -123,6 +152,10 @@ class Gif(KaitaiStruct):
 
         @property
         def has_sorted_color_table(self):
+            """
+            :param self:
+            :param has_sorted_color_table:
+            """
             if hasattr(self, '_m_has_sorted_color_table'):
                 return self._m_has_sorted_color_table if hasattr(self, '_m_has_sorted_color_table') else None
 
@@ -131,6 +164,16 @@ class Gif(KaitaiStruct):
 
         @property
         def color_table_size(self):
+            """
+            .. function: color_table_size()
+                Returns the size of the color table, in entries.
+
+                The value is derived from `flags` and can be 2, 4 or 8.
+            """
+            """
+            :param self:
+            :type self: GIF_FILE_INPUT
+            """
             if hasattr(self, '_m_color_table_size'):
                 return self._m_color_table_size if hasattr(self, '_m_color_table_size') else None
 
@@ -184,6 +227,9 @@ class Gif(KaitaiStruct):
 
         @property
         def transparent_color_flag(self):
+            """
+            :var flags: The number of bytes used by the chunk.
+            """
             if hasattr(self, '_m_transparent_color_flag'):
                 return self._m_transparent_color_flag if hasattr(self, '_m_transparent_color_flag') else None
 
@@ -192,6 +238,9 @@ class Gif(KaitaiStruct):
 
         @property
         def user_input_flag(self):
+            """
+            :returns: True if the file is a user input flag, False otherwise.
+            """
             if hasattr(self, '_m_user_input_flag'):
                 return self._m_user_input_flag if hasattr(self, '_m_user_input_flag') else None
 

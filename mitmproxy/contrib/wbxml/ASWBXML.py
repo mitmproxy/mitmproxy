@@ -826,6 +826,14 @@ class ASWBXML:
 				return self.xmlDoc.toxml()
 	
 	def loadBytes(self, byteWBXML):
+   """
+   :param byteWBXML:
+           The WBXML data to be parsed.
+
+   :returns xmlDoc: 
+           A XML document object that represents the provided WBXML data.
+   :raises InvalidDataException, UnknownEncodingException, UnexpectedTokenException, UnsupportedEncodingException
+   """
 		
 		currentNode = self.xmlDoc
 		

@@ -41,6 +41,30 @@ class _Option:
         self.choices = choices
 
     def __repr__(self):
+        """
+        This is a docstring.
+
+        It contains multiple lines, but no blank lines.
+        """
+        """
+        Return a new instance of the {cls} class.
+
+        The {cls} class is a wrapper around the ``{mod}.{func}`` function that
+        provides consistent behavior across
+        different versions of Python.
+
+        :param options: A dictionary mapping from option names to values.
+                        These options will override any
+        defaults provided by this
+                        wrapper class (see :attr:`default_options`).
+
+                        .. note :: Option names should be all
+        lowercase, with words separated by underscores as necessary to improve readability (e.g., ``max_connections``).  See below for some useful examples of
+        default option values that you can assign in your own callables' ``__init__()`` methods or elsewhere in your code wherever you want to set defaults
+        for all instances created using that callable's constructor or factory method, respectively.  If an option name is not provided here, then its value
+        will be taken from the corresponding key in :attr:`default_options`.  If no such key exists either here or in :attr:`default_options`, then the
+        relevant attribute on this object itself will be used as a default value instead; see `Attribute Access <http://docs.python-guide
+        """
         return f"{self.current()} [{self.typespec}]"
 
     @property
@@ -142,6 +166,11 @@ class OptManager:
 
         @functools.wraps(func)
         def _call(options, updated):
+            """
+            :param options:
+                A dictionary of options that will be passed to the callback function.
+            :type options: dict
+            """
             if updated.intersection(set(opts)):
                 f = func()
                 if f:
@@ -167,12 +196,34 @@ class OptManager:
     __copy__ = __deepcopy__
 
     def __getattr__(self, attr):
+        """
+        A class that provides a convenient interface to a configuration file.
+
+        The constructor takes the name of the configuration file and an optional
+        argument which, if true, causes ConfigParser to load its values from the 
+        default section instead of from an actual section in the config file. The
+        get() method returns a string for each option specified; if no such option exists in the config file then it returns None.
+
+            >>> import os,
+        tempfile # Import standard library modules needed by this code example: os (operating system), tempfile (create temporary files)
+
+            >>> fd =
+        tempfile.NamedTemporaryFile(delete=False) # Create temporary files for testing purposes using Python's built-in function: NamedTemporaryFile(). This
+        function creates a new empty named temporary file and opens it with mode 'w+b'. The returned object is actually an instance of Python's built-in
+        class: FileIO(). A reference to this object is stored in variable fd so that we can close() it later on without losing access to our newly created but
+        still unclosed temporary named pipe /tmp/test_config_parser_fdXhf9 . Note that we use delete=False as an argument here because
+        """
         if attr in self._options:
             return self._options[attr].current()
         else:
             raise AttributeError("No such option: %s" % attr)
 
     def __setattr__(self, attr, value):
+        """
+        This is a class that provides an alternative to the built-in `dict` type.
+        It has an `update` method that allows for adding items in bulk, and it also
+        supports attribute access of its keys.
+        """
         # This is slightly tricky. We allow attributes to be set on the instance
         # until we have an _options attribute. After that, assignment is sent to
         # the update function, and will raise an error for unknown options.
@@ -279,6 +330,30 @@ class OptManager:
         self.update(**toset)
 
     def __repr__(self):
+        """
+        This is a docstring.
+
+        It contains multiple lines, but no blank lines.
+        """
+        """
+        Return a new instance of the {cls} class.
+
+        The {cls} class is a wrapper around the ``{mod}.{func}`` function that
+        provides consistent behavior across
+        different versions of Python.
+
+        :param options: A dictionary mapping from option names to values.
+                        These options will override any
+        defaults provided by this
+                        wrapper class (see :attr:`default_options`).
+
+                        .. note :: Option names should be all
+        lowercase, with words separated by underscores as necessary to improve readability (e.g., ``max_connections``).  See below for some useful examples of
+        default option values that you can assign in your own callables' ``__init__()`` methods or elsewhere in your code wherever you want to set defaults
+        for all instances created using that callable's constructor or factory method, respectively.  If an option name is not provided here, then its value
+        will be taken from the corresponding key in :attr:`default_options`.  If no such key exists either here or in :attr:`default_options`, then the
+        relevant attribute on this object itself will be used as a default value instead; see `Attribute Access <http://docs.python-guide
+        """
         options = pprint.pformat(self._options, indent=4).strip(" {}")
         if "\n" in options:
             options = "\n    " + options + "\n"
@@ -484,6 +559,17 @@ def dump_dicts(opts, keys: typing.List[str]=None):
 
 
 def parse(text):
+    """
+    .. function: parse(text)
+
+        Parse a YAML string and return a dictionary.
+
+        :param text:
+            The YAML string to parse.
+        :returns:
+            A
+    dictionary containing the parsed options, or ``{}`` if there was no valid configuration to parse.
+    """
     if not text:
         return {}
     try:

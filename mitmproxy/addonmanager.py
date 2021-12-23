@@ -39,6 +39,11 @@ def cut_traceback(tb, func_name):
 
 @contextlib.contextmanager
 def safecall():
+    """
+    .. function: safecall()
+
+        A generator that yields a ``yield`` expression and handles any exceptions raised by the ``yield``ed function.
+    """
     try:
         yield
     except (exceptions.AddonHalt, exceptions.OptionsError):

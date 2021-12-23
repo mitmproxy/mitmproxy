@@ -13,6 +13,11 @@ def expect(*event_types):
     """
 
     def decorator(f):
+        """
+        Decorator that checks the type of an event.
+
+        :param event_types: The types of events to check for.
+        """
         if __debug__ is True:
             @functools.wraps(f)
             def _check_event_type(self, event: events.Event):

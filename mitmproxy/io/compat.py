@@ -23,6 +23,19 @@ def convert_012_013(data):
 
 
 def convert_013_014(data):
+    """
+    Convert a 0.13.x flow to a 0.14.0-style flow, which contains the following changes:
+
+    * ``request`` and ``response`` objects are now nested under
+    ``http_message``;
+    * The keys for the request/response headers have changed from being flat strings to tuples of (name, value);
+    * The values in these
+    header tuples are byte strings instead of unicode strings;
+    * The body is now stored as an array of bytes instead of a string or None; and  # no-cover-
+    ignore  # pragma: no cover because this isn't worth testing due to its complexity (and it's hard) but I'm leaving it here so that I remember what it
+    looks like when I come back in 6 months and want to know why my code sucks so bad - tlinden@hypothesi.co   *The new "body" key has been added.*
+    :param data: A dict containing the old data format that needs converting into the new one defined by this function's docstring above.
+    """
     data[b"request"][b"first_line_format"] = data[b"request"].pop(b"form_in")
     data[b"request"][b"http_version"] = b"HTTP/" + ".".join(
         str(x) for x in data[b"request"].pop(b"httpversion")).encode()
@@ -42,6 +55,20 @@ def convert_014_015(data):
 
 
 def convert_015_016(data):
+    """
+    Convert a data structure from 0.15 to 0.16
+
+    - Remove the `form_out` field in the request form and put it in the response form under `content`.
+    -
+    Rename `msg` fields to `reason`.
+    - Add version number (0, 16) at top of file.
+
+        Args:
+            data: A dict containing a HAR capture with keys
+    "request" and "response".
+
+        Returns: The same data structure, but with some values converted to new formats or removed altogether.
+    """
     for m in (b"request", b"response"):
         if b"body" in data[m]:
             data[m][b"content"] = data[m].pop(b"body")
@@ -59,6 +86,11 @@ def convert_016_017(data):
 
 
 def convert_017_018(data):
+    """
+    Convert a dictionary from version 0.17 to 0.18 by adding the `ip_address` field to the server connection and removing
+    the `peer_address` field, which
+    was replaced by `ip_address`.
+    """
     # convert_unicode needs to be called for every dual release and the first py3-only release
     data = convert_unicode(data)
 
@@ -69,6 +101,23 @@ def convert_017_018(data):
 
 
 def convert_018_019(data):
+    """
+    Convert a mitmproxy version 0.18 state file to a version 0.19 state file.
+
+    The following changes were made:
+
+        * The "stickyauth" and "stickycookie"
+    options are removed; see the `Proxy Server Manual`_ for more information on how to achieve the same functionality using regular expressions in
+    ``setheaders`` configuration option(s).
+
+        * The SNI value of the client connection is set to None if it's an IP address (this was not detected
+    before).
+        * A new field, ``alpn_proto_negotiated`` was added to the client connection dictionary, containing an empty string if no protocol has
+    been negotiated or one of these values: http/1.1, h2, spdy/3 or none (if ALPN negotiation failed)
+        * A new field, ``cipher_name`` was added to both
+    connections dictionaries containing cipher name used for encryption (for tls connections only) as specified by RFC5246 section 7.4.1.4., along with
+    TLS version associated with this cipher suite - eiher 'TLSv1' or 'TLSv1-not-secure'. Note that this is different from
+    """
     # convert_unicode needs to be called for every dual release and the first py3-only release
     data = convert_unicode(data)
 
@@ -96,6 +145,10 @@ def convert_019_100(data):
 
 
 def convert_100_200(data):
+    """
+    Convert the ``address`` and ``source_address`` fields of a
+    :class:`mitmproxy.net.http.HTTPFlow` to :class:`mitmproxy.types._Address`.
+    """
     data["version"] = (2, 0, 0)
     data["client_conn"]["address"] = data["client_conn"]["address"]["address"]
     data["server_conn"]["address"] = data["server_conn"]["address"]["address"]
@@ -113,6 +166,26 @@ def convert_100_200(data):
 
 
 def convert_200_300(data):
+    """
+    Convert a mitmproxy v2.0.0 log file to the v3 format.
+
+    This function converts a mitmproxy v2 log file to the version 3 format, which is used by this
+    script and its subprocesses. The conversion process adds some new fields and removes others, so it's not possible to simply upgrade an old logfile
+    with this function - you'll need to regenerate it from scratch using the `mitmdump` tool that comes bundled with mitmproxy 2 (or your own version of
+    `mitmdump` if you've installed another version of mitmproxy).
+
+        Args:
+            data (dict): A dictionary containing all information about one proxy
+    flow in the old format
+
+        Returns:
+            dict: A dictionary containing all information about one proxy flow in the new format
+
+        Raises:  # TODO
+    specify exceptions raised by this function; use docstrings for each exception class as per PEP 257? Or just put them here? Both? What are standard
+    ways of documenting exceptions raised by functions/methods/classes on Python websites? Which do I look at first, StackOverflow or PEP 257 or ... ? Or
+    maybe just ask someone who knows more than me... But then
+    """
     data["version"] = (3, 0, 0)
     data["client_conn"]["mitmcert"] = None
     data["server_conn"]["tls_version"] = None
@@ -132,6 +205,13 @@ server_connections: Mapping[str, str] = {}
 
 
 def convert_4_5(data):
+    """
+    Convert a version 4 HAR file to a version 5 HAR file.
+
+    The conversion is done by adding IDs to the connections in the HAR file, and then setting those
+    IDs as their own attributes on each connection object. The ID is based on the timestamp of when it was created, along with its address (IP + port).
+    This ensures that two different connections will always have different IDs even if they are identical in every way except for their timestamps.
+    """
     data["version"] = 5
     client_conn_key = (
         data["client_conn"]["timestamp_start"],
@@ -155,6 +235,12 @@ def convert_4_5(data):
 
 
 def convert_5_6(data):
+    """
+    Convert a version 5 `.har` file to a version 6 `.har` file.
+
+    :param data: A dict representing the JSON of an exported HAR file, as in
+    :func:`load_file`.
+    """
     data["version"] = 6
     data["client_conn"]["tls_established"] = data["client_conn"].pop("ssl_established")
     data["client_conn"]["timestamp_tls_setup"] = data["client_conn"].pop("timestamp_ssl_setup")
@@ -173,6 +259,15 @@ def convert_6_7(data):
 
 
 def convert_7_8(data):
+    """
+    Convert a version 7 HAR data object to version 8.
+
+    :param data: A dictionary containing the HAR data.
+    :returns: The same dictionary, but with
+    ``data["request"]["trailers"]`` and ``data["response"]["trailers"]`` set to None.
+
+        *Version 8 removes support for HTTP trailers.*
+    """
     data["version"] = 8
     if "request" in data and data["request"] is not None:
         data["request"]["trailers"] = None
@@ -182,6 +277,21 @@ def convert_7_8(data):
 
 
 def convert_8_9(data):
+    """
+    Convert a version 8 `data` dict to version 9.
+
+    :param data: The :class:`dict` that will be converted.
+        This function modifies the dict in place,
+    but also returns it for convenience.
+
+        .. note-warning::::
+
+            This function is not intended to be used on its own as it only applies changes
+    from version 8 to 9 of the specification and may break if used with other versions of mitmproxy's JSON export format.
+
+            If you would like an
+    up-to-date way of converting your old flow exports, please see our guide here_.
+    """
     data["version"] = 9
     is_request_replay = False
     if "request" in data:
@@ -201,9 +311,39 @@ def convert_8_9(data):
 
 
 def convert_9_10(data):
+    """
+    Convert a version 9 `data` dict to version 10.
+
+    This function converts the following fields:
+
+        * `client_conn.state` from 0 to 1 (see
+    :ref:`ClientStateTypes <client-state>`)
+        * `server_conn.error`, if present, from None to "TLSV1_ALERT_ACCESS_DENIED" (see :ref:`ErrorTypes <error-
+    types>`. The field is renamed from ``error`` to ``error2`` and moved into a subdict.)
+        * `server_conn.tls`, if present, set to True (the value was
+    ``True`` for all connections in the input data)
+        * If both of these are present, add an additional level that contains the values for client
+    certificate chains and cipher suites as lists of strings instead of single strings; this level is called "via2". This is done even if there's only one
+    chain or one cipher suite; it's simpler this way since we can then use a consistent structure everywhere without having complicated parsing code in
+    multiple places.
+
+            .. note ::
+
+                The list entries are sorted alphabetically by their string representation before they're added here
+    - this makes
+    """
     data["version"] = 10
 
     def conv_conn(conn):
+        """
+        Converts a connection dict into a human-readable format.
+
+        :param conn: The connection dict to convert.
+        :type conn: dict
+
+            :returns str -- A human-
+        readable string representation of the connection object.
+        """
         conn["state"] = 0
         conn["error"] = None
         conn["tls"] = conn["tls_established"]
@@ -219,6 +359,24 @@ def convert_9_10(data):
         conv_conn(conn)
 
     def conv_sconn(conn):
+        """
+        Convert a connection dict to the new format.
+
+        :param conn: The connection dict to convert.
+        :type conn: dict(str, str) | NoneType
+
+          * **cert** - The
+        certificate used by the server (optional).
+
+          * **cipher_name** - The name of the cipher used for encryption (optional).
+
+          * **protocol_name** - The
+        name of the SSL/TLS protocol version used for encryption (optional).
+
+          * **via2** - A string describing how this information was obtained, or None if
+        not available. This is only present in connections that were retrieved using :func`~stem.descriptor.remote._get_from_compression`, and is an artifact
+        of some pre-existing documentation generation code that we've yet to update our parsers for (PRIVATE).
+        """
         crt = conn.pop("cert", None)
         conn["certificate_list"] = [crt] if crt else []
         conn["cipher_name"] = None
@@ -234,9 +392,33 @@ def convert_9_10(data):
 
 
 def convert_10_11(data):
+    """
+    Convert a version 10 HAR entry to version 11.
+
+    :param data: The HAR entry in dict form.
+    :type data: dict(str, str) or dict(str, int) or similar
+    :returns data_converted: The converted HAR entry in dict form.
+        :rtype data_converted: see above
+
+            * "client_conn" is the connection from
+    the client to us (i.e., HTTP proxy). It may be missing if there was no such connection made during recording (though that's unlikely). If it exists,
+    it has these fields and their meanings are as follows:\n\n            * ``sni`` - SNI string sent by the client; this is usually empty unless we're
+    doing TLS termination at our end and so have provided an alternate hostname on our listener\n            * ``alpn`` - ALPN protocol negotiated with
+    the client; this will be one of those listed in ``alpn_offers``\n            * ``cipher_list`` - list of ciphers supported by both us and the client;
+    each item is a two-tuple ``(name, bits)`` where name is something like "ECDHE-RSA
+    """
     data["version"] = 11
 
     def conv_conn(conn):
+        """
+        Converts a connection dict into a human-readable format.
+
+        :param conn: The connection dict to convert.
+        :type conn: dict
+
+            :returns str -- A human-
+        readable string representation of the connection object.
+        """
         conn["sni"] = strutils.always_str(conn["sni"], "ascii", "backslashreplace")
         conn["alpn"] = conn.pop("alpn_proto_negotiated")
         conn["alpn_offers"] = conn["alpn_offers"] or []
@@ -254,6 +436,24 @@ _websocket_handshakes = {}
 
 
 def convert_11_12(data):
+    """
+    Convert a version 11 flow into a version 12 flow.
+
+    This function is used to convert flows from mitmproxy versions 0.11.* to 1.0.*, which are
+    incompatible with each other and cannot be converted automatically. This function takes the old data structure as input and returns the new one as
+    output, so that it can be used like this:
+
+        f = open("old_flow", "rb")
+        data = pickle.load(f)  # The protocol version is unknown here...
+        f2
+    = open("new_flow", "wb")
+        pickle.dump(convert_11_12(data), f2)  # ...so we have to pass it explicitly (protocol=4).
+
+     * ``websocket``: A dictionary
+    containing information about the WebSocket handshake if either client or server sent an initial HTTP/1-request with a header ``Upgrade: websocket``
+    (and not something else such as ``HTTP/1-Upgrade``). If present, contains keys ``messages`` and ``closed_by_client``; both of these are dictionaries
+    again that contain information about messages received by or sent by the client during its WebSocket handshake phase - see
+    """
     data["version"] = 12
 
     if "websocket" in data["metadata"]:
@@ -310,6 +510,17 @@ def convert_12_13(data):
 
 
 def convert_13_14(data):
+    """
+    .. function: convert_13_14(data)
+        :param data: The data to be converted.
+        :type data: dict
+
+        Convert a version 13 ``data`` dictionary to a
+    version 14 ``data`` dictionary.
+
+        This is needed because the format of HTTP/2 requests changed in mitmproxy 2.0, and this function converts the old
+    format into the new one, including correct timestamps for all request and response headers.
+    """
     data["version"] = 14
     data["comment"] = ""
     # bugfix for https://github.com/mitmproxy/mitmproxy/issues/4576

@@ -410,6 +410,21 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
             click.echo("Downloading InstallBuilder...")
 
             def report(block, blocksize, total):
+                """
+                Downloads a file in chunks and reports the progress.
+
+                :param block: The number of bytes downloaded so far.
+                :type block: int
+                :param blocksize: The size
+                of each chunk to download.
+                :type blocksize; int, optional (default=1)  # This is an optional parameter that defaults to 1 if not specified by the user
+                when calling this function. It can be set as a keyword argument with default value 1 when defining the function, or it can be passed as an unnamed
+                positional argument after 'block'. If both are specified, then they must agree exactly (i.e., you cannot specify one named arg and one unnamed
+                positional arg). You could also use both at once but that would require two values for 'blocksize' rather than just one since it's defined twice in
+                this example).  # This is a docstring comment which describes what type blocksize should be (int here). It's good practice to include these types
+                along with examples for how you expect your users to pass data into your functions/classes/modules so they know what types of data are expected and
+                acceptable by those objects/functions etc..   # Note that there are no quotes around "int" - this is because we're using
+                """
                 done = block * blocksize
                 if round(100 * done / total) != round(100 * (done - blocksize) / total):
                     click.secho(f"Downloading... {round(100 * done / total)}%")

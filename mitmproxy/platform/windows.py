@@ -56,6 +56,11 @@ class Resolver:
             self._connect()
 
     def _connect(self):
+        """
+        Connect to the redirect server.
+
+        :param sock: The socket object. If provided, it will be closed before this function returns.
+        """
         if self.sock:
             self.sock.close()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -145,6 +150,12 @@ class MIB_TCP6ROW_OWNER_PID(ctypes.Structure):
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366905(v=vs.85).aspx
 def MIB_TCP6TABLE_OWNER_PID(size):
+    """
+    MIB_TCP6TABLE_OWNER_PID(size)
+
+    Return a MIB_TCP6TABLE structure with the `dwNumEntries` member set to *size* and the `table` member pointing to an
+    array of *size* :class:`MIB_TCP6ROW_OWNER_PID <ctypes.Structure>`.
+    """
     class _MIB_TCP6TABLE_OWNER_PID(ctypes.Structure):
         _fields_ = [
             ('dwNumEntries', ctypes.wintypes.DWORD),
@@ -172,6 +183,10 @@ class MIB_TCPROW_OWNER_PID(ctypes.Structure):
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366921(v=vs.85).aspx
 def MIB_TCPTABLE_OWNER_PID(size):
+    """
+    :param size:
+        The number of elements in the :attr:`table` array.
+    """
     class _MIB_TCPTABLE_OWNER_PID(ctypes.Structure):
         _fields_ = [
             ('dwNumEntries', ctypes.wintypes.DWORD),
@@ -209,6 +224,11 @@ class TcpConnectionTable(collections.abc.Mapping):
         self._refresh_ipv6()
 
     def _refresh_ipv4(self):
+        """
+        Retrieves the current TCP connections from the local machine.
+
+        :returns: A dictionary mapping ``(ip, port)`` tuples to process IDs (integers).
+        """
         ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
             ctypes.byref(self._tcp),
             ctypes.byref(self._tcp_size),
@@ -230,6 +250,12 @@ class TcpConnectionTable(collections.abc.Mapping):
             raise RuntimeError("[IPv4] Unknown GetExtendedTcpTable return code: %s" % ret)
 
     def _refresh_ipv6(self):
+        """
+        Retrieves the current TCP connections for IPv6, using the MIB_TCP6TABLE_OWNER_PID structure.
+
+        :returns: A dictionary of tuples (local ip, local port)
+        mapped to PIDs. The key is a 2-tuple containing an IP address and port number, and the value is a process ID.
+        """
         ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
             ctypes.byref(self._tcp6),
             ctypes.byref(self._tcp6_size),
@@ -293,10 +319,27 @@ class Redirect(threading.Thread):
         super().__init__()
 
     def start(self):
+        """
+        Starts the proxy.
+        """
+        """
+        Starts the proxy.
+
+        :param self: The object instance.
+        :type self: Proxy
+
+        .. note :: This function starts all of the threads that are part of this proxy
+        and is called by the constructor method __init__().  It does not return anything.
+
+            >>> start(self) #doctest +SKIP
+        """
         self.windivert.open()
         super().start()
 
     def run(self):
+        """
+        Receives packets from the windivert driver, and passes them to the handle function.
+        """
         while True:
             try:
                 packet = self.windivert.recv()
@@ -309,6 +352,12 @@ class Redirect(threading.Thread):
                 self.handle(packet)
 
     def shutdown(self):
+        """
+        This function is used to shutdown the local and forward connections.
+        """
+        """
+        This function is used to shutdown the local and forward connections.
+        """
         self.windivert.close()
 
     def recv(self) -> typing.Optional[pydivert.Packet]:
@@ -339,6 +388,17 @@ class RedirectLocal(Redirect):
         super().__init__(self.handle, filter)
 
     def handle(self, packet):
+        """
+        Redirects TCP packets to the proxy.
+
+        :param packet: The intercepted packet.
+        :type packet: windivert_raw.Packet
+        """
+        """
+        Send the packet to its intended destination.
+
+        If the client is not a trusted process, redirect it to :attr:`~Redirector.redirect_addr`.
+        """
         client = (packet.src_addr, packet.src_port)
 
         if client not in self.tcp_connections:
@@ -484,6 +544,14 @@ class TransparentProxy:
 
     @classmethod
     def setup(cls):
+        """
+        This function creates a socket and checks if the server is available. If not, it starts a transparent proxy
+        """
+        """
+        This function creates a socket connection to the redirect server.
+        If the connection is not successful, it will start a transparent proxy and return
+        that instead.
+        """
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -493,6 +561,20 @@ class TransparentProxy:
             proxifier.start()
 
     def start(self):
+        """
+        Starts the proxy.
+        """
+        """
+        Starts the proxy.
+
+        :param self: The object instance.
+        :type self: Proxy
+
+        .. note :: This function starts all of the threads that are part of this proxy
+        and is called by the constructor method __init__().  It does not return anything.
+
+            >>> start(self) #doctest +SKIP
+        """
         self.api_thread.start()
         self.icmp.start()
         self.response.start()
@@ -502,6 +584,12 @@ class TransparentProxy:
             self.local.start()
 
     def shutdown(self):
+        """
+        This function is used to shutdown the local and forward connections.
+        """
+        """
+        This function is used to shutdown the local and forward connections.
+        """
         if self.local:
             self.local.shutdown()
         if self.forward:

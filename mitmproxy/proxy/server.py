@@ -43,6 +43,13 @@ class TimeoutWatchdog:
         self.last_activity = time.time()
 
     async def watch(self):
+        """
+        This function waits for a certain amount of time before returning.
+        The wait is terminated if the last activity was more than CONNECTION_TIMEOUT
+        seconds ago.
+
+        :param self: A reference to the instance of this object
+        """
         while True:
             await self.can_timeout.wait()
             await asyncio.sleep(self.CONNECTION_TIMEOUT - (time.time() - self.last_activity))
@@ -52,6 +59,9 @@ class TimeoutWatchdog:
 
     @contextmanager
     def disarm(self):
+        """
+        This function disarms the timeout.
+        """
         self.can_timeout.clear()
         self.blocker += 1
         try:
@@ -388,6 +398,14 @@ if __name__ == "__main__":  # pragma: no cover
     opts.mode = "reverse:http://127.0.0.1:3000/"
 
     async def handle(reader, writer):
+        """
+        This function is a coroutine that handles the client connection.
+
+        It accepts a reader and writer for the connection, as well as an options object and
+        a dictionary of callbacks. It then calls each callback in order with the context object passed to it. The context object contains information about
+        both the client and server connections, such as whether or not they are encrypted, their hostnames, etc., but also contains functions that can be
+        called to modify either side of the connection (e.g., `tls_start_client`).
+        """
         layer_stack = [
             # lambda ctx: layers.ServerTLSLayer(ctx),
             # lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),

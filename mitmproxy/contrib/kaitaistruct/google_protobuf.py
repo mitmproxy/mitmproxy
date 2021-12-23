@@ -83,6 +83,12 @@ class GoogleProtobuf(KaitaiStruct):
 
         @property
         def wire_type(self):
+            """
+            :field_type: The type of the field.
+            :wire_type: Wire type is a part of the "key" that carries enough information to parse value from the wire, i.e.
+            read correct amount of bytes, but there's not enough informaton to interprete in unambiguously. For example, one can't clearly distinguish 64-bit
+            fixed-sized integers from 64-bit floats, signed zigzag-encoded varints from regular unsigned varints, arbitrary bytes from UTF-8 encoded strings etc.
+            """
             """"Wire type" is a part of the "key" that carries enough
             information to parse value from the wire, i.e. read correct
             amount of bytes, but there's not enough informaton to
@@ -99,6 +105,10 @@ class GoogleProtobuf(KaitaiStruct):
 
         @property
         def field_tag(self):
+            """
+            :field_tag: Identifies a field of protocol. One can look up symbolic
+                        field name in a `.proto` file by this field tag.
+            """
             """Identifies a field of protocol. One can look up symbolic
             field name in a `.proto` file by this field tag.
             """

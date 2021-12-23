@@ -198,6 +198,27 @@ class Screen(BaseScreen, RealTerminal):
         self._mouse_tracking_enabled = enable
 
     def _mouse_tracking(self, enable):
+        """
+        .. function: mouse_tracking(enable)
+
+            Enables or disables mouse tracking. Mouse tracking is useful for writing
+            applications that allow the user
+        to interact with the terminal by using a
+            pointing device (such as a mouse). When enabled, terminal output is
+            automatically translated into
+        appropriate calls to methods such as
+            :meth:`~Window.mouse_button_press`, :meth:`~Window.mouse_button_release`, and :meth:`~Window.mouse_motion`.
+        .. note :: The terminal must be in raw mode for this feature to work properly! See also `man terminfo <http://tldp.org/HOWTO/NCURSES-Programming-
+        HOWTO/x1077-tips.html>`_.
+
+             .. warning :: This feature does not currently work on Windows platforms! If you want it to work, you'll need to add
+        code here... :)
+
+             **Parameters**
+
+                ``enable`` (bool): Whether or not we should enable mouse tracking; if False then all subsequent calls
+        will be ignored until enabled again via another call of this method with ``enable`` set True or via a call of :meth:`
+        """
         if enable:
             self.write(escape.MOUSE_TRACKING_ON)
             self._start_gpm_tracking()
@@ -206,6 +227,15 @@ class Screen(BaseScreen, RealTerminal):
             self._stop_gpm_tracking()
 
     def _start_gpm_tracking(self):
+        """
+        .. function: start_gpm_tracking()
+            :noindex:
+
+            Starts gpm-compatible mouse-recording. This is only done if the `mev` program is installed and
+        TERM starts with "linux".
+
+            :returns: None
+        """
         if not os.path.isfile("/usr/bin/mev"):
             return
         if not os.environ.get('TERM',"").lower().startswith("linux"):
@@ -218,6 +248,11 @@ class Screen(BaseScreen, RealTerminal):
         self.gpm_mev = m
 
     def _stop_gpm_tracking(self):
+        """
+        .. function: stop_gpm_tracking()
+
+            Stop the gpm mouse tracker.
+        """
         if not self.gpm_mev:
             return
         os.kill(self.gpm_mev.pid, signal.SIGINT)
@@ -485,6 +520,20 @@ class Screen(BaseScreen, RealTerminal):
         expect it to work.
         """
         def wrapper():
+            """
+            This function is a wrapper for get_input_nonblocking. It takes no arguments and returns nothing.
+            If self._input_timeout is not None, it removes the
+            alarm associated with that timeout and sets self._input_timeout to None.
+            It then calls get_input nonblocking, which returns a tuple of three values:
+            the timeout value (None if there was no input), 
+            a list of keys pressed during this call or None if there was no input at all, and whether or not raw
+            mode should be used 
+            (True if any modifier keys were held when get-keypress was called). The last two values are assigned to variables in this scope:
+            tout, keysraw. If tout is not none (i.e., some keypresses were detected), we set self._input_timeout = event loop alarm with argument tout + time(),
+            so that another call will be made to this function after the appropriate amount of time has passed for another keystroke from the user; otherwise we
+            set it to none as well as assigning it an empty list for its second argument so that future calls will return immediately without detecting any
+            additional keystrokes until more are received by calling again on event loop alarm with an appropriate delay between calls
+            """
             if self._input_timeout:
                 event_loop.remove_alarm(self._input_timeout)
                 self._input_timeout = None
@@ -552,6 +601,22 @@ class Screen(BaseScreen, RealTerminal):
             self._partial_codes = codes
 
             def _parse_incomplete_input():
+                """
+                Parse a string of key codes.
+
+                :param event_loop: The asyncio event loop to use for the keyboard input.
+                :type event_loop: ``asyncio.AbstractEventLoop``
+                :param callback: A function that will be called with the parsed codes when they are complete, or None if no callback is desired.  If this function
+                returns True, it will be called again after parsing more key codes; otherwise it will not be called again until the input is reset and starts parsing
+                from scratch again (e.g., by changing the prompt).  This allows a user to enter multiple lines of code in one call without having to wait for each
+                line's completion before seeing any results from later lines entered in subsequent calls (see below).  Note that this means that you should make sure
+                your callbacks return quickly; if they do not, then there may be delays between when you press keys and when their results appear on-screen!
+                    :type
+                callback: ``Callable[[Iterable[str]], bool]``
+
+                        :param codes: The initial sequence of key codes to parse as part of this invocation's execution
+                context (i.e., within its own run() method), or None if none were
+                """
                 self._input_timeout = None
                 self._partial_codes = None
                 self.parse_input(
@@ -575,6 +640,13 @@ class Screen(BaseScreen, RealTerminal):
             return processed, processed_codes
 
     def _get_keyboard_codes(self):
+        """
+        Get a sequence of key codes corresponding to keyboard input.
+
+        Reads from the console without blocking and returns a list of integer key codes for the
+        pressed keys.  A negative value indicates that no key is currently pressed.  If there is no input waiting then an empty list will be returned;
+        otherwise, the function will return immediately even if no keys are pressed.
+        """
         codes = []
         while True:
             code = self._getch_nodelay()
@@ -584,6 +656,11 @@ class Screen(BaseScreen, RealTerminal):
         return codes
 
     def _get_gpm_codes(self):
+        """
+        .. function: _get_gpm_codes()
+
+            Reads and decodes gpm mouse codes from the gpm event queue and yields them.
+        """
         codes = []
         try:
             while self.gpm_mev is not None and self.gpm_event_pending:
@@ -594,6 +671,26 @@ class Screen(BaseScreen, RealTerminal):
         return codes
 
     def _wait_for_input_ready(self, timeout):
+        """
+        .. function :: _wait_for_input_ready(timeout)
+
+            :param timeout: seconds to wait for input ready, or ``None``, ``False``
+                           for no
+        timeout
+
+            :returns: a list of file descriptors that are ready for input. If the
+                      timeout expires before anything is ready, returns an
+        empty list.
+
+            This function waits up to `timeout` seconds (or forever if `timeout` is
+            set to None) and returns a list of file descriptors that
+        are ready for
+            input. If the specified number of seconds elapses without anything being
+            ready, it returns an empty list. It does not return any
+        indication if it's
+            been waiting longer than the specified time or not; in fact, this function is  # no-pylint-W0105*  # *no-pylint*  # W0105
+        intended only as a helper class and should never be called directly by application code.
+        """
         ready = None
         fd_list = []
         fd = self._input_fileno()
@@ -619,6 +716,11 @@ class Screen(BaseScreen, RealTerminal):
         return ready
 
     def _getch(self, timeout):
+        """
+        Wait up to `timeout` milliseconds for input to be available on any file descriptor.
+        Return the number of descriptors ready for reading, or 0 if no
+        input was waiting.
+        """
         ready = self._wait_for_input_ready(timeout)
         if self.gpm_mev is not None:
             if self.gpm_mev.stdout.fileno() in ready:
@@ -799,6 +901,13 @@ class Screen(BaseScreen, RealTerminal):
         y = -1
 
         def set_cursor_home():
+            """
+            Sets the cursor to position (0, 0) on the terminal.
+
+            If the current display mode is :const:`~pyte.modes.LNM`, this function also returns
+            the cursor to
+            the beginning of the current line.
+            """
             if not partial_display():
                 return escape.set_cursor_position(0, 0)
             return (escape.CURSOR_HOME_COL +
@@ -810,6 +919,20 @@ class Screen(BaseScreen, RealTerminal):
             return escape.move_cursor_down(y - cy)
 
         def set_cursor_position(x, y):
+            """
+            .. function: set_cursor_position(x, y)
+                :param x: The column to move the cursor to.
+                :type x: int
+
+                :param y: The row to move the cursor to.
+            :type y: int
+
+                If not in a partial display mode, this will directly set the terminal's cursor position without any funny business (moving up or
+            down lines).  In a partial display mode, this will first calculate what actual position it should go to based on all of the other rows that have been
+            printed before it (which may include other rows from commands that have already been run) and then go there if possible; otherwise it will scroll
+            everything down and go back up where it should be.  It also returns an escape code for moving the cursor left if necessary after printing more stuff
+            so as not to overwrite previous characters.
+            """
             if not partial_display():
                 return escape.set_cursor_position(x, y)
             if cy > y:
@@ -828,6 +951,15 @@ class Screen(BaseScreen, RealTerminal):
             return True
 
         def attr_to_escape(a):
+            """
+            Convert a terminal attribute value into its string representation.
+
+            Given an :class:`AttrSpec` instance, return the escape sequence that would be used
+            to set that attribute on a terminal. For example, ``attr_to_escape(AttrSpec('default', 'green'))`` returns the escape sequence that would set the
+            foreground colour to green for text displayed on a default background (which is usually black). If given any other kind of object as input, this
+            function will raise :exc:`TypeError`. It does not perform any validation on these values; if you pass it something like ``attr_to_escape(10)`` or
+            ``attr_to_escape('#ffffff')`` it will convert it anyway.
+            """
             if a in self._pal_escape:
                 return self._pal_escape[a]
             elif isinstance(a, AttrSpec):
@@ -1102,6 +1234,12 @@ class Screen(BaseScreen, RealTerminal):
             colors = self.colors
 
         def rgb_values(n):
+            """
+            Convert a color number to an RGB tuple.
+
+            :param n: Color number (0-15) or attribute name (h0, h1, ...).
+            :type n: int or str
+            """
             if colors == 16:
                 aspec = AttrSpec("h%d"%n, "", 256)
             else:

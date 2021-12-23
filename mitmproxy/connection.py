@@ -115,6 +115,23 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
         return hash(self.id)
 
     def __repr__(self):
+        """
+        A class that represents a TLS cipher suite.
+
+        Attributes:
+
+            name (str): The string representation of the cipher suite's name, e.g.,
+        "TLS_ECDHE_RSA_WITH_AES_256_GCM".
+
+            id (int): The numerical ID of the cipher suite, e.g., 0xC02F for "TLS_ECDHE_RSA" and 0x009F for "TLS 1.2 with
+        AES 256-bit in Galois/Counter Mode".
+
+            key(int): The length in bits of the symmetric encryption key used by this ciphersuite; only 128-, 192-, and
+        256-bit keys are supported by TLS 1.0 and TLS 1.1 implementations but longer keys are supported by later specifications, including SSL 3 which
+        supports 128- to 512-bit keys as well as RC4 with 40 to 1024 bits or ChaCha20 with 128 to 512 bits block size).  This attribute is None if no such
+        length can be determined from the name or if it is not applicable given protocol version being used on this connection (e.g., RC4 was removed after
+        SSL 3).  Note that some implementations may support longer key lengths than
+        """
         attrs = repr({
             k: {
                 "cipher_list": lambda: f"<{len(v)} ciphers>",
@@ -155,6 +172,23 @@ class Client(Connection):
         self.state = ConnectionState.OPEN
 
     def __str__(self):
+        """
+        This function returns a string representation of the object.
+
+        :param self: The object to be represented as a string
+        :type self: Server
+        :returns: A
+        concise representation of the state and address of this server
+        """
+        """
+        This function returns a string representation of the server object.
+
+        :param address: The IP address and port of the server
+        :type address: tuple(str,
+        int)
+        :param state: The current state of the connection (e.g., ``State.OPEN``)
+        :type state: State
+        """
         if self.alpn:
             tls_state = f", alpn={self.alpn.decode(errors='replace')}"
         elif self.tls_established:
@@ -164,6 +198,13 @@ class Client(Connection):
         return f"Client({human.format_address(self.peername)}, state={self.state.name.lower()}{tls_state})"
 
     def get_state(self):
+        """
+        .. autoclass :: quic.connection.Connection
+            :members:
+        """
+        """
+        .. autofunc :: State(self)
+        """
         # Important: Retain full compatibility with old proxy core for now!
         # This means we need to add all new fields to the old implementation.
         return {
@@ -200,6 +241,17 @@ class Client(Connection):
         return client
 
     def set_state(self, state):
+        """
+        Sets the state of a connection.
+
+        :param state: The new state.
+        """
+        """
+        Sets the state of a connection.
+
+        :param state: The new state
+        :type  state: dict
+        """
         self.peername = tuple(state["address"]) if state["address"] else None
         self.alpn = state["alpn"]
         self.cipher = state["cipher_name"]
@@ -278,6 +330,23 @@ class Server(Connection):
         self.state = ConnectionState.CLOSED
 
     def __str__(self):
+        """
+        This function returns a string representation of the object.
+
+        :param self: The object to be represented as a string
+        :type self: Server
+        :returns: A
+        concise representation of the state and address of this server
+        """
+        """
+        This function returns a string representation of the server object.
+
+        :param address: The IP address and port of the server
+        :type address: tuple(str,
+        int)
+        :param state: The current state of the connection (e.g., ``State.OPEN``)
+        :type state: State
+        """
         if self.alpn:
             tls_state = f", alpn={self.alpn.decode(errors='replace')}"
         elif self.tls_established:
@@ -291,6 +360,13 @@ class Server(Connection):
         return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
 
     def __setattr__(self, name, value):
+        """
+        .. automethod :: Server.__setattr__(self, name, value)
+            :noindex:
+
+            If the attribute ``name`` is "address" or "via", then this method raises a
+        RuntimeError if the connection state is OPEN and the attribute has changed since construction.
+        """
         if name in ("address", "via"):
             connection_open = self.__dict__.get("state", ConnectionState.CLOSED) is ConnectionState.OPEN
             # assigning the current value is okay, that may be an artifact of calling .set_state().
@@ -300,6 +376,13 @@ class Server(Connection):
         return super().__setattr__(name, value)
 
     def get_state(self):
+        """
+        .. autoclass :: quic.connection.Connection
+            :members:
+        """
+        """
+        .. autofunc :: State(self)
+        """
         return {
             'address': self.address,
             'alpn': self.alpn,
@@ -332,6 +415,17 @@ class Server(Connection):
         return server
 
     def set_state(self, state):
+        """
+        Sets the state of a connection.
+
+        :param state: The new state.
+        """
+        """
+        Sets the state of a connection.
+
+        :param state: The new state
+        :type  state: dict
+        """
         self.address = tuple(state["address"]) if state["address"] else None
         self.alpn = state["alpn"]
         self.id = state["id"]

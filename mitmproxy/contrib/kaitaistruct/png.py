@@ -121,6 +121,9 @@ class Png(KaitaiStruct):
 
         @property
         def x(self):
+            """
+            :return: The x coordinate of the point.
+            """
             if hasattr(self, '_m_x'):
                 return self._m_x if hasattr(self, '_m_x') else None
 
@@ -129,6 +132,11 @@ class Png(KaitaiStruct):
 
         @property
         def y(self):
+            """
+            .. function y(self)
+                A concise reStructuredText docstring for the above function that explains what the code does without using general terms or
+            examples:
+            """
             if hasattr(self, '_m_y'):
                 return self._m_y if hasattr(self, '_m_y') else None
 
@@ -224,6 +232,27 @@ class Png(KaitaiStruct):
 
         @property
         def gamma_ratio(self):
+            """
+            Returns the gamma ratio of a given gamma value.
+
+            :param self: A reference to the current instance of Gamma class.
+            :type self: Gamma
+
+            :returns: The
+            gamma ratio for a given gamma value. 
+                      If no return type is specified, Python returns None by default. 
+
+                      If an integer or float is
+            returned, it will be rounded to 6 decimal places and returned as a float data type (i.e., 1/100000).  
+
+                      If an integer or float is not
+            returned, then it will be interpreted as returning NoneType (i.e., nothing).  
+
+             .. note :: This function does not take any parameters except for
+            `self`. It uses attributes that are defined in __init__(self) function and returns either one of these two values: 1/100000 or NoneType depending on
+            what was passed into `gamma_int` parameter during initialization of this object instance from the main program file (i..e., 'gamma_calc =
+            Gamma(1000000)').
+            """
             if hasattr(self, '_m_gamma_ratio'):
                 return self._m_gamma_ratio if hasattr(self, '_m_gamma_ratio') else None
 

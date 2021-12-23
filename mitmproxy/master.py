@@ -46,6 +46,26 @@ class Master:
         self.addons.trigger(hooks.RunningHook())
 
     def run_loop(self, loop):
+        """
+        .. function: run_loop(self, loop)
+           :param self: The current class instance.
+           :type self: mitmproxy.tools.console.master.ConsoleMaster
+           :param
+        loop: An asyncio event loop that will be used to run the console master process and its addons until it is stopped by a keyboard interrupt or other
+        means of exiting the process (e.g., Ctrl+C).
+           :type loop: asyncio._run_loop
+
+            Runs an asynchronous event-based main program for Mitmproxy - this
+        function should not return unless all addons have been shutdown via a signal or other mechanism, and then it should exit with whatever error code was
+        received from those signals (or 0 if no signals were received).
+
+            .. note :: This function is called automatically when ``mitmproxy`` is executed
+        as a script using Python's built-in interpreter; there's no need to call it manually unless you're writing your own extension scripts for mitmproxy in
+        Python instead of in another language such as C or Go!
+
+            .. warning :: If you are implementing your own addon module rather than using one of the
+        included ones, remember that this method must be decorated with ``@command`` so
+        """
         self.start()
         asyncio.ensure_future(self.running())
 

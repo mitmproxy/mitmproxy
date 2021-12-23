@@ -24,6 +24,15 @@ class Ico(KaitaiStruct):
         self._read()
 
     def _read(self):
+        """
+        This function reads the header of a Windows BMP file.
+        """
+        """
+        This function reads the header of a Windows BMP file.
+
+        :param self: This object.
+        :type self: obj
+        """
         self.magic = self._io.ensure_fixed_contents(struct.pack('4b', 0, 0, 1, 0))
         self.num_images = self._io.read_u2le()
         self.images = [None] * (self.num_images)
@@ -39,6 +48,15 @@ class Ico(KaitaiStruct):
             self._read()
 
         def _read(self):
+        """
+        This function reads the header of a Windows BMP file.
+        """
+        """
+        This function reads the header of a Windows BMP file.
+
+        :param self: This object.
+        :type self: obj
+        """
             self.width = self._io.read_u1()
             self.height = self._io.read_u1()
             self.num_colors = self._io.read_u1()
@@ -50,6 +68,12 @@ class Ico(KaitaiStruct):
 
         @property
         def img(self):
+            """
+            Returns the raw image data.
+
+            If this is an embedded PNG file, returns its contents. Otherwise, returns the DIB bitmap data. Use `is_png` to determine
+            whether this is an embedded PNG file (true) or a DIB bitmap (false) and call a relevant parser if needed to parse image data further.
+            """
             """Raw image data. Use `is_png` to determine whether this is an
             embedded PNG file (true) or a DIB bitmap (false) and call a
             relevant parser, if needed to parse image data further.
@@ -65,6 +89,9 @@ class Ico(KaitaiStruct):
 
         @property
         def png_header(self):
+            """
+            This function checks if the image is a PNG file by reading its first 8 bytes.
+            """
             """Pre-reads first 8 bytes of the image to determine if it's an
             embedded PNG file.
             """
@@ -79,6 +106,10 @@ class Ico(KaitaiStruct):
 
         @property
         def is_png(self):
+            """
+            :param self:
+            :type self: PNG_file
+            """
             """True if this image is in PNG format."""
             if hasattr(self, '_m_is_png'):
                 return self._m_is_png if hasattr(self, '_m_is_png') else None

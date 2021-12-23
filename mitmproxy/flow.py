@@ -139,6 +139,23 @@ class Flow(stateobject.StateObject):
     )
 
     def get_state(self):
+        """
+        .. automethod :: get_state(self)
+            :noindex:
+
+            Returns a dict containing the state of this object. The default implementation returns a copy of
+        self.__dict__, but subclasses can override this to return other values from their __dict__ as necessary (e.g., excluding some attributes). This dict
+        is used by :meth:`from_state` to reconstruct the object later on; it also may be stored directly in persistent storage if desired (see :ref:`pickling-
+        and-unpickling-data` for more information about serialization and pickling).
+
+            .. code-block :: python3
+
+                def get_state(self):
+                    d
+        = super().get_state()
+                    d.update(**{'some': 'attributes', 'that': 'are', 'not': ['in', self._backup]})
+                    return d
+        """
         d = super().get_state()
         d.update(version=version.FLOW_FORMAT_VERSION)
         if self._backup and self._backup != d:
@@ -146,6 +163,12 @@ class Flow(stateobject.StateObject):
         return d
 
     def set_state(self, state):
+        """
+        Set the state of this object.
+
+        :param dict state: The new state to set. This is a dictionary with keys ``"backup"`` and everything in
+        :attr:`state_schema <StateSchema>`.
+        """
         state = state.copy()
         state.pop("version")
         if "backup" in state:
@@ -192,6 +215,10 @@ class Flow(stateobject.StateObject):
 
     @property
     def killable(self):
+        """
+        :param self: The flow to check.
+        :returns: `True` if this flow can be killed, `False` otherwise.
+        """
         """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
         return (
             self.reply and

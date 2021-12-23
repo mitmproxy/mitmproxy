@@ -15,6 +15,26 @@ from mitmproxy.utils import asyncio_utils
 
 
 def dump_system_info():
+    """
+    Dump system information.
+
+    :param mitmproxy_verison: The version of mitmproxy you are running.
+    :type  mitmproxy_verison: str
+
+        :returns A string
+    containing the system information.
+        :rtype   str
+
+            Example output (the example is shown in a terminal session):
+
+            .. code-block ::
+    none
+
+                Mitmproxy version 0.18 on Python 3.7 on Darwin 17.7, OpenSSL 1.1.0h  2 Nov 2017, 2035 GMT (Apple Inc) <unknown@example> [darwin] #
+    noqarunner-macosx64/mitmdump(37)> dumpinfo --system | head -n 4
+    Mitmproxy version 0..on Python 3..on Darwin 17...OpenSSL 1.... | head -n 4 # noqarunner-macosx64/mitmdump(37)> dumpinfo --system | tail -n +5
+    Platform:  darwin # noqarunner-macosx64/mitmdump(37)> dumpinfo --system | tail -n +6     OpenSSL 1....
+    """
     mitmproxy_version = version.get_dev_version()
 
     data = [

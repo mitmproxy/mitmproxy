@@ -22,6 +22,30 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
     """The underlying raw datastructure."""
 
     def __repr__(self):
+        """
+        Create a new record with the given fields.
+
+        :param field1: The first field of the record.
+        :type  field1: str, int, or float
+
+                * If str, it is
+        assumed to be a string (unicode) value.
+
+                * If int, it is assumed to be an integer value.
+
+                * If float, it is assumed to be a floating
+        point value.
+
+            :param ... zero or more additional fields in the same format as `field1`. Note that each of these will have its own docstring
+        describing what type and semantics are expected for that particular argument/field of the record type being created by this function call! This means
+        you can create very flexible and powerful APIs for your functions using this technique! For example if you want to create records containing
+        information about people then you could define your API as follows... ::
+
+                    def get_person(name):
+                        '''Get person by name.'''
+        return PersonRecord(name=name) # Create new PersonRecord instance with just one attribute "name" initialized from positional argument provided when
+        calling function get_person(). This name attribute can now be accessed directly on our returned PersonRecord object like so... p = get_person
+        """
         fields = (
             repr(field)
             for field in self.fields

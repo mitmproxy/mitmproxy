@@ -356,6 +356,12 @@ class CertStore:
     @contextlib.contextmanager
     def umask_secret():
         """
+        Temporarily set the umask to its original value bitor 0o77.
+
+        This is useful when writing private keys to disk so that only the owner will be able to
+        read them.
+        """
+        """
             Context to temporarily set umask to its original value bitor 0o77.
             Useful when writing private keys to disk so that only the owner
             will be able to read them.

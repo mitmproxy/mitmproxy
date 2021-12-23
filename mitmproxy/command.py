@@ -152,6 +152,11 @@ class CommandManager:
         self.commands = {}
 
     def collect_commands(self, addon):
+        """
+        Collects commands from the specified addon.
+
+        :param addon: The addon to collect commands from.
+        """
         for i in dir(addon):
             if not i.startswith("__"):
                 o = getattr(addon, i)

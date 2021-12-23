@@ -50,6 +50,12 @@ class ASWBXMLByteQueue(Queue):
     Created to debug the dequeueing of bytes
     """
     def dequeueAndLog(self):
+        """
+        Dequeues a single byte from the queue and logs it.
+
+        :param self: The queue to dequeue from.
+        :returns: A single byte popped off the queue.
+        """
         singleByte = self.get()
         self.bytesDequeued += 1
         logging.debug("Dequeued byte 0x{0:X} ({1} total)".format(singleByte, self.bytesDequeued))
@@ -63,6 +69,24 @@ class ASWBXMLByteQueue(Queue):
         return (continuationBitmask & byteval) != 0
 
     def dequeueMultibyteInt(self):
+        """
+        Dequeues a multibyte integer from the queue.
+
+        :param self: The queue to dequeue from
+        :type self: Queue
+
+        :returns iReturn: The dequeued integer, or
+        None if the queue is empty.  If an integer was returned, it will be in the range [0, 2^63 - 1] inclusive.  This function does not check for overflow
+        conditions when converting to an int; this should be handled by calling functions as necessary.
+
+            >>> q = Queue()
+            >>> q.enqueue(1) # doctest:
+        +ELLIPSIS
+            <Queue object at 0x...>
+            >>> q = Queue() # doctest: +ELLIPSIS                                # doctest skips these lines so they're
+        not tested here!         >>> for i in range(0x7F):             ...     q.enqueue((i & 0x7F) | (1 << 7))             ...          >>> print(q)       #
+        prints out all bytes of a single long number that's been enqueued into this test case's queue...       # doctest: +NORMALIZE_WH
+        """
         iReturn = 0
         singleByte = 0xFF
 

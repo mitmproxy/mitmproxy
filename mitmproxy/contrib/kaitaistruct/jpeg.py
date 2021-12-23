@@ -162,6 +162,9 @@ class Jpeg(KaitaiStruct):
 
             @property
             def sampling_x(self):
+                """
+                :returns: The horizontal sampling factor.
+                """
                 if hasattr(self, '_m_sampling_x'):
                     return self._m_sampling_x if hasattr(self, '_m_sampling_x') else None
 
@@ -170,6 +173,9 @@ class Jpeg(KaitaiStruct):
 
             @property
             def sampling_y(self):
+                """
+                :returns: The number of times the image is downsampled by 2 along the Y axis.
+                """
                 if hasattr(self, '_m_sampling_y'):
                     return self._m_sampling_y if hasattr(self, '_m_sampling_y') else None
 

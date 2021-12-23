@@ -195,6 +195,15 @@ class MessageData(serializable.Serializable):
     # noinspection PyUnreachableCode
     if __debug__:
         def __post_init__(self):
+            """
+            .. function :: __post_init__(self)
+
+                :param self: The object instance to be initialized.
+                :type self: ``class``
+
+                This function is called
+            after the initialization of an object, and it checks that all fields have values of the correct type.
+            """
             for field in fields(self):
                 val = getattr(self, field.name)
                 typecheck.check_option_type(field.name, val, field.type)
@@ -840,6 +849,11 @@ class Request(Message):
         return tuple(url.decode(query))
 
     def _set_query(self, query_data):
+        """
+        Sets the query part of a URL.
+
+        :param dict query_data: A dictionary containing key-value pairs to be added as parameters to the current URL.
+        """
         query = url.encode(query_data)
         _, _, path, params, _, fragment = urllib.parse.urlparse(self.url)
         self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
@@ -861,10 +875,26 @@ class Request(Message):
         self._set_query(value)
 
     def _get_cookies(self):
+        """
+        :returns: A tuple of (name, value, attrs) for each cookie.
+        """
+        """
+        :returns: A tuple of (name, value, attrs) for each cookie.
+        """
         h = self.headers.get_all("Cookie")
         return tuple(cookies.parse_cookie_headers(h))
 
     def _set_cookies(self, value):
+        """
+        Sets the cookies of the response.
+
+        :param value: A list of tuples (name, value) representing cookies to be set.
+        """
+        """
+        Sets the cookies of the response.
+
+        :param value: A list of tuples (name, value) containing the cookies to be set.
+        """
         self.headers["cookie"] = cookies.format_cookie_header(value)
 
     @property
@@ -934,6 +964,14 @@ class Request(Message):
             )
 
     def _get_urlencoded_form(self):
+        """
+        Returns a tuple of the form (key, value) for each key/value pair in the
+        request body. If the content-type header is not application/x-wwww-form-
+        urlencoded,
+        returns an empty tuple.
+
+        :returns: A tuple containing all key/value pairs from a request's body.
+        """
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             return tuple(url.decode(self.get_text(strict=False)))
@@ -967,6 +1005,12 @@ class Request(Message):
         self._set_urlencoded_form(value)
 
     def _get_multipart_form(self):
+        """
+        .. function: _get_multipart_form()
+
+            :returns: A tuple of (``field-name``, ``field-value``) for each form field.
+            :rtype: tuple(str, str)
+        """
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             try:
@@ -976,6 +1020,15 @@ class Request(Message):
         return ()
 
     def _set_multipart_form(self, value):
+        """
+        Set the body of this request to be a multipart form.
+
+        :param value: The values to set as the form fields. This is a dictionary where each key is the
+        name of a field and each value is either an :class:`~httpolice.structure.FieldBody` or another dictionary with keys ``'value'`` and
+        ``'content_type'``, which are passed on to :class:`~httpolice.structure.FieldBody`. For example, ``{u'message': {u'value': u'the message',
+        u'content_type': u'text/plain; charset=utf-8}}`` will create a text/plain field named `message`. (The charset part must be specified for text fields
+        because otherwise it would not be possible for httpolice to determine its character encoding.)
+        """
         is_valid_content_type = self.headers.get("content-type", "").lower().startswith("multipart/form-data")
         if not is_valid_content_type:
             """
@@ -1130,6 +1183,12 @@ class Response(Message):
         self.data.reason = strutils.always_bytes(reason, "ISO-8859-1")
 
     def _get_cookies(self):
+        """
+        :returns: A tuple of (name, value, attrs) for each cookie.
+        """
+        """
+        :returns: A tuple of (name, value, attrs) for each cookie.
+        """
         h = self.headers.get_all("set-cookie")
         all_cookies = cookies.parse_set_cookie_headers(h)
         return tuple(
@@ -1138,6 +1197,16 @@ class Response(Message):
         )
 
     def _set_cookies(self, value):
+        """
+        Sets the cookies of the response.
+
+        :param value: A list of tuples (name, value) representing cookies to be set.
+        """
+        """
+        Sets the cookies of the response.
+
+        :param value: A list of tuples (name, value) containing the cookies to be set.
+        """
         cookie_headers = []
         for k, v in value:
             header = cookies.format_set_cookie_header([(k, v[0], v[1])])
@@ -1247,6 +1316,14 @@ class HTTPFlow(flow.Flow):
         return self.request.timestamp_start
 
     def copy(self):
+        """
+        Returns a copy of the current flow. The request, response and metadata are copied.
+
+        :param self: A Flow object to be copied.
+        :type self: Flow
+        :returns: A new copy of the current flow with a new id and different references to its request, response and metadata objects (but with references to
+        other objects shared between them).
+        """
         f = super().copy()
         if self.request:
             f.request = self.request.copy()

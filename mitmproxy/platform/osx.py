@@ -18,6 +18,15 @@ STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
 
 
 def original_addr(csock):
+    """
+    .. function: original_addr(csock)
+
+        :param csock: A socket object.
+        :type csock: ``socket``
+
+        Given a client-side socket, return the original
+    destination as (ip, port).
+    """
     peer = csock.getpeername()
     try:
         stxt = subprocess.check_output(STATECMD, stderr=subprocess.STDOUT)

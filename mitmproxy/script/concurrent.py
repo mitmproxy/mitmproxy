@@ -12,6 +12,12 @@ class ScriptThread(basethread.BaseThread):
 
 
 def concurrent(fn):
+    """
+    Concurrent decorator for methods that are not part of the load or configure hooks.
+
+    The decorated method will be run concurrently with other
+    concurrent decorated methods.
+    """
     if fn.__name__ not in set(hooks.all_hooks.keys()) - {"load", "configure"}:
         raise NotImplementedError(
             "Concurrent decorator not supported for '%s' method." % fn.__name__

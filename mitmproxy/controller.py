@@ -20,6 +20,25 @@ class Reply:
     @property
     def state(self):
         """
+        This is a docstring.
+
+        :param arg1: This is the first argument.
+        :type arg1: int
+
+            This function does nothing in particular.
+
+            Args:
+                arg1
+        (int): The first argument.
+
+            Returns:
+                bool or NoneType : Always returns True unless error occurs, then False or None if no value can be
+        returned. 
+
+           Examples of use :  >>> print(do_nothing()) # prints 'True' as expected  >>> do_nothing() # prints 'None' as there was an error and no
+        return value could be determined
+        """
+        """
         The state the reply is currently in. A normal reply object goes
         sequentially through the following lifecycle:
 

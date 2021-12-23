@@ -47,6 +47,13 @@ class Context:
         return ret
 
     def __repr__(self):
+        """
+        Context(
+          client=<aiohttp.client_reqrep.ClientSession object at 0x7f6b3d0e5390>,
+          server=<aiohttp.client_reqrep.Server object at 0x7f6b3d0e5310>,
+        layers=[],
+        )
+        """
         return (
             f"Context(\n"
             f"  {self.client!r},\n"

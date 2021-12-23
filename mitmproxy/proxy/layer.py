@@ -43,6 +43,29 @@ class Layer:
     The result is code that looks like blocking code, but is not blocking:
 
         def _handle_event(self, event):
+            """
+            Processes the given event.
+
+            If we are waiting for data, this function will check if we can determine the next layer now and ask it if necessary. If
+            not, it will add the event to our list of events.
+            :param mevents.Event event: The :class:`mevents.Event` that should be processed by us or one of our
+            subprotocols (if any).
+            """
+            """
+            This function is a generator that yields commands.
+
+            It receives events and executes the following steps:
+
+                * If we have not determined the next
+            protocol yet and :class:`events.Start` is received, we ask for it by calling ``self._ask()``.
+
+                * If :class:`mevents.ConnectionClosed` with
+            ``connection == self.context.client`` is received, we abort everything by closing the connection of our client context (which may be different from
+            ``connection``).
+
+                * If :class:`mevents.DataReceived`, this means new data has been received on our client context, so we ask for it again to
+            determine if there are more layers after us or not (by calling ``self._ask()``).
+            """
             err = yield OpenConnection(server)  # execution continues here after a connection has been established.
 
     Technically this is very similar to how coroutines are implemented.

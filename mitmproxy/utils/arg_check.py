@@ -106,6 +106,11 @@ REPLACEMENTS = {
 
 
 def check():
+    """
+    Checks for deprecated options and their replacements.
+
+    :param list args: A list of command line arguments to check.
+    """
     args = sys.argv[1:]
     print()
     if "-U" in args:
