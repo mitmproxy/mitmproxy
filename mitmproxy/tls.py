@@ -16,8 +16,12 @@ class ClientHello:
     A TLS ClientHello is the first message sent by the client when initiating TLS.
     """
 
+    raw_bytes: bytes
+    """The raw ClientHello bytes as seen on the wire"""
+
     def __init__(self, raw_client_hello: bytes):
         """Create a TLS ClientHello object from raw bytes."""
+        self.raw_bytes = raw_client_hello
         self._client_hello = tls_client_hello.TlsClientHello(
             KaitaiStream(io.BytesIO(raw_client_hello))
         )
