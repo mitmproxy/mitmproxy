@@ -172,7 +172,9 @@ class TlsConfig:
         server: connection.Server = tls_start.context.server
         assert server.address
 
-        if ctx.options.ssl_insecure:
+        options = tls_start.context.options
+
+        if options.ssl_insecure:
             verify = net_tls.Verify.VERIFY_NONE
         else:
             verify = net_tls.Verify.VERIFY_PEER
@@ -182,7 +184,7 @@ class TlsConfig:
 
         if not server.alpn_offers:
             if client.alpn_offers:
-                if ctx.options.http2:
+                if options.http2:
                     # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol
                     # version. There are some edge cases where we want to mirror the regular server's behavior
                     # accurately, for example header capitalization.
@@ -197,14 +199,14 @@ class TlsConfig:
                 #   or falls back to HTTP.
                 server.alpn_offers = []
 
-        if not server.cipher_list and ctx.options.ciphers_server:
-            server.cipher_list = ctx.options.ciphers_server.split(":")
+        if not server.cipher_list and options.ciphers_server:
+            server.cipher_list = options.ciphers_server.split(":")
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
         client_cert: Optional[str] = None
-        if ctx.options.client_certs:
-            client_certs = os.path.expanduser(ctx.options.client_certs)
+        if options.client_certs:
+            client_certs = os.path.expanduser(options.client_certs)
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
@@ -214,13 +216,13 @@ class TlsConfig:
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(
-            min_version=net_tls.Version[ctx.options.tls_version_client_min],
-            max_version=net_tls.Version[ctx.options.tls_version_client_max],
+            min_version=net_tls.Version[options.tls_version_client_min],
+            max_version=net_tls.Version[options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
             verify=verify,
             hostname=server.sni,
-            ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
-            ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
+            ca_path=options.ssl_verify_upstream_trusted_confdir,
+            ca_pemfile=options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
             alpn_protos=tuple(server.alpn_offers),
         )
