@@ -161,10 +161,12 @@ class TestTlsConfig:
     def test_tls_start_server_verify_ok(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
+            )
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
-            tctx.configure(ta, ssl_verify_upstream_trusted_ca=tdata.path(
-                "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
 
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
@@ -180,9 +182,6 @@ class TestTlsConfig:
     def test_tls_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
-            ctx.server.address = ("example.mitmproxy.org", 443)
-
             tctx.configure(
                 ta,
                 ssl_verify_upstream_trusted_ca=None,
@@ -190,6 +189,8 @@ class TestTlsConfig:
                 http2=False,
                 ciphers_server="ALL"
             )
+            ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
@@ -204,7 +205,7 @@ class TestTlsConfig:
             tls_start = tls.TlsData(ctx.server, context=ctx)
 
             def assert_alpn(http2, client_offers, expected):
-                tctx.configure(ta, http2=http2)
+                ctx.options.http2 = http2
                 ctx.client.alpn_offers = client_offers
                 ctx.server.alpn_offers = None
                 tls_start.ssl_conn = None
@@ -248,13 +249,13 @@ class TestTlsConfig:
     def test_client_cert_file(self, tdata, client_certs):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
-            ctx.server.address = ("example.mitmproxy.org", 443)
             tctx.configure(
                 ta,
                 client_certs=tdata.path(client_certs),
                 ssl_verify_upstream_trusted_ca=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt"),
             )
+            ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
 
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)

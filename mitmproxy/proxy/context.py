@@ -3,6 +3,8 @@ from typing import List, TYPE_CHECKING
 from mitmproxy import connection
 from mitmproxy.options import Options
 
+import copy
+
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
 
@@ -36,7 +38,8 @@ class Context:
         options: Options,
     ) -> None:
         self.client = client
-        self.options = options
+        # Always copy the options to prevent modifications from different contexts
+        self.options = copy.deepcopy(options)
         self.server = connection.Server(None)
         self.layers = []
 

@@ -108,9 +108,9 @@ class TlsConfig:
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
         tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
-                ctx.options.connection_strategy == "eager" or
-                ctx.options.add_upstream_certs_to_client_chain or
-                ctx.options.upstream_cert
+                conn_context.options.connection_strategy == "eager" or
+                conn_context.options.add_upstream_certs_to_client_chain or
+                conn_context.options.upstream_cert
         )
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
@@ -120,23 +120,24 @@ class TlsConfig:
 
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
+        context = tls_start.context
 
-        entry = self.get_cert(tls_start.context)
+        entry = self.get_cert(context)
 
-        if not client.cipher_list and ctx.options.ciphers_client:
-            client.cipher_list = ctx.options.ciphers_client.split(":")
+        if not client.cipher_list and context.options.ciphers_client:
+            client.cipher_list = context.options.ciphers_client.split(":")
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = client.cipher_list or DEFAULT_CIPHERS
 
-        if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
+        if context.options.add_upstream_certs_to_client_chain:  # pragma: no cover
             # exempted from coverage until https://bugs.python.org/issue18233 is fixed.
             extra_chain_certs = server.certificate_list
         else:
             extra_chain_certs = []
 
         ssl_ctx = net_tls.create_client_proxy_context(
-            min_version=net_tls.Version[ctx.options.tls_version_client_min],
-            max_version=net_tls.Version[ctx.options.tls_version_client_max],
+            min_version=net_tls.Version[context.options.tls_version_client_min],
+            max_version=net_tls.Version[context.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
             cert=entry.cert,
             key=entry.privatekey,
@@ -159,7 +160,7 @@ class TlsConfig:
         tls_start.ssl_conn.set_app_data(AppData(
             client_alpn=client_alpn,
             server_alpn=server.alpn,
-            http2=ctx.options.http2,
+            http2=context.options.http2,
         ))
         tls_start.ssl_conn.set_accept_state()
 
@@ -172,9 +173,9 @@ class TlsConfig:
         server: connection.Server = tls_start.context.server
         assert server.address
 
-        options = tls_start.context.options
+        context = tls_start.context
 
-        if options.ssl_insecure:
+        if context.options.ssl_insecure:
             verify = net_tls.Verify.VERIFY_NONE
         else:
             verify = net_tls.Verify.VERIFY_PEER
@@ -184,7 +185,7 @@ class TlsConfig:
 
         if not server.alpn_offers:
             if client.alpn_offers:
-                if options.http2:
+                if context.options.http2:
                     # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol
                     # version. There are some edge cases where we want to mirror the regular server's behavior
                     # accurately, for example header capitalization.
@@ -199,14 +200,14 @@ class TlsConfig:
                 #   or falls back to HTTP.
                 server.alpn_offers = []
 
-        if not server.cipher_list and options.ciphers_server:
-            server.cipher_list = options.ciphers_server.split(":")
+        if not server.cipher_list and context.options.ciphers_server:
+            server.cipher_list = context.options.ciphers_server.split(":")
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
         client_cert: Optional[str] = None
-        if options.client_certs:
-            client_certs = os.path.expanduser(options.client_certs)
+        if context.options.client_certs:
+            client_certs = os.path.expanduser(context.options.client_certs)
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
@@ -216,13 +217,13 @@ class TlsConfig:
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(
-            min_version=net_tls.Version[options.tls_version_client_min],
-            max_version=net_tls.Version[options.tls_version_client_max],
+            min_version=net_tls.Version[context.options.tls_version_client_min],
+            max_version=net_tls.Version[context.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
             verify=verify,
             hostname=server.sni,
-            ca_path=options.ssl_verify_upstream_trusted_confdir,
-            ca_pemfile=options.ssl_verify_upstream_trusted_ca,
+            ca_path=context.options.ssl_verify_upstream_trusted_confdir,
+            ca_pemfile=context.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
             alpn_protos=tuple(server.alpn_offers),
         )
@@ -290,7 +291,7 @@ class TlsConfig:
         organization: Optional[str] = None
 
         # Use upstream certificate if available.
-        if ctx.options.upstream_cert and conn_context.server.certificate_list:
+        if conn_context.options.upstream_cert and conn_context.server.certificate_list:
             upstream_cert = conn_context.server.certificate_list[0]
             if upstream_cert.cn:
                 altnames.append(upstream_cert.cn)

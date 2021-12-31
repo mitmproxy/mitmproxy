@@ -2,6 +2,8 @@ from typing import Optional, Sequence
 
 from mitmproxy import optmanager
 
+import copy
+
 CONF_DIR = "~/.mitmproxy"
 CONF_BASENAME = "mitmproxy"
 LISTEN_PORT = 8080
@@ -154,3 +156,10 @@ class Options(optmanager.OptManager):
         )
 
         self.update(**kwargs)
+
+    def __deepcopy__(self, memodict = None):
+        o = Options()
+        o.__dict__["_options"] = copy.deepcopy(self._options, memodict)
+        return o
+
+    __copy__ = __deepcopy__
