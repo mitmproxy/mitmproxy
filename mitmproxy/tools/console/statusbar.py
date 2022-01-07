@@ -289,37 +289,12 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = self.master.commands.execute("view.properties.length")
-        if self.master.view.focus.flow is None:
-            offset = 0
-        else:
-            offset = self.master.view.focus.index + 1
 
-        if self.master.options.view_order_reversed:
-            arrow = common.SYMBOL_UP
-        else:
-            arrow = common.SYMBOL_DOWN
+        boundaddr = "\nFlow:   ↵ Details D Duplicate r Replay    e Export d Delete a Resume\nProxy:  E Events  O Options   i Intercept f Search q Quit   ? Help"
 
-        marked = ""
-        if self.master.commands.execute("view.properties.marked"):
-            marked = "M"
-
-        t = [
-            ('heading', (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
-        ]
-
-        if self.master.options.server:
-            host = self.master.options.listen_host
-            if host == "0.0.0.0" or host == "":
-                host = "*"
-            boundaddr = f"[{host}:{self.master.options.listen_port}]"
-        else:
-            boundaddr = ""
-        t.extend(self.get_status())
         status = urwid.AttrWrap(urwid.Columns([
-            urwid.Text(t),
-            urwid.Text(boundaddr, align="right"),
-        ]), "heading")
+            urwid.Text(boundaddr, align="left"),
+        ]), "editfc")
         self.ib._w = status
 
     def selectable(self):
