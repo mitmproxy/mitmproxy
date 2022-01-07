@@ -92,7 +92,7 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: typing.Dict[str, typing.List[str]] = {}
+        self.deferred: typing.Dict[str, typing.Any] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
@@ -296,7 +296,7 @@ class OptManager:
             are added.
         """
         vals = {}
-        unknown: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
+        unknown: typing.Dict[str, typing.Any] = collections.defaultdict(list)
         for i in spec:
             parts = i.split("=", maxsplit=1)
             if len(parts) == 1:
@@ -319,8 +319,12 @@ class OptManager:
             have since been added.
         """
         update = {}
-        for optname, optvals in self.deferred.items():
+        for optname, optval in self.deferred.items():
             if optname in self._options:
+                if isinstance(optval, list):
+                    optvals = optval
+                else:
+                    optvals = [optval]
                 for optval in optvals:
                     optval = self.parse_setval(self._options[optname], optval, update.get(optname))
                     update[optname] = optval
