@@ -92,7 +92,7 @@ class Master:
             # This all needs to be simplified when the proxy server runs on asyncio as well.
             if not self.event_loop.is_running():  # pragma: no cover
                 try:
-                    self.event_loop.run_until_complete(asyncio.wrap_future(ret))
+                    self.event_loop.run_until_complete(asyncio.wrap_future(ret, loop=self.event_loop))
                 except RuntimeError:
                     pass  # Event loop stopped before Future completed.
 
