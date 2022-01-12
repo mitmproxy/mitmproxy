@@ -12,7 +12,7 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from mitmproxy import http, version
+from mitmproxy import http, version, tweaks
 from mitmproxy.connection import Connection
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human
@@ -40,7 +40,7 @@ class Http2Connection(HttpConnection):
     h2_conf_defaults = dict(
         header_encoding=False,
         validate_outbound_headers=False,
-        validate_inbound_headers=True,
+        validate_inbound_headers=not tweaks.tweaks.no_strict_http2_headers,
         normalize_inbound_headers=False,  # changing this to True is required to pass h2spec
         normalize_outbound_headers=False,
     )
