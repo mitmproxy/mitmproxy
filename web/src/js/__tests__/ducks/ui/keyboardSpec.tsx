@@ -102,6 +102,11 @@ describe('onKeyDown', () => {
 
     })
 
+    it('should handle create action', () => {
+        store.dispatch(createKeyEvent("n"))
+        expect(fetchApi).toBeCalledWith('/flows/create', {method: 'POST'})
+    })
+
     it('should handle duplicate action', () => {
         store.dispatch(createKeyEvent("D"))
         expect(fetchApi).toBeCalledWith('/flows/1/duplicate', {method: 'POST'})

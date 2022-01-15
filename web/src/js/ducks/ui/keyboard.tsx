@@ -80,6 +80,11 @@ export function onKeyDown(e: KeyboardEvent) {
                 break
             }
 
+            case "n": {
+                dispatch(flowsActions.create())
+                break
+            }
+
             case "D": {
                 if (!flow) {
                     return
