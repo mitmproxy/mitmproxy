@@ -18,7 +18,7 @@ and many of the built-in argument types - give it a try.
 The canonical reference for commands is the `--commands` flag, which is exposed
 by each of the mitmproxy tools. Passing this flag will dump an annotated list of
 all registered commands, their arguments and their return values to screen. In
-mimtproxy console you can also view a palette of all commands in the command
+mitmproxy console you can also view a palette of all commands in the command
 browser (by default accessible with the `C` key binding).
 
 # Working with Flows
