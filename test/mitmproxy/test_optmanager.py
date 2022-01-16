@@ -71,7 +71,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval(o._options["required_int"], None, None)
+        o.parse_setval(o._options["required_int"], [])
 
 
 def test_deepcopy():
@@ -402,7 +402,7 @@ def test_set():
 
     opts.set("str=foo")
     assert opts.str == "foo"
-    with pytest.raises(TypeError):
+    with pytest.raises(exceptions.OptionsError):
         opts.set("str")
 
     opts.set("optstr=foo")

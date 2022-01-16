@@ -355,7 +355,7 @@ class TestCommandBuffer:
                 ('commander_command', 'set'),
                 ('text', ' '),
                 ('commander_hint', 'option '),
-                ('commander_hint', 'value '),
+                ('commander_hint', '*value '),
             ]
 
     def test_render(self):
@@ -380,5 +380,5 @@ class TestCommandBuffer:
                 ('commander_command', 'set'),
                 ('text', ' '),
                 ('commander_hint', 'option '),
-                ('commander_hint', 'value '),
+                ('commander_hint', '*value '),
             ]
