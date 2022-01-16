@@ -269,13 +269,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             body="!!"
         ).code == 400
 
-    def test_flow_create(self):
-        resp = self.fetch("/flows/create", method="POST")
-        assert resp.code == 200
-        f = self.view.get_by_id(resp.body.decode())
-        assert f
-        self.view.remove([f])
-
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
         assert resp.code == 200

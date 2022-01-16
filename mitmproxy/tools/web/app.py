@@ -26,8 +26,6 @@ from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
-from mitmproxy import exceptions
-from mitmproxy import connection
 
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> Optional[dict]:
@@ -413,24 +411,6 @@ class FlowHandler(RequestHandler):
         self.view.update([flow])
 
 
-class CreateFlow(RequestHandler):
-    def post(self, method: str = "GET", url: str = "https://example.com") -> None:
-        try:
-            req = http.Request.make(method.upper(), url)
-        except ValueError as e:
-            raise exceptions.CommandError("Invalid URL: %s" % e)
-
-        c = connection.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
-        s = connection.Server((req.host, req.port))
-
-        f = http.HTTPFlow(c, s)
-        f.request = req
-        f.request.headers["Host"] = req.host
-
-        self.view.add([f])
-        self.write(f.id)
-
-
 class DuplicateFlow(RequestHandler):
     def post(self, flow_id):
         f = self.flow.copy()
@@ -648,7 +628,6 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
-                (r"/flows/create", CreateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),

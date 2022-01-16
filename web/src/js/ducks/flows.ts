@@ -180,10 +180,6 @@ export function remove(flow: Flow) {
     return dispatch => fetchApi(`/flows/${flow.id}`, {method: 'DELETE'})
 }
 
-export function create() {
-    return dispatch => fetchApi(`/flows/create`, { method: 'POST' })
-}
-
 export function duplicate(flow: Flow) {
     return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, {method: 'POST'})
 }
