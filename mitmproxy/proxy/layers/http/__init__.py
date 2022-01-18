@@ -249,9 +249,8 @@ class HttpStream(layer.Layer):
                     chunks = []
                 elif isinstance(chunks, bytes):
                     chunks = [chunks]
-                if len(chunks) != 1 or len(chunks[0]) != 0:
-                    for chunk in chunks:
-                        yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
+                for chunk in chunks:
+                    yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
 
             self.flow.request.timestamp_end = time.time()
             yield HttpRequestHook(self.flow)
@@ -344,9 +343,8 @@ class HttpStream(layer.Layer):
                     chunks = []
                 elif isinstance(chunks, bytes):
                     chunks = [chunks]
-                if len(chunks) != 1 or len(chunks[0]) != 0:
-                    for chunk in chunks:
-                        yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
+                for chunk in chunks:
+                    yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
