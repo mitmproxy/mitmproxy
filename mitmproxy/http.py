@@ -1187,8 +1187,8 @@ class Response(Message):
                     new = mktime_tz(d) + delta
                     try:
                         self.headers[i] = formatdate(new, usegmt=True)
-                    except OSError:
-                        pass  # value out of bounds on Windows.
+                    except OSError:  # pragma: no cover
+                        pass  # value out of bounds on Windows only (which is why we exclude it from coverage).
         c = []
         for set_cookie_header in self.headers.get_all("set-cookie"):
             try:
