@@ -21,6 +21,8 @@ class TestClientHello:
         assert c.cipher_suites == [53, 47, 10, 5, 4, 9, 3, 6, 8, 96, 97, 98, 100]
         assert c.alpn_protocols == []
         assert c.extensions == []
+        assert c.raw_bytes(False) == CLIENT_HELLO_NO_EXTENSIONS
+        assert c.raw_bytes(True) == FULL_CLIENT_HELLO_NO_EXTENSIONS
 
     def test_extensions(self):
         data = bytes.fromhex(
