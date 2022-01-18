@@ -71,7 +71,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval(o._options["required_int"], [])
+        o._parse_setval(o._options["required_int"], [])
 
 
 def test_deepcopy():
@@ -409,6 +409,8 @@ def test_set():
     assert opts.optstr == "foo"
     opts.set("optstr")
     assert opts.optstr is None
+    with pytest.raises(exceptions.OptionsError, match="Received multiple values"):
+        opts.set("optstr=foo", "optstr=bar")
 
     opts.set("bool=false")
     assert opts.bool is False

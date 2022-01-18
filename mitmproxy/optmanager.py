@@ -295,11 +295,14 @@ class OptManager:
 
     def set(self, *specs: str, defer: bool = False) -> None:
         """
-            Takes a list of set specification in standard form (option=value).
-            Options that are known are updated immediately. If defer is true,
-            options that are not known are deferred, and will be set once they
-            are added.
+        Takes a list of set specification in standard form (option=value).
+        Options that are known are updated immediately. If defer is true,
+        options that are not known are deferred, and will be set once they
+        are added.
+
+        May raise an `OptionsError` if a value is malformed or an option is unknown and defer is False.
         """
+        # First, group specs by option name.
         unprocessed: typing.Dict[str, typing.List[str]] = {}
         for spec in specs:
             if "=" in spec:
@@ -308,18 +311,22 @@ class OptManager:
             else:
                 unprocessed.setdefault(spec, [])
 
+        # Second, convert values to the correct type.
         processed: typing.Dict[str, typing.Any] = {}
         for name in list(unprocessed.keys()):
             if name in self._options:
-                processed[name] = self.parse_setval(self._options[name], unprocessed.pop(name))
+                processed[name] = self._parse_setval(self._options[name], unprocessed.pop(name))
 
+        # Third, stash away unrecognized options or complain about them.
         if defer:
             self.deferred.update({
                 k: _UnconvertedStr(v)
                 for k, v in unprocessed.items()
             })
         elif unprocessed:
-            raise exceptions.OptionsError(f"Unknown options: {', '.join(unprocessed)}")
+            raise exceptions.OptionsError(f"Unknown option(s): {', '.join(unprocessed)}")
+
+        # Finally, apply updated options.
         self.update(**processed)
 
     def process_deferred(self) -> None:
@@ -331,13 +338,13 @@ class OptManager:
         for optname, value in self.deferred.items():
             if optname in self._options:
                 if isinstance(value, _UnconvertedStr):
-                    value = self.parse_setval(self._options[optname], value.val)
+                    value = self._parse_setval(self._options[optname], value.val)
                 update[optname] = value
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
 
-    def parse_setval(self, o: _Option, values: typing.List[str]) -> typing.Any:
+    def _parse_setval(self, o: _Option, values: typing.List[str]) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
