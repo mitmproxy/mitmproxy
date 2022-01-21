@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix empty cookie attributes being set to `Key=` instead of `Key`
+  ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
 
 
 ## 14 November 2023: mitmproxy 10.1.5
