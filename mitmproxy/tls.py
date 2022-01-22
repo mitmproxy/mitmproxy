@@ -16,15 +16,38 @@ class ClientHello:
     A TLS ClientHello is the first message sent by the client when initiating TLS.
     """
 
-    raw_bytes: bytes
-    """The raw ClientHello bytes as seen on the wire"""
+    _raw_bytes: bytes
 
     def __init__(self, raw_client_hello: bytes):
         """Create a TLS ClientHello object from raw bytes."""
-        self.raw_bytes = raw_client_hello
+        self._raw_bytes = raw_client_hello
         self._client_hello = tls_client_hello.TlsClientHello(
             KaitaiStream(io.BytesIO(raw_client_hello))
         )
+
+    def raw_bytes(self, wrap_in_record: bool = True) -> bytes:
+        """
+        The raw ClientHello bytes as seen on the wire.
+
+        If `wrap_in_record` is True, the ClientHello will be wrapped in a synthetic TLS record
+        (`0x160303 + len(chm) + 0x01 + len(ch)`), which is the format expected by some tools.
+        The synthetic record assumes TLS version (`0x0303`), which may be different from what has been sent over the
+        wire. JA3 hashes are unaffected by this as they only use the TLS version from the ClientHello data structure.
+
+        A future implementation may return not just the exact ClientHello, but also the exact record(s) as seen on the
+        wire.
+        """
+        if wrap_in_record:
+            return (
+                # record layer
+                b"\x16\x03\x03" + (len(self._raw_bytes) + 4).to_bytes(2, byteorder="big") +
+                # handshake header
+                b"\x01" + len(self._raw_bytes).to_bytes(3, byteorder="big") +
+                # ClientHello as defined in https://datatracker.ietf.org/doc/html/rfc8446#section-4.1.2.
+                self._raw_bytes
+            )
+        else:
+            return self._raw_bytes
 
     @property
     def cipher_suites(self) -> List[int]:

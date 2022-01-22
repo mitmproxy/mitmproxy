@@ -157,7 +157,7 @@ def create_proxy_server_context(
             ip: bytes = ipaddress.ip_address(hostname).packed
         except ValueError:
             SSL._openssl_assert(  # type: ignore
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1  # type: ignore
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), len(hostname.encode())) == 1  # type: ignore
             )
         else:
             SSL._openssl_assert(  # type: ignore

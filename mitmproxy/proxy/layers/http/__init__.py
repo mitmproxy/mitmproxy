@@ -244,7 +244,9 @@ class HttpStream(layer.Layer):
         elif isinstance(event, RequestEndOfMessage):
             if callable(self.flow.request.stream):
                 chunks = self.flow.request.stream(b"")
-                if isinstance(chunks, bytes):
+                if chunks == b"":
+                    chunks = []
+                elif isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
                     yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
@@ -336,7 +338,9 @@ class HttpStream(layer.Layer):
         elif isinstance(event, ResponseEndOfMessage):
             if callable(self.flow.response.stream):
                 chunks = self.flow.response.stream(b"")
-                if isinstance(chunks, bytes):
+                if chunks == b"":
+                    chunks = []
+                elif isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
                     yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
