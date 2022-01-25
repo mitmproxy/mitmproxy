@@ -20,6 +20,10 @@
 * Add fonts to asset filter (~a) (#4928, @elespike)
 * Fix bug that crashed when using `view.flows.resolve` (#4916, @rbdixon)
 * Fix a bug where `running()` is invoked twice on startup (#3584, @mhils)
+* Correct documentation example for User-Agent header modification (#4997, @jamesyale)
+* Fix random connection stalls (#5040, @EndUser509)
+* Add `n` new flow keybind to mitmweb (#5061, @ianklatzco)
+* Fix compatibility with BoringSSL (@pmoulton)
 
 ## 28 September 2021: mitmproxy 7.0.4
 

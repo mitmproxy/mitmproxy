@@ -2,7 +2,7 @@ import reduceFlows, * as flowsActions from "../../../ducks/flows";
 import {onKeyDown} from '../../../ducks/ui/keyboard'
 import * as UIActions from '../../../ducks/ui/flow'
 import * as modalActions from '../../../ducks/ui/modal'
-import {fetchApi} from '../../../utils'
+import {fetchApi, runCommand} from '../../../utils'
 import {TStore} from "../tutils";
 
 jest.mock('../../../utils')
@@ -100,6 +100,11 @@ describe('onKeyDown', () => {
         store.dispatch(createKeyEvent("d"))
         expect(fetchApi).toBeCalledWith('/flows/1', {method: 'DELETE'})
 
+    })
+
+    it('should handle create action', () => {
+        store.dispatch(createKeyEvent("n"))
+        expect(runCommand).toBeCalledWith('view.flows.create', "get", "https://example.com/")
     })
 
     it('should handle duplicate action', () => {

@@ -109,6 +109,61 @@ def test_upgrade(tctx):
     assert flow().websocket.messages[1].type == Opcode.BINARY
 
 
+def test_upgrade_streamed(tctx):
+    """If the HTTP response is streamed, we may get early data from the client."""
+    tctx.server.address = ("example.com", 80)
+    tctx.server.state = ConnectionState.OPEN
+    flow = Placeholder(HTTPFlow)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.response.stream = True
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+            >> DataReceived(tctx.client,
+                            b"GET / HTTP/1.1\r\n"
+                            b"Connection: upgrade\r\n"
+                            b"Upgrade: websocket\r\n"
+                            b"Sec-WebSocket-Version: 13\r\n"
+                            b"\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << SendData(tctx.server, b"GET / HTTP/1.1\r\n"
+                                     b"Connection: upgrade\r\n"
+                                     b"Upgrade: websocket\r\n"
+                                     b"Sec-WebSocket-Version: 13\r\n"
+                                     b"\r\n")
+            >> DataReceived(tctx.server, b"HTTP/1.1 101 Switching Protocols\r\n"
+                                         b"Upgrade: websocket\r\n"
+                                         b"Connection: Upgrade\r\n"
+                                         b"\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply(side_effect=enable_streaming)
+            << SendData(tctx.client, b"HTTP/1.1 101 Switching Protocols\r\n"
+                                     b"Upgrade: websocket\r\n"
+                                     b"Connection: Upgrade\r\n"
+                                     b"\r\n")
+            << http.HttpResponseHook(flow)
+            >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello world"))  # early !!
+            >> reply(to=-2)
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.server, masked(b"\x81\x0bhello world"))
+            >> DataReceived(tctx.server, b"\x82\nhello back")
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.client, b"\x82\nhello back")
+            >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello again"))
+            << websocket.WebsocketMessageHook(flow)
+            >> reply()
+            << SendData(tctx.server, masked(b"\x81\x0bhello again"))
+    )
+
+
 @pytest.fixture()
 def ws_testdata(tctx):
     tctx.server.address = ("example.com", 80)

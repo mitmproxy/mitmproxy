@@ -115,6 +115,9 @@ class TlsConfig:
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between client and proxy."""
+        if tls_start.ssl_conn is not None:
+            return  # a user addon has already provided the pyOpenSSL context.
+
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
 
@@ -162,6 +165,9 @@ class TlsConfig:
 
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between proxy and server."""
+        if tls_start.ssl_conn is not None:
+            return  # a user addon has already provided the pyOpenSSL context.
+
         client: connection.Client = tls_start.context.client
         server: connection.Server = tls_start.context.server
         assert server.address

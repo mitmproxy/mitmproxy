@@ -122,7 +122,7 @@ class Test_FileLoading(unittest.TestCase):
 
     def test_error_on_absurd_lengths(self):
         s = io.BytesIO()
-        s.write(b'1000000000:pwned!,')
+        s.write(b'1000000000000:pwned!,')
         s.seek(0)
         with self.assertRaises(ValueError):
             tnetstring.load(s)

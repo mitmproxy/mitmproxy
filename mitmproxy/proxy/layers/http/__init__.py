@@ -244,7 +244,9 @@ class HttpStream(layer.Layer):
         elif isinstance(event, RequestEndOfMessage):
             if callable(self.flow.request.stream):
                 chunks = self.flow.request.stream(b"")
-                if isinstance(chunks, bytes):
+                if chunks == b"":
+                    chunks = []
+                elif isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
                     yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
@@ -336,7 +338,9 @@ class HttpStream(layer.Layer):
         elif isinstance(event, ResponseEndOfMessage):
             if callable(self.flow.response.stream):
                 chunks = self.flow.response.stream(b"")
-                if isinstance(chunks, bytes):
+                if chunks == b"":
+                    chunks = []
+                elif isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
                     yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
@@ -389,7 +393,6 @@ class HttpStream(layer.Layer):
 
         if self.flow.response.trailers:
             yield SendHttp(ResponseTrailers(self.stream_id, self.flow.response.trailers), self.context.client)
-        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
         if self.flow.response.status_code == 101:
             if is_websocket:
@@ -405,7 +408,10 @@ class HttpStream(layer.Layer):
                 yield commands.Log(f"{self.debug}[http] upgrading to {self.child_layer}", "debug")
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
-            return
+
+        # delay sending EOM until the child layer is set up,
+        # we may get data immediately and need to be prepared to handle it.
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     def check_body_size(self, request: bool) -> layer.CommandGenerator[bool]:
         """
@@ -541,7 +547,7 @@ class HttpStream(layer.Layer):
         connection, err = yield GetHttpConnection(
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https",
-            self.context.server.via,
+            self.flow.server_conn.via,
         )
         if err:
             yield from self.handle_protocol_error(ResponseProtocolError(self.stream_id, err))

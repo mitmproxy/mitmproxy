@@ -275,7 +275,7 @@ Set the `User-Agent` header to the data read from `~/useragent.txt` for all requ
 (existing `User-Agent` headers are replaced):
 
 ```
-/~q/Host/@~/useragent.txt
+/~q/User-Agent/@~/useragent.txt
 ```
 
 Remove existing `Host` headers from all requests:

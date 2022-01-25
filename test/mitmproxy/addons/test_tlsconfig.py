@@ -134,6 +134,11 @@ class TestTlsConfig:
             tls_start = tls.TlsData(ctx.client, context=ctx)
             ta.tls_start_client(tls_start)
             tssl_server = tls_start.ssl_conn
+
+            # assert that a preexisting ssl_conn is not overwritten
+            ta.tls_start_client(tls_start)
+            assert tssl_server is tls_start.ssl_conn
+
             tssl_client = test_tls.SSLTest()
             assert self.do_handshake(tssl_client, tssl_server)
             assert tssl_client.obj.getpeercert()["subjectAltName"] == (("DNS", "example.mitmproxy.org"),)
@@ -164,6 +169,11 @@ class TestTlsConfig:
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
             tssl_client = tls_start.ssl_conn
+
+            # assert that a preexisting ssl_conn is not overwritten
+            ta.tls_start_server(tls_start)
+            assert tssl_client is tls_start.ssl_conn
+
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
 
@@ -197,6 +207,7 @@ class TestTlsConfig:
                 tctx.configure(ta, http2=http2)
                 ctx.client.alpn_offers = client_offers
                 ctx.server.alpn_offers = None
+                tls_start.ssl_conn = None
                 ta.tls_start_server(tls_start)
                 assert ctx.server.alpn_offers == expected
 

@@ -308,7 +308,7 @@ class _TLSLayer(tunnel.TunnelLayer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         try:
             self.tls.sendall(data)
-        except SSL.ZeroReturnError:
+        except (SSL.ZeroReturnError, SSL.SysCallError):
             # The other peer may still be trying to send data over, which we discard here.
             pass
         yield from self.tls_interact()

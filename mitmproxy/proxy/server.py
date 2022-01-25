@@ -223,11 +223,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             except asyncio.CancelledError as e:
                 cancelled = e
                 break
-            else:
-                self.server_event(events.DataReceived(connection, data))
-                for transport in self.transports.values():
-                    if transport.writer is not None:
-                        await transport.writer.drain()
+
+            self.server_event(events.DataReceived(connection, data))
+
+            try:
+                await self.drain_writers()
+            except asyncio.CancelledError as e:
+                cancelled = e
+                break
 
         if cancelled is None:
             connection.state &= ~ConnectionState.CAN_READ
@@ -252,6 +255,19 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
         if cancelled:
             raise cancelled
+
+    async def drain_writers(self):
+        """
+        Drain all writers to create some backpressure. We won't continue reading until there's space available in our
+        write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
+        """
+        for transport in self.transports.values():
+            if transport.writer is not None:
+                try:
+                    await transport.writer.drain()
+                except OSError as e:
+                    if transport.handler is not None:
+                        asyncio_utils.cancel_task(transport.handler, f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
         self.log(f"Closing connection due to inactivity: {self.client}")

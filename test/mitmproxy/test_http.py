@@ -613,6 +613,11 @@ class TestResponseUtils:
             m.side_effect = ValueError
             r.refresh(n)
 
+        # Test negative unixtime, which raises on at least Windows.
+        r.headers["date"] = pre = "Mon, 01 Jan 1601 00:00:00 GMT"
+        r.refresh(946681202)
+        assert r.headers["date"] == pre
+
 
 class TestHTTPFlow:
 

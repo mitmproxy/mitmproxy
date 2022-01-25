@@ -2024,7 +2024,9 @@ export default (function() {
         new RegExp("application/x-javascript"),
         new RegExp("application/javascript"),
         new RegExp("text/css"),
-        new RegExp("image/.*")
+        new RegExp("image/.*"),
+        new RegExp("font/.*"),
+        new RegExp("application/font.*"),
     ];
     function assetFilter(flow) {
         if (flow.response) {
