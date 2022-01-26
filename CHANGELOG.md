@@ -32,6 +32,7 @@
 * Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (#4207, @mhils)
 * Speculative fix for some rare HTTP/2 connection stalls (#5158, @EndUser509)
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
+* Add support for rotating saved streams every hour or day (@EndUser509)
 * Console Improvements on Windows (@mhils)
 * Fix processing of `--set` options (#5067, @marwinxxii) 
 * Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
