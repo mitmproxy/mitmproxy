@@ -25,6 +25,7 @@
 * Add `n` new flow keybind to mitmweb (#5061, @ianklatzco)
 * Fix compatibility with BoringSSL (@pmoulton)
 * Add support for rotating saved streams every hour or day (@EndUser509)
+* Add example addon for saving streamed data to individual files (@EndUser509)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
