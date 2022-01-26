@@ -1,5 +1,8 @@
+from datetime import datetime
+from pathlib import Path
 import os.path
 import typing
+import time
 
 from mitmproxy import command
 from mitmproxy import exceptions
@@ -14,31 +17,82 @@ import mitmproxy.types
 class Save:
     def __init__(self):
         self.stream = None
+        self.path = None
+        self.mode = None
         self.filt = None
         self.active_flows: typing.Set[flow.Flow] = set()
+        self.lastpath = None
+        self.lasttime = -1
+        self.period = 0
 
     def load(self, loader):
         loader.add_option(
             "save_stream_file", typing.Optional[str], None,
-            "Stream flows to file as they arrive. Prefix path with + to append."
+            "Stream flows to file as they arrive. Prefix path with + to append. The full path can use python strftime() formating, "
+            "missing directories are created as needed."
+        )
+        loader.add_option(
+            "save_stream_period", typing.Optional[str], None,
+            "Save to a new file every 'hour' or 'day'. Requires 'save_stream_file' to use proper formating for a unique file for every "
+            "hour or day. Flows are placed in files according to the end time."
+
         )
         loader.add_option(
             "save_stream_filter", typing.Optional[str], None,
             "Filter which flows are written to file."
         )
 
-    def open_file(self, path):
+    def prep_path(self, path):
         if path.startswith("+"):
             path = path[1:]
             mode = "ab"
         else:
             mode = "wb"
         path = os.path.expanduser(path)
-        return open(path, mode)
+        return path, mode
+
+    def new_path(self):
+        if self.stream and self.period == 0:
+            return False
+        now = time.time()
+        if self.period != 0:
+            now = int(now - (now % self.period))
+            if now == self.lasttime:
+                return False
+
+        self.lasttime = now
+        try:
+            self.lastpath = datetime.fromtimestamp(now).strftime(self.path)
+        except Exception as v:
+            ctx.log.error(f"Format string in {self.lastpath} caused error: {v}")
+            self.lastpath = self.path
+
+        parent = Path(self.lastpath).parent
+        try:
+            if not parent.exists():
+                parent.mkdir(parents=True, exist_ok=True)
+        except OSError as v:
+            ctx.log.error(f"Failed to create directory {parent}: {v}")
+        return True
+
+    def new_stream(self):
+        if self.new_path():
+            if self.stream:
+                self.stream.fo.close()
+                self.stream = None
+            try:
+                f = open(self.lastpath, self.mode)
+                self.stream = io.FilteredFlowWriter(f, self.filt)
+            except OSError as v:
+                ctx.log.error(f"Failed to open {self.lastpath} for writing, not saving flows anymore: {v}")
+                self.active_flows = set()
+        return self.stream
 
     def start_stream_to_path(self, path, flt):
         try:
-            f = self.open_file(path)
+            self.path, self.mode = self.prep_path(path)
+            self.new_path()
+            f = open(self.lastpath, self.mode)
         except OSError as v:
             raise exceptions.OptionsError(str(v))
         self.stream = io.FilteredFlowWriter(f, flt)
@@ -54,6 +108,16 @@ class Save:
                     raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filt = None
+        if "save_stream_period" in updated:
+            if ctx.options.save_stream_period:
+                if ctx.options.save_stream_period == 'hour':
+                    self.period = 3600
+                elif ctx.options.save_stream_period == 'day':
+                    self.period = 24 * 3600
+                else:
+                    raise exceptions.OptionsError("save_stream_file_period must be 'hour' or 'day'.")
+            else:
+                self.period = 0
         if "save_stream_file" in updated or "save_stream_filter" in updated:
             if self.stream:
                 self.done()
@@ -67,7 +131,8 @@ class Save:
             appended to the file, otherwise it is over-written.
         """
         try:
-            f = self.open_file(path)
+            path, mode = self.prep_path(path)
+            f = open(path, mode)
         except OSError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
@@ -81,7 +146,7 @@ class Save:
             self.active_flows.add(flow)
 
     def tcp_end(self, flow):
-        if self.stream:
+        if self.stream and self.new_stream():
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
@@ -89,7 +154,7 @@ class Save:
         self.tcp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
-        if self.stream:
+        if self.stream and self.new_stream():
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
@@ -100,7 +165,7 @@ class Save:
     def response(self, flow: http.HTTPFlow):
         # websocket flows will receive a websocket_end,
         # we don't want to persist them here already
-        if self.stream and flow.websocket is None:
+        if self.stream and flow.websocket is None and self.new_stream():
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
@@ -108,7 +173,7 @@ class Save:
         self.response(flow)
 
     def done(self):
-        if self.stream:
+        if self.stream and self.new_stream():
             for f in self.active_flows:
                 self.stream.add(f)
             self.active_flows = set()
