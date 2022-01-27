@@ -1,9 +1,9 @@
 """
 Save streamed requests and responses
 
-The option 'save_streamed_data' is set to a format string. If set then
+If the option 'save_streamed_data' is set to a format string then
 streamed requests and responses are written to individual files with a name
-derived from the string. Apart from python strftime() formating (ising the
+derived from the string. Apart from python strftime() formating (using the
 request start time) the following codes can also be used:
     - %+T: The time stamp of the request with microseconds
     - %+D: 'req' or 'rsp' indicating the direction of the data
@@ -13,6 +13,9 @@ A good starting point for a template could be '~/streamed_files/%+D:%+T:%+I',
 a more complex example is '~/streamed_files/%+C/%Y-%m-%d%/%+D:%+T:%+I'.
 The client connection id and the request time stamp should be unique for
 associating a file with a flow in the stream saved with '--save-stream-file'.
+
+This addon is not compatible with addons that use the same mechanism to
+capture streamed data, http-stream-modify.py for instance.
 """
 from mitmproxy import ctx
 from datetime import datetime
