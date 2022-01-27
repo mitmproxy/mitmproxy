@@ -28,21 +28,21 @@ class GrpcProtocConsoleBodyModifer:
         response = ctx.master.view.focus.flow.response
         path = request.path
 
-        if flow_part == "request_body":
+        if flow_part == "request-body":
             http_message = request
-        elif flow_part == "response_body":
+        elif flow_part == "response-body":
             http_message = response
         else:
             return
 
         content = http_message.get_content(strict=False) or b""
-        deserialized_content = self.protobuf_modifier.deserialize(http_message, path, content)
-        modifiedContent = ctx.master.spawn_editor(deserialized_content)
+        deserialized_content = self.serializer.deserialize(http_message, path, content)
+        modified_content = ctx.master.spawn_editor(deserialized_content)
 
         if ctx.master.options.console_strip_trailing_newlines:
-            modifiedContent = strutils.clean_hanging_newline(modifiedContent)
+            modified_content = strutils.clean_hanging_newline(modified_content)
 
-        http_message.content = self.serializer.serialize(http_message, path, modifiedContent)
+        http_message.content = self.serializer.serialize(http_message, path, modified_content)
 
 
 class GrpcProtocConsoleDescriptorProvider:
