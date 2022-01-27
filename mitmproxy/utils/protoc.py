@@ -8,6 +8,12 @@ import mitmproxy
 
 
 class ProtocSerializer:
+    """
+    Wrapper around google protobuf package that provides serialization and deserialization of protobuf content.
+    The implementation uses a proto descriptor to resolve messages. Method resolution works based on HTTP path. 
+
+    NOTE: Content compression is not supported. 
+    """
 
     def __init__(self) -> None:
         self.descriptor_pool = protobuf_descriptor_pool.DescriptorPool()
@@ -19,8 +25,13 @@ class ProtocSerializer:
                 self.descriptor_pool.Add(proto)
 
     def deserialize(self, http_message: mitmproxy.http.Message, path: str, serialized_protobuf: bytes) -> str:
+        """
+        Takes a protobuf byte array and returns a deserialized JSON string. 
+        This method requires a descriptor file.
+        """
+
         grpc_method = self.__find_method_by_path(path)
-        # Strip the length and compression prefix; 5 bytes in total.
+        # Strip the length and compression header; 5 bytes in total.
         # Payload compression is not supported at the moment.
         data_without_prefix = serialized_protobuf[5:]
 
@@ -35,6 +46,11 @@ class ProtocSerializer:
         return protobuf_json.MessageToJson(message=message, descriptor_pool=self.descriptor_pool)
 
     def serialize(self, http_message: mitmproxy.http.Message, path: str, json: str) -> bytes:
+        """
+        Takes a JSON string and serializes it into a protobuf byte array.
+        This method requires a descriptor file.
+        """
+        
         grpc_method = self.__find_method_by_path(path)
 
         if isinstance(http_message, mitmproxy.http.Request):
@@ -55,11 +71,13 @@ class ProtocSerializer:
             raise Exception(f"Unexpected HTTP message type {http_message}")
 
         serializedMessage = populated_message.SerializeToString()
-        # Prepend the length and compression prefix; 5 bytes in total in big endian byte order.
+        # Prepend the length and compression header; 5 bytes in total in big endian order.
         # Payload compression is not supported at the moment, so compression bit is always 0.
         return len(serializedMessage).to_bytes(5, "big") + serializedMessage
 
     def __find_method_by_path(self, path: str) -> protobuf_descriptor.MethodDescriptor:
-        # Drop the first '/' from the path and convert the rest to a fully qualified name space.
+        # Drop the first '/' from the path and convert the rest to a fully qualified namespace that we can look up.
         method_path = path.replace("/", ".")[1:]
         return self.descriptor_pool.FindMethodByName(method_path)
+
+serializer = ProtocSerializer()
