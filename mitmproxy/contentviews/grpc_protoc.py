@@ -4,7 +4,14 @@ from mitmproxy.contentviews import base
 from mitmproxy.utils.protoc import ProtocSerializer
 
 
-class ViewProtocGrpc(base.View):
+class ViewGrpcProtoc(base.View):
+    """
+    Content view that displays deserialized protobuf content in form of a JSON.
+    This content view will take the highest render priority if following conditions are met:
+    1. Body contains data.
+    2. The content type is 'application/grpc'.
+    2. The descriptor file is set passed as an option. See `GrpcProtocConsoleDescriptorProvider` for more info.
+    """
 
     name = "gRPC/Protocol Buffer using protoc"
 
@@ -13,7 +20,6 @@ class ViewProtocGrpc(base.View):
     ]
 
     def __init__(self, serializer: ProtocSerializer) -> None:
-        super().__init__()
         self.serializer = serializer
 
     def __call__(
@@ -24,9 +30,7 @@ class ViewProtocGrpc(base.View):
         flow: Optional[flow.Flow] = None,
         http_message: Optional[http.Message] = None,
         **unknown_metadata
-    ) -> contentviews.TViewResult:
-
-        # Fix this
+    ):
         deserialized = self.serializer.deserialize(http_message, flow.request.path, data)
         return self.name, base.format_text(deserialized)
 
@@ -39,8 +43,7 @@ class ViewProtocGrpc(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata
     ) -> float:
-        # Set to high priority if a descriptor file is set and the content type is protobuf
-        if ctx.options.descriptor_file is not None and bool(data) and content_type in self.__content_types_grpc:
+        if ctx.options.proto_descriptor_file is not None and bool(data) and content_type in self.__content_types_grpc:
             return 1
         else:
             return 0
