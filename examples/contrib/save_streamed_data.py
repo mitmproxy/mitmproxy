@@ -7,12 +7,13 @@ derived from the string. Apart from python strftime() formating (using the
 request start time) the following codes can also be used:
     - %+T: The time stamp of the request with microseconds
     - %+D: 'req' or 'rsp' indicating the direction of the data
-    - %+I: The client connection id
+    - %+I: The client connection ID
     - %+C: The client IP address
 A good starting point for a template could be '~/streamed_files/%+D:%+T:%+I',
 a more complex example is '~/streamed_files/%+C/%Y-%m-%d%/%+D:%+T:%+I'.
-The client connection id and the request time stamp should be unique for
-associating a file with a flow in the stream saved with '--save-stream-file'.
+The client connection ID combined with the request time stamp should be unique
+for associating a file with its corresponding flow in the stream saved with
+'--save-stream-file'.
 
 This addon is not compatible with addons that use the same mechanism to
 capture streamed data, http-stream-modify.py for instance.
@@ -56,10 +57,7 @@ class StreamSaver:
             return data
 
         if not self.fh:
-            try:
-                self.path = datetime.fromtimestamp(self.flow.request.timestamp_start).strftime(ctx.options.save_streamed_data)
-            except Exception:
-                self.path = ctx.options.save_streamed_data
+            self.path = datetime.fromtimestamp(self.flow.request.timestamp_start).strftime(ctx.options.save_streamed_data)
             self.path = self.path.replace('%+T', str(self.flow.request.timestamp_start))
             self.path = self.path.replace('%+I', str(self.flow.client_conn.id))
             self.path = self.path.replace('%+D', self.direction)
@@ -94,7 +92,7 @@ def load(loader):
         "to a file with a name derived from the string. In addition to formating supported by python "
         "strftime() (using the request start time) the code '%+T' is replaced with the time stamp of the request, "
         "'%+D' by 'req' or 'rsp' depending on the direction of the data, '%+C' by the client IP addresses and "
-        "'%+I' by the client connection id."
+        "'%+I' by the client connection ID."
     )
 
 
