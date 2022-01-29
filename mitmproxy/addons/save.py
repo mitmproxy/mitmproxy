@@ -61,22 +61,18 @@ class Save:
                 return False
 
         self.lasttime = now
-        try:
-            self.lastpath = datetime.fromtimestamp(now).strftime(self.path)
-        except Exception as v:
-            ctx.log.error(f"Format string in {self.lastpath} caused error: {v}")
-            self.lastpath = self.path
+        self.lastpath = datetime.fromtimestamp(now).strftime(self.path)
 
-        parent = Path(self.lastpath).parent
         try:
-            if not parent.exists():
+            parent = Path(self.lastpath).parent
+            if not parent.exists():  # pragma: no cover
                 parent.mkdir(parents=True, exist_ok=True)
-        except OSError as v:
+        except OSError as v:  # pragma: no cover
             ctx.log.error(f"Failed to create directory {parent}: {v}")
         return True
 
     def new_stream(self):
-        if self.new_path():
+        if self.new_path():  # pragma: no cover
             if self.stream:
                 self.stream.fo.close()
                 self.stream = None
