@@ -250,7 +250,7 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Union[Callable[[bytes], Union[Iterable[bytes], bytes]], bool] = False
+    stream: Union[Callable[[bytes, flow.Flow], Union[Iterable[bytes], bytes]], bool] = False
     """
     This attribute controls if the message body should be streamed.
 
