@@ -231,7 +231,7 @@ class HttpStream(layer.Layer):
     def state_stream_request_body(self, event: Union[RequestData, RequestEndOfMessage]) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
-                chunks = self.flow.request.stream(event.data)
+                chunks = self.flow.request.stream(event.data, self.flow)
                 if isinstance(chunks, bytes):
                     chunks = [chunks]
             else:
@@ -243,7 +243,7 @@ class HttpStream(layer.Layer):
             self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             if callable(self.flow.request.stream):
-                chunks = self.flow.request.stream(b"")
+                chunks = self.flow.request.stream(b"", self.flow)
                 if chunks == b"":
                     chunks = []
                 elif isinstance(chunks, bytes):
@@ -325,7 +325,7 @@ class HttpStream(layer.Layer):
         assert self.flow.response
         if isinstance(event, ResponseData):
             if callable(self.flow.response.stream):
-                chunks = self.flow.response.stream(event.data)
+                chunks = self.flow.response.stream(event.data, self.flow)
                 if isinstance(chunks, bytes):
                     chunks = [chunks]
             else:
@@ -337,7 +337,7 @@ class HttpStream(layer.Layer):
             # will be sent in send_response() after the response hook.
         elif isinstance(event, ResponseEndOfMessage):
             if callable(self.flow.response.stream):
-                chunks = self.flow.response.stream(b"")
+                chunks = self.flow.response.stream(b"", self.flow)
                 if chunks == b"":
                     chunks = []
                 elif isinstance(chunks, bytes):
