@@ -1,4 +1,5 @@
 import contextlib
+import inspect
 import pprint
 import sys
 import traceback
@@ -240,7 +241,7 @@ class AddonManager:
         if isinstance(message.reply, controller.DummyReply):
             message.reply.reset()
 
-        self.trigger(event)
+        await self.async_trigger(event)
 
         if message.reply.state == "start":
             message.reply.take()
@@ -250,18 +251,18 @@ class AddonManager:
                 message.reply.mark_reset()
 
         if isinstance(message, flow.Flow):
-            self.trigger(hooks.UpdateHook([message]))
+            await self.async_trigger(hooks.UpdateHook([message]))
 
-    def invoke_addon(self, addon, event: hooks.Hook):
+    def _iter_hooks(self, addon, event: hooks.Hook):
         """
-            Invoke an event on an addon and all its children.
+            Enumerate all hook callables belonging to the given addon
         """
         assert isinstance(event, hooks.Hook)
         for a in traverse([addon]):
             func = getattr(a, event.name, None)
             if func:
                 if callable(func):
-                    func(*event.args())
+                    yield a, func
                 elif isinstance(func, types.ModuleType):
                     # we gracefully exclude module imports with the same name as hooks.
                     # For example, a user may have "from mitmproxy import log" in an addon,
@@ -272,6 +273,38 @@ class AddonManager:
                     raise exceptions.AddonManagerError(
                         f"Addon handler {event.name} ({a}) not callable"
                     )
+
+    async def async_invoke_addon(self, addon, event: hooks.Hook):
+        """
+            Asynchronously invoke an event on an addon and all its children.
+        """
+        for addon, func in self._iter_hooks(addon, event):
+            res = func(*event.args())
+            # Support both async and sync hook functions
+            if inspect.isawaitable(res):
+                await res
+
+    def invoke_addon(self, addon, event: hooks.Hook):
+        """
+            Invoke an event on an addon and all its children.
+        """
+        for addon, func in self._iter_hooks(addon, event):
+            if inspect.iscoroutinefunction(func):
+                raise exceptions.AddonManagerError(
+                    f"Async handler {event.name} ({addon}) cannot be called from sync context"
+                )
+            func(*event.args())
+
+    async def async_trigger(self, event: hooks.Hook):
+        """
+            Asynchronously trigger an event across all addons.
+        """
+        for i in self.chain:
+            try:
+                with safecall():
+                    await self.async_invoke_addon(i, event)
+            except exceptions.AddonHalt:
+                return
 
     def trigger(self, event: hooks.Hook):
         """
