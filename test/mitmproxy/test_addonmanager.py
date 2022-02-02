@@ -99,11 +99,11 @@ async def test_async_halt():
     a.add(end)
 
     assert not end.running_called
-    await a.async_trigger(hooks.RunningHook())
+    await a.trigger_event(hooks.RunningHook())
     assert not end.running_called
 
     a.remove(halt)
-    await a.async_trigger(hooks.RunningHook())
+    await a.trigger_event(hooks.RunningHook())
     assert end.running_called
 
 
@@ -143,7 +143,7 @@ async def test_mixed_async_sync():
         # test that we can call both sync and async hooks asynchronously
         assert not a1.running_called
         assert not a2.running_called
-        await a.async_trigger(hooks.RunningHook())
+        await a.trigger_event(hooks.RunningHook())
         assert a1.running_called
         assert a2.running_called
 

@@ -46,6 +46,7 @@ def safecall():
         raise
     except Exception:
         etype, value, tb = sys.exc_info()
+        tb = cut_traceback(tb, "invoke_addon_sync")
         tb = cut_traceback(tb, "invoke_addon")
         ctx.log.error(
             "Addon error: %s" % "".join(
@@ -142,7 +143,7 @@ class AddonManager:
             Remove all addons.
         """
         for a in self.chain:
-            self.invoke_addon(a, hooks.DoneHook())
+            self.invoke_addon_sync(a, hooks.DoneHook())
         self.lookup = {}
         self.chain = []
 
@@ -182,7 +183,7 @@ class AddonManager:
                     "An addon called '%s' already exists." % name
                 )
         l = Loader(self.master)
-        self.invoke_addon(addon, LoadHook(l))
+        self.invoke_addon_sync(addon, LoadHook(l))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a
@@ -213,7 +214,7 @@ class AddonManager:
                 raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
-        self.invoke_addon(addon, hooks.DoneHook())
+        self.invoke_addon_sync(addon, hooks.DoneHook())
 
     def __len__(self):
         return len(self.chain)
@@ -241,7 +242,7 @@ class AddonManager:
         if isinstance(message.reply, controller.DummyReply):
             message.reply.reset()
 
-        await self.async_trigger(event)
+        await self.trigger_event(event)
 
         if message.reply.state == "start":
             message.reply.take()
@@ -251,7 +252,7 @@ class AddonManager:
                 message.reply.mark_reset()
 
         if isinstance(message, flow.Flow):
-            await self.async_trigger(hooks.UpdateHook([message]))
+            await self.trigger_event(hooks.UpdateHook([message]))
 
     def _iter_hooks(self, addon, event: hooks.Hook):
         """
@@ -274,7 +275,7 @@ class AddonManager:
                         f"Addon handler {event.name} ({a}) not callable"
                     )
 
-    async def async_invoke_addon(self, addon, event: hooks.Hook):
+    async def invoke_addon(self, addon, event: hooks.Hook):
         """
             Asynchronously invoke an event on an addon and all its children.
         """
@@ -284,7 +285,7 @@ class AddonManager:
             if inspect.isawaitable(res):
                 await res
 
-    def invoke_addon(self, addon, event: hooks.Hook):
+    def invoke_addon_sync(self, addon, event: hooks.Hook):
         """
             Invoke an event on an addon and all its children.
         """
@@ -295,14 +296,14 @@ class AddonManager:
                 )
             func(*event.args())
 
-    async def async_trigger(self, event: hooks.Hook):
+    async def trigger_event(self, event: hooks.Hook):
         """
             Asynchronously trigger an event across all addons.
         """
         for i in self.chain:
             try:
                 with safecall():
-                    await self.async_invoke_addon(i, event)
+                    await self.invoke_addon(i, event)
             except exceptions.AddonHalt:
                 return
 
@@ -313,6 +314,6 @@ class AddonManager:
         for i in self.chain:
             try:
                 with safecall():
-                    self.invoke_addon(i, event)
+                    self.invoke_addon_sync(i, event)
             except exceptions.AddonHalt:
                 return

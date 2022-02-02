@@ -87,7 +87,7 @@ class context:
         """
         f.reply._state = "start"
         for evt in eventsequence.iterate(f):
-            self.master.addons.invoke_addon(
+            self.master.addons.invoke_addon_sync(
                 addon,
                 evt
             )
@@ -106,7 +106,7 @@ class context:
             if kwargs:
                 self.options.update(**kwargs)
             else:
-                self.master.addons.invoke_addon(addon, hooks.ConfigureHook(set()))
+                self.master.addons.invoke_addon_sync(addon, hooks.ConfigureHook(set()))
 
     def script(self, path):
         """
@@ -119,7 +119,7 @@ class context:
         """
             Recursively invoke an event on an addon and all its children.
         """
-        return self.master.addons.invoke_addon(addon, event)
+        return self.master.addons.invoke_addon_sync(addon, event)
 
     def command(self, func, *args):
         """
