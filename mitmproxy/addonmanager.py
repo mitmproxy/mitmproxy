@@ -7,7 +7,6 @@ import types
 import typing
 from dataclasses import dataclass
 
-from mitmproxy import controller
 from mitmproxy import hooks
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -231,25 +230,8 @@ class AddonManager:
             Handle a lifecycle event.
         """
         message = event.args()[0]
-        if not hasattr(message, "reply"):  # pragma: no cover
-            raise exceptions.ControlException(
-                "Message %s has no reply attribute" % message
-            )
-
-        # We can use DummyReply objects multiple times. We only clear them up on
-        # the next handler so that we can access value and state in the
-        # meantime.
-        if isinstance(message.reply, controller.DummyReply):
-            message.reply.reset()
 
         await self.trigger_event(event)
-
-        if message.reply.state == "start":
-            message.reply.take()
-            message.reply.commit()
-
-            if isinstance(message.reply, controller.DummyReply):
-                message.reply.mark_reset()
 
         if isinstance(message, flow.Flow):
             await self.trigger_event(hooks.UpdateHook([message]))

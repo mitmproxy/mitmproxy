@@ -168,7 +168,7 @@ class TestMapLocal:
             ml.request(f)
             await tctx.master.await_log("could not read file")
 
-    def test_has_reply(self, tmpdir):
+    def test_is_killed(self, tmpdir):
         ml = MapLocal()
         with taddons.context(ml) as tctx:
             tmpfile = tmpdir.join("foo.jpg")
@@ -181,6 +181,6 @@ class TestMapLocal:
             )
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
-            f.reply.take()
+            f.kill()
             ml.request(f)
             assert not f.response

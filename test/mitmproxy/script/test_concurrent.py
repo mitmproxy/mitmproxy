@@ -3,15 +3,12 @@ import time
 
 import pytest
 
-from mitmproxy import controller
-
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
 
 
 class Thing:
     def __init__(self):
-        self.reply = controller.DummyReply()
         self.live = True
 
 

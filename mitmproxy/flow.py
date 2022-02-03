@@ -3,7 +3,7 @@ import time
 import typing  # noqa
 import uuid
 
-from mitmproxy import controller, connection
+from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
@@ -121,7 +121,6 @@ class Flow(stateobject.StateObject):
         self.intercepted: bool = False
         self._resume_event: typing.Optional[asyncio.Event] = None
         self._backup: typing.Optional[Flow] = None
-        self.reply: typing.Optional[controller.Reply] = None
         self.marked: str = ""
         self.is_replay: typing.Optional[str] = None
         self.metadata: typing.Dict[str, typing.Any] = dict()
@@ -164,8 +163,6 @@ class Flow(stateobject.StateObject):
         """Make a copy of this flow."""
         f = super().copy()
         f.live = False
-        if self.reply is not None:
-            f.reply = controller.DummyReply()
         return f
 
     def modified(self):

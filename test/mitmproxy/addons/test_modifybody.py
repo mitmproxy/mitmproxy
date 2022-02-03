@@ -3,6 +3,7 @@ import pytest
 from mitmproxy.addons import modifybody
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.test.tutils import tresp
 
 
 class TestModifyBody:
@@ -41,14 +42,14 @@ class TestModifyBody:
             f = tflow.tflow()
             f.request.content = b"foo"
             if take:
-                f.reply.take()
+                f.response = tresp()
             mb.request(f)
             assert (f.request.content == b"bar") ^ take
 
             f = tflow.tflow(resp=True)
             f.response.content = b"foo"
             if take:
-                f.reply.take()
+                f.kill()
             mb.response(f)
             assert (f.response.content == b"bar") ^ take
 

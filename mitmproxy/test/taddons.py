@@ -80,16 +80,15 @@ class context:
 
     async def cycle(self, addon, f):
         """
-            Cycles the flow through the events for the flow. Stops if a reply
-            is taken (as in flow interception).
+            Cycles the flow through the events for the flow. Stops if the flow
+            is intercepted.
         """
-        f.reply._state = "start"
         for evt in eventsequence.iterate(f):
             await self.master.addons.invoke_addon(
                 addon,
                 evt
             )
-            if f.reply.state == "taken":
+            if f.intercepted:
                 return
 
     def configure(self, addon, **kwargs):
