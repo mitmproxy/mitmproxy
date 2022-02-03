@@ -6,7 +6,7 @@ from mitmproxy.utils.protoc import ProtocSerializer
 
 class GrpcProtocConsoleBodyModifer:
     """
-    Command options that allow for modification of protobuf content in HTTP body. 
+    Command options that allow for modification of protobuf content in HTTP body.
     """
 
     def __init__(self, serializer: ProtocSerializer) -> None:
@@ -47,7 +47,7 @@ class GrpcProtocConsoleBodyModifer:
 
 class GrpcProtocConsoleDescriptorProvider:
     """
-    Adds a parameter that allows to specify a proto descriptor file. 
+    Adds a parameter that allows to specify a proto descriptor file.
     """
 
     def __init__(self, serializer: ProtocSerializer) -> None:
@@ -57,7 +57,8 @@ class GrpcProtocConsoleDescriptorProvider:
         loader.add_option(
             "proto_descriptor_file", Optional[str], None,
             """
-            Path to the proto descriptor file. This argument is required in order to enable "gRPC/Protocol Buffer using protoc" content view.
+            Path to the proto descriptor file.
+            This argument is required in order to enable "gRPC/Protocol Buffer using protoc" content view.
             """
         )
 

@@ -10,9 +10,9 @@ import mitmproxy
 class ProtocSerializer:
     """
     Wrapper around google protobuf package that provides serialization and deserialization of protobuf content.
-    The implementation uses a proto descriptor to resolve messages. Method resolution works based on HTTP path. 
+    The implementation uses a proto descriptor to resolve messages. Method resolution works based on HTTP path.
 
-    NOTE: Content compression is not supported. 
+    NOTE: Content compression is not supported.
     """
 
     def __init__(self) -> None:
@@ -26,7 +26,7 @@ class ProtocSerializer:
 
     def deserialize(self, http_message: mitmproxy.http.Message, path: str, serialized_protobuf: bytes) -> str:
         """
-        Takes a protobuf byte array and returns a deserialized JSON string. 
+        Takes a protobuf byte array and returns a deserialized JSON string.
         This method requires a descriptor file.
         """
 
@@ -50,7 +50,7 @@ class ProtocSerializer:
         Takes a JSON string and serializes it into a protobuf byte array.
         This method requires a descriptor file.
         """
-        
+
         grpc_method = self.__find_method_by_path(path)
 
         if isinstance(http_message, mitmproxy.http.Request):
@@ -79,5 +79,6 @@ class ProtocSerializer:
         # Drop the first '/' from the path and convert the rest to a fully qualified namespace that we can look up.
         method_path = path.replace("/", ".")[1:]
         return self.descriptor_pool.FindMethodByName(method_path)
+
 
 serializer = ProtocSerializer()
