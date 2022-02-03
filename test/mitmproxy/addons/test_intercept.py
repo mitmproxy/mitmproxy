@@ -7,7 +7,8 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
-def test_simple():
+@pytest.mark.asyncio
+async def test_simple():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:
         assert not r.filt
@@ -23,11 +24,11 @@ def test_simple():
         tctx.configure(r, intercept="~s")
 
         f = tflow.tflow(resp=True)
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert f.intercepted
 
         f = tflow.tflow(resp=False)
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert not f.intercepted
 
         f = tflow.tflow(resp=True)
@@ -36,39 +37,41 @@ def test_simple():
 
         tctx.configure(r, intercept_active=False)
         f = tflow.tflow(resp=True)
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert not f.intercepted
 
         tctx.configure(r, intercept_active=True)
         f = tflow.tflow(resp=True)
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert f.intercepted
 
 
-def test_tcp():
+@pytest.mark.asyncio
+async def test_tcp():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:
         tctx.configure(r, intercept="~tcp")
         f = tflow.ttcpflow()
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert f.intercepted
 
         tctx.configure(r, intercept_active=False)
         f = tflow.ttcpflow()
-        tctx.cycle(r, f)
+        await tctx.cycle(r, f)
         assert not f.intercepted
 
 
-def test_already_taken():
+@pytest.mark.asyncio
+async def test_already_taken():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:
         tctx.configure(r, intercept="~q")
 
         f = tflow.tflow()
-        tctx.invoke(r, layers.http.HttpRequestHook(f))
+        await tctx.invoke(r, layers.http.HttpRequestHook(f))
         assert f.intercepted
 
         f = tflow.tflow()
         f.reply.take()
-        tctx.invoke(r, layers.http.HttpRequestHook(f))
+        await tctx.invoke(r, layers.http.HttpRequestHook(f))
         assert not f.intercepted

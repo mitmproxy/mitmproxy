@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import asyncio
 import click
 
 from mitmproxy.addons import dumper
@@ -6,12 +7,24 @@ from mitmproxy.test import tflow
 from mitmproxy.test import taddons
 
 
+def run_async(coro):
+    """
+        Run the given async function in a new event loop.
+        This allows async functions to be called synchronously.
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
 def show(flow_detail, flows):
     d = dumper.Dumper()
     with taddons.context() as ctx:
         ctx.configure(d, flow_detail=flow_detail)
         for f in flows:
-            ctx.cycle(d, f)
+            run_async(ctx.cycle(d, f))
 
 
 @click.group()

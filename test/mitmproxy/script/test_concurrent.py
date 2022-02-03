@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import pytest
@@ -15,7 +16,8 @@ class Thing:
 
 
 class TestConcurrent:
-    def test_concurrent(self, tdata):
+    @pytest.mark.asyncio
+    async def test_concurrent(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(
                 tdata.path(
@@ -23,8 +25,10 @@ class TestConcurrent:
                 )
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
-            tctx.cycle(sc, f1)
-            tctx.cycle(sc, f2)
+            await asyncio.gather(
+                tctx.cycle(sc, f1),
+                tctx.cycle(sc, f2),
+            )
             start = time.time()
             while time.time() - start < 5:
                 if f1.reply.state == f2.reply.state == "committed":
@@ -41,7 +45,8 @@ class TestConcurrent:
             )
             await tctx.master.await_log("decorator not supported")
 
-    def test_concurrent_class(self, tdata):
+    @pytest.mark.asyncio
+    async def test_concurrent_class(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(
                 tdata.path(
@@ -49,8 +54,10 @@ class TestConcurrent:
                 )
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
-            tctx.cycle(sc, f1)
-            tctx.cycle(sc, f2)
+            await asyncio.gather(
+                tctx.cycle(sc, f1),
+                tctx.cycle(sc, f2),
+            )
             start = time.time()
             while time.time() - start < 5:
                 if f1.reply.state == f2.reply.state == "committed":

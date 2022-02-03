@@ -1,4 +1,3 @@
-import contextlib
 import asyncio
 import sys
 
@@ -79,15 +78,14 @@ class context:
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
-    @contextlib.contextmanager
-    def cycle(self, addon, f):
+    async def cycle(self, addon, f):
         """
             Cycles the flow through the events for the flow. Stops if a reply
             is taken (as in flow interception).
         """
         f.reply._state = "start"
         for evt in eventsequence.iterate(f):
-            self.master.addons.invoke_addon_sync(
+            await self.master.addons.invoke_addon(
                 addon,
                 evt
             )
@@ -115,11 +113,11 @@ class context:
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
-    def invoke(self, addon, event: hooks.Hook):
+    async def invoke(self, addon, event: hooks.Hook):
         """
             Recursively invoke an event on an addon and all its children.
         """
-        return self.master.addons.invoke_addon_sync(addon, event)
+        return await self.master.addons.invoke_addon(addon, event)
 
     def command(self, func, *args):
         """

@@ -340,7 +340,8 @@ def test_server_playback_full():
         assert not tf.response
 
 
-def test_server_playback_kill():
+@pytest.mark.asyncio
+async def test_server_playback_kill():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
         tctx.configure(
@@ -355,7 +356,7 @@ def test_server_playback_kill():
 
         f = tflow.tflow()
         f.request.host = "nonexistent"
-        tctx.cycle(s, f)
+        await tctx.cycle(s, f)
         assert f.error
 
 
