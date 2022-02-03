@@ -1,5 +1,5 @@
 from typing import Optional
-from mitmproxy import contentviews, ctx, flow, http
+from mitmproxy import ctx, flow, http
 from mitmproxy.contentviews import base
 from mitmproxy.utils.protoc import ProtocSerializer
 
@@ -10,7 +10,7 @@ class ViewGrpcProtoc(base.View):
     This content view will take the highest render priority if following conditions are met:
     1. Body contains data.
     2. The content type is 'application/grpc'.
-    2. The descriptor file is set passed as an option. See `GrpcProtocConsoleDescriptorProvider` for more info.
+    2. Descriptor file is set. See `GrpcProtocConsoleDescriptorProvider` for more info.
     """
 
     name = "gRPC/Protocol Buffer using protoc"
@@ -43,7 +43,12 @@ class ViewGrpcProtoc(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata
     ) -> float:
-        if ctx.options.proto_descriptor_file is not None and bool(data) and content_type in self.__content_types_grpc:
+        if (
+            ctx.options.__contains__("proto_descriptor_file") and
+            ctx.options.proto_descriptor_file is not None and
+            bool(data) and
+            content_type in self.__content_types_grpc
+        ):
             return 1
         else:
             return 0
