@@ -25,15 +25,13 @@ class TestConcurrent:
                 )
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
+            start = time.time()
             await asyncio.gather(
                 tctx.cycle(sc, f1),
                 tctx.cycle(sc, f2),
             )
-            start = time.time()
-            while time.time() - start < 5:
-                if f1.reply.state == f2.reply.state == "committed":
-                    return
-            raise ValueError("Script never acked")
+            end = time.time()
+            assert 0.3 < end - start < 0.7
 
     @pytest.mark.asyncio
     async def test_concurrent_err(self, tdata):
@@ -54,12 +52,10 @@ class TestConcurrent:
                 )
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
+            start = time.time()
             await asyncio.gather(
                 tctx.cycle(sc, f1),
                 tctx.cycle(sc, f2),
             )
-            start = time.time()
-            while time.time() - start < 5:
-                if f1.reply.state == f2.reply.state == "committed":
-                    return
-            raise ValueError("Script never acked")
+            end = time.time()
+            assert 0.3 < end - start < 0.7
