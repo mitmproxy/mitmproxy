@@ -112,12 +112,6 @@ class context:
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
-    async def invoke(self, addon, event: hooks.Hook):
-        """
-            Recursively invoke an event on an addon and all its children.
-        """
-        return await self.master.addons.invoke_addon(addon, event)
-
     def command(self, func, *args):
         """
             Invoke a command function with a list of string arguments within a command context, mimicking the actual command environment.
