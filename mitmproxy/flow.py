@@ -193,11 +193,7 @@ class Flow(stateobject.StateObject):
     @property
     def killable(self):
         """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
-        return (
-            self.reply and
-            self.reply.state in {"start", "taken"} and
-            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
-        )
+        return not (self.error and self.error.msg == Error.KILLED_MESSAGE)
 
     def kill(self):
         """

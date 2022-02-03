@@ -7,7 +7,6 @@ import pytest
 
 from mitmproxy import flow
 from mitmproxy import flowfilter
-from mitmproxy.exceptions import ControlException
 from mitmproxy.http import Headers, Request, Response, HTTPFlow
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tflow import tflow
@@ -704,10 +703,11 @@ class TestHTTPFlow:
 
     def test_kill(self):
         f = tflow()
-        with pytest.raises(ControlException):
-            f.intercept()
-            f.resume()
-            f.kill()
+        f.intercept()
+        f.resume()
+        assert f.killable
+        f.kill()
+        assert not f.killable
 
         f = tflow()
         f.intercept()
