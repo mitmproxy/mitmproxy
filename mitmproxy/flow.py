@@ -1,3 +1,4 @@
+import asyncio
 import time
 import typing  # noqa
 import uuid
@@ -118,6 +119,7 @@ class Flow(stateobject.StateObject):
         self.live = live
 
         self.intercepted: bool = False
+        self._resume_event: typing.Optional[asyncio.Event] = None
         self._backup: typing.Optional[Flow] = None
         self.reply: typing.Optional[controller.Reply] = None
         self.marked: str = ""
@@ -213,7 +215,18 @@ class Flow(stateobject.StateObject):
         if self.intercepted:
             return
         self.intercepted = True
-        self.reply.take()
+        if self._resume_event is not None:
+            self._resume_event.clear()
+
+    async def wait_for_resume(self):
+        """
+        Wait until this Flow is resumed.
+        """
+        if not self.intercepted:
+            return
+        if self._resume_event is None:
+            self._resume_event = asyncio.Event()
+        await self._resume_event.wait()
 
     def resume(self):
         """
@@ -222,9 +235,8 @@ class Flow(stateobject.StateObject):
         if not self.intercepted:
             return
         self.intercepted = False
-        # If a flow is intercepted and then duplicated, the duplicated one is not taken.
-        if self.reply.state == "taken":
-            self.reply.commit()
+        if self._resume_event is not None:
+            self._resume_event.set()
 
     @property
     def timestamp_start(self) -> float:

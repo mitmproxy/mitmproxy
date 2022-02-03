@@ -98,6 +98,8 @@ class ReplayHandler(server.ConnectionHandler):
         data.reply = AsyncReply(data)
         await ctx.master.addons.handle_lifecycle(hook)
         await data.reply.done.wait()
+        if isinstance(data, flow.Flow):
+            await data.wait_for_resume()
         if isinstance(hook, (layers.http.HttpResponseHook, layers.http.HttpErrorHook)):
             if self.transports:
                 # close server connections

@@ -1,3 +1,4 @@
+import asyncio
 import email
 import time
 import json
@@ -719,16 +720,46 @@ class TestHTTPFlow:
     def test_intercept(self):
         f = tflow()
         f.intercept()
-        assert f.reply.state == "taken"
+        assert f.intercepted
         f.intercept()
-        assert f.reply.state == "taken"
+        assert f.intercepted
 
     def test_resume(self):
         f = tflow()
-        f.intercept()
-        assert f.reply.state == "taken"
         f.resume()
-        assert f.reply.state == "committed"
+        assert not f.intercepted
+        f.intercept()
+        assert f.intercepted
+        f.resume()
+        assert not f.intercepted
+
+    @pytest.mark.asyncio
+    async def test_wait_for_resume(self):
+        f = tflow()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        f.resume()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        await f.wait_for_resume()
 
     def test_resume_duplicated(self):
         f = tflow()
