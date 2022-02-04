@@ -24,7 +24,8 @@
 * Fix random connection stalls (#5040, @EndUser509)
 * Add `n` new flow keybind to mitmweb (#5061, @ianklatzco)
 * Fix compatibility with BoringSSL (@pmoulton)
-* Await the `server_connected` hook before doing something with the connection, e.g. before HTTP `request` hook (@Prinzhorn)
+* Change connection event hooks to be blocking.
+  Processing will only resume once the event hook has finished. (@Prinzhorn)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
