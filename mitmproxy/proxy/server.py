@@ -176,14 +176,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     addr = human.format_address(command.connection.address)
                 self.log(f"server connect {addr}")
-                connected_hook = asyncio_utils.create_task(
-                    self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
-                    name=f"handle_hook(server_connected) {addr}",
-                    client=self.client.peername,
-                )
-                if not connected_hook:
-                    return  # this should not be needed, see asyncio_utils.create_task
-
+                await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
                 self.server_event(events.OpenConnectionCompleted(command, None))
 
                 # during connection opening, this function is the designated handler that can be cancelled.
@@ -201,7 +194,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
                 self.log(f"server disconnect {addr}")
                 command.connection.timestamp_end = time.time()
-                await connected_hook  # wait here for this so that closed always comes after connected.
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
