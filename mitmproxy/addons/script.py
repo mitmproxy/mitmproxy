@@ -55,7 +55,7 @@ def script_error_handler(path, exc, msg="", tb=False):
     log_msg = f"in script {path}:{lineno} {exception}"
     if tb:
         etype, value, tback = sys.exc_info()
-        tback = addonmanager.cut_traceback(tback, "invoke_addon")
+        tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
         log_msg = log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
     ctx.log.error(log_msg)
 
@@ -110,9 +110,9 @@ class Script:
             # We're already running, so we have to explicitly register and
             # configure the addon
             if self.is_running:
-                ctx.master.addons.invoke_addon(self.ns, hooks.RunningHook())
+                ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
             try:
-                ctx.master.addons.invoke_addon(
+                ctx.master.addons.invoke_addon_sync(
                     self.ns,
                     hooks.ConfigureHook(ctx.options.keys())
                 )
@@ -166,14 +166,14 @@ class ScriptLoader:
         mod = load_script(path)
         if mod:
             with addonmanager.safecall():
-                ctx.master.addons.invoke_addon(mod, hooks.RunningHook())
-                ctx.master.addons.invoke_addon(
+                ctx.master.addons.invoke_addon_sync(mod, hooks.RunningHook())
+                ctx.master.addons.invoke_addon_sync(
                     mod,
                     hooks.ConfigureHook(ctx.options.keys()),
                 )
                 for f in flows:
                     for evt in eventsequence.iterate(f):
-                        ctx.master.addons.invoke_addon(mod, evt)
+                        ctx.master.addons.invoke_addon_sync(mod, evt)
 
     def configure(self, updated):
         if "scripts" in updated:
@@ -214,4 +214,4 @@ class ScriptLoader:
                 if self.is_running:
                     # If we're already running, we configure and tell the addon
                     # we're up and running.
-                    ctx.master.addons.invoke_addon(s, hooks.RunningHook())
+                    ctx.master.addons.invoke_addon_sync(s, hooks.RunningHook())

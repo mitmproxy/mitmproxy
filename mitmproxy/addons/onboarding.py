@@ -34,6 +34,6 @@ class Onboarding(asgiapp.WSGIApp):
         self.port = ctx.options.onboarding_port
         app.config["CONFDIR"] = ctx.options.confdir
 
-    def request(self, f):
+    async def request(self, f):
         if ctx.options.onboarding:
-            super().request(f)
+            await super().request(f)

@@ -55,7 +55,7 @@ async def test_playback(mode, concurrency):
         async with tcp_server(handler) as addr:
 
             cp.running()
-            flow = tflow.tflow()
+            flow = tflow.tflow(live=False)
             flow.request.content = b"data"
             if mode == "upstream":
                 tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
@@ -90,7 +90,7 @@ async def test_playback_https_upstream():
         tctx.configure(cp)
         async with tcp_server(handler) as addr:
             cp.running()
-            flow = tflow.tflow()
+            flow = tflow.tflow(live=False)
             flow.request.scheme = b"https"
             flow.request.content = b"data"
             tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
@@ -112,7 +112,7 @@ async def test_playback_crash(monkeypatch):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
         cp.running()
-        cp.start_replay([tflow.tflow()])
+        cp.start_replay([tflow.tflow(live=False)])
         await tctx.master.await_log("Client replay has crashed!", level="error")
         assert cp.count() == 0
         cp.done()
@@ -124,19 +124,20 @@ def test_check():
     f.live = True
     assert "live flow" in cp.check(f)
 
-    f = tflow.tflow(resp=True)
+    f = tflow.tflow(resp=True, live=False)
     f.intercepted = True
     assert "intercepted flow" in cp.check(f)
 
-    f = tflow.tflow(resp=True)
+    f = tflow.tflow(resp=True, live=False)
     f.request = None
     assert "missing request" in cp.check(f)
 
-    f = tflow.tflow(resp=True)
+    f = tflow.tflow(resp=True, live=False)
     f.request.raw_content = None
     assert "missing content" in cp.check(f)
 
     f = tflow.ttcpflow()
+    f.live = False
     assert "Can only replay HTTP" in cp.check(f)
 
 
@@ -144,10 +145,12 @@ def test_check():
 async def test_start_stop(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
-        cp.start_replay([tflow.tflow()])
+        cp.start_replay([tflow.tflow(live=False)])
         assert cp.count() == 1
 
-        cp.start_replay([tflow.twebsocketflow()])
+        ws_flow = tflow.twebsocketflow()
+        ws_flow.live = False
+        cp.start_replay([ws_flow])
         await tctx.master.await_log("Can't replay WebSocket flows.", level="warn")
         assert cp.count() == 1
 

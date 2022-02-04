@@ -3,6 +3,7 @@ import pytest
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifyHeaders
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.test.tutils import tresp
 
 
 def test_parse_modify_spec():
@@ -133,13 +134,13 @@ class TestModifyHeaders:
             tctx.configure(mh, modify_headers=["/content-length/42"])
             f = tflow.tflow()
             if take:
-                f.reply.take()
+                f.response = tresp()
             mh.request(f)
             assert (f.request.headers["content-length"] == "42") ^ take
 
             f = tflow.tflow(resp=True)
             if take:
-                f.reply.take()
+                f.kill()
             mh.response(f)
             assert (f.response.headers["content-length"] == "42") ^ take
 

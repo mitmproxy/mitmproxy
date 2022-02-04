@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 
-from mitmproxy import controller
 from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.tools import dump
@@ -17,7 +16,6 @@ class TestDumpMaster:
     def test_has_error(self):
         m = self.mkmaster()
         ent = log.LogEntry("foo", "error")
-        ent.reply = controller.DummyReply()
         m.addons.trigger(log.AddLogHook(ent))
         assert m.errorcheck.has_errored
 

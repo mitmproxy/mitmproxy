@@ -25,7 +25,7 @@ def test_resume():
         assert not sa.resume([f])
         f.intercept()
         sa.resume([f])
-        assert not f.reply.state == "taken"
+        assert not f.intercepted
 
 
 def test_mark():

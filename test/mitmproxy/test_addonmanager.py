@@ -36,8 +36,21 @@ class TAddon:
         self.running_called = True
 
 
+class AsyncTAddon(TAddon):
+    async def done(self):
+        pass
+
+    async def running(self):
+        self.running_called = True
+
+
 class THalt:
     def running(self):
+        raise exceptions.AddonHalt
+
+
+class AsyncTHalt:
+    async def running(self):
         raise exceptions.AddonHalt
 
 
@@ -76,6 +89,25 @@ def test_halt():
 
 
 @pytest.mark.asyncio
+async def test_async_halt():
+    o = options.Options()
+    m = master.Master(o)
+    a = addonmanager.AddonManager(m)
+    halt = AsyncTHalt()
+    end = AsyncTAddon("end")
+    a.add(halt)
+    a.add(end)
+
+    assert not end.running_called
+    await a.trigger_event(hooks.RunningHook())
+    assert not end.running_called
+
+    a.remove(halt)
+    await a.trigger_event(hooks.RunningHook())
+    assert end.running_called
+
+
+@pytest.mark.asyncio
 async def test_lifecycle():
     o = options.Options()
     m = master.Master(o)
@@ -95,6 +127,32 @@ async def test_lifecycle():
 
 def test_defaults():
     assert addons.default_addons()
+
+
+@pytest.mark.asyncio
+async def test_mixed_async_sync():
+    with taddons.context(loadcore=False) as tctx:
+        a = tctx.master.addons
+
+        assert len(a) == 0
+        a1 = TAddon("sync")
+        a2 = AsyncTAddon("async")
+        a.add(a1)
+        a.add(a2)
+
+        # test that we can call both sync and async hooks asynchronously
+        assert not a1.running_called
+        assert not a2.running_called
+        await a.trigger_event(hooks.RunningHook())
+        assert a1.running_called
+        assert a2.running_called
+
+        # test that calling an async hook synchronously fails
+        a1.running_called = False
+        a2.running_called = False
+        a.trigger(hooks.RunningHook())
+        assert a1.running_called
+        await tctx.master.await_log("called from sync context")
 
 
 @pytest.mark.asyncio

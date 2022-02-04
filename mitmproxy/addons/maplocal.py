@@ -105,7 +105,7 @@ class MapLocal:
                 self.replacements.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
-        if flow.response or flow.error or (flow.reply and flow.reply.state == "taken"):
+        if flow.response or flow.error or not flow.live:
             return
 
         url = flow.request.pretty_url
