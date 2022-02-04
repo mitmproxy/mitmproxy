@@ -264,7 +264,7 @@ class AddonManager:
         for addon, func in self._iter_hooks(addon, event):
             res = func(*event.args())
             # Support both async and sync hook functions
-            if inspect.isawaitable(res):
+            if res is not None and inspect.isawaitable(res):
                 await res
 
     def invoke_addon_sync(self, addon, event: hooks.Hook):
