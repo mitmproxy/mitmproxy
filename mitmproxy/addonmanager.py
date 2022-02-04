@@ -292,6 +292,9 @@ class AddonManager:
     def trigger(self, event: hooks.Hook):
         """
             Trigger an event across all addons.
+
+            This API is discouraged and may be deprecated in the future.
+            Use `trigger_event()` instead, which provides the same functionality but supports async hooks.
         """
         for i in self.chain:
             try:

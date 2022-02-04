@@ -105,12 +105,18 @@ class Flow(stateobject.StateObject):
      - a value of `response` indicates that the response to the client's request has been set by server replay.
     """
 
+    live: bool
+    """
+    If `True`, the flow belongs to a currently active connection.
+    If `False`, the flow may have been already completed or loaded from disk.
+    """
+
     def __init__(
         self,
         type: str,
         client_conn: connection.Client,
         server_conn: connection.Server,
-        live: bool = None
+        live: bool = False,
     ) -> None:
         self.type = type
         self.id = str(uuid.uuid4())
@@ -192,7 +198,10 @@ class Flow(stateobject.StateObject):
     @property
     def killable(self):
         """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
-        return not (self.error and self.error.msg == Error.KILLED_MESSAGE)
+        return (
+            self.live and
+            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
+        )
 
     def kill(self):
         """
@@ -200,6 +209,10 @@ class Flow(stateobject.StateObject):
         """
         if not self.killable:
             raise exceptions.ControlException("Flow is not killable.")
+        # TODO: The way we currently signal killing is not ideal. One major problem is that we cannot kill
+        #  flows in transit (https://github.com/mitmproxy/mitmproxy/issues/4711), even though they are advertised
+        #  as killable. An alternative approach would be to introduce a `KillInjected` event similar to
+        #  `MessageInjected`, which should fix this issue.
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
         self.live = False

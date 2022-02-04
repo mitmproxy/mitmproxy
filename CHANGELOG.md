@@ -27,6 +27,7 @@
 * Change connection event hooks to be blocking.
   Processing will only resume once the event hook has finished. (@Prinzhorn)
 * Allow addon hooks to be async (@nneonneo, #4207)
+* Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (@mhils, #4207)
 
 ## 28 September 2021: mitmproxy 7.0.4
 

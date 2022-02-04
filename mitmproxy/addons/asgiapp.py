@@ -27,7 +27,7 @@ class ASGIApp:
     def should_serve(self, flow: http.HTTPFlow) -> bool:
         return bool(
             (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
-            and not flow.error and not flow.response
+            and flow.live and not flow.error and not flow.response
         )
 
     async def request(self, flow: http.HTTPFlow) -> None:

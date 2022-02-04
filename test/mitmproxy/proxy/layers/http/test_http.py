@@ -263,6 +263,7 @@ def test_disconnect_while_intercept(tctx):
     )
     assert server1() != server2()
     assert flow().server_conn == server2()
+    assert not flow().live
 
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
@@ -292,6 +293,7 @@ def test_response_streaming(tctx, why, transfer_encoding):
         << SendData(server, b"GET /largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\n")
     )
+    assert flow().live
     if transfer_encoding == "identity":
         playbook >> DataReceived(server, b"Content-Length: 6\r\n\r\n"
                                          b"abc")
@@ -329,6 +331,7 @@ def test_response_streaming(tctx, why, transfer_encoding):
         playbook << SendData(tctx.client, b"0\r\n\r\n")
 
     assert playbook
+    assert not flow().live
 
 
 def test_stream_modify(tctx):
@@ -534,6 +537,7 @@ def test_body_size_limit(tctx, where, transfer_encoding):
         )
         assert b"413 Payload Too Large" in err()
         assert b"body_size_limit" in err()
+        assert not flow().live
     else:
         server = Placeholder(Server)
         assert (
@@ -559,6 +563,7 @@ def test_body_size_limit(tctx, where, transfer_encoding):
         )
         assert b"502 Bad Gateway" in err()
         assert b"body_size_limit" in err()
+        assert not flow().live
 
 
 @pytest.mark.parametrize("connect", [True, False])
@@ -589,6 +594,7 @@ def test_server_unreachable(tctx, connect):
     assert playbook
     if not connect:
         assert flow().error
+        assert not flow().live
     assert b"502 Bad Gateway" in err()
     assert b"Connection failed" in err()
 
@@ -624,6 +630,7 @@ def test_server_aborts(tctx, data):
     )
     assert flow().error
     assert b"502 Bad Gateway" in err()
+    assert not flow().live
 
 
 @pytest.mark.parametrize("redirect", ["", "change-destination", "change-proxy"])
@@ -926,6 +933,7 @@ def test_http_client_aborts(tctx, stream):
     )
 
     assert "peer closed connection" in flow().error.msg
+    assert not flow().live
 
 
 @pytest.mark.parametrize("stream", [True, False])
@@ -991,6 +999,7 @@ def test_http_server_aborts(tctx, stream):
         assert b"peer closed connection" in error_html()
 
     assert "peer closed connection" in flow().error.msg
+    assert not flow().live
 
 
 @pytest.mark.parametrize("when", ["http_connect", "requestheaders", "request", "script-response-responseheaders",
@@ -1014,6 +1023,8 @@ def test_kill_flow(tctx, when):
             playbook >> reply()
         playbook << CloseConnection(tctx.client)
         assert playbook
+        if flow():
+            assert not flow().live
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     assert (playbook

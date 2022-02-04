@@ -107,6 +107,7 @@ def test_upgrade(tctx):
     assert flow().websocket.messages[1].content == b"hello back"
     assert flow().websocket.messages[1].from_client is False
     assert flow().websocket.messages[1].type == Opcode.BINARY
+    assert flow().live
 
 
 def test_upgrade_streamed(tctx):
@@ -289,6 +290,7 @@ def test_protocol_error(ws_testdata):
 
     )
     assert not flow.websocket.messages
+    assert not flow.live
 
 
 def test_ping(ws_testdata):
@@ -329,6 +331,7 @@ def test_close_normal(ws_testdata):
     assert close() == b"\x88\x02\x03\xe8" or close() == b"\x88\x00"
 
     assert flow.websocket.close_code == 1005
+    assert not flow.live
 
 
 def test_close_disconnect(ws_testdata):
@@ -348,6 +351,7 @@ def test_close_disconnect(ws_testdata):
     # The \x03\xe8 above is code 1000 (normal closure).
     # But 1006 (ABNORMAL_CLOSURE) is expected, because the connection was already closed.
     assert flow.websocket.close_code == 1006
+    assert not flow.live
 
 
 def test_close_code(ws_testdata):
@@ -365,6 +369,7 @@ def test_close_code(ws_testdata):
             >> reply()
     )
     assert flow.websocket.close_code == 4000
+    assert not flow.live
 
 
 def test_deflate(ws_testdata):
