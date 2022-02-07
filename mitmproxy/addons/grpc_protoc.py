@@ -71,5 +71,4 @@ class GrpcProtocConsoleDescriptorProvider:
             ctx.options.__contains__(self.option_name) and 
             ctx.options.proto_descriptor_file is not None
         ):
-            print("here")
             self.serializer.set_descriptor(ctx.options.proto_descriptor_file)
