@@ -1,5 +1,6 @@
 from typing import Optional
 from mitmproxy import ctx, flow, http
+from mitmproxy.addons.grpc_protoc import GrpcProtocConsoleDescriptorProvider
 from mitmproxy.contentviews import base
 from mitmproxy.utils.protoc import ProtocSerializer
 
@@ -44,7 +45,7 @@ class ViewGrpcProtoc(base.View):
         **unknown_metadata
     ) -> float:
         if (
-            ctx.options.__contains__("proto_descriptor_file") and
+            ctx.options.__contains__(GrpcProtocConsoleDescriptorProvider.option_name) and
             ctx.options.proto_descriptor_file is not None and
             bool(data) and
             content_type in self.__content_types_grpc

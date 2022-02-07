@@ -33,6 +33,7 @@ class GrpcProtocConsoleBodyModifer:
         elif flow_part == "response-body":
             http_message = response
         else:
+            ctx.log(f"Unknown option {flow_part}")
             return
 
         content = http_message.get_content(strict=False) or b""
@@ -49,13 +50,15 @@ class GrpcProtocConsoleDescriptorProvider:
     """
     Adds a parameter that allows to specify a proto descriptor file.
     """
+    
+    option_name = "proto_descriptor_file"
 
     def __init__(self, serializer: ProtocSerializer) -> None:
         self.serializer = serializer
 
     def load(self, loader):
         loader.add_option(
-            "proto_descriptor_file", Optional[str], None,
+            self.option_name, Optional[str], None,
             """
             Path to the proto descriptor file.
             This argument is required in order to enable "gRPC/Protocol Buffer using protoc" content view.
@@ -63,5 +66,10 @@ class GrpcProtocConsoleDescriptorProvider:
         )
 
     def configure(self, updates):
-        if ("proto_descriptor_file" in updates and ctx.options.proto_descriptor_file is not None):
+        if (
+            GrpcProtocConsoleDescriptorProvider.option_name in updates and
+            ctx.options.__contains__(self.option_name) and 
+            ctx.options.proto_descriptor_file is not None
+        ):
+            print("here")
             self.serializer.set_descriptor(ctx.options.proto_descriptor_file)
