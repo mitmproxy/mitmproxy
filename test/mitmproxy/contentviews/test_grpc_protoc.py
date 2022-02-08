@@ -1,6 +1,3 @@
-from http.client import HTTPMessage
-from subprocess import call
-from termios import tcflow
 from unittest.mock import Mock
 from mitmproxy.addons.grpc_protoc import GrpcProtocConsoleDescriptorProvider
 from mitmproxy.contentviews.grpc_protoc import ViewGrpcProtoc

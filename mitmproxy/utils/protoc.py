@@ -1,8 +1,9 @@
-import google.protobuf.descriptor_pb2 as protobuf_descriptor_pb2
-import google.protobuf.reflection as protobuf_reflection
-import google.protobuf.descriptor as protobuf_descriptor
-import google.protobuf.json_format as protobuf_json
-import google.protobuf.descriptor_pool as protobuf_descriptor_pool
+from google.protobuf.descriptor_pb2 import FileDescriptorSet
+from google.protobuf.descriptor import MethodDescriptor
+from google.protobuf.descriptor_pool import DescriptorPool
+from google.protobuf.message_factory import MessageFactory
+from google.protobuf.message import DecodeError
+from google.protobuf.text_format import MessageToString, Parse, ParseError
 
 import mitmproxy
 
@@ -16,18 +17,24 @@ class ProtocSerializer:
     """
 
     def __init__(self) -> None:
-        self.descriptor_pool = protobuf_descriptor_pool.DescriptorPool()
+        self.descriptor_pool = DescriptorPool()
 
     def set_descriptor(self, descriptor_path: str) -> None:
         with open(descriptor_path, mode="rb") as file:
-            descriptor = protobuf_descriptor_pb2.FileDescriptorSet.FromString(file.read())
+            descriptor = FileDescriptorSet.FromString(file.read())
             for proto in descriptor.file:
                 self.descriptor_pool.Add(proto)
 
+            self.message_factory = MessageFactory(self.descriptor_pool)
+
     def deserialize(self, http_message: mitmproxy.http.Message, path: str, serialized_protobuf: bytes) -> str:
         """
-        Takes a protobuf byte array and returns a deserialized JSON string.
-        This method requires a descriptor file.
+        Takes a protobuf byte array and returns a deserialized string in text format.
+        You must set a descriptor file must prior to calling this method.
+        The string is formatted according to `google.protobuf.text_format`
+
+        Raises:
+            ValueError - in case deserialization fails because the method could not be resolved or the input data is invalid.
         """
 
         grpc_method = self.__find_method_by_path(path)
@@ -36,49 +43,70 @@ class ProtocSerializer:
         data_without_prefix = serialized_protobuf[5:]
 
         if isinstance(http_message, mitmproxy.http.Request):
-            # ParseMessage is deprecated, update to GetPrototype
-            message = protobuf_reflection.ParseMessage(grpc_method.input_type, data_without_prefix)
+            message = self.message_factory.GetPrototype(grpc_method.input_type)()
         elif isinstance(http_message, mitmproxy.http.Response):
-            message = protobuf_reflection.ParseMessage(grpc_method.output_type, data_without_prefix)
+            message = self.message_factory.GetPrototype(grpc_method.output_type)()
         else:
-            raise Exception(f"Unexpected HTTP message type {http_message}")
+            raise ValueError(f"Unexpected HTTP message type {http_message}")
 
-        return protobuf_json.MessageToJson(message=message, descriptor_pool=self.descriptor_pool)
+        message.Clear()
 
-    def serialize(self, http_message: mitmproxy.http.Message, path: str, json: str) -> bytes:
+        try:
+            message.MergeFromString(data_without_prefix)
+        except DecodeError as e:
+            raise ValueError("Unable to deserialize input") from e
+
+        return MessageToString(
+            message=message,
+            descriptor_pool=self.descriptor_pool,
+            print_unknown_fields=True,
+        )
+
+    def serialize(self, http_message: mitmproxy.http.Message, path: str, text: str) -> bytes:
         """
-        Takes a JSON string and serializes it into a protobuf byte array.
-        This method requires a descriptor file.
+        Takes a string and serializes it into a protobuf byte array.
+        You must set a descriptor file must prior to calling this method.
+        The string must be formatted according `google.protobuf.text_format`
+
+        Raises:
+            ValueError - in case serialization fails because the method could not be resolved or the input data is invalid
+                         e.g. unknown fields present or invalid text format.
         """
 
         grpc_method = self.__find_method_by_path(path)
 
         if isinstance(http_message, mitmproxy.http.Request):
-            empty_message = protobuf_reflection.ParseMessage(grpc_method.input_type, b"")
-            populated_message = protobuf_json.Parse(
-                text=json,
-                message=empty_message,
-                ignore_unknown_fields=True,
-                descriptor_pool=self.descriptor_pool)
+            empty_message = self.message_factory.GetPrototype(grpc_method.input_type)()
         elif isinstance(http_message, mitmproxy.http.Response):
-            empty_message = protobuf_reflection.ParseMessage(grpc_method.output_type, b"")
-            populated_message = protobuf_json.Parse(
-                text=json,
-                message=empty_message,
-                ignore_unknown_fields=True,
-                descriptor_pool=self.descriptor_pool)
+            empty_message = self.message_factory.GetPrototype(grpc_method.output_type)()
         else:
-            raise Exception(f"Unexpected HTTP message type {http_message}")
+            raise ValueError(f"Unexpected HTTP message type {http_message}")
 
-        serializedMessage = populated_message.SerializeToString()
+        empty_message.Clear()
+
+        try:
+            populated_message = Parse(
+                text=text,
+                message=empty_message,
+                allow_field_number=True,
+                allow_unknown_field=False,
+                descriptor_pool=self.descriptor_pool
+            )
+        except ParseError as e:
+            raise ValueError("Unable to serialize input") from e
+
+        serializedMessage = populated_message.SerializeToString(deterministic=True)
         # Prepend the length and compression header; 5 bytes in total in big endian order.
         # Payload compression is not supported at the moment, so compression bit is always 0.
         return len(serializedMessage).to_bytes(5, "big") + serializedMessage
 
-    def __find_method_by_path(self, path: str) -> protobuf_descriptor.MethodDescriptor:
-        # Drop the first '/' from the path and convert the rest to a fully qualified namespace that we can look up.
-        method_path = path.replace("/", ".")[1:]
-        return self.descriptor_pool.FindMethodByName(method_path)
+    def __find_method_by_path(self, path: str) -> MethodDescriptor:
+        try:
+            # Drop the first '/' from the path and convert the rest to a fully qualified namespace that we can look up.
+            method_path = path.replace("/", ".")[1:]
+            return self.descriptor_pool.FindMethodByName(method_path)
+        except KeyError as e:
+            raise ValueError("Failed to resolve method name by path") from e
 
 
 serializer = ProtocSerializer()

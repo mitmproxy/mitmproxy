@@ -1,7 +1,8 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from mitmproxy.addons.grpc_protoc import GrpcProtocConsoleDescriptorProvider
 
 from mitmproxy.test import taddons
+
 
 class TestGrpcProtocConsoleDescriptorProvider:
 
@@ -11,7 +12,7 @@ class TestGrpcProtocConsoleDescriptorProvider:
 
         with taddons.context(addon) as context:
             context.configure(addon, proto_descriptor_file="file")
-            
+
             serializer.set_descriptor.assert_called()
             assert "file" in str(serializer.set_descriptor.call_args_list)
 
@@ -21,5 +22,5 @@ class TestGrpcProtocConsoleDescriptorProvider:
 
         with taddons.context(addon) as context:
             context.configure(addon)
-            
+
             serializer.set_descriptor.assert_not_called()

@@ -37,20 +37,28 @@ class GrpcProtocConsoleBodyModifer:
             return
 
         content = http_message.get_content(strict=False) or b""
-        deserialized_content = self.serializer.deserialize(http_message, path, content)
+
+        try:
+            deserialized_content = self.serializer.deserialize(http_message, path, content)
+        except ValueError as e:
+            ctx.log(f"Failed to deserialize the content: {e}", level="error")
+
         modified_content = ctx.master.spawn_editor(deserialized_content)
 
         if ctx.master.options.console_strip_trailing_newlines:
             modified_content = strutils.clean_hanging_newline(modified_content)
 
-        http_message.content = self.serializer.serialize(http_message, path, modified_content)
+        try:
+            http_message.content = self.serializer.serialize(http_message, path, modified_content)
+        except ValueError as e:
+            ctx.log(f"Failed to serialize the modified content: {e}", level="error")
 
 
 class GrpcProtocConsoleDescriptorProvider:
     """
     Adds a parameter that allows to specify a proto descriptor file.
     """
-    
+
     option_name = "proto_descriptor_file"
 
     def __init__(self, serializer: ProtocSerializer) -> None:
@@ -68,7 +76,7 @@ class GrpcProtocConsoleDescriptorProvider:
     def configure(self, updates):
         if (
             GrpcProtocConsoleDescriptorProvider.option_name in updates and
-            ctx.options.__contains__(self.option_name) and 
+            ctx.options.__contains__(self.option_name) and
             ctx.options.proto_descriptor_file is not None
         ):
             self.serializer.set_descriptor(ctx.options.proto_descriptor_file)
