@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package mitmproxy.test.utils.test_grpc_data;
+
+service TestService {
+
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+message GetUserRequest {
+    string name = 1;
+}
+
+message GetUserResponse {
+    string name = 1;
+    int32 age = 2;
+    int32 id = 3;
+}
