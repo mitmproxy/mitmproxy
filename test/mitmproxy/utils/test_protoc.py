@@ -64,6 +64,17 @@ class TestProtocSerializer(unittest.TestCase):
                 serialized_protobuf=b"invalidData"
             )
 
+    def test_deserialize_unsupported_http_message(self):
+        with self.assertRaises(ValueError):
+            serializer = ProtocSerializer()
+            serializer.set_descriptor("test/mitmproxy/utils/test_grpc_data/test.descriptor")
+
+            serializer.deserialize(
+                http_message=None,
+                path="/mitmproxy/test/utils/test_grpc_data/TestService/GetUser",
+                serialized_protobuf=binascii.unhexlify("000000000a0a045465737410021803")
+            )
+
     def test_serialize_request(self):
         serializer = ProtocSerializer()
         serializer.set_descriptor("test/mitmproxy/utils/test_grpc_data/test.descriptor")
@@ -119,4 +130,15 @@ class TestProtocSerializer(unittest.TestCase):
                 http_message=tutils.treq(),
                 path="/mitmproxy/test/utils/test_grpc_data/TestService/GetUser",
                 text='name: "Test" age:2 id:3,,,,,'
+            )
+
+    def test_serialize_unsupported_http_message(self):
+        with self.assertRaises(ValueError):
+            serializer = ProtocSerializer()
+            serializer.set_descriptor("test/mitmproxy/utils/test_grpc_data/test.descriptor")
+
+            serializer.serialize(
+                http_message=None,
+                path="/mitmproxy/test/utils/test_grpc_data/TestService/GetUser",
+                text='name: "Test" age:2 id:3'
             )

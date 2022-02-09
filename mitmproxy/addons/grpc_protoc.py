@@ -1,5 +1,7 @@
 from typing import Optional, Sequence
 from mitmproxy import ctx, command, types
+from mitmproxy.exceptions import CommandError
+from mitmproxy.flow import Flow
 from mitmproxy.utils import strutils
 from mitmproxy.utils.protoc import ProtocSerializer
 
@@ -23,25 +25,23 @@ class GrpcProtocConsoleBodyModifer:
 
     @command.command("console.edit.grpc")
     @command.argument("flow_part", type=types.Choice("console.edit.grpc.options"))
-    def edit_focus(self, flow_part: str) -> None:
-        request = ctx.master.view.focus.flow.request
-        response = ctx.master.view.focus.flow.response
-        path = request.path
+    def edit_focus(self, flow_part: str, flow: Flow) -> None:
+        if not flow:
+            raise CommandError("No flow selected.")
 
         if flow_part == "request-body":
-            http_message = request
+            http_message = flow.request
         elif flow_part == "response-body":
-            http_message = response
+            http_message = flow.response
         else:
-            ctx.log(f"Unknown option {flow_part}")
-            return
+            raise CommandError(f"Unsupported options {flow_part}.")
 
         content = http_message.get_content(strict=False) or b""
 
         try:
-            deserialized_content = self.serializer.deserialize(http_message, path, content)
+            deserialized_content = self.serializer.deserialize(http_message, flow.request.path, content)
         except ValueError as e:
-            ctx.log(f"Failed to deserialize the content: {e}", level="error")
+            raise CommandError("Failed to deserialize the content") from e
 
         modified_content = ctx.master.spawn_editor(deserialized_content)
 
@@ -49,9 +49,9 @@ class GrpcProtocConsoleBodyModifer:
             modified_content = strutils.clean_hanging_newline(modified_content)
 
         try:
-            http_message.content = self.serializer.serialize(http_message, path, modified_content)
+            http_message.content = self.serializer.serialize(http_message, flow.request.path, modified_content)
         except ValueError as e:
-            ctx.log(f"Failed to serialize the modified content: {e}", level="error")
+            raise CommandError("Failed to serialize the content") from e
 
 
 class GrpcProtocConsoleDescriptorProvider:
