@@ -73,21 +73,29 @@ class TestGrpcProtocConsoleBodyModifier(unittest.TestCase):
         with self.assertRaises(CommandError):
             addon.edit_focus("random-option", tflow.tflow())
 
-    def test_edit_focus_deserialization_fails(self):
+    @patch("mitmproxy.ctx.master")
+    def test_edit_focus_deserialization_fails(self, master):
         serializer = Mock()
         serializer.deserialize.side_effect = ValueError()
         addon = GrpcProtocConsoleBodyModifer(serializer)
 
-        with self.assertRaises(CommandError):
-            addon.edit_focus("random-option", tflow.tflow())
+        master.spawn_editor().return_value = "modifiedMessage"
+        mitmproxy.ctx.master = master
 
-    def test_edit_focus_serialization_fails(self):
+        with self.assertRaises(CommandError):
+            addon.edit_focus("request-body", tflow.tflow())
+
+    @patch("mitmproxy.ctx.master")
+    def test_edit_focus_serialization_fails(self, master):
         serializer = Mock()
         serializer.serialize.side_effect = ValueError()
         addon = GrpcProtocConsoleBodyModifer(serializer)
 
+        master.spawn_editor().return_value = "modifiedMessage"
+        mitmproxy.ctx.master = master
+
         with self.assertRaises(CommandError):
-            addon.edit_focus("random-option", tflow.tflow())
+            addon.edit_focus("request-body", tflow.tflow())
 
 
 class TestGrpcProtocConsoleDescriptorProvider:

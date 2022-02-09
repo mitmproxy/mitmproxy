@@ -8,6 +8,7 @@ from google.protobuf.text_format import MessageToString, Parse, ParseError
 import mitmproxy
 import mitmproxy.http
 
+
 class ProtocSerializer:
     """
     Wrapper around google protobuf package that provides serialization and deserialization of protobuf content.
