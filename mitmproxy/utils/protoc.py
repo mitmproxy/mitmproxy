@@ -6,7 +6,7 @@ from google.protobuf.message import DecodeError
 from google.protobuf.text_format import MessageToString, Parse, ParseError
 
 import mitmproxy
-
+import mitmproxy.http
 
 class ProtocSerializer:
     """
