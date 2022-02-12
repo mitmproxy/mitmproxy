@@ -1,7 +1,4 @@
 {% extends "default/module.html.jinja2" %}
-{% block nav %}{% endblock %}
-{% block style_layout %}{% endblock %}
-{% block style_pygments %}{% endblock %}
 {#
 To document all event hooks, we do a bit of hackery:
   1. scripts/api-events.py auto-generates generated/events.py.
@@ -12,8 +9,14 @@ To document all event hooks, we do a bit of hackery:
 {% if module.name == "events" %}
     {% macro module_name() %}
     {% endmacro %}
+    {% macro class(cls) %}
+        <div class="attr class">
+            {{ headerlink(cls) }}
+            <span class="name">{{ cls.qualname.replace("Events", " Events") }}</span>
+        </div>
+    {% endmacro %}
     {% macro view_source(doc) %}
-        {% if doc.type != "module" %}
+        {% if doc.type == "function" %}
             {{ default_view_source(doc) }}
         {% endif %}
     {% endmacro %}
