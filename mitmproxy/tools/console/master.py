@@ -29,6 +29,7 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
+from mitmproxy.utils import exit_codes
 
 
 class ConsoleMaster(master.Master):
@@ -193,7 +194,7 @@ class ConsoleMaster(master.Master):
                 "Please run mitmproxy in an interactive shell environment.",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            sys.exit(exit_codes.NO_TTY)
 
         detected_encoding = urwid.detected_encoding.lower()
         if os.name != "nt" and detected_encoding and "utf" not in detected_encoding:

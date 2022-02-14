@@ -5,6 +5,7 @@ from mitmproxy import ctx
 from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
+from mitmproxy.utils import exit_codes
 
 LOG_COLORS = {"error": "red", "warn": "yellow", "alert": "magenta"}
 
@@ -41,4 +42,10 @@ class TermLog:
                     fg=LOG_COLORS.get(e.level),
                     dim=(e.level == "debug"),
                 )
-            print(msg, file=f)
+
+            try:
+                print(msg, file=f)
+            except OSError:
+                # We cannot write logs, exit immediately.
+                # See https://github.com/mitmproxy/mitmproxy/issues/4669
+                sys.exit(exit_codes.CANNOT_WRITE_LOGS)
