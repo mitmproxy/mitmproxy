@@ -12,6 +12,10 @@
   upstream connections to fetch TLS certificate details.
   (@mhils)
 * DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits
+  ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn))
+* Introduce more specific exit codes than `1`
+  ([#5133](https://github.com/mitmproxy/mitmproxy/pull/5133), @Prinzhorn))
 
 ## 28 June 2022: mitmproxy 8.1.1
 
