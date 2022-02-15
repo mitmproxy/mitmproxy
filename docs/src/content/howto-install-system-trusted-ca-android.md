@@ -29,13 +29,13 @@ Please note, that apps can decide to ignore the system certificate store and mai
   ```
 
 - Mitmproxy CA certificate has been created
-  - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer` on Linux systems
+  - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer` or `$XDG_DATA_HOME/mitmproxy/mitmproxy-ca-cert.cer` on Linux systems
   - If the folder is empty or does not exist, run `mitmproxy` in order to generate the certificates
 
 ## 2. Rename certificate
 
 CA Certificates in Android are stored by the name of their hash, with a '0' as extension (Example: `c8450d0d.0`). It is necessary to figure out the hash of your CA certificate and copy it to a file with this hash as filename. Otherwise Android will ignore the certificate. 
-By default, the mitmproxy CA certificate is located in this file: `~/.mitmproxy/mitmproxy-ca-cert.cer`
+By default, the mitmproxy CA certificate is located in this file: `~/.mitmproxy/mitmproxy-ca-cert.cer`. `$XDG_DATA_HOME/mitmproxy/mitmproxy-ca-cert.cer` is also supported.
 
 
 ### Instructions
