@@ -22,15 +22,15 @@ class CommandHistory:
 
     @property
     def history_file(self) -> pathlib.Path:
-        return pathlib.Path(os.path.expanduser(ctx.options.confdir)) / "command_history"
+        return pathlib.Path(os.path.expanduser(ctx.options.datadir)) / "command_history"
 
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
-        # confdir or command_history as updated.
+        # datadir or command_history as updated.
         self.configure("command_history")  # pragma: no cover
 
     def configure(self, updated):
-        if "command_history" in updated or "confdir" in updated:
+        if "command_history" in updated or "datadir" in updated:
             if ctx.options.command_history and self.history_file.is_file():
                 self.history = self.history_file.read_text().splitlines()
                 self.set_filter('')

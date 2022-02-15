@@ -6,7 +6,7 @@ from typing import List, Optional, TypedDict, Any
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
-from mitmproxy.options import CONF_BASENAME
+from mitmproxy.options import PROG_NAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import tls as proxy_tls
@@ -245,17 +245,17 @@ class TlsConfig:
 
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
-        # confdir or command_history as updated.
-        self.configure("confdir")  # pragma: no cover
+        # datadir or command_history as updated.
+        self.configure("datadir")  # pragma: no cover
 
     def configure(self, updated):
-        if "confdir" not in updated and "certs" not in updated:
+        if "datadir" not in updated and "certs" not in updated:
             return
 
-        certstore_path = os.path.expanduser(ctx.options.confdir)
+        certstore_path = os.path.expanduser(ctx.options.datadir)
         self.certstore = certs.CertStore.from_store(
             path=certstore_path,
-            basename=CONF_BASENAME,
+            basename=PROG_NAME,
             key_size=ctx.options.key_size,
             passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
         )

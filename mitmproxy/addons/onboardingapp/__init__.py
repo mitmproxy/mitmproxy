@@ -2,11 +2,11 @@ import os
 
 from flask import Flask, render_template
 
-from mitmproxy.options import CONF_BASENAME, CONF_DIR
+from mitmproxy.options import PROG_NAME, get_data_dir
 
 app = Flask(__name__)
 # will be overridden in the addon, setting this here so that the Flask app can be run standalone.
-app.config["CONFDIR"] = CONF_DIR
+app.config["DATADIR"] = get_data_dir(PROG_NAME)
 
 
 @app.route('/')
@@ -30,8 +30,8 @@ def cer():
 
 
 def read_cert(ext, content_type):
-    filename = CONF_BASENAME + f"-ca-cert.{ext}"
-    p = os.path.join(app.config["CONFDIR"], filename)
+    filename = PROG_NAME + f"-ca-cert.{ext}"
+    p = os.path.join(app.config["DATADIR"], filename)
     p = os.path.expanduser(p)
     with open(p, "rb") as f:
         cert = f.read()
