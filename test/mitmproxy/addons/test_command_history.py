@@ -16,7 +16,7 @@ class TestCommandHistory:
         ch = command_history.CommandHistory()
         ch.VACUUM_SIZE = 4
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = str(tmpdir)
+            tctx.options.datadir = str(tmpdir)
             assert ch.history == commands
             ch.add_command("cmd4")
             ch.done()
@@ -31,7 +31,7 @@ class TestCommandHistory:
             ch.history.append('cmd1')
             ch.history.append('cmd2')
             ch.history.append('cmd3')
-            tctx.options.confdir = '/non/existent/path/foobar1234/'
+            tctx.options.datadir = '/non/existent/path/foobar1234/'
             ch.done()
             await tctx.master.await_log(f"Failed writing to {ch.history_file}")
 
@@ -48,7 +48,7 @@ class TestCommandHistory:
     async def test_add_command_failed(self):
         ch = command_history.CommandHistory()
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = '/non/existent/path/foobar1234/'
+            tctx.options.datadir = '/non/existent/path/foobar1234/'
             ch.add_command('cmd1')
             await tctx.master.await_log(f"Failed writing to {ch.history_file}")
 
@@ -56,7 +56,7 @@ class TestCommandHistory:
         ch = command_history.CommandHistory()
 
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = str(tmpdir)
+            tctx.options.datadir = str(tmpdir)
 
             ch.add_command('cmd1')
 
@@ -137,7 +137,7 @@ class TestCommandHistory:
         ch = command_history.CommandHistory()
 
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = str(tmpdir)
+            tctx.options.datadir = str(tmpdir)
             ch.add_command('cmd1')
             ch.add_command('cmd2')
             ch.clear_history()
@@ -156,7 +156,7 @@ class TestCommandHistory:
         ch = command_history.CommandHistory()
 
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = '/non/existent/path/foobar1234/'
+            tctx.options.datadir = '/non/existent/path/foobar1234/'
 
             with patch.object(Path, 'exists') as mock_exists:
                 mock_exists.return_value = True
@@ -169,7 +169,7 @@ class TestCommandHistory:
         ch = command_history.CommandHistory()
 
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = str(tmpdir)
+            tctx.options.datadir = str(tmpdir)
 
             ch.add_command('cmd1')
             ch.add_command('cmd2')
@@ -203,7 +203,7 @@ class TestCommandHistory:
     def test_multiple_instances(self, tmpdir):
         ch = command_history.CommandHistory()
         with taddons.context(ch) as tctx:
-            tctx.options.confdir = str(tmpdir)
+            tctx.options.datadir = str(tmpdir)
 
         instances = [
             command_history.CommandHistory(),
@@ -270,7 +270,7 @@ class TestCommandHistory:
         instances.pop(0).done()
         instances.pop(0).done()
 
-        _path = os.path.join(tctx.options.confdir, 'command_history')
+        _path = os.path.join(tctx.options.datadir, 'command_history')
         lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd_before_close', 'new_cmd']
@@ -298,7 +298,7 @@ class TestCommandHistory:
         instances.pop().done()
         instances.pop().done()
 
-        _path = os.path.join(tctx.options.confdir, 'command_history')
+        _path = os.path.join(tctx.options.datadir, 'command_history')
         lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd5']
