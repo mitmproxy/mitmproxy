@@ -68,6 +68,7 @@
 * Exit early if there are errors on startup (#4544, @mhils)
 * Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)
 * Binaries are now built with Python 3.10 (@mhils)
+* Add support for XDG_CONFIG_HOME, XDG_DATA_HOME directories
 
 ## 28 September 2021: mitmproxy 7.0.4
 
