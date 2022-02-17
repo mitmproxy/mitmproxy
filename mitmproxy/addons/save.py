@@ -61,32 +61,29 @@ class Save:
             ctx.log.error(f"Error while creating directories {parent}: {v}")
         return True
 
-    def new_stream(self):
-        if self.new_path():  # pragma: no cover
+    def save_flow(self, flow: http.HTTPFlow):
+        if self.new_path():
             if self.stream:
                 self.close_stream()
             try:
                 f = open(self.curpath, self.mode)
                 self.stream = io.FilteredFlowWriter(f, self.filt)
-            except OSError as v:
+            except OSError as v:  # pragma: no cover
                 ctx.log.error(f"Error while opening {self.curpath}: {v}")
-                sys.exit(1)
-        return self.stream
-
-    def save_flow(self, flow: http.HTTPFlow):
+                exit(1)
         try:
             self.stream.add(flow)
-        except OSError as v:
+        except OSError as v:  # pragma: no cover
             ctx.log.error(f"Error while writing to {self.curpath}: {v}")
-            sys.exit(1)
+            exit(1)
 
     def close_stream(self):
         try:
             self.active_flows = set()
             self.stream.fo.close()
-        except OSError as v:
+        except OSError as v:  # pragma: no cover
             ctx.log.error(f"Error while closing stream file: {v}")
-            sys.exit(1)
+            exit(1)
 
     def start_stream_to_path(self, path, flt):
         try:
@@ -136,7 +133,7 @@ class Save:
             self.active_flows.add(flow)
 
     def tcp_end(self, flow):
-        if self.stream and self.new_stream():
+        if self.stream:
             self.save_flow(flow)
             self.active_flows.discard(flow)
 
@@ -144,7 +141,7 @@ class Save:
         self.tcp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
-        if self.stream and self.new_stream():
+        if self.stream:
             self.save_flow(flow)
             self.active_flows.discard(flow)
 
@@ -155,7 +152,7 @@ class Save:
     def response(self, flow: http.HTTPFlow):
         # websocket flows will receive a websocket_end,
         # we don't want to persist them here already
-        if self.stream and flow.websocket is None and self.new_stream():
+        if self.stream and flow.websocket is None:
             self.save_flow(flow)
             self.active_flows.discard(flow)
 
@@ -163,7 +160,7 @@ class Save:
         self.response(flow)
 
     def done(self):
-        if self.stream and self.new_stream():
+        if self.stream:
             for f in self.active_flows:
                 self.save_flow(f)
             self.close_stream()

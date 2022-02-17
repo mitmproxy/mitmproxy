@@ -22,12 +22,6 @@ def test_configure(tmpdir):
         assert sa.filt
         tctx.configure(sa, save_stream_filter=None)
         assert not sa.filt
-        with pytest.raises(exceptions.OptionsError):
-            tctx.configure(sa, save_stream_period='foo')
-        tctx.configure(sa, save_stream_period='day')
-        assert sa.period != 0
-        tctx.configure(sa, save_stream_period='hour')
-        assert sa.period != 0
 
 
 def rd(p):
@@ -119,13 +113,14 @@ def test_simple(tmpdir):
         assert not rd(p)[2].response
 
 
-def test_period(tmpdir):
+def test_new_stream(tmpdir):
     sa = save.Save()
     with taddons.context(sa) as tctx:
         p = str(tmpdir.join("foo"))
+        p2 = str(tmpdir.join("bar"))
 
-        tctx.configure(sa, save_stream_period='hour')
         tctx.configure(sa, save_stream_file=p)
+        sa.curpath = p2
 
         f = tflow.tflow(resp=True)
         sa.request(f)
