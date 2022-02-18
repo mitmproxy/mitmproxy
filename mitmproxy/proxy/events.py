@@ -30,6 +30,14 @@ class Start(Event):
     pass
 
 
+class KeepAlive(Event):
+    """
+    Event sent to the http2 layer to send a PING to the remote server
+    to keep the connection alive.
+    """
+    pass
+
+
 @dataclass
 class ConnectionEvent(Event):
     """

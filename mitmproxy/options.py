@@ -107,6 +107,15 @@ class Options(optmanager.OptManager):
             "HTTP/2 support is enabled by default.",
         )
         self.add_option(
+            "http2_ping_threshold", int, 0,
+            """
+            Send HTTP/2 PING frames to remote if connection is idle longer than
+            the threshold to prevent the remote site from closing it. Value is
+            in seconds, recommended is 58, 0 or negative values disable the feature.
+            Sending PING frames is disabled by default.
+            """
+        )
+        self.add_option(
             "websocket", bool, True,
             "Enable/disable WebSocket support. "
             "WebSocket support is enabled by default.",

@@ -4,15 +4,16 @@ import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
+import time
 from h2.errors import ErrorCodes
 
 from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
+from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, RequestKeepAlive
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
+from mitmproxy.proxy.events import ConnectionClosed, DataReceived, KeepAlive
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client, split_pseudo_headers
@@ -776,3 +777,30 @@ def test_request_smuggling_te(tctx):
             << CloseConnection(tctx.client)
     )
     assert b"Connection-specific header field present" in err()
+
+
+def test_request_keepalive(tctx):
+    playbook, cff = start_h2_client(tctx)
+    tctx.options.http2_ping_threshold = 1
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << RequestKeepAlive(1)
+            << SendData(server, initial)
+            >> KeepAlive()
+    )
+    time.sleep(1.5)
+    assert (
+            playbook
+            >> KeepAlive()
+    )

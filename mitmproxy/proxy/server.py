@@ -63,6 +63,25 @@ class TimeoutWatchdog:
                 self.can_timeout.set()
 
 
+class IdleWatchdog:
+    last_activity: float
+    threshold: int
+
+    def __init__(self, callback: typing.Callable[[], typing.Any], threshold: int):
+        self.callback = callback
+        self.last_activity = time.time()
+        self.threshold = threshold
+
+    def register_activity(self):
+        self.last_activity = time.time()
+
+    async def watch(self):
+        while True:
+            await asyncio.sleep(self.threshold - (time.time() - self.last_activity))
+            if self.last_activity + self.threshold < time.time():
+                await self.callback()
+
+
 @dataclass
 class ConnectionIO:
     handler: typing.Optional[asyncio.Task] = None
@@ -76,6 +95,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
     layer: layer.Layer
+
+    idle_watchdog: typing.Optional[IdleWatchdog] = None
+    idle_watchdog_task: typing.Optional[asyncio.Task] = None
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
@@ -117,6 +139,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await asyncio.wait([handler])
 
         watch.cancel()
+        if self.idle_watchdog_task:
+            self.idle_watchdog_task.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
@@ -204,6 +228,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 await connected_hook  # wait here for this so that closed always comes after connected.
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
+    async def keep_alive(self) -> None:
+        self.server_event(events.KeepAlive())
+
     async def handle_connection(self, connection: Connection) -> None:
         """
         Handle a connection for its entire lifetime.
@@ -289,6 +316,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
+        if self.idle_watchdog:
+            self.idle_watchdog.register_activity()
+
         try:
             layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
@@ -301,6 +331,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         client=self.client.peername,
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
+                elif isinstance(command, commands.RequestKeepAlive):
+                    if not self.idle_watchdog:
+                        self.idle_watchdog = IdleWatchdog(self.keep_alive, command.threshold)
+                        self.idle_watchdog_task = asyncio_utils.create_task(
+                            self.idle_watchdog.watch(),
+                            name="idle_watchdog",
+                            client=self.client.peername
+                        )
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):

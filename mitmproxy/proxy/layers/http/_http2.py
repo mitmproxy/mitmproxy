@@ -20,9 +20,9 @@ from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolE
     ResponseEndOfMessage, ResponseHeaders, RequestTrailers, ResponseTrailers, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
-from ...commands import CloseConnection, Log, SendData
+from ...commands import CloseConnection, Log, SendData, RequestKeepAlive
 from ...context import Context
-from ...events import ConnectionClosed, DataReceived, Event, Start
+from ...events import ConnectionClosed, DataReceived, Event, Start, KeepAlive
 from ...layer import CommandGenerator
 from ...utils import expect
 
@@ -251,7 +251,7 @@ class Http2Connection(HttpConnection):
         self.streams.clear()
         self._handle_event = self.done  # type: ignore
 
-    @expect(DataReceived, HttpEvent, ConnectionClosed)
+    @expect(DataReceived, HttpEvent, ConnectionClosed, KeepAlive)
     def done(self, _) -> CommandGenerator[None]:
         yield from ()
 
@@ -396,7 +396,17 @@ class Http2Client(Http2Connection):
                 yield from self._handle_event(event)
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
-        if isinstance(event, RequestHeaders):
+        if isinstance(event, Start):
+            if self.context.options.http2_ping_threshold > 0:
+                yield RequestKeepAlive(self.context.options.http2_ping_threshold)
+            yield from super()._handle_event(event)
+        elif isinstance(event, KeepAlive):
+            yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
+            self.h2_conn.ping(b"0" * 8)
+            data_to_send = self.h2_conn.data_to_send()
+            if data_to_send:
+                yield SendData(self.conn, data_to_send)
+        elif isinstance(event, RequestHeaders):
             pseudo_headers = [
                 (b':method', event.request.data.method),
                 (b':scheme', event.request.data.scheme),

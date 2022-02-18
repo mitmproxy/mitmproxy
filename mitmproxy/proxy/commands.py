@@ -39,6 +39,17 @@ class Command:
         return f"{type(self).__name__}({repr(x)})"
 
 
+class RequestKeepAlive(Command):
+    """
+    Sent by a layer to request regular sending of KeepAlive events.
+    Currently only used by HTTP/2 to send PINGs to the remote server.
+    """
+    thrshold: int
+
+    def __init__(self, threshold: int):
+        self.threshold = threshold
+
+
 class ConnectionCommand(Command):
     """
     Commands involving a specific connection
