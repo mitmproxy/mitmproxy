@@ -46,7 +46,7 @@ class RequestKeepAlive(Command):
     """
     thrshold: int
 
-    def __init__(self, threshold: int):
+    def __init__(self, threshold: int):  # pragma: no cover
         self.threshold = threshold
 
 
