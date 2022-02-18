@@ -4,7 +4,6 @@ import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
-import time
 from h2.errors import ErrorCodes
 
 from mitmproxy.connection import ConnectionState, Server
@@ -13,7 +12,7 @@ from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, RequestKeepAlive
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived, KeepAlive
+from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client, split_pseudo_headers
