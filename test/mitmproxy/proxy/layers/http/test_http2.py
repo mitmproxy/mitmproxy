@@ -797,10 +797,4 @@ def test_request_keepalive(tctx):
             >> reply(None, side_effect=make_h2)
             << RequestKeepAlive(1)
             << SendData(server, initial)
-            >> KeepAlive()
-    )
-    time.sleep(1.5)
-    assert (
-            playbook
-            >> KeepAlive()
     )
