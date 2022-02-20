@@ -5,11 +5,15 @@ from mitmproxy.flow import Flow
 from mitmproxy.utils import strutils
 from mitmproxy.utils.protoc import ProtocSerializer
 
+import mitmproxy.tools.console.master
+
 
 class GrpcProtocConsoleBodyModifer:
     """
     Command options that allow for modification of protobuf content in HTTP body.
     """
+
+    console_master: "mitmproxy.tools.console.master.ConsoleMaster"
 
     def __init__(self, serializer: ProtocSerializer) -> None:
         self.serializer = serializer
@@ -25,7 +29,7 @@ class GrpcProtocConsoleBodyModifer:
 
     @command.command("console.edit.grpc")
     @command.argument("flow_part", type=types.Choice("console.edit.grpc.options"))
-    def edit_focus(self, flow_part: str, flow: Flow) -> None:
+    def edit_focus(self, flow_part: str, flow) -> None:
         if not flow:
             raise CommandError("No flow selected.")
 
@@ -43,9 +47,9 @@ class GrpcProtocConsoleBodyModifer:
         except ValueError as e:
             raise CommandError("Failed to deserialize the content") from e
 
-        modified_content = ctx.master.spawn_editor(deserialized_content)
+        modified_content = self.console_master.spawn_editor(deserialized_content)
 
-        if ctx.master.options.console_strip_trailing_newlines:
+        if self.console_master.options.console_strip_trailing_newlines:
             modified_content = strutils.clean_hanging_newline(modified_content)
 
         try:

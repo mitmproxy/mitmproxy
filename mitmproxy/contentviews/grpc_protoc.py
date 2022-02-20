@@ -28,12 +28,15 @@ class ViewGrpcProtoc(base.View):
         data: bytes,
         *,
         content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
+        flow = None,
         http_message: Optional[http.Message] = None,
         **unknown_metadata
     ):
-        deserialized = self.serializer.deserialize(http_message, flow.request.path, data)
-        return self.name, base.format_text(deserialized)
+        if http_message is not None:
+            deserialized = self.serializer.deserialize(http_message, flow.request.path, data)
+            return self.name, base.format_text(deserialized)
+        else:
+            return self.name, ""
 
     def render_priority(
         self,
