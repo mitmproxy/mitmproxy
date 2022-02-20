@@ -171,8 +171,8 @@ jobs:
         with:
           python-version: '3.9'
       - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.88.1/hugo_extended_0.88.1_Linux-64bit.deb
-          echo "865ab9a930e0a9e4957e7dbfdf91c32847324f022e33271b5661d5717600bc2b hugo_extended_0.88.1_Linux-64bit.deb" | sha256sum -c
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.92.1/hugo_extended_0.92.1_Linux-64bit.deb
+          echo "a9440adfd3ecce40089def287dee4e42ffae252ba08c77d1ac575b880a079ce6 hugo_extended_0.92.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py

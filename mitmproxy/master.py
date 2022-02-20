@@ -6,7 +6,6 @@ import traceback
 
 from mitmproxy import addonmanager, hooks
 from mitmproxy import command
-from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import http
 from mitmproxy import log
@@ -115,6 +114,5 @@ class Master:
         if isinstance(f, http.HTTPFlow):
             self._change_reverse_host(f)
 
-        f.reply = controller.DummyReply()
         for e in eventsequence.iterate(f):
             await self.addons.handle_lifecycle(e)

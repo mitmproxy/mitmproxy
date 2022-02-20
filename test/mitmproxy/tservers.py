@@ -1,6 +1,5 @@
 from unittest import mock
 
-from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import io
 from mitmproxy.proxy import server_hooks
@@ -14,7 +13,6 @@ class MasterTest:
         f = tflow.tflow(req=tutils.treq(content=content))
         layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")
         layer.client_conn = f.client_conn
-        layer.reply = controller.DummyReply()
         await master.addons.handle_lifecycle(server_hooks.ClientConnectedHook(layer))
         for e in eventsequence.iterate(f):
             await master.addons.handle_lifecycle(e)

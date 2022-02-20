@@ -64,7 +64,7 @@ setup(
         ]
     },
     python_requires='>=3.8',
-    # https://packaging.python.org/en/latest/requirements/#install-requires
+    # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "asgiref>=3.2.10,<3.5",

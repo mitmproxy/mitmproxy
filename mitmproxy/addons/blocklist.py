@@ -61,7 +61,7 @@ class BlockList:
                 self.items.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
-        if flow.response or flow.error or (flow.reply and flow.reply.state == "taken"):
+        if flow.response or flow.error or not flow.live:
             return
 
         for spec in self.items:
