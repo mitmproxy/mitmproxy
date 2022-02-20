@@ -1,6 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch
-import mitmproxy
+from unittest.mock import Mock
 from mitmproxy.addons.grpc_protoc import GrpcProtocConsoleBodyModifer, GrpcProtocConsoleDescriptorProvider
 
 from mitmproxy.test import taddons, tflow
@@ -11,18 +10,16 @@ from mitmproxy.exceptions import CommandError
 class TestGrpcProtocConsoleBodyModifier(unittest.TestCase):
 
     def test_edit_focus_options(self):
-        addon = GrpcProtocConsoleBodyModifer(Mock())
+        addon = GrpcProtocConsoleBodyModifer(Mock(), Mock())
 
         assert ["request-body", "response-body"] == addon.edit_focus_options()
 
-    @patch("mitmproxy.ctx.master")
-    def test_edit_focus_request_body(self, master):
+    def test_edit_focus_request_body(self):
         serializer = Mock()
-        addon = GrpcProtocConsoleBodyModifer(serializer)
-
         serializer.serialize.return_value = b"1234"
-        master.spawn_editor().return_value = "modifiedMessage"
-        mitmproxy.ctx.master = master
+        master = Mock()
+        master.spawn_editor.return_value = "modifiedMessage"
+        addon = GrpcProtocConsoleBodyModifer(serializer, master)
 
         flow = tflow.tflow(req=treq(content=b"message"))
         addon.edit_focus("request-body", flow)
@@ -38,14 +35,12 @@ class TestGrpcProtocConsoleBodyModifier(unittest.TestCase):
 
         assert flow.request.content == b"1234"
 
-    @patch("mitmproxy.ctx.master")
-    def test_edit_focus_response_body(self, master):
+    def test_edit_focus_response_body(self):
         serializer = Mock()
-        addon = GrpcProtocConsoleBodyModifer(serializer)
-
         serializer.serialize.return_value = b"1234"
-        master.spawn_editor().return_value = "modifiedMessage"
-        mitmproxy.ctx.master = master
+        master = Mock()
+        master.spawn_editor.return_value = "modifiedMessage"
+        addon = GrpcProtocConsoleBodyModifer(serializer, master)
 
         flow = tflow.tflow(resp=tresp(content=b"message"))
         addon.edit_focus("response-body", flow)
@@ -62,37 +57,33 @@ class TestGrpcProtocConsoleBodyModifier(unittest.TestCase):
         assert flow.response.content == b"1234"
 
     def test_edit_focus_flow_not_set(self):
-        addon = GrpcProtocConsoleBodyModifer(Mock())
+        addon = GrpcProtocConsoleBodyModifer(Mock(), Mock())
 
         with self.assertRaises(CommandError):
             addon.edit_focus("request-body", None)
 
     def test_edit_focus_unknown_option(self):
-        addon = GrpcProtocConsoleBodyModifer(Mock())
+        addon = GrpcProtocConsoleBodyModifer(Mock(), Mock())
 
         with self.assertRaises(CommandError):
             addon.edit_focus("random-option", tflow.tflow())
 
-    @patch("mitmproxy.ctx.master")
-    def test_edit_focus_deserialization_fails(self, master):
+    def test_edit_focus_deserialization_fails(self):
         serializer = Mock()
         serializer.deserialize.side_effect = ValueError()
-        addon = GrpcProtocConsoleBodyModifer(serializer)
-
-        master.spawn_editor().return_value = "modifiedMessage"
-        mitmproxy.ctx.master = master
+        master = Mock()
+        master.spawn_editor.return_value = "modifiedMessage"
+        addon = GrpcProtocConsoleBodyModifer(serializer, master)
 
         with self.assertRaises(CommandError):
             addon.edit_focus("request-body", tflow.tflow())
 
-    @patch("mitmproxy.ctx.master")
-    def test_edit_focus_serialization_fails(self, master):
+    def test_edit_focus_serialization_fails(self):
         serializer = Mock()
         serializer.serialize.side_effect = ValueError()
-        addon = GrpcProtocConsoleBodyModifer(serializer)
-
-        master.spawn_editor().return_value = "modifiedMessage"
-        mitmproxy.ctx.master = master
+        master = Mock()
+        master.spawn_editor.return_value = "modifiedMessage"
+        addon = GrpcProtocConsoleBodyModifer(serializer, master)
 
         with self.assertRaises(CommandError):
             addon.edit_focus("request-body", tflow.tflow())

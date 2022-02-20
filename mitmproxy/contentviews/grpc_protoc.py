@@ -32,7 +32,7 @@ class ViewGrpcProtoc(base.View):
         http_message: Optional[http.Message] = None,
         **unknown_metadata
     ):
-        if http_message is not None:
+        if http_message is not None and flow is not None:
             deserialized = self.serializer.deserialize(http_message, flow.request.path, data)
             return self.name, base.format_text(deserialized)
         else:

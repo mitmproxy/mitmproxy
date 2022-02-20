@@ -61,7 +61,7 @@ class ConsoleMaster(master.Master):
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),
-            grpc_protoc.GrpcProtocConsoleBodyModifer(protoc.serializer),
+            grpc_protoc.GrpcProtocConsoleBodyModifer(protoc.serializer, self),
             grpc_protoc.GrpcProtocConsoleDescriptorProvider(protoc.serializer)
         )
 

@@ -1,11 +1,9 @@
 from typing import Optional, Sequence
 from mitmproxy import ctx, command, types
 from mitmproxy.exceptions import CommandError
-from mitmproxy.flow import Flow
+from mitmproxy.tools.console.master import ConsoleMaster
 from mitmproxy.utils import strutils
 from mitmproxy.utils.protoc import ProtocSerializer
-
-import mitmproxy.tools.console.master
 
 
 class GrpcProtocConsoleBodyModifer:
@@ -13,10 +11,13 @@ class GrpcProtocConsoleBodyModifer:
     Command options that allow for modification of protobuf content in HTTP body.
     """
 
-    console_master: "mitmproxy.tools.console.master.ConsoleMaster"
-
-    def __init__(self, serializer: ProtocSerializer) -> None:
+    def __init__(
+        self,
+        serializer: ProtocSerializer,
+        console_master: ConsoleMaster
+    ) -> None:
         self.serializer = serializer
+        self.console_master = console_master
 
     @command.command("console.edit.grpc.options")
     def edit_focus_options(self) -> Sequence[str]:
