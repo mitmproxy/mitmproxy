@@ -1,15 +1,18 @@
 import ipaddress
 import os
+from enum import Enum
 from pathlib import Path
 from typing import List, Optional, TypedDict, Any
 
 from OpenSSL import SSL
+
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import tls as proxy_tls
+from mitmproxy.utils import ciphersuites as cs
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -23,6 +26,11 @@ DEFAULT_CIPHERS = (
     'DHE-RSA-AES256-SHA256', 'AES128-GCM-SHA256', 'AES256-GCM-SHA384', 'AES128-SHA256', 'AES256-SHA256', 'AES128-SHA',
     'AES256-SHA', 'DES-CBC3-SHA'
 )
+
+
+class TlsStrategy(Enum):
+    DEFAULT_CIPHERSET = 1
+    MIRROR = 2
 
 
 class AppData(TypedDict):
@@ -60,6 +68,8 @@ class TlsConfig:
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
     """
     certstore: certs.CertStore = None  # type: ignore
+
+    client_tls_hello: tls.ClientHello = None
 
     # TODO: We should support configuring TLS 1.3 cipher suites (https://github.com/mitmproxy/mitmproxy/issues/4260)
     # TODO: We should re-use SSL.Context options here, if only for TLS session resumption.
@@ -104,6 +114,13 @@ class TlsConfig:
             choices=[x.name for x in net_tls.Version],
             help=f"Set the maximum TLS version for server connections.",
         )
+        loader.add_option(
+            name="tls_strategy",
+            typespec=str,
+            default=TlsStrategy.MIRROR.name,
+            choices=[x.name for x in TlsStrategy],
+            help=f"Set server TLS connection strategy.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -112,6 +129,7 @@ class TlsConfig:
                 ctx.options.add_upstream_certs_to_client_chain or
                 ctx.options.upstream_cert
         )
+        self.client_tls_hello = tls_clienthello.client_hello
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between client and proxy."""
@@ -199,6 +217,17 @@ class TlsConfig:
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
+
+        if not server.cipher_list and ctx.options.tls_strategy is not TlsStrategy.DEFAULT_CIPHERSET:
+            if ctx.options.tls_strategy is TlsStrategy.MIRROR.name:
+                cs_list = []
+                for cs_num in self.client_tls_hello.cipher_suites:
+                    cipher_name = cs.get_cipher_name(cs_num)
+                    if cipher_name is not None:
+                        cs_list.append(cipher_name)
+                server.cipher_list = tuple(cs_list)
+                # ctx.log.info(server.cipher_list)
+
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
@@ -224,6 +253,18 @@ class TlsConfig:
             client_cert=client_cert,
             alpn_protos=tuple(server.alpn_offers),
         )
+
+        if ctx.options.tls_strategy is TlsStrategy.MIRROR.name:
+            # Set TLS1.3 ciphers
+            # Maybe there is a better way, but I suck at python :)
+            ssl_ctx.set_ciphersuites = cs.set_ciphersuites
+            tls_13_ciphersuites = (x.encode() for x in cipher_list if x in cs.tls_13_ciphersuite_names.values())
+            ssl_ctx.set_ciphersuites(ssl_ctx, b":".join(tls_13_ciphersuites))
+            # TODO: this will interfere with old ciphers - find the way around, if any
+            # Need to somehow disable TLS_FALLBACK_SCSV fake ciphersuite
+            # OpenSSL sends it by default, even though Chrome and FF don't
+            # https://wiki.openssl.org/index.php/SSL_MODE_SEND_FALLBACK_SCSV
+            # ssl_ctx.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_COMPRESSION)
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         if server.sni:
