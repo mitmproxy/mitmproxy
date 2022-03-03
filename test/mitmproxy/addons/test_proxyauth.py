@@ -206,8 +206,8 @@ class TestProxyAuth:
             with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
                 ctx.configure(pa, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
-                ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
+            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification on the first part"):
+                ctx.configure(pa, proxyauth="ldapssssssss:390:fake_server:dn:password:tree")
 
             with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
                 ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt"))
