@@ -210,6 +210,7 @@ def test_ldap(monkeypatch):
     validator.conn.response = False
     assert not validator("foo", "bar")
 
+
 def test_ldap_with_custom_port(monkeypatch):
     monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
     monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
