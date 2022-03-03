@@ -208,15 +208,34 @@ class Ldap(Validator):
 
     def __init__(self, proxyauth: str):
         try:
-            security, url, ldap_user, ldap_pass, self.dn_subtree = proxyauth.split(":")
+            port = None
+            if proxyauth.count(":") > 4:
+                (
+                    security,
+                    url,
+                    port,
+                    ldap_user,
+                    ldap_pass,
+                    self.dn_subtree,
+                ) = proxyauth.split(":")
+            else:
+                security, url, ldap_user, ldap_pass, self.dn_subtree = proxyauth.split(":")
         except ValueError:
             raise exceptions.OptionsError("Invalid ldap specification")
-        if security == "ldaps":
-            server = ldap3.Server(url, use_ssl=True)
-        elif security == "ldap":
-            server = ldap3.Server(url)
+        if port and port is not None:
+            if security == "ldaps":
+                server = ldap3.Server(url, port=int(port), use_ssl=True)
+            elif security == "ldap":
+                server = ldap3.Server(url, port=int(port))
+            else:
+                raise exceptions.OptionsError("Invalid ldap specification on the first part")
         else:
-            raise exceptions.OptionsError("Invalid ldap specification on the first part")
+            if security == "ldaps":
+                server = ldap3.Server(url, use_ssl=True)
+            elif security == "ldap":
+                server = ldap3.Server(url)
+            else:
+                raise exceptions.OptionsError("Invalid ldap specification on the first part")
         conn = ldap3.Connection(
             server,
             ldap_user,

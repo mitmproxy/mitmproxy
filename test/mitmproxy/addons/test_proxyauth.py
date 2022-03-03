@@ -209,3 +209,13 @@ def test_ldap(monkeypatch):
     assert validator("foo", "bar")
     validator.conn.response = False
     assert not validator("foo", "bar")
+
+def test_ldap_with_custom_port(monkeypatch):
+    monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
+    monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
+
+    validator = proxyauth.Ldap("ldaps:localhost:390:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+    assert not validator("", "")
+    assert validator("foo", "bar")
+    validator.conn.response = False
+    assert not validator("foo", "bar")
