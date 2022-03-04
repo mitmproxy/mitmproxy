@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 
 import pytest
@@ -25,7 +26,10 @@ class TestConcurrent:
             )
             end = time.time()
             # This test may fail on overloaded CI systems, increase upper bound if necessary.
-            assert 0.3 < end - start < 1
+            if os.environ.get("CI"):
+                assert 0.5 <= end - start
+            else:
+                assert 0.5 <= end - start < 1
 
     @pytest.mark.asyncio
     async def test_concurrent_err(self, tdata):
