@@ -103,14 +103,6 @@ def run(
             # Not supported on Windows
             pass
 
-        # Make sure that we catch KeyboardInterrupts on Windows.
-        # https://stackoverflow.com/a/36925722/934719
-        if os.name == "nt":
-            async def wakeup():
-                while True:
-                    await asyncio.sleep(0.2)
-            asyncio.ensure_future(wakeup())
-
         master.run()
     except exceptions.OptionsError as e:
         print("{}: {}".format(sys.argv[0], e), file=sys.stderr)
