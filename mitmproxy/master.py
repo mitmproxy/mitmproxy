@@ -3,6 +3,7 @@ import logging
 import sys
 import threading
 import traceback
+from typing import Callable
 
 from mitmproxy import addonmanager, hooks
 from mitmproxy import command
@@ -44,13 +45,26 @@ class Master:
     async def running(self):
         self.addons.trigger(hooks.RunningHook())
 
-    def run_loop(self, loop):
+        # We set the exception handler here because urwid's run() method overwrites it.
+        asyncio.get_running_loop().set_exception_handler(self._asyncio_exception_handler)
+
+    def _asyncio_exception_handler(self, loop, context):
+        exc: Exception = context["exception"]
+        if isinstance(exc, OSError) and exc.errno == 10038:
+            return  # suppress https://bugs.python.org/issue43253
+        self.log.error(
+            "\n".join(traceback.format_exception(exc)) +
+            "\nPlease lodge a bug report at:" +
+            "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+        )
+
+    def run_loop(self, run_forever: Callable) -> None:
         self.start()
         asyncio.ensure_future(self.running())
 
         exc = None
         try:
-            loop()
+            run_forever()
         except Exception:  # pragma: no cover
             exc = traceback.format_exc()
         finally:
