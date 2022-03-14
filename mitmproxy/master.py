@@ -109,24 +109,19 @@ class Master:
                 except RuntimeError:
                     pass  # Event loop stopped before Future completed.
 
-    def _change_reverse_host(self, f):
-        """
-        When we load flows in reverse proxy mode, we adjust the target host to
-        the reverse proxy destination for all flows we load. This makes it very
-        easy to replay saved flows against a different host.
-        """
-        if self.options.mode.startswith("reverse:"):
-            _, upstream_spec = server_spec.parse_with_mode(self.options.mode)
-            f.request.host, f.request.port = upstream_spec.address
-            f.request.scheme = upstream_spec.scheme
-
     async def load_flow(self, f):
         """
         Loads a flow
         """
 
         if isinstance(f, http.HTTPFlow):
-            self._change_reverse_host(f)
+            if self.options.mode.startswith("reverse:"):
+                # When we load flows in reverse proxy mode, we adjust the target host to
+                # the reverse proxy destination for all flows we load. This makes it very
+                # easy to replay saved flows against a different host.
+                _, upstream_spec = server_spec.parse_with_mode(self.options.mode)
+                f.request.host, f.request.port = upstream_spec.address
+                f.request.scheme = upstream_spec.scheme
 
         for e in eventsequence.iterate(f):
             await self.addons.handle_lifecycle(e)
