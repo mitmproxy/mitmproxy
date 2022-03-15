@@ -70,7 +70,11 @@ class Master:
         if isinstance(exc, OSError) and exc.errno == 10038:
             return  # suppress https://bugs.python.org/issue43253
         self.log.error(
-            "\n".join(traceback.format_exception(exc)) +
+            "\n".join(traceback.format_exception(
+                type(exc),
+                exc,
+                exc.__traceback__
+            )) +
             "\nPlease lodge a bug report at:" +
             "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
         )
