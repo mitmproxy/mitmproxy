@@ -94,10 +94,10 @@ The _separator_ is arbitrary, and is defined by the first character (`|` in the 
 
 Pattern | Description
 ------- | -----------
-`|example.com/main.js|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
-`|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
-`|example.com/static/foo|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
-`|~m GET|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
+`\|example.com/main.js\|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
+`\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
+`\|example.com/static/foo\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
+`\|~m GET\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
 
 ### Details
 

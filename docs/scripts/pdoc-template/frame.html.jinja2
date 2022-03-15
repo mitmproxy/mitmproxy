@@ -1,3 +1,9 @@
-{% block style %}{% endblock %}
-{% block body %}{% endblock %}
+{% filter minify_css %}
+    {% block style %}
+        <style>/*! theme.css */{% include "theme.css" %}</style>
+        <style>/*! content.css */{% include "content.css" %}</style>
+        <style>.pdoc h1 { margin-bottom: 1em; }</style>
+    {% endblock %}
+{% endfilter %}
+{% block content %}{% endblock %}
 <div class="pdoc" style="margin-top: 4rem">{% block attribution %}{% endblock %}</div>

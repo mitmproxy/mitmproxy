@@ -1168,7 +1168,7 @@ class ReadInputThread(threading.Thread):
                 if inp.EventType == win32.EventType.KEY_EVENT:
                     if not inp.Event.KeyEvent.bKeyDown:
                         continue
-                    self._input.send(inp.Event.KeyEvent.uChar.AsciiChar)
+                    self._input.send(inp.Event.KeyEvent.uChar.UnicodeChar.encode("utf8"))
                 elif inp.EventType == win32.EventType.WINDOW_BUFFER_SIZE_EVENT:
                     self._resize()
                 else:

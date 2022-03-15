@@ -194,6 +194,7 @@ class WebsocketLayer(layer.Layer):
                         yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)
                 yield WebsocketEndHook(self.flow)
+                self.flow.live = False
                 self._handle_event = self.done
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")

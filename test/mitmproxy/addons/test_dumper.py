@@ -168,7 +168,6 @@ def test_echo_request_line():
 
 
 class TestContentView:
-    @pytest.mark.asyncio
     async def test_contentview(self):
         with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
             va.side_effect = ValueError("")

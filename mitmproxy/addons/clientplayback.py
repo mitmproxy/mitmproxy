@@ -10,7 +10,6 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
-from mitmproxy.addons.proxyserver import AsyncReply
 from mitmproxy.hooks import UpdateHook
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
@@ -95,9 +94,9 @@ class ReplayHandler(server.ConnectionHandler):
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         data, = hook.args()
-        data.reply = AsyncReply(data)
         await ctx.master.addons.handle_lifecycle(hook)
-        await data.reply.done.wait()
+        if isinstance(data, flow.Flow):
+            await data.wait_for_resume()
         if isinstance(hook, (layers.http.HttpResponseHook, layers.http.HttpErrorHook)):
             if self.transports:
                 # close server connections

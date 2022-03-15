@@ -241,7 +241,7 @@ class CommandManager:
 
         return parsed, next_params
 
-    def call(self, command_name: str, *args: typing.Sequence[typing.Any]) -> typing.Any:
+    def call(self, command_name: str, *args: typing.Any) -> typing.Any:
         """
         Call a command with native arguments. May raise CommandError.
         """

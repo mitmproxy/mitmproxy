@@ -1,4 +1,3 @@
-import contextlib
 import asyncio
 import sys
 
@@ -22,7 +21,11 @@ class TestAddons(addonmanager.AddonManager):
 
 class RecordingMaster(mitmproxy.master.Master):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+        super().__init__(*args, **kwargs, event_loop=loop)
         self.addons = TestAddons(self)
         self.logs = []
 
@@ -79,19 +82,17 @@ class context:
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
-    @contextlib.contextmanager
-    def cycle(self, addon, f):
+    async def cycle(self, addon, f):
         """
-            Cycles the flow through the events for the flow. Stops if a reply
-            is taken (as in flow interception).
+            Cycles the flow through the events for the flow. Stops if the flow
+            is intercepted.
         """
-        f.reply._state = "start"
         for evt in eventsequence.iterate(f):
-            self.master.addons.invoke_addon(
+            await self.master.addons.invoke_addon(
                 addon,
                 evt
             )
-            if f.reply.state == "taken":
+            if f.intercepted:
                 return
 
     def configure(self, addon, **kwargs):
@@ -106,7 +107,7 @@ class context:
             if kwargs:
                 self.options.update(**kwargs)
             else:
-                self.master.addons.invoke_addon(addon, hooks.ConfigureHook(set()))
+                self.master.addons.invoke_addon_sync(addon, hooks.ConfigureHook(set()))
 
     def script(self, path):
         """
@@ -114,12 +115,6 @@ class context:
         """
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
-
-    def invoke(self, addon, event: hooks.Hook):
-        """
-            Recursively invoke an event on an addon and all its children.
-        """
-        return self.master.addons.invoke_addon(addon, event)
 
     def command(self, func, *args):
         """

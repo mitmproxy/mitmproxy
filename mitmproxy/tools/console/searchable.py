@@ -19,7 +19,6 @@ class Searchable(urwid.ListBox):
     def __init__(self, contents):
         self.walker = urwid.SimpleFocusListWalker(contents)
         urwid.ListBox.__init__(self, self.walker)
-        self.set_focus(len(self.walker) - 1)
         self.search_offset = 0
         self.current_highlight = None
         self.search_term = None
