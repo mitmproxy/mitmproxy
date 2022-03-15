@@ -30,7 +30,7 @@ class NTLMUpstreamAuth:
             typespec=typing.Optional[str],
             default=None,
             help="""
-            Add HTTP NTLM authentication to upstream proxy requests. 
+            Add HTTP NTLM authentication to upstream proxy requests.
             Format: username:password.
             """
         )
@@ -64,9 +64,9 @@ class NTLMUpstreamAuth:
     def running(self):
         def extract_flow_from_context(context: Context) -> http.HTTPFlow:
             if context and context.layers:
-                for layer in context.layers:
-                    if isinstance(layer, HttpLayer):
-                        for _, stream in layer.streams.items():
+                for l in context.layers:
+                    if isinstance(l, HttpLayer):
+                        for _, stream in l.streams.items():
                             return stream.flow if isinstance(stream, HttpStream) else None
 
         def build_connect_flow(context: Context, connect_header: typing.Tuple) -> http.HTTPFlow:
@@ -74,7 +74,7 @@ class NTLMUpstreamAuth:
             if not flow:
                 ctx.log.error("failed to build connect flow")
                 raise
-            flow.request.content = b"" # we should send empty content for handshake
+            flow.request.content = b""  # we should send empty content for handshake
             header_name, header_value = connect_header
             flow.request.headers.add(header_name, header_value)
             return flow
@@ -99,8 +99,7 @@ class NTLMUpstreamAuth:
                         raise
                     return token
 
-        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[
-            typing.Tuple[bool, typing.Optional[str]]]:
+        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[typing.Tuple[bool, typing.Optional[str]]]:
             self.buf += data
             response_head = self.buf.maybe_extract_lines()
             if response_head:
@@ -165,8 +164,9 @@ class CustomNTLMContext:
         negotiate_message_base_64_in_bytes = base64.b64encode(negotiate_message)
         negotiate_message_base_64_ascii = negotiate_message_base_64_in_bytes.decode("ascii")
         negotiate_message_base_64_final = u'%s %s' % (self.preferred_type, negotiate_message_base_64_ascii)
-        self.ctx_log.debug('{} Authentication, negotiate message: {}'
-                     .format(self.preferred_type, negotiate_message_base_64_final))
+        self.ctx_log.debug(
+            f'{self.preferred_type} Authentication, negotiate message: {negotiate_message_base_64_final}'
+        )
         return negotiate_message_base_64_final
 
     def get_ntlm_challenge_response_message(self, challenge_message: str) -> typing.Any:
@@ -179,6 +179,7 @@ class CustomNTLMContext:
         authenticate_message = self.ntlm_context.step(challenge_message_ascii_bytes)
         negotiate_message_base_64 = u'%s %s' % (self.preferred_type,
                                                 base64.b64encode(authenticate_message).decode('ascii'))
-        self.ctx_log.debug('{} Authentication, response to challenge message: {}'
-                     .format(self.preferred_type, negotiate_message_base_64))
+        self.ctx_log.debug(
+            f'{self.preferred_type} Authentication, response to challenge message: {negotiate_message_base_64}'
+        )
         return negotiate_message_base_64
