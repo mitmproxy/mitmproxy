@@ -92,13 +92,16 @@ class WebMaster(master.Master):
             data=options_dict
         )
 
-    def run(self):  # pragma: no cover
-        AsyncIOMainLoop().install()
-        iol = tornado.ioloop.IOLoop.instance()
+    async def running(self):
+        # Register tornado with the current event loop
+        tornado.ioloop.IOLoop.current()
+
+        # Add our web app.
         http_server = tornado.httpserver.HTTPServer(self.app)
         http_server.listen(self.options.web_port, self.options.web_host)
-        web_url = f"http://{self.options.web_host}:{self.options.web_port}/"
+
         self.log.info(
-            f"Web server listening at {web_url}",
+            f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",
         )
-        self.run_loop(iol.start)
+
+        return await super().running()

@@ -5,16 +5,14 @@ import os
 import os.path
 import shlex
 import shutil
-import signal
 import stat
 import subprocess
 import sys
 import tempfile
-import typing  # noqa
 import contextlib
 import threading
 
-from tornado.platform.asyncio import AddThreadSelectorEventLoop
+from mitmproxy.contrib.tornado.asyncio import AddThreadSelectorEventLoop
 
 import urwid
 
@@ -38,8 +36,6 @@ class ConsoleMaster(master.Master):
     def __init__(self, opts):
         super().__init__(opts)
 
-        self.start_err: typing.Optional[log.LogEntry] = None
-
         self.view: view.View = view.View()
         self.events = eventstore.EventStore()
         self.events.sig_add.connect(self.sig_add_log)
@@ -60,11 +56,6 @@ class ConsoleMaster(master.Master):
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),
         )
-
-        def sigint_handler(*args, **kwargs):
-            self.prompt_for_exit()
-
-        signal.signal(signal.SIGINT, sigint_handler)
 
         self.window = None
 
@@ -201,7 +192,7 @@ class ConsoleMaster(master.Master):
     def inject_key(self, key):
         self.loop.process_input([key])
 
-    def run(self):
+    async def running(self) -> None:
         if not sys.stdout.isatty():
             print("Error: mitmproxy's console interface requires a tty. "
                   "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
@@ -215,27 +206,28 @@ class ConsoleMaster(master.Master):
             self.set_palette,
             ["console_palette", "console_palette_transparent"]
         )
-        loop = asyncio.get_event_loop()
+
+        loop = asyncio.get_running_loop()
         if isinstance(loop, getattr(asyncio, "ProactorEventLoop", tuple())):
             # fix for https://bugs.python.org/issue37373
             loop = AddThreadSelectorEventLoop(loop)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             event_loop=urwid.AsyncioEventLoop(loop=loop),
-            screen = self.ui,
-            handle_mouse = self.options.console_mouse,
+            screen=self.ui,
+            handle_mouse=self.options.console_mouse,
         )
         self.window = window.Window(self)
         self.loop.widget = self.window
         self.window.refresh()
 
-        if self.start_err:
-            def display_err(*_):
-                self.sig_add_log(None, self.start_err)
-                self.start_err = None
-            self.loop.set_alarm_in(0.01, display_err)
+        self.loop.start()
 
-        super().run_loop(self.loop.run)
+        await super().running()
+
+    async def done(self):
+        self.loop.stop()
+        await super().done()
 
     def overlay(self, widget, **kwargs):
         self.window.set_overlay(widget, **kwargs)

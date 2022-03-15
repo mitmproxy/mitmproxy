@@ -9,7 +9,7 @@ from mitmproxy import exceptions, master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
-from mitmproxy.utils import debug, arg_check
+from mitmproxy.utils import asyncio_utils, debug, arg_check
 
 
 def assert_utf8_env():
@@ -95,20 +95,27 @@ def run(
                 master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
             opts.update(**extra(args))
 
-        loop = asyncio.get_event_loop()
-        try:
-            loop.add_signal_handler(signal.SIGINT, getattr(master, "prompt_for_exit", master.shutdown))
-            loop.add_signal_handler(signal.SIGTERM, master.shutdown)
-        except NotImplementedError:
-            # Not supported on Windows
-            pass
-
-        master.run()
     except exceptions.OptionsError as e:
         print("{}: {}".format(sys.argv[0], e), file=sys.stderr)
         sys.exit(1)
-    except (KeyboardInterrupt, RuntimeError):
-        pass
+
+    async def main():
+        loop = asyncio.get_running_loop()
+
+        def _sigint(*_):
+            loop.call_soon_threadsafe(getattr(master, "prompt_for_exit", master.shutdown))
+
+        def _sigterm(*_):
+            loop.call_soon_threadsafe(master.shutdown)
+
+        # We can't use loop.add_signal_handler because that's not available on Windows' Proactorloop,
+        # but signal.signal just works fine for our purposes.
+        signal.signal(signal.SIGINT, _sigint)
+        signal.signal(signal.SIGTERM, _sigterm)
+
+        return await master.run()
+
+    asyncio.run(main())
     return master
 
 
