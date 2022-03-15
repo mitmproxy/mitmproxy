@@ -20,7 +20,6 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
 async def test_playback(mode, concurrency):
@@ -72,7 +71,6 @@ async def test_playback(mode, concurrency):
                 assert flow.response.status_code == 204
 
 
-@pytest.mark.asyncio
 async def test_playback_https_upstream():
     handler_ok = asyncio.Event()
 
@@ -103,7 +101,6 @@ async def test_playback_https_upstream():
             assert str(flow.error) == f'Upstream proxy {addr[0]}:{addr[1]} refused HTTP CONNECT request: 502 Bad Gateway'
 
 
-@pytest.mark.asyncio
 async def test_playback_crash(monkeypatch):
     async def raise_err():
         raise ValueError("oops")
@@ -141,7 +138,6 @@ def test_check():
     assert "Can only replay HTTP" in cp.check(f)
 
 
-@pytest.mark.asyncio
 async def test_start_stop(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:

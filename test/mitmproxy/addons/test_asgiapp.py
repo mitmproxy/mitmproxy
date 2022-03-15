@@ -2,7 +2,6 @@ import asyncio
 import json
 
 import flask
-import pytest
 from flask import request
 
 from mitmproxy.addons import asgiapp
@@ -45,7 +44,6 @@ async def noresponseapp(scope, receive, send):
     return
 
 
-@pytest.mark.asyncio
 async def test_asgi_full():
     ps = Proxyserver()
     addons = [

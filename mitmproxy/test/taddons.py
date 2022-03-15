@@ -21,7 +21,11 @@ class TestAddons(addonmanager.AddonManager):
 
 class RecordingMaster(mitmproxy.master.Master):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+        super().__init__(*args, **kwargs, event_loop=loop)
         self.addons = TestAddons(self)
         self.logs = []
 

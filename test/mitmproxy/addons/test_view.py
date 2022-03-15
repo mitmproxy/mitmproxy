@@ -194,7 +194,6 @@ def test_orders():
         assert v.order_options()
 
 
-@pytest.mark.asyncio
 async def test_load(tmpdir):
     path = str(tmpdir.join("path"))
     v = view.View()

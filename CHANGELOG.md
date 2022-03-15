@@ -30,6 +30,7 @@
 * Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (@mhils, #4207)
 * Speculative fix for some rare HTTP/2 connection stalls (#5158, @EndUser509)
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
+* Console Improvements on Windows (@mhils)
 
 ## 28 September 2021: mitmproxy 7.0.4
 

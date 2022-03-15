@@ -1,4 +1,3 @@
-import asyncio
 import io
 import gzip
 import json
@@ -76,7 +75,7 @@ def test_generate_tflow_js(tdata):
     )
 
 
-def test_generate_options_js():
+async def test_generate_options_js():
     o = options.Options()
     m = webmaster.WebMaster(o)
     opt: optmanager._Option
@@ -117,14 +116,12 @@ def test_generate_options_js():
 
 @pytest.mark.usefixtures("no_tornado_logging", "tdata")
 class TestApp(tornado.testing.AsyncHTTPTestCase):
-    def get_new_ioloop(self):
-        io_loop = tornado.platform.asyncio.AsyncIOLoop()
-        asyncio.set_event_loop(io_loop.asyncio_loop)
-        return io_loop
-
     def get_app(self):
-        o = options.Options(http2=False)
-        m = webmaster.WebMaster(o, with_termlog=False)
+        async def make_master():
+            o = options.Options(http2=False)
+            return webmaster.WebMaster(o, with_termlog=False)
+
+        m = self.io_loop.asyncio_loop.run_until_complete(make_master())
         f = tflow.tflow(resp=True)
         f.id = "42"
         f.request.content = b"foo\nbar"

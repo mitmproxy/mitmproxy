@@ -4,7 +4,7 @@ from mitmproxy import options
 from mitmproxy.tools.console import statusbar, master
 
 
-def test_statusbar(monkeypatch):
+async def test_statusbar(monkeypatch):
     o = options.Options()
     m = master.ConsoleMaster(o)
     m.options.update(
@@ -48,15 +48,9 @@ def test_statusbar(monkeypatch):
                                            ("warn", "(more in eventlog)")])
 ])
 def test_shorten_message(message, ready_message):
-    o = options.Options()
-    m = master.ConsoleMaster(o)
-    ab = statusbar.ActionBar(m)
-    assert ab.shorten_message(message, max_width=30) == ready_message
+    assert statusbar.ActionBar.shorten_message(message, max_width=30) == ready_message
 
 
 def test_shorten_message_narrow():
-    o = options.Options()
-    m = master.ConsoleMaster(o)
-    ab = statusbar.ActionBar(m)
-    shorten_msg = ab.shorten_message("error", max_width=4)
+    shorten_msg = statusbar.ActionBar.shorten_message("error", max_width=4)
     assert shorten_msg == [(None, "\u2026"), ("warn", "(more in eventlog)")]

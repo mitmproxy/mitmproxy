@@ -41,7 +41,6 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-@pytest.mark.asyncio
 async def test_start_stop():
     async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         assert await reader.readuntil(b"\r\n\r\n") == b"GET /hello HTTP/1.1\r\n\r\n"
@@ -89,7 +88,6 @@ async def test_start_stop():
             assert repr(ps) == "ProxyServer(stopped, 0 active conns)"
 
 
-@pytest.mark.asyncio
 async def test_inject() -> None:
     async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         while s := await reader.read(1):
@@ -118,7 +116,6 @@ async def test_inject() -> None:
             assert await reader.read(1) == b"c"
 
 
-@pytest.mark.asyncio
 async def test_inject_fail() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
@@ -149,7 +146,6 @@ async def test_inject_fail() -> None:
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
 
 
-@pytest.mark.asyncio
 async def test_warn_no_nextlayer():
     """
     Test that we log an error if the proxy server is started without NextLayer addon.

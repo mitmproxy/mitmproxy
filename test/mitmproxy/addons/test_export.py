@@ -261,7 +261,6 @@ def test_export(tmp_path) -> None:
     (IsADirectoryError, "Is a directory"),
     (FileNotFoundError, "No such file or directory")
 ])
-@pytest.mark.asyncio
 async def test_export_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
@@ -272,7 +271,6 @@ async def test_export_open(exception, log_message, tmpdir):
             await tctx.master.await_log(log_message, level="error")
 
 
-@pytest.mark.asyncio
 async def test_clip(tmpdir):
     e = export.Export()
     with taddons.context() as tctx:

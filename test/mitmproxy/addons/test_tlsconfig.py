@@ -264,7 +264,6 @@ class TestTlsConfig:
             assert self.do_handshake(tssl_client, tssl_server)
             assert tssl_server.obj.getpeercert()
 
-    @pytest.mark.asyncio
     async def test_ca_expired(self, monkeypatch):
         monkeypatch.setattr(certs.Cert, "has_expired", lambda self: True)
         ta = tlsconfig.TlsConfig()
