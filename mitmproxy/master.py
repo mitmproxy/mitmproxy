@@ -20,13 +20,19 @@ class Master:
     event_loop: asyncio.AbstractEventLoop
 
     def __init__(self, opts, event_loop: Optional[asyncio.AbstractEventLoop] = None):
-        self.should_exit = asyncio.Event()
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self.log = log.Log(self)
-        self.event_loop = event_loop or asyncio.get_running_loop()
 
+        # We expect an active event loop here already because some addons
+        # may want to spawn tasks during the initial configuration phase,
+        # which happens before run().
+        self.event_loop = event_loop or asyncio.get_running_loop()
+        try:
+            self.should_exit = asyncio.Event()
+        except RuntimeError:
+            self.should_exit = asyncio.Event(loop=self.event_loop)
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = self.log
         mitmproxy_ctx.options = self.options

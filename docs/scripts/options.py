@@ -16,7 +16,7 @@ unified_options = {}
 async def dump():
     for tool_name, master in masters.items():
         opts = options.Options()
-        inst = master(opts)
+        _ = master(opts)
         for key, option in optmanager.dump_dicts(opts).items():
             if key in unified_options:
                 unified_options[key]['tools'].append(tool_name)
