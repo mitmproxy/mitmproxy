@@ -147,67 +147,20 @@ class TestProxyAuth:
             )
             assert isinstance(pa.validator, proxyauth.Ldap)
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
-                ctx.configure(pa, proxyauth="ldap:test:test:test")
-
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
-                ctx.configure(pa, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
-
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
-                ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
-
-            with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
-                ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt"))
-            with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
-                ctx.configure(pa, proxyauth="@nonexistent")
-
-            ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/htpasswd"))
-            assert isinstance(pa.validator, proxyauth.Htpasswd)
-            assert pa.validator("test", "test")
-            assert not pa.validator("test", "foo")
-
-            with pytest.raises(exceptions.OptionsError,
-                               match="Proxy Authentication not supported in transparent mode."):
-                ctx.configure(pa, proxyauth="any", mode="transparent")
-
-    def test_configure_with_custom_port(self, monkeypatch, tdata):
-        monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
-        monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
-
-        pa = proxyauth.ProxyAuth()
-        with taddons.context(pa) as ctx:
-            with pytest.raises(exceptions.OptionsError, match="Invalid proxyauth specification"):
-                ctx.configure(pa, proxyauth="foo")
-
-            ctx.configure(pa, proxyauth="foo:bar")
-            assert isinstance(pa.validator, proxyauth.SingleUser)
-            assert pa.validator("foo", "bar")
-            assert not pa.validator("foo", "baz")
-
-            with pytest.raises(exceptions.OptionsError, match="Invalid single-user auth specification."):
-                ctx.configure(pa, proxyauth="foo:bar:baz")
-
-            ctx.configure(pa, proxyauth="any")
-            assert isinstance(pa.validator, proxyauth.AcceptAll)
-            assert pa.validator("foo", "bar")
-
-            ctx.configure(pa, proxyauth=None)
-            assert pa.validator is None
-
             ctx.configure(
                 pa,
-                proxyauth="ldap:localhost:390:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+                proxyauth="ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
             )
             assert isinstance(pa.validator, proxyauth.Ldap)
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
                 ctx.configure(pa, proxyauth="ldap:test:test:test")
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
                 ctx.configure(pa, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification on the first part"):
-                ctx.configure(pa, proxyauth="ldapssssssss:390:fake_server:dn:password:tree")
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
+                ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
 
             with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
                 ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt"))
@@ -253,22 +206,15 @@ class TestProxyAuth:
             assert f2.metadata["proxyauth"] == ('test', 'test')
 
 
-def test_ldap(monkeypatch):
+@pytest.mark.parametrize("spec", [
+    "ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
+    "ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+])
+def test_ldap(monkeypatch, spec):
     monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
     monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
 
-    validator = proxyauth.Ldap("ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
-    assert not validator("", "")
-    assert validator("foo", "bar")
-    validator.conn.response = False
-    assert not validator("foo", "bar")
-
-
-def test_ldap_with_custom_port(monkeypatch):
-    monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
-    monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
-
-    validator = proxyauth.Ldap("ldaps:localhost:390:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+    validator = proxyauth.Ldap(spec)
     assert not validator("", "")
     assert validator("foo", "bar")
     validator.conn.response = False
