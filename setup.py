@@ -104,7 +104,7 @@ setup(
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
             "pyinstaller==4.7",
-            "pytest-asyncio>=0.10.0,<0.16,!=0.14",
+            "pytest-asyncio>=0.17.0,<0.19",
             "pytest-cov>=2.7.1,<3.1",
             "pytest-timeout>=1.3.3,<2.1",
             "pytest-xdist>=2.1.0,<3",

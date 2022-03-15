@@ -1,5 +1,6 @@
 import asyncio
 import traceback
+from typing import Optional
 
 from mitmproxy import addonmanager, hooks
 from mitmproxy import command
@@ -18,26 +19,32 @@ class Master:
 
     event_loop: asyncio.AbstractEventLoop
 
-    def __init__(self, opts):
+    def __init__(self, opts, event_loop: Optional[asyncio.AbstractEventLoop] = None):
         self.should_exit = asyncio.Event()
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self.log = log.Log(self)
+        self.event_loop = event_loop or asyncio.get_running_loop()
 
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = self.log
         mitmproxy_ctx.options = self.options
 
     async def run(self) -> None:
-        self.event_loop = asyncio.get_running_loop()
+        old_handler = self.event_loop.get_exception_handler()
         self.event_loop.set_exception_handler(self._asyncio_exception_handler)
-        self.should_exit.clear()
+        try:
+            self.should_exit.clear()
 
-        await self.running()
-        await self.should_exit.wait()
+            # Handle scheduled tasks (configure()) first.
+            await asyncio.sleep(0)
+            await self.running()
+            await self.should_exit.wait()
 
-        await self.done()
+            await self.done()
+        finally:
+            self.event_loop.set_exception_handler(old_handler)
 
     def shutdown(self):
         """

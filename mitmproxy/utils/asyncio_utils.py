@@ -1,11 +1,8 @@
 import asyncio
-import concurrent.futures
-import signal
 import sys
 import time
-from asyncio import tasks
 from collections.abc import Coroutine
-from typing import Awaitable, Callable, Optional, TypeVar
+from typing import Optional
 
 from mitmproxy.utils import human
 

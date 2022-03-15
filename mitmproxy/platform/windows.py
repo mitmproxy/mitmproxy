@@ -17,11 +17,6 @@ import collections.abc
 import pydivert
 import pydivert.consts
 
-if typing.TYPE_CHECKING:
-    class WindowsError(OSError):
-        @property
-        def winerror(self) -> int:
-            return 42
 
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
@@ -300,7 +295,7 @@ class Redirect(threading.Thread):
         while True:
             try:
                 packet = self.windivert.recv()
-            except WindowsError as e:
+            except OSError as e:
                 if e.winerror == 995:
                     return
                 else:
@@ -318,8 +313,8 @@ class Redirect(threading.Thread):
         """
         try:
             return self.windivert.recv()
-        except WindowsError as e:
-            if e.winerror == 995:
+        except OSError as e:
+            if e.winerror == 995:  # type: ignore
                 return None
             else:
                 raise

@@ -12,7 +12,7 @@ import tempfile
 import contextlib
 import threading
 
-from mitmproxy.contrib.tornado.asyncio import AddThreadSelectorEventLoop
+from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
 import urwid
 
@@ -23,6 +23,7 @@ from mitmproxy.addons import intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
+from mitmproxy.contrib.tornado import patch_tornado
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
@@ -209,8 +210,9 @@ class ConsoleMaster(master.Master):
 
         loop = asyncio.get_running_loop()
         if isinstance(loop, getattr(asyncio, "ProactorEventLoop", tuple())):
+            patch_tornado()
             # fix for https://bugs.python.org/issue37373
-            loop = AddThreadSelectorEventLoop(loop)
+            loop = AddThreadSelectorEventLoop(loop)  # type: ignore
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             event_loop=urwid.AsyncioEventLoop(loop=loop),

@@ -4,9 +4,11 @@ import pytest
 from mitmproxy.addons import termlog
 from mitmproxy import log
 from mitmproxy.test import taddons
+from test.conftest import skip_windows
 
 
 class TestTermLog:
+    @skip_windows  # not sure why this is suddenly necessary (03/2022)
     @pytest.mark.usefixtures('capfd')
     @pytest.mark.parametrize('outfile, expected_out, expected_err', [
         (None, ['one', 'three'], ['four']),

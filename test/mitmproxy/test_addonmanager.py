@@ -70,7 +70,7 @@ def test_command():
         assert tctx.master.commands.execute("test.command") == "here"
 
 
-def test_halt():
+async def test_halt():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)
@@ -218,7 +218,7 @@ async def test_simple():
         assert ta in a
 
 
-def test_load_option():
+async def test_load_option():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)
@@ -226,7 +226,7 @@ def test_load_option():
     assert "custom_option" in m.options._options
 
 
-def test_nesting():
+async def test_nesting():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)

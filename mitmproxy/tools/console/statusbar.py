@@ -63,7 +63,8 @@ class ActionBar(urwid.WidgetWrap):
     def prep_prompt(self, p):
         return p.strip() + ": "
 
-    def shorten_message(self, msg, max_width):
+    @staticmethod
+    def shorten_message(msg, max_width):
         """
         Shorten message so that it fits into a single line in the statusbar.
         """

@@ -194,7 +194,7 @@ class TestScriptLoader:
             await tctx.master.await_log("recorder response")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'recorder running', 'recorder configure',
+                'recorder configure', 'recorder running',
                 'recorder requestheaders', 'recorder request',
                 'recorder responseheaders', 'recorder response'
             ]
@@ -285,16 +285,16 @@ class TestScriptLoader:
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'a load',
-                'a running',
                 'a configure',
+                'a running',
 
                 'b load',
-                'b running',
                 'b configure',
+                'b running',
 
                 'c load',
-                'c running',
                 'c configure',
+                'c running',
             ]
 
             tctx.master.clear()
@@ -330,14 +330,16 @@ class TestScriptLoader:
                 'b done',
                 'a configure',
                 'e load',
-                'e running',
                 'e configure',
+                'e running',
             ]
 
+            # stop reload tasks
+            tctx.configure(sc, scripts=[])
 
-def test_order(event_loop, tdata, capsys):
+
+def test_order(tdata, capsys):
     """Integration test: Make sure that the runtime hooks are triggered on startup in the correct order."""
-    asyncio.set_event_loop(event_loop)
     main.mitmdump([
         "-n",
         "-s", tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py"),
@@ -348,6 +350,7 @@ def test_order(event_loop, tdata, capsys):
         r"\('recorder', 'load', .+\n"
         r"\('recorder', 'configure', .+\n"
         r"Loading script.+shutdown.py\n"
-        r"\('recorder', 'running', .+\n$",
+        r"\('recorder', 'running', .+\n"
+        r"\('recorder', 'done', .+\n$",
         capsys.readouterr().out,
     )

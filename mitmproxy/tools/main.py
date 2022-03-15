@@ -9,7 +9,7 @@ from mitmproxy import exceptions, master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
-from mitmproxy.utils import asyncio_utils, debug, arg_check
+from mitmproxy.utils import debug, arg_check
 
 
 def assert_utf8_env():
@@ -58,48 +58,48 @@ def run(
         extra: Extra argument processing callable which returns a dict of
         options.
     """
-    debug.register_info_dumpers()
+    async def main() -> master.Master:
+        debug.register_info_dumpers()
 
-    opts = options.Options()
-    master = master_cls(opts)
+        opts = options.Options()
+        master = master_cls(opts)
 
-    parser = make_parser(opts)
+        parser = make_parser(opts)
 
-    # To make migration from 2.x to 3.0 bearable.
-    if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
-        print("To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
+        # To make migration from 2.x to 3.0 bearable.
+        if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
+            print("To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
-    try:
-        args = parser.parse_args(arguments)
-    except SystemExit:
-        arg_check.check()
-        sys.exit(1)
+        try:
+            args = parser.parse_args(arguments)
+        except SystemExit:
+            arg_check.check()
+            sys.exit(1)
 
-    try:
-        opts.set(*args.setoptions, defer=True)
-        optmanager.load_paths(
-            opts,
-            os.path.join(opts.confdir, "config.yaml"),
-            os.path.join(opts.confdir, "config.yml"),
-        )
-        process_options(parser, opts, args)
+        try:
+            opts.set(*args.setoptions, defer=True)
+            optmanager.load_paths(
+                opts,
+                os.path.join(opts.confdir, "config.yaml"),
+                os.path.join(opts.confdir, "config.yml"),
+            )
+            process_options(parser, opts, args)
 
-        if args.options:
-            optmanager.dump_defaults(opts, sys.stdout)
-            sys.exit(0)
-        if args.commands:
-            master.commands.dump()
-            sys.exit(0)
-        if extra:
-            if args.filter_args:
-                master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
-            opts.update(**extra(args))
+            if args.options:
+                optmanager.dump_defaults(opts, sys.stdout)
+                sys.exit(0)
+            if args.commands:
+                master.commands.dump()
+                sys.exit(0)
+            if extra:
+                if args.filter_args:
+                    master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
+                opts.update(**extra(args))
 
-    except exceptions.OptionsError as e:
-        print("{}: {}".format(sys.argv[0], e), file=sys.stderr)
-        sys.exit(1)
+        except exceptions.OptionsError as e:
+            print("{}: {}".format(sys.argv[0], e), file=sys.stderr)
+            sys.exit(1)
 
-    async def main():
         loop = asyncio.get_running_loop()
 
         def _sigint(*_):
@@ -113,10 +113,10 @@ def run(
         signal.signal(signal.SIGINT, _sigint)
         signal.signal(signal.SIGTERM, _sigterm)
 
-        return await master.run()
+        await master.run()
+        return master
 
-    asyncio.run(main())
-    return master
+    return asyncio.run(main())
 
 
 def mitmproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
