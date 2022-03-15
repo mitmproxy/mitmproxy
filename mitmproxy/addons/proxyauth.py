@@ -232,12 +232,12 @@ class Ldap(Validator):
                 (
                     security,
                     url,
-                    port,
+                    port_str,
                     ldap_user,
                     ldap_pass,
                     dn_subtree,
                 ) = spec.split(":")
-                port = int(port)
+                port = int(port_str)
             else:
                 security, url, ldap_user, ldap_pass, dn_subtree = spec.split(":")
                 port = None
