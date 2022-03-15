@@ -13,7 +13,6 @@ async def ttask():
     await asyncio.sleep(999)
 
 
-@pytest.mark.asyncio
 async def test_simple():
     task = asyncio_utils.create_task(
         ttask(),

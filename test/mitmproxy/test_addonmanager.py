@@ -88,7 +88,6 @@ async def test_halt():
     assert end.running_called
 
 
-@pytest.mark.asyncio
 async def test_async_halt():
     o = options.Options()
     m = master.Master(o)
@@ -107,7 +106,6 @@ async def test_async_halt():
     assert end.running_called
 
 
-@pytest.mark.asyncio
 async def test_lifecycle():
     o = options.Options()
     m = master.Master(o)
@@ -129,7 +127,6 @@ def test_defaults():
     assert addons.default_addons()
 
 
-@pytest.mark.asyncio
 async def test_mixed_async_sync():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
@@ -155,7 +152,6 @@ async def test_mixed_async_sync():
         await tctx.master.await_log("called from sync context")
 
 
-@pytest.mark.asyncio
 async def test_loader():
     with taddons.context() as tctx:
         with mock.patch("mitmproxy.ctx.log.warn") as warn:
@@ -177,7 +173,6 @@ async def test_loader():
             l.add_command("test.command", cmd)
 
 
-@pytest.mark.asyncio
 async def test_simple():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
@@ -257,7 +252,6 @@ async def test_nesting():
     assert not a.get("four")
 
 
-@pytest.mark.asyncio
 async def test_old_api():
     with taddons.context(loadcore=False) as tctx:
         tctx.master.addons.add(AOldAPI())

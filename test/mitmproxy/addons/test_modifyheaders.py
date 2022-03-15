@@ -160,7 +160,6 @@ class TestModifyHeadersFile:
             mh.request(f)
             assert f.request.headers["one"] == "two"
 
-    @pytest.mark.asyncio
     async def test_nonexistent(self, tmpdir):
         mh = ModifyHeaders()
         with taddons.context(mh) as tctx:

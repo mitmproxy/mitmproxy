@@ -340,7 +340,6 @@ def test_server_playback_full():
         assert not tf.response
 
 
-@pytest.mark.asyncio
 async def test_server_playback_kill():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
