@@ -93,6 +93,8 @@ class Save:
         """
         Write the flow to the stream, but first check if we need to rotate to a new file.
         """
+        if not self.stream:
+            return
         try:
             self.maybe_rotate_to_new_file()
             self.stream.add(flow)
@@ -142,17 +144,15 @@ class Save:
         self.tcp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
-        if self.stream:
-            self.save_flow(flow)
+        self.save_flow(flow)
 
     def request(self, flow: http.HTTPFlow):
-        if self.stream:
-            self.active_flows.add(flow)
+        self.active_flows.add(flow)
 
     def response(self, flow: http.HTTPFlow):
         # websocket flows will receive a websocket_end,
         # we don't want to persist them here already
-        if self.stream and flow.websocket is None:
+        if flow.websocket is None:
             self.save_flow(flow)
 
     def error(self, flow: http.HTTPFlow):
