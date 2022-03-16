@@ -24,6 +24,7 @@
 * Fix random connection stalls (#5040, @EndUser509)
 * Add `n` new flow keybind to mitmweb (#5061, @ianklatzco)
 * Fix compatibility with BoringSSL (@pmoulton)
+* Added `WebSocketMessage.injected` flag (@Prinzhorn)
 * Add example addon for saving streamed data to individual files (@EndUser509)
 * Change connection event hooks to be blocking.
   Processing will only resume once the event hook has finished. (@Prinzhorn)
