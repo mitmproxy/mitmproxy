@@ -269,6 +269,13 @@ def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) ->
     return headers
 
 
+def normalize_h2_headers(headers: List[Tuple[bytes, bytes]]) -> CommandGenerator[None]:
+    for i in range(len(headers)):
+        if not headers[i][0].islower():
+            yield Log(f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2.")
+            headers[i] = (headers[i][0].lower(), headers[i][1])
+
+
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
@@ -290,7 +297,10 @@ class Http2Server(Http2Connection):
                     (b":status", b"%d" % event.response.status_code),
                     *event.response.headers.fields
                 ]
-                if not event.response.is_http2:
+                if event.response.is_http2:
+                    if self.context.options.normalize_outbound_headers:
+                        yield from normalize_h2_headers(headers)
+                else:
                     headers = normalize_h1_headers(headers, False)
 
                 self.h2_conn.send_headers(
@@ -407,6 +417,8 @@ class Http2Client(Http2Connection):
 
             if event.request.is_http2:
                 hdrs = list(event.request.headers.fields)
+                if self.context.options.normalize_outbound_headers:
+                    yield from normalize_h2_headers(hdrs)
             else:
                 headers = event.request.headers
                 if not event.request.authority and "host" in headers:

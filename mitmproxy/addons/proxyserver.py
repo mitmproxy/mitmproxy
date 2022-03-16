@@ -90,6 +90,14 @@ class Proxyserver:
             "proxy_debug", bool, False,
             "Enable debug logs in the proxy core.",
         )
+        loader.add_option(
+            "normalize_outbound_headers", bool, True,
+            """
+            Normalize outgoing HTTP/2 header names, but emit a warning when doing so.
+            HTTP/2 does not allow uppercase header names. This option makes sure that HTTP/2 headers set
+            in custom scripts are lowercased before they are sent.
+            """,
+        )
 
     def running(self):
         self.master = ctx.master
