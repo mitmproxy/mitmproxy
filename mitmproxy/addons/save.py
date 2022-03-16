@@ -2,7 +2,7 @@ import os.path
 import sys
 import typing
 from datetime import datetime
-from functools import cache
+from functools import lru_cache
 from pathlib import Path
 
 import mitmproxy.types
@@ -15,7 +15,7 @@ from mitmproxy import http
 from mitmproxy import io
 
 
-@cache
+@lru_cache
 def _path(path: str) -> str:
     """Extract the path from a path spec (which may have an extra "+" at the front)"""
     if path.startswith("+"):
@@ -23,7 +23,7 @@ def _path(path: str) -> str:
     return os.path.expanduser(path)
 
 
-@cache
+@lru_cache
 def _mode(path: str) -> typing.Literal["ab", "wb"]:
     """Extract the writing mode (overwrite or append) from a path spec"""
     if path.startswith("+"):
