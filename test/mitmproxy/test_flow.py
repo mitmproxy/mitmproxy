@@ -113,7 +113,6 @@ class TestSerialize:
 
 
 class TestFlowMaster:
-    @pytest.mark.asyncio
     async def test_load_http_flow_reverse(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"
@@ -124,7 +123,6 @@ class TestFlowMaster:
             await ctx.master.load_flow(f)
             assert s.flows[0].request.host == "use-this-domain"
 
-    @pytest.mark.asyncio
     async def test_all(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"

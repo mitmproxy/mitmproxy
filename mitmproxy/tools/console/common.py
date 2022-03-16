@@ -684,9 +684,7 @@ def format_flow(
             error_message=error_message,
         )
     elif isinstance(f, HTTPFlow):
-        intercepted = (
-                f.intercepted and not (f.reply and f.reply.state == "committed")
-        )
+        intercepted = f.intercepted
         response_content_length: typing.Optional[int]
         if f.response:
             if f.response.raw_content is not None:

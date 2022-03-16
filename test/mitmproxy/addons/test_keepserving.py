@@ -1,5 +1,4 @@
 import asyncio
-import pytest
 
 from mitmproxy.addons import keepserving
 from mitmproxy.test import taddons
@@ -35,7 +34,6 @@ class TKS(keepserving.KeepServing):
         self.is_shutdown = True
 
 
-@pytest.mark.asyncio
 async def test_keepserving():
     ks = TKS()
     d = Dummy(True)
