@@ -16,6 +16,9 @@ class TO(optmanager.OptManager):
         self.add_option("two", typing.Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("required_int", int, 2, "help")
+        self.add_option("onef", typing.Optional[float], None, "help")
+        self.add_option("twof", typing.Optional[float], 0.5, "help")
+        self.add_option("required_float", float, 0.5, "help")
 
 
 class TD(optmanager.OptManager):
@@ -37,6 +40,42 @@ class TM(optmanager.OptManager):
         super().__init__()
         self.add_option("two", typing.Sequence[str], ["foo"], "help")
         self.add_option("one", typing.Optional[str], None, "help")
+
+
+def test__parse_numeric():
+    # (InputStr, Type, ExpectedResult, ExpectedException)
+    tests = [
+        # int
+        ("10", int, 10, None),
+        ("x", int, None, exceptions.OptionsError),
+        (None, int, None, exceptions.OptionsError),
+        (None, typing.Optional[int], None, None),
+        ("10", typing.Optional[int], 10, None),
+        ("x", typing.Optional[int], None, None),
+
+        # float
+        ("0.5", float, 0.5, None),
+        ("x", float, None, exceptions.OptionsError),
+        (None, float, None, exceptions.OptionsError),
+        (None, typing.Optional[float], None, None),
+        ("0.5", typing.Optional[float], 0.5, None),
+        ("x", typing.Optional[float], None, None),
+
+        # Other type
+        ("string", str, None, None)
+    ]
+
+    for test in tests:
+        optstr, typespec, expected_value, expected_ex = test
+        try:
+            result = optmanager.OptManager._parse_numeric(optstr, "OptionName", typespec)
+            if expected_ex is not None:
+                pytest.fail("Expected exception {} to be raised".format(str(expected_ex)))
+
+            assert result == expected_value
+        except exceptions.OptionsError as ex:
+            if expected_ex is None:
+                pytest.fail("Unexpected exception {}".format(str(ex)))
 
 
 def test_defaults():
@@ -74,6 +113,12 @@ def test_required_int():
         o.parse_setval(o._options["required_int"], None, None)
 
 
+def test_required_float():
+    o = TO()
+    with pytest.raises(exceptions.OptionsError):
+        o.parse_setval(o._options["required_float"], None, None)
+
+
 def test_deepcopy():
     o = TD()
     copy.deepcopy(o)
@@ -81,12 +126,17 @@ def test_deepcopy():
 
 def test_options():
     o = TO()
-    assert o.keys() == {"bool", "one", "two", "required_int"}
+    assert o.keys() == {"bool", "one", "two", "required_int", "onef", "twof", "required_float"}
 
     assert o.one is None
     assert o.two == 2
     o.one = 1
     assert o.one == 1
+
+    assert o.onef is None
+    assert o.twof == 0.5
+    o.onef = 10.4
+    assert o.onef == 10.4
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")

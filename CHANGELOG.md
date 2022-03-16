@@ -14,6 +14,7 @@
 * New content view which handles gRPC/protobuf. Allows to apply custom definitions to visualize different field decodings.
   Includes example addon which applies custom definitions for selected gRPC traffic (@mame82)
 * Fix a crash caused when editing string option (#4852, @rbdixon)
+* Fix a occurring when editing a float option in the TUI (#4926, @triztian)
 * Base container image bumped to Debian 11 Bullseye (@Kriechi)
 * Upstream replays don't do CONNECT on plaintext HTTP requests (#4876, @HoffmannP)
 * Remove workarounds for old pyOpenSSL versions (#4831, @KarlParkinson)

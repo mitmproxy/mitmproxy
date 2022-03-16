@@ -16,7 +16,7 @@ HELP_HEIGHT = 5
 def can_edit_inplace(opt):
     if opt.choices:
         return False
-    if opt.typespec in [str, int, Optional[str], Optional[int]]:
+    if opt.typespec in [str, int, float, Optional[str], Optional[int], Optional[float]]:
         return True
 
 
@@ -45,7 +45,10 @@ class OptionItem(urwid.WidgetWrap):
         if self.opt.typespec == bool:
             displayval = "true" if val else "false"
         elif not val:
-            displayval = ""
+            if self.opt.typespec == float:
+                displayval = str(self.opt.default)
+            else:
+                displayval = ""
         elif self.opt.typespec == Sequence[str]:
             displayval = pprint.pformat(val, indent=1)
         else:

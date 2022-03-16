@@ -334,16 +334,8 @@ class OptManager:
         """
         if o.typespec in (str, typing.Optional[str]):
             return optstr
-        elif o.typespec in (int, typing.Optional[int]):
-            if optstr:
-                try:
-                    return int(optstr)
-                except ValueError:
-                    raise exceptions.OptionsError("Not an integer: %s" % optstr)
-            elif o.typespec == int:
-                raise exceptions.OptionsError("Option is required: %s" % o.name)
-            else:
-                return None
+        elif o.typespec in (int, typing.Optional[int], float, typing.Optional[float]):
+            return OptManager._parse_numeric(optstr, o.name, typing.cast(type, o.typespec))
         elif o.typespec == bool:
             if optstr == "toggle":
                 return not o.current()
@@ -364,6 +356,30 @@ class OptManager:
                 else:
                     return [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
+
+    @staticmethod
+    def _parse_numeric(optstr: typing.Optional[str], name: str,
+                       typespec: type) -> typing.Union[int, float, None]:
+        """Helper method to parse a numeric option value from a string"""
+        is_optional = typespec in (typing.Optional[int], typing.Optional[float])
+        if optstr:
+            try:
+                if typespec in (int, typing.Optional[int]):
+                    return int(optstr)
+                elif typespec in (float, typing.Optional[float]):
+                    return float(optstr)
+                else:
+                    return None
+            except ValueError:
+                if not is_optional:
+                    typename = str(typespec).split("'")[1]
+                    raise exceptions.OptionsError(f"Not an {typename}: {optstr}")
+                else:
+                    return None
+        elif not is_optional:
+            raise exceptions.OptionsError(f"Option is required: {name}")
+        else:
+            return None
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """

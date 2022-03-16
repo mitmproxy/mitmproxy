@@ -24,6 +24,7 @@ Then, do the following:
 python3 --version
 python3 -m pip --help
 python3 -m venv --help
+
 # 2) Install:
 git clone https://github.com/mitmproxy/mitmproxy.git
 cd mitmproxy
