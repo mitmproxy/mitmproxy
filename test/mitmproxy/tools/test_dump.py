@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 
-from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.tools import dump
 
@@ -12,12 +11,6 @@ class TestDumpMaster:
         o = options.Options(**opts)
         m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)
         return m
-
-    async def test_has_error(self):
-        m = self.mkmaster()
-        ent = log.LogEntry("foo", "error")
-        m.addons.trigger(log.AddLogHook(ent))
-        assert m.errorcheck.has_errored
 
     @pytest.mark.parametrize("termlog", [False, True])
     async def test_addons_termlog(self, termlog):

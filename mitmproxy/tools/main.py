@@ -48,17 +48,20 @@ def process_options(parser, opts, args):
     opts.merge(adict)
 
 
+T = typing.TypeVar("T", bound=master.Master)
+
+
 def run(
-        master_cls: typing.Type[master.Master],
+        master_cls: typing.Type[T],
         make_parser: typing.Callable[[options.Options], argparse.ArgumentParser],
         arguments: typing.Sequence[str],
         extra: typing.Callable[[typing.Any], dict] = None
-) -> master.Master:  # pragma: no cover
+) -> T:  # pragma: no cover
     """
         extra: Extra argument processing callable which returns a dict of
         options.
     """
-    async def main() -> master.Master:
+    async def main() -> T:
         debug.register_info_dumpers()
 
         opts = options.Options()
@@ -143,9 +146,7 @@ def mitmdump(args=None) -> typing.Optional[int]:  # pragma: no cover
             )
         return {}
 
-    m = run(dump.DumpMaster, cmdline.mitmdump, args, extra)
-    if m and m.errorcheck.has_errored:  # type: ignore
-        return 1
+    run(dump.DumpMaster, cmdline.mitmdump, args, extra)
     return None
 
 
