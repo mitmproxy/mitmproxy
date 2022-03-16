@@ -5,7 +5,7 @@ from mitmproxy import addons
 from mitmproxy import log
 from mitmproxy import master
 from mitmproxy import optmanager
-from mitmproxy.addons import eventstore
+from mitmproxy.addons import errorcheck, eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
@@ -29,6 +29,8 @@ class WebMaster(master.Master):
 
         self.options.changed.connect(self._sig_options_update)
 
+        if with_termlog:
+            self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
         self.addons.add(
             webaddons.WebAddon(),
@@ -37,9 +39,8 @@ class WebMaster(master.Master):
             static_viewer.StaticViewer(),
             self.view,
             self.events,
+            errorcheck.ErrorCheck(),
         )
-        if with_termlog:
-            self.addons.add(termlog.TermLog())
         self.app = app.Application(
             self, self.options.web_debug
         )

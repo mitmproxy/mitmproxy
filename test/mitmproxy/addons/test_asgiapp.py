@@ -54,7 +54,7 @@ async def test_asgi_full():
     with taddons.context(ps, *addons) as tctx:
         tctx.master.addons.add(next_layer.NextLayer())
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        ps.running()
+        await ps.running()
         await tctx.master.await_log("Proxy server listening", level="info")
         proxy_addr = ps.server.sockets[0].getsockname()[:2]
 

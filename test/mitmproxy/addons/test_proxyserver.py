@@ -55,7 +55,7 @@ async def test_start_stop():
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert not ps.server
-            ps.running()
+            await ps.running()
             await tctx.master.await_log("Proxy server listening", level="info")
             assert ps.server
 
@@ -99,7 +99,7 @@ async def test_inject() -> None:
         tctx.master.addons.add(state)
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-            ps.running()
+            await ps.running()
             await tctx.master.await_log("Proxy server listening", level="info")
             proxy_addr = ps.server.sockets[0].getsockname()[:2]
             reader, writer = await asyncio.open_connection(*proxy_addr)
@@ -154,7 +154,7 @@ async def test_warn_no_nextlayer():
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        ps.running()
+        await ps.running()
         await tctx.master.await_log("Proxy server listening at", level="info")
         assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
         await ps.shutdown_server()
@@ -184,3 +184,15 @@ def test_options():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, stream_large_bodies="invalid")
         tctx.configure(ps, stream_large_bodies="1m")
+
+
+async def test_startup_err(monkeypatch) -> None:
+    async def _raise(*_):
+        raise OSError("cannot bind")
+
+    monkeypatch.setattr(asyncio, "start_server", _raise)
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        await ps.running()
+        await tctx.master.await_log("cannot bind", level="error")

@@ -39,6 +39,7 @@ def console(monkeypatch) -> ConsoleTestMaster:
     async def make_master():
         opts = mitmproxy.options.Options()
         m = ConsoleTestMaster(opts)
+        opts.server = False
         await m.running()
         return m
     return asyncio.run(make_master())

@@ -1,20 +1,10 @@
 from mitmproxy import addons
-from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.addons import dumper, termlog, keepserving, readfile
-
-
-class ErrorCheck:
-    def __init__(self):
-        self.has_errored = False
-
-    def add_log(self, e):
-        if e.level == "error":
-            self.has_errored = True
+from mitmproxy import options
+from mitmproxy.addons import dumper, errorcheck, keepserving, readfile, termlog
 
 
 class DumpMaster(master.Master):
-
     def __init__(
         self,
         options: options.Options,
@@ -22,7 +12,6 @@ class DumpMaster(master.Master):
         with_dumper=True,
     ) -> None:
         super().__init__(options)
-        self.errorcheck = ErrorCheck()
         if with_termlog:
             self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
@@ -31,5 +20,5 @@ class DumpMaster(master.Master):
         self.addons.add(
             keepserving.KeepServing(),
             readfile.ReadFileStdin(),
-            self.errorcheck
+            errorcheck.ErrorCheck(),
         )
