@@ -50,18 +50,19 @@ class Core:
                     )
 
     @command.command("set")
-    def set(self, option: str, value: str = "") -> None:
+    def set(self, option: str, *value: str) -> None:
         """
             Set an option. When the value is omitted, booleans are set to true,
             strings and integers are set to None (if permitted), and sequences
             are emptied. Boolean values can be true, false or toggle.
             Multiple values are concatenated with a single space.
-            Sequences are set using multiple invocations to set for
-            the same option.
         """
-        strspec = f"{option}={value}"
+        if value:
+            specs = [f"{option}={v}" for v in value]
+        else:
+            specs = [option]
         try:
-            ctx.options.set(strspec)
+            ctx.options.set(*specs)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
 
