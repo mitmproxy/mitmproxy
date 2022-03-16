@@ -558,11 +558,9 @@ class TransparentProxy:
 if __name__ == "__main__":
     import click
 
-
     @click.group()
     def cli():
         pass
-
 
     @cli.command()
     @click.option("--local/--no-local", default=True,
@@ -587,7 +585,6 @@ if __name__ == "__main__":
             proxy.shutdown()
             print(" * Shut down.")
 
-
     @cli.command()
     def connections():
         """List all TCP connections and the associated PIDs."""
@@ -595,6 +592,5 @@ if __name__ == "__main__":
         connections.refresh()
         for (ip, port), pid in connections.items():
             print(f"{ip}:{port} -> {pid}")
-
 
     cli()
