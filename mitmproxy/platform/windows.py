@@ -1,3 +1,5 @@
+import collections
+import collections.abc
 import contextlib
 import ctypes
 import ctypes.wintypes
@@ -11,12 +13,8 @@ import threading
 import time
 import typing
 
-import click
-import collections
-import collections.abc
 import pydivert
 import pydivert.consts
-
 
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
@@ -557,43 +555,42 @@ class TransparentProxy:
                 self.local.trusted_pids.remove(pid)
 
 
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
-@click.option("--local/--no-local", default=True,
-              help="Redirect the host's own traffic.")
-@click.option("--forward/--no-forward", default=True,
-              help="Redirect traffic that's forwarded by the host.")
-@click.option("--filter", type=str, metavar="WINDIVERT_FILTER",
-              help="Custom WinDivert interception rule.")
-@click.option("-p", "--proxy-port", type=int, metavar="8080", default=8080,
-              help="The port mitmproxy is listening on.")
-def redirect(**options):
-    """Redirect flows to mitmproxy."""
-    proxy = TransparentProxy(**options)
-    proxy.start()
-    print(f" * Redirection active.")
-    print(f"   Filter: {proxy.filter}")
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print(" * Shutting down...")
-        proxy.shutdown()
-        print(" * Shut down.")
-
-
-@cli.command()
-def connections():
-    """List all TCP connections and the associated PIDs."""
-    connections = TcpConnectionTable()
-    connections.refresh()
-    for (ip, port), pid in connections.items():
-        print(f"{ip}:{port} -> {pid}")
-
-
 if __name__ == "__main__":
+    import click
+
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option("--local/--no-local", default=True,
+                  help="Redirect the host's own traffic.")
+    @click.option("--forward/--no-forward", default=True,
+                  help="Redirect traffic that's forwarded by the host.")
+    @click.option("--filter", type=str, metavar="WINDIVERT_FILTER",
+                  help="Custom WinDivert interception rule.")
+    @click.option("-p", "--proxy-port", type=int, metavar="8080", default=8080,
+                  help="The port mitmproxy is listening on.")
+    def redirect(**options):
+        """Redirect flows to mitmproxy."""
+        proxy = TransparentProxy(**options)
+        proxy.start()
+        print(f" * Redirection active.")
+        print(f"   Filter: {proxy.filter}")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print(" * Shutting down...")
+            proxy.shutdown()
+            print(" * Shut down.")
+
+    @cli.command()
+    def connections():
+        """List all TCP connections and the associated PIDs."""
+        connections = TcpConnectionTable()
+        connections.refresh()
+        for (ip, port), pid in connections.items():
+            print(f"{ip}:{port} -> {pid}")
+
     cli()
