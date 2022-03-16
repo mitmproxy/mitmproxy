@@ -5,7 +5,7 @@
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
 * Make it possible to ignore connections in the tls_clienthello event hook (@mhils)
 * Add `tls_established/failed_client/server` event hooks to record negotiation success/failure (@mhils)
-* fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
+* fix some responses not being decoded properly if the encoding was uppercase (#4735, @Mattwmaster58)
 * Trigger event hooks for flows with semantically invalid requests, for example invalid content-length headers (@mhils)
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
@@ -29,11 +29,12 @@
 * Change connection event hooks to be blocking.
   Processing will only resume once the event hook has finished. (@Prinzhorn)
 * Allow addon hooks to be async (@nneonneo, #4207)
-* Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (@mhils, #4207)
+* Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (#4207, @mhils)
 * Speculative fix for some rare HTTP/2 connection stalls (#5158, @EndUser509)
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
 * Console Improvements on Windows (@mhils)
 * Fix processing of `--set` options (#5067, @marwinxxii) 
+* Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
 
 ## 28 September 2021: mitmproxy 7.0.4
 

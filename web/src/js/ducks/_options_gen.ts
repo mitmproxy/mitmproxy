@@ -34,6 +34,7 @@ export interface OptionsState {
     mode: string
     modify_body: string[]
     modify_headers: string[]
+    normalize_outbound_headers: boolean
     onboarding: boolean
     onboarding_host: string
     onboarding_port: number
@@ -120,6 +121,7 @@ export const defaultState: OptionsState = {
     mode: "regular",
     modify_body: [],
     modify_headers: [],
+    normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
     onboarding_port: 80,
