@@ -1,22 +1,20 @@
 import sys
+
 import pytest
 
-from mitmproxy.addons import termlog
 from mitmproxy import log
+from mitmproxy.addons import termlog
 from mitmproxy.test import taddons
-from test.conftest import skip_windows
 
 
 class TestTermLog:
-    @skip_windows  # not sure why this is suddenly necessary (03/2022)
     @pytest.mark.usefixtures('capfd')
     @pytest.mark.parametrize('outfile, expected_out, expected_err', [
         (None, ['one', 'three'], ['four']),
         (sys.stdout, ['one', 'three', 'four'], []),
-        (sys.stderr, [], ['one', 'three', 'four']),
     ])
     def test_output(self, outfile, expected_out, expected_err, capfd):
-        t = termlog.TermLog(outfile=outfile)
+        t = termlog.TermLog(out=outfile, err=outfile)
         with taddons.context(t) as tctx:
             tctx.options.termlog_verbosity = "info"
             tctx.configure(t)
