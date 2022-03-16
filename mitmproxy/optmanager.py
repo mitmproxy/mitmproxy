@@ -80,7 +80,7 @@ class _Option:
 
 
 @dataclass
-class _UnconvertedStr:
+class _UnconvertedStrings:
     val: typing.List[str]
 
 
@@ -320,7 +320,7 @@ class OptManager:
         # Third, stash away unrecognized options or complain about them.
         if defer:
             self.deferred.update({
-                k: _UnconvertedStr(v)
+                k: _UnconvertedStrings(v)
                 for k, v in unprocessed.items()
             })
         elif unprocessed:
@@ -337,7 +337,7 @@ class OptManager:
         update: typing.Dict[str, typing.Any] = {}
         for optname, value in self.deferred.items():
             if optname in self._options:
-                if isinstance(value, _UnconvertedStr):
+                if isinstance(value, _UnconvertedStrings):
                     value = self._parse_setval(self._options[optname], value.val)
                 update[optname] = value
         self.update(**update)
@@ -384,7 +384,7 @@ class OptManager:
                 raise exceptions.OptionsError(
                     'Boolean must be "true", "false", or have the value omitted (a synonym for "true").'
                 )
-        raise NotImplementedError("Unsupported option type: {o.typespec}")
+        raise NotImplementedError(f"Unsupported option type: {o.typespec}")
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """
