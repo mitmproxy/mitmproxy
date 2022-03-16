@@ -234,6 +234,8 @@ class Http1Server(Http1Connection):
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.request = http1.read_request_head(request_head)
+                    if self.context.options.validate_inbound_headers:
+                        http1.validate_headers(self.request.headers)
                     expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
@@ -330,6 +332,8 @@ class Http1Client(Http1Connection):
                 response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.response = http1.read_response_head(response_head)
+                    if self.context.options.validate_inbound_headers:
+                        http1.validate_headers(self.response.headers)
                     expected_size = http1.expected_http_body_size(self.request, self.response)
                 except ValueError as e:
                     yield commands.CloseConnection(self.conn)
