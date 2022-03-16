@@ -184,3 +184,15 @@ def test_options():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, stream_large_bodies="invalid")
         tctx.configure(ps, stream_large_bodies="1m")
+
+
+async def test_startup_err(monkeypatch) -> None:
+    async def _raise(*_):
+        raise OSError("cannot bind")
+
+    monkeypatch.setattr(asyncio, "start_server", _raise)
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        await ps.running()
+        await tctx.master.await_log("cannot bind", level="error")
