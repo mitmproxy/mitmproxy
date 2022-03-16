@@ -33,6 +33,7 @@
 * Speculative fix for some rare HTTP/2 connection stalls (#5158, @EndUser509)
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
 * Console Improvements on Windows (@mhils)
+* Fix processing of `--set` options (#5067, @marwinxxii) 
 
 ## 28 September 2021: mitmproxy 7.0.4
 
