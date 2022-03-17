@@ -171,7 +171,7 @@ def test_self_connect():
         ps.server_connect(
             server_hooks.ServerConnectionHookData(server, client)
         )
-        assert server.error == "Stopped mitmproxy from recursively connecting to itself."
+        assert "Request destination unknown" in server.error
 
 
 def test_options():

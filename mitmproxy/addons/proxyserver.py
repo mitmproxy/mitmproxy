@@ -140,6 +140,7 @@ class Proxyserver:
                 except OSError as e:
                     ctx.log.error(str(e))
                     return
+                # TODO: This is a bit confusing currently for `-p 0`.
                 addrs = {f"http://{human.format_address(s.getsockname())}" for s in self.server.sockets}
                 ctx.log.info(f"Proxy server listening at {' and '.join(addrs)}")
 
@@ -208,4 +209,7 @@ class Proxyserver:
             ctx.server.address[0] in ("localhost", "127.0.0.1", "::1", self.options.listen_host)
         )
         if self_connect:
-            ctx.server.error = "Stopped mitmproxy from recursively connecting to itself."
+            ctx.server.error = (
+                "Request destination unknown. "
+                "Unable to figure out where this request should be forwarded to."
+            )
