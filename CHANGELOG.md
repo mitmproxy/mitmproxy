@@ -37,6 +37,7 @@
 * Fix processing of `--set` options (#5067, @marwinxxii) 
 * Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
 * Exit early if there are errors on startup (#4544, @mhils)
+* Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)
 
 ## 28 September 2021: mitmproxy 7.0.4
 
