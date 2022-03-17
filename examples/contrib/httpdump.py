@@ -52,7 +52,6 @@ class HTTPDump:
 
         # create dir
         folder = Path(ctx.options.dumper_folder) / flow.request.host
-        print(folder)
         if not folder.exists():
             os.makedirs(folder)
 
