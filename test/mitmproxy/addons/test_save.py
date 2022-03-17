@@ -111,6 +111,10 @@ def test_simple(tmp_path):
         tctx.configure(sa, save_stream_file=None)
         assert not rd(p)[2].response
 
+        f = tflow.tflow()
+        sa.response(f)
+        assert len(rd(p)) == 3
+
 
 def test_rotate_stream(tmp_path):
     sa = save.Save()
