@@ -5,7 +5,7 @@
 # options:
 #   - dumper_folder: content dump destination folder (default: ./httpdump)
 #   - open_browser: open integrated browser with proxy configured at start (default: true)
-# 
+#
 # remember to add your own mitmproxy authorative certs in your browser/os!
 # certs docs: https://docs.mitmproxy.org/stable/concepts-certificates/
 # filter expressions docs: https://docs.mitmproxy.org/stable/concepts-filters/
