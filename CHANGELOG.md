@@ -2,7 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
-* Add flatpak support to the browser addon (@pauloromeira)
+* Add flatpak support to the browser addon (#5200, @pauloromeira)
+* Add example addon to dump contents to files based on a filter expression (#5190, @redraw)
 
 ## 19 March 2022: mitmproxy 8.0.0
 
