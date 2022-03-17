@@ -733,7 +733,6 @@ class TestHTTPFlow:
         f.resume()
         assert not f.intercepted
 
-    @pytest.mark.asyncio
     async def test_wait_for_resume(self):
         f = tflow()
         await f.wait_for_resume()

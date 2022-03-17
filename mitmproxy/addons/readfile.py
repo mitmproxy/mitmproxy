@@ -76,7 +76,7 @@ class ReadFile:
 
     def running(self):
         if ctx.options.rfile:
-            asyncio.get_event_loop().create_task(self.doread(ctx.options.rfile))
+            asyncio.get_running_loop().create_task(self.doread(ctx.options.rfile))
 
     @command.command("readfile.reading")
     def reading(self) -> bool:

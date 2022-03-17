@@ -2,8 +2,6 @@ import os
 from unittest.mock import patch
 from pathlib import Path
 
-import pytest
-
 from mitmproxy.addons import command_history
 from mitmproxy.test import taddons
 
@@ -26,7 +24,6 @@ class TestCommandHistory:
         with open(history_file) as f:
             assert f.read() == "cmd3\ncmd4\n"
 
-    @pytest.mark.asyncio
     async def test_done_writing_failed(self):
         ch = command_history.CommandHistory()
         ch.VACUUM_SIZE = 1
@@ -48,7 +45,6 @@ class TestCommandHistory:
             ch.add_command('')
             assert ch.history == ['cmd1', 'cmd2']
 
-    @pytest.mark.asyncio
     async def test_add_command_failed(self):
         ch = command_history.CommandHistory()
         with taddons.context(ch) as tctx:
@@ -156,7 +152,6 @@ class TestCommandHistory:
 
             ch.clear_history()
 
-    @pytest.mark.asyncio
     async def test_clear_failed(self, monkeypatch):
         ch = command_history.CommandHistory()
 

@@ -90,12 +90,20 @@ class Proxyserver:
             "proxy_debug", bool, False,
             "Enable debug logs in the proxy core.",
         )
+        loader.add_option(
+            "normalize_outbound_headers", bool, True,
+            """
+            Normalize outgoing HTTP/2 header names, but emit a warning when doing so.
+            HTTP/2 does not allow uppercase header names. This option makes sure that HTTP/2 headers set
+            in custom scripts are lowercased before they are sent.
+            """,
+        )
 
-    def running(self):
+    async def running(self):
         self.master = ctx.master
         self.options = ctx.options
         self.is_running = True
-        self.configure(["listen_port"])
+        await self.refresh_server()
 
     def configure(self, updated):
         if "stream_large_bodies" in updated:
@@ -112,9 +120,7 @@ class Proxyserver:
                                               f"{ctx.options.body_size_limit}")
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
             platform.init_transparent_mode()
-        if not self.is_running:
-            return
-        if any(x in updated for x in ["server", "listen_host", "listen_port"]):
+        if self.is_running and any(x in updated for x in ["server", "listen_host", "listen_port"]):
             asyncio.create_task(self.refresh_server())
 
     async def refresh_server(self):
@@ -125,11 +131,15 @@ class Proxyserver:
             if ctx.options.server:
                 if not ctx.master.addons.get("nextlayer"):
                     ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
-                self.server = await asyncio.start_server(
-                    self.handle_connection,
-                    self.options.listen_host,
-                    self.options.listen_port,
-                )
+                try:
+                    self.server = await asyncio.start_server(
+                        self.handle_connection,
+                        self.options.listen_host,
+                        self.options.listen_port,
+                    )
+                except OSError as e:
+                    ctx.log.error(str(e))
+                    return
                 addrs = {f"http://{human.format_address(s.getsockname())}" for s in self.server.sockets}
                 ctx.log.info(f"Proxy server listening at {' and '.join(addrs)}")
 

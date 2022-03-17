@@ -86,7 +86,6 @@ class TestModifyBodyFile:
             mb.request(f)
             assert f.request.content == b"bar"
 
-    @pytest.mark.asyncio
     async def test_nonexistent(self, tmpdir):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:

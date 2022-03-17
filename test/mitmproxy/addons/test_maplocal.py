@@ -136,7 +136,6 @@ class TestMapLocal:
             ml.request(f)
             assert f.response.content == b"foofoobar"
 
-    @pytest.mark.asyncio
     async def test_nonexistent_files(self, tmpdir, monkeypatch):
         ml = MapLocal()
 

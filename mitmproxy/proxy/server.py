@@ -88,6 +88,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.layer = layer.NextLayer(context, ask_on_start=True)
         self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
 
+        # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
+        self._drain_lock = asyncio.Lock()
+
     async def handle_client(self) -> None:
         watch = asyncio_utils.create_task(
             self.timeout_watchdog.watch(),
@@ -253,13 +256,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         Drain all writers to create some backpressure. We won't continue reading until there's space available in our
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
-        for transport in self.transports.values():
-            if transport.writer is not None:
-                try:
-                    await transport.writer.drain()
-                except OSError as e:
-                    if transport.handler is not None:
-                        asyncio_utils.cancel_task(transport.handler, f"Error sending data: {e}")
+        async with self._drain_lock:
+            for transport in self.transports.values():
+                if transport.writer is not None:
+                    try:
+                        await transport.writer.drain()
+                    except OSError as e:
+                        if transport.handler is not None:
+                            asyncio_utils.cancel_task(transport.handler, f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
         self.log(f"Closing connection due to inactivity: {self.client}")

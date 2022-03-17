@@ -47,7 +47,6 @@ class TestReadFile:
                 tctx.configure(rf, readfile_filter="~~")
             tctx.configure(rf, readfile_filter="")
 
-    @pytest.mark.asyncio
     async def test_read(self, tmpdir, data, corrupt_data):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
@@ -72,7 +71,6 @@ class TestReadFile:
             rf.running()
             await tctx.master.await_log("corrupted")
 
-    @pytest.mark.asyncio
     async def test_corrupt(self, corrupt_data):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
@@ -84,7 +82,6 @@ class TestReadFile:
                 await rf.load_flows(corrupt_data)
             await tctx.master.await_log("file corrupted")
 
-    @pytest.mark.asyncio
     async def test_nonexistent_file(self):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
@@ -95,7 +92,6 @@ class TestReadFile:
 
 class TestReadFileStdin:
     @mock.patch('sys.stdin')
-    @pytest.mark.asyncio
     async def test_stdin(self, stdin, data, corrupt_data):
         rf = readfile.ReadFileStdin()
         with taddons.context(rf):
@@ -109,7 +105,6 @@ class TestReadFileStdin:
                 with pytest.raises(exceptions.FlowReadException):
                     await rf.load_flows(stdin.buffer)
 
-    @pytest.mark.asyncio
     async def test_normal(self, tmpdir, data):
         rf = readfile.ReadFileStdin()
         with taddons.context(rf) as tctx:
