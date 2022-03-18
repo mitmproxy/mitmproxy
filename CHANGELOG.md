@@ -4,6 +4,7 @@
 
 * Add flatpak support to the browser addon (#5200, @pauloromeira)
 * Add example addon to dump contents to files based on a filter expression (#5190, @redraw)
+* Add example addon for domain fronting.
 
 ## 19 March 2022: mitmproxy 8.0.0
 
