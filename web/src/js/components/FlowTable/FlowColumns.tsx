@@ -107,8 +107,18 @@ path.headerName = 'Path'
 path.sortKey = flow => mainPath(flow)
 
 export const method: FlowColumn = ({flow}) => {
+    let method;
+    if(flow.type === "http") {
+        if(flow.websocket) {
+            method = flow.client_conn.tls_established ? "WSS" : "WS";
+        } else {
+            method = flow.request.method;
+        }
+    } else {
+        method = flow.type.toUpperCase();
+    }
     return (
-        <td className="col-method">{flow.type === "http" ? flow.request.method : flow.type.toUpperCase()}</td>
+        <td className="col-method">{method}</td>
     )
 };
 method.headerName = 'Method'
