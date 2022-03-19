@@ -139,6 +139,7 @@ class LowDark(Palette):
         scheme_ws=('brown', 'default'),
         scheme_wss=('dark magenta', 'default'),
         scheme_tcp=('dark magenta', 'default'),
+        scheme_dns=('dark blue', 'default'),
         scheme_other = ('dark magenta', 'default'),
 
         url_punctuation = ('light gray', 'default'),
@@ -250,6 +251,7 @@ class LowLight(Palette):
         scheme_ws=('brown', 'default'),
         scheme_wss=('light magenta', 'default'),
         scheme_tcp=('light magenta', 'default'),
+        scheme_dns=('light blue', 'default'),
         scheme_other = ('light magenta', 'default'),
 
         url_punctuation = ('dark gray', 'default'),
@@ -380,6 +382,7 @@ class SolarizedLight(LowLight):
         scheme_ws=(sol_orange, 'default'),
         scheme_wss=('light magenta', 'default'),
         scheme_tcp=('light magenta', 'default'),
+        scheme_dns=('light blue', 'default'),
         scheme_other = ('light magenta', 'default'),
 
         url_punctuation = ('dark gray', 'default'),

@@ -14,7 +14,7 @@ interface _Flow {
     error?: Error
 }
 
-export type Flow = HTTPFlow | TCPFlow;
+export type Flow = HTTPFlow | TCPFlow | DNSFlow;
 
 export interface HTTPFlow extends _Flow {
     type: "http"
@@ -114,4 +114,39 @@ export interface WebSocketData {
     close_code?: number
     close_reason?: string
     timestamp_end?: number
+}
+
+export interface DNSResourceRecord {
+    name: string
+    type: string
+    class: string
+    ttl: number
+    data: string
+}
+
+export interface DNSMessage {
+    id: number
+    query: boolean
+    opCode: string
+    authoritativeAnswer: boolean
+    truncation: boolean
+    recursionDesired: boolean
+    recursionAvailable: boolean
+    responseCode: string
+    questions: {
+        name: string
+        type: string
+        class: string
+    }[]
+    answers: DNSResourceRecord[]
+    authorities: DNSResourceRecord[]
+    additionals: DNSResourceRecord[]
+    size: number
+    timestamp: number
+}
+
+export interface DNSFlow extends _Flow {
+    type: "dns"
+    request: DNSMessage
+    response?: DNSMessage
 }

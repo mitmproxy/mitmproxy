@@ -20,7 +20,8 @@ from mitmproxy import http, options as moptions, tls
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.connection import Address, Client, Connection, ConnectionState
+from mitmproxy.connection import Address, Client, Connection, ConnectionProtocol, ConnectionState
+from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
@@ -152,7 +153,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         async with self.max_conns[command.connection.address]:
             try:
                 command.connection.timestamp_start = time.time()
-                reader, writer = await asyncio.open_connection(*command.connection.address)
+                open_connection = (
+                    asyncio.open_connection if command.connection.protocol == ConnectionProtocol.TCP
+                    else
+                    udp.open_connection if command.connection.protocol == ConnectionProtocol.UDP
+                    else
+                    None
+                )
+                if open_connection is None:
+                    raise IOError(f"Connection protocol '{command.connection.protocol}' is not implemented.")
+                reader, writer = await open_connection(*command.connection.address)
             except (IOError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.

@@ -12,6 +12,8 @@ from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
+from mitmproxy.dns import DNSFlow, ResponseCode
+from mitmproxy.connection import Address
 
 # Detect Windows Subsystem for Linux and Windows
 IS_WINDOWS_OR_WSL = "Microsoft" in platform.platform() or "Windows" in platform.platform()
@@ -122,6 +124,7 @@ SCHEME_STYLES = {
     'ws': 'scheme_ws',
     'wss': 'scheme_wss',
     'tcp': 'scheme_tcp',
+    'dns': 'scheme_dns',
 }
 HTTP_REQUEST_METHOD_STYLES = {
     'GET': 'method_get',
@@ -644,6 +647,58 @@ def format_tcp_flow(
     ])
 
 
+@lru_cache(maxsize=800)
+def format_dns_flow(
+    *,
+    render_mode: RenderMode,
+    focused: bool,
+    intercepted: bool,
+    marked: str,
+    is_replay: typing.Optional[str],
+    client_address: Address,
+    server_address: Address,
+    op_code: str,
+    request_timestamp: float,
+    question: str,
+    authoritative_answer: typing.Optional[bool],
+    response_code: typing.Optional[str],
+    response_code_style: str,
+    answer: typing.Optional[str],
+    error_message: str,
+) -> urwid.Widget:
+    items = []
+
+    if render_mode in (RenderMode.TABLE, RenderMode.DETAILVIEW):
+        items.append(format_left_indicators(focused=focused, intercepted=intercepted, timestamp=request_timestamp))
+    else:
+        items.append(fcol(">>" if focused else "  ", "focus"))
+
+    scheme_style = "intercepted" if intercepted else SCHEME_STYLES["dns"]
+    if render_mode is RenderMode.TABLE:
+        items.append(fcol("DNS  ", scheme_style))
+    else:
+        items.append(fcol("DNS", scheme_style))
+
+    items.append(fcol(fixlen(op_code, 6), scheme_style))
+
+    items.append(("weight", 1.0, TruncatedText(question, "text", "right")))
+    items.append(fcol("=", scheme_style))
+    if answer:
+        items.append(("weight", 1.0, TruncatedText(answer, "text", "left")))
+    if error_message:
+        items.append(('weight', 1.0, truncated_plain(error_message, "error", "left")))
+
+    items.append(fcol("A" if authoritative_answer else " ", scheme_style))
+    if response_code:
+        items.append(fcol(fixlen(response_code, 9), response_code_style))
+
+    items.append(format_right_indicators(
+        replay=bool(is_replay),
+        marked=marked,
+    ))
+    return urwid.Columns(items, dividechars=1, min_width=15)
+
+
 def format_flow(
         f: flow.Flow,
         *,
@@ -681,6 +736,33 @@ def format_flow(
             server_address=f.server_conn.address,
             total_size=total_size,
             duration=duration,
+            error_message=error_message,
+        )
+    elif isinstance(f, DNSFlow):
+        code = None if not f.response else f.response.response_code.name
+        return format_dns_flow(
+            render_mode=render_mode,
+            focused=focused,
+            intercepted=f.intercepted,
+            marked=f.marked,
+            is_replay=f.is_replay,
+            client_address=f.client_conn.peername,
+            server_address=f.server_conn.address,
+            op_code=f.request.op_code.name,
+            request_timestamp=f.request.timestamp,
+            question=", ".join(q.name for q in f.request.questions),
+            authoritative_answer=None if not f.response else f.response.authoritative_answer,
+            response_code=code,
+            response_code_style=(
+                "code_200" if code is ResponseCode.NOERROR
+                else
+                "code_400" if code in (ResponseCode.FORMERR, ResponseCode.NXDOMAIN, ResponseCode.REFUSED)
+                else
+                "code_500" if code in (ResponseCode.SERVFAIL, ResponseCode.NOTIMP)
+                else
+                "code_other"
+            ),
+            answer=None if not f.response else ", ".join(q.name for q in f.response.answers),
             error_message=error_message,
         )
     elif isinstance(f, HTTPFlow):

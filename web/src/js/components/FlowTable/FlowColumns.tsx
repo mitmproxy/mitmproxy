@@ -37,8 +37,8 @@ icon.headerName = ''
 icon.sortKey = flow => getIcon(flow)
 
 const getIcon = (flow: Flow): string => {
-    if (flow.type === "tcp") {
-        return "resource-icon-tcp"
+    if (flow.type === "tcp" || flow.type === "dns") {
+        return `resource-icon-${flow.type}`
     }
     if (flow.websocket) {
         return 'resource-icon-websocket'
@@ -77,6 +77,8 @@ const mainPath = (flow: Flow): string => {
             return RequestUtils.pretty_url(flow.request)
         case "tcp":
             return `${flow.client_conn.peername.join(':')} ↔ ${flow.server_conn?.address?.join(':')}`
+        case "dns":
+            return `${flow.request.questions.map(q => q.name).join(", ")} = ${flow.response?.answers.map(q => q.data).join(", ") ?? ""}`
     }
 }
 
