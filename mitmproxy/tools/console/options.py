@@ -181,9 +181,7 @@ class OptionsList(urwid.ListBox):
                 foc, idx = self.get_focus()
                 v = self.walker.get_edit_text()
                 try:
-                    current = getattr(self.master.options, foc.opt.name)
-                    d = self.master.options.parse_setval(foc.opt, v, current)
-                    self.master.options.update(**{foc.opt.name: d})
+                    self.master.options.set(f"{foc.opt.name}={v}")
                 except exceptions.OptionsError as v:
                     signals.status_message.send(message=str(v))
                 self.walker.stop_editing()

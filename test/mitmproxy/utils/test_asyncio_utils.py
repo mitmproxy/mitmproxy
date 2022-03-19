@@ -13,7 +13,6 @@ async def ttask():
     await asyncio.sleep(999)
 
 
-@pytest.mark.asyncio
 async def test_simple():
     task = asyncio_utils.create_task(
         ttask(),
@@ -23,6 +22,8 @@ async def test_simple():
     assert asyncio_utils.task_repr(task) == "127.0.0.1:42313: ttask (age: 0s)"
     await asyncio.sleep(0)
     assert "newname" in asyncio_utils.task_repr(task)
+    delattr(task, "created")
+    asyncio_utils.task_repr(task)
     asyncio_utils.cancel_task(task, "bye")
     await asyncio.sleep(0)
     assert task.cancelled()

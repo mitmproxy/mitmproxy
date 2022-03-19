@@ -1,12 +1,9 @@
 import io
 
-import pytest
-
 from mitmproxy.test import taddons
 from mitmproxy import ctx
 
 
-@pytest.mark.asyncio
 async def test_recordingmaster():
     with taddons.context() as tctx:
         assert not tctx.master.has_log("nonexistent")
@@ -15,7 +12,6 @@ async def test_recordingmaster():
         await tctx.master.await_log("foo", level="error")
 
 
-@pytest.mark.asyncio
 async def test_dumplog():
     with taddons.context() as tctx:
         ctx.log.info("testing")

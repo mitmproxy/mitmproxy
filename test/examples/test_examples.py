@@ -4,10 +4,8 @@ from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 from mitmproxy.http import Headers
 
-from ..mitmproxy import tservers
 
-
-class TestScripts(tservers.MasterTest):
+class TestScripts:
     def test_add_header(self, tdata):
         with taddons.context() as tctx:
             a = tctx.script(tdata.path("../examples/addons/anatomy2.py"))

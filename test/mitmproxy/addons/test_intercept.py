@@ -6,7 +6,6 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
-@pytest.mark.asyncio
 async def test_simple():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:
@@ -45,7 +44,6 @@ async def test_simple():
         assert f.intercepted
 
 
-@pytest.mark.asyncio
 async def test_tcp():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:

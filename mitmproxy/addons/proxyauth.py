@@ -34,7 +34,7 @@ class ProxyAuth:
             "username:pass",
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
-            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
+            or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree" for LDAP authentication.
             """
         )
 
@@ -207,16 +207,15 @@ class Ldap(Validator):
     dn_subtree: str
 
     def __init__(self, proxyauth: str):
-        try:
-            security, url, ldap_user, ldap_pass, self.dn_subtree = proxyauth.split(":")
-        except ValueError:
-            raise exceptions.OptionsError("Invalid ldap specification")
-        if security == "ldaps":
-            server = ldap3.Server(url, use_ssl=True)
-        elif security == "ldap":
-            server = ldap3.Server(url)
-        else:
-            raise exceptions.OptionsError("Invalid ldap specification on the first part")
+        (
+            use_ssl,
+            url,
+            port,
+            ldap_user,
+            ldap_pass,
+            self.dn_subtree,
+        ) = self.parse_spec(proxyauth)
+        server = ldap3.Server(url, port=port, use_ssl=use_ssl)
         conn = ldap3.Connection(
             server,
             ldap_user,
@@ -225,6 +224,34 @@ class Ldap(Validator):
         )
         self.conn = conn
         self.server = server
+
+    @staticmethod
+    def parse_spec(spec: str) -> Tuple[bool, str, Optional[int], str, str, str]:
+        try:
+            if spec.count(":") > 4:
+                (
+                    security,
+                    url,
+                    port_str,
+                    ldap_user,
+                    ldap_pass,
+                    dn_subtree,
+                ) = spec.split(":")
+                port = int(port_str)
+            else:
+                security, url, ldap_user, ldap_pass, dn_subtree = spec.split(":")
+                port = None
+
+            if security == "ldaps":
+                use_ssl = True
+            elif security == "ldap":
+                use_ssl = False
+            else:
+                raise ValueError
+
+            return use_ssl, url, port, ldap_user, ldap_pass, dn_subtree
+        except ValueError:
+            raise exceptions.OptionsError(f"Invalid LDAP specification: {spec}")
 
     def __call__(self, username: str, password: str) -> bool:
         if not username or not password:
