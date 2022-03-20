@@ -3,7 +3,7 @@
 These steps assume you are on the correct branch and have a git remote called `origin` that points to the `mitmproxy/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
 
 - Update CHANGELOG.
-- Verify that the compiled mitmweb assets are up-to-date.
+- Verify that the compiled mitmweb assets are up-to-date (`npm start prod`).
 - Verify that all CI tests pass.
 - Verify that `mitmproxy/version.py` is correct. Remove `.dev` suffix if it exists.
 - Tag the release and push to GitHub.

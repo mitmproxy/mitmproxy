@@ -352,11 +352,11 @@ def test_http2_client_aborts(tctx, stream, when, how):
         assert "peer closed connection" in flow().error.msg
 
 
-@pytest.mark.xfail(reason="inbound validation turned on to protect against request smuggling")
 @pytest.mark.parametrize("normalize", [True, False])
 def test_no_normalization(tctx, normalize):
     """Test that we don't normalize headers when we just pass them through."""
     tctx.options.normalize_outbound_headers = normalize
+    tctx.options.validate_inbound_headers = False
 
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)

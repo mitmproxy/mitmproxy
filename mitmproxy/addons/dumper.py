@@ -16,6 +16,7 @@ from mitmproxy.contrib import click as miniclick
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
+from mitmproxy.utils import vt_codes
 from mitmproxy.websocket import WebSocketData, WebSocketMessage
 
 
@@ -37,7 +38,7 @@ class Dumper:
     def __init__(self, outfile: Optional[IO[str]] = None):
         self.filter: Optional[flowfilter.TFilter] = None
         self.outfp: IO[str] = outfile or sys.stdout
-        self.isatty = self.outfp.isatty()
+        self.out_has_vt_codes = vt_codes.ensure_supported(self.outfp)
 
     def load(self, loader):
         loader.add_option(
@@ -72,7 +73,7 @@ class Dumper:
                 self.filter = None
 
     def style(self, text: str, **style) -> str:
-        if style and self.isatty:
+        if style and self.out_has_vt_codes:
             text = miniclick.style(text, **style)
         return text
 

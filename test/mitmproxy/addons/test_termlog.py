@@ -19,11 +19,10 @@ def test_output(capsys):
     assert err.strip().splitlines() == ["four"]
 
 
-def test_styling() -> None:
+def test_styling(monkeypatch) -> None:
     f = io.StringIO()
-    f.isatty = lambda: True
     t = termlog.TermLog(out=f)
-
+    t.out_has_vt_codes = True
     with taddons.context(t) as tctx:
         tctx.configure(t)
         t.add_log(log.LogEntry("hello world", "info"))

@@ -72,6 +72,7 @@ export interface OptionsState {
     tls_version_server_min: string
     upstream_auth: string | undefined
     upstream_cert: boolean
+    validate_inbound_headers: boolean
     view_filter: string | undefined
     view_order: string
     view_order_reversed: boolean
@@ -159,6 +160,7 @@ export const defaultState: OptionsState = {
     tls_version_server_min: "TLS1_2",
     upstream_auth: undefined,
     upstream_cert: true,
+    validate_inbound_headers: true,
     view_filter: undefined,
     view_order: "time",
     view_order_reversed: false,

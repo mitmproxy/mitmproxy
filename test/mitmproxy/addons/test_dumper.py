@@ -243,9 +243,9 @@ def test_http2():
 
 def test_styling():
     sio = io.StringIO()
-    sio.isatty = lambda: True
 
     d = dumper.Dumper(sio)
+    d.out_has_vt_codes = True
     with taddons.context(d):
         d.response(tflow.tflow(resp=True))
         assert "\x1b[" in sio.getvalue()

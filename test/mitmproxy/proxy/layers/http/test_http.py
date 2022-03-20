@@ -1261,6 +1261,37 @@ def test_request_smuggling(tctx):
     assert b"Received both a Transfer-Encoding and a Content-Length header" in err()
 
 
+def test_request_smuggling_whitespace(tctx):
+    """Test that we reject header names with whitespace"""
+    err = Placeholder(bytes)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
+                                     b"Host: example.com\r\n"
+                                     b"Content-Length : 42\r\n\r\n")
+        << SendData(tctx.client, err)
+        << CloseConnection(tctx.client)
+    )
+    assert b"Received an invalid header name" in err()
+
+
+def test_request_smuggling_validation_disabled(tctx):
+    """Test that we don't reject request smuggling when validation is disabled."""
+    tctx.options.validate_inbound_headers = False
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
+                                     b"Host: example.com\r\n"
+                                     b"Content-Length: 4\r\n"
+                                     b"Transfer-Encoding: chunked\r\n\r\n"
+                                     b"4\r\n"
+                                     b"abcd\r\n"
+                                     b"0\r\n"
+                                     b"\r\n")
+        << OpenConnection(Placeholder(Server))
+    )
+
+
 def test_request_smuggling_te_te(tctx):
     """Test that we reject transfer-encoding headers that are weird in some way"""
     err = Placeholder(bytes)

@@ -98,6 +98,13 @@ class Proxyserver:
             in custom scripts are lowercased before they are sent.
             """,
         )
+        loader.add_option(
+            "validate_inbound_headers", bool, True,
+            """
+            Make sure that incoming HTTP requests are not malformed.
+            Disabling this option makes mitmproxy vulnerable to HTTP smuggling attacks.
+            """,
+        )
 
     async def running(self):
         self.master = ctx.master
