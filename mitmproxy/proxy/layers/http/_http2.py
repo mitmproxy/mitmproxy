@@ -410,12 +410,11 @@ class Http2Client(Http2Connection):
         if isinstance(event, Wakeup):
             remaining = self.context.options.http2_ping_threshold - time.time() + self.last_activity
             if remaining <= 0.5:
-                yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
+                remaining = self.context.options.http2_ping_threshold
                 self.h2_conn.ping(b"0" * 8)
+                yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
                 yield SendData(self.conn, self.h2_conn.data_to_send())
-                yield RequestWakeup(self.context.options.http2_ping_threshold)
-            else:
-                yield RequestWakeup(remaining)
+            yield RequestWakeup(remaining)
             return
         self.last_activity = time.time()
         if isinstance(event, Start):
