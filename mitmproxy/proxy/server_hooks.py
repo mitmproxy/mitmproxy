@@ -20,7 +20,6 @@ class ClientDisconnectedHook(commands.StartHook):
     """
     A client connection has been closed (either by us or the client).
     """
-    blocking = False
     client: connection.Client
 
 
@@ -50,7 +49,6 @@ class ServerConnectedHook(commands.StartHook):
     """
     Mitmproxy has connected to a server.
     """
-    blocking = False
     data: ServerConnectionHookData
 
 
@@ -59,5 +57,4 @@ class ServerDisconnectedHook(commands.StartHook):
     """
     A server connection has been closed (either by us or the server).
     """
-    blocking = False
     data: ServerConnectionHookData

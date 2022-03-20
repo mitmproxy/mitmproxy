@@ -2,7 +2,6 @@ import uuid
 from typing import Optional, Union
 
 from mitmproxy import connection
-from mitmproxy import controller
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
@@ -27,7 +26,7 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp
     f = tcp.TCPFlow(client_conn, server_conn)
     f.messages = messages
     f.error = err
-    f.reply = controller.DummyReply()
+    f.live = True
     return f
 
 
@@ -82,7 +81,7 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
             # NORMAL_CLOSURE
             flow.websocket.close_code = 1000
 
-    flow.reply = controller.DummyReply()
+    flow.live = True
     return flow
 
 
@@ -94,6 +93,7 @@ def tflow(
     resp: Union[bool, http.Response] = False,
     err: Union[bool, flow.Error] = False,
     ws: Union[bool, websocket.WebSocketData] = False,
+    live: bool = True,
 ) -> http.HTTPFlow:
     """Create a flow for testing."""
     if client_conn is None:
@@ -119,7 +119,7 @@ def tflow(
     f.response = resp or None
     f.error = err or None
     f.websocket = ws or None
-    f.reply = controller.DummyReply()
+    f.live = live
     return f
 
 
@@ -140,7 +140,7 @@ def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
 
     f = DummyFlow(client_conn, server_conn)
     f.error = err
-    f.reply = controller.DummyReply()
+    f.live = True
     return f
 
 
@@ -166,7 +166,6 @@ def tclient_conn() -> connection.Client:
         alpn_offers=[],
         cipher_list=[],
     ))
-    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 
@@ -194,7 +193,6 @@ def tserver_conn() -> connection.Server:
         cipher_list=[],
         via2=None,
     ))
-    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 

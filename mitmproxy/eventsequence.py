@@ -1,6 +1,5 @@
 from typing import Any, Callable, Dict, Iterator, Type
 
-from mitmproxy import controller
 from mitmproxy import flow
 from mitmproxy import hooks
 from mitmproxy import http
@@ -32,7 +31,6 @@ def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
 def _iterate_tcp(f: tcp.TCPFlow) -> TEventGenerator:
     messages = f.messages
     f.messages = []
-    f.reply = controller.DummyReply()
     yield layers.tcp.TcpStartHook(f)
     while messages:
         f.messages.append(messages.pop(0))

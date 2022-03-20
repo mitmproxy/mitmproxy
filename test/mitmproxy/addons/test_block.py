@@ -50,7 +50,6 @@ from mitmproxy.test import taddons
     (False, True, False, (r"::ffff:216.58.207.174%scope",)),
     (False, True, False, ("2001:4860:4860::8888",)),
 ])
-@pytest.mark.asyncio
 async def test_block_global(block_global, block_private, should_be_killed, address):
     ar = block.Block()
     with taddons.context(ar) as tctx:

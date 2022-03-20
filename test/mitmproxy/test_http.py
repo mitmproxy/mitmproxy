@@ -1,3 +1,4 @@
+import asyncio
 import email
 import time
 import json
@@ -7,7 +8,6 @@ import pytest
 
 from mitmproxy import flow
 from mitmproxy import flowfilter
-from mitmproxy.exceptions import ControlException
 from mitmproxy.http import Headers, Request, Response, HTTPFlow
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tflow import tflow
@@ -704,10 +704,11 @@ class TestHTTPFlow:
 
     def test_kill(self):
         f = tflow()
-        with pytest.raises(ControlException):
-            f.intercept()
-            f.resume()
-            f.kill()
+        f.intercept()
+        f.resume()
+        assert f.killable
+        f.kill()
+        assert not f.killable
 
         f = tflow()
         f.intercept()
@@ -719,16 +720,45 @@ class TestHTTPFlow:
     def test_intercept(self):
         f = tflow()
         f.intercept()
-        assert f.reply.state == "taken"
+        assert f.intercepted
         f.intercept()
-        assert f.reply.state == "taken"
+        assert f.intercepted
 
     def test_resume(self):
         f = tflow()
-        f.intercept()
-        assert f.reply.state == "taken"
         f.resume()
-        assert f.reply.state == "committed"
+        assert not f.intercepted
+        f.intercept()
+        assert f.intercepted
+        f.resume()
+        assert not f.intercepted
+
+    async def test_wait_for_resume(self):
+        f = tflow()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        f.resume()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        await f.wait_for_resume()
+
+        f = tflow()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        f.intercept()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(f.wait_for_resume(), 0.2)
+        f.resume()
+        await f.wait_for_resume()
 
     def test_resume_duplicated(self):
         f = tflow()
@@ -1068,6 +1098,7 @@ class TestMessageText:
     def test_guess_meta_charset(self):
         r = tresp(content=b'<meta http-equiv="content-type" '
                           b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf')
+        r.headers["content-type"] = "text/html"
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" in r.text
 

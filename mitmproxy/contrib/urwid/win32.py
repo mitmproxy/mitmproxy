@@ -4,6 +4,7 @@ from ctypes.wintypes import BOOL, DWORD, WCHAR, WORD, SHORT, UINT, HANDLE, LPDWO
 # https://docs.microsoft.com/de-de/windows/console/getstdhandle
 STD_INPUT_HANDLE = -10
 STD_OUTPUT_HANDLE = -11
+STD_ERROR_HANDLE = -12
 
 # https://docs.microsoft.com/de-de/windows/console/setconsolemode
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004

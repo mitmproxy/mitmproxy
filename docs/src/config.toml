@@ -12,3 +12,6 @@ tag = "tags"
 
 [markup.goldmark.renderer]
 unsafe = true
+
+[security.funcs]
+getenv = ["DOCS_ARCHIVE"]

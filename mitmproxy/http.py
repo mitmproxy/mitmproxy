@@ -414,9 +414,10 @@ class Message(serializable.Serializable):
             if "json" in self.headers.get("content-type", ""):
                 enc = "utf8"
         if not enc:
-            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
-            if meta_charset:
-                enc = meta_charset.group(1).decode("ascii", "ignore")
+            if "html" in self.headers.get("content-type", ""):
+                meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
+                if meta_charset:
+                    enc = meta_charset.group(1).decode("ascii", "ignore")
         if not enc:
             if "text/css" in self.headers.get("content-type", ""):
                 # @charset rule must be the very first thing.

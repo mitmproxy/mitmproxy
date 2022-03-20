@@ -125,6 +125,7 @@ class TCPLayer(layer.Layer):
                 self._handle_event = self.done
                 if self.flow:
                     yield TcpEndHook(self.flow)
+                    self.flow.live = False
             else:
                 yield commands.CloseConnection(send_to, half_close=True)
         else:

@@ -40,7 +40,7 @@ class Http2Connection(HttpConnection):
     h2_conf_defaults = dict(
         header_encoding=False,
         validate_outbound_headers=False,
-        validate_inbound_headers=True,
+        # validate_inbound_headers is controlled by the validate_inbound_headers option.
         normalize_inbound_headers=False,  # changing this to True is required to pass h2spec
         normalize_outbound_headers=False,
     )
@@ -58,6 +58,7 @@ class Http2Connection(HttpConnection):
         if self.debug:
             self.h2_conf.logger = H2ConnectionLogger(f"{human.format_address(self.context.client.peername)}: "
                                                      f"{self.__class__.__name__}")
+        self.h2_conf.validate_inbound_headers = self.context.options.validate_inbound_headers
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
 

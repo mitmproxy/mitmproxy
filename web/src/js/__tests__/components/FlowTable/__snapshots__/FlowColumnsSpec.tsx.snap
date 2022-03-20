@@ -177,7 +177,7 @@ exports[`should render columns: method 1`] = `
         <td
           class="col-method"
         >
-          GET
+          WSS
         </td>
       </tr>
     </tbody>

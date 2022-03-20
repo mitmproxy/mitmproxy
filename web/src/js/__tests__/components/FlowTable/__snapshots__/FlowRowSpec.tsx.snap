@@ -34,7 +34,7 @@ exports[`FlowRow 1`] = `
         <td
           class="col-method"
         >
-          GET
+          WSS
         </td>
         <td
           class="col-status"

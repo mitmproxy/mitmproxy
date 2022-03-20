@@ -124,8 +124,10 @@ class WebsocketLayer(layer.Layer):
 
         if isinstance(event, events.ConnectionEvent):
             from_client = event.connection == self.context.client
+            injected = False
         elif isinstance(event, WebSocketMessageInjected):
             from_client = event.message.from_client
+            injected = True
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -165,7 +167,7 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf = [b""]
 
-                    message = websocket.WebSocketMessage(typ, from_client, content)
+                    message = websocket.WebSocketMessage(typ, from_client, content, injected=injected)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
@@ -194,6 +196,7 @@ class WebsocketLayer(layer.Layer):
                         yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)
                 yield WebsocketEndHook(self.flow)
+                self.flow.live = False
                 self._handle_event = self.done
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")

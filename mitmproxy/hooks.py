@@ -72,8 +72,7 @@ class DoneHook(Hook):
 class RunningHook(Hook):
     """
     Called when the proxy is completely up and running. At this point,
-    you can expect the proxy to be bound to a port, and all addons to be
-    loaded.
+    you can expect all addons to be loaded and all options to be set.
     """
 
 

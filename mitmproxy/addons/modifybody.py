@@ -31,12 +31,12 @@ class ModifyBody:
                 self.replacements.append(spec)
 
     def request(self, flow):
-        if flow.response or flow.error or flow.reply.state == "taken":
+        if flow.response or flow.error or not flow.live:
             return
         self.run(flow)
 
     def response(self, flow):
-        if flow.error or flow.reply.state == "taken":
+        if flow.error or not flow.live:
             return
         self.run(flow)
 

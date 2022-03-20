@@ -16,10 +16,10 @@ def cancel_task(task: asyncio.Task, message: str) -> None:
 
 
 def create_task(
-        coro: Coroutine, *,
-        name: str,
-        client: Optional[tuple] = None,
-        ignore_closed_loop: bool = True,
+    coro: Coroutine, *,
+    name: str,
+    client: Optional[tuple] = None,
+    ignore_closed_loop: bool = True,
 ) -> Optional[asyncio.Task]:
     """
     Like asyncio.create_task, but also store some debug info on the task object.
@@ -41,10 +41,10 @@ def create_task(
 
 
 def set_task_debug_info(
-        task: asyncio.Task,
-        *,
-        name: str,
-        client: Optional[tuple] = None,
+    task: asyncio.Task,
+    *,
+    name: str,
+    client: Optional[tuple] = None,
 ) -> None:
     """Set debug info for an externally-spawned task."""
     task.created = time.time()  # type: ignore
@@ -56,9 +56,11 @@ def set_task_debug_info(
 def task_repr(task: asyncio.Task) -> str:
     """Get a task representation with debug info."""
     name = task.get_name()
-    age = getattr(task, "created", "")
-    if age:
-        age = f" (age: {time.time() - age:.0f}s)"
+    a: float = getattr(task, "created", 0)
+    if a:
+        age = f" (age: {time.time() - a:.0f}s)"
+    else:
+        age = ""
     client = getattr(task, "client", "")
     if client:
         client = f"{human.format_address(client)}: "
