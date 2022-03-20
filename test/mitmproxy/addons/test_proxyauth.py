@@ -147,13 +147,19 @@ class TestProxyAuth:
             )
             assert isinstance(pa.validator, proxyauth.Ldap)
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+            ctx.configure(
+                pa,
+                proxyauth="ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+            )
+            assert isinstance(pa.validator, proxyauth.Ldap)
+
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
                 ctx.configure(pa, proxyauth="ldap:test:test:test")
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
                 ctx.configure(pa, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
 
-            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+            with pytest.raises(exceptions.OptionsError, match="Invalid LDAP specification"):
                 ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
 
             with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
@@ -200,11 +206,15 @@ class TestProxyAuth:
             assert f2.metadata["proxyauth"] == ('test', 'test')
 
 
-def test_ldap(monkeypatch):
+@pytest.mark.parametrize("spec", [
+    "ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
+    "ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+])
+def test_ldap(monkeypatch, spec):
     monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
     monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
 
-    validator = proxyauth.Ldap("ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+    validator = proxyauth.Ldap(spec)
     assert not validator("", "")
     assert validator("foo", "bar")
     validator.conn.response = False

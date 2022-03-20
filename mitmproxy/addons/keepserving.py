@@ -37,4 +37,4 @@ class KeepServing:
             ctx.options.rfile,
         ]
         if any(opts) and not ctx.options.keepserving:
-            asyncio.get_event_loop().create_task(self.watch())
+            asyncio.get_running_loop().create_task(self.watch())

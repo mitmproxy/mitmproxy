@@ -38,6 +38,38 @@ def connection_close(http_version, headers):
     )
 
 
+# https://datatracker.ietf.org/doc/html/rfc7230#section-3.2: Header fields are tokens.
+# "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /  "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
+_valid_header_name = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$")
+
+
+def validate_headers(
+    headers: Headers
+) -> None:
+    """
+    Validate headers to avoid request smuggling attacks. Raises a ValueError if they are malformed.
+    """
+
+    te_found = False
+    cl_found = False
+
+    for (name, value) in headers.fields:
+        if not _valid_header_name.match(name):
+            raise ValueError(f"Received an invalid header name: {name!r}. Invalid header names may introduce "
+                             f"request smuggling vulnerabilities. Disable the validate_inbound_headers option "
+                             f"to skip this security check.")
+
+        name_lower = name.lower()
+        te_found = te_found or name_lower == b"transfer-encoding"
+        cl_found = cl_found or name_lower == b"content-length"
+
+    if te_found and cl_found:
+        raise ValueError("Received both a Transfer-Encoding and a Content-Length header, "
+                         "refusing as recommended in RFC 7230 Section 3.3.3. "
+                         "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details. "
+                         "Disable the validate_inbound_headers option to skip this security check.")
+
+
 def expected_http_body_size(
         request: Request,
         response: Optional[Response] = None
@@ -101,10 +133,8 @@ def expected_http_body_size(
     #        a message downstream.
     #
     if "transfer-encoding" in headers:
-        if "content-length" in headers:
-            raise ValueError("Received both a Transfer-Encoding and a Content-Length header, "
-                             "refusing as recommended in RFC 7230 Section 3.3.3. "
-                             "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details.")
+        # we should make sure that there isn't also a content-length header.
+        # this is already handled in validate_headers.
 
         te: str = headers["transfer-encoding"]
         if not te.isascii():

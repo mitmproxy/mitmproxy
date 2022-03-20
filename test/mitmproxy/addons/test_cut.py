@@ -69,7 +69,6 @@ def qr(f):
         return fp.read()
 
 
-@pytest.mark.asyncio
 async def test_cut_clip():
     v = view.View()
     c = cut.Cut()
@@ -124,7 +123,6 @@ def test_cut_save(tmpdir):
     (IsADirectoryError, "Is a directory"),
     (FileNotFoundError, "No such file or directory")
 ])
-@pytest.mark.asyncio
 async def test_cut_save_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     v = view.View()

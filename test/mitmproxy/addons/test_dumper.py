@@ -167,17 +167,15 @@ def test_echo_request_line():
         sio.truncate(0)
 
 
-class TestContentView:
-    @pytest.mark.asyncio
-    async def test_contentview(self):
-        with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
-            va.side_effect = ValueError("")
-            sio = io.StringIO()
-            d = dumper.Dumper(sio)
-            with taddons.context(d) as tctx:
-                tctx.configure(d, flow_detail=4)
-                d.response(tflow.tflow())
-                await tctx.master.await_log("content viewer failed")
+async def test_contentview():
+    with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
+        va.side_effect = ValueError("")
+        sio = io.StringIO()
+        d = dumper.Dumper(sio)
+        with taddons.context(d) as tctx:
+            tctx.configure(d, flow_detail=4)
+            d.response(tflow.tflow())
+            await tctx.master.await_log("content viewer failed")
 
 
 def test_tcp():
@@ -241,3 +239,13 @@ def test_http2():
         f.response.http_version = b"HTTP/2.0"
         d.response(f)
         assert "HTTP/2.0 200 OK" in sio.getvalue()
+
+
+def test_styling():
+    sio = io.StringIO()
+
+    d = dumper.Dumper(sio)
+    d.out_has_vt_codes = True
+    with taddons.context(d):
+        d.response(tflow.tflow(resp=True))
+        assert "\x1b[" in sio.getvalue()

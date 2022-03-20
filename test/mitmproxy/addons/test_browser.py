@@ -1,11 +1,9 @@
 from unittest import mock
-import pytest
 
 from mitmproxy.addons import browser
 from mitmproxy.test import taddons
 
 
-@pytest.mark.asyncio
 async def test_browser():
     with mock.patch("subprocess.Popen") as po, mock.patch("shutil.which") as which:
         which.return_value = "chrome"
@@ -21,7 +19,6 @@ async def test_browser():
             assert not b.browser
 
 
-@pytest.mark.asyncio
 async def test_no_browser():
     with mock.patch("shutil.which") as which:
         which.return_value = False

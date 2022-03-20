@@ -2279,7 +2279,7 @@ export default (function() {
 
     // ~websocket
     function websocketFilter(flow){
-        return flow.type === "websocket";
+        return !!flow.websocket;
     }
     websocketFilter.desc = "is a Websocket Flow";
 
