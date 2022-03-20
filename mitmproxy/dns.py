@@ -395,7 +395,7 @@ class ResourceRecord(stateobject.StateObject):
                 end_label = offset + size
                 if len(buffer) < end_label:
                     raise struct.error(f"unpack requires a label buffer of {size} bytes")
-                labels.append(buffer[range(offset, end_label)].decode("idna"))
+                labels.append(buffer[offset:end_label].decode("idna"))
                 offset += size
         return ".".join(labels)
 
@@ -413,6 +413,11 @@ class ResourceRecord(stateobject.StateObject):
     def CNAME(cls, alias: str, canonical: str, *, ttl = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
         return ResourceRecord(alias, Type.CNAME, Class.IN, ttl, ResourceRecord.encode_domain_name(canonical))
+
+    @classmethod
+    def PTR(cls, inaddr: str, ptr: str, *, ttl = DEFAULT_TTL) -> ResourceRecord:
+        """Create a canonical internet name resource record."""
+        return ResourceRecord(inaddr, Type.PTR, Class.IN, ttl, ResourceRecord.encode_domain_name(ptr))
 
 
 # comments are taken from rfc1035
@@ -617,7 +622,7 @@ class Message(stateobject.StateObject):
                     if len(buffer) < end_data:
                         raise struct.error(f"unpack requires a data buffer of {len_data} bytes")
                     try:
-                        rr = ResourceRecord(name, Type(type), Class(class_), ttl, buffer[range(offset, end_data)])
+                        rr = ResourceRecord(name, Type(type), Class(class_), ttl, buffer[offset:end_data])
                     except ValueError as e:
                         raise struct.error(str(e))
                     section.append(rr)
