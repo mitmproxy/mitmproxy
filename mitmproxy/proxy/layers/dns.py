@@ -1,10 +1,9 @@
-from curses import nonl
 from dataclasses import dataclass
 import enum
 import ipaddress
 import socket
 import struct
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Union
 
 from mitmproxy import dns, platform
 from mitmproxy import connection
@@ -44,7 +43,7 @@ class DnsErrorHook(commands.StartHook):
 
 class DnsMode(enum.Enum):
     Simple = "simple"
-    Forward = "forward:"
+    Forward = "forward"
     Transparent = "transparent"
 
 
@@ -78,9 +77,10 @@ class DNSLayer(layer.Layer):
                 if e.errno == socket.EAI_NODATA:
                     raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
                 else:
+                    # NOTE https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
                     raise DnsResolveError(dns.ResponseCode.SERVFAIL)
             for addrinfo in addrinfos:
-                _, _, _, _, (addr, ) = addrinfo
+                _, _, _, _, (addr, _) = addrinfo
                 answers.append(dns.ResourceRecord(
                     name=question.name,
                     type=question.type,
@@ -178,22 +178,29 @@ class DNSLayer(layer.Layer):
         else:
             flow = dns.DNSFlow(self.context.client, server_conn, True)
             flow.response = msg
-            flow.error = f"Received response to message {msg.id} sent to {human.format_address(flow.server_conn)}."
+            flow.error = f"Received response to message {msg.id} sent to {human.format_address(flow.server_conn.address)}."
             yield DnsErrorHook(flow)
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:
         mode: str = self.context.options.dns_mode
-        if mode == DnsMode.Simple.name:
-            self.mode = DnsMode.Simple
-        elif mode == DnsMode.Transparent.name:
-            self.mode = DnsMode.Transparent
-        elif mode.startswith(DnsMode.Forward.name):
-            self.mode = DnsMode.Forward
-            addr = mode[0:-len(DnsMode.Forward.name)]
-            # TODO
-        else
-            yield commands.Log(f"Invalid DNS '{mode}', disabling further message handling.", level="error")
+        try:
+            if mode == DnsMode.Simple.name:
+                self.mode = DnsMode.Simple
+            elif mode == DnsMode.Transparent.name:
+                self.mode = DnsMode.Transparent
+            elif mode.startswith(DnsMode.Forward.name):
+                self.mode = DnsMode.Forward
+                parts = mode[len(DnsMode.Forward.name):].split(":")
+                if len(parts) < 2 or len(parts) > 3 or parts[0] != 0:
+                    raise ValueError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{mode}'.")
+                address = (parts[1], int(parts[2]) if len(parts) == 2 else 53)
+                self.context.server = connection.Server(address, protocol=connection.ConnectionProtocol.UDP)
+            else:
+                raise ValueError(f"Invalid DNS mode '{mode}'.")
+            self._handle_event = self.query
+        except ValueError as e:
+            yield commands.Log(f"{str(e)}. Disabling further message handling.", level="error")
             self._handle_event = self.done
 
     @expect(events.DataReceived, events.ConnectionClosed)
@@ -201,7 +208,7 @@ class DNSLayer(layer.Layer):
         assert isinstance(event, events.ConnectionEvent)
 
         if isinstance(event, events.DataReceived):
-            from_client = event.connection == self.context.client
+            from_client = event.connection is self.context.client
             try:
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
@@ -222,11 +229,11 @@ class DNSLayer(layer.Layer):
                 if from_client:
                     yield from self.handle_request(msg)
                 else:
-                    flow = dns.DNSFlow(self.context.client, self.context.server, True)
+                    flow = dns.DNSFlow(self.context.client, event.connection, True)
                     flow.response = msg
                     flow.error = f"Received response for unknown message {msg.id}."
                     yield DnsErrorHook(flow)
-            
+
         elif isinstance(event, events.ConnectionClosed):
             pass  # TODO
 
@@ -238,3 +245,64 @@ class DNSLayer(layer.Layer):
         yield from ()
 
     _handle_event = start
+
+
+if __name__ == "__main__":
+    # TODO move this into proper test
+    msg = dns.Message(
+        timestamp=1647775951.981541,
+        id=31415,
+        query=True,
+        op_code=dns.OpCode.QUERY,
+        authoritative_answer=False,
+        truncation=False,
+        recursion_desired=True,
+        recursion_available=False,
+        reserved=5,
+        response_code=dns.ResponseCode.NOERROR,
+        questions=[
+            dns.Question(
+                name="www.aufbauwerk.com",
+                type=dns.Type.A,
+                class_=dns.Class.IN,
+            ),
+            # dns.Question(
+            #     name="www.google.at",
+            #     type=dns.Type.AAAA,
+            #     class_=dns.Class.IN,
+            # ),
+            dns.Question(
+                name="8.8.8.8.in-addr.arpa",
+                type=dns.Type.PTR,
+                class_=dns.Class.IN,
+            ),
+            dns.Question(
+                name="8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa",
+                type=dns.Type.PTR,
+                class_=dns.Class.IN,
+            )
+        ],
+        answers=[],
+        authorities=[],
+        additionals=[],
+    )
+    assert dns.Message.from_state(msg.get_state()) == msg
+    copy = dns.Message.unpack(msg.packed)
+    copy.timestamp = msg.timestamp
+    assert copy == msg
+    answers = DNSLayer.simple_resolve(msg.questions)
+    answer = msg.succeed(answers)
+    assert(dns.Message.from_state(answer.get_state()) == answer)
+    copy = dns.Message.unpack(answer.packed)
+    copy.timestamp = answer.timestamp
+    assert copy == answer
+    assert str(answer) == "\r\n".join([
+        "www.aufbauwerk.com",
+        "8.8.8.8.in-addr.arpa",
+        "8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa",
+        "217.160.0.146",
+        "dns.google",
+        "dns.google",
+    ])
+    compressed = b'\x04\xd2\x81\x8b\x00\x03\x00\x03\x00\x00\x00\x00\x03www\x06google\x02at\x00\x00\x01\x00\x01\x018\x018\x018\x018\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\xc0\x2f\x00\x0c\x00\x01\x03www\x06google\x02at\x00\x00\x01\x00\x01\x00\x00\x00\x01\x00\x04\xac\xd9\x17c\x018\x018\x018\x018\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00'
+    assert dns.Message.unpack(compressed).answers[1].name.endswith(".arpa")

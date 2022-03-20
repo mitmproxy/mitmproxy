@@ -36,24 +36,6 @@ class ResponseCode(enum.IntEnum):
     """Name not contained in zone [RFC2136]"""
     DSOTYPENI = 11
     """DSO-TYPE Not Implemented [RFC8490]"""
-    BADVERS = 16
-    """Bad OPT Version [RFC6891]"""
-    BADSIG = 16
-    """TSIG Signature Failure [RFC8945]"""
-    BADKEY = 17
-    """Key not recognized [RFC8945]"""
-    BADTIME = 18
-    """Signature out of time window [RFC8945]"""
-    BADMODE = 19
-    """Bad TKEY Mode [RFC2930]"""
-    BADNAME = 20
-    """Duplicate key name [RFC2930]"""
-    BADALG = 21
-    """Algorithm not supported [RFC2930]"""
-    BADTRUNC = 22
-    """Bad Truncation [RFC8945]"""
-    BADCOOKIE = 23
-    """Bad/missing Server Cookie [RFC7873]"""
 
 
 class Type(enum.IntEnum):
@@ -265,8 +247,16 @@ class OpCode(enum.IntEnum):
     """DNS Stateful Operations [RFC8490]"""
 
 
+class BypassInitStateObject(stateobject.StateObject):
+    @classmethod
+    def from_state(cls, state):
+        obj = cls.__new__(cls)  # `cls(**state)`` won't work recursively
+        obj.set_state(state)
+        return obj
+
+
 @dataclass
-class Question(stateobject.StateObject):
+class Question(BypassInitStateObject):
     HEADER = struct.Struct("!HH")
 
     name: str
@@ -280,7 +270,7 @@ class Question(stateobject.StateObject):
 
 
 @dataclass
-class ResourceRecord(stateobject.StateObject):
+class ResourceRecord(BypassInitStateObject):
     # since preferable every query should go through mitmproxy, keep the TTL as low as possible
     DEFAULT_TTL = 1
     HEADER = struct.Struct("!HHIH")
@@ -373,9 +363,9 @@ class ResourceRecord(stateobject.StateObject):
             size = len(label)
             if size == 0 or size >= 64:
                 raise ValueError()
-            buffer.append(Message.LABEL_SIZE.pack(size))
-            buffer.append(label)
-        buffer.append(Message.LABEL_SIZE.pack(0))
+            buffer.extend(Message.LABEL_SIZE.pack(size))
+            buffer.extend(label)
+        buffer.extend(Message.LABEL_SIZE.pack(0))
         return bytes(buffer)
 
     @classmethod
@@ -383,20 +373,26 @@ class ResourceRecord(stateobject.StateObject):
         offset = 0
         labels = []
         while True:
-            size = Message.LABEL_SIZE.unpack_from(buffer, offset)
+            size, = Message.LABEL_SIZE.unpack_from(buffer, offset)
             if size & Message.POINTER_INDICATOR == Message.POINTER_INDICATOR:
                 raise struct.error(f"unpack encountered a pointer which is not supported in RDATA")
             elif size >= 64:
                 raise struct.error(f"unpack encountered a label of length {size}")
             elif size == 0:
+                offset += Message.LABEL_SIZE.size
                 break
             else:
                 offset += Message.LABEL_SIZE.size
                 end_label = offset + size
                 if len(buffer) < end_label:
                     raise struct.error(f"unpack requires a label buffer of {size} bytes")
-                labels.append(buffer[offset:end_label].decode("idna"))
+                try:
+                    labels.append(buffer[offset:end_label].decode("idna"))
+                except UnicodeDecodeError:
+                    raise struct.error(f"unpack encountered a illegal characters at offset {offset}")
                 offset += size
+        if offset != len(buffer):
+            raise struct.error(f"unpack requires a buffer of {offset} bytes")
         return ".".join(labels)
 
     @classmethod
@@ -422,7 +418,7 @@ class ResourceRecord(stateobject.StateObject):
 
 # comments are taken from rfc1035
 @dataclass
-class Message(stateobject.StateObject):
+class Message(BypassInitStateObject):
     HEADER = struct.Struct("!HHHHHH")
     LABEL_SIZE = struct.Struct("!B")
     POINTER_OFFSET = struct.Struct("!H")
@@ -470,22 +466,24 @@ class Message(stateobject.StateObject):
     """Third resource record section."""
 
     _stateobject_attributes = dict(
-        id=str,
+        timestamp=float,
+        id=int,
         query=bool,
         op_code=OpCode,
         authoritative_answer=bool,
-        truncated=bool,
+        truncation=bool,
         recursion_desired=bool,
         recursion_available=bool,
         reserved=int,
         response_code=ResponseCode,
+        questions=List[Question],
         answers=List[ResourceRecord],
         authorities=List[ResourceRecord],
         additionals=List[ResourceRecord],
     )
 
     def __str__(self) -> str:
-        return "\n".join([str(x) for x in [*self.questions, *self.answers, *self.authorities, *self.additionals]])
+        return "\r\n".join([str(x) for x in [*self.questions, *self.answers, *self.authorities, *self.additionals]])
 
     @property
     def size(self) -> int:
@@ -541,38 +539,42 @@ class Message(stateobject.StateObject):
             msg = Message(
                 timestamp=time.time(),
                 id=id,
-                query=(flags & (1 << 14)) != 0,
+                query=(flags & (1 << 15)) != 0,
                 op_code = OpCode((flags >> 11) & 0b1111),
                 authoritative_answer=(flags & (1 << 10)) != 0,
                 truncation = (flags & (1 << 9)) != 0,
                 recursion_desired = (flags & (1 << 8)) != 0,
                 recursion_available = (flags & (1 << 7)) != 0,
-                reserved = (flags >> 6) & 0b111,
+                reserved = (flags >> 4) & 0b111,
                 response_code = ResponseCode(flags & 0b1111),
+                questions=[],
+                answers=[],
+                authorities=[],
+                additionals=[],
             )
         except ValueError as e:
             raise struct.error(str(e))
         offset += Message.HEADER.size
-        labels: Dict[int, Optional[Tuple[str, int]]] = dict()
+        cached_names: Dict[int, Optional[Tuple[str, int]]] = dict()
 
         def unpack_domain_name() -> str:
             nonlocal buffer, offset
 
             def unpack_domain_name_internal(offset: int) -> Tuple[str, int]:
-                nonlocal labels, buffer
+                nonlocal cached_names, buffer
 
-                if offset in labels:
-                    result = labels[offset]
+                if offset in cached_names:
+                    result = cached_names[offset]
                     if result is None:
                         raise struct.error(f"unpack encountered domain name loop")
                 else:
-                    labels[offset] = None
+                    cached_names[offset] = None  # this will indicate that the offset is being unpacked
                     labels = []
                     length = 0
                     while True:
-                        size = Message.LABEL_SIZE.unpack_from(buffer, offset)
+                        size, = Message.LABEL_SIZE.unpack_from(buffer, offset)
                         if size & Message.POINTER_INDICATOR == Message.POINTER_INDICATOR:
-                            pointer = Message.POINTER_OFFSET.unpack_from(buffer, offset)
+                            pointer, = Message.POINTER_OFFSET.unpack_from(buffer, offset)
                             length += Message.POINTER_OFFSET.size
                             label, _ = unpack_domain_name_internal(pointer & ~(Message.POINTER_INDICATOR << 8))
                             labels.append(label)
@@ -587,18 +589,21 @@ class Message(stateobject.StateObject):
                             end_label = offset + size
                             if len(buffer) < end_label:
                                 raise struct.error(f"unpack requires a label buffer of {size} bytes")
-                            labels.append(buffer[range(offset, end_label)].decode("idna"))
+                            try:
+                                labels.append(buffer[offset:end_label].decode("idna"))
+                            except UnicodeDecodeError:
+                                raise struct.error(f"unpack encountered a illegal characters at offset {offset}")
                             offset += size
                             length += Message.LABEL_SIZE.size + size
                     result = ".".join(labels), length
-                    labels[offset] = result
+                    cached_names[offset] = result
                 return result
 
             name, length = unpack_domain_name_internal(offset)
             offset += length
             return name
 
-        for i in range(1, len_questions):
+        for i in range(0, len_questions):
             try:
                 name = unpack_domain_name()
                 type, class_ = Question.HEADER.unpack_from(buffer, offset)
@@ -613,7 +618,7 @@ class Message(stateobject.StateObject):
 
         def unpack_rrs(section: List[ResourceRecord], section_name: str, count: int) -> int:
             nonlocal buffer, offset
-            for i in range(1, count):
+            for i in range(0, count):
                 try:
                     name = unpack_domain_name()
                     type, class_, ttl, len_data = ResourceRecord.HEADER.unpack_from(buffer, offset)
@@ -640,11 +645,11 @@ class Message(stateobject.StateObject):
     @property
     def packed(self) -> bytes:
         """Converts the message into network bytes."""
-        if id < 0 or id > 65536:
+        if self.id < 0 or self.id > 65536:
             raise ValueError(f"DNS message ID {self.id} is out of bound.")
         flags = 0
         if self.query:
-            flags |= 1 << 14
+            flags |= 1 << 15
         flags |= self.op_code.value << 11
         if self.authoritative_answer:
             flags |= 1 << 10
@@ -656,10 +661,10 @@ class Message(stateobject.StateObject):
             flags |= 1 << 7
         if self.reserved < 0 or self.reserved > 7:
             raise ValueError(f"DNS message reserved value {self.reserved} is out of bound.")
-        flags |= self.reserved << 6
+        flags |= self.reserved << 4
         flags |= self.response_code.value
         data = bytearray()
-        data.append(Message.HEADER.pack(
+        data.extend(Message.HEADER.pack(
             self.id,
             flags,
             len(self.questions),
@@ -669,12 +674,12 @@ class Message(stateobject.StateObject):
         ))
         # TODO implement compression
         for question in self.questions:
-            data.append(ResourceRecord.pack_domain_name(question.name))
-            data.append(Question.HEADER.pack(question.type.value, question.class_.value))
+            data.extend(ResourceRecord.pack_domain_name(question.name))
+            data.extend(Question.HEADER.pack(question.type.value, question.class_.value))
         for rr in *self.answers, *self.authorities, *self.additionals:
-            data.append(ResourceRecord.pack_domain_name(rr.name))
-            data.append(ResourceRecord.HEADER.pack(rr.type.value, rr.class_.value, rr.ttl, len(rr.data)))
-            data.append(rr.data)
+            data.extend(ResourceRecord.pack_domain_name(rr.name))
+            data.extend(ResourceRecord.HEADER.pack(rr.type.value, rr.class_.value, rr.ttl, len(rr.data)))
+            data.extend(rr.data)
         return bytes(data)
 
     def to_json(self) -> dict:

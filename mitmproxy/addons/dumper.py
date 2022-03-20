@@ -355,5 +355,5 @@ class Dumper:
                 type=f.response.answers[0].type.name,
                 class_=f.response.answers[0].class_.name,
                 ttl=f.response.answers[0].ttl,
-                value=str(f.response[0])
+                value=str(f.response.answers[0])
             ))
