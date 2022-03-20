@@ -20,9 +20,9 @@ from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolE
     ResponseEndOfMessage, ResponseHeaders, RequestTrailers, ResponseTrailers, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
-from ...commands import CloseConnection, Log, SendData, RequestKeepAlive
+from ...commands import CloseConnection, Log, SendData, RequestWakeup
 from ...context import Context
-from ...events import ConnectionClosed, DataReceived, Event, Start, KeepAlive
+from ...events import ConnectionClosed, DataReceived, Event, Start, Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
 
@@ -251,7 +251,7 @@ class Http2Connection(HttpConnection):
         self.streams.clear()
         self._handle_event = self.done  # type: ignore
 
-    @expect(DataReceived, HttpEvent, ConnectionClosed, KeepAlive)
+    @expect(DataReceived, HttpEvent, ConnectionClosed, Wakeup)
     def done(self, _) -> CommandGenerator[None]:
         yield from ()
 
@@ -267,6 +267,13 @@ def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) ->
     # otherwise hyper-h2 will silently drop headers.
     headers = list(headers)
     return headers
+
+
+def normalize_h2_headers(headers: List[Tuple[bytes, bytes]]) -> CommandGenerator[None]:
+    for i in range(len(headers)):
+        if not headers[i][0].islower():
+            yield Log(f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2.")
+            headers[i] = (headers[i][0].lower(), headers[i][1])
 
 
 class Http2Server(Http2Connection):
@@ -290,7 +297,10 @@ class Http2Server(Http2Connection):
                     (b":status", b"%d" % event.response.status_code),
                     *event.response.headers.fields
                 ]
-                if not event.response.is_http2:
+                if event.response.is_http2:
+                    if self.context.options.normalize_outbound_headers:
+                        yield from normalize_h2_headers(headers)
+                else:
                     headers = normalize_h1_headers(headers, False)
 
                 self.h2_conn.send_headers(
@@ -358,6 +368,7 @@ class Http2Client(Http2Connection):
         self.our_stream_id = {}
         self.their_stream_id = {}
         self.stream_queue = collections.defaultdict(list)
+        self.last_activity: float
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         # We can't reuse stream ids from the client because they may arrived reordered here
@@ -396,16 +407,21 @@ class Http2Client(Http2Connection):
                 yield from self._handle_event(event)
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
+        if isinstance(event, Wakeup):
+            remaining = self.context.options.http2_ping_threshold - time.time() + self.last_activity
+            if remaining <= 0.5:
+                yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
+                self.h2_conn.ping(b"0" * 8)
+                yield SendData(self.conn, self.h2_conn.data_to_send())
+                yield RequestWakeup(self.context.options.http2_ping_threshold)
+            else:
+                yield RequestWakeup(remaining)
+            return
+        self.last_activity = time.time()
         if isinstance(event, Start):
             if self.context.options.http2_ping_threshold > 0:
-                yield RequestKeepAlive(self.context.options.http2_ping_threshold)
+                yield RequestWakeup(self.context.options.http2_ping_threshold)
             yield from super()._handle_event(event)
-        elif isinstance(event, KeepAlive):
-            yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
-            self.h2_conn.ping(b"0" * 8)
-            data_to_send = self.h2_conn.data_to_send()
-            if data_to_send:
-                yield SendData(self.conn, data_to_send)
         elif isinstance(event, RequestHeaders):
             pseudo_headers = [
                 (b':method', event.request.data.method),
@@ -417,6 +433,8 @@ class Http2Client(Http2Connection):
 
             if event.request.is_http2:
                 hdrs = list(event.request.headers.fields)
+                if self.context.options.normalize_outbound_headers:
+                    yield from normalize_h2_headers(hdrs)
             else:
                 headers = event.request.headers
                 if not event.request.authority and "host" in headers:

@@ -10,7 +10,7 @@ from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, RequestKeepAlive
+from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, RequestWakeup
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
@@ -794,6 +794,6 @@ def test_request_keepalive(tctx):
             >> reply()
             << OpenConnection(server)
             >> reply(None, side_effect=make_h2)
-            << RequestKeepAlive(1)
+            << RequestWakeup(1)
             << SendData(server, initial)
     )

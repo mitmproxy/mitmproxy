@@ -30,10 +30,10 @@ class Start(Event):
     pass
 
 
-class KeepAlive(Event):
+class Wakeup(Event):
     """
-    Event sent to the http2 layer to send a PING to the remote server
-    to keep the connection alive.
+    Event sent to layers that requested a wakeup using RequestWakeup.
+    Currently only used by HTTP/2 to send PINGs to the remote server.
     """
     pass
 

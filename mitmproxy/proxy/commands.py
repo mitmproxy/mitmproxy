@@ -39,14 +39,14 @@ class Command:
         return f"{type(self).__name__}({repr(x)})"
 
 
-class RequestKeepAlive(Command):
+class RequestWakeup(Command):
     """
-    Sent by a layer to request regular sending of KeepAlive events.
+    Sent by a layer to request a Wakeup event.
     Currently only used by HTTP/2 to send PINGs to the remote server.
     """
-    thrshold: int
+    threshold: float
 
-    def __init__(self, threshold: int):  # pragma: no cover
+    def __init__(self, threshold: float):  # pragma: no cover
         self.threshold = threshold
 
 
