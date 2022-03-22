@@ -109,10 +109,9 @@ class Options(optmanager.OptManager):
         self.add_option(
             "http2_ping_keepalive", int, 58,
             """
-            Send HTTP/2 PING frames to remote if connection is idle longer than
-            the threshold to prevent the remote site from closing it. Value is
-            in seconds, recommended is 58, 0 or negative values disable the feature.
-            PING frames are sent after 58 seconds idle time by default.
+            Send a PING frame if an HTTP/2 connection is idle for more than
+            the specified number of seconds to prevent the remote site from closing it. 
+            Set to 0 to disable this feature.
             """
         )
         self.add_option(
