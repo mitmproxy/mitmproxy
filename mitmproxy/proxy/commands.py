@@ -41,8 +41,7 @@ class Command:
 
 class RequestWakeup(Command):
     """
-    Sent by a layer to request a Wakeup event.
-    Currently only used by HTTP/2 to send PINGs to the remote server.
+    Request a `Wakeup` event after the specified amount of seconds.
     """
     threshold: float
 
