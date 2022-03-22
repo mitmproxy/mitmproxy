@@ -107,7 +107,7 @@ class Options(optmanager.OptManager):
             "HTTP/2 support is enabled by default.",
         )
         self.add_option(
-            "http2_ping_threshold", int, 58,
+            "http2_ping_keepalive", int, 58,
             """
             Send HTTP/2 PING frames to remote if connection is idle longer than
             the threshold to prevent the remote site from closing it. Value is
