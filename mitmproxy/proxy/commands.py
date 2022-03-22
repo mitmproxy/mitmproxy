@@ -45,7 +45,7 @@ class RequestWakeup(Command):
     """
     threshold: float
 
-    def __init__(self, threshold: float):  # pragma: no cover
+    def __init__(self, threshold: float):
         self.threshold = threshold
 
 
