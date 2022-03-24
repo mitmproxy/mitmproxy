@@ -674,24 +674,19 @@ def format_dns_flow(
         items.append(fcol(">>" if focused else "  ", "focus"))
 
     scheme_style = "intercepted" if intercepted else SCHEME_STYLES["dns"]
-    if render_mode is RenderMode.TABLE:
-        items.append(fcol("DNS  ", scheme_style))
-    else:
-        items.append(fcol("DNS", scheme_style))
-
+    items.append(fcol("DNS  " if render_mode is RenderMode.TABLE else "DNS", scheme_style))
     items.append(fcol(fixlen(op_code, 6), scheme_style))
-
     items.append(("weight", 0.5, truncated_plain(human.format_address(client_address), "text")))
-    items.append(("weight", 1.0, truncated_plain(question, "text")))
+    items.append(("weight", 1.0, truncated_plain("?" if not question else question, "text")))
     items.append(fcol("=", scheme_style))
-    items.append(("weight", 1.0, truncated_plain("..." if answer is None else "?" if not answer else answer, "text")))
-    items.append(fcol("A" if authoritative_answer else "-", scheme_style))
-    items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
-    if error_message:
+    if error_message is not None:
         items.append(('weight', 1.0, truncated_plain(error_message, "error")))
-
-    if response_code:
-        items.append(fcol(fixlen(response_code, 9), response_code_style))
+        items.append(fcol("E", scheme_style))
+    else:
+        items.append(("weight", 1.0, truncated_plain("..." if answer is None else "?" if not answer else answer, "text")))
+        items.append(fcol("A" if authoritative_answer else "-", scheme_style))
+    items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
+    items.append(fcol(fixlen("" if response_code is None else response_code, 9), response_code_style))
 
     items.append(format_right_indicators(
         replay=bool(is_replay),

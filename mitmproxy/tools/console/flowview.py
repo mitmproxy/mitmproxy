@@ -395,26 +395,26 @@ class FlowDetails(tabs.Tabs):
     def dns_message_text(self, type: str, message: Optional[dns.Message]) -> searchable.Searchable:
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:
-            def rrs_text(rrs: List[dns.ResourceRecord]):
-                return [f"  {rr.name} {rr.type.name} {rr.class_.name} {rr.ttl} {str(rr)}" for rr in rrs]
+            def rr_text(rr: dns.ResourceRecord):
+                return urwid.Text(f"  {rr.name} {rr.type.name} {rr.class_.name} {rr.ttl} {str(rr)}")
             viewmode = self.master.commands.call("console.flowview.mode")
             txt = []
             txt.append(urwid.Text("{recursive}Question".format(
                 recursive="Recursive " if message.recursion_desired else "",
             )))
-            txt.append([f"  {q.name} {q.type.name} {q.class_.name}" for q in message.questions])
+            txt.extend(urwid.Text(f"  {q.name} {q.type.name} {q.class_.name}") for q in message.questions)
             txt.append(urwid.Text(""))
-            txt.append(urwid.Text("{authoritative}{recursive}Answer").format(
+            txt.append(urwid.Text("{authoritative}{recursive}Answer".format(
                 authoritative="Authoritative " if message.authoritative_answer else "",
                 recursive="Recursive " if message.recursion_available else "",
-            ))
-            txt.append(map(rrs_text, message.answers))
+            )))
+            txt.extend(map(rr_text, message.answers))
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("Authority"))
-            txt.append(map(rrs_text, message.authorities))
+            txt.extend(map(rr_text, message.authorities))
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("Addition"))
-            txt.append(map(rrs_text, message.additionals))
+            txt.extend(map(rr_text, message.additionals))
             txt.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
             return searchable.Searchable(txt)
         else:
