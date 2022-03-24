@@ -649,23 +649,23 @@ def format_tcp_flow(
 
 @lru_cache(maxsize=800)
 def format_dns_flow(
-    *,
-    render_mode: RenderMode,
-    focused: bool,
-    intercepted: bool,
-    marked: str,
-    is_replay: typing.Optional[str],
-    client_address: Address,
-    server_address: Address,
-    op_code: str,
-    request_timestamp: float,
-    question: str,
-    authoritative_answer: typing.Optional[bool],
-    response_code: typing.Optional[str],
-    response_code_style: str,
-    answer: typing.Optional[str],
-    error_message: str,
-) -> urwid.Widget:
+        *,
+        render_mode: RenderMode,
+        focused: bool,
+        intercepted: bool,
+        marked: str,
+        is_replay: typing.Optional[str],
+        client_address: Address,
+        server_address: Address,
+        op_code: str,
+        request_timestamp: float,
+        question: str,
+        authoritative_answer: typing.Optional[bool],
+        response_code: typing.Optional[str],
+        response_code_style: str,
+        answer: typing.Optional[str],
+        error_message: str,
+):
     items = []
 
     if render_mode in (RenderMode.TABLE, RenderMode.DETAILVIEW):
@@ -681,14 +681,15 @@ def format_dns_flow(
 
     items.append(fcol(fixlen(op_code, 6), scheme_style))
 
-    items.append(("weight", 1.0, TruncatedText(question, "text", "right")))
+    items.append(("weight", 0.5, truncated_plain(human.format_address(client_address), "text")))
+    items.append(("weight", 1.0, truncated_plain(question, "text")))
     items.append(fcol("=", scheme_style))
-    if answer:
-        items.append(("weight", 1.0, TruncatedText(answer, "text", "left")))
+    items.append(("weight", 1.0, truncated_plain("..." if answer is None else "?" if not answer else answer, "text")))
+    items.append(fcol("A" if authoritative_answer else "-", scheme_style))
+    items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
     if error_message:
-        items.append(('weight', 1.0, truncated_plain(error_message, "error", "left")))
+        items.append(('weight', 1.0, truncated_plain(error_message, "error")))
 
-    items.append(fcol("A" if authoritative_answer else " ", scheme_style))
     if response_code:
         items.append(fcol(fixlen(response_code, 9), response_code_style))
 
@@ -696,7 +697,9 @@ def format_dns_flow(
         replay=bool(is_replay),
         marked=marked,
     ))
-    return urwid.Columns(items, dividechars=1, min_width=15)
+    return urwid.Pile([
+        urwid.Columns(items, dividechars=1, min_width=15)
+    ])
 
 
 def format_flow(
@@ -739,7 +742,7 @@ def format_flow(
             error_message=error_message,
         )
     elif isinstance(f, DNSFlow):
-        code = None if not f.response else f.response.response_code.name
+        code = None if not f.response else f.response.response_code
         return format_dns_flow(
             render_mode=render_mode,
             focused=focused,
@@ -750,9 +753,9 @@ def format_flow(
             server_address=f.server_conn.address,
             op_code=f.request.op_code.name,
             request_timestamp=f.request.timestamp,
-            question=", ".join(q.name for q in f.request.questions),
+            question=", ".join(f"{q.name} ({q.type.name})" for q in f.request.questions),
             authoritative_answer=None if not f.response else f.response.authoritative_answer,
-            response_code=code,
+            response_code=code.name,
             response_code_style=(
                 "code_200" if code is ResponseCode.NOERROR
                 else
