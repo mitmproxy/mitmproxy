@@ -660,7 +660,6 @@ def format_dns_flow(
         op_code: str,
         request_timestamp: float,
         question: str,
-        authoritative_answer: typing.Optional[bool],
         response_code: typing.Optional[str],
         response_code_style: str,
         answer: typing.Optional[str],
@@ -679,12 +678,11 @@ def format_dns_flow(
     items.append(("weight", 0.5, truncated_plain(human.format_address(client_address), "text")))
     items.append(("weight", 1.0, truncated_plain("?" if not question else question, "text")))
     items.append(fcol("=", scheme_style))
-    if error_message is not None:
-        items.append(('weight', 1.0, truncated_plain(error_message, "error")))
-        items.append(fcol("E", scheme_style))
-    else:
-        items.append(("weight", 1.0, truncated_plain("..." if answer is None else "?" if not answer else answer, "text")))
-        items.append(fcol("A" if authoritative_answer else "-", scheme_style))
+    items.append(("weight", 1.0, (
+        truncated_plain("..." if answer is None else "?" if not answer else answer, "text")
+        if error_message is None else
+        truncated_plain(error_message, "error")
+    )))
     items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
     items.append(fcol(fixlen("" if response_code is None else response_code, 9), response_code_style))
 
@@ -749,7 +747,6 @@ def format_flow(
             op_code=f.request.op_code.name,
             request_timestamp=f.request.timestamp,
             question=", ".join(f"{q.name} ({q.type.name})" for q in f.request.questions),
-            authoritative_answer=None if not f.response else f.response.authoritative_answer,
             response_code=code.name,
             response_code_style=(
                 "code_200" if code is ResponseCode.NOERROR
