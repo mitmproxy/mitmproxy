@@ -6,7 +6,7 @@ from collections import deque
 import ipaddress
 import socket
 import struct
-from typing import Deque, Dict, Optional, Tuple, Union
+from typing import Any, Deque, Dict, Optional, Tuple, Union
 from mitmproxy import ctx
 
 
@@ -223,6 +223,10 @@ class UdpServerConnection(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol
         else:
             self._server.datagram_received(data, (addr, self._server_addr))
 
+    def connection_made(self, transport: asyncio.transports.DatagramTransport) -> None:
+        # wrap the transport as writeable
+        return super().connection_made(UdpWriteTransport(transport, self._client_addr))
+
     def connection_lost(self, exc: Optional[Exception]) -> None:
         # remove the connection from the server
         del self._server._connections[(self._client_addr, self._server_addr) if self._server.is_transparent() else self._client_addr]
@@ -231,6 +235,37 @@ class UdpServerConnection(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol
     def error_received(self, exc: Exception) -> None:
         # on error we're closing the connection
         self.connection_lost(exc)
+
+
+class UdpWriteTransport(asyncio.WriteTransport):
+    """Wrapper around a asyncio.DatagramTransport to support write via sendto."""
+
+    # TODO forward other methods as well if supported
+
+    _inner: asyncio.DatagramTransport
+    _addr: Address
+
+    def __init__(self, inner: asyncio.DatagramTransport, addr: Address):
+        self._inner = inner
+        self._addr = addr
+
+    def get_extra_info(self, name: Any, default: Any = None) -> Any:
+        return self._inner.get_extra_info(name, default)
+
+    def is_closing(self) -> bool:
+        self._inner.is_closing()
+
+    def close(self) -> None:
+        self._inner.close()
+
+    def set_protocol(self, protocol: asyncio.BaseProtocol) -> None:
+        self._inner.set_protocol(protocol)
+
+    def get_protocol(self) -> asyncio.BaseProtocol:
+        return self._inner.get_protocol()
+
+    def write(self, data: Any) -> None:
+        self._inner.sendto(data, self._addr)
 
 
 class UdpOutgoingProtocol(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol):
@@ -290,5 +325,5 @@ async def open_connection(host: str, port: int) -> Tuple[asyncio.StreamReader, a
         family=family,
         remote_addr=addr
     )
-    writer = asyncio.StreamWriter(transport, protocol, reader, loop)
+    writer = asyncio.StreamWriter(UdpWriteTransport(transport, addr), protocol, reader, loop)
     return reader, writer

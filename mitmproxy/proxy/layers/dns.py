@@ -189,9 +189,9 @@ class DNSLayer(layer.Layer):
             elif mode.startswith(DnsMode.Forward.value):
                 self.mode = DnsMode.Forward
                 parts = mode[len(DnsMode.Forward.value):].split(":")
-                if len(parts) < 2 or len(parts) > 3 or parts[0] != 0:
+                if len(parts) < 2 or len(parts) > 3 or parts[0] != "":
                     raise ValueError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{mode}'.")
-                address = (parts[1], int(parts[2]) if len(parts) == 2 else 53)
+                address = (parts[1], int(parts[2]) if len(parts) == 3 else 53)
                 self.context.server = connection.Server(address, protocol=connection.ConnectionProtocol.UDP)
             else:
                 raise ValueError(f"Invalid DNS mode '{mode}'.")
