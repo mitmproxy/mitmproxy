@@ -334,7 +334,7 @@ class Dumper:
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message, f)
 
-    def dns_request(self, f: dns.DNSFlow) -> None:
+    def dns_request(self, f: dns.DNSFlow):
         # TODO this needs to be refined
         if self.match(f) and f.request.questions:
             self.echo("{client} asks {server} for {name} {class_} {type}".format(
@@ -345,7 +345,7 @@ class Dumper:
                 class_=f.request.questions[0].class_.name,
             ))
 
-    def dns_response(self, f: dns.DNSFlow) -> None:
+    def dns_response(self, f: dns.DNSFlow):
         # TODO this needs to be refined
         if self.match(f) and f.response.answers:
             self.echo("{server} answers {client} with {name} {ttl}s {class_} {type} {value}".format(

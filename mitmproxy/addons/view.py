@@ -599,7 +599,7 @@ class View(collections.abc.Sequence):
         self.update([f])
 
     def dns_request(self, f):
-        self.update([f])
+        self.add([f])
 
     def dns_response(self, f):
         self.update([f])

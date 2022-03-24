@@ -5,12 +5,11 @@ import socket
 import struct
 from typing import Callable, Dict, List, Union
 
-from mitmproxy import dns, flow as mflow, platform
+from mitmproxy import dns, flow as mflow
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
-from mitmproxy.utils import human
 
 
 @dataclass
@@ -129,16 +128,16 @@ class DNSLayer(layer.Layer):
         return answers
 
     def handle_request(self, msg: dns.Message) -> layer.CommandGenerator[None]:
-        flow = dns.DNSFlow(self.context.client, self.context.server, True)
+        flow = dns.DNSFlow(
+            client_conn=self.context.client,
+            server_conn=(
+                connection.Server(self.context.client.sockname, protocol=connection.ConnectionProtocol.UDP)
+                if self.mode is DnsMode.Transparent else
+                self.context.server
+            ),
+            live=True,
+        )
         flow.request = msg
-        if self.mode is DnsMode.Transparent:  # get the query's original destination
-            assert platform.original_addr is not None
-            socket = yield commands.GetSocket(self.context.client)
-            try:
-                flow.server_conn = connection.Server(platform.original_addr(socket), protocol=connection.ConnectionProtocol.UDP)
-            except Exception as e:
-                yield commands.Log(f"Transparent DNS mode failed: {e!r}", level="warn")
-                return
         yield DnsRequestHook(flow)  # give hooks a chance to produce a response
         if not flow.response:
             if self.mode is DnsMode.Simple:
@@ -147,9 +146,11 @@ class DNSLayer(layer.Layer):
                         raise DnsResolveError(dns.ResponseCode.REFUSED)  # we received an answer from the _client_
                     if msg.op_code is not dns.OpCode.QUERY:
                         raise DnsResolveError(dns.ResponseCode.NOTIMP)  # inverse queries and others are not supported
-                    flow.response = msg.succeed(DNSLayer.simple_resolve(msg.questions))
+                    rrs = DNSLayer.simple_resolve(msg.questions)
                 except DnsResolveError as e:
                     flow.response = msg.fail(e.response_code)
+                else:
+                    flow.response = msg.succeed(rrs)
             else:
                 if flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
                     err = yield commands.OpenConnection(flow.server_conn)
@@ -173,10 +174,7 @@ class DNSLayer(layer.Layer):
             if self.mode is DnsMode.Transparent:  # always close transparent connections
                 yield commands.CloseConnection(flow.server_conn)
         else:
-            flow = dns.DNSFlow(self.context.client, server_conn, True)
-            flow.response = msg
-            flow.error = mflow.Error(f"Received response to message {msg.id} sent to {human.format_address(flow.server_conn.address)}.")
-            yield DnsErrorHook(flow)
+            yield commands.Log(f"{server_conn} responded to message {msg.id} sent to {flow.server_conn.address}")
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:
@@ -209,27 +207,22 @@ class DNSLayer(layer.Layer):
             try:
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
-                flow = dns.DNSFlow(self.context.client, self.context.server if from_client else event.connection, True)
-                flow.error = mflow.Error(str(e))
-                yield DnsErrorHook(flow)
-                return
-            if msg.id in self.flows:
-                if from_client:  # duplicate ID, remove the old flow with an error and create a new one
-                    flow = self.flows[msg.id]
-                    del self.flows[msg.id]
-                    flow.error = mflow.Error(f"Received duplicate request for id {msg.id}.")
-                    yield DnsErrorHook(flow)
-                    yield from self.handle_request(msg)
-                else:
-                    yield from self.handle_response(msg, event.connection)
+                yield commands.Log(f"{event.connection} sent an invalid message: {e}")
             else:
-                if from_client:
-                    yield from self.handle_request(msg)
+                if msg.id in self.flows:
+                    if from_client:  # duplicate ID, remove the old flow with an error and create a new one
+                        flow = self.flows[msg.id]
+                        del self.flows[msg.id]
+                        flow.error = mflow.Error(f"Received duplicate request for id {msg.id}.")
+                        yield DnsErrorHook(flow)
+                        yield from self.handle_request(msg)
+                    else:
+                        yield from self.handle_response(msg, event.connection)
                 else:
-                    flow = dns.DNSFlow(self.context.client, event.connection, True)
-                    flow.response = msg
-                    flow.error = mflow.Error(f"Received response for unknown message {msg.id}.")
-                    yield DnsErrorHook(flow)
+                    if from_client:
+                        yield from self.handle_request(msg)
+                    else:
+                        yield commands.Log(f"{event.connection} responded to unknown message {msg.id}")
 
         elif isinstance(event, events.ConnectionClosed):
             pass  # TODO

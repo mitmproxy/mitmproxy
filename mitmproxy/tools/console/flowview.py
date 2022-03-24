@@ -149,12 +149,12 @@ class FlowDetails(tabs.Tabs):
         assert isinstance(flow, http.HTTPFlow)
         return self.conn_text(flow.response)
 
-    def view_dns_request(self) -> searchable.Searchable:
+    def view_dns_request(self):
         flow = self.flow
         assert isinstance(flow, dns.DNSFlow)
         return self.dns_message_text("request", flow.request)
 
-    def view_dns_response(self) -> searchable.Searchable:
+    def view_dns_response(self):
         flow = self.flow
         assert isinstance(flow, dns.DNSFlow)
         return self.dns_message_text("response", flow.response)

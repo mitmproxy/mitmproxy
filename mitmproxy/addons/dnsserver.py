@@ -1,6 +1,6 @@
 import asyncio
 from typing import Dict, List, Optional, Tuple
-from mitmproxy import ctx, flow, log, master, options, platform
+from mitmproxy import ctx, flow, log, master, options
 from mitmproxy.addonmanager import Loader
 from mitmproxy.connection import ConnectionProtocol
 from mitmproxy.net import udp
@@ -74,8 +74,6 @@ class DnsServer:
         )
 
     def configure(self, updated: List[str], *, force_refresh: bool = False) -> None:
-        if "dns_mode" in updated and ctx.options.dns_mode == "transparent":
-            platform.init_transparent_mode()
         if not self.is_running:
             return
         if force_refresh or any(x.startswith('dns_') for x in updated):
