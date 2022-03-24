@@ -18,8 +18,6 @@ class DnsRequestHook(commands.StartHook):
     """
     A DNS query has been received.
     """
-
-    name = "resolve"
     flow: dns.DNSFlow
 
 
@@ -28,8 +26,6 @@ class DnsResponseHook(commands.StartHook):
     """
     A DNS response has been received or set.
     """
-
-    name = "resolved"
     flow: dns.DNSFlow
 
 
@@ -77,7 +73,8 @@ class DNSLayer(layer.Layer):
                 if e.errno == socket.EAI_NODATA:
                     raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
                 else:
-                    # NOTE https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
+                    # NOTE might fail on Windows for IPv6 queries:
+                    # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
                     raise DnsResolveError(dns.ResponseCode.SERVFAIL)
             for addrinfo in addrinfos:
                 _, _, _, _, (addr, _) = addrinfo
@@ -185,13 +182,13 @@ class DNSLayer(layer.Layer):
     def start(self, _) -> layer.CommandGenerator[None]:
         mode: str = self.context.options.dns_mode
         try:
-            if mode == DnsMode.Simple.name:
+            if mode == DnsMode.Simple.value:
                 self.mode = DnsMode.Simple
-            elif mode == DnsMode.Transparent.name:
+            elif mode == DnsMode.Transparent.value:
                 self.mode = DnsMode.Transparent
-            elif mode.startswith(DnsMode.Forward.name):
+            elif mode.startswith(DnsMode.Forward.value):
                 self.mode = DnsMode.Forward
-                parts = mode[len(DnsMode.Forward.name):].split(":")
+                parts = mode[len(DnsMode.Forward.value):].split(":")
                 if len(parts) < 2 or len(parts) > 3 or parts[0] != 0:
                     raise ValueError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{mode}'.")
                 address = (parts[1], int(parts[2]) if len(parts) == 2 else 53)
@@ -304,5 +301,13 @@ if __name__ == "__main__":
         "dns.google",
         "dns.google",
     ])
-    compressed = b'\x04\xd2\x81\x8b\x00\x03\x00\x03\x00\x00\x00\x00\x03www\x06google\x02at\x00\x00\x01\x00\x01\x018\x018\x018\x018\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\xc0\x2f\x00\x0c\x00\x01\x03www\x06google\x02at\x00\x00\x01\x00\x01\x00\x00\x00\x01\x00\x04\xac\xd9\x17c\x018\x018\x018\x018\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00'
+    compressed = b''.join([
+        b'\x04\xd2\x81\x8b\x00\x03\x00\x03\x00\x00\x00\x00\x03www\x06google\x02at\x00\x00\x01\x00\x01\x018\x018\x018\x018',
+        b'\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010',
+        b'\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\xc0\x2f\x00\x0c\x00',
+        b'\x01\x03www\x06google\x02at\x00\x00\x01\x00\x01\x00\x00\x00\x01\x00\x04\xac\xd9\x17c\x018\x018\x018\x018\x07in-addr',
+        b'\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00\x018\x018\x018\x018\x010\x010\x010\x010',
+        b'\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010',
+        b'\x012\x03ip6\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00'
+    ])
     assert dns.Message.unpack(compressed).answers[1].name.endswith(".arpa")

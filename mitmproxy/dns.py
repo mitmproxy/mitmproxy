@@ -4,7 +4,7 @@ import enum
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
 
@@ -491,7 +491,6 @@ class Message(BypassInitStateObject):
         return sum(len(x.data) for x in [*self.answers, *self.authorities, *self.additionals])
 
     def fail(self, response_code: ResponseCode) -> Message:
-        assert self.query
         if response_code is ResponseCode.NOERROR:
             raise ValueError("response_code must be an error code.")
         return Message(
@@ -512,7 +511,6 @@ class Message(BypassInitStateObject):
         )
 
     def succeed(self, answers: List[ResourceRecord]) -> Message:
-        assert self.query
         return Message(
             timestamp=time.time(),
             id=self.id,
@@ -533,13 +531,20 @@ class Message(BypassInitStateObject):
     @classmethod
     def unpack(cls, buffer: bytes) -> Message:
         """Converts the entire given buffer into a DNS message."""
-        offset = 0
+        length, msg = cls.unpack_from(buffer, 0)
+        if length != len(buffer):
+            raise struct.error(f"unpack requires a buffer of {length} bytes")
+        return msg
+
+    @classmethod
+    def unpack_from(cls, buffer: Union[bytes, bytearray], offset: int) -> Tuple[int, Message]:
+        """Converts the buffer from a given offset into a DNS message and also returns its length."""
         id, flags, len_questions, len_answers, len_authorities, len_additionals = Message.HEADER.unpack_from(buffer, offset)
         try:
             msg = Message(
                 timestamp=time.time(),
                 id=id,
-                query=(flags & (1 << 15)) != 0,
+                query=(flags & (1 << 15)) == 0,
                 op_code = OpCode((flags >> 11) & 0b1111),
                 authoritative_answer=(flags & (1 << 10)) != 0,
                 truncation = (flags & (1 << 9)) != 0,
@@ -638,9 +643,7 @@ class Message(BypassInitStateObject):
         unpack_rrs(msg.answers, "answer", len_answers)
         unpack_rrs(msg.authorities, "authority", len_authorities)
         unpack_rrs(msg.additionals, "additional", len_additionals)
-        if offset != len(buffer):
-            raise struct.error(f"unpack requires a buffer of {offset} bytes")
-        return msg
+        return (offset, msg)
 
     @property
     def packed(self) -> bytes:
@@ -648,7 +651,7 @@ class Message(BypassInitStateObject):
         if self.id < 0 or self.id > 65536:
             raise ValueError(f"DNS message ID {self.id} is out of bound.")
         flags = 0
-        if self.query:
+        if not self.query:
             flags |= 1 << 15
         flags |= self.op_code.value << 11
         if self.authoritative_answer:
@@ -719,6 +722,8 @@ class DNSFlow(flow.Flow):
 
     def __init__(self, client_conn: connection.Client, server_conn: connection.Server, live: bool):
         super().__init__("dns", client_conn, server_conn, live)
+        self.request = None
+        self.response = None
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"

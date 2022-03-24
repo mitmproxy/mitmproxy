@@ -61,7 +61,7 @@ class DnsServer:
             """Start a DNS server. Disabled by default."""
         )
         loader.add_option(
-            "dns_listen_host", Optional[str], None,
+            "dns_listen_host", Optional[str], "",
             """Address to bind DNS server to."""
         )
         loader.add_option(
@@ -97,6 +97,7 @@ class DnsServer:
                     self.handle_connection,
                     self.options.dns_listen_host,
                     self.options.dns_listen_port,
+                    transparent=ctx.options.dns_mode == "transparent",
                 )
                 addrs = {human.format_address(s.getsockname()) for s in self.server.sockets}
                 ctx.log.info(f"DNS server listening at {' and '.join(addrs)}")
