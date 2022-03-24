@@ -5,7 +5,7 @@ import socket
 import struct
 from typing import Callable, Dict, List, Union
 
-from mitmproxy import dns, platform
+from mitmproxy import dns, flow as mflow, platform
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Context
@@ -154,7 +154,7 @@ class DNSLayer(layer.Layer):
                 if flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
                     err = yield commands.OpenConnection(flow.server_conn)
                     if err:
-                        flow.error = str(err)
+                        flow.error = mflow.Error(str(err))
                         yield DnsErrorHook(flow)
                         return  # cannot recover from this
                 self.flows[msg.id] = flow
@@ -175,7 +175,7 @@ class DNSLayer(layer.Layer):
         else:
             flow = dns.DNSFlow(self.context.client, server_conn, True)
             flow.response = msg
-            flow.error = f"Received response to message {msg.id} sent to {human.format_address(flow.server_conn.address)}."
+            flow.error = mflow.Error(f"Received response to message {msg.id} sent to {human.format_address(flow.server_conn.address)}.")
             yield DnsErrorHook(flow)
 
     @expect(events.Start)
@@ -210,14 +210,14 @@ class DNSLayer(layer.Layer):
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
                 flow = dns.DNSFlow(self.context.client, self.context.server if from_client else event.connection, True)
-                flow.error = str(e)
+                flow.error = mflow.Error(str(e))
                 yield DnsErrorHook(flow)
                 return
             if msg.id in self.flows:
                 if from_client:  # duplicate ID, remove the old flow with an error and create a new one
                     flow = self.flows[msg.id]
                     del self.flows[msg.id]
-                    flow.error = f"Received duplicate request for id {msg.id}."
+                    flow.error = mflow.Error(f"Received duplicate request for id {msg.id}.")
                     yield DnsErrorHook(flow)
                     yield from self.handle_request(msg)
                 else:
@@ -228,7 +228,7 @@ class DNSLayer(layer.Layer):
                 else:
                     flow = dns.DNSFlow(self.context.client, event.connection, True)
                     flow.response = msg
-                    flow.error = f"Received response for unknown message {msg.id}."
+                    flow.error = mflow.Error(f"Received response for unknown message {msg.id}.")
                     yield DnsErrorHook(flow)
 
         elif isinstance(event, events.ConnectionClosed):

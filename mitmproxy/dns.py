@@ -714,7 +714,7 @@ class Message(BypassInitStateObject):
 
 class DNSFlow(flow.Flow):
     request: Message
-    response: Optional[Message]
+    response: Optional[Message] = None
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["request"] = Message
@@ -722,8 +722,6 @@ class DNSFlow(flow.Flow):
 
     def __init__(self, client_conn: connection.Client, server_conn: connection.Server, live: bool):
         super().__init__("dns", client_conn, server_conn, live)
-        self.request = None
-        self.response = None
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"

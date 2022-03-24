@@ -534,6 +534,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FReq,
     FResp,
     FTCP,
+    FDNS,
     FWebSocket,
     FAll,
 ]

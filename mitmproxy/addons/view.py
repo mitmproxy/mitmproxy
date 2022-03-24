@@ -598,6 +598,15 @@ class View(collections.abc.Sequence):
     def tcp_end(self, f):
         self.update([f])
 
+    def dns_request(self, f):
+        self.update([f])
+
+    def dns_response(self, f):
+        self.update([f])
+
+    def dns_error(self, f):
+        self.update([f])
+
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.

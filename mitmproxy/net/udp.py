@@ -84,11 +84,9 @@ class UdpServer(base_events.Server, asyncio.DatagramProtocol):
             ssl_handshake_timeout=None,  # unused
         )
 
-    def is_transparent(self) -> bool:
-        return self._transparent
-
     def connection_made(self, transport):
         # store the transport
+        # NOTE we don't write on this transport, so no need to wrap it
         assert self._transport is None
         self._transport = transport
 
@@ -98,7 +96,7 @@ class UdpServer(base_events.Server, asyncio.DatagramProtocol):
             ctx.log.error(f"server {self!r} has encountered an error: {exc!r}")
         self.close()
 
-    def datagram_received(self, data: bytes, addr: Tuple[Address, Address]) -> None:
+    def datagram_received(self, data: bytes, addr: Union[Address, Tuple[Address, Address]]) -> None:
         # forward the packet to the matching connection (possibly creating it)
         client_addr, server_addr = addr if self._transparent else addr, self._socket.getsockname()
         conn = self._connections[addr] if addr in self._connections else self._connections.setdefault(
@@ -207,7 +205,7 @@ class UdpServerConnection(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol
         )
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            if server.is_transparent():
+            if server._transparent:
                 sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)
             sock.bind(server_addr)
             sock.connect(client_addr)
@@ -221,7 +219,7 @@ class UdpServerConnection(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol
         if addr == self._client_addr:
             self.data_received(data)
         else:
-            self._server.datagram_received(data, (addr, self._server_addr))
+            self._server.datagram_received(data, (addr, self._server_addr) if self._server._transparent else addr)
 
     def connection_made(self, transport: asyncio.transports.DatagramTransport) -> None:
         # wrap the transport as writeable
@@ -229,7 +227,7 @@ class UdpServerConnection(asyncio.DatagramProtocol, asyncio.StreamReaderProtocol
 
     def connection_lost(self, exc: Optional[Exception]) -> None:
         # remove the connection from the server
-        del self._server._connections[(self._client_addr, self._server_addr) if self._server.is_transparent() else self._client_addr]
+        del self._server._connections[(self._client_addr, self._server_addr) if self._server._transparent else self._client_addr]
         return super().connection_lost(exc)
 
     def error_received(self, exc: Exception) -> None:
