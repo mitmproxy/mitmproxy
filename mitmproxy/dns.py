@@ -574,6 +574,7 @@ class Message(BypassInitStateObject):
                         raise struct.error(f"unpack encountered domain name loop")
                 else:
                     cached_names[offset] = None  # this will indicate that the offset is being unpacked
+                    orig_offset = offset
                     labels = []
                     length = 0
                     while True:
@@ -601,7 +602,7 @@ class Message(BypassInitStateObject):
                             offset += size
                             length += Message.LABEL_SIZE.size + size
                     result = ".".join(labels), length
-                    cached_names[offset] = result
+                    cached_names[orig_offset] = result
                 return result
 
             name, length = unpack_domain_name_internal(offset)
