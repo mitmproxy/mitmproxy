@@ -13,7 +13,6 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.dns import DNSFlow, ResponseCode
-from mitmproxy.connection import Address
 
 # Detect Windows Subsystem for Linux and Windows
 IS_WINDOWS_OR_WSL = "Microsoft" in platform.platform() or "Windows" in platform.platform()
@@ -655,8 +654,8 @@ def format_dns_flow(
         intercepted: bool,
         marked: str,
         is_replay: typing.Optional[str],
-        client_address: Address,
-        server_address: Address,
+        client_address,
+        server_address,
         op_code: str,
         request_timestamp: float,
         question: str,

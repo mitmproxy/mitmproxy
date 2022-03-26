@@ -161,7 +161,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     None
                 )
                 if open_connection is None:
-                    raise IOError(f"Connection protocol '{command.connection.protocol}' is not implemented.")
+                    raise IOError(f"Connection protocol '{command.connection.protocol.name}' is not implemented.")
                 reader, writer = await open_connection(*command.connection.address)
             except (IOError, asyncio.CancelledError) as e:
                 err = str(e)

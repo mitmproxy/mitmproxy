@@ -1,7 +1,7 @@
 import math
 import sys
 from functools import lru_cache
-from typing import List, Optional, Union  # noqa
+from typing import Optional, Union  # noqa
 
 import mitmproxy.flow
 import mitmproxy.tools.console.master  # noqa
