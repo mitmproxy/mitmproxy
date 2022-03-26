@@ -747,7 +747,7 @@ def format_flow(
             op_code=f.request.op_code.name,
             request_timestamp=f.request.timestamp,
             question=", ".join(f"{q.name} ({q.type.name})" for q in f.request.questions),
-            response_code=code.name,
+            response_code=None if code is None else code.name,
             response_code_style=(
                 "code_200" if code is ResponseCode.NOERROR
                 else
@@ -757,7 +757,7 @@ def format_flow(
                 else
                 "code_other"
             ),
-            answer=None if not f.response else ", ".join(q.name for q in f.response.answers),
+            answer=None if not f.response else ", ".join(map(str, f.response.answers)),
             error_message=error_message,
         )
     elif isinstance(f, HTTPFlow):
