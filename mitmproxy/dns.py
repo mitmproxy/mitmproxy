@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import enum
+import random
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
@@ -486,6 +487,11 @@ class Message(BypassInitStateObject):
         return "\r\n".join([str(x) for x in [*self.questions, *self.answers, *self.authorities, *self.additionals]])
 
     @property
+    def content(self) -> bytes:
+        """Returns the user-friendly content of all parts as encoded bytes."""
+        return str(self).encode()
+
+    @property
     def size(self) -> int:
         """Returns the cumulative data size of all resource record sections."""
         return sum(len(x.data) for x in [*self.answers, *self.authorities, *self.additionals])
@@ -712,6 +718,12 @@ class Message(BypassInitStateObject):
             "timestamp": self.timestamp,
         }
 
+    def copy(self) -> Message:
+        # we keep the copy semantics but change the ID generation
+        state = self.get_state()
+        state["id"] = random.randint(0, 65535)
+        return Message.from_state(state)
+
 
 class DNSFlow(flow.Flow):
     request: Message
@@ -719,10 +731,10 @@ class DNSFlow(flow.Flow):
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["request"] = Message
-    _stateobject_attributes["response"] = Optional[Message]
+    _stateobject_attributes["response"] = Message
 
-    def __init__(self, client_conn: connection.Client, server_conn: connection.Server, live: bool):
-        super().__init__("dns", client_conn, server_conn, live)
+    def __init__(self, client_conn: connection.Client, server_conn: connection.Server):
+        super().__init__("dns", client_conn, server_conn, True)
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"

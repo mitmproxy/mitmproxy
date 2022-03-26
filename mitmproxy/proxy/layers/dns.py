@@ -135,7 +135,6 @@ class DNSLayer(layer.Layer):
                 if self.mode is DnsMode.Transparent else
                 self.context.server
             ),
-            live=True,
         )
         flow.request = msg
         yield DnsRequestHook(flow)  # give hooks a chance to produce a response
@@ -235,72 +234,3 @@ class DNSLayer(layer.Layer):
         yield from ()
 
     _handle_event = start
-
-
-if __name__ == "__main__":
-    # TODO move this into proper test
-    msg = dns.Message(
-        timestamp=1647775951.981541,
-        id=31415,
-        query=True,
-        op_code=dns.OpCode.QUERY,
-        authoritative_answer=False,
-        truncation=False,
-        recursion_desired=True,
-        recursion_available=False,
-        reserved=5,
-        response_code=dns.ResponseCode.NOERROR,
-        questions=[
-            dns.Question(
-                name="www.aufbauwerk.com",
-                type=dns.Type.A,
-                class_=dns.Class.IN,
-            ),
-            # dns.Question(
-            #     name="www.google.at",
-            #     type=dns.Type.AAAA,
-            #     class_=dns.Class.IN,
-            # ),
-            dns.Question(
-                name="8.8.8.8.in-addr.arpa",
-                type=dns.Type.PTR,
-                class_=dns.Class.IN,
-            ),
-            dns.Question(
-                name="8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa",
-                type=dns.Type.PTR,
-                class_=dns.Class.IN,
-            )
-        ],
-        answers=[],
-        authorities=[],
-        additionals=[],
-    )
-    assert dns.Message.from_state(msg.get_state()) == msg
-    copy = dns.Message.unpack(msg.packed)
-    copy.timestamp = msg.timestamp
-    assert copy == msg
-    answers = DNSLayer.simple_resolve(msg.questions)
-    answer = msg.succeed(answers)
-    assert(dns.Message.from_state(answer.get_state()) == answer)
-    copy = dns.Message.unpack(answer.packed)
-    copy.timestamp = answer.timestamp
-    assert copy == answer
-    assert str(answer) == "\r\n".join([
-        "www.aufbauwerk.com",
-        "8.8.8.8.in-addr.arpa",
-        "8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa",
-        "217.160.0.146",
-        "dns.google",
-        "dns.google",
-    ])
-    compressed = b''.join([
-        b'\x04\xd2\x81\x8b\x00\x03\x00\x03\x00\x00\x00\x00\x03www\x06google\x02at\x00\x00\x01\x00\x01\x018\x018\x018\x018',
-        b'\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x018\x018\x018\x018\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010',
-        b'\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010\x012\x03ip6\xc0\x2f\x00\x0c\x00',
-        b'\x01\x03www\x06google\x02at\x00\x00\x01\x00\x01\x00\x00\x00\x01\x00\x04\xac\xd9\x17c\x018\x018\x018\x018\x07in-addr',
-        b'\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00\x018\x018\x018\x018\x010\x010\x010\x010',
-        b'\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x010\x016\x018\x014\x010\x016\x018\x014\x011\x010\x010',
-        b'\x012\x03ip6\x04arpa\x00\x00\x0c\x00\x01\x00\x00\x00\x01\x00\x0c\x03dns\x06google\x00'
-    ])
-    assert dns.Message.unpack(compressed).answers[1].name.endswith(".arpa")
