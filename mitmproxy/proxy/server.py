@@ -153,16 +153,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         async with self.max_conns[command.connection.address]:
             try:
                 command.connection.timestamp_start = time.time()
-                open_connection = (
-                    asyncio.open_connection if command.connection.protocol is ConnectionProtocol.TCP
-                    else
-                    udp.open_connection if command.connection.protocol is ConnectionProtocol.UDP
-                    else
-                    None
-                )
-                if open_connection is None:
+                if command.connection.protocol is ConnectionProtocol.TCP:
+                    reader, writer = await asyncio.open_connection(*command.connection.address)
+                elif command.connection.protocol is ConnectionProtocol.UDP:
+                    reader, writer = await udp.open_connection(*command.connection.address)
+                else:
                     raise IOError(f"Connection protocol '{command.connection.protocol.name}' is not implemented.")
-                reader, writer = await open_connection(*command.connection.address)
             except (IOError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
