@@ -359,13 +359,16 @@ class ResourceRecord(BypassInitStateObject):
     def pack_domain_name(cls, name: str) -> bytes:
         """Converts a domain name into RDATA without pointer compression."""
         buffer = bytearray()
-        for part in name.split("."):
-            label = part.encode("idna")
-            size = len(label)
-            if size == 0 or size >= 64:
-                raise ValueError()
-            buffer.extend(Message.LABEL_SIZE.pack(size))
-            buffer.extend(label)
+        if len(name) > 0:
+            for part in name.split("."):
+                label = part.encode("idna")
+                size = len(label)
+                if size == 0:
+                    raise ValueError(f"domain name '{name}' contains empty labels")
+                if size >= 64:
+                    raise ValueError(f"encoded label '{part}' of domain name '{name}' is too long ({size} bytes)")
+                buffer.extend(Message.LABEL_SIZE.pack(size))
+                buffer.extend(label)
         buffer.extend(Message.LABEL_SIZE.pack(0))
         return bytes(buffer)
 

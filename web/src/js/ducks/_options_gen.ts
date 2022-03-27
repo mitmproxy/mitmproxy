@@ -20,7 +20,7 @@ export interface OptionsState {
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
-    dns_listen_host: string | undefined
+    dns_listen_host: string
     dns_listen_port: number
     dns_mode: string
     dns_server: boolean
