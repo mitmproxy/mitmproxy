@@ -61,7 +61,7 @@ class DnsServer:
             """Start a DNS server. Disabled by default."""
         )
         loader.add_option(
-            "dns_listen_host", Optional[str], "",
+            "dns_listen_host", str, "",
             """Address to bind DNS server to."""
         )
         loader.add_option(
@@ -87,9 +87,7 @@ class DnsServer:
 
     async def refresh_server(self) -> None:
         async with self._lock:
-            if self.server:
-                await self.shutdown_server()
-                self.server = None
+            await self.shutdown_server()
             if ctx.options.dns_server:
                 self.server = await udp.start_server(
                     self.handle_connection,
@@ -101,18 +99,21 @@ class DnsServer:
                 ctx.log.info(f"DNS server listening at {' and '.join(addrs)}")
 
     async def shutdown_server(self) -> None:
-        ctx.log.info("Stopping server...")
-        self.server.close()
-        await self.server.wait_closed()
-        self.server = None
+        if self.server is not None:
+            ctx.log.info("Stopping server...")
+            self.server.close()
+            await self.server.wait_closed()
+            self.server = None
 
     async def handle_connection(self, r: asyncio.StreamReader, w: asyncio.StreamWriter) -> None:
         peername = w.get_extra_info('peername')
-        asyncio_utils.set_task_debug_info(
-            asyncio.current_task(),
-            name=f"DnsServer.handle_connection",
-            client=peername,
-        )
+        current_task = asyncio.current_task()
+        if current_task is not None:
+            asyncio_utils.set_task_debug_info(
+                current_task,
+                name=f"DnsServer.handle_connection",
+                client=peername,
+            )
         handler = DnsConnectionHandler(self.master, r, w, self.options)
         self._connections[peername] = handler
         try:
@@ -123,7 +124,7 @@ class DnsServer:
     def server_connect(self, ctx: server_hooks.ServerConnectionHookData) -> None:
         assert ctx.server.address
         self_connect = (
-            ctx.server.protocol == ConnectionProtocol.UDP
+            ctx.server.protocol is ConnectionProtocol.UDP
             and
             ctx.server.address[1] == self.options.dns_listen_port
             and

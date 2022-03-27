@@ -154,9 +154,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             try:
                 command.connection.timestamp_start = time.time()
                 open_connection = (
-                    asyncio.open_connection if command.connection.protocol == ConnectionProtocol.TCP
+                    asyncio.open_connection if command.connection.protocol is ConnectionProtocol.TCP
                     else
-                    udp.open_connection if command.connection.protocol == ConnectionProtocol.UDP
+                    udp.open_connection if command.connection.protocol is ConnectionProtocol.UDP
                     else
                     None
                 )

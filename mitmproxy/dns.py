@@ -397,24 +397,24 @@ class ResourceRecord(BypassInitStateObject):
         return ".".join(labels)
 
     @classmethod
-    def A(cls, name: str, ip: IPv4Address, *, ttl = DEFAULT_TTL) -> ResourceRecord:
+    def A(cls, name: str, ip: IPv4Address, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create an IPv4 resource record."""
         return ResourceRecord(name, Type.A, Class.IN, ttl, ip.packed)
 
     @classmethod
-    def AAAA(cls, name: str, ip: IPv6Address, *, ttl = DEFAULT_TTL) -> ResourceRecord:
+    def AAAA(cls, name: str, ip: IPv6Address, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create an IPv6 resource record."""
         return ResourceRecord(name, Type.AAAA, Class.IN, ttl, ip.packed)
 
     @classmethod
-    def CNAME(cls, alias: str, canonical: str, *, ttl = DEFAULT_TTL) -> ResourceRecord:
+    def CNAME(cls, alias: str, canonical: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
-        return ResourceRecord(alias, Type.CNAME, Class.IN, ttl, ResourceRecord.encode_domain_name(canonical))
+        return ResourceRecord(alias, Type.CNAME, Class.IN, ttl, ResourceRecord.pack_domain_name(canonical))
 
     @classmethod
-    def PTR(cls, inaddr: str, ptr: str, *, ttl = DEFAULT_TTL) -> ResourceRecord:
+    def PTR(cls, inaddr: str, ptr: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
-        return ResourceRecord(inaddr, Type.PTR, Class.IN, ttl, ResourceRecord.encode_domain_name(ptr))
+        return ResourceRecord(inaddr, Type.PTR, Class.IN, ttl, ResourceRecord.pack_domain_name(ptr))
 
 
 # comments are taken from rfc1035
@@ -628,7 +628,7 @@ class Message(BypassInitStateObject):
             except struct.error as e:
                 raise struct.error(f"question #{i}: {str(e)}")
 
-        def unpack_rrs(section: List[ResourceRecord], section_name: str, count: int) -> int:
+        def unpack_rrs(section: List[ResourceRecord], section_name: str, count: int) -> None:
             nonlocal buffer, offset
             for i in range(0, count):
                 try:

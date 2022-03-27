@@ -347,7 +347,7 @@ class Dumper:
 
     def dns_response(self, f: dns.DNSFlow):
         # TODO this needs to be refined
-        if self.match(f) and f.response.answers:
+        if self.match(f) and f.response and f.response.answers:
             self.echo("{server} answers {client} with {name} {ttl}s {class_} {type} {value}".format(
                 client=human.format_address(f.client_conn.peername),
                 server=human.format_address(f.server_conn.address),

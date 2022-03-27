@@ -62,53 +62,60 @@ class DNSLayer(layer.Layer):
 
     @classmethod
     def simple_resolve(cls, questions: List[dns.Question]) -> List[dns.ResourceRecord]:
-        answers = []
+        answers: List[dns.ResourceRecord] = []
 
-        def resolve_by_name(family: socket.AddressFamily, ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]) -> None:
-            nonlocal answers, question
-            try:
-                addrinfos = socket.getaddrinfo(host=question.name, port=0, family=family)
-            except socket.gaierror as e:
-                if e.errno == socket.EAI_NODATA:
+        for question in questions:
+
+            def resolve_by_name(
+                family: socket.AddressFamily,
+                ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
+            ) -> None:
+                nonlocal answers, question
+                try:
+                    addrinfos = socket.getaddrinfo(host=question.name, port=0, family=family)
+                except socket.gaierror as e:
+                    if e.errno == socket.EAI_NODATA:
+                        raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
+                    else:
+                        # NOTE might fail on Windows for IPv6 queries:
+                        # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
+                        raise DnsResolveError(dns.ResponseCode.SERVFAIL)
+                for addrinfo in addrinfos:
+                    _, _, _, _, addr = addrinfo
+                    answers.append(dns.ResourceRecord(
+                        name=question.name,
+                        type=question.type,
+                        class_=question.class_,
+                        ttl=dns.ResourceRecord.DEFAULT_TTL,
+                        data=ip(addr[0]).packed,
+                    ))
+
+            def resolve_by_addr(
+                suffix: str,
+                ip: Callable[[List[str]], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
+            ) -> bool:
+                nonlocal answers, question
+                if not question.name.lower().endswith(suffix.lower()):
+                    return False
+                try:
+                    addr = ip(question.name[0:-len(suffix)].split(".")[::-1])
+                except ValueError:
+                    raise DnsResolveError(dns.ResponseCode.FORMERR)
+                try:
+                    name, _, _ = socket.gethostbyaddr(str(addr))
+                except socket.herror:
                     raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
-                else:
-                    # NOTE might fail on Windows for IPv6 queries:
-                    # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
+                except socket.gaierror:
                     raise DnsResolveError(dns.ResponseCode.SERVFAIL)
-            for addrinfo in addrinfos:
-                _, _, _, _, (addr, _) = addrinfo
                 answers.append(dns.ResourceRecord(
                     name=question.name,
                     type=question.type,
                     class_=question.class_,
                     ttl=dns.ResourceRecord.DEFAULT_TTL,
-                    data=ip(addr).packed,
+                    data=dns.ResourceRecord.pack_domain_name(name),
                 ))
+                return True
 
-        def resolve_by_addr(suffix: str, ip: Callable[[List[str]], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]) -> bool:
-            nonlocal answers, question
-            if not question.name.lower().endswith(suffix.lower()):
-                return False
-            try:
-                addr = ip(question.name[0:-len(suffix)].split(".")[::-1])
-            except ValueError:
-                raise DnsResolveError(dns.ResponseCode.FORMERR)
-            try:
-                name, _, _ = socket.gethostbyaddr(str(addr))
-            except socket.herror:
-                raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
-            except socket.gaierror:
-                raise DnsResolveError(dns.ResponseCode.SERVFAIL)
-            answers.append(dns.ResourceRecord(
-                name=question.name,
-                type=question.type,
-                class_=question.class_,
-                ttl=dns.ResourceRecord.DEFAULT_TTL,
-                data=dns.ResourceRecord.pack_domain_name(name),
-            ))
-            return True
-
-        for question in questions:
             if question.class_ is not dns.Class.IN:
                 raise DnsResolveError(dns.ResponseCode.NOTIMP)
             if question.type is dns.Type.A:
