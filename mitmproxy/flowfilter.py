@@ -130,7 +130,7 @@ class FReq(_Action):
     code = "q"
     help = "Match request with no response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f.response:
             return True
@@ -140,7 +140,7 @@ class FResp(_Action):
     code = "s"
     help = "Match response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         return bool(f.response)
 

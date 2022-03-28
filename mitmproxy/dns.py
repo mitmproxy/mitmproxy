@@ -689,7 +689,7 @@ class Message(BypassInitStateObject):
         for question in self.questions:
             data.extend(ResourceRecord.pack_domain_name(question.name))
             data.extend(Question.HEADER.pack(question.type.value, question.class_.value))
-        for rr in *self.answers, *self.authorities, *self.additionals:
+        for rr in [*self.answers, *self.authorities, *self.additionals]:
             data.extend(ResourceRecord.pack_domain_name(rr.name))
             data.extend(ResourceRecord.HEADER.pack(rr.type.value, rr.class_.value, rr.ttl, len(rr.data)))
             data.extend(rr.data)

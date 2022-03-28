@@ -357,3 +357,14 @@ class Dumper:
                 ttl=f.response.answers[0].ttl,
                 value=str(f.response.answers[0])
             ))
+
+    def dns_error(self, f: dns.DNSFlow):
+        if self.match(f):
+            self.echo(
+                "Error in DNS connection between {client} and {server}: {error}".format(
+                    client=human.format_address(f.client_conn.peername),
+                    server=human.format_address(f.server_conn.address),
+                    error=f.error,
+                ),
+                fg="red"
+            )
