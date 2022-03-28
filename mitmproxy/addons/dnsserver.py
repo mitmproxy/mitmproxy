@@ -1,8 +1,9 @@
 import asyncio
+import ipaddress
 from typing import Dict, List, Optional, Tuple
-from mitmproxy import ctx, flow, log, master, options
+from mitmproxy import ctx, dns, exceptions, flow, log, master, options
 from mitmproxy.addonmanager import Loader
-from mitmproxy.connection import ConnectionProtocol
+from mitmproxy.connection import Address, ConnectionProtocol
 from mitmproxy.net import udp
 from mitmproxy.proxy import commands, layers, server, server_hooks
 from mitmproxy.utils import asyncio_utils, human
@@ -45,6 +46,8 @@ class DnsServer:
     master: master.Master
     options: options.Options
     is_running: bool
+    mode: layers.dns.DnsMode
+    forward_addr: Address
 
     def __init__(self):
         self._lock = asyncio.Lock()
@@ -74,6 +77,24 @@ class DnsServer:
         )
 
     def configure(self, updated: List[str], *, force_refresh: bool = False) -> None:
+        if "mode" in updated:
+            mode: str = ctx.options.dns_mode
+            if mode == layers.dns.DnsMode.Simple.value:
+                self.mode = layers.dns.DnsMode.Simple
+            elif mode == layers.dns.DnsMode.Transparent.value:
+                self.mode = layers.dns.DnsMode.Transparent
+            elif mode.startswith(layers.dns.DnsMode.Forward.value):
+                self.mode = layers.dns.DnsMode.Forward
+                parts = mode[len(layers.dns.DnsMode.Forward.value):].split(":")
+                try:
+                    if len(parts) < 2 or len(parts) > 3 or parts[0] != "":
+                        raise ValueError("invalid ip/port parts")
+                    self.forward_addr = (str(ipaddress.ip_address(parts[1])), int(parts[2]) if len(parts) == 3 else 53)
+                except ValueError:
+                    raise exceptions.OptionsError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{mode}'.")
+            else:
+                raise exceptions.OptionsError(f"Invalid DNS mode '{mode}'.")
+
         if not self.is_running:
             return
         if force_refresh or any(x.startswith('dns_') for x in updated):
@@ -132,3 +153,8 @@ class DnsServer:
         )
         if self_connect:
             ctx.server.error = "Stopped mitmproxy from recursively connecting to itself."
+
+    def dns_request(self, flow: dns.DNSFlow) -> None:
+        # handle simple requests here to not block the layer
+        if self.mode is layers.dns.DnsMode.Simple:
+            flow.response = flow.request.resolve()

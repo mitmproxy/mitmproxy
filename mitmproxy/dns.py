@@ -1,11 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import enum
+import ipaddress
+import itertools
 import random
+import socket
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
 
@@ -256,9 +259,18 @@ class BypassInitStateObject(stateobject.StateObject):
         return obj
 
 
+class ResolveError(Exception):
+    """Exception thrown by different resolve methods."""
+    def __init__(self, response_code: ResponseCode):
+        assert response_code is not ResponseCode.NOERROR
+        self.response_code = response_code
+
+
 @dataclass
 class Question(BypassInitStateObject):
     HEADER = struct.Struct("!HH")
+    IP4_PTR_SUFFIX = ".in-addr.arpa"
+    IP6_PTR_SUFFIX = ".ip6.arpa"
 
     name: str
     type: Type
@@ -268,6 +280,73 @@ class Question(BypassInitStateObject):
 
     def __str__(self) -> str:
         return self.name
+
+    def _resolve_by_name(
+        self,
+        family: socket.AddressFamily,
+        ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
+    ) -> Generator[ResourceRecord, None, None]:
+        try:
+            addrinfos = socket.getaddrinfo(host=self.name, port=0, family=family)
+        except socket.gaierror as e:
+            if e.errno == socket.EAI_NODATA:
+                raise ResolveError(ResponseCode.NXDOMAIN)
+            else:
+                # NOTE might fail on Windows for IPv6 queries:
+                # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
+                raise ResolveError(ResponseCode.SERVFAIL)
+        for addrinfo in addrinfos:
+            _, _, _, _, addr = addrinfo
+            yield ResourceRecord(
+                name=self.name,
+                type=self.type,
+                class_=self.class_,
+                ttl=ResourceRecord.DEFAULT_TTL,
+                data=ip(addr[0]).packed,
+            )
+
+    def _resolve_by_addr(
+        self,
+        suffix: str,
+        ip: Callable[[List[str]], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
+    ) -> ResourceRecord:
+        try:
+            addr = ip(self.name[:-len(suffix)].split(".")[::-1])
+        except ValueError:
+            raise ResolveError(ResponseCode.FORMERR)
+        try:
+            name, _, _ = socket.gethostbyaddr(str(addr))
+        except socket.herror:
+            raise ResolveError(ResponseCode.NXDOMAIN)
+        except socket.gaierror:
+            raise ResolveError(ResponseCode.SERVFAIL)
+        return ResourceRecord(
+            name=self.name,
+            type=self.type,
+            class_=self.class_,
+            ttl=ResourceRecord.DEFAULT_TTL,
+            data=ResourceRecord.pack_domain_name(name),
+        )
+
+    def resolve(self) -> Generator[ResourceRecord, None, None]:
+        """Resolve the question into resource record(s), throwing ResolveError if an error condition occurs."""
+
+        if self.class_ is not Class.IN:
+            raise ResolveError(ResponseCode.NOTIMP)
+        if self.type is Type.A:
+            yield from self._resolve_by_name(socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
+        elif self.type is Type.AAAA:
+            yield from self._resolve_by_name(socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
+        elif self.type is Type.PTR:
+            name_lower = self.name.lower()
+            if name_lower.endswith(Question.IP4_PTR_SUFFIX):
+                yield self._resolve_by_addr(Question.IP4_PTR_SUFFIX, lambda x: ipaddress.IPv4Address(".".join(x)))
+            elif name_lower.endswith(Question.IP6_PTR_SUFFIX):
+                yield self._resolve_by_addr(Question.IP6_PTR_SUFFIX, lambda x: ipaddress.IPv6Address(bytes.fromhex("".join(x))))
+            else:
+                raise ResolveError(ResponseCode.FORMERR)
+        else:
+            raise ResolveError(ResponseCode.NOTIMP)
 
 
 @dataclass
@@ -286,9 +365,9 @@ class ResourceRecord(BypassInitStateObject):
 
     def __str__(self) -> str:
         value = (
-            str(self.ipv4_address) if self.type is Type.A
+            str(self.ipv4_address) if self.type is Type.A and self.ipv4_address is not None
             else
-            str(self.ipv6_address) if self.type is Type.AAAA
+            str(self.ipv6_address) if self.type is Type.AAAA and self.ipv6_address is not None
             else
             self.domain_name if self.type in [Type.NS, Type.CNAME, Type.PTR]
             else
@@ -487,7 +566,7 @@ class Message(BypassInitStateObject):
     )
 
     def __str__(self) -> str:
-        return "\r\n".join([str(x) for x in [*self.questions, *self.answers, *self.authorities, *self.additionals]])
+        return "\r\n".join(str(x) for x in itertools.chain.from_iterable([self.questions, self.answers, self.authorities, self.additionals]))
 
     @property
     def content(self) -> bytes:
@@ -497,7 +576,7 @@ class Message(BypassInitStateObject):
     @property
     def size(self) -> int:
         """Returns the cumulative data size of all resource record sections."""
-        return sum(len(x.data) for x in [*self.answers, *self.authorities, *self.additionals])
+        return sum(len(x.data) for x in itertools.chain.from_iterable([self.answers, self.authorities, self.additionals]))
 
     def fail(self, response_code: ResponseCode) -> Message:
         if response_code is ResponseCode.NOERROR:
@@ -536,6 +615,19 @@ class Message(BypassInitStateObject):
             authorities=[],
             additionals=[],
         )
+
+    def resolve(self) -> Message:
+        """Resolves the message and return the result in form of a response message."""
+        try:
+            if not self.query:
+                raise ResolveError(ResponseCode.REFUSED)  # we cannot resolve an answer
+            if self.op_code is not OpCode.QUERY:
+                raise ResolveError(ResponseCode.NOTIMP)  # inverse queries and others are not supported
+            rrs = [rr for rrs in map(lambda q: q.resolve(), self.questions) for rr in rrs]
+        except ResolveError as e:
+            return self.fail(e.response_code)
+        else:
+            return self.succeed(rrs)
 
     @classmethod
     def unpack(cls, buffer: bytes) -> Message:

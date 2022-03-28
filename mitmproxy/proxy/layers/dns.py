@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 import enum
-import ipaddress
-import socket
 import struct
-from typing import Callable, Dict, List, Union
+from typing import Dict
 
 from mitmproxy import dns, flow as mflow
 from mitmproxy import connection
@@ -42,12 +40,6 @@ class DnsMode(enum.Enum):
     Transparent = "transparent"
 
 
-class DnsResolveError(Exception):
-    def __init__(self, response_code: dns.ResponseCode):
-        assert response_code is not dns.ResponseCode.NOERROR
-        self.response_code = response_code
-
-
 class DNSLayer(layer.Layer):
     """
     Layer that handles resolving DNS queries.
@@ -56,182 +48,85 @@ class DNSLayer(layer.Layer):
     flows: Dict[int, dns.DNSFlow]
     mode: DnsMode
 
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, mode: DnsMode):
         super().__init__(context)
         self.flows = dict()
+        self.mode = mode
 
-    @classmethod
-    def simple_resolve(cls, questions: List[dns.Question]) -> List[dns.ResourceRecord]:
-        answers: List[dns.ResourceRecord] = []
-
-        for question in questions:
-
-            def resolve_by_name(
-                family: socket.AddressFamily,
-                ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
-            ) -> None:
-                nonlocal answers, question
-                try:
-                    addrinfos = socket.getaddrinfo(host=question.name, port=0, family=family)
-                except socket.gaierror as e:
-                    if e.errno == socket.EAI_NODATA:
-                        raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
-                    else:
-                        # NOTE might fail on Windows for IPv6 queries:
-                        # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
-                        raise DnsResolveError(dns.ResponseCode.SERVFAIL)
-                for addrinfo in addrinfos:
-                    _, _, _, _, addr = addrinfo
-                    answers.append(dns.ResourceRecord(
-                        name=question.name,
-                        type=question.type,
-                        class_=question.class_,
-                        ttl=dns.ResourceRecord.DEFAULT_TTL,
-                        data=ip(addr[0]).packed,
-                    ))
-
-            def resolve_by_addr(
-                suffix: str,
-                ip: Callable[[List[str]], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
-            ) -> bool:
-                nonlocal answers, question
-                if not question.name.lower().endswith(suffix.lower()):
-                    return False
-                try:
-                    addr = ip(question.name[0:-len(suffix)].split(".")[::-1])
-                except ValueError:
-                    raise DnsResolveError(dns.ResponseCode.FORMERR)
-                try:
-                    name, _, _ = socket.gethostbyaddr(str(addr))
-                except socket.herror:
-                    raise DnsResolveError(dns.ResponseCode.NXDOMAIN)
-                except socket.gaierror:
-                    raise DnsResolveError(dns.ResponseCode.SERVFAIL)
-                answers.append(dns.ResourceRecord(
-                    name=question.name,
-                    type=question.type,
-                    class_=question.class_,
-                    ttl=dns.ResourceRecord.DEFAULT_TTL,
-                    data=dns.ResourceRecord.pack_domain_name(name),
-                ))
-                return True
-
-            if question.class_ is not dns.Class.IN:
-                raise DnsResolveError(dns.ResponseCode.NOTIMP)
-            if question.type is dns.Type.A:
-                resolve_by_name(socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
-            elif question.type is dns.Type.AAAA:
-                resolve_by_name(socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
-            elif question.type is dns.Type.PTR:
-                known_family = (
-                    resolve_by_addr(".in-addr.arpa", lambda x: ipaddress.IPv4Address(".".join(x)))
-                    or
-                    resolve_by_addr(".ip6.arpa", lambda x: ipaddress.IPv6Address(bytes.fromhex("".join(x))))
-                )
-                if not known_family:
-                    raise DnsResolveError(dns.ResponseCode.FORMERR)
-            else:
-                raise DnsResolveError(dns.ResponseCode.NOTIMP)
-        return answers
-
-    def handle_request(self, msg: dns.Message) -> layer.CommandGenerator[None]:
-        flow = dns.DNSFlow(
-            client_conn=self.context.client,
-            server_conn=(
-                connection.Server(self.context.client.sockname, protocol=connection.ConnectionProtocol.UDP)
-                if self.mode is DnsMode.Transparent else
-                self.context.server
-            ),
-        )
-        flow.request = msg
-        yield DnsRequestHook(flow)  # give hooks a chance to produce a response
-        if not flow.response:
-            if self.mode is DnsMode.Simple:
-                try:
-                    if not msg.query:
-                        raise DnsResolveError(dns.ResponseCode.REFUSED)  # we received an answer from the _client_
-                    if msg.op_code is not dns.OpCode.QUERY:
-                        raise DnsResolveError(dns.ResponseCode.NOTIMP)  # inverse queries and others are not supported
-                    rrs = DNSLayer.simple_resolve(msg.questions)
-                except DnsResolveError as e:
-                    flow.response = msg.fail(e.response_code)
-                else:
-                    flow.response = msg.succeed(rrs)
-            else:
-                if flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
-                    err = yield commands.OpenConnection(flow.server_conn)
-                    if err:
-                        flow.error = mflow.Error(str(err))
-                        yield DnsErrorHook(flow)
-                        return  # cannot recover from this
-                self.flows[msg.id] = flow
-                yield commands.SendData(flow.server_conn, msg.packed)
-                return  # we need to wait for the server's response
-        yield DnsResponseHook(flow)
-        yield commands.SendData(self.context.client, flow.response.packed)
-
-    def handle_response(self, msg: dns.Message, server_conn: connection.Connection) -> layer.CommandGenerator[None]:
-        flow = self.flows[msg.id]
-        if flow.server_conn is server_conn:
-            del self.flows[msg.id]
-            flow.response = msg
-            yield DnsResponseHook(flow)
-            yield commands.SendData(self.context.client, flow.response.packed)
-            if self.mode is DnsMode.Transparent:  # always close transparent connections
-                yield commands.CloseConnection(flow.server_conn)
+    def handle_request(self, flow: dns.DNSFlow) -> layer.CommandGenerator[None]:
+        orig_id = flow.request.id
+        yield DnsRequestHook(flow)  # give hooks a chance to change the request or produce a response
+        if orig_id != flow.request.id:  # handle the case of a hook changing the request id
+            del self.flows[orig_id]
+            self.flows[flow.request.id] = flow
+        if flow.response:
+            yield from self.handle_response(flow)
+        elif self.mode is DnsMode.Simple:
+            yield from self.handle_error(flow, "Simple hook has not set a response.")
         else:
-            yield commands.Log(f"{server_conn} responded to message {msg.id} sent to {flow.server_conn.address}")
+            if flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
+                err = yield commands.OpenConnection(flow.server_conn)
+                if err:
+                    yield from self.handle_error(flow, str(err))
+                    return  # cannot recover from this
+            yield commands.SendData(flow.server_conn, flow.request.packed)
+
+    def handle_response(self, flow: dns.DNSFlow) -> layer.CommandGenerator[None]:
+        yield DnsResponseHook(flow)
+        if flow.response:  # allows the response hook to suppress an answer
+            yield commands.SendData(self.context.client, flow.response.packed)
+        self.remove_flow(flow)
+
+    def handle_error(self, flow: dns.DNSFlow, err: str) -> layer.CommandGenerator[None]:
+        flow.error = mflow.Error(err)
+        yield DnsErrorHook(flow)
+        self.remove_flow(flow)
+
+    def remove_flow(self, flow: dns.DNSFlow) -> None:
+        del self.flows[flow.request.id]
+        flow.live = False
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:
-        mode: str = self.context.options.dns_mode
-        try:
-            if mode == DnsMode.Simple.value:
-                self.mode = DnsMode.Simple
-            elif mode == DnsMode.Transparent.value:
-                self.mode = DnsMode.Transparent
-            elif mode.startswith(DnsMode.Forward.value):
-                self.mode = DnsMode.Forward
-                parts = mode[len(DnsMode.Forward.value):].split(":")
-                if len(parts) < 2 or len(parts) > 3 or parts[0] != "":
-                    raise ValueError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{mode}'.")
-                address = (parts[1], int(parts[2]) if len(parts) == 3 else 53)
-                self.context.server = connection.Server(address, protocol=connection.ConnectionProtocol.UDP)
-            else:
-                raise ValueError(f"Invalid DNS mode '{mode}'.")
-            self._handle_event = self.query
-        except ValueError as e:
-            yield commands.Log(f"{str(e)}. Disabling further message handling.", level="error")
-            self._handle_event = self.done
+        self._handle_event = self.query
+        yield from ()
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def query(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert isinstance(event, events.ConnectionEvent)
+        from_client = event.connection is self.context.client
 
         if isinstance(event, events.DataReceived):
-            from_client = event.connection is self.context.client
             try:
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
             else:
                 if msg.id in self.flows:
-                    if from_client:  # duplicate ID, remove the old flow with an error and create a new one
-                        flow = self.flows[msg.id]
-                        del self.flows[msg.id]
-                        flow.error = mflow.Error(f"Received duplicate request for id {msg.id}.")
-                        yield DnsErrorHook(flow)
-                        yield from self.handle_request(msg)
+                    flow = self.flows[msg.id]
+                    if from_client:
+                        flow.request = msg  # override the request and handle it again
+                        yield from self.handle_request(flow)
                     else:
-                        yield from self.handle_response(msg, event.connection)
+                        flow.response = msg
+                        yield from self.handle_response(flow)
                 else:
                     if from_client:
-                        yield from self.handle_request(msg)
+                        flow = dns.DNSFlow(self.context.client, self.context.server)
+                        flow.request = msg
+                        self.flows[msg.id] = flow
+                        yield from self.handle_request(flow)
                     else:
-                        yield commands.Log(f"{event.connection} responded to unknown message {msg.id}")
+                        yield commands.Log(f"{event.connection} responded to unknown message #{msg.id}")
 
         elif isinstance(event, events.ConnectionClosed):
-            pass  # TODO
+            other_conn = self.context.server if from_client else self.context.client
+            if other_conn.state is not connection.ConnectionState.CLOSED:
+                yield commands.CloseConnection(other_conn)
+            self._handle_event = self.done
+            flows = self.flows.values()
+            while flows:
+                self.remove_flow(next(iter(flows)))
 
         else:
             raise AssertionError(f"Unexpected event: {event}")
