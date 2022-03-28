@@ -99,7 +99,7 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "click>=7.0,<8.1",
+            "click>=7.0,<8.2",
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
