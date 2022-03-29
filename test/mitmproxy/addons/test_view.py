@@ -54,6 +54,26 @@ def test_order_generators_http():
     assert sz.generate(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
 
 
+def test_order_generators_dns():
+    v = view.View()
+    tf = tflow.tdnsflow(resp=True)
+
+    rs = view.OrderRequestStart(v)
+    assert rs.generate(tf) == 946681200
+
+    rm = view.OrderRequestMethod(v)
+    assert rm.generate(tf) == "QUERY"
+
+    ru = view.OrderRequestURL(v)
+    assert ru.generate(tf) == "dns.google"
+
+    sz = view.OrderKeySize(v)
+    assert sz.generate(tf) == tf.response.size
+
+    tf = tflow.tdnsflow(resp=False)
+    assert sz.generate(tf) == 0
+
+
 def test_order_generators_tcp():
     v = view.View()
     tf = tflow.ttcpflow()
