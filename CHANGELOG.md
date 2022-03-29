@@ -8,6 +8,8 @@
   ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
 * Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
+* Make sure that mitmproxy displays error messages on startup.
+  ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
 
 ## 19 March 2022: mitmproxy 8.0.0
 
