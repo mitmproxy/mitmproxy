@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Console Performance Improvements
+  ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
 * Add example addon to dump contents to files based on a filter expression 
