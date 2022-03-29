@@ -22,7 +22,7 @@ SAMPLE_SETTINGS = {
 }
 
 
-class FrameFactory(object):
+class FrameFactory:
     """
     A class containing lots of helper methods and state to build frames. This
     allows test cases to easily build correct HTTP/2 frames to feed to

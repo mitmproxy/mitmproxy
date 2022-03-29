@@ -1312,9 +1312,9 @@ def test_invalid_content_length(tctx):
     flow = Placeholder(HTTPFlow)
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular))
-        >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
-                                      "Host: example.com\r\n"
-                                      "Content-Length: NaN\r\n\r\n").encode())
+        >> DataReceived(tctx.client, (b"GET http://example.com/ HTTP/1.1\r\n"
+                                      b"Host: example.com\r\n"
+                                      b"Content-Length: NaN\r\n\r\n"))
         << SendData(tctx.client, err)
         << CloseConnection(tctx.client)
         << http.HttpRequestHeadersHook(flow)

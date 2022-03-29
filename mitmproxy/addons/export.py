@@ -63,7 +63,7 @@ def curl_command(f: flow.Flow) -> str:
     server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
 
     if ctx.options.export_preserve_original_ip and server_addr and request.pretty_host != server_addr:
-        resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
+        resolve = f"{request.pretty_host}:{request.port}:[{server_addr}]"
         args.append("--resolve")
         args.append(resolve)
 

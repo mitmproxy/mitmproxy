@@ -21,7 +21,7 @@ class MyAddon:
                 totals[f.request.host] = totals.setdefault(f.request.host, 0) + 1
 
         with open(path, "w+") as fp:
-            for cnt, dom in sorted([(v, k) for (k, v) in totals.items()]):
+            for cnt, dom in sorted((v, k) for (k, v) in totals.items()):
                 fp.write(f"{cnt}: {dom}\n")
 
         ctx.log.alert("done")

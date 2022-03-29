@@ -3,14 +3,15 @@ import binascii
 import socket
 import typing
 
+from ntlm_auth import gss_channel_bindings, ntlm
+
+from mitmproxy import addonmanager, http
 from mitmproxy import ctx
-from mitmproxy import http, addonmanager
 from mitmproxy.net.http import http1
-from mitmproxy.proxy import layer, commands
+from mitmproxy.proxy import commands, layer
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HttpConnectUpstreamHook, HttpLayer, HttpStream
 from mitmproxy.proxy.layers.http._upstream_proxy import HttpUpstreamProxy
-from ntlm_auth import gss_channel_bindings, ntlm
 
 
 class NTLMUpstreamAuth:
@@ -148,7 +149,7 @@ class CustomNTLMContext:
         ntlm_compatibility: int = ctx.options.upstream_ntlm_compatibility
         username, password = tuple(auth.split(":"))
         workstation = socket.gethostname().upper()
-        ctx.log.debug('\nntlm context with the details: "{}\\{}", *****'.format(domain, username))
+        ctx.log.debug(f'\nntlm context with the details: "{domain}\\{username}", *****')
         self.ctx_log = ctx.log
         self.preferred_type = preferred_type
         self.ntlm_context = ntlm.NtlmContext(
@@ -163,7 +164,7 @@ class CustomNTLMContext:
         negotiate_message = self.ntlm_context.step()
         negotiate_message_base_64_in_bytes = base64.b64encode(negotiate_message)
         negotiate_message_base_64_ascii = negotiate_message_base_64_in_bytes.decode("ascii")
-        negotiate_message_base_64_final = u'%s %s' % (self.preferred_type, negotiate_message_base_64_ascii)
+        negotiate_message_base_64_final = f'{self.preferred_type} {negotiate_message_base_64_ascii}'
         self.ctx_log.debug(
             f'{self.preferred_type} Authentication, negotiate message: {negotiate_message_base_64_final}'
         )
@@ -174,11 +175,11 @@ class CustomNTLMContext:
         try:
             challenge_message_ascii_bytes = base64.b64decode(challenge_message, validate=True)
         except binascii.Error as err:
-            self.ctx_log.debug('{} Authentication fail with error {}'.format(self.preferred_type, err.__str__()))
+            self.ctx_log.debug(f'{self.preferred_type} Authentication fail with error {err.__str__()}')
             return False
         authenticate_message = self.ntlm_context.step(challenge_message_ascii_bytes)
-        negotiate_message_base_64 = u'%s %s' % (self.preferred_type,
-                                                base64.b64encode(authenticate_message).decode('ascii'))
+        negotiate_message_base_64 = '{} {}'.format(self.preferred_type,
+                                                   base64.b64encode(authenticate_message).decode('ascii'))
         self.ctx_log.debug(
             f'{self.preferred_type} Authentication, response to challenge message: {negotiate_message_base_64}'
         )
