@@ -4,14 +4,13 @@ Utility functions for decoding response bodies.
 
 import codecs
 import collections
-from io import BytesIO
-
 import gzip
 import zlib
+from io import BytesIO
+from typing import Union, overload
+
 import brotli
 import zstandard as zstd
-
-from typing import Union, Optional, AnyStr, overload  # noqa
 
 # We have a shared single-element cache for encoding and decoding.
 # This is quite useful in practice, e.g.
@@ -39,7 +38,7 @@ def decode(encoded: bytes, encoding: str, errors: str = 'strict') -> Union[str, 
 
 
 def decode(
-        encoded: Union[None, str, bytes], encoding: str, errors: str = 'strict'
+    encoded: Union[None, str, bytes], encoding: str, errors: str = 'strict'
 ) -> Union[None, str, bytes]:
     """
     Decode the given input object
@@ -56,10 +55,10 @@ def decode(
 
     global _cache
     cached = (
-            isinstance(encoded, bytes) and
-            _cache.encoded == encoded and
-            _cache.encoding == encoding and
-            _cache.errors == errors
+        isinstance(encoded, bytes) and
+        _cache.encoded == encoded and
+        _cache.encoding == encoding and
+        _cache.errors == errors
     )
     if cached:
         return _cache.decoded
@@ -113,10 +112,10 @@ def encode(decoded: Union[None, str, bytes], encoding, errors='strict') -> Union
 
     global _cache
     cached = (
-            isinstance(decoded, bytes) and
-            _cache.decoded == decoded and
-            _cache.encoding == encoding and
-            _cache.errors == errors
+        isinstance(decoded, bytes) and
+        _cache.decoded == decoded and
+        _cache.encoding == encoding and
+        _cache.errors == errors
     )
     if cached:
         return _cache.encoded

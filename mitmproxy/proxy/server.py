@@ -158,8 +158,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif command.connection.protocol is ConnectionProtocol.UDP:
                     reader, writer = await udp.open_connection(*command.connection.address)
                 else:
-                    raise IOError(f"Connection protocol '{command.connection.protocol.name}' is not implemented.")
-            except (IOError, asyncio.CancelledError) as e:
+                    raise NotImplementedError(f"Connection protocol '{command.connection.protocol.name}' is not implemented.")
+            except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
                     err = "connection cancelled"

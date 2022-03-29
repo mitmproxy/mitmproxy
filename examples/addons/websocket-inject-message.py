@@ -15,7 +15,7 @@ def websocket_message(flow: http.HTTPFlow):
     last_message = flow.websocket.messages[-1]
     if last_message.is_text and "secret" in last_message.text:
         last_message.drop()
-        ctx.master.commands.call("inject.websocket", flow, last_message.from_client, "ssssssh".encode())
+        ctx.master.commands.call("inject.websocket", flow, last_message.from_client, b"ssssssh")
 
 
 # Complex example: Schedule a periodic timer

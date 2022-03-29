@@ -27,7 +27,7 @@ class _Masked:
         other[1] &= 0b0111_1111  # remove mask bit
         assert other[1] < 126  # (we don't support extended payload length here)
         mask = other[2:6]
-        payload = bytes([x ^ mask[i % 4] for i, x in enumerate(other[6:])])
+        payload = bytes(x ^ mask[i % 4] for i, x in enumerate(other[6:]))
         return self.unmasked == other[:2] + payload
 
 
@@ -41,7 +41,7 @@ def masked_bytes(unmasked: bytes) -> bytes:
     assert header[1] < 126  # assert that this is neither masked nor extended payload
     header[1] |= 0b1000_0000
     mask = secrets.token_bytes(4)
-    masked = bytes([x ^ mask[i % 4] for i, x in enumerate(unmasked[2:])])
+    masked = bytes(x ^ mask[i % 4] for i, x in enumerate(unmasked[2:]))
     return bytes(header + mask + masked)
 
 

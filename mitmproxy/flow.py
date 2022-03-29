@@ -1,6 +1,6 @@
 import asyncio
 import time
-import typing  # noqa
+import typing
 import uuid
 
 from mitmproxy import connection

@@ -1,4 +1,4 @@
-import typing  # noqa
+import typing
 # Low-color themes should ONLY use the standard foreground and background
 # colours listed here:
 #

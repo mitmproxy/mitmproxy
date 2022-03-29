@@ -211,7 +211,7 @@ class RequestHandler(tornado.web.RequestHandler):
         try:
             return json.loads(self.request.body.decode())
         except Exception as e:
-            raise APIError(400, "Malformed JSON: {}".format(str(e)))
+            raise APIError(400, f"Malformed JSON: {str(e)}")
 
     @property
     def filecontents(self):

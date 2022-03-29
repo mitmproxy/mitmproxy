@@ -112,7 +112,7 @@ class ServerPlayback:
 
     @command.command("replay.server.count")
     def count(self) -> int:
-        return sum([len(i) for i in self.flowmap.values()])
+        return sum(len(i) for i in self.flowmap.values())
 
     def _hash(self, flow: http.HTTPFlow) -> typing.Hashable:
         """

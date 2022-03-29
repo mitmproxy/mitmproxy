@@ -100,7 +100,7 @@ def run(
                 opts.update(**extra(args))
 
         except exceptions.OptionsError as e:
-            print("{}: {}".format(sys.argv[0], e), file=sys.stderr)
+            print(f"{sys.argv[0]}: {e}", file=sys.stderr)
             sys.exit(1)
 
         loop = asyncio.get_running_loop()

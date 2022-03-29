@@ -108,7 +108,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.master = master
         self.choices = choices
         self.callback = callback
-        choicewidth = max([len(i) for i in choices])
+        choicewidth = max(len(i) for i in choices)
         self.width = max(choicewidth, len(title)) + 7
 
         self.walker = ChooserListWalker(choices, current)
