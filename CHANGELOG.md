@@ -4,6 +4,8 @@
 
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
+* Console Performance Improvements
+  ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
 * Add example addon to dump contents to files based on a filter expression 
@@ -12,6 +14,8 @@
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
 * Make sure that mitmproxy displays error messages on startup.
   ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
+* Add example addon for domain fronting.
+  ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 
 ## 19 March 2022: mitmproxy 8.0.0
 
