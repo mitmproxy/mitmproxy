@@ -10,6 +10,8 @@
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
 * Make sure that mitmproxy displays error messages on startup.
   ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
+* Add example addon for domain fronting.
+  ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 
 ## 19 March 2022: mitmproxy 8.0.0
 
