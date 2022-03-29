@@ -138,6 +138,20 @@ def test_simple_tcp():
     assert list(v) == [f]
 
 
+def test_simple_dns():
+    v = view.View()
+    f = tflow.tdnsflow(resp=True, err=True)
+    assert v.store_count() == 0
+    v.dns_request(f)
+    assert list(v) == [f]
+
+    # These all just call update
+    v.dns_request(f)
+    v.dns_response(f)
+    v.dns_error(f)
+    assert list(v) == [f]
+
+
 def test_filter():
     v = view.View()
     v.requestheaders(tft(method="get"))
