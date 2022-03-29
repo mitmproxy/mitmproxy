@@ -200,7 +200,7 @@ class ProtoParser:
             # read field key (tag and wire_type)
             offset, key = ProtoParser._read_base128le(wire_data[pos:])
             # casting raises exception for invalid WireTypes
-            wt = ProtoParser.WireTypes((key & 7))
+            wt = ProtoParser.WireTypes(key & 7)
             tag = (key >> 3)
             pos += offset
 
@@ -232,7 +232,7 @@ class ProtoParser:
                 wt == ProtoParser.WireTypes.group_start or
                 wt == ProtoParser.WireTypes.group_end
             ):
-                raise ValueError("deprecated field: {}".format(wt))
+                raise ValueError(f"deprecated field: {wt}")
             elif wt == ProtoParser.WireTypes.bit_32:
                 offset, val = ProtoParser._read_u32(wire_data[pos:])
                 pos += offset
@@ -735,8 +735,7 @@ class ProtoParser:
                     yield field_desc_dict
                 # add sub-fields of messages or packed fields
                 for f in decoded_val:
-                    for field_dict in f.gen_flat_decoded_field_dicts():
-                        yield field_dict
+                    yield from f.gen_flat_decoded_field_dicts()
             else:
                 field_desc_dict["val"] = decoded_val
                 yield field_desc_dict
@@ -767,8 +766,7 @@ class ProtoParser:
 
     def gen_flat_decoded_field_dicts(self) -> Generator[Dict, None, None]:
         for f in self.root_fields:
-            for field_dict in f.gen_flat_decoded_field_dicts():
-                yield field_dict
+            yield from f.gen_flat_decoded_field_dicts()
 
     def gen_str_rows(self) -> Generator[Tuple[str, ...], None, None]:
         for field_dict in self.gen_flat_decoded_field_dicts():
@@ -879,8 +877,7 @@ def hack_generator_to_list(generator_func):
 
 
 def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule]):
-    for l in format_table(ProtoParser(data=message, parser_options=parser_options, rules=rules).gen_str_rows()):
-        yield l
+    yield from format_table(ProtoParser(data=message, parser_options=parser_options, rules=rules).gen_str_rows())
 
 
 def format_grpc(
@@ -895,12 +892,11 @@ def format_grpc(
             compression_scheme if compressed else compressed) + ')'
 
         yield [("text", headline)]
-        for l in format_pbuf(
+        yield from format_pbuf(
             message=pb_message,
             parser_options=parser_options,
             rules=rules
-        ):
-            yield l
+        )
 
 
 @dataclass

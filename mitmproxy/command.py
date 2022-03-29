@@ -265,11 +265,11 @@ class CommandManager:
         parts, _ = self.parse_partial(cmdstr)
         if not parts:
             raise exceptions.CommandError(f"Invalid command: {cmdstr!r}")
-        command_name, *args = [
+        command_name, *args = (
             unquote(part.value)
             for part in parts
             if part.type != mitmproxy.types.Space
-        ]
+        )
         return self.call_strings(command_name, args)
 
     def dump(self, out=sys.stdout) -> None:

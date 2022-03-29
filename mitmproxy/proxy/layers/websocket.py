@@ -63,7 +63,7 @@ class WebsocketConnection(wsproto.Connection):
     frame_buf: List[bytes]
 
     def __init__(self, *args, conn: connection.Connection, **kwargs):
-        super(WebsocketConnection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.conn = conn
         self.frame_buf = [b""]
 

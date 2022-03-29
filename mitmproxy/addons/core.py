@@ -178,7 +178,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            "URL {} is invalid: {}".format(repr(val), e)
+                            f"URL {repr(val)} is invalid: {e}"
                         ) from e
                 else:
                     self.rupdate = False
@@ -199,7 +199,7 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Set {} on  {} flows.".format(attr, len(updated)))
+        ctx.log.alert(f"Set {attr} on  {len(updated)} flows.")
 
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:

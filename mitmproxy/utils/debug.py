@@ -20,7 +20,7 @@ def dump_system_info():
     data = [
         f"Mitmproxy: {mitmproxy_version}",
         f"Python:    {platform.python_version()}",
-        "OpenSSL:   {}".format(SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode()),
+        f"OpenSSL:   {SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode()}",
         f"Platform:  {platform.platform()}",
     ]
     return "\n".join(data)

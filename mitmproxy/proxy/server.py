@@ -153,7 +153,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             try:
                 command.connection.timestamp_start = time.time()
                 reader, writer = await asyncio.open_connection(*command.connection.address)
-            except (IOError, asyncio.CancelledError) as e:
+            except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
                     err = "connection cancelled"

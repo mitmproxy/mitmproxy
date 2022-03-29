@@ -62,7 +62,7 @@ def get_random_object(random=random, depth=0):
             else:
                 return -1 * random.randint(0, MAXINT)
         n = random.randint(0, 100)
-        return bytes([random.randint(32, 126) for _ in range(n)])
+        return bytes(random.randint(32, 126) for _ in range(n))
 
 
 class Test_Format(unittest.TestCase):
