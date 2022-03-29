@@ -48,6 +48,24 @@ class ResponseCode(SerializableIntEnum):
     DSOTYPENI = 11
     """DSO-TYPE Not Implemented [RFC8490]"""
 
+    @property
+    def http_equiv_status_code(self) -> int:
+        def raiseassert() -> int:
+            raise AssertionError(f"No HTTP equivalent status code defined for '{self.name}'.")
+
+        return (
+            200 if self is ResponseCode.NOERROR else
+            400 if self is ResponseCode.FORMERR else  # Bad Request
+            401 if self is ResponseCode.NOTAUTH else  # Unauthorized
+            403 if self is ResponseCode.REFUSED else  # Forbidden
+            404 if self is ResponseCode.NXDOMAIN else  # Not Found
+            409 if self in (ResponseCode.YXRRSET, ResponseCode.NXRRSET) else  # Conflict
+            410 if self is ResponseCode.NXRRSET else  # Gone
+            500 if self is ResponseCode.SERVFAIL else  # Internal Server Error
+            501 if self in (ResponseCode.NOTIMP, ResponseCode.DSOTYPENI) else  # Not Implemented
+            raiseassert()
+        )
+
 
 class Type(SerializableIntEnum):
     A = 1
@@ -808,6 +826,7 @@ class Message(BypassInitStateObject):
             "recursionDesired": self.recursion_desired,
             "recursionAvailable": self.recursion_available,
             "responseCode": self.response_code.name,
+            "responseCodeHttpEquiv": self.response_code.http_equiv_status_code,
             "questions": [{
                 "name": question.name,
                 "type": question.type.name,

@@ -9,7 +9,7 @@ const Summary: React.FC<{
     <div>
         {message.query ? message.opCode : message.responseCode}
         &nbsp;
-        {message.id}
+        #{message.id}
         &nbsp;
         {message.truncation ? "(Truncated)" : ""}
     </div>
@@ -79,7 +79,9 @@ const Message: React.FC<{
         <Questions message={message} />
         <hr/>
         <ResourceRecords name={`${message.authoritativeAnswer ? "Authoritative " : ""}${message.recursionAvailable ? "Recursive " : ""}Answer`} values={message.answers} />
+        <hr/>
         <ResourceRecords name="Authority" values={message.authorities} />
+        <hr/>
         <ResourceRecords name="Additional" values={message.additionals} />
     </section>
 )

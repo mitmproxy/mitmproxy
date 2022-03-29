@@ -12,7 +12,7 @@ from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
-from mitmproxy.dns import DNSFlow, ResponseCode
+from mitmproxy.dns import DNSFlow
 
 # Detect Windows Subsystem for Linux and Windows
 IS_WINDOWS_OR_WSL = "Microsoft" in platform.platform() or "Windows" in platform.platform()
@@ -660,7 +660,7 @@ def format_dns_flow(
         request_timestamp: float,
         question: str,
         response_code: typing.Optional[str],
-        response_code_style: str,
+        response_code_http_equiv: int,
         answer: typing.Optional[str],
         error_message: str,
 ):
@@ -683,7 +683,8 @@ def format_dns_flow(
         truncated_plain(error_message, "error")
     )))
     items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
-    items.append(fcol(fixlen("" if response_code is None else response_code, 9), response_code_style))
+    status_style = "intercepted" if intercepted else HTTP_RESPONSE_CODE_STYLE.get(response_code_http_equiv // 100, "code_other")
+    items.append(fcol(fixlen("" if response_code is None else response_code, 9), status_style))
 
     items.append(format_right_indicators(
         replay=bool(is_replay),
@@ -747,15 +748,7 @@ def format_flow(
             request_timestamp=f.request.timestamp,
             question=", ".join(f"{q.name} ({q.type.name})" for q in f.request.questions),
             response_code=None if code is None else code.name,
-            response_code_style=(
-                "code_200" if code is ResponseCode.NOERROR
-                else
-                "code_400" if code in (ResponseCode.FORMERR, ResponseCode.NXDOMAIN, ResponseCode.REFUSED)
-                else
-                "code_500" if code in (ResponseCode.SERVFAIL, ResponseCode.NOTIMP)
-                else
-                "code_other"
-            ),
+            response_code_http_equiv=0 if code is None else code.http_equiv_status_code,
             answer=None if not f.response else ", ".join(map(str, f.response.answers)),
             error_message=error_message,
         )

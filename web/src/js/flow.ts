@@ -133,6 +133,7 @@ export interface DNSMessage {
     recursionDesired: boolean
     recursionAvailable: boolean
     responseCode: string
+    responseCodeHttpEquiv: number
     questions: {
         name: string
         type: string
