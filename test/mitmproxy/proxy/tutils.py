@@ -201,9 +201,13 @@ class Playbook:
                     x.connection.timestamp_end = 1624544787
 
                 self.actual.append(x)
+                cmds: typing.List[commands.Command] = []
                 try:
-                    cmds: typing.List[commands.Command] = list(self.layer.handle_event(x))
+                    # consume them one by one so that we can extend the log with all commands until traceback.
+                    for cmd in self.layer.handle_event(x):
+                        cmds.append(cmd)
                 except Exception:
+                    self.actual.extend(cmds)
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
 

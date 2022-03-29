@@ -70,6 +70,7 @@ def test_upstream_https(tctx):
         << SendData(upstream, clienthello)
     )
     assert upstream().address == ("example.mitmproxy.org", 8081)
+    assert upstream().sni == "example.mitmproxy.org"
     assert (
         proxy2
         >> DataReceived(tctx2.client, clienthello())
