@@ -17,6 +17,7 @@ def test_always_str():
         strutils.always_str(42)
     assert strutils.always_str("foo") == "foo"
     assert strutils.always_str(b"foo") == "foo"
+    assert strutils.always_str(b"foo", 'utf-8') == "foo"
     assert strutils.always_str(None) is None
 
 

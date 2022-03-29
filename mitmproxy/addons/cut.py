@@ -8,7 +8,6 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import ctx
 from mitmproxy import certs
-from mitmproxy.utils import strutils
 import mitmproxy.types
 
 import pyperclip
@@ -112,7 +111,7 @@ class Cut:
                     for f in flows:
                         vals = [extract(c, f) for c in cuts]
                         writer.writerow(
-                            [strutils.always_str(x) or "" for x in vals]  # type: ignore
+                            [repr(x) or "" for x in vals]  # type: ignore
                         )
                 ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
         except OSError as e:
@@ -133,14 +132,14 @@ class Cut:
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
             v = extract(cuts[0], flows[0])
-            fp.write(strutils.always_str(v))  # type: ignore
+            fp.write(repr(v))  # type: ignore
             ctx.log.alert("Clipped single cut.")
         else:
             writer = csv.writer(fp)
             for f in flows:
                 vals = [extract(c, f) for c in cuts]
                 writer.writerow(
-                    [strutils.always_str(v) for v in vals]
+                    [repr(v) for v in vals]
                 )
             ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
         try:
