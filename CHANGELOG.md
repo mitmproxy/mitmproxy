@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Replayed flows retain their current position in the flow list.
+  ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
 * Add example addon to dump contents to files based on a filter expression 

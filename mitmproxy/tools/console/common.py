@@ -669,13 +669,13 @@ def format_flow(
         for message in f.messages:
             total_size += len(message.content)
         if f.messages:
-            duration = f.messages[-1].timestamp - f.timestamp_start
+            duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
         return format_tcp_flow(
             render_mode=render_mode,
             focused=focused,
-            timestamp_start=f.timestamp_start,
+            timestamp_start=f.client_conn.timestamp_start,
             marked=f.marked,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
