@@ -351,7 +351,8 @@ class ServerTLSLayer(_TLSLayer):
             self.tunnel_state = tunnel.TunnelState.CLOSED
         else:
             yield from self.start_tls()
-            yield from self.receive_handshake_data(b"")
+            if self.tls:
+                yield from self.receive_handshake_data(b"")
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.wait_for_clienthello:
