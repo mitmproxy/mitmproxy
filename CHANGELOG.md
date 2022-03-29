@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* DNS support (@meitinger)
 * Console Performance Improvements
   ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
 * Add flatpak support to the browser addon
