@@ -566,7 +566,7 @@ class Message(BypassInitStateObject):
     )
 
     def __str__(self) -> str:
-        return "\r\n".join(str(x) for x in itertools.chain.from_iterable([self.questions, self.answers, self.authorities, self.additionals]))
+        return "\r\n".join(map(str, itertools.chain(self.questions, self.answers, self.authorities, self.additionals)))
 
     @property
     def content(self) -> bytes:

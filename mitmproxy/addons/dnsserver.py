@@ -2,8 +2,8 @@ import asyncio
 import ipaddress
 from typing import Dict, List, Optional, Tuple
 from mitmproxy import ctx, dns, exceptions, flow, log, master, options
+from mitmproxy import connection
 from mitmproxy.addonmanager import Loader
-from mitmproxy.connection import Address, ConnectionProtocol
 from mitmproxy.net import udp
 from mitmproxy.proxy import commands, layers, server, server_hooks
 from mitmproxy.utils import asyncio_utils, human
@@ -16,7 +16,6 @@ class DnsConnectionHandler(server.StreamConnectionHandler):
         self.master = master
         super().__init__(r, w, options)
         self.log_prefix = f"[DNS] {human.format_address(self.client.peername)}: "
-        self.layer = layers.DNSLayer(self.layer.context)
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
@@ -47,13 +46,15 @@ class DnsServer:
     options: options.Options
     is_running: bool
     mode: layers.dns.DnsMode
-    forward_addr: Address
+    forward_addr: Optional[connection.Address]
 
     def __init__(self):
         self._lock = asyncio.Lock()
         self._connections = {}
         self.server = None
         self.is_running = False
+        self.mode = layers.dns.DnsMode.Simple
+        self.forward_addr = None
 
     def __repr__(self) -> str:
         return f"DnsServer({'running' if self.server else 'stopped'}, {len(self._connections)} active conns)"
@@ -136,6 +137,10 @@ class DnsServer:
                 client=peername,
             )
         handler = DnsConnectionHandler(self.master, r, w, self.options)
+        handler.layer = layers.DNSLayer(handler.layer.context, self.mode)
+        if self.mode is layers.dns.DnsMode.Forward:
+            assert self.forward_addr
+            handler.layer.context.server = connection.Server(self.forward_addr, protocol=connection.ConnectionProtocol.UDP)
         self._connections[peername] = handler
         try:
             await handler.handle_client()
@@ -145,7 +150,7 @@ class DnsServer:
     def server_connect(self, ctx: server_hooks.ServerConnectionHookData) -> None:
         assert ctx.server.address
         self_connect = (
-            ctx.server.protocol is ConnectionProtocol.UDP
+            ctx.server.protocol is connection.ConnectionProtocol.UDP
             and
             ctx.server.address[1] == self.options.dns_listen_port
             and
