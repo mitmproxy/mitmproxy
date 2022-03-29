@@ -47,6 +47,36 @@ def test_tcp(tmp_path):
         assert len(rd(p)) == 2
 
 
+def test_dns(tmp_path):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "foo")
+        tctx.configure(sa, save_stream_file=p)
+
+        f = tflow.tdnsflow(resp=True)
+        sa.dns_request(f)
+        sa.dns_response(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd(p)[0].response
+
+        tctx.configure(sa, save_stream_file="+" + p)
+        f = tflow.tdnsflow(err=True)
+        sa.dns_request(f)
+        sa.dns_error(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd(p)[1].error
+
+        tctx.configure(sa, save_stream_file="+" + p)
+        f = tflow.tdnsflow()
+        sa.dns_request(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert not rd(p)[2].response
+
+        f = tflow.tdnsflow()
+        sa.dns_response(f)
+        assert len(rd(p)) == 3
+
+
 def test_websocket(tmp_path):
     sa = save.Save()
     with taddons.context(sa) as tctx:

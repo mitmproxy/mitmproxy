@@ -15,7 +15,14 @@ from mitmproxy import connection, flow, stateobject
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
 
-class ResponseCode(enum.IntEnum):
+class SerializableIntEnum(enum.IntEnum):
+    """IntEnum with a minor correction for serialization in tnetstring.py."""
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class ResponseCode(SerializableIntEnum):
     NOERROR = 0
     """No Error [RFC1035]"""
     FORMERR = 1
@@ -42,7 +49,7 @@ class ResponseCode(enum.IntEnum):
     """DSO-TYPE Not Implemented [RFC8490]"""
 
 
-class Type(enum.IntEnum):
+class Type(SerializableIntEnum):
     A = 1
     """a host address [RFC1035]"""
     NS = 2
@@ -223,7 +230,7 @@ class Type(enum.IntEnum):
     """DNSSEC Lookaside Validation (OBSOLETE) [RFC8749 RFC4431]"""
 
 
-class Class(enum.IntEnum):
+class Class(SerializableIntEnum):
     IN = 1
     """Internet [RFC1035]"""
     CH = 3
@@ -236,7 +243,7 @@ class Class(enum.IntEnum):
     """QCLASS * [RFC1035]"""
 
 
-class OpCode(enum.IntEnum):
+class OpCode(SerializableIntEnum):
     QUERY = 0
     """Query [RFC1035]"""
     IQUERY = 1
