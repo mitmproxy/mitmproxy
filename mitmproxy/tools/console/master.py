@@ -56,7 +56,7 @@ class ConsoleMaster(master.Master):
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),
-            errorcheck.ErrorCheck(),
+            errorcheck.ErrorCheck(log_to_stderr=True),
         )
 
         self.window = None
