@@ -22,7 +22,7 @@ def always_bytes(str_or_bytes: Union[None, str, bytes], *encode_args) -> Union[N
     elif isinstance(str_or_bytes, str):
         return str_or_bytes.encode(*encode_args)
     else:
-        raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
+        raise TypeError(f"Expected str or bytes, but got {type(str_or_bytes).__name__}.")
 
 
 @overload
@@ -45,7 +45,7 @@ def always_str(str_or_bytes: Union[None, str, bytes], *decode_args) -> Union[Non
     elif isinstance(str_or_bytes, bytes):
         return str_or_bytes.decode(*decode_args)
     else:
-        raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
+        raise TypeError(f"Expected str or bytes, but got {type(str_or_bytes).__name__}.")
 
 
 # Translate control characters to "safe" characters. This implementation
@@ -73,7 +73,7 @@ def escape_control_characters(text: str, keep_spacing=True) -> str:
         keep_spacing: If True, tabs and newlines will not be replaced.
     """
     if not isinstance(text, str):
-        raise ValueError("text type must be unicode but is {}".format(type(text).__name__))
+        raise ValueError(f"text type must be unicode but is {type(text).__name__}")
 
     trans = _control_char_trans_newline if keep_spacing else _control_char_trans
     return text.translate(trans)

@@ -1,5 +1,3 @@
-from typing import List  # noqa
-
 from mitmproxy.utils import strutils
 from . import base
 

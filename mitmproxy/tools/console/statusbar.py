@@ -3,7 +3,7 @@ from typing import Optional
 
 import urwid
 
-import mitmproxy.tools.console.master  # noqa
+import mitmproxy.tools.console.master
 from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals

@@ -56,7 +56,7 @@ class ConsoleMaster(master.Master):
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),
-            errorcheck.ErrorCheck(),
+            errorcheck.ErrorCheck(log_to_stderr=True),
         )
 
         self.window = None
@@ -89,7 +89,7 @@ class ConsoleMaster(master.Master):
             signals.status_message.send(
                 message = (
                     entry.level,
-                    "{}: {}".format(entry.level.title(), str(entry.msg).lstrip())
+                    f"{entry.level.title()}: {str(entry.msg).lstrip()}"
                 ),
                 expire=5
             )

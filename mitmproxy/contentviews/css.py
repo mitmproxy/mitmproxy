@@ -67,4 +67,4 @@ if __name__ == "__main__":  # pragma: no cover
 
     t = time.time()
     x = beautify(data)
-    print("Beautifying vendor.css took {:.2}s".format(time.time() - t))
+    print(f"Beautifying vendor.css took {time.time() - t:.2}s")

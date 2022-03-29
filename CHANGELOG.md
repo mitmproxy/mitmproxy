@@ -2,9 +2,16 @@
 
 ## Unreleased: mitmproxy next
 
-* Add flatpak support to the browser addon (#5200, @pauloromeira)
-* Add example addon to dump contents to files based on a filter expression (#5190, @redraw)
+* Add flatpak support to the browser addon
+  ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
+* Add example addon to dump contents to files based on a filter expression 
+  ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
+* Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
+  ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
+* Make sure that mitmproxy displays error messages on startup.
+  ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
 * Add example addon for domain fronting.
+  ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 
 ## 19 March 2022: mitmproxy 8.0.0
 
