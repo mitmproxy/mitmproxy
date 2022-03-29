@@ -2,7 +2,7 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master
 
 
 class FlowItem(urwid.WidgetWrap):

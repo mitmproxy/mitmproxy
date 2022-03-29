@@ -5,7 +5,6 @@ import textwrap
 from pathlib import Path
 from typing import List, Type
 
-import mitmproxy.addons.next_layer  # noqa
 from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer
 from mitmproxy.proxy.layers import http, modes, tcp, tls, websocket
