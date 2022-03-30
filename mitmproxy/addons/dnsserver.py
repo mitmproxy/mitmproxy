@@ -78,7 +78,7 @@ class DnsServer:
         )
 
     def configure(self, updated: List[str], *, force_refresh: bool = False) -> None:
-        if "mode" in updated:
+        if "dns_mode" in updated:
             mode: str = ctx.options.dns_mode
             if mode == layers.dns.DnsMode.Simple.value:
                 self.mode = layers.dns.DnsMode.Simple
