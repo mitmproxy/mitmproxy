@@ -141,12 +141,15 @@ class UdpStreamReader(asyncio.StreamReader):
         self._packets: Deque[bytes] = deque()
 
     def feed_data(self, data: bytes) -> None:
+        # ignore empty packets as reading them cannot be differentiated from EOF
+        if not data:
+            return
+
         size = len(data)
         if size > MAX_UDP_PACKET_SIZE:
             raise ValueError(f"packet of size {size} bytes exceeds limit of {MAX_UDP_PACKET_SIZE} byte")
 
         # add only a marker in the base class and queue the packet in this class
-        # NOTE empty packets will also notify any waiter which is on purpose
         super().feed_data(self.MARKER)
         self._packets.append(data)
 
