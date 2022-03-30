@@ -59,6 +59,12 @@ def test_extract(tdata):
     assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
 
+def test_extract_str():
+    tf = tflow.tflow()
+    tf.request.raw_content = b"\xFF"
+    assert cut.extract_str("request.raw_content", tf) == r"b'\xff'"
+
+
 def test_headername():
     with pytest.raises(exceptions.CommandError):
         cut.headername("header[foo.")
@@ -115,7 +121,7 @@ def test_cut_save(tmpdir):
         tctx.command(c.save, "@all", "request.method", f)
         assert qr(f).splitlines() == [b"GET", b"GET"]
         tctx.command(c.save, "@all", "request.method,request.content", f)
-        assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
+        assert qr(f).splitlines() == [b"GET,b'content'", b"GET,b'content'"]
 
 
 @pytest.mark.parametrize("exception, log_message", [
