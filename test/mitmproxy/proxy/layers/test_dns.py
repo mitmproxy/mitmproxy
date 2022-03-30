@@ -79,6 +79,33 @@ def test_simple_no_hook(tctx):
     assert not layer.flows and f().request == req and not f().response and not f().live
 
 
+def test_forward_premature_close(tctx):
+    f = Placeholder(DNSFlow)
+    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+
+    req = tdnsreq()
+
+    def check_flows(_: DNSFlow):
+        nonlocal layer
+        assert layer.flows
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, req.packed)
+        << dns.DnsRequestHook(f)
+        >> reply(side_effect=check_flows)
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, req.packed)
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+    assert not layer.flows and f().request and not f().response and not f().live
+    req.timestamp = f().request.timestamp
+    assert f().request == req
+
+
 def test_forward(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
