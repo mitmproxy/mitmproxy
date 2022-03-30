@@ -15,6 +15,8 @@
   ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
 * Add example addon for domain fronting.
   ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
+* Improve cut addon to better handle binary contents
+  ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
 
 ## 19 March 2022: mitmproxy 8.0.0
 

@@ -8,7 +8,6 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import ctx
 from mitmproxy import certs
-from mitmproxy.utils import strutils
 import mitmproxy.types
 
 import pyperclip
@@ -52,6 +51,14 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
                 return part[0].to_pem().decode("ascii")
         current = part
     return str(current or "")
+
+
+def extract_str(cut: str, f: flow.Flow) -> str:
+    ret = extract(cut, f)
+    if isinstance(ret, bytes):
+        return repr(ret)
+    else:
+        return ret
 
 
 class Cut:
@@ -110,10 +117,8 @@ class Cut:
                 with open(path, "a" if append else "w", newline='', encoding="utf8") as tfp:
                     writer = csv.writer(tfp)
                     for f in flows:
-                        vals = [extract(c, f) for c in cuts]
-                        writer.writerow(
-                            [strutils.always_str(x) or "" for x in vals]  # type: ignore
-                        )
+                        vals = [extract_str(c, f) for c in cuts]
+                        writer.writerow(vals)
                 ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
         except OSError as e:
             ctx.log.error(str(e))
@@ -132,16 +137,14 @@ class Cut:
         v: typing.Union[str, bytes]
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
-            v = extract(cuts[0], flows[0])
-            fp.write(strutils.always_str(v))  # type: ignore
+            v = extract_str(cuts[0], flows[0])
+            fp.write(v)
             ctx.log.alert("Clipped single cut.")
         else:
             writer = csv.writer(fp)
             for f in flows:
-                vals = [extract(c, f) for c in cuts]
-                writer.writerow(
-                    [strutils.always_str(v) for v in vals]
-                )
+                vals = [extract_str(c, f) for c in cuts]
+                writer.writerow(vals)
             ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
         try:
             pyperclip.copy(fp.getvalue())
