@@ -335,6 +335,56 @@ class TestMatchingHTTPFlow:
         assert self.q("~meta \"'key': 'value'\"", f)
 
 
+class TestMatchingDNSFlow:
+
+    def req(self):
+        return tflow.tdnsflow()
+
+    def resp(self):
+        return tflow.tdnsflow(resp=True)
+
+    def err(self):
+        return tflow.tdnsflow(err=True)
+
+    def q(self, q, o):
+        return flowfilter.parse(q)(o)
+
+    def test_dns(self):
+        s = self.req()
+        assert self.q("~dns", s)
+        assert not self.q("~http", s)
+        assert not self.q("~tcp", s)
+
+    def test_freq_fresp(self):
+        q = self.req()
+        s = self.resp()
+
+        assert self.q("~q", q)
+        assert not self.q("~q", s)
+
+        assert not self.q("~s", q)
+        assert self.q("~s", s)
+
+    def test_ferr(self):
+        e = self.err()
+        assert self.q("~e", e)
+
+    def test_body(self):
+        q = self.req()
+        s = self.resp()
+        assert not self.q("~b nonexistent", q)
+        assert self.q("~b dns.google", q)
+        assert self.q("~b 8.8.8.8", s)
+
+        assert not self.q("~bq 8.8.8.8", s)
+        assert self.q("~bq dns.google", q)
+        assert self.q("~bq dns.google", s)
+
+        assert not self.q("~bs dns.google", q)
+        assert self.q("~bs dns.google", s)
+        assert self.q("~bs 8.8.8.8", s)
+
+
 class TestMatchingTCPFlow:
 
     def flow(self):
