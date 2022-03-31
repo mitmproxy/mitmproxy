@@ -8,7 +8,7 @@ import socket
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
 
@@ -22,52 +22,60 @@ class SerializableIntEnum(enum.IntEnum):
         return str(self.value)
 
 
+class CustomValueSerializableIntEnum(SerializableIntEnum):
+
+    @classmethod
+    def _missing_(cls, value: object) -> Any:
+        assert isinstance(value, int)
+        obj = int.__new__(cls, value)
+        obj._value_ = value
+        obj._name_ = str(value)
+        return obj
+
+
 class ResponseCode(SerializableIntEnum):
-    NOERROR = 0
+
+    _http_equiv: int
+
+    def __new__(cls, value: int, http_equiv: Optional[int] = None) -> ResponseCode:
+        # we need this to make mypy happy
+        assert http_equiv is not None
+        obj = int.__new__(cls, value)
+        obj._value_ = value
+        obj._http_equiv = http_equiv
+        return obj
+
+    NOERROR = (0, 200)  # OK
     """No Error [RFC1035]"""
-    FORMERR = 1
+    FORMERR = (1, 400)  # Bad Request
     """Format Error [RFC1035]"""
-    SERVFAIL = 2
+    SERVFAIL = (2, 500)  # Internal Server Error
     """Server Failure [RFC1035]"""
-    NXDOMAIN = 3
+    NXDOMAIN = (3, 404)  # Not Found
     """Non-Existent Domain [RFC1035]"""
-    NOTIMP = 4
+    NOTIMP = (4, 501)  # Not Implemented
     """Not Implemented [RFC1035]"""
-    REFUSED = 5
+    REFUSED = (5, 403)  # Forbidden
     """Query Refused [RFC1035]"""
-    YXDOMAIN = 6
+    YXDOMAIN = (6, 409)  # Conflict
     """Name Exists when it should not [RFC2136 RFC6672]"""
-    YXRRSET = 7
+    YXRRSET = (7, 409)  # Conflict
     """RR Set Exists when it should not [RFC2136]"""
-    NXRRSET = 8
+    NXRRSET = (8, 410)  # Gone
     """RR Set that should exist does not [RFC2136]"""
-    NOTAUTH = 9
+    NOTAUTH = (9, 401)  # Unauthorized
     """Server Not Authoritative for zone [RFC2136] | Not Authorized [RFC8945]"""
-    NOTZONE = 10
+    NOTZONE = (10, 404)  # Not Found
     """Name not contained in zone [RFC2136]"""
-    DSOTYPENI = 11
+    DSOTYPENI = (11, 501)  # Not Implemented
     """DSO-TYPE Not Implemented [RFC8490]"""
 
     @property
     def http_equiv_status_code(self) -> int:
-        def raiseassert() -> int:
-            raise AssertionError(f"No HTTP equivalent status code defined for '{self.name}'.")
-
-        return (
-            200 if self is ResponseCode.NOERROR else
-            400 if self is ResponseCode.FORMERR else  # Bad Request
-            401 if self is ResponseCode.NOTAUTH else  # Unauthorized
-            403 if self is ResponseCode.REFUSED else  # Forbidden
-            404 if self is ResponseCode.NXDOMAIN else  # Not Found
-            409 if self in (ResponseCode.YXRRSET, ResponseCode.NXRRSET) else  # Conflict
-            410 if self is ResponseCode.NXRRSET else  # Gone
-            500 if self is ResponseCode.SERVFAIL else  # Internal Server Error
-            501 if self in (ResponseCode.NOTIMP, ResponseCode.DSOTYPENI) else  # Not Implemented
-            raiseassert()
-        )
+        return self._http_equiv
 
 
-class Type(SerializableIntEnum):
+class Type(CustomValueSerializableIntEnum):
     A = 1
     """a host address [RFC1035]"""
     NS = 2
@@ -248,7 +256,7 @@ class Type(SerializableIntEnum):
     """DNSSEC Lookaside Validation (OBSOLETE) [RFC8749 RFC4431]"""
 
 
-class Class(SerializableIntEnum):
+class Class(CustomValueSerializableIntEnum):
     IN = 1
     """Internet [RFC1035]"""
     CH = 3
@@ -279,14 +287,14 @@ class OpCode(SerializableIntEnum):
 class BypassInitStateObject(stateobject.StateObject):
     @classmethod
     def from_state(cls, state):
-        obj = cls.__new__(cls)  # `cls(**state)`` won't work recursively
+        obj = cls.__new__(cls)  # `cls(**state)` won't work recursively
         obj.set_state(state)
         return obj
 
 
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
-    def __init__(self, response_code: ResponseCode):
+    def __init__(self, response_code: ResponseCode) -> None:
         assert response_code is not ResponseCode.NOERROR
         self.response_code = response_code
 
