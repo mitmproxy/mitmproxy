@@ -80,7 +80,7 @@ setup(
         "ldap3>=2.8,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.14,<3.20",
+        "protobuf>=3.20,<3.21",
         "pyOpenSSL>=21.0,<22.1",
         "pyparsing>=2.4.2,<3.1",
         "pyperclip>=1.6.0,<1.9",
