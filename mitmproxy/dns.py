@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 from dataclasses import dataclass
 import enum
 import ipaddress
@@ -8,9 +9,10 @@ import socket
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Coroutine, Iterable, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
+from mitmproxy.net.dns import domain_names
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
@@ -314,13 +316,14 @@ class Question(BypassInitStateObject):
     def __str__(self) -> str:
         return self.name
 
-    def _resolve_by_name(
+    async def _resolve_by_name(
         self,
+        loop: asyncio.AbstractEventLoop,
         family: socket.AddressFamily,
         ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
-    ) -> Generator[ResourceRecord, None, None]:
+    ) -> Iterable[ResourceRecord]:
         try:
-            addrinfos = socket.getaddrinfo(host=self.name, port=0, family=family)
+            addrinfos = await loop.getaddrinfo(host=self.name, port=0, family=family)
         except socket.gaierror as e:
             if e.errno == socket.EAI_NODATA:
                 raise ResolveError(ResponseCode.NXDOMAIN)
@@ -328,54 +331,60 @@ class Question(BypassInitStateObject):
                 # NOTE might fail on Windows for IPv6 queries:
                 # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
                 raise ResolveError(ResponseCode.SERVFAIL)
-        for addrinfo in addrinfos:
-            _, _, _, _, addr = addrinfo
-            yield ResourceRecord(
-                name=self.name,
-                type=self.type,
-                class_=self.class_,
-                ttl=ResourceRecord.DEFAULT_TTL,
-                data=ip(addr[0]).packed,
-            )
+        return map(lambda addrinfo: ResourceRecord(
+            name=self.name,
+            type=self.type,
+            class_=self.class_,
+            ttl=ResourceRecord.DEFAULT_TTL,
+            data=ip(addrinfo[5][0]).packed,
+        ), addrinfos)
 
-    def _resolve_by_addr(
+    async def _resolve_by_addr(
         self,
+        loop: asyncio.AbstractEventLoop,
         suffix: str,
-        ip: Callable[[List[str]], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]
-    ) -> ResourceRecord:
+        sockaddr: Callable[[List[str]], Union[Tuple[str, int], Tuple[str, int, int, int]]]
+    ) -> Iterable[ResourceRecord]:
         try:
-            addr = ip(self.name[:-len(suffix)].split(".")[::-1])
+            addr = sockaddr(self.name[:-len(suffix)].split(".")[::-1])
         except ValueError:
             raise ResolveError(ResponseCode.FORMERR)
         try:
-            name, _, _ = socket.gethostbyaddr(str(addr))
+            name, _ = await loop.getnameinfo(addr, flags=socket.NI_NAMEREQD)
         except socket.herror:
             raise ResolveError(ResponseCode.NXDOMAIN)
         except socket.gaierror:
             raise ResolveError(ResponseCode.SERVFAIL)
-        return ResourceRecord(
+        return [ResourceRecord(
             name=self.name,
             type=self.type,
             class_=self.class_,
             ttl=ResourceRecord.DEFAULT_TTL,
             data=ResourceRecord.pack_domain_name(name),
-        )
+        )]
 
-    def resolve(self) -> Generator[ResourceRecord, None, None]:
+    def resolve(self) -> Coroutine[Any, Any, Iterable[ResourceRecord]]:
         """Resolve the question into resource record(s), throwing ResolveError if an error condition occurs."""
 
+        loop = asyncio.get_running_loop()
         if self.class_ is not Class.IN:
             raise ResolveError(ResponseCode.NOTIMP)
         if self.type is Type.A:
-            yield from self._resolve_by_name(socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
+            return self._resolve_by_name(loop, socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
         elif self.type is Type.AAAA:
-            yield from self._resolve_by_name(socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
+            return self._resolve_by_name(loop, socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
         elif self.type is Type.PTR:
             name_lower = self.name.lower()
             if name_lower.endswith(Question.IP4_PTR_SUFFIX):
-                yield self._resolve_by_addr(Question.IP4_PTR_SUFFIX, lambda x: ipaddress.IPv4Address(".".join(x)))
+                return self._resolve_by_addr(
+                    Question.IP4_PTR_SUFFIX,
+                    lambda x: (str(ipaddress.IPv4Address(".".join(x)), 0))
+                )
             elif name_lower.endswith(Question.IP6_PTR_SUFFIX):
-                yield self._resolve_by_addr(Question.IP6_PTR_SUFFIX, lambda x: ipaddress.IPv6Address(bytes.fromhex("".join(x))))
+                return self._resolve_by_addr(
+                    Question.IP6_PTR_SUFFIX,
+                    lambda x: (str(ipaddress.IPv6Address(bytes.fromhex("".join(x)))), 0, 0, 0)
+                )
             else:
                 raise ResolveError(ResponseCode.FORMERR)
         else:
@@ -384,8 +393,7 @@ class Question(BypassInitStateObject):
 
 @dataclass
 class ResourceRecord(BypassInitStateObject):
-    # since preferable every query should go through mitmproxy, keep the TTL as low as possible
-    DEFAULT_TTL = 1
+    DEFAULT_TTL = 60
     HEADER = struct.Struct("!HHIH")
 
     name: str
@@ -397,62 +405,51 @@ class ResourceRecord(BypassInitStateObject):
     _stateobject_attributes = dict(name=str, type=Type, class_=Class, ttl=int, data=bytes)
 
     def __str__(self) -> str:
-        value = (
-            str(self.ipv4_address) if self.type is Type.A and self.ipv4_address is not None
-            else
-            str(self.ipv6_address) if self.type is Type.AAAA and self.ipv6_address is not None
-            else
-            self.domain_name if self.type in [Type.NS, Type.CNAME, Type.PTR]
-            else
-            self.text if self.type in [Type.TXT]
-            else
-            None
-        )
-        return self.data.hex() if value is None else value
+        try:
+            if self.type is Type.A and self.ipv4_address is not None:
+                return str(self.ipv4_address)
+            if self.type is Type.AAAA and self.ipv6_address is not None:
+                return str(self.ipv6_address)
+            if self.type in [Type.NS, Type.CNAME, Type.PTR]:
+                return self.domain_name
+            if self.type is Type.TXT:
+                return self.text
+        except:
+            return f"(invalid {self.type.name} data)"
+        else:
+            return self.data.hex()
 
     @property
-    def text(self) -> Optional[str]:
-        try:
-            return self.data.decode("utf-8")
-        except UnicodeDecodeError:
-            return None
+    def text(self) -> str:
+        return self.data.decode("utf-8")
 
     @text.setter
     def text(self, value: str) -> None:
         self.data = value.encode("utf-8")
 
     @property
-    def ipv4_address(self) -> Optional[IPv4Address]:
-        try:
-            return IPv4Address(self.data)
-        except ValueError:
-            return None
+    def ipv4_address(self) -> IPv4Address:
+        return IPv4Address(self.data)
 
     @ipv4_address.setter
     def ipv4_address(self, ip: IPv4Address) -> None:
         self.data = ip.packed
 
     @property
-    def ipv6_address(self) -> Optional[IPv6Address]:
-        try:
-            return IPv6Address(self.data)
-        except ValueError:
-            return None
+    def ipv6_address(self) -> IPv6Address:
+        return IPv6Address(self.data)
 
     @ipv6_address.setter
     def ipv6_address(self, ip: IPv6Address) -> None:
         self.data = ip.packed
 
     @property
-    def domain_name(self) -> Optional[str]:
-        try:
-            return ResourceRecord.unpack_domain_name(self.data)
-        except struct.error:
-            return None
+    def domain_name(self) -> str:
+        return domain_names.unpack(self.data)
 
     @domain_name.setter
     def domain_name(self, name: str) -> None:
-        self.data = ResourceRecord.pack_domain_name(name)
+        self.data = domain_names.pack(name)
 
     def to_json(self) -> dict:
         """
@@ -468,77 +465,30 @@ class ResourceRecord(BypassInitStateObject):
         }
 
     @classmethod
-    def pack_domain_name(cls, name: str) -> bytes:
-        """Converts a domain name into RDATA without pointer compression."""
-        buffer = bytearray()
-        if len(name) > 0:
-            for part in name.split("."):
-                label = part.encode("idna")
-                size = len(label)
-                if size == 0:
-                    raise ValueError(f"domain name '{name}' contains empty labels")
-                if size >= 64:
-                    raise ValueError(f"encoded label '{part}' of domain name '{name}' is too long ({size} bytes)")
-                buffer.extend(Message.LABEL_SIZE.pack(size))
-                buffer.extend(label)
-        buffer.extend(Message.LABEL_SIZE.pack(0))
-        return bytes(buffer)
-
-    @classmethod
-    def unpack_domain_name(cls, buffer: bytes) -> str:
-        offset = 0
-        labels = []
-        while True:
-            size, = Message.LABEL_SIZE.unpack_from(buffer, offset)
-            if size & Message.POINTER_INDICATOR == Message.POINTER_INDICATOR:
-                raise struct.error(f"unpack encountered a pointer which is not supported in RDATA")
-            elif size >= 64:
-                raise struct.error(f"unpack encountered a label of length {size}")
-            elif size == 0:
-                offset += Message.LABEL_SIZE.size
-                break
-            else:
-                offset += Message.LABEL_SIZE.size
-                end_label = offset + size
-                if len(buffer) < end_label:
-                    raise struct.error(f"unpack requires a label buffer of {size} bytes")
-                try:
-                    labels.append(buffer[offset:end_label].decode("idna"))
-                except UnicodeDecodeError:
-                    raise struct.error(f"unpack encountered a illegal characters at offset {offset}")
-                offset += size
-        if offset != len(buffer):
-            raise struct.error(f"unpack requires a buffer of {offset} bytes")
-        return ".".join(labels)
-
-    @classmethod
     def A(cls, name: str, ip: IPv4Address, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create an IPv4 resource record."""
-        return ResourceRecord(name, Type.A, Class.IN, ttl, ip.packed)
+        return cls(name, Type.A, Class.IN, ttl, ip.packed)
 
     @classmethod
     def AAAA(cls, name: str, ip: IPv6Address, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create an IPv6 resource record."""
-        return ResourceRecord(name, Type.AAAA, Class.IN, ttl, ip.packed)
+        return cls(name, Type.AAAA, Class.IN, ttl, ip.packed)
 
     @classmethod
     def CNAME(cls, alias: str, canonical: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
-        return ResourceRecord(alias, Type.CNAME, Class.IN, ttl, ResourceRecord.pack_domain_name(canonical))
+        return cls(alias, Type.CNAME, Class.IN, ttl, domain_names.pack(canonical))
 
     @classmethod
     def PTR(cls, inaddr: str, ptr: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
-        return ResourceRecord(inaddr, Type.PTR, Class.IN, ttl, ResourceRecord.pack_domain_name(ptr))
+        return cls(inaddr, Type.PTR, Class.IN, ttl, domain_names.pack(ptr))
 
 
 # comments are taken from rfc1035
 @dataclass
 class Message(BypassInitStateObject):
     HEADER = struct.Struct("!HHHHHH")
-    LABEL_SIZE = struct.Struct("!B")
-    POINTER_OFFSET = struct.Struct("!H")
-    POINTER_INDICATOR = 0b11000000
 
     timestamp: float
     """The time at which the message was sent or received."""
@@ -649,14 +599,14 @@ class Message(BypassInitStateObject):
             additionals=[],
         )
 
-    def resolve(self) -> Message:
+    async def resolve(self) -> Message:
         """Resolves the message and return the result in form of a response message."""
         try:
             if not self.query:
                 raise ResolveError(ResponseCode.REFUSED)  # we cannot resolve an answer
             if self.op_code is not OpCode.QUERY:
                 raise ResolveError(ResponseCode.NOTIMP)  # inverse queries and others are not supported
-            rrs = [rr for rrs in map(lambda q: q.resolve(), self.questions) for rr in rrs]
+            rrs = [rr for rrs in (await q.resolve() for q in self.questions) for rr in rrs]
         except ResolveError as e:
             return self.fail(e.response_code)
         else:
@@ -694,52 +644,11 @@ class Message(BypassInitStateObject):
         except ValueError as e:
             raise struct.error(str(e))
         offset += Message.HEADER.size
-        cached_names: Dict[int, Optional[Tuple[str, int]]] = dict()
+        cached_names = domain_names.cache()
 
         def unpack_domain_name() -> str:
-            nonlocal buffer, offset
-
-            def unpack_domain_name_internal(offset: int) -> Tuple[str, int]:
-                nonlocal cached_names, buffer
-
-                if offset in cached_names:
-                    result = cached_names[offset]
-                    if result is None:
-                        raise struct.error(f"unpack encountered domain name loop")
-                else:
-                    cached_names[offset] = None  # this will indicate that the offset is being unpacked
-                    orig_offset = offset
-                    labels = []
-                    length = 0
-                    while True:
-                        size, = Message.LABEL_SIZE.unpack_from(buffer, offset)
-                        if size & Message.POINTER_INDICATOR == Message.POINTER_INDICATOR:
-                            pointer, = Message.POINTER_OFFSET.unpack_from(buffer, offset)
-                            length += Message.POINTER_OFFSET.size
-                            label, _ = unpack_domain_name_internal(pointer & ~(Message.POINTER_INDICATOR << 8))
-                            labels.append(label)
-                            break
-                        elif size >= 64:
-                            raise struct.error(f"unpack encountered a label of length {size}")
-                        elif size == 0:
-                            length += Message.LABEL_SIZE.size
-                            break
-                        else:
-                            offset += Message.LABEL_SIZE.size
-                            end_label = offset + size
-                            if len(buffer) < end_label:
-                                raise struct.error(f"unpack requires a label buffer of {size} bytes")
-                            try:
-                                labels.append(buffer[offset:end_label].decode("idna"))
-                            except UnicodeDecodeError:
-                                raise struct.error(f"unpack encountered a illegal characters at offset {offset}")
-                            offset += size
-                            length += Message.LABEL_SIZE.size + size
-                    result = ".".join(labels), length
-                    cached_names[orig_offset] = result
-                return result
-
-            name, length = unpack_domain_name_internal(offset)
+            nonlocal buffer, offset, cached_names
+            name, length = domain_names.unpack_from_with_compression(buffer, offset, cached_names)
             offset += length
             return name
 
@@ -812,10 +721,10 @@ class Message(BypassInitStateObject):
         ))
         # TODO implement compression
         for question in self.questions:
-            data.extend(ResourceRecord.pack_domain_name(question.name))
+            data.extend(domain_names.pack(question.name))
             data.extend(Question.HEADER.pack(question.type.value, question.class_.value))
         for rr in [*self.answers, *self.authorities, *self.additionals]:
-            data.extend(ResourceRecord.pack_domain_name(rr.name))
+            data.extend(domain_names.pack(rr.name))
             data.extend(ResourceRecord.HEADER.pack(rr.type.value, rr.class_.value, rr.ttl, len(rr.data)))
             data.extend(rr.data)
         return bytes(data)

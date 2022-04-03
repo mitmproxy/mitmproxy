@@ -159,7 +159,7 @@ class DnsServer:
         if self_connect:
             ctx.server.error = "Stopped mitmproxy from recursively connecting to itself."
 
-    def dns_request(self, flow: dns.DNSFlow) -> None:
+    async def dns_request(self, flow: dns.DNSFlow) -> None:
         # handle simple requests here to not block the layer
         if self.mode is layers.dns.DnsMode.Simple:
-            flow.response = flow.request.resolve()
+            flow.response = await flow.request.resolve()
