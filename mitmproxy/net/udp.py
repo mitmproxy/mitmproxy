@@ -295,7 +295,7 @@ async def start_server(
 ) -> base_events.Server:
     """UDP variant of asyncio.start_server."""
 
-    loop = asyncio.events.get_event_loop()
+    loop = asyncio.events.get_running_loop()
     family, addr = await _resolve_addr(loop, host, port)
     sock = socket.socket(family=family, type=socket.SocketKind.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
     try:
