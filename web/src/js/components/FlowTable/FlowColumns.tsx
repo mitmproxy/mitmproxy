@@ -113,30 +113,26 @@ method.headerName = 'Method'
 method.sortKey = flow => {
     switch (flow.type) {
         case "http": return flow.websocket ? (flow.client_conn.tls_established ? "WSS" : "WS") : flow.request.method
-        case "dns": return flow.request.opCode
+        case "dns": return flow.request.op_code
         default: return flow.type.toUpperCase()
     }
 }
 
 export const status: FlowColumn = ({flow}) => {
-    let color = 'darkred';
-    let httpStatusCode =
-        flow.type === "http" ? flow.response?.status_code :
-        flow.type === "dns" ? flow.response?.responseCodeHttpEquiv :
-        undefined
+    let color = 'darkred'
 
-    if (httpStatusCode == undefined)
+    if ((flow.type !== "http" && flow.type != "dns") || !flow.response)
         return <td className="col-status"/>
 
-    if (100 <= httpStatusCode && httpStatusCode < 200) {
+    if (100 <= flow.response.status_code && flow.response.status_code < 200) {
         color = 'green'
-    } else if (200 <= httpStatusCode && httpStatusCode < 300) {
+    } else if (200 <= flow.response.status_code && flow.response.status_code < 300) {
         color = 'darkgreen'
-    } else if (300 <= httpStatusCode && httpStatusCode < 400) {
+    } else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
         color = 'lightblue'
-    } else if (400 <= httpStatusCode && httpStatusCode < 500) {
+    } else if (400 <= flow.response.status_code && flow.response.status_code < 500) {
         color = 'red'
-    } else if (500 <= httpStatusCode && httpStatusCode < 600) {
+    } else if (500 <= flow.response.status_code && flow.response.status_code < 600) {
         color = 'red'
     }
 
@@ -148,7 +144,7 @@ status.headerName = 'Status'
 status.sortKey = flow => {
     switch (flow.type) {
         case "http": return flow.response?.status_code
-        case "dns": return flow.response?.responseCode
+        case "dns": return flow.response?.response_code
         default: return undefined
     }
 }

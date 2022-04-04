@@ -116,6 +116,12 @@ export interface WebSocketData {
     timestamp_end?: number
 }
 
+export interface DNSQuestion {
+    name: string
+    type: string
+    class: string
+}
+
 export interface DNSResourceRecord {
     name: string
     type: string
@@ -127,18 +133,14 @@ export interface DNSResourceRecord {
 export interface DNSMessage {
     id: number
     query: boolean
-    opCode: string
-    authoritativeAnswer: boolean
+    op_code: string
+    authoritative_answer: boolean
     truncation: boolean
-    recursionDesired: boolean
-    recursionAvailable: boolean
-    responseCode: string
-    responseCodeHttpEquiv: number
-    questions: {
-        name: string
-        type: string
-        class: string
-    }[]
+    recursion_desired: boolean
+    recursion_available: boolean
+    response_code: string
+    status_code: number
+    questions: DNSQuestion[]
     answers: DNSResourceRecord[]
     authorities: DNSResourceRecord[]
     additionals: DNSResourceRecord[]

@@ -18,10 +18,10 @@ class TestResourceRecord:
         assert str(dns.ResourceRecord.CNAME("test", "some.other.host")) == "some.other.host"
         assert str(dns.ResourceRecord.PTR("test", "some.other.host")) == "some.other.host"
         assert str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
-        assert str(dns.ResourceRecord("test", dns.Type.A, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'')) == "(invalid A data)"
+        assert str(dns.ResourceRecord("test", dns.Type.A, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'')) == "0x (invalid A data)"
         assert str(
             dns.ResourceRecord("test", dns.Type.SOA, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'\x00\x01\x02\x03')
-        ) == "00010203"
+        ) == "0x00010203"
 
     def test_setter(self):
         rr = dns.ResourceRecord("test", dns.Type.ANY, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'')
@@ -58,7 +58,7 @@ class TestQuestion:
             dns.Question("dns.google", dns.Type.A, dns.Class.IN),
             lambda rr: rr.ipv4_address == ipaddress.IPv4Address("8.8.8.8")
         )
-        if platform.system() != "Windows":
+        if platform.system() == "Linux":  # will fail on Windows, apparently returns empty on Mac
             await succeed_with(
                 dns.Question("dns.google", dns.Type.AAAA, dns.Class.IN),
                 lambda rr: rr.ipv6_address == ipaddress.IPv6Address("2001:4860:4860::8888")

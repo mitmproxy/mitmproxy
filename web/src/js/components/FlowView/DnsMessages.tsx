@@ -7,7 +7,7 @@ const Summary: React.FC<{
     message: DNSMessage
 }> = ({message}) => (
     <div>
-        {message.query ? message.opCode : message.responseCode}
+        {message.query ? message.op_code : message.response_code}
         &nbsp;
         #{message.id}
         &nbsp;
@@ -19,7 +19,7 @@ const Questions: React.FC<{
     message: DNSMessage
 }> = ({message}) => (
     <table>
-        <caption>{message.recursionDesired ? "Recursive " : ""}Question</caption>
+        <caption>{message.recursion_desired ? "Recursive " : ""}Question</caption>
         <thead>
             <tr>
                 <th>Name</th>
@@ -78,7 +78,7 @@ const Message: React.FC<{
         </div>
         <Questions message={message} />
         <hr/>
-        <ResourceRecords name={`${message.authoritativeAnswer ? "Authoritative " : ""}${message.recursionAvailable ? "Recursive " : ""}Answer`} values={message.answers} />
+        <ResourceRecords name={`${message.authoritative_answer ? "Authoritative " : ""}${message.recursion_available ? "Recursive " : ""}Answer`} values={message.answers} />
         <hr/>
         <ResourceRecords name="Authority" values={message.authorities} />
         <hr/>

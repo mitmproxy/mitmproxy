@@ -390,6 +390,17 @@ class Question(BypassInitStateObject):
         else:
             raise ResolveError(ResponseCode.NOTIMP)
 
+    def to_json(self) -> dict:
+        """
+        Converts the question into json for mitmweb.
+        Sync with web/src/flow.ts.
+        """
+        return {
+            "name": self.name,
+            "type": self.type.name,
+            "class": self.class_.name,
+        }
+
 
 @dataclass
 class ResourceRecord(BypassInitStateObject):
@@ -415,8 +426,8 @@ class ResourceRecord(BypassInitStateObject):
             if self.type is Type.TXT:
                 return self.text
         except:
-            return f"(invalid {self.type.name} data)"
-        return self.data.hex()
+            return f"0x{self.data.hex()} (invalid {self.type.name} data)"
+        return f"0x{self.data.hex()}"
 
     @property
     def text(self) -> str:
@@ -452,7 +463,7 @@ class ResourceRecord(BypassInitStateObject):
 
     def to_json(self) -> dict:
         """
-        Converts the resource record into json for the mitmweb.
+        Converts the resource record into json for mitmweb.
         Sync with web/src/flow.ts.
         """
         return {
@@ -737,24 +748,20 @@ class Message(BypassInitStateObject):
 
     def to_json(self) -> dict:
         """
-        Converts the message into json for the mitmweb.
+        Converts the message into json for mitmweb.
         Sync with web/src/flow.ts.
         """
         return {
             "id": self.id,
             "query": self.query,
-            "opCode": self.op_code.name,
-            "authoritativeAnswer": self.authoritative_answer,
+            "op_code": self.op_code.name,
+            "authoritative_answer": self.authoritative_answer,
             "truncation": self.truncation,
-            "recursionDesired": self.recursion_desired,
-            "recursionAvailable": self.recursion_available,
-            "responseCode": self.response_code.name,
-            "responseCodeHttpEquiv": self.response_code.http_equiv_status_code,
-            "questions": [{
-                "name": question.name,
-                "type": question.type.name,
-                "class": question.class_.name,
-            } for question in self.questions],
+            "recursion_desired": self.recursion_desired,
+            "recursion_available": self.recursion_available,
+            "response_code": self.response_code.name,
+            "status_code": self.response_code.http_equiv_status_code,
+            "questions": [question.to_json() for question in self.questions],
             "answers": [rr.to_json() for rr in self.answers],
             "authorities": [rr.to_json() for rr in self.authorities],
             "additionals": [rr.to_json() for rr in self.additionals],
