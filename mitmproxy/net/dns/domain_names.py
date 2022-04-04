@@ -60,7 +60,7 @@ def unpack_from_with_compression(buffer: bytes, offset: int, cache: Cache) -> Tu
 
 def unpack_from(buffer: bytes, offset: int) -> Tuple[str, int]:
     """Converts RDATA into a domain name without pointer compression from a given offset and also returns the binary size."""
-    labels = []
+    labels: List[str] = []
     while True:
         size, = _LABEL_SIZE.unpack_from(buffer, offset)
         if size & _POINTER_INDICATOR == _POINTER_INDICATOR:

@@ -336,7 +336,7 @@ class Question(BypassInitStateObject):
             type=self.type,
             class_=self.class_,
             ttl=ResourceRecord.DEFAULT_TTL,
-            data=ip(addrinfo[5][0]).packed,
+            data=ip(addrinfo[4][0]).packed,
         ), addrinfos)
 
     async def _resolve_by_addr(
@@ -351,16 +351,14 @@ class Question(BypassInitStateObject):
             raise ResolveError(ResponseCode.FORMERR)
         try:
             name, _ = await loop.getnameinfo(addr, flags=socket.NI_NAMEREQD)
-        except socket.herror:
-            raise ResolveError(ResponseCode.NXDOMAIN)
-        except socket.gaierror:
-            raise ResolveError(ResponseCode.SERVFAIL)
+        except socket.gaierror as e:
+            raise ResolveError(ResponseCode.NXDOMAIN if e.errno == socket.EAI_NODATA else ResponseCode.SERVFAIL)
         return [ResourceRecord(
             name=self.name,
             type=self.type,
             class_=self.class_,
             ttl=ResourceRecord.DEFAULT_TTL,
-            data=ResourceRecord.pack_domain_name(name),
+            data=domain_names.pack(name),
         )]
 
     def resolve(self) -> Coroutine[Any, Any, Iterable[ResourceRecord]]:
@@ -377,13 +375,15 @@ class Question(BypassInitStateObject):
             name_lower = self.name.lower()
             if name_lower.endswith(Question.IP4_PTR_SUFFIX):
                 return self._resolve_by_addr(
-                    Question.IP4_PTR_SUFFIX,
-                    lambda x: (str(ipaddress.IPv4Address(".".join(x)), 0))
+                    loop=loop,
+                    suffix=Question.IP4_PTR_SUFFIX,
+                    sockaddr=lambda x: (str(ipaddress.IPv4Address(".".join(x))), 0)
                 )
             elif name_lower.endswith(Question.IP6_PTR_SUFFIX):
                 return self._resolve_by_addr(
-                    Question.IP6_PTR_SUFFIX,
-                    lambda x: (str(ipaddress.IPv6Address(bytes.fromhex("".join(x)))), 0, 0, 0)
+                    loop=loop,
+                    suffix=Question.IP6_PTR_SUFFIX,
+                    sockaddr=lambda x: (str(ipaddress.IPv6Address(bytes.fromhex("".join(x)))), 0, 0, 0)
                 )
             else:
                 raise ResolveError(ResponseCode.FORMERR)
@@ -406,9 +406,9 @@ class ResourceRecord(BypassInitStateObject):
 
     def __str__(self) -> str:
         try:
-            if self.type is Type.A and self.ipv4_address is not None:
+            if self.type is Type.A:
                 return str(self.ipv4_address)
-            if self.type is Type.AAAA and self.ipv6_address is not None:
+            if self.type is Type.AAAA:
                 return str(self.ipv6_address)
             if self.type in [Type.NS, Type.CNAME, Type.PTR]:
                 return self.domain_name
@@ -416,8 +416,7 @@ class ResourceRecord(BypassInitStateObject):
                 return self.text
         except:
             return f"(invalid {self.type.name} data)"
-        else:
-            return self.data.hex()
+        return self.data.hex()
 
     @property
     def text(self) -> str:
@@ -483,6 +482,11 @@ class ResourceRecord(BypassInitStateObject):
     def PTR(cls, inaddr: str, ptr: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a canonical internet name resource record."""
         return cls(inaddr, Type.PTR, Class.IN, ttl, domain_names.pack(ptr))
+
+    @classmethod
+    def TXT(cls, name: str, text: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
+        """Create a textual resource record."""
+        return cls(name, Type.TXT, Class.IN, ttl, text.encode("utf-8"))
 
 
 # comments are taken from rfc1035
@@ -606,7 +610,9 @@ class Message(BypassInitStateObject):
                 raise ResolveError(ResponseCode.REFUSED)  # we cannot resolve an answer
             if self.op_code is not OpCode.QUERY:
                 raise ResolveError(ResponseCode.NOTIMP)  # inverse queries and others are not supported
-            rrs = [rr for rrs in (await q.resolve() for q in self.questions) for rr in rrs]
+            rrs: List[ResourceRecord] = []
+            for q in self.questions:
+                rrs.extend(await q.resolve())
         except ResolveError as e:
             return self.fail(e.response_code)
         else:
@@ -692,7 +698,7 @@ class Message(BypassInitStateObject):
     @property
     def packed(self) -> bytes:
         """Converts the message into network bytes."""
-        if self.id < 0 or self.id > 65536:
+        if self.id < 0 or self.id > 65535:
             raise ValueError(f"DNS message ID {self.id} is out of bound.")
         flags = 0
         if not self.query:
