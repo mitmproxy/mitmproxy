@@ -325,7 +325,7 @@ class Question(BypassInitStateObject):
         try:
             addrinfos = await loop.getaddrinfo(host=self.name, port=0, family=family)
         except socket.gaierror as e:
-            if e.errno == socket.EAI_NODATA:
+            if e.errno == socket.EAI_NONAME:
                 raise ResolveError(ResponseCode.NXDOMAIN)
             else:
                 # NOTE might fail on Windows for IPv6 queries:
@@ -352,7 +352,7 @@ class Question(BypassInitStateObject):
         try:
             name, _ = await loop.getnameinfo(addr, flags=socket.NI_NAMEREQD)
         except socket.gaierror as e:
-            raise ResolveError(ResponseCode.NXDOMAIN if e.errno == socket.EAI_NODATA else ResponseCode.SERVFAIL)
+            raise ResolveError(ResponseCode.NXDOMAIN if e.errno == socket.EAI_NONAME else ResponseCode.SERVFAIL)
         return [ResourceRecord(
             name=self.name,
             type=self.type,
