@@ -89,7 +89,8 @@ def pack(name: str) -> bytes:
             size = len(label)
             if size == 0:
                 raise ValueError(f"domain name '{name}' contains empty labels")
-            if size >= 64:
+            if size >= 64:  # pragma: no cover
+                # encoding with 'idna' will already have raised an exception earlier
                 raise ValueError(f"encoded label '{part}' of domain name '{name}' is too long ({size} bytes)")
             buffer.extend(_LABEL_SIZE.pack(size))
             buffer.extend(label)
