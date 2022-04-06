@@ -18,6 +18,8 @@
   ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 * Improve cut addon to better handle binary contents
   ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
+* Fix text truncation for full-width characters 
+  ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 
 ## 19 March 2022: mitmproxy 8.0.0
 

@@ -36,3 +36,10 @@ def test_format_keyvals():
             ("aa", wrapped)
         ]
     )
+
+
+def test_truncated_text():
+    half_width_text = common.TruncatedText("Half-width", [])
+    full_width_text = common.TruncatedText("ＦＵＬＬ－ＷＩＤＴＨ", [])
+    assert half_width_text.render((10,))
+    assert full_width_text.render((10,))
