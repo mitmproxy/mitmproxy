@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Replayed flows retain their current position in the flow list.
+  ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Console Performance Improvements
   ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
 * Add flatpak support to the browser addon

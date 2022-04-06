@@ -145,6 +145,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "timestamp_created": 946681200,
         "type": "http",
         "websocket": {
             "close_code": 1000,
@@ -221,6 +222,7 @@ export function TTCPFlow(): Required<TCPFlow> {
             "tls_established": true,
             "tls_version": "TLSv1.2"
         },
+        "timestamp_created": 946681200,
         "type": "tcp"
     }
 }
