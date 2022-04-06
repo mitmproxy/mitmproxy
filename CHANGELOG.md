@@ -6,6 +6,8 @@
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Console Performance Improvements
   ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
+* Warn users if server side event responses are received without streaming.
+  ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
 * Add example addon to dump contents to files based on a filter expression 
