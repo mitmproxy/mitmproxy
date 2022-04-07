@@ -128,9 +128,11 @@ class ConsoleMaster(master.Master):
             return m
         if m := os.environ.get("EDITOR"):
             return m
-        for editor in "xxd", "hexedit", "hexyl":
+        for editor in "hexedit", "hexyl":
             if shutil.which(editor):
                 return editor
+        if os.name == "xxd":
+            return "xxd"
 
     def spawn_editor(self, data):
         if strutils.is_mostly_bin(data):
