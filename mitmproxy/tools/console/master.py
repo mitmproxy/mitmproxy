@@ -133,6 +133,8 @@ class ConsoleMaster(master.Master):
                 return editor
         if os.name == "xxd":
             return "xxd"
+        else:
+            return "ghex"
 
     def spawn_editor(self, data):
         if strutils.is_mostly_bin(data):
