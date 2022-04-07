@@ -13,7 +13,7 @@ import contextlib
 import threading
 
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
-
+from mitmproxy.utils import strutils
 import urwid
 
 from mitmproxy import addons
@@ -123,12 +123,26 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
+    def get_hex_editor(self) -> str:
+        if m := os.environ.get("MITMPROXY_EDITOR"):
+            return m
+        if m := os.environ.get("EDITOR"):
+            return m
+        for editor in "xxd", "hexedit", "hexyl":
+            if shutil.which(editor):
+                return editor
+
     def spawn_editor(self, data):
+        if strutils.is_mostly_bin(data):
+            isBinary = True
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        c = self.get_editor()
+        if isBinary:
+            c = self.get_hex_editor()
+        else:
+            c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():
