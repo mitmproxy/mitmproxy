@@ -128,22 +128,22 @@ class ConsoleMaster(master.Master):
             return m
         if m := os.environ.get("EDITOR"):
             return m
-        for editor in "hexedit", "hexyl":
+        for editor in "xxd", "ghex", "hexedit", "hexyl":
             if shutil.which(editor):
                 return editor
-        if os.name == "xxd":
-            return "xxd"
+        if os.name == "nt":
+            for editor in "hexalter", "frhed", "HxD":
+                if shutil.which(editor):
+                    return editor
         else:
-            return "ghex"
+            return "notepad"
 
     def spawn_editor(self, data):
-        if strutils.is_mostly_bin(data):
-            isBinary = True
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        if isBinary:
+        if strutils.is_mostly_bin(data):
             c = self.get_hex_editor()
         else:
             c = self.get_editor()
