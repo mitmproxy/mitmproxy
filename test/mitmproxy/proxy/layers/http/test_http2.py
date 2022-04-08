@@ -784,7 +784,7 @@ def test_request_smuggling_te(tctx):
 
 def test_request_keepalive(tctx):
     playbook, cff = start_h2_client(tctx)
-    tctx.options.http2_ping_threshold = 1
+    tctx.options.http2_ping_keepalive = 1
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)
     initial = Placeholder(bytes)

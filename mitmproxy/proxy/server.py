@@ -64,15 +64,15 @@ class TimeoutWatchdog:
 
 
 class WakeupTimer:
-    threshold: float
+    request: commands.RequestWakeup
 
-    def __init__(self, callback: typing.Callable[[], typing.Any], threshold: float):
+    def __init__(self, callback: typing.Callable[[], typing.Any], request: commands.RequestWakeup):
         self.callback = callback
-        self.threshold = threshold
+        self.request = request
 
     async def sleep(self):
-        await asyncio.sleep(self.threshold)
-        await self.callback()
+        await asyncio.sleep(self.request.threshold)
+        await self.callback(self)
 
 
 @dataclass
@@ -88,13 +88,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
     layer: layer.Layer
-    wakeuptimer: typing.Optional[WakeupTimer] = None
-    wakeuptimer_task: typing.Optional[asyncio.Task] = None
+    wakeup_timer: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
+        self.wakeup_timer = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -134,8 +134,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await asyncio.wait([handler])
 
         watch.cancel()
-        if self.wakeuptimer_task:
-            self.wakeuptimer_task.cancel()
+        while self.wakeup_timer:
+            timer = self.wakeup_timer.pop()
+            timer.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
@@ -169,7 +170,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             try:
                 command.connection.timestamp_start = time.time()
                 reader, writer = await asyncio.open_connection(*command.connection.address)
-            except (IOError, asyncio.CancelledError) as e:
+            except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
                     err = "connection cancelled"
@@ -215,10 +216,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.timestamp_end = time.time()
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
-    async def wakeup(self) -> None:
-        self.wakeuptimer_task = None
-        self.wakeuptimer = None
-        self.server_event(events.Wakeup())
+    async def wakeup(self, timer: WakeupTimer) -> None:
+        self.wakeup_timer.discard(timer.handler)
+        timer.handler = None
+        self.server_event(events.Wakeup(timer.request))
 
     async def handle_connection(self, connection: Connection) -> None:
         """
@@ -319,12 +320,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
                 elif isinstance(command, commands.RequestWakeup):
-                    self.wakeuptimer = WakeupTimer(self.wakeup, command.threshold)
-                    self.wakeuptimer_task = asyncio_utils.create_task(
-                        self.wakeuptimer.sleep(),
-                        name="wakeuptimer",
+                    timer = WakeupTimer(self.wakeup, command)
+                    handler = asyncio_utils.create_task(
+                        timer.sleep(),
+                        name="wakeup_timer",
                         client=self.client.peername
                     )
+                    timer.handler = handler
+                    self.wakeup_timer.add(handler)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):

@@ -33,9 +33,11 @@ class Start(Event):
 class Wakeup(Event):
     """
     Event sent to layers that requested a wakeup using RequestWakeup.
-    Currently only used by HTTP/2 to send PINGs to the remote server.
     """
-    pass
+    request: commands.RequestWakeup
+
+    def __init__(self, request: commands.RequestWakeup):
+        self.request = request
 
 
 @dataclass

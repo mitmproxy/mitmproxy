@@ -409,9 +409,9 @@ class Http2Client(Http2Connection):
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Wakeup):
-            remaining = self.context.options.http2_ping_threshold - time.time() + self.last_activity
+            remaining = self.context.options.http2_ping_keepalive - time.time() + self.last_activity
             if remaining <= 0.5:
-                remaining = self.context.options.http2_ping_threshold
+                remaining = self.context.options.http2_ping_keepalive
                 # PING frames MUST contain 8 octets of opaque data in the payload. 
                 # A sender can include any value it chooses and use those octets in any fashion.
                 self.h2_conn.ping(b"0" * 8)
@@ -421,8 +421,8 @@ class Http2Client(Http2Connection):
             return
         self.last_activity = time.time()
         if isinstance(event, Start):
-            if self.context.options.http2_ping_threshold > 0:
-                yield RequestWakeup(self.context.options.http2_ping_threshold)
+            if self.context.options.http2_ping_keepalive > 0:
+                yield RequestWakeup(self.context.options.http2_ping_keepalive)
             yield from super()._handle_event(event)
         elif isinstance(event, RequestHeaders):
             pseudo_headers = [
