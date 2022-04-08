@@ -135,8 +135,10 @@ class ConsoleMaster(master.Master):
             for editor in "hexalter", "frhed", "HxD":
                 if shutil.which(editor):
                     return editor
+                else:
+                    return "notepad"
         else:
-            return "notepad"
+            return "vi"
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
