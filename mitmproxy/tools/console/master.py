@@ -200,6 +200,16 @@ class ConsoleMaster(master.Master):
                   "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
             sys.exit(1)
 
+        if os.name != "nt" and "utf" not in urwid.detected_encoding.lower():
+            print(
+                f"mitmproxy expects a UTF-8 console environment, not {urwid.detected_encoding!r}. "
+                f"Set your LANG environment variable to something like en_US.UTF-8.",
+                file=sys.stderr
+            )
+            # Experimental (04/2022): We just don't exit here and see if/how that affects users.
+            # sys.exit(1)
+        urwid.set_encoding("utf8")
+
         signals.call_in.connect(self.sig_call_in)
         self.ui = window.Screen()
         self.ui.set_terminal_properties(256)

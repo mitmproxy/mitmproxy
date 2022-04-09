@@ -12,22 +12,6 @@ from mitmproxy.tools import cmdline
 from mitmproxy.utils import debug, arg_check
 
 
-def assert_utf8_env():
-    spec = ""
-    for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
-        spec += os.environ.get(i, "").lower()
-    if "utf" not in spec:
-        print(
-            "Error: mitmproxy requires a UTF console environment.",
-            file=sys.stderr
-        )
-        print(
-            "Set your LANG environment variable to something like en_US.UTF-8",
-            file=sys.stderr
-        )
-        sys.exit(1)
-
-
 def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
@@ -123,11 +107,6 @@ def run(
 
 
 def mitmproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
-    if os.name == "nt":
-        import urwid
-        urwid.set_encoding("utf8")
-    else:
-        assert_utf8_env()
     from mitmproxy.tools import console
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None

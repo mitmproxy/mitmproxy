@@ -111,6 +111,13 @@ class Flow(stateobject.StateObject):
     If `False`, the flow may have been already completed or loaded from disk.
     """
 
+    timestamp_created: float
+    """
+    The Unix timestamp of when this flow was created.
+
+    In contrast to `timestamp_start`, this value will not change when a flow is replayed.
+    """
+
     def __init__(
         self,
         type: str,
@@ -123,6 +130,7 @@ class Flow(stateobject.StateObject):
         self.client_conn = client_conn
         self.server_conn = server_conn
         self.live = live
+        self.timestamp_created = time.time()
 
         self.intercepted: bool = False
         self._resume_event: typing.Optional[asyncio.Event] = None
@@ -143,6 +151,7 @@ class Flow(stateobject.StateObject):
         marked=str,
         metadata=typing.Dict[str, typing.Any],
         comment=str,
+        timestamp_created=float,
     )
 
     def get_state(self):

@@ -26,6 +26,7 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp
         err = terr()
 
     f = tcp.TCPFlow(client_conn, server_conn)
+    f.timestamp_created = client_conn.timestamp_start
     f.messages = messages
     f.error = err
     f.live = True
@@ -150,6 +151,7 @@ def tflow(
     assert ws is False or isinstance(ws, websocket.WebSocketData)
 
     f = http.HTTPFlow(client_conn, server_conn)
+    f.timestamp_created = req.timestamp_start
     f.request = req
     f.response = resp or None
     f.error = err or None

@@ -330,6 +330,12 @@ def convert_14_15(data):
     return data
 
 
+def convert_15_16(data):
+    data["version"] = 16
+    data["timestamp_created"] = data.get("request", data["client_conn"])["timestamp_start"]
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -392,6 +398,7 @@ converters = {
     12: convert_12_13,
     13: convert_13_14,
     14: convert_14_15,
+    15: convert_15_16,
 }
 
 
