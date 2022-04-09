@@ -5,7 +5,7 @@ import re
 from typing import Dict, Optional, Tuple
 
 from mitmproxy import command, ctx, dns, exceptions, flow, http, log, master, options, platform, tcp, websocket
-from mitmproxy.connection import Address
+from mitmproxy.connection import Address, ConnectionProtocol
 from mitmproxy.flow import Flow
 from mitmproxy.net import udp
 from mitmproxy.proxy import commands, events, layers, server_hooks
@@ -249,6 +249,7 @@ class Proxyserver:
             handler = ProxyConnectionHandler(self.master, reader, writer, self.options)
             handler.layer = layers.DNSLayer(handler.layer.context)
             handler.layer.context.server.address = local_addr if self.options.dns_mode == "transparent" else self.dns_forward_addr
+            handler.layer.context.server.protocol = ConnectionProtocol.UDP
             self._connections[connection_id] = handler
             asyncio.create_task(self.handle_connection(connection_id))
         else:
