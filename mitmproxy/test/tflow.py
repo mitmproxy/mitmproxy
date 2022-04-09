@@ -114,6 +114,7 @@ def tdnsflow(
     assert err is False or isinstance(err, flow.Error)
 
     f = dns.DNSFlow(client_conn, server_conn)
+    f.timestamp_created = req.timestamp
     f.request = req
     f.response = resp or None
     f.error = err or None

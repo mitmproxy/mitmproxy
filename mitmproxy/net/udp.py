@@ -217,7 +217,13 @@ class DatagramReader:
 
     async def read(self, n: int) -> bytes:
         assert n >= MAX_DATAGRAM_SIZE
-        return b'' if self._eof else await self._packets.get()
+        if self._eof:
+            try:
+                return self._packets.get_nowait()
+            except asyncio.QueueEmpty:
+                return b''
+        else:
+            return await self._packets.get()
 
 
 class DatagramWriter:
