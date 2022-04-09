@@ -9,7 +9,7 @@ from ..tutils import Placeholder, Playbook, reply
 
 
 def test_invalid_and_dummy_end(tctx):
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Simple)
+    layer = dns.DNSLayer(tctx)
     assert (
         Playbook(layer)
         >> DataReceived(tctx.client, b'Not a DNS packet')
@@ -25,7 +25,7 @@ def test_invalid_and_dummy_end(tctx):
 
 def test_simple(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Simple)
+    layer = dns.DNSLayer(tctx)
 
     req = tdnsreq()
     resp = tdnsresp()
@@ -55,7 +55,8 @@ def test_simple(tctx):
 
 def test_simple_no_hook(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Simple)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = None
 
     req = tdnsreq()
 
@@ -81,7 +82,8 @@ def test_simple_no_hook(tctx):
 
 def test_forward_premature_close(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ('8.8.8.8', 53)
 
     req = tdnsreq()
 
@@ -108,7 +110,8 @@ def test_forward_premature_close(tctx):
 
 def test_forward(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ('8.8.8.8', 53)
 
     req = tdnsreq()
     resp = tdnsresp()
@@ -137,7 +140,8 @@ def test_forward(tctx):
 
 def test_forward_fail_connection(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ('8.8.8.8', 53)
 
     req = tdnsreq()
 
@@ -157,53 +161,10 @@ def test_forward_fail_connection(tctx):
     assert f().request == req
 
 
-def test_forward_with_id_change(tctx):
-    f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
-
-    req = tdnsreq()
-    req2 = tdnsreq()
-    req2.id = req.id + 1
-    resp = tdnsresp()
-    resp.id = req2.id
-
-    def check_in_flows(flow: DNSFlow):
-        nonlocal layer
-        assert flow.request
-        assert layer.flows[flow.request.id] is flow
-
-    def change_id(flow: DNSFlow):
-        nonlocal req, resp
-        check_in_flows(flow)
-        req.timestamp = flow.request.timestamp
-        assert flow.request == req
-        flow.request = req2
-
-    assert (
-        Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
-        << dns.DnsRequestHook(f)
-        >> reply(side_effect=change_id)
-        << OpenConnection(tctx.server)
-        >> reply(None)
-        << SendData(tctx.server, req2.packed)
-        >> DataReceived(tctx.server, resp.packed)
-        << dns.DnsResponseHook(f)
-        >> reply(side_effect=check_in_flows)
-        << SendData(tctx.client, resp.packed)
-        >> ConnectionClosed(tctx.client)
-        << CloseConnection(tctx.server)
-        << None
-    )
-    assert not layer.flows and f().request and f().response and not f().live
-    req2.timestamp = f().request.timestamp
-    resp.timestamp = f().response.timestamp
-    assert f().request == req2 and f().response == resp
-
-
 def test_forward_with_query_resend(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ('8.8.8.8', 53)
 
     req = tdnsreq()
     req2 = tdnsreq()
@@ -238,7 +199,8 @@ def test_forward_with_query_resend(tctx):
 
 def test_forward_with_invalid_response(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx, dns.DnsMode.Forward)
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ('8.8.8.8', 53)
 
     req = tdnsreq()
     resp = tdnsresp()
@@ -253,7 +215,7 @@ def test_forward_with_invalid_response(tctx):
         >> reply(None)
         << SendData(tctx.server, req.packed)
         >> DataReceived(tctx.server, resp.packed)
-        << Log(f'Server(<no address>, state=open) responded to unknown message #{resp.id}')
+        << Log(f'Server(8.8.8.8:53, state=open) responded to unknown message #{resp.id}')
     )
     assert layer.flows and f().request and not f().response and f().live
     req.timestamp = f().request.timestamp

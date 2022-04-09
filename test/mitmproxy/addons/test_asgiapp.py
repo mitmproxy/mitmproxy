@@ -56,7 +56,7 @@ async def test_asgi_full():
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         await ps.running()
         await tctx.master.await_log("Proxy server listening", level="info")
-        proxy_addr = ps.server.sockets[0].getsockname()[:2]
+        proxy_addr = ps.tcp_server.sockets[0].getsockname()[:2]
 
         reader, writer = await asyncio.open_connection(*proxy_addr)
         req = f"GET http://testapp:80/ HTTP/1.1\r\n\r\n"

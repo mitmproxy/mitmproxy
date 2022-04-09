@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import enum
 import struct
 from typing import Dict
 
@@ -34,35 +33,23 @@ class DnsErrorHook(commands.StartHook):
     flow: dns.DNSFlow
 
 
-class DnsMode(enum.Enum):
-    Simple = "simple"
-    Forward = "forward"
-    Transparent = "transparent"
-
-
 class DNSLayer(layer.Layer):
     """
     Layer that handles resolving DNS queries.
     """
 
     flows: Dict[int, dns.DNSFlow]
-    mode: DnsMode
 
-    def __init__(self, context: Context, mode: DnsMode):
+    def __init__(self, context: Context):
         super().__init__(context)
-        self.flows = dict()
-        self.mode = mode
+        self.flows = {}
 
     def handle_request(self, flow: dns.DNSFlow) -> layer.CommandGenerator[None]:
-        orig_id = flow.request.id
         yield DnsRequestHook(flow)  # give hooks a chance to change the request or produce a response
-        if orig_id != flow.request.id:  # handle the case of a hook changing the request id
-            del self.flows[orig_id]
-            self.flows[flow.request.id] = flow
         if flow.response:
             yield from self.handle_response(flow)
-        elif self.mode is DnsMode.Simple:
-            yield from self.handle_error(flow, "Simple hook has not set a response.")
+        elif not flow.server_conn.address:
+            yield from self.handle_error(flow, "No hook has set a response.")
         else:
             if flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
                 err = yield commands.OpenConnection(flow.server_conn)

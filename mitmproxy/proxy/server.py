@@ -67,8 +67,8 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: typing.Optional[asyncio.Task] = None
-    reader: typing.Optional[asyncio.StreamReader] = None
-    writer: typing.Optional[asyncio.StreamWriter] = None
+    reader: typing.Optional[typing.Union[asyncio.StreamReader, udp.DatagramReader]] = None
+    writer: typing.Optional[typing.Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -352,7 +352,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             asyncio_utils.cancel_task(handler, "closed by command")
 
 
-class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
+class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
         client = Client(
             writer.get_extra_info('peername'),
@@ -364,7 +364,7 @@ class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         self.transports[client] = ConnectionIO(handler=None, reader=reader, writer=writer)
 
 
-class SimpleConnectionHandler(StreamConnectionHandler):  # pragma: no cover
+class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
     """Simple handler that does not really process any hooks."""
 
     hook_handlers: typing.Dict[str, typing.Callable]
