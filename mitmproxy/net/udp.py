@@ -82,18 +82,14 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
 
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop]) -> None:
         self._loop = asyncio.get_running_loop() if loop is None else loop
-        self._closed = asyncio.Event(loop=loop)
+        self._closed = asyncio.Event()
         self._paused = 0
-        self._can_write = asyncio.Event(loop=loop)
+        self._can_write = asyncio.Event()
         self._can_write.set()
         self._sock = None
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} socket={self._sock!r}>'
-
-    @property
-    def loop(self) -> asyncio.AbstractEventLoop:
-        return self._loop
 
     @property
     def sockets(self) -> Tuple[socket.socket, ...]:
@@ -248,7 +244,7 @@ class DatagramWriter:
         assert isinstance(proto, DrainableDatagramProtocol)
         self._protocol = proto
         self._reader = reader
-        self._closed = asyncio.Event(loop=proto.loop) if reader is not None else None
+        self._closed = asyncio.Event() if reader is not None else None
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)

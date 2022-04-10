@@ -62,7 +62,7 @@ class Proxyserver:
         self._connections = {}
 
     def __repr__(self):
-        return f"ProxyServer({'running' if any(self.running_servers) else 'stopped'}, {len(self._connections)} active conns)"
+        return f"ProxyServer({'running' if self.running_servers else 'stopped'}, {len(self._connections)} active conns)"
 
     @property
     def _server_desc(self):
@@ -80,7 +80,7 @@ class Proxyserver:
 
     @property
     def running_servers(self):
-        return (instance for _, instance, _, _, _ in self._server_desc if instance is not None)
+        return tuple(instance for _, instance, _, _, _ in self._server_desc if instance is not None)
 
     def load(self, loader):
         loader.add_option(

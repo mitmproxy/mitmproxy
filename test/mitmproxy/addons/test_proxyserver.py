@@ -3,13 +3,15 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from mitmproxy import exceptions
+from mitmproxy import dns, exceptions
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.connection import Address
+from mitmproxy.net import udp
 from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons, tflow
-from mitmproxy.test.tflow import tclient_conn, tserver_conn
+from mitmproxy.test.tflow import tclient_conn, tdnsflow, tserver_conn
+from mitmproxy.test.tutils import tdnsreq
 
 
 class HelperAddon:
@@ -196,7 +198,7 @@ def test_options():
         assert ps.dns_forward_addr == ("8.8.8.8", 53)
 
         with pytest.raises(exceptions.OptionsError):
-            tctx.configure(ps, dns_mode="forward:8.8.8.8:invalid")
+            tctx.configure(ps, dns_mode="forward:invalid:53")
         tctx.configure(ps, dns_mode="forward:8.8.8.8:53")
         assert ps.dns_forward_addr == ("8.8.8.8", 53)
 
@@ -211,3 +213,63 @@ async def test_startup_err(monkeypatch) -> None:
     with taddons.context(ps) as tctx:
         await ps.running()
         await tctx.master.await_log("cannot bind", level="error")
+
+
+async def test_shutdown_err() -> None:
+    def _raise(*_):
+        raise OSError("cannot close")
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        await ps.running()
+        assert ps.running_servers
+        for server in ps.running_servers:
+            setattr(server, "close", _raise)
+        await ps.shutdown_server()
+        await tctx.master.await_log("cannot close", level="error")
+        assert ps.running_servers
+
+
+async def test_dns_simple() -> None:
+    flow = tdnsflow(resp=False)
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, server=False, dns_server=True, dns_mode="simple")
+        await ps.running()
+        await tctx.master.await_log("DNS server listening at", level="info")
+        await ps.dns_request(flow)
+        assert flow.response
+        await ps.shutdown_server()
+
+
+async def test_dns_not_simple() -> None:
+    flow = tdnsflow(resp=False)
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, server=False, dns_server=True, dns_mode="custom")
+        await ps.running()
+        await tctx.master.await_log("DNS server listening at", level="info")
+        await ps.dns_request(flow)
+        assert not flow.response
+        await ps.shutdown_server()
+
+
+async def test_dns() -> None:
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, server=False, dns_server=True, dns_mode="simple")
+        await ps.running()
+        await tctx.master.await_log("DNS server listening at", level="info")
+        assert ps.dns_server
+        r, w = await udp.open_connection(*ps.dns_server.sockets[0].getsockname()[:2])
+        req = tdnsreq()
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 1
+        req.id = req.id + 1
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 1
+        await ps.shutdown_server()
