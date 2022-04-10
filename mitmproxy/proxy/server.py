@@ -320,14 +320,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
                 elif isinstance(command, commands.RequestWakeup):
-                    timer = WakeupTimer(self.wakeup, command)
-                    handler = asyncio_utils.create_task(
-                        timer.sleep(),
+                    task = asyncio_utils.create_task(
+                        self.wakeup(command),
                         name="wakeup_timer",
                         client=self.client.peername
                     )
-                    timer.handler = handler
-                    self.wakeup_timer.add(handler)
+                    self.wakeup_timer.add(task)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
