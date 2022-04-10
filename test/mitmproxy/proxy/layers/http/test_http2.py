@@ -4,6 +4,7 @@ import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
+import time
 from h2.errors import ErrorCodes
 
 from mitmproxy.connection import ConnectionState, Server
@@ -12,7 +13,7 @@ from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData, RequestWakeup
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
+from mitmproxy.proxy.events import ConnectionClosed, DataReceived, Wakeup
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client, split_pseudo_headers
@@ -66,6 +67,7 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
 
 def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
     tctx.client.alpn = b"h2"
+    tctx.options.http2_ping_keepalive = 0
     frame_factory = FrameFactory()
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
@@ -679,6 +681,7 @@ def test_kill_stream(tctx):
 
 class TestClient:
     def test_no_data_on_closed_stream(self, tctx):
+        tctx.options.http2_ping_keepalive = 0
         frame_factory = FrameFactory()
         req = Request.make("GET", "http://example.com/")
         resp = {
@@ -782,12 +785,13 @@ def test_request_smuggling_te(tctx):
     assert b"Connection-specific header field present" in err()
 
 
-def test_request_keepalive(tctx):
+def test_request_keepalive(tctx, monkeypatch):
     playbook, cff = start_h2_client(tctx)
-    tctx.options.http2_ping_keepalive = 1
+    tctx.options.http2_ping_keepalive = 58
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)
     initial = Placeholder(bytes)
+    rw = RequestWakeup(58)
     assert (
             playbook
             >> DataReceived(tctx.client,
@@ -798,6 +802,9 @@ def test_request_keepalive(tctx):
             >> reply()
             << OpenConnection(server)
             >> reply(None, side_effect=make_h2)
-            << RequestWakeup(1)
+            << rw
             << SendData(server, initial)
     )
+    t = time.time()
+    monkeypatch.setattr(time, "time", lambda: t + 60)
+    assert (playbook >> Wakeup(rw))

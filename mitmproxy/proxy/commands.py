@@ -43,10 +43,10 @@ class RequestWakeup(Command):
     """
     Request a `Wakeup` event after the specified amount of seconds.
     """
-    threshold: float
+    delay: float
 
-    def __init__(self, threshold: float):
-        self.threshold = threshold
+    def __init__(self, delay: float):
+        self.delay = delay
 
 
 class ConnectionCommand(Command):

@@ -205,9 +205,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
     async def wakeup(self, request: commands.RequestWakeup) -> None:
-        await asyncio.sleep(request.threshold)
-        self.wakeup_timer.discard(asyncio.current_task())
-        self.server_event(events.Wakeup(timer.request))
+        await asyncio.sleep(request.delay)
+        task = asyncio.current_task()
+        assert task is not None
+        self.wakeup_timer.discard(task)
+        self.server_event(events.Wakeup(request))
 
     async def handle_connection(self, connection: Connection) -> None:
         """
@@ -313,6 +315,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         name="wakeup_timer",
                         client=self.client.peername
                     )
+                    assert task is not None
                     self.wakeup_timer.add(task)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     pass  # The connection has already been closed.

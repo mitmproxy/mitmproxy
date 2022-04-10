@@ -412,11 +412,14 @@ class Http2Client(Http2Connection):
             remaining = self.context.options.http2_ping_keepalive - time.time() + self.last_activity
             if remaining <= 0.5:
                 remaining = self.context.options.http2_ping_keepalive
-                # PING frames MUST contain 8 octets of opaque data in the payload. 
+                # PING frames MUST contain 8 octets of opaque data in the payload.
                 # A sender can include any value it chooses and use those octets in any fashion.
                 self.h2_conn.ping(b"0" * 8)
-                yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
-                yield SendData(self.conn, self.h2_conn.data_to_send())
+                data = self.h2_conn.data_to_send()
+                if data is not None:
+                    yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
+                    yield SendData(self.conn, data)
+                    self.last_activity = time.time()
             yield RequestWakeup(remaining)
             return
         self.last_activity = time.time()
