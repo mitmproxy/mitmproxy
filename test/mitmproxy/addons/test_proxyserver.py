@@ -160,15 +160,16 @@ async def test_warn_no_nextlayer():
         await ps.shutdown_server()
 
 
-def test_self_connect():
+async def test_self_connect():
     server = tserver_conn()
     client = tclient_conn()
-    server.address = ("localhost", 8080)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        # not calling .running() here to avoid unnecessary socket
-        ps.options = tctx.options
-        ps.server_connect(
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        await ps.running()
+        await tctx.master.await_log("Proxy server listening at", level="info")
+        server.address = ps.tcp_server.sockets[0].getsockname()[:2]
+        await ps.server_connect(
             server_hooks.ServerConnectionHookData(server, client)
         )
         assert "Request destination unknown" in server.error

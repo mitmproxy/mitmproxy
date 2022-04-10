@@ -62,10 +62,10 @@ class Proxyserver:
         self._connections = {}
 
     def __repr__(self):
-        return f"ProxyServer({'running' if self.tcp_server else 'stopped'}, {len(self._connections)} active conns)"
+        return f"ProxyServer({'running' if any(self.running_servers) else 'stopped'}, {len(self._connections)} active conns)"
 
     @property
-    def servers(self):
+    def _server_desc(self):
         yield "Proxy", self.tcp_server, lambda x: setattr(self, "tcp_server", x), ctx.options.server, lambda: asyncio.start_server(
             self.handle_tcp_connection,
             self.options.listen_host,
@@ -77,6 +77,10 @@ class Proxyserver:
             self.options.dns_listen_port,
             transparent=self.options.dns_mode == "transparent"
         )
+
+    @property
+    def running_servers(self):
+        return (instance for _, instance, _, _, _ in self._server_desc if instance is not None)
 
     def load(self, loader):
         loader.add_option(
@@ -194,7 +198,7 @@ class Proxyserver:
             await self.shutdown_server()
             if ctx.options.server and not ctx.master.addons.get("nextlayer"):
                 ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
-            for name, instance, set_instance, enabled, start in self.servers:
+            for name, instance, set_instance, enabled, start in self._server_desc:
                 if instance is None and enabled:
                     try:
                         instance = await start()
@@ -207,7 +211,7 @@ class Proxyserver:
                         ctx.log.info(f"{name} server listening at {' and '.join(addrs)}")
 
     async def shutdown_server(self):
-        for name, instance, set_instance, _, _ in self.servers:
+        for name, instance, set_instance, _, _ in self._server_desc:
             if instance is not None:
                 ctx.log.info(f"Stopping {name} server...")
                 try:
@@ -291,18 +295,19 @@ class Proxyserver:
         except ValueError as e:
             ctx.log.warn(str(e))
 
-    def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
+    async def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
         assert ctx.server.address
-        self_connect = (
-            ctx.server.address[1] in (self.options.listen_port, self.options.dns_listen_port)
-            and
-            ctx.server.address[0] in ("localhost", "127.0.0.1", "::1", self.options.listen_host, self.options.dns_listen_host)
-        )
-        if self_connect:
-            ctx.server.error = (
-                "Request destination unknown. "
-                "Unable to figure out where this request should be forwarded to."
-            )
+
+        addrinfos = await asyncio.get_running_loop().getaddrinfo(*ctx.server.address[:2], proto=ctx.server.protocol.value)
+        for srv in self.running_servers:
+            for sock in srv.sockets:
+                for family, _, proto, _, addr in addrinfos:
+                    if family == sock.family and proto == sock.proto and addr == sock.getsockname():
+                        ctx.server.error = (
+                            "Request destination unknown. "
+                            "Unable to figure out where this request should be forwarded to."
+                        )
+                        return
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         # handle simple requests here to not block the layer

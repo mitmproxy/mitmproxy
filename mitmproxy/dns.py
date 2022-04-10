@@ -421,7 +421,7 @@ class ResourceRecord(BypassInitStateObject):
                 return str(self.ipv4_address)
             if self.type is Type.AAAA:
                 return str(self.ipv6_address)
-            if self.type in [Type.NS, Type.CNAME, Type.PTR]:
+            if self.type in (Type.NS, Type.CNAME, Type.PTR):
                 return self.domain_name
             if self.type is Type.TXT:
                 return self.text
@@ -740,7 +740,7 @@ class Message(BypassInitStateObject):
         for question in self.questions:
             data.extend(domain_names.pack(question.name))
             data.extend(Question.HEADER.pack(question.type.value, question.class_.value))
-        for rr in [*self.answers, *self.authorities, *self.additionals]:
+        for rr in (*self.answers, *self.authorities, *self.additionals):
             data.extend(domain_names.pack(rr.name))
             data.extend(ResourceRecord.HEADER.pack(rr.type.value, rr.class_.value, rr.ttl, len(rr.data)))
             data.extend(rr.data)
