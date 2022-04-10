@@ -151,6 +151,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
+            reader: typing.Union[asyncio.StreamReader, udp.DatagramReader]
+            writer: typing.Union[asyncio.StreamWriter, udp.DatagramWriter]
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.protocol is ConnectionProtocol.TCP:

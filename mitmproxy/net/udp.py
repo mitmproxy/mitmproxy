@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -22,13 +22,16 @@ In the case of transparent server, the last argument is the original destination
 """
 DatagramReceivedCallback = Callable[[asyncio.DatagramTransport, bytes, Address, Address], None]
 
+# to make mypy happy
+SockAddress = Union[Tuple[str, int], Tuple[str, int, int, int]]
+
 
 class TransparentSocket(socket.socket):
     SOL_IP = getattr(socket, "SOL_IP", 0)
     IP_TRANSPARENT = getattr(socket, "IP_TRANSPARENT", 19)
     IP_RECVORIGDSTADDR = getattr(socket, "IP_RECVORIGDSTADDR", 20)
 
-    def __init__(self, family: socket.AddressFamily, local_addr: Address) -> None:
+    def __init__(self, family: socket.AddressFamily, local_addr: SockAddress) -> None:
         self._recvmsg = getattr(self, "recvmsg")
         if not self._recvmsg:
             raise NotImplementedError("Transparent UDP sockets are only supporting on platforms providing recvmsg.")
@@ -43,7 +46,7 @@ class TransparentSocket(socket.socket):
             raise
 
     @staticmethod
-    def _unpack_addr(sockaddr_in: bytes) -> Address:
+    def _unpack_addr(sockaddr_in: bytes) -> SockAddress:
         """Converts a native sockaddr into a python tuple."""
 
         (family,) = struct.unpack_from("h", sockaddr_in, 0)
@@ -56,7 +59,7 @@ class TransparentSocket(socket.socket):
         else:
             raise NotImplementedError(f"family {family} not implemented")
 
-    def recvfrom(self, bufsize: int, flags: int = 0) -> Tuple[bytes, Tuple[Address, Address]]:
+    def recvfrom(self, bufsize: int, flags: int = 0) -> Tuple[bytes, Tuple[SockAddress, SockAddress]]:
         """Same as recvfrom, but always returns source and destination addresses."""
 
         data, ancdata, _, client_addr = self._recvmsg(bufsize, socket.CMSG_SPACE(1024), flags)

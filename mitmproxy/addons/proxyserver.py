@@ -224,8 +224,10 @@ class Proxyserver:
 
     async def handle_connection(self, connection_id: Tuple):
         handler = self._connections[connection_id]
+        task = asyncio.current_task()
+        assert task
         asyncio_utils.set_task_debug_info(
-            asyncio.current_task(),
+            task,
             name=f"Proxyserver.handle_connection",
             client=handler.client.peername,
         )
@@ -258,8 +260,9 @@ class Proxyserver:
             asyncio.create_task(self.handle_connection(connection_id))
         else:
             handler = self._connections[connection_id]
-            reader = handler.transports[handler.client].reader
-            assert reader is not None
+            client_reader = handler.transports[handler.client].reader
+            assert isinstance(client_reader, udp.DatagramReader)
+            reader = client_reader
         reader.feed_data(data, remote_addr)
 
     def inject_event(self, event: events.MessageInjected):
