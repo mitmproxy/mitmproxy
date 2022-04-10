@@ -216,9 +216,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.timestamp_end = time.time()
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
-    async def wakeup(self, timer: WakeupTimer) -> None:
-        self.wakeup_timer.discard(timer.handler)
-        timer.handler = None
+    async def wakeup(self, request: commands.RequestWakeup) -> None:
+        await asyncio.sleep(request.threshold)
+        self.wakeup_timer.discard(asyncio.current_task())
         self.server_event(events.Wakeup(timer.request))
 
     async def handle_connection(self, connection: Connection) -> None:
