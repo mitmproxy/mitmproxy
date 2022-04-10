@@ -12,6 +12,7 @@ from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
+from mitmproxy import dns
 from mitmproxy.dns import DNSFlow
 
 # Detect Windows Subsystem for Linux and Windows
@@ -737,7 +738,6 @@ def format_flow(
             error_message=error_message,
         )
     elif isinstance(f, DNSFlow):
-        code = None if not f.response else f.response.response_code
         return format_dns_flow(
             render_mode=render_mode,
             focused=focused,
@@ -746,11 +746,11 @@ def format_flow(
             is_replay=f.is_replay,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
-            op_code=f.request.op_code.name,
+            op_code=dns.op_codes.str(f.request.op_code),
             request_timestamp=f.request.timestamp,
-            question=", ".join(f"{q.name} ({q.type.name})" for q in f.request.questions),
-            response_code=None if code is None else code.name,
-            response_code_http_equiv=0 if code is None else code.http_equiv_status_code,
+            question=", ".join(f"{q.name} ({dns.types.str(q.type)})" for q in f.request.questions),
+            response_code=None if not f.response else dns.response_codes.str(f.response.response_code),
+            response_code_http_equiv=0 if not f.response else dns.response_codes.http_equiv_status_code(f.response.response_code),
             answer=None if not f.response else ", ".join(map(str, f.response.answers)),
             error_message=error_message,
         )

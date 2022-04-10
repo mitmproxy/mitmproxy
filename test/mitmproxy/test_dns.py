@@ -18,13 +18,13 @@ class TestResourceRecord:
         assert str(dns.ResourceRecord.CNAME("test", "some.other.host")) == "some.other.host"
         assert str(dns.ResourceRecord.PTR("test", "some.other.host")) == "some.other.host"
         assert str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
-        assert str(dns.ResourceRecord("test", dns.Type.A, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'')) == "0x (invalid A data)"
+        assert str(dns.ResourceRecord("test", dns.types.A, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'')) == "0x (invalid A data)"
         assert str(
-            dns.ResourceRecord("test", dns.Type.SOA, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'\x00\x01\x02\x03')
+            dns.ResourceRecord("test", dns.types.SOA, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'\x00\x01\x02\x03')
         ) == "0x00010203"
 
     def test_setter(self):
-        rr = dns.ResourceRecord("test", dns.Type.ANY, dns.Class.IN, dns.ResourceRecord.DEFAULT_TTL, b'')
+        rr = dns.ResourceRecord("test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'')
         rr.ipv4_address = ipaddress.IPv4Address("8.8.4.4")
         assert rr.ipv4_address == ipaddress.IPv4Address("8.8.4.4")
         rr.ipv6_address = ipaddress.IPv6Address("2001:4860:4860::8844")
@@ -39,7 +39,7 @@ class TestQuestion:
 
     @pytest.mark.asyncio
     async def test_resolve(self):
-        async def fail_with(question: dns.Question, code: dns.ResponseCode):
+        async def fail_with(question: dns.Question, code: int):
             with pytest.raises(dns.ResolveError) as ex:
                 await question.resolve()
             assert ex.value.response_code == code
@@ -47,32 +47,32 @@ class TestQuestion:
         async def succeed_with(question: dns.Question, check: Callable[[dns.ResourceRecord], bool]):
             assert any(map(check, await question.resolve()))
 
-        await fail_with(dns.Question("dns.google", dns.Type.A, dns.Class.CH), dns.ResponseCode.NOTIMP)
-        await fail_with(dns.Question("not.exists", dns.Type.A, dns.Class.IN), dns.ResponseCode.NXDOMAIN)
-        await fail_with(dns.Question("dns.google", dns.Type.SOA, dns.Class.IN), dns.ResponseCode.NOTIMP)
-        await fail_with(dns.Question("totally.invalid", dns.Type.PTR, dns.Class.IN), dns.ResponseCode.FORMERR)
-        await fail_with(dns.Question("invalid.in-addr.arpa", dns.Type.PTR, dns.Class.IN), dns.ResponseCode.FORMERR)
-        await fail_with(dns.Question("0.0.0.1.in-addr.arpa", dns.Type.PTR, dns.Class.IN), dns.ResponseCode.NXDOMAIN)
+        await fail_with(dns.Question("dns.google", dns.types.A, dns.classes.CH), dns.response_codes.NOTIMP)
+        await fail_with(dns.Question("not.exists", dns.types.A, dns.classes.IN), dns.response_codes.NXDOMAIN)
+        await fail_with(dns.Question("dns.google", dns.types.SOA, dns.classes.IN), dns.response_codes.NOTIMP)
+        await fail_with(dns.Question("totally.invalid", dns.types.PTR, dns.classes.IN), dns.response_codes.FORMERR)
+        await fail_with(dns.Question("invalid.in-addr.arpa", dns.types.PTR, dns.classes.IN), dns.response_codes.FORMERR)
+        await fail_with(dns.Question("0.0.0.1.in-addr.arpa", dns.types.PTR, dns.classes.IN), dns.response_codes.NXDOMAIN)
 
         await succeed_with(
-            dns.Question("dns.google", dns.Type.A, dns.Class.IN),
+            dns.Question("dns.google", dns.types.A, dns.classes.IN),
             lambda rr: rr.ipv4_address == ipaddress.IPv4Address("8.8.8.8")
         )
         if platform.system() == "Linux":  # will fail on Windows, apparently returns empty on Mac
             await succeed_with(
-                dns.Question("dns.google", dns.Type.AAAA, dns.Class.IN),
+                dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
                 lambda rr: rr.ipv6_address == ipaddress.IPv6Address("2001:4860:4860::8888")
             )
         await succeed_with(
-            dns.Question("8.8.8.8.in-addr.arpa", dns.Type.PTR, dns.Class.IN),
+            dns.Question("8.8.8.8.in-addr.arpa", dns.types.PTR, dns.classes.IN),
             lambda rr: rr.domain_name == "dns.google"
         )
         await succeed_with(
-            dns.Question("8.8.8.8.in-addr.arpa", dns.Type.PTR, dns.Class.IN),
+            dns.Question("8.8.8.8.in-addr.arpa", dns.types.PTR, dns.classes.IN),
             lambda rr: rr.domain_name == "dns.google"
         )
         await succeed_with(
-            dns.Question("8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa", dns.Type.PTR, dns.Class.IN),
+            dns.Question("8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa", dns.types.PTR, dns.classes.IN),
             lambda rr: rr.domain_name == "dns.google"
         )
 
@@ -83,13 +83,13 @@ class TestMessage:
     async def test_resolve(self):
         req = tutils.tdnsreq()
         req.query = False
-        assert (await req.resolve()).response_code == dns.ResponseCode.REFUSED
+        assert (await req.resolve()).response_code == dns.response_codes.REFUSED
         req.query = True
-        req.op_code = dns.OpCode.IQUERY
-        assert (await req.resolve()).response_code == dns.ResponseCode.NOTIMP
-        req.op_code = dns.OpCode.QUERY
+        req.op_code = dns.op_codes.IQUERY
+        assert (await req.resolve()).response_code == dns.response_codes.NOTIMP
+        req.op_code = dns.op_codes.QUERY
         resp = await req.resolve()
-        assert resp.response_code == dns.ResponseCode.NOERROR
+        assert resp.response_code == dns.response_codes.NOERROR
         assert filter(lambda rr: str(rr.ipv4_address) == "8.8.8.8", resp.answers)
 
     def test_responses(self):
@@ -103,8 +103,8 @@ class TestMessage:
         assert resp == resp2
         assert resp2.size == 8
         with pytest.raises(ValueError):
-            req.fail(dns.ResponseCode.NOERROR)
-        assert req.fail(dns.ResponseCode.FORMERR).response_code == dns.ResponseCode.FORMERR
+            req.fail(dns.response_codes.NOERROR)
+        assert req.fail(dns.response_codes.FORMERR).response_code == dns.response_codes.FORMERR
 
     def test_range(self):
         def test(what: str, min: int, max: int):

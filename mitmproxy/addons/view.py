@@ -85,7 +85,7 @@ class OrderRequestMethod(_OrderKey):
         elif isinstance(f, tcp.TCPFlow):
             return "TCP"
         elif isinstance(f, dns.DNSFlow):
-            return f.request.op_code.name
+            return dns.op_codes.str(f.request.op_code)
         else:
             raise NotImplementedError()
 

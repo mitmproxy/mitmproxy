@@ -221,6 +221,7 @@ async def test_shutdown_err() -> None:
 
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         await ps.running()
         assert ps.running_servers
         for server in ps.running_servers:

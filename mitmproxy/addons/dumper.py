@@ -341,8 +341,8 @@ class Dumper:
                 client=human.format_address(f.client_conn.peername),
                 server=human.format_address(f.server_conn.address),
                 name=f.request.questions[0].name,
-                type=f.request.questions[0].type.name,
-                class_=f.request.questions[0].class_.name,
+                type=dns.types.str(f.request.questions[0].type),
+                class_=dns.classes.str(f.request.questions[0].class_),
             ))
 
     def dns_response(self, f: dns.DNSFlow):
@@ -352,8 +352,8 @@ class Dumper:
                 client=human.format_address(f.client_conn.peername),
                 server=human.format_address(f.server_conn.address),
                 name=f.response.answers[0].name,
-                type=f.response.answers[0].type.name,
-                class_=f.response.answers[0].class_.name,
+                type=dns.types.str(f.response.answers[0].type),
+                class_=dns.classes.str(f.response.answers[0].class_),
                 ttl=f.response.answers[0].ttl,
                 value=str(f.response.answers[0])
             ))
