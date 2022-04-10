@@ -234,7 +234,7 @@ async def test_dns_simple() -> None:
     flow = tdnsflow(resp=False)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_mode="simple")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5353, dns_mode="simple")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         await ps.dns_request(flow)
@@ -246,7 +246,7 @@ async def test_dns_not_simple() -> None:
     flow = tdnsflow(resp=False)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_mode="custom")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5353, dns_mode="custom")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         await ps.dns_request(flow)
@@ -257,7 +257,7 @@ async def test_dns_not_simple() -> None:
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_mode="simple")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5353, dns_mode="simple")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.dns_server
