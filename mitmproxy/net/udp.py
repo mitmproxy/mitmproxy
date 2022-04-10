@@ -89,7 +89,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         self._sock = None
 
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__} socket={self._sock!r}>'
+        return f"<{self.__class__.__name__} socket={self._sock!r}>"
 
     @property
     def sockets(self) -> Tuple[socket.socket, ...]:

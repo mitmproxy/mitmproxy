@@ -73,7 +73,7 @@ class Proxyserver:
         )
         yield "DNS", self.dns_server, lambda x: setattr(self, "dns_server", x), ctx.options.dns_server, lambda: udp.start_server(
             self.handle_dns_datagram,
-            self.options.dns_listen_host or '127.0.0.1',
+            self.options.dns_listen_host or "127.0.0.1",
             self.options.dns_listen_port,
             transparent=self.options.dns_mode == "transparent"
         )
@@ -237,7 +237,7 @@ class Proxyserver:
             del self._connections[connection_id]
 
     async def handle_tcp_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        connection_id = ("tcp", writer.get_extra_info('peername'), writer.get_extra_info('sockname'))
+        connection_id = ("tcp", writer.get_extra_info("peername"), writer.get_extra_info("sockname"))
         self._connections[connection_id] = ProxyConnectionHandler(self.master, reader, writer, self.options)
         await self.handle_connection(connection_id)
 
@@ -301,7 +301,8 @@ class Proxyserver:
     async def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
         assert ctx.server.address
 
-        addrinfos = await asyncio.get_running_loop().getaddrinfo(*ctx.server.address[:2], proto=ctx.server.protocol.value)
+        host, port = ctx.server.address[:2]
+        addrinfos = await asyncio.get_running_loop().getaddrinfo(host, port, proto=ctx.server.protocol.value)
         for srv in self.running_servers:
             for sock in srv.sockets:
                 for family, _, proto, _, addr in addrinfos:

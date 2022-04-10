@@ -234,34 +234,37 @@ async def test_dns_simple() -> None:
     flow = tdnsflow(resp=False)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5353, dns_mode="simple")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="simple")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         await ps.dns_request(flow)
         assert flow.response
         await ps.shutdown_server()
+        await tctx.master.await_log("Stopping DNS server", level="info")
 
 
 async def test_dns_not_simple() -> None:
     flow = tdnsflow(resp=False)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5354, dns_mode="custom")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="custom")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         await ps.dns_request(flow)
         assert not flow.response
         await ps.shutdown_server()
+        await tctx.master.await_log("Stopping DNS server", level="info")
 
 
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_port=5355, dns_mode="simple")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="simple")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.dns_server
-        r, w = await udp.open_connection(*ps.dns_server.sockets[0].getsockname()[:2])
+        dns_addr = ps.dns_server.sockets[0].getsockname()[:2]
+        r, w = await udp.open_connection(*dns_addr)
         req = tdnsreq()
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
@@ -273,3 +276,4 @@ async def test_dns() -> None:
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps._connections) == 1
         await ps.shutdown_server()
+        await tctx.master.await_log("Stopping DNS server", level="info")
