@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -145,9 +145,8 @@ class UdpServer(DrainableDatagramProtocol):
         self._local_addr = None
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
-        assert isinstance(transport, asyncio.DatagramTransport)
         if self._transport is None:
-            self._transport = transport
+            self._transport = cast(asyncio.DatagramTransport, transport)
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
 
@@ -164,9 +163,8 @@ class UdpServer(DrainableDatagramProtocol):
             sock.close()
             raise
         transport, _ = await self._loop.create_datagram_endpoint(lambda: self, sock=sock)
-        assert isinstance(transport, asyncio.DatagramTransport)
-        self._transparent_transports[local_addr] = transport
-        self._datagram_received_cb(transport, data, remote_addr, local_addr)
+        self._transparent_transports[local_addr] = cast(asyncio.DatagramTransport, transport)
+        self._datagram_received_cb(self._transparent_transports[local_addr], data, remote_addr, local_addr)
 
     def datagram_received(self, data: bytes, addr: Any) -> None:
         assert self._transport is not None
@@ -337,9 +335,8 @@ async def open_connection(host: str, port: int) -> Tuple[DatagramReader, Datagra
         lambda: UdpClient(reader, loop),
         remote_addr=(host, port)
     )
-    assert isinstance(transport, asyncio.DatagramTransport)
     writer = DatagramWriter(
-        transport,
+        cast(asyncio.DatagramTransport, transport),
         remote_addr=transport.get_extra_info("peername")
     )
     return reader, writer
