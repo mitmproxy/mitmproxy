@@ -63,18 +63,6 @@ class TimeoutWatchdog:
                 self.can_timeout.set()
 
 
-class WakeupTimer:
-    request: commands.RequestWakeup
-
-    def __init__(self, callback: typing.Callable[[], typing.Any], request: commands.RequestWakeup):
-        self.callback = callback
-        self.request = request
-
-    async def sleep(self):
-        await asyncio.sleep(self.request.threshold)
-        await self.callback(self)
-
-
 @dataclass
 class ConnectionIO:
     handler: typing.Optional[asyncio.Task] = None
