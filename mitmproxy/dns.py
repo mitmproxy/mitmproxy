@@ -432,12 +432,12 @@ class Message(BypassInitStateObject):
     def packed(self) -> bytes:
         """Converts the message into network bytes."""
         if self.id < 0 or self.id > 65535:
-            raise ValueError(f"DNS message's id {self.id} is out of bound.")
+            raise ValueError(f"DNS message's id {self.id} is out of bounds.")
         flags = 0
         if not self.query:
             flags |= 1 << 15
         if self.op_code < 0 or self.op_code > 0b1111:
-            raise ValueError(f"DNS message's op_code {self.op_code} is out of bound.")
+            raise ValueError(f"DNS message's op_code {self.op_code} is out of bounds.")
         flags |= self.op_code << 11
         if self.authoritative_answer:
             flags |= 1 << 10
@@ -448,10 +448,10 @@ class Message(BypassInitStateObject):
         if self.recursion_available:
             flags |= 1 << 7
         if self.reserved < 0 or self.reserved > 0b111:
-            raise ValueError(f"DNS message's reserved {self.reserved} is out of bound.")
+            raise ValueError(f"DNS message's reserved value of {self.reserved} is out of bounds.")
         flags |= self.reserved << 4
         if self.response_code < 0 or self.response_code > 0b1111:
-            raise ValueError(f"DNS message's response_code {self.reserved} is out of bound.")
+            raise ValueError(f"DNS message's response_code {self.response_code} is out of bounds.")
         flags |= self.response_code
         data = bytearray()
         data.extend(Message.HEADER.pack(
