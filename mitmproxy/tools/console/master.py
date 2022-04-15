@@ -124,19 +124,15 @@ class ConsoleMaster(master.Master):
             return "vi"
 
     def get_hex_editor(self) -> str:
-        if m := os.environ.get("MITMPROXY_EDITOR"):
+        if m := os.environ.get("MITMPROXY_HEXEDITOR"):
             return m
-        if m := os.environ.get("EDITOR"):
-            return m
-        for editor in "xxd", "ghex", "hexedit", "hexyl":
+        for editor in "ghex", "hexedit", "bless", "wxhexeditor", "nano":
             if shutil.which(editor):
                 return editor
         if os.name == "nt":
-            for editor in "hexalter", "frhed", "HxD":
+            for editor in "HxD", "WinVi", "Cygnus", "Frhed", "notepad":
                 if shutil.which(editor):
                     return editor
-                else:
-                    return "notepad"
         else:
             return "vi"
 
