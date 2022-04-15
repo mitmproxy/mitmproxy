@@ -21,6 +21,20 @@ You can start any of our three tools from the command line / terminal.
 
 If you use the command-line interface, we highly recommend you to take the [tutorial]({{< relref "mitmproxytutorial-userinterface" >}}) to get started.
 
+You may face this error while trying to start mitmproxy "mitmproxy: Error starting proxy server: Address already in use".
+The proposed solution for this is :
+```bash
+1) In console type:
+$ sudo lsof -i tcp:8080
+
+The last command will result in a list of currently running processes that will be displayed for you.
+It will contain information about each process’s PID.
+
+2) In console, type this to stop the process(replace “PID” with the process ID you want to kill):
+$ sudo kill -9 PID
+```              
+
+
 ## Configure your browser or device
 
 Mitmproxy starts as a [regular HTTP proxy]({{< relref
