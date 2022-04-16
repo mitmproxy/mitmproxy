@@ -22,7 +22,9 @@
   ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
 * Fix text truncation for full-width characters 
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
-
+* Fix mitmweb export copy failed in non-secure domain.
+  ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
+  
 ## 19 March 2022: mitmproxy 8.0.0
 
 ### Major Changes
