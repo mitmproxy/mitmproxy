@@ -18,11 +18,10 @@ function copyToClipboard(textToCopy) {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        return new Promise((res, rej) => {
+        return new Promise<void>((res, rej) => {
             // execute the copy command and remove the text box
             document.execCommand('copy') ? res() : rej();
             textArea.remove();
-
         });
     }
 }
