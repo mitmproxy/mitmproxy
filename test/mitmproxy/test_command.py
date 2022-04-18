@@ -503,7 +503,6 @@ class TCmds(TAttr):
         pass
 
 
-@pytest.mark.asyncio
 async def test_collect_commands():
     """
         This tests for errors thrown by getattr() or __getattr__ implementations

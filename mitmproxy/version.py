@@ -2,12 +2,12 @@ import os
 import subprocess
 import sys
 
-VERSION = "8.0.0.dev"
+VERSION = "9.0.0.dev"
 MITMPROXY = "mitmproxy " + VERSION
 
 # Serialization format version. This is displayed nowhere, it just needs to be incremented by one
 # for each change in the file format.
-FLOW_FORMAT_VERSION = 14
+FLOW_FORMAT_VERSION = 16
 
 
 def get_dev_version() -> str:

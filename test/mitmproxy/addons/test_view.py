@@ -14,7 +14,7 @@ from mitmproxy.tools.console.common import render_marker, SYMBOL_MARK
 def tft(*, method="get", start=0):
     f = tflow.tflow()
     f.request.method = method
-    f.request.timestamp_start = start
+    f.timestamp_created = start
     return f
 
 
@@ -31,7 +31,7 @@ def test_order_refresh():
     with taddons.context() as tctx:
         tctx.configure(v, view_order="time")
         v.add([tf])
-        tf.request.timestamp_start = 10
+        tf.timestamp_created = 10
         assert not sargs
         v.update([tf])
         assert sargs
@@ -194,7 +194,6 @@ def test_orders():
         assert v.order_options()
 
 
-@pytest.mark.asyncio
 async def test_load(tmpdir):
     path = str(tmpdir.join("path"))
     v = view.View()
@@ -346,7 +345,7 @@ def test_order():
     v.requestheaders(tft(method="put", start=2))
     v.requestheaders(tft(method="get", start=3))
     v.requestheaders(tft(method="put", start=4))
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    assert [i.timestamp_created for i in v] == [1, 2, 3, 4]
 
     v.set_order("method")
     assert v.get_order() == "method"
@@ -356,10 +355,10 @@ def test_order():
 
     v.set_order("time")
     assert v.get_order() == "time"
-    assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
+    assert [i.timestamp_created for i in v] == [4, 3, 2, 1]
 
     v.set_reversed(False)
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    assert [i.timestamp_created for i in v] == [1, 2, 3, 4]
     with pytest.raises(exceptions.CommandError):
         v.set_order("not_an_order")
 
@@ -371,9 +370,9 @@ def test_reversed():
     v.requestheaders(tft(start=3))
     v.set_reversed(True)
 
-    assert v[0].request.timestamp_start == 3
-    assert v[-1].request.timestamp_start == 1
-    assert v[2].request.timestamp_start == 1
+    assert v[0].timestamp_created == 3
+    assert v[-1].timestamp_created == 1
+    assert v[2].timestamp_created == 1
     with pytest.raises(IndexError):
         v[5]
     with pytest.raises(IndexError):
@@ -486,21 +485,21 @@ def test_focus_follow():
 
         v.add([tft(start=4)])
         assert v.focus.index == 0
-        assert v.focus.flow.request.timestamp_start == 4
+        assert v.focus.flow.timestamp_created == 4
 
         v.add([tft(start=7)])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.flow.timestamp_created == 7
 
         mod = tft(method="put", start=6)
         v.add([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.flow.timestamp_created == 7
 
         mod.request.method = "GET"
         v.update([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 6
+        assert v.focus.flow.timestamp_created == 6
 
 
 def test_focus():

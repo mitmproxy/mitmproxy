@@ -20,7 +20,6 @@ def test_dump_info():
     assert "Tasks" not in cs.getvalue()
 
 
-@pytest.mark.asyncio
 async def test_dump_info_async():
     cs = io.StringIO()
     debug.dump_info(None, None, file=cs, testing=True)

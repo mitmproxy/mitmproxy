@@ -3,10 +3,10 @@ import typing
 
 from kaitaistruct import KaitaiStream
 
-from mitmproxy.contrib.kaitaistruct import png
 from mitmproxy.contrib.kaitaistruct import gif
-from mitmproxy.contrib.kaitaistruct import jpeg
 from mitmproxy.contrib.kaitaistruct import ico
+from mitmproxy.contrib.kaitaistruct import jpeg
+from mitmproxy.contrib.kaitaistruct import png
 
 Metadata = typing.List[typing.Tuple[str, str]]
 
@@ -91,12 +91,13 @@ def parse_ico(data: bytes) -> Metadata:
     for i, image in enumerate(img.images):
         parts.append(
             (
-                'Image {}'.format(i + 1), "Size: {} x {}\n"
-                                          "{: >18}Bits per pixel: {}\n"
-                                          "{: >18}PNG: {}".format(256 if not image.width else image.width,
-                                                                  256 if not image.height else image.height,
-                                                                  '', image.bpp,
-                                                                  '', image.is_png)
+                f'Image {i + 1}',
+                "Size: {} x {}\n"
+                "{: >18}Bits per pixel: {}\n"
+                "{: >18}PNG: {}".format(256 if not image.width else image.width,
+                                        256 if not image.height else image.height,
+                                        '', image.bpp,
+                                        '', image.is_png)
             )
         )
 

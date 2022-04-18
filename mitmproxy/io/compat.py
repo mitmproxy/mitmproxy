@@ -6,7 +6,7 @@ v3.0.0dev) and versioning. Every change or migration gets a new flow file
 version number, this prevents issues with developer builds and snapshots.
 """
 import uuid
-from typing import Any, Dict, Mapping, Union  # noqa
+from typing import Any, Dict, Mapping, Union
 
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -319,6 +319,23 @@ def convert_13_14(data):
     return data
 
 
+def convert_14_15(data):
+    data["version"] = 15
+    if data.get("websocket", None):
+        # Add "injected" attribute.
+        data["websocket"]["messages"] = [
+            msg + [False]
+            for msg in data["websocket"]["messages"]
+        ]
+    return data
+
+
+def convert_15_16(data):
+    data["version"] = 16
+    data["timestamp_created"] = data.get("request", data["client_conn"])["timestamp_start"]
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -380,6 +397,8 @@ converters = {
     11: convert_11_12,
     12: convert_12_13,
     13: convert_13_14,
+    14: convert_14_15,
+    15: convert_15_16,
 }
 
 

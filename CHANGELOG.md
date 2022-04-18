@@ -2,10 +2,46 @@
 
 ## Unreleased: mitmproxy next
 
+* Replayed flows retain their current position in the flow list.
+  ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
+* Console Performance Improvements
+  ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
+* Warn users if server side event responses are received without streaming.
+  ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
+* Add flatpak support to the browser addon
+  ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
+* Add example addon to dump contents to files based on a filter expression 
+  ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
+* Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
+  ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
+* Make sure that mitmproxy displays error messages on startup.
+  ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
+* Add example addon for domain fronting.
+  ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
+* Improve cut addon to better handle binary contents
+  ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
+* Fix text truncation for full-width characters 
+  ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
+
+## 19 March 2022: mitmproxy 8.0.0
+
+### Major Changes
+
+* Major improvements to the web interface (@gorogoroumaru)
+* Event hooks can now be async (@nneonneo, [#5106](https://github.com/mitmproxy/mitmproxy/issues/5106))
+* New [`tls_{established,failed}_{client,server}` event hooks](https://docs.mitmproxy.org/dev/api/events.html#TLSEvents)
+  to record negotiation success/failure (@mhils, [#4790](https://github.com/mitmproxy/mitmproxy/pull/4790))
+
+### Security Fixes
+
+* [CVE-2022-24766](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-gcx2-gvj7-pxv3):
+  Fix request smuggling vulnerability reported by @zeyu2001 (@mhils)
+
+### Full Changelog
+
 * Support proxy authentication for SOCKS v5 mode (@starplanet)
 * Make it possible to ignore connections in the tls_clienthello event hook (@mhils)
-* Add `tls_established/failed_client/server` event hooks to record negotiation success/failure (@mhils)
-* fix some responses not being decoded properly if the encoding was uppercase #4735 (@Mattwmaster58)
+* fix some responses not being decoded properly if the encoding was uppercase (#4735, @Mattwmaster58)
 * Trigger event hooks for flows with semantically invalid requests, for example invalid content-length headers (@mhils)
 * Improve error message on TLS version mismatch (@mhils)
 * Windows: Switch to Python's default asyncio event loop, which increases the number of sockets
@@ -24,11 +60,20 @@
 * Fix random connection stalls (#5040, @EndUser509)
 * Add `n` new flow keybind to mitmweb (#5061, @ianklatzco)
 * Fix compatibility with BoringSSL (@pmoulton)
+* Added `WebSocketMessage.injected` flag (@Prinzhorn)
+* Add example addon for saving streamed data to individual files (@EndUser509)
 * Change connection event hooks to be blocking.
   Processing will only resume once the event hook has finished. (@Prinzhorn)
-* Allow addon hooks to be async (@nneonneo, #4207)
-* Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (@mhils, #4207)
-* Add support for gRPC content viewing and modification based on proto file descriptors. (@aarnaut, #5001)
+* Reintroduce `Flow.live`, which signals if a flow belongs to a currently active connection. (#4207, @mhils)
+* Speculative fix for some rare HTTP/2 connection stalls (#5158, @EndUser509)
+* Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
+* Add support for rotating saved streams every hour or day (@EndUser509)
+* Console Improvements on Windows (@mhils)
+* Fix processing of `--set` options (#5067, @marwinxxii) 
+* Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
+* Exit early if there are errors on startup (#4544, @mhils)
+* Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)
+* Binaries are now built with Python 3.10 (@mhils)
 
 ## 28 September 2021: mitmproxy 7.0.4
 

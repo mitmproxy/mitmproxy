@@ -108,7 +108,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.write(msg, **markup)
 
         for name in sorted(coverage_values.keys()):
-            msg = 'Coverage for {}: {:.2f}%\n'.format(name, coverage_values[name][0])
+            msg = f'Coverage for {name}: {coverage_values[name][0]:.2f}%\n'
             if coverage_values[name][0] < 100:
                 markup = {'red': True, 'bold': True}
                 for s, v in sorted(coverage_values[name][1]):

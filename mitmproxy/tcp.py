@@ -40,15 +40,22 @@ class TCPFlow(flow.Flow):
     A TCPFlow is a simplified representation of a TCP session.
     """
 
+    messages: List[TCPMessage]
+    """
+    The messages transmitted over this connection.
+
+    The latest message can be accessed as `flow.messages[-1]` in event hooks.
+    """
+
     def __init__(self, client_conn, server_conn, live=None):
         super().__init__("tcp", client_conn, server_conn, live)
-        self.messages: List[TCPMessage] = []
+        self.messages = []
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["messages"] = List[TCPMessage]
 
     def __repr__(self):
-        return "<TCPFlow ({} messages)>".format(len(self.messages))
+        return f"<TCPFlow ({len(self.messages)} messages)>"
 
 
 __all__ = [

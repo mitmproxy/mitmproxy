@@ -14,6 +14,7 @@ from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy import ctx
 import mitmproxy.types as mtypes
+from mitmproxy.utils import asyncio_utils
 
 
 def load_script(path: str) -> typing.Optional[types.ModuleType]:
@@ -82,7 +83,10 @@ class Script:
 
         self.reloadtask = None
         if reload:
-            self.reloadtask = asyncio.ensure_future(self.watcher())
+            self.reloadtask = asyncio_utils.create_task(
+                self.watcher(),
+                name=f"script watcher for {path}",
+            )
         else:
             self.loadscript()
 
@@ -107,10 +111,6 @@ class Script:
             ctx.master.addons.register(ns)
             self.ns = ns
         if self.ns:
-            # We're already running, so we have to explicitly register and
-            # configure the addon
-            if self.is_running:
-                ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
             try:
                 ctx.master.addons.invoke_addon_sync(
                     self.ns,
@@ -118,6 +118,9 @@ class Script:
                 )
             except exceptions.OptionsError as e:
                 script_error_handler(self.fullpath, e, msg=str(e))
+            if self.is_running:
+                # We're already running, so we call that on the addon now.
+                ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
 
     async def watcher(self):
         last_mtime = 0
@@ -166,11 +169,11 @@ class ScriptLoader:
         mod = load_script(path)
         if mod:
             with addonmanager.safecall():
-                ctx.master.addons.invoke_addon_sync(mod, hooks.RunningHook())
                 ctx.master.addons.invoke_addon_sync(
                     mod,
                     hooks.ConfigureHook(ctx.options.keys()),
                 )
+                ctx.master.addons.invoke_addon_sync(mod, hooks.RunningHook())
                 for f in flows:
                     for evt in eventsequence.iterate(f):
                         ctx.master.addons.invoke_addon_sync(mod, evt)

@@ -286,6 +286,14 @@ class _TLSLayer(tunnel.TunnelLayer):
             except SSL.ZeroReturnError:
                 close = True
                 break
+            except SSL.Error as e:
+                # This may be happening because the other side send an alert.
+                # There's somewhat ugly behavior with Firefox on Android here,
+                # which upon mistrusting a certificate still completes the handshake
+                # and then sends an alert in the next packet. At this point we have unfortunately
+                # already fired out `tls_established_client` hook.
+                yield commands.Log(f"TLS Error: {e}", "warn")
+                break
 
         if plaintext:
             yield from self.event_to_child(
@@ -343,7 +351,8 @@ class ServerTLSLayer(_TLSLayer):
             self.tunnel_state = tunnel.TunnelState.CLOSED
         else:
             yield from self.start_tls()
-            yield from self.receive_handshake_data(b"")
+            if self.tls:
+                yield from self.receive_handshake_data(b"")
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.wait_for_clienthello:

@@ -1,11 +1,11 @@
 import math
 import sys
 from functools import lru_cache
-from typing import Optional, Union  # noqa
+
+import urwid
 
 import mitmproxy.flow
-import mitmproxy.tools.console.master  # noqa
-import urwid
+import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http

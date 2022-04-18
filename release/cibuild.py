@@ -388,7 +388,7 @@ def build_pyinstaller(be: BuildEnviron) -> None:  # pragma: no cover
             click.echo(subprocess.check_output([executable, "--version"]).decode())
 
             archive.add(str(executable), str(executable.name))
-    click.echo("Packed {}.".format(be.archive_path.name))
+    click.echo(f"Packed {be.archive_path.name}.")
 
 
 def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover

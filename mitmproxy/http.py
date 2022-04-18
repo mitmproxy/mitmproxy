@@ -414,9 +414,10 @@ class Message(serializable.Serializable):
             if "json" in self.headers.get("content-type", ""):
                 enc = "utf8"
         if not enc:
-            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
-            if meta_charset:
-                enc = meta_charset.group(1).decode("ascii", "ignore")
+            if "html" in self.headers.get("content-type", ""):
+                meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
+                if meta_charset:
+                    enc = meta_charset.group(1).decode("ascii", "ignore")
         if not enc:
             if "text/css" in self.headers.get("content-type", ""):
                 # @charset rule must be the very first thing.
@@ -509,7 +510,7 @@ class Message(serializable.Serializable):
         self.headers["content-encoding"] = encoding
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
-            raise ValueError("Invalid content encoding {}".format(repr(encoding)))
+            raise ValueError(f"Invalid content encoding {repr(encoding)}")
 
     def json(self, **kwargs: Any) -> Any:
         """
@@ -1032,7 +1033,7 @@ class Response(Message):
             reason = reason.encode("ascii", "strict")
 
         if isinstance(content, str):
-            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+            raise ValueError(f"Content must be bytes, not {type(content).__name__}")
         if not isinstance(headers, Headers):
             headers = Headers(headers)
         if trailers is not None and not isinstance(trailers, Headers):

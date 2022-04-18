@@ -3,7 +3,7 @@ from typing import Optional
 
 import urwid
 
-import mitmproxy.tools.console.master  # noqa
+import mitmproxy.tools.console.master
 from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
@@ -63,7 +63,8 @@ class ActionBar(urwid.WidgetWrap):
     def prep_prompt(self, p):
         return p.strip() + ": "
 
-    def shorten_message(self, msg, max_width):
+    @staticmethod
+    def shorten_message(msg, max_width):
         """
         Shorten message so that it fits into a single line in the statusbar.
         """

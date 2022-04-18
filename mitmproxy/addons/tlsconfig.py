@@ -118,7 +118,9 @@ class TlsConfig:
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
-        client: connection.Client = tls_start.context.client
+        assert isinstance(tls_start.conn, connection.Client)
+
+        client: connection.Client = tls_start.conn
         server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
@@ -168,8 +170,11 @@ class TlsConfig:
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
+        assert isinstance(tls_start.conn, connection.Server)
+
         client: connection.Client = tls_start.context.client
-        server: connection.Server = tls_start.context.server
+        # tls_start.conn may be different from tls_start.context.server, e.g. an upstream HTTPS proxy.
+        server: connection.Server = tls_start.conn
         assert server.address
 
         if ctx.options.ssl_insecure:

@@ -63,7 +63,7 @@ class WebsocketConnection(wsproto.Connection):
     frame_buf: List[bytes]
 
     def __init__(self, *args, conn: connection.Connection, **kwargs):
-        super(WebsocketConnection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.conn = conn
         self.frame_buf = [b""]
 
@@ -124,8 +124,10 @@ class WebsocketLayer(layer.Layer):
 
         if isinstance(event, events.ConnectionEvent):
             from_client = event.connection == self.context.client
+            injected = False
         elif isinstance(event, WebSocketMessageInjected):
             from_client = event.message.from_client
+            injected = True
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -165,7 +167,7 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf = [b""]
 
-                    message = websocket.WebSocketMessage(typ, from_client, content)
+                    message = websocket.WebSocketMessage(typ, from_client, content, injected=injected)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 

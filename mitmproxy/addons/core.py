@@ -50,18 +50,19 @@ class Core:
                     )
 
     @command.command("set")
-    def set(self, option: str, value: str = "") -> None:
+    def set(self, option: str, *value: str) -> None:
         """
             Set an option. When the value is omitted, booleans are set to true,
             strings and integers are set to None (if permitted), and sequences
             are emptied. Boolean values can be true, false or toggle.
             Multiple values are concatenated with a single space.
-            Sequences are set using multiple invocations to set for
-            the same option.
         """
-        strspec = f"{option}={value}"
+        if value:
+            specs = [f"{option}={v}" for v in value]
+        else:
+            specs = [option]
         try:
-            ctx.options.set(strspec)
+            ctx.options.set(*specs)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
 
@@ -177,7 +178,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            "URL {} is invalid: {}".format(repr(val), e)
+                            f"URL {repr(val)} is invalid: {e}"
                         ) from e
                 else:
                     self.rupdate = False
@@ -198,7 +199,7 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Set {} on  {} flows.".format(attr, len(updated)))
+        ctx.log.alert(f"Set {attr} on  {len(updated)} flows.")
 
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:

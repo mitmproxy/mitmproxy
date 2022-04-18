@@ -40,7 +40,7 @@ class Http2Connection(HttpConnection):
     h2_conf_defaults = dict(
         header_encoding=False,
         validate_outbound_headers=False,
-        validate_inbound_headers=True,
+        # validate_inbound_headers is controlled by the validate_inbound_headers option.
         normalize_inbound_headers=False,  # changing this to True is required to pass h2spec
         normalize_outbound_headers=False,
     )
@@ -58,6 +58,7 @@ class Http2Connection(HttpConnection):
         if self.debug:
             self.h2_conf.logger = H2ConnectionLogger(f"{human.format_address(self.context.client.peername)}: "
                                                      f"{self.__class__.__name__}")
+        self.h2_conf.validate_inbound_headers = self.context.options.validate_inbound_headers
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
 
@@ -269,6 +270,13 @@ def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) ->
     return headers
 
 
+def normalize_h2_headers(headers: List[Tuple[bytes, bytes]]) -> CommandGenerator[None]:
+    for i in range(len(headers)):
+        if not headers[i][0].islower():
+            yield Log(f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2.")
+            headers[i] = (headers[i][0].lower(), headers[i][1])
+
+
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
@@ -290,7 +298,10 @@ class Http2Server(Http2Connection):
                     (b":status", b"%d" % event.response.status_code),
                     *event.response.headers.fields
                 ]
-                if not event.response.is_http2:
+                if event.response.is_http2:
+                    if self.context.options.normalize_outbound_headers:
+                        yield from normalize_h2_headers(headers)
+                else:
                     headers = normalize_h1_headers(headers, False)
 
                 self.h2_conn.send_headers(
@@ -407,6 +418,8 @@ class Http2Client(Http2Connection):
 
             if event.request.is_http2:
                 hdrs = list(event.request.headers.fields)
+                if self.context.options.normalize_outbound_headers:
+                    yield from normalize_h2_headers(hdrs)
             else:
                 headers = event.request.headers
                 if not event.request.authority and "host" in headers:

@@ -10,7 +10,7 @@ from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
+from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
@@ -352,20 +352,20 @@ def test_http2_client_aborts(tctx, stream, when, how):
         assert "peer closed connection" in flow().error.msg
 
 
-@pytest.mark.xfail(reason="inbound validation turned on to protect against request smuggling")
-def test_no_normalization(tctx):
+@pytest.mark.parametrize("normalize", [True, False])
+def test_no_normalization(tctx, normalize):
     """Test that we don't normalize headers when we just pass them through."""
+    tctx.options.normalize_outbound_headers = normalize
+    tctx.options.validate_inbound_headers = False
 
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook, cff = start_h2_client(tctx)
 
-    request_headers = example_request_headers + (
-        (b"Should-Not-Be-Capitalized! ", b" :) "),
-    )
-    response_headers = example_response_headers + (
-        (b"Same", b"Here"),
-    )
+    request_headers = list(example_request_headers) + [(b"Should-Not-Be-Capitalized! ", b" :) ")]
+    request_headers_lower = [(k.lower(), v) for (k, v) in request_headers]
+    response_headers = list(example_response_headers) + [(b"Same", b"Here")]
+    response_headers_lower = [(k.lower(), v) for (k, v) in response_headers]
 
     initial = Placeholder(bytes)
     assert (
@@ -385,18 +385,22 @@ def test_no_normalization(tctx):
         hyperframe.frame.SettingsFrame,
         hyperframe.frame.HeadersFrame,
     ]
-    assert hpack.hpack.Decoder().decode(frames[1].data, True) == list(request_headers)
+    assert hpack.hpack.Decoder().decode(frames[1].data, True) == request_headers_lower if normalize else request_headers
 
     sff = FrameFactory()
-    assert (
+    (
             playbook
             >> DataReceived(server, sff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
             << http.HttpResponseHeadersHook(flow)
             >> reply()
             << http.HttpResponseHook(flow)
             >> reply()
-            << SendData(tctx.client, cff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
     )
+    if normalize:
+        playbook << Log("Lowercased 'Same' header as uppercase is not allowed with HTTP/2.")
+    hdrs = response_headers_lower if normalize else response_headers
+    assert playbook << SendData(tctx.client, cff.build_headers_frame(hdrs, flags=["END_STREAM"]).serialize())
+
     assert flow().request.headers.fields == ((b"Should-Not-Be-Capitalized! ", b" :) "),)
     assert flow().response.headers.fields == ((b"Same", b"Here"),)
 

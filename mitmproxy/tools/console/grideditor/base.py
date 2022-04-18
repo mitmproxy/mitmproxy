@@ -8,7 +8,7 @@ from mitmproxy.utils import strutils
 from mitmproxy import exceptions
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master
 
 
 def read_file(filename: str, escaped: bool) -> typing.AnyStr:
