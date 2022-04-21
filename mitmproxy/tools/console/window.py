@@ -131,10 +131,30 @@ class WindowStack:
 class Window(urwid.Frame):
     def __init__(self, master):
         self.statusbar = statusbar.StatusBar(master)
+        self.quick_help = urwid.Text([
+            ("heading", u"?"),
+            u" Help ",
+            ("heading", u"k"),
+            u" Up ",
+            ("heading", u"j"),
+            u" Down ",
+            ("heading", u"h"),
+            u" Left ",
+            ("heading", u"l"),
+            u" Right ",
+            ("heading", u"q"),
+            u" Exit current view ",
+            ("heading", u"enter"),
+            u" Select ",
+            ("heading", u"tab"),
+            u" Next "])
+
         super().__init__(
             None,
             header=None,
-            footer=urwid.AttrWrap(self.statusbar, "background")
+            footer = urwid.Pile([
+                self.statusbar,
+                self.quick_help])
         )
         self.master = master
         self.master.view.sig_view_refresh.connect(self.view_changed)
