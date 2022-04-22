@@ -30,16 +30,6 @@ class Start(Event):
     pass
 
 
-class Wakeup(Event):
-    """
-    Event sent to layers that requested a wakeup using RequestWakeup.
-    """
-    request: commands.RequestWakeup
-
-    def __init__(self, request: commands.RequestWakeup):
-        self.request = request
-
-
 @dataclass
 class ConnectionEvent(Event):
     """
@@ -131,3 +121,11 @@ class MessageInjected(Event, typing.Generic[T]):
     """
     flow: flow.Flow
     message: T
+
+
+@dataclass
+class Wakeup(CommandCompleted):
+    """
+    Event sent to layers that requested a wakeup using RequestWakeup.
+    """
+    command: commands.RequestWakeup
