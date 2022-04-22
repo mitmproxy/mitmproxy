@@ -7,9 +7,11 @@ import signal
 import sys
 import threading
 import traceback
+from collections import Counter
 from contextlib import redirect_stdout
 
 from OpenSSL import SSL
+
 from mitmproxy import version
 from mitmproxy.utils import asyncio_utils
 
@@ -70,17 +72,26 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
 
         print()
         print("Memory")
-        print("=======")
+        print("======")
         gc.collect()
-        d = {}
-        for i in gc.get_objects():
-            t = str(type(i))
-            if "mitmproxy" in t:
-                d[t] = d.setdefault(t, 0) + 1
-        itms = list(d.items())
-        itms.sort(key=lambda x: x[1])
-        for i in itms[-20:]:
-            print(i[1], i[0])
+        objs = Counter(
+            str(type(i))
+            for i in gc.get_objects()
+        )
+
+        for cls, count in objs.most_common(20):
+            print(f"{count} {cls}")
+
+        print()
+        print("Memory (mitmproxy only)")
+        print("=======================")
+        mitm_objs = Counter({
+            k: v
+            for k, v in objs.items()
+            if "mitmproxy" in k
+        })
+        for cls, count in mitm_objs.most_common(20):
+            print(f"{count} {cls}")
 
         try:
             asyncio.get_running_loop()
