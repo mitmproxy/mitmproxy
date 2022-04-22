@@ -26,7 +26,7 @@ def dump_system_info():
     return "\n".join(data)
 
 
-def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragma: no cover
+def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
     with redirect_stdout(file):
         print("****************************************************")
         print("Summary")
@@ -99,11 +99,11 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
 
         print("****************************************************")
 
-    if not testing and not os.getenv("MITMPROXY_DEBUG_STAY_ALIVE"):  # pragma: no cover
+    if os.getenv("MITMPROXY_DEBUG_EXIT"):  # pragma: no cover
         sys.exit(1)
 
 
-def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
+def dump_stacks(signal=None, frame=None, file=sys.stdout):
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
     for threadId, stack in sys._current_frames().items():
@@ -117,7 +117,7 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
             if line:
                 code.append("  %s" % (line.strip()))
     print("\n".join(code), file=file)
-    if not testing and not os.getenv("MITMPROXY_DEBUG_STAY_ALIVE"):  # pragma: no cover
+    if os.getenv("MITMPROXY_DEBUG_EXIT"):  # pragma: no cover
         sys.exit(1)
 
 
