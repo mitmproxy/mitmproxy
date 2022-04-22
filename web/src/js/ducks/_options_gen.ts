@@ -26,6 +26,7 @@ export interface OptionsState {
     dns_server: boolean
     export_preserve_original_ip: boolean
     http2: boolean
+    http2_ping_keepalive: number
     ignore_hosts: string[]
     intercept: string | undefined
     intercept_active: boolean
@@ -118,6 +119,7 @@ export const defaultState: OptionsState = {
     dns_server: false,
     export_preserve_original_ip: false,
     http2: true,
+    http2_ping_keepalive: 58,
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,

@@ -20,9 +20,9 @@ from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolE
     ResponseEndOfMessage, ResponseHeaders, RequestTrailers, ResponseTrailers, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
-from ...commands import CloseConnection, Log, SendData
+from ...commands import CloseConnection, Log, SendData, RequestWakeup
 from ...context import Context
-from ...events import ConnectionClosed, DataReceived, Event, Start
+from ...events import ConnectionClosed, DataReceived, Event, Start, Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
 
@@ -252,7 +252,7 @@ class Http2Connection(HttpConnection):
         self.streams.clear()
         self._handle_event = self.done  # type: ignore
 
-    @expect(DataReceived, HttpEvent, ConnectionClosed)
+    @expect(DataReceived, HttpEvent, ConnectionClosed, Wakeup)
     def done(self, _) -> CommandGenerator[None]:
         yield from ()
 
@@ -358,6 +358,8 @@ class Http2Client(Http2Connection):
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
     provisional_max_concurrency: Optional[int] = 10
     """A provisional currency limit before we get the server's first settings frame."""
+    last_activity: float
+    """Timestamp of when we've last seen network activity on this connection."""
 
     def __init__(self, context: Context):
         super().__init__(context, context.server)
@@ -407,7 +409,30 @@ class Http2Client(Http2Connection):
                 yield from self._handle_event(event)
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
-        if isinstance(event, RequestHeaders):
+        if isinstance(event, Wakeup):
+            send_ping_now = (
+                # add one second to avoid unnecessary roundtrip, we don't need to be super correct here.
+                time.time() - self.last_activity + 1 > self.context.options.http2_ping_keepalive
+            )
+            if send_ping_now:
+                # PING frames MUST contain 8 octets of opaque data in the payload.
+                # A sender can include any value it chooses and use those octets in any fashion.
+                self.last_activity = time.time()
+                self.h2_conn.ping(b"0" * 8)
+                data = self.h2_conn.data_to_send()
+                if data is not None:
+                    yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
+                    yield SendData(self.conn, data)
+            time_until_next_ping = self.context.options.http2_ping_keepalive - (time.time() - self.last_activity)
+            yield RequestWakeup(time_until_next_ping)
+            return
+
+        self.last_activity = time.time()
+        if isinstance(event, Start):
+            if self.context.options.http2_ping_keepalive > 0:
+                yield RequestWakeup(self.context.options.http2_ping_keepalive)
+            yield from super()._handle_event(event)
+        elif isinstance(event, RequestHeaders):
             pseudo_headers = [
                 (b':method', event.request.data.method),
                 (b':scheme', event.request.data.scheme),

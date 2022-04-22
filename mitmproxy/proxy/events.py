@@ -121,3 +121,11 @@ class MessageInjected(Event, typing.Generic[T]):
     """
     flow: flow.Flow
     message: T
+
+
+@dataclass
+class Wakeup(CommandCompleted):
+    """
+    Event sent to layers that requested a wakeup using RequestWakeup.
+    """
+    command: commands.RequestWakeup

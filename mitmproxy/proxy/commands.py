@@ -39,6 +39,16 @@ class Command:
         return f"{type(self).__name__}({repr(x)})"
 
 
+class RequestWakeup(Command):
+    """
+    Request a `Wakeup` event after the specified amount of seconds.
+    """
+    delay: float
+
+    def __init__(self, delay: float):
+        self.delay = delay
+
+
 class ConnectionCommand(Command):
     """
     Commands involving a specific connection

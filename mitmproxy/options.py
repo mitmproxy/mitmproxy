@@ -107,6 +107,14 @@ class Options(optmanager.OptManager):
             "HTTP/2 support is enabled by default.",
         )
         self.add_option(
+            "http2_ping_keepalive", int, 58,
+            """
+            Send a PING frame if an HTTP/2 connection is idle for more than
+            the specified number of seconds to prevent the remote site from closing it.
+            Set to 0 to disable this feature.
+            """
+        )
+        self.add_option(
             "websocket", bool, True,
             "Enable/disable WebSocket support. "
             "WebSocket support is enabled by default.",

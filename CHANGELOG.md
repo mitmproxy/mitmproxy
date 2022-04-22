@@ -5,6 +5,8 @@
 * DNS support (@meitinger)
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
+* Periodically send HTTP/2 ping frames to keep connections alive.
+  ([#5046](https://github.com/mitmproxy/mitmproxy/issues/5046), @EndUser509)
 * Console Performance Improvements
   ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
 * Warn users if server side event responses are received without streaming.
@@ -25,7 +27,8 @@
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
-* Added example script for manipulating cookies. (@WillahScott)
+* Added example script for manipulating cookies.
+  ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
   
 ## 19 March 2022: mitmproxy 8.0.0
 

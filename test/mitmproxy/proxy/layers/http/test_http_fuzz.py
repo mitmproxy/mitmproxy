@@ -220,6 +220,7 @@ def h2_frames(draw):
 
 def h2_layer(opts):
     tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    tctx.options.http2_ping_keepalive = 0
     tctx.client.alpn = b"h2"
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
