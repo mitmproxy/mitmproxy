@@ -76,11 +76,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
     layer: layer.Layer
+    wakeup_timer: typing.Set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
+        self.wakeup_timer = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -120,6 +122,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await asyncio.wait([handler])
 
         watch.cancel()
+        while self.wakeup_timer:
+            timer = self.wakeup_timer.pop()
+            timer.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
@@ -198,6 +203,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.log(f"server disconnect {addr}")
                 command.connection.timestamp_end = time.time()
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
+
+    async def wakeup(self, request: commands.RequestWakeup) -> None:
+        await asyncio.sleep(request.delay)
+        task = asyncio.current_task()
+        assert task is not None
+        self.wakeup_timer.discard(task)
+        self.server_event(events.Wakeup(request))
 
     async def handle_connection(self, connection: Connection) -> None:
         """
@@ -297,6 +309,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         client=self.client.peername,
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
+                elif isinstance(command, commands.RequestWakeup):
+                    task = asyncio_utils.create_task(
+                        self.wakeup(command),
+                        name=f"wakeup timer ({command.delay:.1f}s)",
+                        client=self.client.peername
+                    )
+                    assert task is not None
+                    self.wakeup_timer.add(task)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):

@@ -13,6 +13,7 @@ def tconn() -> connection.Server:
 
 
 def test_dataclasses(tconn):
+    assert repr(commands.RequestWakeup(58))
     assert repr(commands.SendData(tconn, b"foo"))
     assert repr(commands.OpenConnection(tconn))
     assert repr(commands.CloseConnection(tconn))

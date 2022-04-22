@@ -708,6 +708,9 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
                 self.context.server.via = server_spec.parse_with_mode(self.context.options.mode)[1]
+        elif isinstance(event, events.Wakeup):
+            stream = self.command_sources.pop(event.command)
+            yield from self.event_to_child(stream, event)
         elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
@@ -765,7 +768,7 @@ class HttpLayer(layer.Layer):
             # Streams may yield blocking commands, which ultimately generate CommandCompleted events.
             # Those need to be routed back to the correct stream, so we need to keep track of that.
 
-            if command.blocking:
+            if command.blocking or isinstance(command, commands.RequestWakeup):
                 self.command_sources[command] = child
 
             if isinstance(command, ReceiveHttp):

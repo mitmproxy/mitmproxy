@@ -4,13 +4,14 @@ import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
+import time
 from h2.errors import ErrorCodes
 
 from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
+from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData, RequestWakeup
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
@@ -64,8 +65,9 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
     return frames
 
 
-def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
+def start_h2_client(tctx: Context, keepalive: int = 0) -> Tuple[Playbook, FrameFactory]:
     tctx.client.alpn = b"h2"
+    tctx.options.http2_ping_keepalive = keepalive
     frame_factory = FrameFactory()
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
@@ -679,6 +681,7 @@ def test_kill_stream(tctx):
 
 class TestClient:
     def test_no_data_on_closed_stream(self, tctx):
+        tctx.options.http2_ping_keepalive = 0
         frame_factory = FrameFactory()
         req = Request.make("GET", "http://example.com/")
         resp = {
@@ -780,3 +783,64 @@ def test_request_smuggling_te(tctx):
             << CloseConnection(tctx.client)
     )
     assert b"Connection-specific header field present" in err()
+
+
+def test_request_keepalive(tctx, monkeypatch):
+    playbook, cff = start_h2_client(tctx, 58)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+
+    def advance_time(_):
+        t = time.time()
+        monkeypatch.setattr(time, "time", lambda: t + 60)
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << RequestWakeup(58)
+            << SendData(server, initial)
+            >> reply(to=-2, side_effect=advance_time)
+            << SendData(server, b'\x00\x00\x08\x06\x00\x00\x00\x00\x0000000000')  # ping frame
+            << RequestWakeup(58)
+    )
+
+
+def test_keepalive_disconnect(tctx, monkeypatch):
+    playbook, cff = start_h2_client(tctx, 58)
+    playbook.hooks = False
+    sff = FrameFactory()
+    server = Placeholder(Server)
+    wakeup_command = RequestWakeup(58)
+
+    http_response = (
+        sff.build_headers_frame(example_response_headers).serialize() +
+        sff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+    )
+
+    def advance_time(_):
+        t = time.time()
+        monkeypatch.setattr(time, "time", lambda: t + 60)
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << wakeup_command
+            << SendData(server, Placeholder(bytes))
+            >> DataReceived(server, http_response)
+            << SendData(tctx.client, Placeholder(bytes))
+            >> ConnectionClosed(server)
+            << CloseConnection(server)
+            >> reply(to=wakeup_command, side_effect=advance_time)
+            << None
+    )

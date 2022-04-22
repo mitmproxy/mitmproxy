@@ -24,6 +24,7 @@ def event_types(events):
 
 def h2_client(tctx: Context) -> Tuple[h2.connection.H2Connection, Playbook]:
     tctx.client.alpn = b"h2"
+    tctx.options.http2_ping_keepalive = 0
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     conn = h2.connection.H2Connection()
@@ -89,6 +90,7 @@ def test_h1_to_h2(tctx):
     """Test HTTP/1 -> HTTP/2 request translation"""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
+    tctx.options.http2_ping_keepalive = 0
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
 
