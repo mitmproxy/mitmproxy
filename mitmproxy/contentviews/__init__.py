@@ -19,10 +19,10 @@ import blinker
 
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.utils import strutils
+from mitmproxy.utils import strutils, protoc
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack, graphql, grpc
+    urlencoded, multipart, image, query, protobuf, msgpack, graphql, grpc, grpc_protoc
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
@@ -194,6 +194,7 @@ add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
+add(grpc_protoc.ViewGrpcProtoc(protoc.serializer))
 
 __all__ = [
     "View", "KEY_MAX", "format_text", "format_dict", "TViewResult",

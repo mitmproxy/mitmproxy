@@ -1,0 +1,12 @@
+
+®
+
+test.proto#mitmproxy.test.utils.test_grpc_data"$
+GetUserRequest
+name (	Rname"G
+GetUserResponse
+name (	Rname
+age (Rage
+id (Rid2ƒ
+TestServicet
+GetUser3.mitmproxy.test.utils.test_grpc_data.GetUserRequest4.mitmproxy.test.utils.test_grpc_data.GetUserResponsebproto3

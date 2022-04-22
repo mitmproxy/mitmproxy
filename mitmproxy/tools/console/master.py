@@ -19,6 +19,12 @@ import urwid
 from mitmproxy import addons
 from mitmproxy import master
 from mitmproxy import log
+from mitmproxy.utils import protoc
+from mitmproxy.addons import intercept
+from mitmproxy.addons import eventstore
+from mitmproxy.addons import readfile
+from mitmproxy.addons import view
+from mitmproxy.addons import grpc_protoc
 from mitmproxy.addons import errorcheck, intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
@@ -56,6 +62,8 @@ class ConsoleMaster(master.Master):
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),
+            grpc_protoc.GrpcProtocConsoleBodyModifer(protoc.serializer, self),
+            grpc_protoc.GrpcProtocConsoleDescriptorProvider(protoc.serializer),
             errorcheck.ErrorCheck(log_to_stderr=True),
         )
 
