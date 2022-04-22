@@ -146,7 +146,7 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
         write(span)
         return size + 1 + len(span)
     else:
-        raise ValueError("unserializable object: {} ({})".format(value, type(value)))
+        raise ValueError(f"unserializable object: {value} ({type(value)})")
 
 
 def loads(string: bytes) -> TSerializable:

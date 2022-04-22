@@ -1,8 +1,11 @@
+import typing
+from functools import lru_cache
+
 import urwid
 
+import mitmproxy.tools.console.master
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master # noqa
 
 
 class FlowItem(urwid.WidgetWrap):
@@ -40,6 +43,7 @@ class FlowItem(urwid.WidgetWrap):
 
 
 class FlowListWalker(urwid.ListWalker):
+    master: "mitmproxy.tools.console.master.ConsoleMaster"
 
     def __init__(self, master):
         self.master = master
@@ -47,13 +51,14 @@ class FlowListWalker(urwid.ListWalker):
     def positions(self, reverse=False):
         # The stub implementation of positions can go once this issue is resolved:
         # https://github.com/urwid/urwid/issues/294
-        ret = range(self.master.commands.execute("view.properties.length"))
+        ret = range(self.master.view.get_length())
         if reverse:
             return reversed(ret)
         return ret
 
     def view_changed(self):
         self._modified()
+        self._get.cache_clear()
 
     def get_focus(self):
         if not self.master.view.focus.flow:
@@ -65,19 +70,17 @@ class FlowListWalker(urwid.ListWalker):
         if self.master.commands.execute("view.properties.inbounds %d" % index):
             self.master.view.focus.index = index
 
-    def get_next(self, pos):
-        pos = pos + 1
-        if not self.master.commands.execute("view.properties.inbounds %d" % pos):
+    @lru_cache(maxsize=None)
+    def _get(self, pos: int) -> typing.Tuple[typing.Optional[FlowItem], typing.Optional[int]]:
+        if not self.master.view.inbounds(pos):
             return None, None
-        f = FlowItem(self.master, self.master.view[pos])
-        return f, pos
+        return FlowItem(self.master, self.master.view[pos]), pos
+
+    def get_next(self, pos):
+        return self._get(pos + 1)
 
     def get_prev(self, pos):
-        pos = pos - 1
-        if not self.master.commands.execute("view.properties.inbounds %d" % pos):
-            return None, None
-        f = FlowItem(self.master, self.master.view[pos])
-        return f, pos
+        return self._get(pos - 1)
 
 
 class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):

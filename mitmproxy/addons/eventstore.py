@@ -1,5 +1,5 @@
 import collections
-import typing  # noqa
+import typing
 
 import blinker
 

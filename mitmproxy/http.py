@@ -510,7 +510,7 @@ class Message(serializable.Serializable):
         self.headers["content-encoding"] = encoding
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
-            raise ValueError("Invalid content encoding {}".format(repr(encoding)))
+            raise ValueError(f"Invalid content encoding {repr(encoding)}")
 
     def json(self, **kwargs: Any) -> Any:
         """
@@ -1033,7 +1033,7 @@ class Response(Message):
             reason = reason.encode("ascii", "strict")
 
         if isinstance(content, str):
-            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+            raise ValueError(f"Content must be bytes, not {type(content).__name__}")
         if not isinstance(headers, Headers):
             headers = Headers(headers)
         if trailers is not None and not isinstance(trailers, Headers):

@@ -10,7 +10,7 @@ to multiple files in parallel.
 import random
 import sys
 from mitmproxy import io, http
-import typing  # noqa
+import typing
 
 
 class Writer:

@@ -20,7 +20,7 @@ def format_query_list(data: typing.List[typing.Any]):
     num_queries = len(data) - 1
     result = ""
     for i, op in enumerate(data):
-        result += "--- {i}/{num_queries}\n".format(i=i, num_queries=num_queries)
+        result += f"--- {i}/{num_queries}\n"
         result += format_graphql(op)
     return result
 

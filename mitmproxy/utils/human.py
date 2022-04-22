@@ -31,7 +31,7 @@ def pretty_size(size: int) -> str:
     raise AssertionError
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def parse_size(s: typing.Optional[str]) -> typing.Optional[int]:
     """
     Parse a size with an optional k/m/... suffix.
@@ -65,7 +65,7 @@ def pretty_duration(secs: typing.Optional[float]) -> str:
         if secs >= limit:
             return formatter.format(secs)
     # less than 1 sec
-    return "{:.0f}ms".format(secs * 1000)
+    return f"{secs * 1000:.0f}ms"
 
 
 def format_timestamp(s):
@@ -79,7 +79,7 @@ def format_timestamp_with_milli(s):
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def format_address(address: typing.Optional[tuple]) -> str:
     """
     This function accepts IPv4/IPv6 tuples and
@@ -90,12 +90,12 @@ def format_address(address: typing.Optional[tuple]) -> str:
     try:
         host = ipaddress.ip_address(address[0])
         if host.is_unspecified:
-            return "*:{}".format(address[1])
+            return f"*:{address[1]}"
         if isinstance(host, ipaddress.IPv4Address):
-            return "{}:{}".format(str(host), address[1])
+            return f"{str(host)}:{address[1]}"
         # If IPv6 is mapped to IPv4
         elif host.ipv4_mapped:
-            return "{}:{}".format(str(host.ipv4_mapped), address[1])
-        return "[{}]:{}".format(str(host), address[1])
+            return f"{str(host.ipv4_mapped)}:{address[1]}"
+        return f"[{str(host)}]:{address[1]}"
     except ValueError:
-        return "{}:{}".format(address[0], address[1])
+        return f"{address[0]}:{address[1]}"

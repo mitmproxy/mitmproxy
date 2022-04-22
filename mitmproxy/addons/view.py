@@ -74,7 +74,7 @@ class _OrderKey:
 
 class OrderRequestStart(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> float:
-        return f.timestamp_start
+        return f.timestamp_created
 
 
 class OrderRequestMethod(_OrderKey):

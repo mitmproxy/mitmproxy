@@ -2,6 +2,32 @@
 
 ## Unreleased: mitmproxy next
 
+* Replayed flows retain their current position in the flow list.
+  ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
+* Console Performance Improvements
+  ([#3427](https://github.com/mitmproxy/mitmproxy/issues/3427), @BkPHcgQL3V)
+* Warn users if server side event responses are received without streaming.
+  ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
+* Add flatpak support to the browser addon
+  ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
+* Add example addon to dump contents to files based on a filter expression 
+  ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
+* Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
+  ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
+* Make sure that mitmproxy displays error messages on startup.
+  ([#5225](https://github.com/mitmproxy/mitmproxy/issues/5225), @mhils)
+* Add example addon for domain fronting.
+  ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
+* Improve cut addon to better handle binary contents
+  ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
+* Fix text truncation for full-width characters 
+  ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
+* Fix mitmweb export copy failed in non-secure domain.
+  ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
+* Added example script for manipulating cookies. (@WillahScott)
+  
+## 19 March 2022: mitmproxy 8.0.0
+
 ### Major Changes
 
 * Major improvements to the web interface (@gorogoroumaru)
