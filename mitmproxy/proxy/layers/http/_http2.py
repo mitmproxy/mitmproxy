@@ -358,6 +358,8 @@ class Http2Client(Http2Connection):
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
     provisional_max_concurrency: Optional[int] = 10
     """A provisional currency limit before we get the server's first settings frame."""
+    last_activity: float
+    """Timestamp of when we've last seen network activity on this connection."""
 
     def __init__(self, context: Context):
         super().__init__(context, context.server)
@@ -369,7 +371,6 @@ class Http2Client(Http2Connection):
         self.our_stream_id = {}
         self.their_stream_id = {}
         self.stream_queue = collections.defaultdict(list)
-        self.last_activity: float
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         # We can't reuse stream ids from the client because they may arrived reordered here
@@ -409,19 +410,23 @@ class Http2Client(Http2Connection):
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Wakeup):
-            remaining = self.context.options.http2_ping_keepalive - time.time() + self.last_activity
-            if remaining <= 0.5:
-                remaining = self.context.options.http2_ping_keepalive
+            send_ping_now = (
+                # add one second to avoid unnecessary roundtrip, we don't need to be super correct here.
+                time.time() - self.last_activity + 1 > self.context.options.http2_ping_keepalive
+            )
+            if send_ping_now:
                 # PING frames MUST contain 8 octets of opaque data in the payload.
                 # A sender can include any value it chooses and use those octets in any fashion.
+                self.last_activity = time.time()
                 self.h2_conn.ping(b"0" * 8)
                 data = self.h2_conn.data_to_send()
                 if data is not None:
                     yield Log(f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}")
                     yield SendData(self.conn, data)
-                    self.last_activity = time.time()
-            yield RequestWakeup(remaining)
+            time_until_next_ping = self.context.options.http2_ping_keepalive - (time.time() - self.last_activity)
+            yield RequestWakeup(time_until_next_ping)
             return
+
         self.last_activity = time.time()
         if isinstance(event, Start):
             if self.context.options.http2_ping_keepalive > 0:

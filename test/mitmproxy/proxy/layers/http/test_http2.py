@@ -13,7 +13,7 @@ from mitmproxy.http import HTTPFlow, Headers, Request
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData, RequestWakeup
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived, Wakeup
+from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client, split_pseudo_headers

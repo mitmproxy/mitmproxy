@@ -76,7 +76,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
     layer: layer.Layer
-    wakeup_timer: set[asyncio.Task]
+    wakeup_timer: typing.Set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
@@ -312,7 +312,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.RequestWakeup):
                     task = asyncio_utils.create_task(
                         self.wakeup(command),
-                        name="wakeup_timer",
+                        name=f"wakeup timer ({command.delay:.1f}s)",
                         client=self.client.peername
                     )
                     assert task is not None
