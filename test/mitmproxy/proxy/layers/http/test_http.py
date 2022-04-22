@@ -1,3 +1,5 @@
+import gc
+
 import pytest
 
 from mitmproxy.connection import ConnectionState, Server
@@ -1356,3 +1358,48 @@ def test_connect_more_newlines(tctx):
         << layer.NextLayerHook(nl)
     )
     assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"
+
+
+def flows_tracked() -> int:
+    return sum(
+        isinstance(x, HTTPFlow)
+        for x in gc.get_objects()
+    )
+
+
+def test_memory_usage_completed_flows(tctx):
+    """Make sure that flows are not kept in memory after they are completed."""
+    gc.collect()
+    flow_count = flows_tracked()
+
+    server = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 204 No Content\r\n\r\n")
+    )
+
+    gc.collect()
+    assert flows_tracked() == flow_count
+
+
+def test_memory_usage_errored_flows(tctx):
+    """Make sure that flows are not kept in memory after they errored."""
+    gc.collect()
+    flow_count = flows_tracked()
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(Placeholder(Server))
+            >> reply("connection failed")
+            << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+connection failed"))
+            << CloseConnection(tctx.client)
+    )
+
+    gc.collect()
+    assert flows_tracked() == flow_count
