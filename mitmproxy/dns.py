@@ -424,7 +424,16 @@ class Message(stateobject.StateObject):
                     end_data = offset + len_data
                     if len(buffer) < end_data:
                         raise struct.error(f"unpack requires a data buffer of {len_data} bytes")
-                    section.append(ResourceRecord(name, type, class_, ttl, buffer[offset:end_data]))
+                    data = buffer[offset:end_data]
+                    if 0b11000000 in data:
+                        # the resource record might contains a compressed domain name, if so, uncompressed in advance
+                        try:
+                            rr_name, rr_name_len = domain_names.unpack_from_with_compression(buffer, offset, cached_names)
+                            if rr_name_len == len_data:
+                                data = domain_names.pack(rr_name)
+                        except struct.error:
+                            pass
+                    section.append(ResourceRecord(name, type, class_, ttl, data))
                     offset += len_data
                 except struct.error as e:
                     raise struct.error(f"{section_name} #{i}: {str(e)}")
