@@ -138,8 +138,7 @@ class Save:
             self.active_flows.add(flow)
 
     def tcp_end(self, flow: tcp.TCPFlow):
-        if self.stream:
-            self.save_flow(flow)
+        self.save_flow(flow)
 
     def tcp_error(self, flow: tcp.TCPFlow):
         self.tcp_end(flow)
@@ -160,7 +159,8 @@ class Save:
         self.response(flow)
 
     def dns_request(self, flow: dns.DNSFlow):
-        self.active_flows.add(flow)
+        if self.stream:
+            self.active_flows.add(flow)
 
     def dns_response(self, flow: dns.DNSFlow):
         self.save_flow(flow)
