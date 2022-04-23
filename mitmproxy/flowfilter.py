@@ -381,11 +381,14 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f or not f.request:
             return False
-        return self.re.search(f.request.pretty_url)
+        if isinstance(f, http.HTTPFlow):
+            return self.re.search(f.request.pretty_url)
+        elif isinstance(f, dns.DNSFlow):
+            return self.re.search(f.request.questions[0].name)
 
 
 class FSrc(_Rex):

@@ -361,9 +361,9 @@ class ConsoleAddon:
         flow = self.master.view.focus.flow
         focus_options = []
 
-        if type(flow) == tcp.TCPFlow:
+        if isinstance(flow, tcp.TCPFlow):
             focus_options = ["tcp-message"]
-        elif type(flow) == http.HTTPFlow:
+        elif isinstance(flow, http.HTTPFlow):
             focus_options = [
                 "cookies",
                 "urlencoded form",
@@ -380,6 +380,8 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
+        elif isinstance(flow, dns.DNSFlow):
+            raise exceptions.CommandError("Cannot edit DNS flows yet, please submit a patch.")
 
         return focus_options
 
