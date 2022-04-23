@@ -46,16 +46,16 @@ class DNSLayer(layer.Layer):
         self.flow.request = msg  # if already set, continue and query upstream again
         yield DnsRequestHook(self.flow)  # give hooks a chance to change the request or produce a response
         if self.flow.response:
-            yield from self.handle_response(self.flow)
+            yield from self.handle_response(self.flow.response)
         elif not self.flow.server_conn.address:
-            yield from self.handle_error(self.flow, "No hook has set a response.")
+            yield from self.handle_error("No hook has set a response.")
         else:
             if self.flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
                 err = yield commands.OpenConnection(self.flow.server_conn)
                 if err:
-                    yield from self.handle_error(self.flow, str(err))
+                    yield from self.handle_error(str(err))
                     return  # cannot recover from this
-            yield commands.SendData(self.context.server, self.flow.request.packed)
+            yield commands.SendData(self.flow.server_conn, self.flow.request.packed)
 
     def handle_response(self, msg: dns.Message) -> layer.CommandGenerator[None]:
         self.flow.response = msg
@@ -89,7 +89,7 @@ class DNSLayer(layer.Layer):
                     yield from self.handle_response(msg)
 
         elif isinstance(event, events.ConnectionClosed):
-            other_conn = self.context.server if from_client else self.context.client
+            other_conn = self.flow.server_conn if from_client else self.context.client
             if other_conn.state is not connection.ConnectionState.CLOSED:
                 yield commands.CloseConnection(other_conn)
             self._handle_event = self.state_done

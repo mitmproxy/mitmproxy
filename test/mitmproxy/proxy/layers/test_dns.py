@@ -9,9 +9,8 @@ from ..tutils import Placeholder, Playbook, reply
 
 
 def test_invalid_and_dummy_end(tctx):
-    layer = dns.DNSLayer(tctx)
     assert (
-        Playbook(layer)
+        Playbook(dns.DNSLayer(tctx))
         >> DataReceived(tctx.client, b'Not a DNS packet')
         << Log('Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99')
         >> ConnectionClosed(tctx.client)
@@ -20,27 +19,24 @@ def test_invalid_and_dummy_end(tctx):
         >> DataReceived(tctx.client, b'Hello?')
         << None
     )
-    assert not layer.flows
 
 
-def test_simple(tctx):
+def test_regular(tctx):
     f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx)
 
     req = tdnsreq()
     resp = tdnsresp()
 
     def resolve(flow: DNSFlow):
-        nonlocal layer, req, resp
+        nonlocal req, resp
         assert flow.request
-        assert layer.flows[flow.request.id] is flow
         req.timestamp = flow.request.timestamp
         assert flow.request == req
         resp.timestamp = time.time()
         flow.response = resp
 
     assert (
-        Playbook(layer)
+        Playbook(dns.DNSLayer(tctx))
         >> DataReceived(tctx.client, req.packed)
         << dns.DnsRequestHook(f)
         >> reply(side_effect=resolve)
@@ -50,7 +46,9 @@ def test_simple(tctx):
         >> ConnectionClosed(tctx.client)
         << None
     )
-    assert not layer.flows and f().request == req and f().response == resp and not f().live
+    assert f().request == req
+    assert f().response == resp
+    assert not f().live
 
 
 def test_regular_mode_no_hook(tctx):
@@ -61,9 +59,8 @@ def test_regular_mode_no_hook(tctx):
     req = tdnsreq()
 
     def no_resolve(flow: DNSFlow):
-        nonlocal layer, req
+        nonlocal req
         assert flow.request
-        assert layer.flows[flow.request.id] is flow
         req.timestamp = flow.request.timestamp
         assert flow.request == req
 
@@ -77,7 +74,9 @@ def test_regular_mode_no_hook(tctx):
         >> ConnectionClosed(tctx.client)
         << None
     )
-    assert not layer.flows and f().request == req and not f().response and not f().live
+    assert f().request == req
+    assert not f().response
+    assert not f().live
 
 
 def test_reverse_premature_close(tctx):
@@ -87,15 +86,11 @@ def test_reverse_premature_close(tctx):
 
     req = tdnsreq()
 
-    def check_flows(_: DNSFlow):
-        nonlocal layer
-        assert layer.flows
-
     assert (
         Playbook(layer)
         >> DataReceived(tctx.client, req.packed)
         << dns.DnsRequestHook(f)
-        >> reply(side_effect=check_flows)
+        >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
         << SendData(tctx.server, req.packed)
@@ -103,7 +98,9 @@ def test_reverse_premature_close(tctx):
         << CloseConnection(tctx.server)
         << None
     )
-    assert not layer.flows and f().request and not f().response and not f().live
+    assert f().request
+    assert not f().response
+    assert not f().live
     req.timestamp = f().request.timestamp
     assert f().request == req
 
@@ -132,7 +129,9 @@ def test_reverse(tctx):
         << CloseConnection(tctx.server)
         << None
     )
-    assert not layer.flows and f().request and f().response and not f().live
+    assert f().request
+    assert f().response
+    assert not f().live
     req.timestamp = f().request.timestamp
     resp.timestamp = f().response.timestamp
     assert f().request == req and f().response == resp
@@ -156,7 +155,9 @@ def test_reverse_fail_connection(tctx):
         >> reply()
         << None
     )
-    assert not layer.flows and f().request and not f().response and f().error.msg == "UDP no likey today." and not f().live
+    assert f().request
+    assert not f().response
+    assert f().error.msg == "UDP no likey today."
     req.timestamp = f().request.timestamp
     assert f().request == req
 
@@ -191,32 +192,11 @@ def test_reverse_with_query_resend(tctx):
         << CloseConnection(tctx.server)
         << None
     )
-    assert not layer.flows and f().request and f().response and not f().live
+    assert f().request
+    assert f().response
+    assert not f().live
     req2.timestamp = f().request.timestamp
     resp.timestamp = f().response.timestamp
-    assert f().request == req2 and f().response == resp
+    assert f().request == req2
+    assert f().response == resp
 
-
-def test_reverse_with_invalid_response(tctx):
-    f = Placeholder(DNSFlow)
-    layer = dns.DNSLayer(tctx)
-    layer.context.server.address = ('8.8.8.8', 53)
-
-    req = tdnsreq()
-    resp = tdnsresp()
-    resp.id = resp.id + 1
-
-    assert (
-        Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
-        << dns.DnsRequestHook(f)
-        >> reply()
-        << OpenConnection(tctx.server)
-        >> reply(None)
-        << SendData(tctx.server, req.packed)
-        >> DataReceived(tctx.server, resp.packed)
-        << Log(f'Server(8.8.8.8:53, state=open) responded to unknown message #{resp.id}')
-    )
-    assert layer.flows and f().request and not f().response and f().live
-    req.timestamp = f().request.timestamp
-    assert f().request == req
