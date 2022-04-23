@@ -10,7 +10,7 @@ from mitmproxy.net import udp
 from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons, tflow
-from mitmproxy.test.tflow import tclient_conn, tdnsflow, tserver_conn
+from mitmproxy.test.tflow import tclient_conn, tserver_conn
 from mitmproxy.test.tutils import tdnsreq
 
 
@@ -229,6 +229,7 @@ async def test_shutdown_err() -> None:
         assert ps.running_servers
 
 
+@pytest.mark.skip("requires internet connection")
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:

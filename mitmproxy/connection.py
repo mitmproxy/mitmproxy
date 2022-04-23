@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from abc import ABCMeta
-from enum import Enum, Flag
+from enum import Flag
 from typing import Literal, Optional, Sequence, Tuple
 
 from mitmproxy import certs

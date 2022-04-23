@@ -8,7 +8,7 @@ import socket
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import Any, Callable, Coroutine, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types

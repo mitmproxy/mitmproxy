@@ -346,6 +346,7 @@ class Dumper:
         self.echo(f"{client}: {type} {name}")
 
     def dns_response(self, f: dns.DNSFlow):
+        assert f.response
         if self.match(f):
             self._echo_dns_query(f)
 
@@ -354,6 +355,7 @@ class Dumper:
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):
+        assert f.error
         if self.match(f):
             self._echo_dns_query(f)
             msg = strutils.escape_control_characters(f.error.msg)

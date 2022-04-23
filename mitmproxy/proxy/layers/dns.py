@@ -74,12 +74,12 @@ class DNSLayer(layer.Layer):
         flow.live = False
 
     @expect(events.Start)
-    def start(self, _) -> layer.CommandGenerator[None]:
-        self._handle_event = self.query
+    def state_start(self, _) -> layer.CommandGenerator[None]:
+        self._handle_event = self.state_query
         yield from ()
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def query(self, event: events.Event) -> layer.CommandGenerator[None]:
+    def state_query(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert isinstance(event, events.ConnectionEvent)
         from_client = event.connection is self.context.client
 
@@ -110,7 +110,7 @@ class DNSLayer(layer.Layer):
             other_conn = self.context.server if from_client else self.context.client
             if other_conn.state is not connection.ConnectionState.CLOSED:
                 yield commands.CloseConnection(other_conn)
-            self._handle_event = self.done
+            self._handle_event = self.state_done
             flows = self.flows.values()
             while flows:
                 self.remove_flow(next(iter(flows)))
@@ -119,7 +119,7 @@ class DNSLayer(layer.Layer):
             raise AssertionError(f"Unexpected event: {event}")
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def done(self, _) -> layer.CommandGenerator[None]:
+    def state_done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
-    _handle_event = start
+    _handle_event = state_start

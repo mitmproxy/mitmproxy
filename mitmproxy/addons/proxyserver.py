@@ -1,11 +1,10 @@
 import asyncio
-import socket
 from asyncio import base_events
 import ipaddress
 import re
 from typing import Dict, Optional, Tuple
 
-from mitmproxy import command, ctx, dns, exceptions, flow, http, log, master, options, platform, tcp, websocket
+from mitmproxy import command, ctx, exceptions, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
 from mitmproxy.net import udp

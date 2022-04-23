@@ -37,7 +37,7 @@ class TestResourceRecord:
 
 class TestQuestion:
 
-    @pytest.mark.asyncio
+    @pytest.mark.skip("requires internet connection")
     async def test_resolve(self):
         async def fail_with(question: dns.Question, code: int):
             with pytest.raises(dns.ResolveError) as ex:
