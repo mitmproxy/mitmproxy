@@ -276,25 +276,22 @@ class Message(stateobject.StateObject):
     def unpack_from(cls, buffer: Union[bytes, bytearray], offset: int) -> Tuple[int, Message]:
         """Converts the buffer from a given offset into a DNS message and also returns its length."""
         id, flags, len_questions, len_answers, len_authorities, len_additionals = Message.HEADER.unpack_from(buffer, offset)
-        try:
-            msg = Message(
-                timestamp=time.time(),
-                id=id,
-                query=(flags & (1 << 15)) == 0,
-                op_code = (flags >> 11) & 0b1111,
-                authoritative_answer=(flags & (1 << 10)) != 0,
-                truncation = (flags & (1 << 9)) != 0,
-                recursion_desired = (flags & (1 << 8)) != 0,
-                recursion_available = (flags & (1 << 7)) != 0,
-                reserved = (flags >> 4) & 0b111,
-                response_code = flags & 0b1111,
-                questions=[],
-                answers=[],
-                authorities=[],
-                additionals=[],
-            )
-        except ValueError as e:
-            raise struct.error(str(e))
+        msg = Message(
+            timestamp=time.time(),
+            id=id,
+            query=(flags & (1 << 15)) == 0,
+            op_code=(flags >> 11) & 0b1111,
+            authoritative_answer=(flags & (1 << 10)) != 0,
+            truncation=(flags & (1 << 9)) != 0,
+            recursion_desired=(flags & (1 << 8)) != 0,
+            recursion_available=(flags & (1 << 7)) != 0,
+            reserved=(flags >> 4) & 0b111,
+            response_code=flags & 0b1111,
+            questions=[],
+            answers=[],
+            authorities=[],
+            additionals=[],
+        )
         offset += Message.HEADER.size
         cached_names = domain_names.cache()
 
