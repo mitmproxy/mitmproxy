@@ -2,6 +2,7 @@ import asyncio
 from asyncio import base_events
 import ipaddress
 import re
+import struct
 from typing import Dict, Optional, Tuple
 
 from mitmproxy import command, ctx, exceptions, flow, http, log, master, options, platform, tcp, websocket
@@ -247,7 +248,12 @@ class Proxyserver:
         remote_addr: Address,
         local_addr: Address
     ) -> None:
-        connection_id = ("udp", remote_addr, local_addr)
+        try:
+            dns_id = struct.unpack_from("!H", data, 0)
+        except struct.error:
+            ctx.log.info(f"Invalid DNS datagram received from {human.format_address(remote_addr)}.")
+            return
+        connection_id = ("udp", dns_id, remote_addr, local_addr)
         if connection_id not in self._connections:
             reader = udp.DatagramReader()
             writer = udp.DatagramWriter(transport, remote_addr, reader)
