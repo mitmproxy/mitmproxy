@@ -160,12 +160,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer: typing.Union[asyncio.StreamWriter, udp.DatagramWriter]
             try:
                 command.connection.timestamp_start = time.time()
-                if command.connection.transport_protocol is "tcp":
+                if command.connection.transport_protocol == "tcp":
                     reader, writer = await asyncio.open_connection(*command.connection.address)
-                elif command.connection.transport_protocol is "udp":
+                elif command.connection.transport_protocol == "udp":
                     reader, writer = await udp.open_connection(*command.connection.address)
                 else:
-                    raise NotImplementedError(f"Connection protocol '{command.connection.transport_protocol.name}' is not implemented.")
+                    raise AssertionError(command.connection.transport_protocol)
             except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.

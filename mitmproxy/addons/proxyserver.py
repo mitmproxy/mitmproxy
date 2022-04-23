@@ -299,24 +299,25 @@ class Proxyserver:
         except ValueError as e:
             ctx.log.warn(str(e))
 
-    async def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
+    def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
         assert ctx.server.address
-        # FIXME: We don't want to addrinfo here.
-        host, port = ctx.server.address[:2]
-        proto = {
-            "tcp": socket.SOL_TCP,
-            "udp": socket.SOL_UDP,
-        }[ctx.server.transport_protocol]
-        addrinfos = await asyncio.get_running_loop().getaddrinfo(host, port, proto=proto)
-        for srv in self.running_servers:
-            for sock in srv.sockets:
-                for family, _, proto, _, addr in addrinfos:
-                    if family == sock.family and proto == sock.proto and addr == sock.getsockname():
-                        ctx.server.error = (
-                            "Request destination unknown. "
-                            "Unable to figure out where this request should be forwarded to."
-                        )
-                        return
+        # FIXME: Move this to individual proxy modes.
+        self_connect = (
+            ctx.server.address[1] in (self.options.dns_listen_port, self.options.listen_port)
+            and
+            ctx.server.address[0] in (
+                "localhost",
+                "127.0.0.1",
+                "::1",
+                self.options.listen_host,
+                self.options.dns_listen_host,
+            )
+        )
+        if self_connect:
+            ctx.server.error = (
+                "Request destination unknown. "
+                "Unable to figure out where this request should be forwarded to."
+            )
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         # handle simple requests here to not block the layer
