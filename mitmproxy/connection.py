@@ -2,7 +2,7 @@ import uuid
 import warnings
 from abc import ABCMeta
 from enum import Enum, Flag
-from typing import Optional, Sequence, Tuple
+from typing import Literal, Optional, Sequence, Tuple
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
@@ -18,10 +18,7 @@ class ConnectionState(Flag):
     OPEN = CAN_READ | CAN_WRITE
 
 
-class ConnectionProtocol(Enum):
-    """The internet protocol used by the underlying socket."""
-    TCP = 6
-    UDP = 17
+TransportProtocol = Literal["tcp", "udp"]
 
 
 # practically speaking we may have IPv6 addresses with flowinfo and scope_id,
@@ -44,7 +41,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     """A unique UUID to identify the connection."""
     state: ConnectionState
     """The current connection state."""
-    protocol: ConnectionProtocol
+    transport_protocol: TransportProtocol
     """The connection protocol in use."""
     peername: Optional[Address]
     """The remote's `(ip, port)` tuple for this connection."""
@@ -156,15 +153,19 @@ class Client(Connection):
     """*Timestamp:* TCP SYN received"""
 
     def __init__(
-        self, peername: Address, sockname: Address, timestamp_start: float,
-        *, protocol: ConnectionProtocol = ConnectionProtocol.TCP
+        self,
+        peername: Address,
+        sockname: Address,
+        timestamp_start: float,
+        *,
+        transport_protocol: TransportProtocol = "tcp"
     ):
         self.id = str(uuid.uuid4())
         self.peername = peername
         self.sockname = sockname
         self.timestamp_start = timestamp_start
         self.state = ConnectionState.OPEN
-        self.protocol = protocol
+        self.transport_protocol = transport_protocol
 
     def __str__(self):
         if self.alpn:
@@ -284,11 +285,11 @@ class Server(Connection):
     via: Optional[server_spec.ServerSpec] = None
     """An optional proxy server specification via which the connection should be established."""
 
-    def __init__(self, address: Optional[Address], *, protocol: ConnectionProtocol = ConnectionProtocol.TCP):
+    def __init__(self, address: Optional[Address], *, transport_protocol: TransportProtocol = "tcp"):
         self.id = str(uuid.uuid4())
         self.address = address
         self.state = ConnectionState.CLOSED
-        self.protocol = protocol
+        self.transport_protocol = transport_protocol
 
     def __str__(self):
         if self.alpn:

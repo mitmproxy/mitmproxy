@@ -20,7 +20,7 @@ from mitmproxy import http, options as moptions, tls
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.connection import Address, Client, Connection, ConnectionProtocol, ConnectionState
+from mitmproxy.connection import Address, Client, Connection, ConnectionState
 from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
@@ -160,12 +160,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer: typing.Union[asyncio.StreamWriter, udp.DatagramWriter]
             try:
                 command.connection.timestamp_start = time.time()
-                if command.connection.protocol is ConnectionProtocol.TCP:
+                if command.connection.transport_protocol is "tcp":
                     reader, writer = await asyncio.open_connection(*command.connection.address)
-                elif command.connection.protocol is ConnectionProtocol.UDP:
+                elif command.connection.transport_protocol is "udp":
                     reader, writer = await udp.open_connection(*command.connection.address)
                 else:
-                    raise NotImplementedError(f"Connection protocol '{command.connection.protocol.name}' is not implemented.")
+                    raise NotImplementedError(f"Connection protocol '{command.connection.transport_protocol.name}' is not implemented.")
             except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.

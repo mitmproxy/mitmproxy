@@ -1,11 +1,12 @@
 import asyncio
+import socket
 from asyncio import base_events
 import ipaddress
 import re
 from typing import Dict, Optional, Tuple
 
 from mitmproxy import command, ctx, dns, exceptions, flow, http, log, master, options, platform, tcp, websocket
-from mitmproxy.connection import Address, ConnectionProtocol
+from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
 from mitmproxy.net import udp
 from mitmproxy.proxy import commands, events, layers, server_hooks
@@ -255,7 +256,7 @@ class Proxyserver:
             handler = ProxyConnectionHandler(self.master, reader, writer, self.options)
             handler.layer = layers.DNSLayer(handler.layer.context)
             handler.layer.context.server.address = local_addr if self.options.dns_mode == "transparent" else self.dns_forward_addr
-            handler.layer.context.server.protocol = ConnectionProtocol.UDP
+            handler.layer.context.server.transport_protocol = "udp"
             self._connections[connection_id] = handler
             asyncio.create_task(self.handle_connection(connection_id))
         else:
@@ -300,9 +301,13 @@ class Proxyserver:
 
     async def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
         assert ctx.server.address
-
+        # FIXME: We don't want to addrinfo here.
         host, port = ctx.server.address[:2]
-        addrinfos = await asyncio.get_running_loop().getaddrinfo(host, port, proto=ctx.server.protocol.value)
+        proto = {
+            "tcp": socket.SOL_TCP,
+            "udp": socket.SOL_UDP,
+        }[ctx.server.transport_protocol]
+        addrinfos = await asyncio.get_running_loop().getaddrinfo(host, port, proto=proto)
         for srv in self.running_servers:
             for sock in srv.sockets:
                 for family, _, proto, _, addr in addrinfos:

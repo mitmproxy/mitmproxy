@@ -37,7 +37,7 @@ class Context:
     ) -> None:
         self.client = client
         self.options = options
-        self.server = connection.Server(None, protocol=client.protocol)
+        self.server = connection.Server(None, transport_protocol=client.transport_protocol)
         self.layers = []
 
     def fork(self) -> "Context":
