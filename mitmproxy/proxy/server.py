@@ -179,7 +179,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     # It is not really defined what almost means here, but we play safe.
                     raise
             else:
-                command.connection.timestamp_tcp_setup = time.time()
+                if command.connection.transport_protocol == "tcp":
+                    # TODO: Rename to `timestamp_setup` and make it agnostic for both TCP (SYN/ACK) and UDP (DNS resl.)
+                    command.connection.timestamp_tcp_setup = time.time()
                 command.connection.state = ConnectionState.OPEN
                 command.connection.peername = writer.get_extra_info('peername')
                 command.connection.sockname = writer.get_extra_info('sockname')
