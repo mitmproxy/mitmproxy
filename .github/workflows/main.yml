@@ -87,6 +87,7 @@ jobs:
         with:
           python-version: ${{ matrix.py }}
       - run: pip install tox
+      - run: which tox
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
         # make sure that tests run without network connection
