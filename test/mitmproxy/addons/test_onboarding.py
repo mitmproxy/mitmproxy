@@ -24,7 +24,7 @@ class TestApp:
     async def test_cert(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
-            tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
+            tctx.configure(ob, datadir=tdata.path("mitmproxy/data/datadir"))
             resp = client.get(f"/cert/{ext}")
             assert resp.status_code == 200
             assert resp.data
@@ -33,7 +33,7 @@ class TestApp:
     async def test_head(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
-            tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
+            tctx.configure(ob, datadir=tdata.path("mitmproxy/data/datadir"))
             resp = client.head(f"http://{tctx.options.onboarding_host}/cert/{ext}")
             assert resp.status_code == 200
             assert "Content-Length" in resp.headers

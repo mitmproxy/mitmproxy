@@ -32,7 +32,7 @@ class Onboarding(asgiapp.WSGIApp):
     def configure(self, updated):
         self.host = ctx.options.onboarding_host
         self.port = ctx.options.onboarding_port
-        app.config["CONFDIR"] = ctx.options.confdir
+        app.config["DATADIR"] = ctx.options.datadir
 
     async def request(self, f):
         if ctx.options.onboarding:

@@ -92,6 +92,7 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.2",
         "publicsuffix2>=2.20190812,<3",
+        "xdg>=5.1.1",
         "zstandard>=0.11,<0.18",
     ],
     extras_require={

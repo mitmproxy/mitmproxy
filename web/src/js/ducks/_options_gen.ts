@@ -20,6 +20,7 @@ export interface OptionsState {
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
+    datadir: string
     export_preserve_original_ip: boolean
     http2: boolean
     http2_ping_keepalive: number
@@ -109,6 +110,7 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    datadir: "~/.mitmproxy",
     export_preserve_original_ip: false,
     http2: true,
     http2_ping_keepalive: 58,

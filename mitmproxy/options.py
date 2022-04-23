@@ -1,9 +1,11 @@
 from typing import Optional, Sequence
+import os
+import logging
 
 from mitmproxy import optmanager
+from xdg import xdg_config_home, xdg_data_home
 
-CONF_DIR = "~/.mitmproxy"
-CONF_BASENAME = "mitmproxy"
+PROG_NAME = "mitmproxy"
 LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512
 KEY_SIZE = 2048
@@ -31,8 +33,12 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "confdir", str, CONF_DIR,
+            "confdir", str, get_config_dir(PROG_NAME),
             "Location of the default mitmproxy configuration files."
+        )
+        self.add_option(
+            "datadir", str, get_data_dir(PROG_NAME),
+            "Location of the mitmproxy data files (certificates, command history)."
         )
         self.add_option(
             "certs", Sequence[str], [],
@@ -162,3 +168,27 @@ class Options(optmanager.OptManager):
         )
 
         self.update(**kwargs)
+
+
+def get_config_dir(dirname):
+    xdg_config_dir = xdg_config_home()
+    mitm_config_dir = f"{xdg_config_dir}/{dirname}"
+    mitm_home_dir = f"~/.{dirname}"
+
+    if os.path.isdir(mitm_config_dir):
+        if os.path.isdir(os.path.expanduser(mitm_home_dir)):
+            logging.warning("Both %s and %s exist, using %s" % (mitm_config_dir, mitm_home_dir, mitm_config_dir))
+        return mitm_config_dir
+    return mitm_home_dir
+
+
+def get_data_dir(dirname):
+    xdg_data_dir = xdg_data_home()
+    mitm_data_dir = f"{xdg_data_dir}/{dirname}"
+    mitm_home_dir = f"~/.{dirname}"
+
+    if os.path.isdir(mitm_data_dir):
+        if os.path.isdir(os.path.expanduser(mitm_home_dir)):
+            logging.warning("Both %s and %s exist, using %s" % (mitm_data_dir, mitm_home_dir, mitm_data_dir))
+        return mitm_data_dir
+    return mitm_home_dir

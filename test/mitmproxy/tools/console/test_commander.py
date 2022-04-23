@@ -11,9 +11,10 @@ def commander_tctx(tmpdir):
     # This runs before each test
     dir_name = tmpdir.mkdir('mitmproxy').dirname
     confdir = dir_name
+    datadir = dir_name
 
     opts = options.Options()
-    opts.set(*[f"confdir={confdir}"])
+    opts.set(*[f"confdir={confdir}", f"datadir={datadir}"])
     commander_tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     commander_tctx.master.addons.add(ch)

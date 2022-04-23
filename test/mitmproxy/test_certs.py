@@ -42,7 +42,7 @@ from ..conftest import skip_windows
 
 @pytest.fixture()
 def tstore(tdata):
-    return certs.CertStore.from_store(tdata.path("mitmproxy/data/confdir"), "mitmproxy", 2048)
+    return certs.CertStore.from_store(tdata.path("mitmproxy/data/datadir"), "mitmproxy", 2048)
 
 
 class TestCertStore:
@@ -60,7 +60,7 @@ class TestCertStore:
         assert tstore.get_cert(None, []).cert.cn is None
 
     def test_chain_file(self, tdata, tmp_path):
-        cert = Path(tdata.path("mitmproxy/data/confdir/mitmproxy-ca.pem")).read_bytes()
+        cert = Path(tdata.path("mitmproxy/data/datadir/mitmproxy-ca.pem")).read_bytes()
         (tmp_path / "mitmproxy-ca.pem").write_bytes(cert)
         ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
         assert ca.default_chain_file is None

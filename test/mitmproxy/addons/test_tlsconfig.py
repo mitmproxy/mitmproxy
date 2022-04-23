@@ -62,7 +62,7 @@ class TestTlsConfig:
         """Test that we generate a certificate matching the connection's context."""
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ta.configure(["confdir"])
+            ta.configure(["datadir"])
 
             ctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
@@ -123,7 +123,7 @@ class TestTlsConfig:
     def test_tls_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ta.configure(["confdir"])
+            ta.configure(["datadir"])
             tctx.configure(
                 ta,
                 certs=[tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")],
@@ -268,5 +268,5 @@ class TestTlsConfig:
         monkeypatch.setattr(certs.Cert, "has_expired", lambda self: True)
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ta.configure(["confdir"])
+            ta.configure(["datadir"])
             await tctx.master.await_log("The mitmproxy certificate authority has expired", "warn")

@@ -27,7 +27,7 @@ you're on and you are good to go.
 ## The mitmproxy certificate authority
 
 The first time mitmproxy is run, it creates the keys for a certificate
-authority (CA) in the config directory (`~/.mitmproxy` by default).
+authority (CA) in the data directory (`~/.mitmproxy` by default, `$XDG_DATA_HOME/mitmproxy` also supported).
 This CA is used for on-the-fly generation of dummy certificates for each visited website.
 Since your browser won't trust the mitmproxy CA out of the box, you will either need to click through a TLS certificate
 warning on every domain, or install the CA certificate once so that it is trusted.
@@ -52,7 +52,7 @@ that other mitmproxy users cannot intercept your traffic.
 Sometimes using the [quick install app](#quick-setup) is not an option and you need to install the CA manually. 
 Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
-`~/.mitmproxy` after it has been generated at the first start of mitmproxy.
+`~/.mitmproxy` after it has been generated at the first start of mitmproxy. It can be relocated to `$XDG_DATA_HOME/mitmproxy` if desired.
 
 - curl on the command line:  
   `curl --proxy 127.0.0.1:8080 --cacert ~/.mitmproxy/mitmproxy-ca-cert.pem https://example.com/`

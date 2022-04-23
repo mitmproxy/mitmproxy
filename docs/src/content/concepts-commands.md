@@ -62,8 +62,8 @@ just replay flows for a specific domain:
 # Custom Key Bindings
 
 Mitmproxy's key bindings can be customized to your needs in the
-`~/.mitmproxy/keys.yaml` file. This file consists of a sequence of maps, with
-the following keys:
+`~/.mitmproxy/keys.yaml` or `$XDG_CONFIG_HOME/mitmproxy/keys.yaml` file. This
+file consists of a sequence of maps, with the following keys:
 
 * `key` (**mandatory**): The key to bind.
 * `cmd` (**mandatory**): The command to execute when the key is pressed.
