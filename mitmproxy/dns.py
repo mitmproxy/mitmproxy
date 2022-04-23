@@ -87,26 +87,26 @@ class Question(stateobject.StateObject):
             data=domain_names.pack(name),
         )]
 
-    def resolve(self) -> Coroutine[Any, Any, Iterable[ResourceRecord]]:
+    async def resolve(self) -> Iterable[ResourceRecord]:
         """Resolve the question into resource record(s), throwing ResolveError if an error condition occurs."""
 
         loop = asyncio.get_running_loop()
         if self.class_ != classes.IN:
             raise ResolveError(response_codes.NOTIMP)
         if self.type == types.A:
-            return self._resolve_by_name(loop, socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
+            return await self._resolve_by_name(loop, socket.AddressFamily.AF_INET, ipaddress.IPv4Address)
         elif self.type == types.AAAA:
-            return self._resolve_by_name(loop, socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
+            return await self._resolve_by_name(loop, socket.AddressFamily.AF_INET6, ipaddress.IPv6Address)
         elif self.type == types.PTR:
             name_lower = self.name.lower()
             if name_lower.endswith(Question.IP4_PTR_SUFFIX):
-                return self._resolve_by_addr(
+                return await self._resolve_by_addr(
                     loop=loop,
                     suffix=Question.IP4_PTR_SUFFIX,
                     sockaddr=lambda x: (str(ipaddress.IPv4Address(".".join(x))), 0)
                 )
             elif name_lower.endswith(Question.IP6_PTR_SUFFIX):
-                return self._resolve_by_addr(
+                return await self._resolve_by_addr(
                     loop=loop,
                     suffix=Question.IP6_PTR_SUFFIX,
                     sockaddr=lambda x: (str(ipaddress.IPv6Address(bytes.fromhex("".join(x)))), 0, 0, 0)
