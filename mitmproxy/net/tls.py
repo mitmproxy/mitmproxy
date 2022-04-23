@@ -109,7 +109,7 @@ def _create_ssl_context(
         try:
             context.set_cipher_list(b":".join(x.encode() for x in cipher_list))
         except SSL.Error as e:
-            raise RuntimeError("SSL cipher specification error: {e}") from e
+            raise RuntimeError(f"SSL cipher specification error: {e}") from e
 
     # SSLKEYLOGFILE
     if log_master_secret:
