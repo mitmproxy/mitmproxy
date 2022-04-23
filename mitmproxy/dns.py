@@ -509,8 +509,12 @@ class Message(stateobject.StateObject):
 
 
 class DNSFlow(flow.Flow):
+    """A DNSFlow is a collection of DNS messages representing a single DNS query."""
+
     request: Message
+    """The DNS request."""
     response: Optional[Message] = None
+    """The DNS response."""
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["request"] = Message
