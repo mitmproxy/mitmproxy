@@ -198,10 +198,6 @@ def test_dns():
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
-        f = tflow.tdnsflow()
-        d.dns_request(f)
-        assert "dns.google" in sio.getvalue()
-        sio.truncate(0)
 
         f = tflow.tdnsflow(resp=True)
         d.dns_response(f)
@@ -210,7 +206,7 @@ def test_dns():
 
         f = tflow.tdnsflow(err=True)
         d.dns_error(f)
-        assert "Error in DNS" in sio.getvalue()
+        assert "error" in sio.getvalue()
 
 
 def test_websocket():

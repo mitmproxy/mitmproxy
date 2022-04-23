@@ -132,18 +132,21 @@ class Dumper:
         if ctx.options.flow_detail >= 2:
             self.echo("")
 
-    def _echo_request_line(self, flow: http.HTTPFlow) -> None:
+    def _fmt_client(self, flow: flow.Flow) -> str:
         if flow.is_replay == "request":
-            client = self.style("[replay]", fg="yellow", bold=True)
+            return self.style("[replay]", fg="yellow", bold=True)
         elif flow.client_conn.peername:
-            client = self.style(
+            return self.style(
                 strutils.escape_control_characters(
                     human.format_address(flow.client_conn.peername)
                 )
             )
         else:  # pragma: no cover
             # this should not happen, but we're defensive here.
-            client = ""
+            return ""
+
+    def _echo_request_line(self, flow: http.HTTPFlow) -> None:
+        client = self._fmt_client(flow)
 
         pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
         method = flow.request.method + pushed
@@ -334,37 +337,24 @@ class Dumper:
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message, f)
 
-    def dns_request(self, f: dns.DNSFlow):
-        # TODO this needs to be refined
-        if self.match(f) and f.request.questions:
-            self.echo("{client} asks {server} for {name} {class_} {type}".format(
-                client=human.format_address(f.client_conn.peername),
-                server=human.format_address(f.server_conn.address),
-                name=f.request.questions[0].name,
-                type=dns.types.to_str(f.request.questions[0].type),
-                class_=dns.classes.to_str(f.request.questions[0].class_),
-            ))
+    def _echo_dns_query(self, f: dns.DNSFlow) -> None:
+        client = self._fmt_client(f)
+        type = dns.types.to_str(f.request.questions[0].type)
+        type_color = dict(A="green", AAAA="magenta").get(type, "red")
+        type = self.style(f"DNS QUERY ({type})", fg=type_color)
+        name = self.style(f.request.questions[0].name, bold=True)
+        self.echo(f"{client}: {type} {name}")
 
     def dns_response(self, f: dns.DNSFlow):
-        # TODO this needs to be refined
-        if self.match(f) and f.response and f.response.answers:
-            self.echo("{server} answers {client} with {name} {ttl}s {class_} {type} {value}".format(
-                client=human.format_address(f.client_conn.peername),
-                server=human.format_address(f.server_conn.address),
-                name=f.response.answers[0].name,
-                type=dns.types.to_str(f.response.answers[0].type),
-                class_=dns.classes.to_str(f.response.answers[0].class_),
-                ttl=f.response.answers[0].ttl,
-                value=str(f.response.answers[0])
-            ))
+        if self.match(f):
+            self._echo_dns_query(f)
+
+            arrows = self.style(" <<", bold=True)
+            answers = ", ".join(self.style(str(x), fg="bright_blue") for x in f.response.answers)
+            self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):
         if self.match(f):
-            self.echo(
-                "Error in DNS connection between {client} and {server}: {error}".format(
-                    client=human.format_address(f.client_conn.peername),
-                    server=human.format_address(f.server_conn.address),
-                    error=f.error,
-                ),
-                fg="red"
-            )
+            self._echo_dns_query(f)
+            msg = strutils.escape_control_characters(f.error.msg)
+            self.echo(f" << {msg}", bold=True, fg="red")
