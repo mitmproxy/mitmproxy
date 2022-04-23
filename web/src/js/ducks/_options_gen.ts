@@ -115,7 +115,7 @@ export const defaultState: OptionsState = {
     content_view_lines_cutoff: 512,
     dns_listen_host: "",
     dns_listen_port: 53,
-    dns_mode: "simple",
+    dns_mode: "regular",
     dns_server: false,
     export_preserve_original_ip: false,
     http2: true,

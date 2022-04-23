@@ -146,10 +146,10 @@ class Proxyserver:
             """DNS server service port."""
         )
         loader.add_option(
-            "dns_mode", str, "simple",
+            "dns_mode", str, "regular",
             """
-            One of "simple", "reverse:<ip>[:<port>]" or "transparent".
-            simple.....: requests will be resolved using the local resolver
+            One of "regular", "reverse:<ip>[:<port>]" or "transparent".
+            regular....: requests will be resolved using the local resolver
             reverse....: forward queries to another DNS server
             transparent: transparent mode
             """,
@@ -175,14 +175,14 @@ class Proxyserver:
                 raise exceptions.OptionsError(f"Invalid body_size_limit specification: "
                                               f"{ctx.options.body_size_limit}")
         if "dns_mode" in updated:
-            m = re.match(r"^(simple|reverse:(?P<host>[^:]+)(:(?P<port>\d+))?|transparent)$", ctx.options.dns_mode)
+            m = re.match(r"^(regular|reverse:(?P<host>[^:]+)(:(?P<port>\d+))?|transparent)$", ctx.options.dns_mode)
             if not m:
-                raise exceptions.OptionsError(f"Invalid DNS mode '{ctx.options.dns_mode!r}'.")
+                raise exceptions.OptionsError(f"Invalid DNS mode {ctx.options.dns_mode!r}.")
             if m["host"]:
                 try:
                     self.dns_reverse_addr = (str(ipaddress.ip_address(m["host"])), int(m["port"]) if m["port"] is not None else 53)
                 except ValueError:
-                    raise exceptions.OptionsError(f"Invalid DNS reverse mode, expected 'reverse:ip[:port]' got '{ctx.options.dns_mode!r}'.")
+                    raise exceptions.OptionsError(f"Invalid DNS reverse mode, expected 'reverse:ip[:port]' got {ctx.options.dns_mode!r}.")
             else:
                 self.dns_reverse_addr = None
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
@@ -317,8 +317,3 @@ class Proxyserver:
                 "Request destination unknown. "
                 "Unable to figure out where this request should be forwarded to."
             )
-
-    async def dns_request(self, flow: dns.DNSFlow) -> None:
-        # handle simple requests here to not block the layer
-        if self.options.dns_mode == "simple":
-            flow.response = await flow.request.resolve()

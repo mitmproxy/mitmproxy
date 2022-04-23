@@ -53,7 +53,7 @@ def test_simple(tctx):
     assert not layer.flows and f().request == req and f().response == resp and not f().live
 
 
-def test_simple_no_hook(tctx):
+def test_regular_mode_no_hook(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = None

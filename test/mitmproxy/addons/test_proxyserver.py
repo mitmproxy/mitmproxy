@@ -188,7 +188,7 @@ def test_options():
         tctx.configure(ps, stream_large_bodies="1m")
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, dns_mode="invalid")
-        tctx.configure(ps, dns_mode="simple")
+        tctx.configure(ps, dns_mode="regular")
 
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, dns_mode="reverse")
@@ -229,23 +229,10 @@ async def test_shutdown_err() -> None:
         assert ps.running_servers
 
 
-async def test_dns_simple() -> None:
-    flow = tdnsflow(resp=False)
-    ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="simple")
-        await ps.running()
-        await tctx.master.await_log("DNS server listening at", level="info")
-        await ps.dns_request(flow)
-        assert flow.response
-        await ps.shutdown_server()
-        await tctx.master.await_log("Stopping DNS server", level="info")
-
-
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="simple")
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="regular")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.dns_server
