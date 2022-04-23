@@ -46,5 +46,5 @@ def http_equiv_status_code(response_code: int) -> int:
     return _CODES.get(response_code, 500)
 
 
-def str(response_code: int):
+def to_str(response_code: int) -> str:
     return _STRINGS.get(response_code, f"RCODE({response_code})")

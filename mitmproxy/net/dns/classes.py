@@ -13,5 +13,5 @@ _STRINGS = {
 }
 
 
-def str(class_: int):
+def to_str(class_: int) -> str:
     return _STRINGS.get(class_, f"CLASS({class_})")

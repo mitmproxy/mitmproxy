@@ -123,8 +123,8 @@ class Question(stateobject.StateObject):
         """
         return {
             "name": self.name,
-            "type": types.str(self.type),
-            "class": classes.str(self.class_),
+            "type": types.to_str(self.type),
+            "class": classes.to_str(self.class_),
         }
 
 
@@ -156,7 +156,7 @@ class ResourceRecord(stateobject.StateObject):
             if self.type == types.TXT:
                 return self.text
         except:
-            return f"0x{self.data.hex()} (invalid {types.str(self.type)} data)"
+            return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
 
     @property
@@ -198,8 +198,8 @@ class ResourceRecord(stateobject.StateObject):
         """
         return {
             "name": self.name,
-            "type": types.str(self.type),
-            "class": classes.str(self.class_),
+            "type": types.to_str(self.type),
+            "class": classes.to_str(self.class_),
             "ttl": self.ttl,
             "data": str(self),
         }
@@ -486,12 +486,12 @@ class Message(stateobject.StateObject):
         return {
             "id": self.id,
             "query": self.query,
-            "op_code": op_codes.str(self.op_code),
+            "op_code": op_codes.to_str(self.op_code),
             "authoritative_answer": self.authoritative_answer,
             "truncation": self.truncation,
             "recursion_desired": self.recursion_desired,
             "recursion_available": self.recursion_available,
-            "response_code": response_codes.str(self.response_code),
+            "response_code": response_codes.to_str(self.response_code),
             "status_code": response_codes.http_equiv_status_code(self.response_code),
             "questions": [question.to_json() for question in self.questions],
             "answers": [rr.to_json() for rr in self.answers],

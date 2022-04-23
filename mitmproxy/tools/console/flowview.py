@@ -397,13 +397,13 @@ class FlowDetails(tabs.Tabs):
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:
             def rr_text(rr: dns.ResourceRecord):
-                return urwid.Text(f"  {rr.name} {dns.types.str(rr.type)} {dns.classes.str(rr.class_)} {rr.ttl} {str(rr)}")
+                return urwid.Text(f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}")
             viewmode = self.master.commands.call("console.flowview.mode")
             txt = []
             txt.append(urwid.Text("{recursive}Question".format(
                 recursive="Recursive " if message.recursion_desired else "",
             )))
-            txt.extend(urwid.Text(f"  {q.name} {dns.types.str(q.type)} {dns.classes.str(q.class_)}") for q in message.questions)
+            txt.extend(urwid.Text(f"  {q.name} {dns.types.to_str(q.type)} {dns.classes.to_str(q.class_)}") for q in message.questions)
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("{authoritative}{recursive}Answer".format(
                 authoritative="Authoritative " if message.authoritative_answer else "",

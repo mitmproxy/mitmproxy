@@ -15,5 +15,5 @@ _STRINGS = {
 }
 
 
-def str(op_code: int):
+def to_str(op_code: int) -> str:
     return _STRINGS.get(op_code, f"OPCODE({op_code})")

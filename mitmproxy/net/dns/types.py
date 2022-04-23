@@ -181,5 +181,5 @@ _STRINGS = {
 }
 
 
-def str(type: int):
+def to_str(type: int) -> str:
     return _STRINGS.get(type, f"TYPE({type})")
