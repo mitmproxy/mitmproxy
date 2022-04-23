@@ -90,7 +90,7 @@ jobs:
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
         # make sure that tests run without network connection
-      - run: unshare --net -- sh -c 'ip link set lo up; tox -e py'
+      - run: sudo unshare --net -- sh -c 'ip link set lo up; tox -e py'
         if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
