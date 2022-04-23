@@ -189,17 +189,16 @@ def test_options():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, dns_mode="invalid")
         tctx.configure(ps, dns_mode="simple")
-        tctx.configure(ps, dns_mode="custom")
 
         with pytest.raises(exceptions.OptionsError):
-            tctx.configure(ps, dns_mode="forward")
-        tctx.configure(ps, dns_mode="forward:8.8.8.8")
-        assert ps.dns_forward_addr == ("8.8.8.8", 53)
+            tctx.configure(ps, dns_mode="reverse")
+        tctx.configure(ps, dns_mode="reverse:8.8.8.8")
+        assert ps.dns_reverse_addr == ("8.8.8.8", 53)
 
         with pytest.raises(exceptions.OptionsError):
-            tctx.configure(ps, dns_mode="forward:invalid:53")
-        tctx.configure(ps, dns_mode="forward:8.8.8.8:53")
-        assert ps.dns_forward_addr == ("8.8.8.8", 53)
+            tctx.configure(ps, dns_mode="reverse:invalid:53")
+        tctx.configure(ps, dns_mode="reverse:8.8.8.8:53")
+        assert ps.dns_reverse_addr == ("8.8.8.8", 53)
 
 
 async def test_startup_err(monkeypatch) -> None:
@@ -239,19 +238,6 @@ async def test_dns_simple() -> None:
         await tctx.master.await_log("DNS server listening at", level="info")
         await ps.dns_request(flow)
         assert flow.response
-        await ps.shutdown_server()
-        await tctx.master.await_log("Stopping DNS server", level="info")
-
-
-async def test_dns_not_simple() -> None:
-    flow = tdnsflow(resp=False)
-    ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="custom")
-        await ps.running()
-        await tctx.master.await_log("DNS server listening at", level="info")
-        await ps.dns_request(flow)
-        assert not flow.response
         await ps.shutdown_server()
         await tctx.master.await_log("Stopping DNS server", level="info")
 

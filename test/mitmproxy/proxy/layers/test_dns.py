@@ -80,7 +80,7 @@ def test_simple_no_hook(tctx):
     assert not layer.flows and f().request == req and not f().response and not f().live
 
 
-def test_forward_premature_close(tctx):
+def test_reverse_premature_close(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ('8.8.8.8', 53)
@@ -108,7 +108,7 @@ def test_forward_premature_close(tctx):
     assert f().request == req
 
 
-def test_forward(tctx):
+def test_reverse(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ('8.8.8.8', 53)
@@ -138,7 +138,7 @@ def test_forward(tctx):
     assert f().request == req and f().response == resp
 
 
-def test_forward_fail_connection(tctx):
+def test_reverse_fail_connection(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ('8.8.8.8', 53)
@@ -161,7 +161,7 @@ def test_forward_fail_connection(tctx):
     assert f().request == req
 
 
-def test_forward_with_query_resend(tctx):
+def test_reverse_with_query_resend(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ('8.8.8.8', 53)
@@ -197,7 +197,7 @@ def test_forward_with_query_resend(tctx):
     assert f().request == req2 and f().response == resp
 
 
-def test_forward_with_invalid_response(tctx):
+def test_reverse_with_invalid_response(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ('8.8.8.8', 53)

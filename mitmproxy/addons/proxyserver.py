@@ -48,7 +48,7 @@ class Proxyserver:
     tcp_server: Optional[base_events.Server]
     dns_server: Optional[udp.UdpServer]
     listen_port: int
-    dns_forward_addr: Optional[Tuple[str, int]]
+    dns_reverse_addr: Optional[Tuple[str, int]]
     master: master.Master
     options: options.Options
     is_running: bool
@@ -58,7 +58,7 @@ class Proxyserver:
         self._lock = asyncio.Lock()
         self.tcp_server = None
         self.dns_server = None
-        self.dns_forward_addr = None
+        self.dns_reverse_addr = None
         self.is_running = False
         self._connections = {}
 
@@ -148,11 +148,10 @@ class Proxyserver:
         loader.add_option(
             "dns_mode", str, "simple",
             """
-            One of "simple", "custom", "forward:<ip>[:<port>]" or "transparent".
-            simple.....: requests will be resolved using getnameinfo (default)
-            custom.....: a custom add-on implementing the dns_request hook will be provided
-            forward....: another DNS server is used to resolve queries
-            transparent: the original DNS server is contacted
+            One of "simple", "reverse:<ip>[:<port>]" or "transparent".
+            simple.....: requests will be resolved using the local resolver
+            reverse....: forward queries to another DNS server
+            transparent: transparent mode
             """,
         )
 
@@ -176,16 +175,16 @@ class Proxyserver:
                 raise exceptions.OptionsError(f"Invalid body_size_limit specification: "
                                               f"{ctx.options.body_size_limit}")
         if "dns_mode" in updated:
-            m = re.match(r"^(simple|custom|forward:(?P<host>[^:]+)(:(?P<port>\d+))?|transparent)$", ctx.options.dns_mode)
+            m = re.match(r"^(simple|reverse:(?P<host>[^:]+)(:(?P<port>\d+))?|transparent)$", ctx.options.dns_mode)
             if not m:
                 raise exceptions.OptionsError(f"Invalid DNS mode '{ctx.options.dns_mode!r}'.")
             if m["host"]:
                 try:
-                    self.dns_forward_addr = (str(ipaddress.ip_address(m["host"])), int(m["port"]) if m["port"] is not None else 53)
+                    self.dns_reverse_addr = (str(ipaddress.ip_address(m["host"])), int(m["port"]) if m["port"] is not None else 53)
                 except ValueError:
-                    raise exceptions.OptionsError(f"Invalid DNS forward mode, expected 'forward:ip[:port]' got '{ctx.options.dns_mode!r}'.")
+                    raise exceptions.OptionsError(f"Invalid DNS reverse mode, expected 'reverse:ip[:port]' got '{ctx.options.dns_mode!r}'.")
             else:
-                self.dns_forward_addr = None
+                self.dns_reverse_addr = None
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
             platform.init_transparent_mode()
         if self.is_running and any(x in updated for x in [
@@ -255,7 +254,7 @@ class Proxyserver:
             writer = udp.DatagramWriter(transport, remote_addr, reader)
             handler = ProxyConnectionHandler(self.master, reader, writer, self.options)
             handler.layer = layers.DNSLayer(handler.layer.context)
-            handler.layer.context.server.address = local_addr if self.options.dns_mode == "transparent" else self.dns_forward_addr
+            handler.layer.context.server.address = local_addr if self.options.dns_mode == "transparent" else self.dns_reverse_addr
             handler.layer.context.server.transport_protocol = "udp"
             self._connections[connection_id] = handler
             asyncio.create_task(self.handle_connection(connection_id))
