@@ -1,7 +1,5 @@
 import ipaddress
-import platform
 import struct
-from typing import Callable
 import pytest
 
 from mitmproxy import dns
@@ -35,62 +33,7 @@ class TestResourceRecord:
         assert rr.text == "sample text"
 
 
-class TestQuestion:
-
-    @pytest.mark.skip("requires internet connection")
-    async def test_resolve(self):
-        async def fail_with(question: dns.Question, code: int):
-            with pytest.raises(dns.ResolveError) as ex:
-                await question.resolve()
-            assert ex.value.response_code == code
-
-        async def succeed_with(question: dns.Question, check: Callable[[dns.ResourceRecord], bool]):
-            assert any(map(check, await question.resolve()))
-
-        await fail_with(dns.Question("dns.google", dns.types.A, dns.classes.CH), dns.response_codes.NOTIMP)
-        await fail_with(dns.Question("not.exists", dns.types.A, dns.classes.IN), dns.response_codes.NXDOMAIN)
-        await fail_with(dns.Question("dns.google", dns.types.SOA, dns.classes.IN), dns.response_codes.NOTIMP)
-        await fail_with(dns.Question("totally.invalid", dns.types.PTR, dns.classes.IN), dns.response_codes.FORMERR)
-        await fail_with(dns.Question("invalid.in-addr.arpa", dns.types.PTR, dns.classes.IN), dns.response_codes.FORMERR)
-        await fail_with(dns.Question("0.0.0.1.in-addr.arpa", dns.types.PTR, dns.classes.IN), dns.response_codes.NXDOMAIN)
-
-        await succeed_with(
-            dns.Question("dns.google", dns.types.A, dns.classes.IN),
-            lambda rr: rr.ipv4_address == ipaddress.IPv4Address("8.8.8.8")
-        )
-        if platform.system() == "Linux":  # will fail on Windows, apparently returns empty on Mac
-            await succeed_with(
-                dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
-                lambda rr: rr.ipv6_address == ipaddress.IPv6Address("2001:4860:4860::8888")
-            )
-        await succeed_with(
-            dns.Question("8.8.8.8.in-addr.arpa", dns.types.PTR, dns.classes.IN),
-            lambda rr: rr.domain_name == "dns.google"
-        )
-        await succeed_with(
-            dns.Question("8.8.8.8.in-addr.arpa", dns.types.PTR, dns.classes.IN),
-            lambda rr: rr.domain_name == "dns.google"
-        )
-        await succeed_with(
-            dns.Question("8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa", dns.types.PTR, dns.classes.IN),
-            lambda rr: rr.domain_name == "dns.google"
-        )
-
-
 class TestMessage:
-
-    @pytest.mark.asyncio
-    async def test_resolve(self):
-        req = tutils.tdnsreq()
-        req.query = False
-        assert (await req.resolve()).response_code == dns.response_codes.REFUSED
-        req.query = True
-        req.op_code = dns.op_codes.IQUERY
-        assert (await req.resolve()).response_code == dns.response_codes.NOTIMP
-        req.op_code = dns.op_codes.QUERY
-        resp = await req.resolve()
-        assert resp.response_code == dns.response_codes.NOERROR
-        assert filter(lambda rr: str(rr.ipv4_address) == "8.8.8.8", resp.answers)
 
     def test_responses(self):
         req = tutils.tdnsreq()
