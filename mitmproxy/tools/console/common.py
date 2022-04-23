@@ -657,15 +657,15 @@ def format_dns_flow(
         intercepted: bool,
         marked: str,
         is_replay: typing.Optional[str],
-        client_address,
-        server_address,
         op_code: str,
         request_timestamp: float,
-        question: str,
+        domain: str,
+        type: str,
         response_code: typing.Optional[str],
         response_code_http_equiv: int,
         answer: typing.Optional[str],
         error_message: str,
+        duration: typing.Optional[float],
 ):
     items = []
 
@@ -675,19 +675,26 @@ def format_dns_flow(
         items.append(fcol(">>" if focused else "  ", "focus"))
 
     scheme_style = "intercepted" if intercepted else SCHEME_STYLES["dns"]
-    items.append(fcol("DNS  " if render_mode is RenderMode.TABLE else "DNS", scheme_style))
-    items.append(fcol(fixlen(op_code, 6), scheme_style))
-    items.append(("weight", 0.5, truncated_plain(human.format_address(client_address), "text")))
-    items.append(("weight", 1.0, truncated_plain("?" if not question else question, "text")))
-    items.append(fcol("=", scheme_style))
-    items.append(("weight", 1.0, (
+    t = f"DNS {op_code}"
+    if render_mode is RenderMode.TABLE:
+        t = fixlen(t, 10)
+    items.append(fcol(t, scheme_style))
+    items.append(('weight', 0.5, TruncatedText(domain, colorize_host(domain), 'right')))
+    items.append(fcol("(" + fixlen(type, 5)[:len(type)] + ") =", "text"))
+
+    items.append(("weight", 1, (
         truncated_plain("..." if answer is None else "?" if not answer else answer, "text")
         if error_message is None else
         truncated_plain(error_message, "error")
     )))
-    items.append(("weight", 0.5, truncated_plain(human.format_address(server_address), "text")))
     status_style = "intercepted" if intercepted else HTTP_RESPONSE_CODE_STYLE.get(response_code_http_equiv // 100, "code_other")
     items.append(fcol(fixlen("" if response_code is None else response_code, 9), status_style))
+
+    if duration:
+        duration_pretty, duration_style = format_duration(duration)
+        items.append(fcol(fixlen_r(duration_pretty, 5), duration_style))
+    else:
+        items.append(("fixed", 5, urwid.Text("")))
 
     items.append(format_right_indicators(
         replay=bool(is_replay),
@@ -738,21 +745,31 @@ def format_flow(
             error_message=error_message,
         )
     elif isinstance(f, DNSFlow):
+        if f.response:
+            duration = f.response.timestamp - f.request.timestamp
+            response_code = dns.response_codes.to_str(f.response.response_code)
+            response_code_http_equiv =  dns.response_codes.http_equiv_status_code(f.response.response_code)
+            answer = ", ".join(str(x) for x in f.response.answers)
+        else:
+            duration = None
+            response_code = None
+            response_code_http_equiv = 0
+            answer = None
         return format_dns_flow(
             render_mode=render_mode,
             focused=focused,
             intercepted=f.intercepted,
             marked=f.marked,
             is_replay=f.is_replay,
-            client_address=f.client_conn.peername,
-            server_address=f.server_conn.address,
             op_code=dns.op_codes.to_str(f.request.op_code),
             request_timestamp=f.request.timestamp,
-            question=", ".join(f"{q.name} ({dns.types.to_str(q.type)})" for q in f.request.questions),
-            response_code=None if not f.response else dns.response_codes.to_str(f.response.response_code),
-            response_code_http_equiv=0 if not f.response else dns.response_codes.http_equiv_status_code(f.response.response_code),
-            answer=None if not f.response else ", ".join(map(str, f.response.answers)),
+            domain=f.request.questions[0].name if f.request.questions else "",
+            type=dns.types.to_str(f.request.questions[0].type) if f.request.questions else "",
+            response_code=response_code,
+            response_code_http_equiv=response_code_http_equiv,
+            answer=answer,
             error_message=error_message,
+            duration=duration,
         )
     elif isinstance(f, HTTPFlow):
         intercepted = f.intercepted

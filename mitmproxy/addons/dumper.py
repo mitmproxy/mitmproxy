@@ -339,11 +339,18 @@ class Dumper:
 
     def _echo_dns_query(self, f: dns.DNSFlow) -> None:
         client = self._fmt_client(f)
+        opcode = dns.op_codes.to_str(f.request.op_code),
         type = dns.types.to_str(f.request.questions[0].type)
-        type_color = dict(A="green", AAAA="magenta").get(type, "red")
-        type = self.style(f"DNS QUERY ({type})", fg=type_color)
+
+        desc = f"DNS {opcode} ({type})"
+        desc_color = {
+            "DNS QUERY (A)": "green",
+            "DNS QUERY (AAAA)": "magenta",
+        }.get(type, "red")
+        desc = self.style(desc, fg=desc_color)
+
         name = self.style(f.request.questions[0].name, bold=True)
-        self.echo(f"{client}: {type} {name}")
+        self.echo(f"{client}: {desc} {name}")
 
     def dns_response(self, f: dns.DNSFlow):
         assert f.response
