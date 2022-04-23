@@ -16,14 +16,6 @@ from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, t
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
 
-class BypassInitStateObject(stateobject.StateObject):
-    @classmethod
-    def from_state(cls, state):
-        obj = cls.__new__(cls)  # `cls(**state)` won't work recursively
-        obj.set_state(state)
-        return obj
-
-
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
     def __init__(self, response_code: int) -> None:
@@ -32,7 +24,7 @@ class ResolveError(Exception):
 
 
 @dataclass
-class Question(BypassInitStateObject):
+class Question(stateobject.StateObject):
     HEADER = struct.Struct("!HH")
     IP4_PTR_SUFFIX = ".in-addr.arpa"
     IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -42,6 +34,10 @@ class Question(BypassInitStateObject):
     class_: int
 
     _stateobject_attributes = dict(name=str, type=int, class_=int)
+
+    @classmethod
+    def from_state(cls, state):
+        return cls(**state)
 
     def __str__(self) -> str:
         return self.name
@@ -133,7 +129,7 @@ class Question(BypassInitStateObject):
 
 
 @dataclass
-class ResourceRecord(BypassInitStateObject):
+class ResourceRecord(stateobject.StateObject):
     DEFAULT_TTL = 60
     HEADER = struct.Struct("!HHIH")
 
@@ -144,6 +140,10 @@ class ResourceRecord(BypassInitStateObject):
     data: bytes
 
     _stateobject_attributes = dict(name=str, type=int, class_=int, ttl=int, data=bytes)
+
+    @classmethod
+    def from_state(cls, state):
+        return cls(**state)
 
     def __str__(self) -> str:
         try:
@@ -232,7 +232,7 @@ class ResourceRecord(BypassInitStateObject):
 
 # comments are taken from rfc1035
 @dataclass
-class Message(BypassInitStateObject):
+class Message(stateobject.StateObject):
     HEADER = struct.Struct("!HHHHHH")
 
     timestamp: float
@@ -292,6 +292,12 @@ class Message(BypassInitStateObject):
         authorities=List[ResourceRecord],
         additionals=List[ResourceRecord],
     )
+
+    @classmethod
+    def from_state(cls, state):
+        obj = cls.__new__(cls)  # `cls(**state)` won't work recursively
+        obj.set_state(state)
+        return obj
 
     def __str__(self) -> str:
         return "\r\n".join(map(str, itertools.chain(self.questions, self.answers, self.authorities, self.additionals)))
