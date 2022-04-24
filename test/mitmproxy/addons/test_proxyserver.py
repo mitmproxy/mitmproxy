@@ -1,9 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
+import socket
 
 import pytest
 
 from mitmproxy import dns, exceptions
+from mitmproxy.addons import dns_resolver
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.connection import Address
 from mitmproxy.net import udp
@@ -229,17 +231,34 @@ async def test_shutdown_err() -> None:
         assert ps.running_servers
 
 
-@pytest.mark.skip("requires internet connection")
+class DummyResolver:
+
+    async def dns_request(self, flow: dns.DNSFlow) -> None:
+        flow.response = await dns_resolver.resolve_message(flow.request, self)
+
+    async def getaddrinfo(self, host: str, port: int, *, family: int):
+        if family == socket.AF_INET and host == "dns.google":
+            return [(socket.AF_INET, None, None, None, ("8.8.8.8", port))]
+        e = socket.gaierror()
+        e.errno = socket.EAI_NONAME
+        raise e
+
 async def test_dns() -> None:
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
+    with taddons.context(ps, DummyResolver()) as tctx:
         tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="regular")
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.dns_server
         dns_addr = ps.dns_server.sockets[0].getsockname()[:2]
         r, w = await udp.open_connection(*dns_addr)
+        w.write(b'\x00')
+        await tctx.master.await_log("Invalid DNS datagram received", level="info")
         req = tdnsreq()
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 1
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
@@ -248,6 +267,6 @@ async def test_dns() -> None:
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
-        assert len(ps._connections) == 1
+        assert len(ps._connections) == 2
         await ps.shutdown_server()
         await tctx.master.await_log("Stopping DNS server", level="info")
