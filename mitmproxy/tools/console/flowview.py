@@ -416,7 +416,6 @@ class FlowDetails(tabs.Tabs):
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("Addition"))
             txt.extend(map(rr_text, message.additionals))
-            txt.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
             return searchable.Searchable(txt)
         else:
             return searchable.Searchable([urwid.Text(("highlight", f"No {type}."))])

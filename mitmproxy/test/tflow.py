@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from mitmproxy import connection
 from mitmproxy import dns
@@ -254,3 +254,15 @@ def twebsocket(messages: bool = True) -> websocket.WebSocketData:
     ws.timestamp_end = 946681205
 
     return ws
+
+
+def tflows() -> List[flow.Flow]:
+    return [
+        tflow(resp=True),
+        tflow(err=True),
+        tflow(ws=True),
+        ttcpflow(),
+        ttcpflow(err=True),
+        tdnsflow(resp=True),
+        tdnsflow(err=True),
+    ]

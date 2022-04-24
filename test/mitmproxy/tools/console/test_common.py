@@ -5,13 +5,7 @@ from mitmproxy.tools.console import common
 
 
 def test_format_flow():
-    flows = [
-        tflow.tflow(resp=True),
-        tflow.tflow(err=True),
-        tflow.ttcpflow(),
-        tflow.ttcpflow(err=True),
-    ]
-    for f in flows:
+    for f in tflow.tflows():
         for render_mode in common.RenderMode:
             assert common.format_flow(f, render_mode=render_mode)
             assert common.format_flow(f, render_mode=render_mode, hostheader=True, focused=False)
