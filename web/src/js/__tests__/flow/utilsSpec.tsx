@@ -1,5 +1,7 @@
 import * as utils from '../../flow/utils'
-import {TFlow} from "../ducks/tutils";
+import {TFlow, TTCPFlow} from "../ducks/tutils";
+import {TDNSFlow, THTTPFlow} from "../ducks/_tflow";
+import {HTTPFlow} from "../../flow";
 
 describe('MessageUtils', () => {
     it('should be possible to get first header', () => {
@@ -66,4 +68,25 @@ describe('isValidHttpVersion', () => {
         expect(utils.isValidHttpVersion("HTTP/1.1")).toBeTruthy()
         expect(utils.isValidHttpVersion("HTTP//1")).toBeFalsy()
     })
+})
+
+it('should be possible to get a start time', () => {
+    expect(utils.startTime(THTTPFlow())).toEqual(946681200);
+    expect(utils.startTime(TTCPFlow())).toEqual(946681200);
+    expect(utils.startTime(TDNSFlow())).toEqual(946681200);
+})
+
+it('should be possible to get an end time', () => {
+    let f: HTTPFlow = THTTPFlow();
+    expect(utils.endTime(f)).toEqual(946681205);
+    f.websocket = undefined;
+    expect(utils.endTime(f)).toEqual(946681203);
+    expect(utils.endTime(TTCPFlow())).toEqual(946681205);
+    expect(utils.endTime(TDNSFlow())).toEqual(946681201);
+})
+
+it('should be possible to get a total size', () => {
+    expect(utils.getTotalSize(THTTPFlow())).toEqual(43);
+    expect(utils.getTotalSize(TTCPFlow())).toEqual(12);
+    expect(utils.getTotalSize(TDNSFlow())).toEqual(8);
 })

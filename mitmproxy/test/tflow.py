@@ -100,8 +100,10 @@ def tdnsflow(
     """Create a DNS flow for testing."""
     if client_conn is None:
         client_conn = tclient_conn()
+        client_conn.transport_protocol = "udp"
     if server_conn is None:
         server_conn = tserver_conn()
+        server_conn.transport_protocol = "udp"
     if req is None:
         req = tdnsreq()
 
