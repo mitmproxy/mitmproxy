@@ -62,10 +62,9 @@ async def resolve_question_by_addr(
     )]
 
 
-async def resolve_question(question: dns.Question) -> Iterable[dns.ResourceRecord]:
+async def resolve_question(question: dns.Question, loop: asyncio.AbstractEventLoop) -> Iterable[dns.ResourceRecord]:
     """Resolve the question into resource record(s), throwing ResolveError if an error condition occurs."""
 
-    loop = asyncio.get_running_loop()
     if question.class_ != dns.classes.IN:
         raise ResolveError(dns.response_codes.NOTIMP)
     if question.type == dns.types.A:
@@ -94,15 +93,15 @@ async def resolve_question(question: dns.Question) -> Iterable[dns.ResourceRecor
         raise ResolveError(dns.response_codes.NOTIMP)
 
 
-async def resolve_message(message: dns.Message) -> dns.Message:
+async def resolve_message(message: dns.Message, loop: asyncio.BaseEventLoop) -> dns.Message:
     try:
         if not message.query:
             raise ResolveError(dns.response_codes.REFUSED)  # we cannot resolve an answer
         if message.op_code != dns.op_codes.QUERY:
             raise ResolveError(dns.response_codes.NOTIMP)  # inverse queries and others are not supported
         rrs: List[dns.ResourceRecord] = []
-        for q in message.questions:
-            rrs.extend(await resolve_question(q))
+        for question in message.questions:
+            rrs.extend(await resolve_question(question, loop))
     except ResolveError as e:
         return message.fail(e.response_code)
     else:
@@ -113,4 +112,4 @@ class DnsResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         # handle regular mode requests here to not block the layer
         if ctx.options.dns_mode == "regular":
-            flow.response = await resolve_message(flow.request)
+            flow.response = await resolve_message(flow.request, asyncio.get_running_loop())

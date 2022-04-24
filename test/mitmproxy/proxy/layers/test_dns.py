@@ -199,4 +199,3 @@ def test_reverse_with_query_resend(tctx):
     resp.timestamp = f().response.timestamp
     assert f().request == req2
     assert f().response == resp
-
