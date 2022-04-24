@@ -20,10 +20,12 @@ from wsproto.frame_protocol import Opcode
 class ProxyConnectionHandler(server.LiveConnectionHandler):
     master: master.Master
 
-    def __init__(self, master, r, w, options):
+    def __init__(self, master, r, w, options, timeout=None):
         self.master = master
         super().__init__(r, w, options)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
+        if timeout is not None:
+            self.timeout_watchdog.CONNECTION_TIMEOUT = timeout
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
@@ -257,7 +259,7 @@ class Proxyserver:
         if connection_id not in self._connections:
             reader = udp.DatagramReader()
             writer = udp.DatagramWriter(transport, remote_addr, reader)
-            handler = ProxyConnectionHandler(self.master, reader, writer, self.options)
+            handler = ProxyConnectionHandler(self.master, reader, writer, self.options, 20)
             handler.layer = layers.DNSLayer(handler.layer.context)
             handler.layer.context.server.address = local_addr if self.options.dns_mode == "transparent" else self.dns_reverse_addr
             handler.layer.context.server.transport_protocol = "udp"
