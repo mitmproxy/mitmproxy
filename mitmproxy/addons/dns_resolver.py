@@ -93,7 +93,7 @@ async def resolve_question(question: dns.Question, loop: asyncio.AbstractEventLo
         raise ResolveError(dns.response_codes.NOTIMP)
 
 
-async def resolve_message(message: dns.Message, loop: asyncio.BaseEventLoop) -> dns.Message:
+async def resolve_message(message: dns.Message, loop: asyncio.AbstractEventLoop) -> dns.Message:
     try:
         if not message.query:
             raise ResolveError(dns.response_codes.REFUSED)  # we cannot resolve an answer

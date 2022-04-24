@@ -384,6 +384,11 @@ class TestMatchingDNSFlow:
         assert self.q("~bs dns.google", s)
         assert self.q("~bs 8.8.8.8", s)
 
+    def test_url(self):
+        f = self.req()
+        assert not self.q("~u whatever", f)
+        assert self.q("~u dns.google", f)
+
 
 class TestMatchingTCPFlow:
 

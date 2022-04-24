@@ -243,6 +243,7 @@ class DummyResolver:
         e.errno = socket.EAI_NONAME
         raise e
 
+
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps, DummyResolver()) as tctx:
