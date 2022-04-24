@@ -1,5 +1,6 @@
 import math
 import sys
+import typing
 from functools import lru_cache
 
 import urwid
@@ -8,6 +9,7 @@ import mitmproxy.flow
 import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import ctx
+from mitmproxy import dns
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy.tools.console import common
@@ -87,6 +89,12 @@ class FlowDetails(tabs.Tabs):
                     (self.tab_tcp_stream, self.view_tcp_stream),
                     (self.tab_details, self.view_details),
                 ]
+            elif isinstance(f, dns.DNSFlow):
+                self.tabs = [
+                    (self.tab_dns_request, self.view_dns_request),
+                    (self.tab_dns_response, self.view_dns_response),
+                    (self.tab_details, self.view_details),
+                ]
             self.show()
         else:
             self.master.window.pop()
@@ -102,6 +110,22 @@ class FlowDetails(tabs.Tabs):
     def tab_http_response(self):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
+        if self.flow.intercepted and flow.response:
+            return "Response intercepted"
+        else:
+            return "Response"
+
+    def tab_dns_request(self) -> str:
+        flow = self.flow
+        assert isinstance(flow, dns.DNSFlow)
+        if self.flow.intercepted and not flow.response:
+            return "Request intercepted"
+        else:
+            return "Request"
+
+    def tab_dns_response(self) -> str:
+        flow = self.flow
+        assert isinstance(flow, dns.DNSFlow)
         if self.flow.intercepted and flow.response:
             return "Response intercepted"
         else:
@@ -125,6 +149,16 @@ class FlowDetails(tabs.Tabs):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
         return self.conn_text(flow.response)
+
+    def view_dns_request(self):
+        flow = self.flow
+        assert isinstance(flow, dns.DNSFlow)
+        return self.dns_message_text("request", flow.request)
+
+    def view_dns_response(self):
+        flow = self.flow
+        assert isinstance(flow, dns.DNSFlow)
+        return self.dns_message_text("response", flow.response)
 
     def _contentview_status_bar(self, description: str, viewmode: str):
         cols = [
@@ -358,6 +392,32 @@ class FlowDetails(tabs.Tabs):
                 )
             ]
         return searchable.Searchable(txt)
+
+    def dns_message_text(self, type: str, message: typing.Optional[dns.Message]) -> searchable.Searchable:
+        # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
+        if message:
+            def rr_text(rr: dns.ResourceRecord):
+                return urwid.Text(f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}")
+            txt = []
+            txt.append(urwid.Text("{recursive}Question".format(
+                recursive="Recursive " if message.recursion_desired else "",
+            )))
+            txt.extend(urwid.Text(f"  {q.name} {dns.types.to_str(q.type)} {dns.classes.to_str(q.class_)}") for q in message.questions)
+            txt.append(urwid.Text(""))
+            txt.append(urwid.Text("{authoritative}{recursive}Answer".format(
+                authoritative="Authoritative " if message.authoritative_answer else "",
+                recursive="Recursive " if message.recursion_available else "",
+            )))
+            txt.extend(map(rr_text, message.answers))
+            txt.append(urwid.Text(""))
+            txt.append(urwid.Text("Authority"))
+            txt.extend(map(rr_text, message.authorities))
+            txt.append(urwid.Text(""))
+            txt.append(urwid.Text("Addition"))
+            txt.extend(map(rr_text, message.additionals))
+            return searchable.Searchable(txt)
+        else:
+            return searchable.Searchable([urwid.Text(("highlight", f"No {type}."))])
 
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):

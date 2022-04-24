@@ -12,6 +12,8 @@ from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
+from mitmproxy import dns
+from mitmproxy.dns import DNSFlow
 
 # Detect Windows Subsystem for Linux and Windows
 IS_WINDOWS_OR_WSL = "Microsoft" in platform.platform() or "Windows" in platform.platform()
@@ -122,6 +124,7 @@ SCHEME_STYLES = {
     'ws': 'scheme_ws',
     'wss': 'scheme_wss',
     'tcp': 'scheme_tcp',
+    'dns': 'scheme_dns',
 }
 HTTP_REQUEST_METHOD_STYLES = {
     'GET': 'method_get',
@@ -646,6 +649,62 @@ def format_tcp_flow(
     ])
 
 
+@lru_cache(maxsize=800)
+def format_dns_flow(
+        *,
+        render_mode: RenderMode,
+        focused: bool,
+        intercepted: bool,
+        marked: str,
+        is_replay: typing.Optional[str],
+        op_code: str,
+        request_timestamp: float,
+        domain: str,
+        type: str,
+        response_code: typing.Optional[str],
+        response_code_http_equiv: int,
+        answer: typing.Optional[str],
+        error_message: str,
+        duration: typing.Optional[float],
+):
+    items = []
+
+    if render_mode in (RenderMode.TABLE, RenderMode.DETAILVIEW):
+        items.append(format_left_indicators(focused=focused, intercepted=intercepted, timestamp=request_timestamp))
+    else:
+        items.append(fcol(">>" if focused else "  ", "focus"))
+
+    scheme_style = "intercepted" if intercepted else SCHEME_STYLES["dns"]
+    t = f"DNS {op_code}"
+    if render_mode is RenderMode.TABLE:
+        t = fixlen(t, 10)
+    items.append(fcol(t, scheme_style))
+    items.append(('weight', 0.5, TruncatedText(domain, colorize_host(domain), 'right')))
+    items.append(fcol("(" + fixlen(type, 5)[:len(type)] + ") =", "text"))
+
+    items.append(("weight", 1, (
+        truncated_plain("..." if answer is None else "?" if not answer else answer, "text")
+        if error_message is None else
+        truncated_plain(error_message, "error")
+    )))
+    status_style = "intercepted" if intercepted else HTTP_RESPONSE_CODE_STYLE.get(response_code_http_equiv // 100, "code_other")
+    items.append(fcol(fixlen("" if response_code is None else response_code, 9), status_style))
+
+    if duration:
+        duration_pretty, duration_style = format_duration(duration)
+        items.append(fcol(fixlen_r(duration_pretty, 5), duration_style))
+    else:
+        items.append(("fixed", 5, urwid.Text("")))
+
+    items.append(format_right_indicators(
+        replay=bool(is_replay),
+        marked=marked,
+    ))
+    return urwid.Pile([
+        urwid.Columns(items, dividechars=1, min_width=15)
+    ])
+
+
 def format_flow(
         f: flow.Flow,
         *,
@@ -684,6 +743,33 @@ def format_flow(
             total_size=total_size,
             duration=duration,
             error_message=error_message,
+        )
+    elif isinstance(f, DNSFlow):
+        if f.response:
+            duration = f.response.timestamp - f.request.timestamp
+            response_code_str: typing.Optional[str] = dns.response_codes.to_str(f.response.response_code)
+            response_code_http_equiv = dns.response_codes.http_equiv_status_code(f.response.response_code)
+            answer = ", ".join(str(x) for x in f.response.answers)
+        else:
+            duration = None
+            response_code_str = None
+            response_code_http_equiv = 0
+            answer = None
+        return format_dns_flow(
+            render_mode=render_mode,
+            focused=focused,
+            intercepted=f.intercepted,
+            marked=f.marked,
+            is_replay=f.is_replay,
+            op_code=dns.op_codes.to_str(f.request.op_code),
+            request_timestamp=f.request.timestamp,
+            domain=f.request.questions[0].name if f.request.questions else "",
+            type=dns.types.to_str(f.request.questions[0].type) if f.request.questions else "",
+            response_code=response_code_str,
+            response_code_http_equiv=response_code_http_equiv,
+            answer=answer,
+            error_message=error_message,
+            duration=duration,
         )
     elif isinstance(f, HTTPFlow):
         intercepted = f.intercepted

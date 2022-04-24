@@ -21,6 +21,7 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
 from mitmproxy.connection import Address, Client, Connection, ConnectionState
+from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
@@ -66,8 +67,8 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: typing.Optional[asyncio.Task] = None
-    reader: typing.Optional[asyncio.StreamReader] = None
-    writer: typing.Optional[asyncio.StreamWriter] = None
+    reader: typing.Optional[typing.Union[asyncio.StreamReader, udp.DatagramReader]] = None
+    writer: typing.Optional[typing.Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -155,9 +156,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
+            reader: typing.Union[asyncio.StreamReader, udp.DatagramReader]
+            writer: typing.Union[asyncio.StreamWriter, udp.DatagramWriter]
             try:
                 command.connection.timestamp_start = time.time()
-                reader, writer = await asyncio.open_connection(*command.connection.address)
+                if command.connection.transport_protocol == "tcp":
+                    reader, writer = await asyncio.open_connection(*command.connection.address)
+                elif command.connection.transport_protocol == "udp":
+                    reader, writer = await udp.open_connection(*command.connection.address)
+                else:
+                    raise AssertionError(command.connection.transport_protocol)
             except (OSError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
@@ -171,7 +179,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     # It is not really defined what almost means here, but we play safe.
                     raise
             else:
-                command.connection.timestamp_tcp_setup = time.time()
+                if command.connection.transport_protocol == "tcp":
+                    # TODO: Rename to `timestamp_setup` and make it agnostic for both TCP (SYN/ACK) and UDP (DNS resl.)
+                    command.connection.timestamp_tcp_setup = time.time()
                 command.connection.state = ConnectionState.OPEN
                 command.connection.peername = writer.get_extra_info('peername')
                 command.connection.sockname = writer.get_extra_info('sockname')
@@ -366,7 +376,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             asyncio_utils.cancel_task(handler, "closed by command")
 
 
-class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
+class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
         client = Client(
             writer.get_extra_info('peername'),
@@ -378,7 +388,7 @@ class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         self.transports[client] = ConnectionIO(handler=None, reader=reader, writer=writer)
 
 
-class SimpleConnectionHandler(StreamConnectionHandler):  # pragma: no cover
+class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
     """Simple handler that does not really process any hooks."""
 
     hook_handlers: typing.Dict[str, typing.Callable]

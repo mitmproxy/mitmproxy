@@ -7,6 +7,7 @@ from wsproto.frame_protocol import CloseReason
 
 from mitmproxy import contentviews
 from mitmproxy import ctx
+from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -131,18 +132,21 @@ class Dumper:
         if ctx.options.flow_detail >= 2:
             self.echo("")
 
-    def _echo_request_line(self, flow: http.HTTPFlow) -> None:
+    def _fmt_client(self, flow: flow.Flow) -> str:
         if flow.is_replay == "request":
-            client = self.style("[replay]", fg="yellow", bold=True)
+            return self.style("[replay]", fg="yellow", bold=True)
         elif flow.client_conn.peername:
-            client = self.style(
+            return self.style(
                 strutils.escape_control_characters(
                     human.format_address(flow.client_conn.peername)
                 )
             )
         else:  # pragma: no cover
             # this should not happen, but we're defensive here.
-            client = ""
+            return ""
+
+    def _echo_request_line(self, flow: http.HTTPFlow) -> None:
+        client = self._fmt_client(flow)
 
         pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
         method = flow.request.method + pushed
@@ -332,3 +336,34 @@ class Dumper:
             ))
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message, f)
+
+    def _echo_dns_query(self, f: dns.DNSFlow) -> None:
+        client = self._fmt_client(f)
+        opcode = dns.op_codes.to_str(f.request.op_code),
+        type = dns.types.to_str(f.request.questions[0].type)
+
+        desc = f"DNS {opcode} ({type})"
+        desc_color = {
+            "DNS QUERY (A)": "green",
+            "DNS QUERY (AAAA)": "magenta",
+        }.get(type, "red")
+        desc = self.style(desc, fg=desc_color)
+
+        name = self.style(f.request.questions[0].name, bold=True)
+        self.echo(f"{client}: {desc} {name}")
+
+    def dns_response(self, f: dns.DNSFlow):
+        assert f.response
+        if self.match(f):
+            self._echo_dns_query(f)
+
+            arrows = self.style(" <<", bold=True)
+            answers = ", ".join(self.style(str(x), fg="bright_blue") for x in f.response.answers)
+            self.echo(f"{arrows} {answers}")
+
+    def dns_error(self, f: dns.DNSFlow):
+        assert f.error
+        if self.match(f):
+            self._echo_dns_query(f)
+            msg = strutils.escape_control_characters(f.error.msg)
+            self.echo(f" << {msg}", bold=True, fg="red")

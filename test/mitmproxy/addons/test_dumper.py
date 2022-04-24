@@ -193,6 +193,22 @@ def test_tcp():
         assert "Error in TCP" in sio.getvalue()
 
 
+def test_dns():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3, showhost=True)
+
+        f = tflow.tdnsflow(resp=True)
+        d.dns_response(f)
+        assert "8.8.8.8" in sio.getvalue()
+        sio.truncate(0)
+
+        f = tflow.tdnsflow(err=True)
+        d.dns_error(f)
+        assert "error" in sio.getvalue()
+
+
 def test_websocket():
     sio = io.StringIO()
     d = dumper.Dumper(sio)

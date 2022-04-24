@@ -5,6 +5,7 @@ import mitmproxy.types
 from mitmproxy import command, command_lexer
 from mitmproxy import contentviews
 from mitmproxy import ctx
+from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
@@ -309,7 +310,7 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow)):
+        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)):
             self.master.switch_view("flowview")
         else:
             ctx.log.warn(f"No detail view for {type(flow).__name__}.")
@@ -360,9 +361,9 @@ class ConsoleAddon:
         flow = self.master.view.focus.flow
         focus_options = []
 
-        if type(flow) == tcp.TCPFlow:
+        if isinstance(flow, tcp.TCPFlow):
             focus_options = ["tcp-message"]
-        elif type(flow) == http.HTTPFlow:
+        elif isinstance(flow, http.HTTPFlow):
             focus_options = [
                 "cookies",
                 "urlencoded form",
@@ -379,6 +380,8 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
+        elif isinstance(flow, dns.DNSFlow):
+            raise exceptions.CommandError("Cannot edit DNS flows yet, please submit a patch.")
 
         return focus_options
 

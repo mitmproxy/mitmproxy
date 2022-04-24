@@ -7,7 +7,7 @@ from typing import List, Type
 
 from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer
-from mitmproxy.proxy.layers import http, modes, tcp, tls, websocket
+from mitmproxy.proxy.layers import dns, http, modes, tcp, tls, websocket
 
 known = set()
 
@@ -102,6 +102,16 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             http.HttpErrorHook,
             http.HttpConnectHook,
             http.HttpConnectUpstreamHook,
+        ]
+    )
+
+    category(
+        "DNS",
+        "",
+        [
+            dns.DnsRequestHook,
+            dns.DnsResponseHook,
+            dns.DnsErrorHook,
         ]
     )
 

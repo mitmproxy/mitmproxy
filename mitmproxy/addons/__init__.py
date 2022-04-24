@@ -9,6 +9,7 @@ from mitmproxy.addons import comment
 from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
+from mitmproxy.addons import dns_resolver
 from mitmproxy.addons import export
 from mitmproxy.addons import next_layer
 from mitmproxy.addons import onboarding
@@ -44,6 +45,7 @@ def default_addons():
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
         proxyserver.Proxyserver(),
+        dns_resolver.DnsResolver(),
         script.ScriptLoader(),
         next_layer.NextLayer(),
         serverplayback.ServerPlayback(),

@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* DNS support (@meitinger)
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Periodically send HTTP/2 ping frames to keep connections alive.

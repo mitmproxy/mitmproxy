@@ -18,6 +18,7 @@ import sortedcontainers
 import mitmproxy.flow
 from mitmproxy import command
 from mitmproxy import ctx
+from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy import hooks
 from mitmproxy import connection
@@ -83,6 +84,8 @@ class OrderRequestMethod(_OrderKey):
             return f.request.method
         elif isinstance(f, tcp.TCPFlow):
             return "TCP"
+        elif isinstance(f, dns.DNSFlow):
+            return dns.op_codes.to_str(f.request.op_code)
         else:
             raise NotImplementedError()
 
@@ -93,6 +96,8 @@ class OrderRequestURL(_OrderKey):
             return f.request.url
         elif isinstance(f, tcp.TCPFlow):
             return human.format_address(f.server_conn.address)
+        elif isinstance(f, dns.DNSFlow):
+            return f.request.questions[0].name if f.request.questions else ""
         else:
             raise NotImplementedError()
 
@@ -111,6 +116,8 @@ class OrderKeySize(_OrderKey):
             for message in f.messages:
                 size += len(message.content)
             return size
+        elif isinstance(f, dns.DNSFlow):
+            return f.response.size if f.response else 0
         else:
             raise NotImplementedError()
 
@@ -589,6 +596,15 @@ class View(collections.abc.Sequence):
         self.update([f])
 
     def tcp_end(self, f):
+        self.update([f])
+
+    def dns_request(self, f):
+        self.add([f])
+
+    def dns_response(self, f):
+        self.update([f])
+
+    def dns_error(self, f):
         self.update([f])
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:

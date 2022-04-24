@@ -1,15 +1,19 @@
 import asyncio
 from contextlib import asynccontextmanager
+import socket
 
 import pytest
 
-from mitmproxy import exceptions
+from mitmproxy import dns, exceptions
+from mitmproxy.addons import dns_resolver
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.connection import Address
+from mitmproxy.net import udp
 from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons, tflow
 from mitmproxy.test.tflow import tclient_conn, tserver_conn
+from mitmproxy.test.tutils import tdnsreq
 
 
 class HelperAddon:
@@ -54,12 +58,12 @@ async def test_start_stop():
         tctx.master.addons.add(state)
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-            assert not ps.server
+            assert not ps.tcp_server
             await ps.running()
             await tctx.master.await_log("Proxy server listening", level="info")
-            assert ps.server
+            assert ps.tcp_server
 
-            proxy_addr = ps.server.sockets[0].getsockname()[:2]
+            proxy_addr = ps.tcp_server.sockets[0].getsockname()[:2]
             reader, writer = await asyncio.open_connection(*proxy_addr)
             req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
             writer.write(req.encode())
@@ -67,8 +71,8 @@ async def test_start_stop():
             assert repr(ps) == "ProxyServer(running, 1 active conns)"
 
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("Stopping server", level="info")
-            assert not ps.server
+            await tctx.master.await_log("Stopping Proxy server", level="info")
+            assert not ps.tcp_server
             assert state.flows
             assert state.flows[0].request.path == "/hello"
             assert state.flows[0].response.status_code == 204
@@ -101,7 +105,7 @@ async def test_inject() -> None:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             await ps.running()
             await tctx.master.await_log("Proxy server listening", level="info")
-            proxy_addr = ps.server.sockets[0].getsockname()[:2]
+            proxy_addr = ps.tcp_server.sockets[0].getsockname()[:2]
             reader, writer = await asyncio.open_connection(*proxy_addr)
 
             req = f"CONNECT {addr[0]}:{addr[1]} HTTP/1.1\r\n\r\n"
@@ -160,7 +164,7 @@ async def test_warn_no_nextlayer():
         await ps.shutdown_server()
 
 
-def test_self_connect():
+async def test_self_connect():
     server = tserver_conn()
     client = tclient_conn()
     server.address = ("localhost", 8080)
@@ -184,6 +188,19 @@ def test_options():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, stream_large_bodies="invalid")
         tctx.configure(ps, stream_large_bodies="1m")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dns_mode="invalid")
+        tctx.configure(ps, dns_mode="regular")
+
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dns_mode="reverse")
+        tctx.configure(ps, dns_mode="reverse:8.8.8.8")
+        assert ps.dns_reverse_addr == ("8.8.8.8", 53)
+
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dns_mode="reverse:invalid:53")
+        tctx.configure(ps, dns_mode="reverse:8.8.8.8:53")
+        assert ps.dns_reverse_addr == ("8.8.8.8", 53)
 
 
 async def test_startup_err(monkeypatch) -> None:
@@ -196,3 +213,61 @@ async def test_startup_err(monkeypatch) -> None:
     with taddons.context(ps) as tctx:
         await ps.running()
         await tctx.master.await_log("cannot bind", level="error")
+
+
+async def test_shutdown_err() -> None:
+    def _raise(*_):
+        raise OSError("cannot close")
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        await ps.running()
+        assert ps.running_servers
+        for server in ps.running_servers:
+            setattr(server, "close", _raise)
+        await ps.shutdown_server()
+        await tctx.master.await_log("cannot close", level="error")
+        assert ps.running_servers
+
+
+class DummyResolver:
+
+    async def dns_request(self, flow: dns.DNSFlow) -> None:
+        flow.response = await dns_resolver.resolve_message(flow.request, self)
+
+    async def getaddrinfo(self, host: str, port: int, *, family: int):
+        if family == socket.AF_INET and host == "dns.google":
+            return [(socket.AF_INET, None, None, None, ("8.8.8.8", port))]
+        e = socket.gaierror()
+        e.errno = socket.EAI_NONAME
+        raise e
+
+
+async def test_dns() -> None:
+    ps = Proxyserver()
+    with taddons.context(ps, DummyResolver()) as tctx:
+        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="regular")
+        await ps.running()
+        await tctx.master.await_log("DNS server listening at", level="info")
+        assert ps.dns_server
+        dns_addr = ps.dns_server.sockets[0].getsockname()[:2]
+        r, w = await udp.open_connection(*dns_addr)
+        w.write(b'\x00')
+        await tctx.master.await_log("Invalid DNS datagram received", level="info")
+        req = tdnsreq()
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 1
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 1
+        req.id = req.id + 1
+        w.write(req.packed)
+        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        assert req.id == resp.id and "8.8.8.8" in str(resp)
+        assert len(ps._connections) == 2
+        await ps.shutdown_server()
+        await tctx.master.await_log("Stopping DNS server", level="info")

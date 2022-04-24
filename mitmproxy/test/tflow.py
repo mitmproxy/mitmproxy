@@ -1,11 +1,13 @@
 import uuid
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from mitmproxy import connection
+from mitmproxy import dns
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
+from mitmproxy.test.tutils import tdnsreq, tdnsresp
 from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
 
@@ -86,6 +88,42 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
     return flow
 
 
+def tdnsflow(
+    *,
+    client_conn: Optional[connection.Client] = None,
+    server_conn: Optional[connection.Server] = None,
+    req: Optional[dns.Message] = None,
+    resp: Union[bool, dns.Message] = False,
+    err: Union[bool, flow.Error] = False,
+    live: bool = True,
+) -> dns.DNSFlow:
+    """Create a DNS flow for testing."""
+    if client_conn is None:
+        client_conn = tclient_conn()
+        client_conn.transport_protocol = "udp"
+    if server_conn is None:
+        server_conn = tserver_conn()
+        server_conn.transport_protocol = "udp"
+    if req is None:
+        req = tdnsreq()
+
+    if resp is True:
+        resp = tdnsresp()
+    if err is True:
+        err = terr()
+
+    assert resp is False or isinstance(resp, dns.Message)
+    assert err is False or isinstance(err, flow.Error)
+
+    f = dns.DNSFlow(client_conn, server_conn)
+    f.timestamp_created = req.timestamp
+    f.request = req
+    f.response = resp or None
+    f.error = err or None
+    f.live = live
+    return f
+
+
 def tflow(
     *,
     client_conn: Optional[connection.Client] = None,
@@ -128,7 +166,7 @@ def tflow(
 class DummyFlow(flow.Flow):
     """A flow that is neither HTTP nor TCP."""
 
-    def __init__(self, client_conn, server_conn, live=None):
+    def __init__(self, client_conn, server_conn, live=False):
         super().__init__("dummy", client_conn, server_conn, live)
 
 
@@ -218,3 +256,15 @@ def twebsocket(messages: bool = True) -> websocket.WebSocketData:
     ws.timestamp_end = 946681205
 
     return ws
+
+
+def tflows() -> List[flow.Flow]:
+    return [
+        tflow(resp=True),
+        tflow(err=True),
+        tflow(ws=True),
+        ttcpflow(),
+        ttcpflow(err=True),
+        tdnsflow(resp=True),
+        tdnsflow(err=True),
+    ]

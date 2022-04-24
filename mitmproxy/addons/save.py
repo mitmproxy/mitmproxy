@@ -8,6 +8,7 @@ from pathlib import Path
 import mitmproxy.types
 from mitmproxy import command, tcp
 from mitmproxy import ctx
+from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -137,8 +138,7 @@ class Save:
             self.active_flows.add(flow)
 
     def tcp_end(self, flow: tcp.TCPFlow):
-        if self.stream:
-            self.save_flow(flow)
+        self.save_flow(flow)
 
     def tcp_error(self, flow: tcp.TCPFlow):
         self.tcp_end(flow)
@@ -157,3 +157,13 @@ class Save:
 
     def error(self, flow: http.HTTPFlow):
         self.response(flow)
+
+    def dns_request(self, flow: dns.DNSFlow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def dns_response(self, flow: dns.DNSFlow):
+        self.save_flow(flow)
+
+    def dns_error(self, flow: dns.DNSFlow):
+        self.save_flow(flow)

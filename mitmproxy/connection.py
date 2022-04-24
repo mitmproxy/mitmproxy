@@ -2,7 +2,7 @@ import uuid
 import warnings
 from abc import ABCMeta
 from enum import Flag
-from typing import Optional, Sequence, Tuple
+from typing import Literal, Optional, Sequence, Tuple
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
@@ -16,6 +16,9 @@ class ConnectionState(Flag):
     CAN_READ = 1
     CAN_WRITE = 2
     OPEN = CAN_READ | CAN_WRITE
+
+
+TransportProtocol = Literal["tcp", "udp"]
 
 
 # practically speaking we may have IPv6 addresses with flowinfo and scope_id,
@@ -38,6 +41,8 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     """A unique UUID to identify the connection."""
     state: ConnectionState
     """The current connection state."""
+    transport_protocol: TransportProtocol
+    """The connection protocol in use."""
     peername: Optional[Address]
     """The remote's `(ip, port)` tuple for this connection."""
     sockname: Optional[Address]
@@ -147,12 +152,20 @@ class Client(Connection):
     timestamp_start: float
     """*Timestamp:* TCP SYN received"""
 
-    def __init__(self, peername: Address, sockname: Address, timestamp_start: float):
+    def __init__(
+        self,
+        peername: Address,
+        sockname: Address,
+        timestamp_start: float,
+        *,
+        transport_protocol: TransportProtocol = "tcp"
+    ):
         self.id = str(uuid.uuid4())
         self.peername = peername
         self.sockname = sockname
         self.timestamp_start = timestamp_start
         self.state = ConnectionState.OPEN
+        self.transport_protocol = transport_protocol
 
     def __str__(self):
         if self.alpn:
@@ -272,10 +285,11 @@ class Server(Connection):
     via: Optional[server_spec.ServerSpec] = None
     """An optional proxy server specification via which the connection should be established."""
 
-    def __init__(self, address: Optional[Address]):
+    def __init__(self, address: Optional[Address], *, transport_protocol: TransportProtocol = "tcp"):
         self.id = str(uuid.uuid4())
         self.address = address
         self.state = ConnectionState.CLOSED
+        self.transport_protocol = transport_protocol
 
     def __str__(self):
         if self.alpn:

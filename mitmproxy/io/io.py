@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict, IO, Iterable, Type, Union, cast
 
+from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -12,6 +13,7 @@ from mitmproxy.io import tnetstring
 FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
     http=http.HTTPFlow,
     tcp=tcp.TCPFlow,
+    dns=dns.DNSFlow,
 )
 
 

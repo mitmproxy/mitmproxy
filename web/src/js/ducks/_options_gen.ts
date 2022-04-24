@@ -20,6 +20,10 @@ export interface OptionsState {
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
+    dns_listen_host: string
+    dns_listen_port: number
+    dns_mode: string
+    dns_server: boolean
     export_preserve_original_ip: boolean
     http2: boolean
     http2_ping_keepalive: number
@@ -109,6 +113,10 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    dns_listen_host: "",
+    dns_listen_port: 53,
+    dns_mode: "regular",
+    dns_server: false,
     export_preserve_original_ip: false,
     http2: true,
     http2_ping_keepalive: 58,

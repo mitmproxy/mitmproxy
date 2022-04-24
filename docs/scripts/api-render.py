@@ -27,6 +27,7 @@ modules = [
     "mitmproxy.certs",
     "mitmproxy.connection",
     "mitmproxy.coretypes.multidict",
+    "mitmproxy.dns",
     "mitmproxy.flow",
     "mitmproxy.http",
     "mitmproxy.net.server_spec",

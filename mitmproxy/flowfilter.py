@@ -39,7 +39,7 @@ import sys
 from typing import ClassVar, Sequence, Type, Protocol, Union
 import pyparsing as pp
 
-from mitmproxy import flow, http, tcp
+from mitmproxy import dns, flow, http, tcp
 
 
 def only(*types):
@@ -117,11 +117,20 @@ class FTCP(_Action):
         return True
 
 
+class FDNS(_Action):
+    code = "dns"
+    help = "Match DNS flows"
+
+    @only(dns.DNSFlow)
+    def __call__(self, f):
+        return True
+
+
 class FReq(_Action):
     code = "q"
     help = "Match request with no response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f.response:
             return True
@@ -131,7 +140,7 @@ class FResp(_Action):
     code = "s"
     help = "Match response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         return bool(f.response)
 
@@ -176,7 +185,7 @@ class FAsset(_Action):
         b"text/css",
         b"image/.*",
         b"font/.*",
-        b"application/font-.*",
+        b"application/font.*",
     ]]
 
     @only(http.HTTPFlow)
@@ -262,7 +271,7 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -279,6 +288,11 @@ class FBod(_Rex):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.request and self.re.search(f.request.content):
+                return True
+            if f.response and self.re.search(f.response.content):
+                return True
         return False
 
 
@@ -287,7 +301,7 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -301,6 +315,9 @@ class FBodRequest(_Rex):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.request and self.re.search(f.request.content):
+                return True
 
 
 class FBodResponse(_Rex):
@@ -308,7 +325,7 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
@@ -322,6 +339,9 @@ class FBodResponse(_Rex):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.response and self.re.search(f.response.content):
+                return True
 
 
 class FMethod(_Rex):
@@ -361,11 +381,14 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f or not f.request:
             return False
-        return self.re.search(f.request.pretty_url)
+        if isinstance(f, http.HTTPFlow):
+            return self.re.search(f.request.pretty_url)
+        elif isinstance(f, dns.DNSFlow):
+            return f.request.questions and self.re.search(f.request.questions[0].name)
 
 
 class FSrc(_Rex):
@@ -514,6 +537,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FReq,
     FResp,
     FTCP,
+    FDNS,
     FWebSocket,
     FAll,
 ]

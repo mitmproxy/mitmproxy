@@ -42,6 +42,10 @@ To document all event hooks, we do a bit of hackery:
             {% else %}
                 {{ default_is_public(doc) }}
             {% endif %}
+        {% elif doc.modulename == "mitmproxy.dns" %}
+            {% if doc.qualname.startswith("DNSFlow") %}
+                {{ default_is_public(doc) }}
+            {% endif %}
         {% elif doc.modulename == "mitmproxy.flow" %}
             {% if doc.name is not in(["__init__", "reply", "metadata"]) %}
                 {{ default_is_public(doc) }}

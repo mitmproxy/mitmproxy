@@ -21,6 +21,7 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils.emoji import emoji
@@ -160,6 +161,10 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "count": len(flow.messages),
             "timestamp_last": flow.messages[-1].timestamp if flow.messages else None,
         }
+    elif isinstance(flow, DNSFlow):
+        f["request"] = flow.request.to_json()
+        if flow.response:
+            f["response"] = flow.response.to_json()
 
     return f
 
