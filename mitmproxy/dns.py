@@ -5,7 +5,7 @@ import random
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import List, Optional, Tuple, Union
+from typing import ClassVar, List, Optional, Tuple, Union
 
 from mitmproxy import connection, flow, stateobject
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types
@@ -15,7 +15,7 @@ from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, t
 
 @dataclass
 class Question(stateobject.StateObject):
-    HEADER = struct.Struct("!HH")
+    HEADER: ClassVar[struct.Struct] = struct.Struct("!HH")
 
     name: str
     type: int
@@ -44,8 +44,8 @@ class Question(stateobject.StateObject):
 
 @dataclass
 class ResourceRecord(stateobject.StateObject):
-    DEFAULT_TTL = 60
-    HEADER = struct.Struct("!HHIH")
+    DEFAULT_TTL: ClassVar[int] = 60
+    HEADER: ClassVar[struct.Struct] = struct.Struct("!HHIH")
 
     name: str
     type: int
@@ -147,7 +147,7 @@ class ResourceRecord(stateobject.StateObject):
 # comments are taken from rfc1035
 @dataclass
 class Message(stateobject.StateObject):
-    HEADER = struct.Struct("!HHHHHH")
+    HEADER: ClassVar[struct.Struct] = struct.Struct("!HHHHHH")
 
     timestamp: float
     """The time at which the message was sent or received."""
