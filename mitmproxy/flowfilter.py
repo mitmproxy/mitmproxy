@@ -185,7 +185,7 @@ class FAsset(_Action):
         b"text/css",
         b"image/.*",
         b"font/.*",
-        b"application/font-.*",
+        b"application/font.*",
     ]]
 
     @only(http.HTTPFlow)
