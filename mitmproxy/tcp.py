@@ -47,7 +47,7 @@ class TCPFlow(flow.Flow):
     The latest message can be accessed as `flow.messages[-1]` in event hooks.
     """
 
-    def __init__(self, client_conn, server_conn, live=None):
+    def __init__(self, client_conn, server_conn, live=False):
         super().__init__("tcp", client_conn, server_conn, live)
         self.messages = []
 

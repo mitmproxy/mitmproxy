@@ -1224,7 +1224,7 @@ class HTTPFlow(flow.Flow):
     If this HTTP flow initiated a WebSocket connection, this attribute contains all associated WebSocket data.
     """
 
-    def __init__(self, client_conn, server_conn, live=None, mode="regular"):
+    def __init__(self, client_conn, server_conn, live=False, mode="regular"):
         super().__init__("http", client_conn, server_conn, live)
         self.mode = mode
 

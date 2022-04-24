@@ -164,7 +164,7 @@ def tflow(
 class DummyFlow(flow.Flow):
     """A flow that is neither HTTP nor TCP."""
 
-    def __init__(self, client_conn, server_conn, live=None):
+    def __init__(self, client_conn, server_conn, live=False):
         super().__init__("dummy", client_conn, server_conn, live)
 
 
