@@ -40,7 +40,7 @@ class DNSLayer(layer.Layer):
 
     def __init__(self, context: Context):
         super().__init__(context)
-        self.flow = dns.DNSFlow(self.context.client, self.context.server)
+        self.flow = dns.DNSFlow(self.context.client, self.context.server, live=True)
 
     def handle_request(self, msg: dns.Message) -> layer.CommandGenerator[None]:
         self.flow.request = msg  # if already set, continue and query upstream again

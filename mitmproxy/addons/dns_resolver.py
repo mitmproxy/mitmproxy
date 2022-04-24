@@ -110,6 +110,11 @@ async def resolve_message(message: dns.Message, loop: asyncio.AbstractEventLoop)
 
 class DnsResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
-        # handle regular mode requests here to not block the layer
-        if ctx.options.dns_mode == "regular":
+        should_resolve = (
+            flow.live
+            and not flow.response
+            and not flow.error
+            and ctx.options.dns_mode == "regular"
+        )
+        if should_resolve:
             flow.response = await resolve_message(flow.request, asyncio.get_running_loop())

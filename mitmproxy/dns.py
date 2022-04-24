@@ -425,8 +425,8 @@ class DNSFlow(flow.Flow):
     _stateobject_attributes["request"] = Message
     _stateobject_attributes["response"] = Message
 
-    def __init__(self, client_conn: connection.Client, server_conn: connection.Server):
-        super().__init__("dns", client_conn, server_conn, True)
+    def __init__(self, client_conn: connection.Client, server_conn: connection.Server, live: bool = False):
+        super().__init__("dns", client_conn, server_conn, live)
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"
