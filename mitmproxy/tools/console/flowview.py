@@ -398,7 +398,6 @@ class FlowDetails(tabs.Tabs):
         if message:
             def rr_text(rr: dns.ResourceRecord):
                 return urwid.Text(f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}")
-            viewmode = self.master.commands.call("console.flowview.mode")
             txt = []
             txt.append(urwid.Text("{recursive}Question".format(
                 recursive="Recursive " if message.recursion_desired else "",

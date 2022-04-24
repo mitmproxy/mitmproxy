@@ -747,12 +747,12 @@ def format_flow(
     elif isinstance(f, DNSFlow):
         if f.response:
             duration = f.response.timestamp - f.request.timestamp
-            response_code: typing.Optional[str] = dns.response_codes.to_str(f.response.response_code)
+            response_code_str: typing.Optional[str] = dns.response_codes.to_str(f.response.response_code)
             response_code_http_equiv = dns.response_codes.http_equiv_status_code(f.response.response_code)
             answer = ", ".join(str(x) for x in f.response.answers)
         else:
             duration = None
-            response_code = None
+            response_code_str = None
             response_code_http_equiv = 0
             answer = None
         return format_dns_flow(
@@ -765,7 +765,7 @@ def format_flow(
             request_timestamp=f.request.timestamp,
             domain=f.request.questions[0].name if f.request.questions else "",
             type=dns.types.to_str(f.request.questions[0].type) if f.request.questions else "",
-            response_code=response_code,
+            response_code=response_code_str,
             response_code_http_equiv=response_code_http_equiv,
             answer=answer,
             error_message=error_message,

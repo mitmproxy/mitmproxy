@@ -12,6 +12,7 @@ from mitmproxy.utils import human
 
 MAX_DATAGRAM_SIZE = 65535 - 20
 
+DatagramReceivedCallback = Callable[[asyncio.DatagramTransport, bytes, Address, Address], None]
 """
 Callable that gets invoked when a datagram is received.
 The first argument is the outgoing transport.
@@ -20,7 +21,6 @@ The third argument is the source address, also referred to as `remote_addr` or `
 The fourth argument is the destination address, also referred to as `local_addr` or `sockname`.
 In the case of transparent server, the last argument is the original destination address.
 """
-DatagramReceivedCallback = Callable[[asyncio.DatagramTransport, bytes, Address, Address], None]
 
 # to make mypy happy
 SockAddress = Union[Tuple[str, int], Tuple[str, int, int, int]]
@@ -227,7 +227,6 @@ class DatagramWriter:
 
     _transport: asyncio.DatagramTransport
     _remote_addr: Address
-    _protocol: DrainableDatagramProtocol
     _reader: Optional[DatagramReader]
     _closed: Optional[asyncio.Event]
 
@@ -240,9 +239,15 @@ class DatagramWriter:
         self._remote_addr = remote_addr
         proto = transport.get_protocol()
         assert isinstance(proto, DrainableDatagramProtocol)
-        self._protocol = proto
         self._reader = reader
         self._closed = asyncio.Event() if reader is not None else None
+
+    @property
+    def _protocol(self) -> DrainableDatagramProtocol:
+        return cast(
+            DrainableDatagramProtocol,
+            self._transport.get_protocol()
+        )
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)

@@ -34,7 +34,7 @@ def console(monkeypatch) -> ConsoleTestMaster:
 
 
 @pytest.fixture
-async def console(monkeypatch) -> ConsoleTestMaster:
+async def console(monkeypatch) -> ConsoleTestMaster:  # noqa
     # monkeypatch.setattr(window.Screen, "get_cols_rows", lambda self: (120, 120))
     monkeypatch.setattr(window.Screen, "start", lambda *_: True)
     monkeypatch.setattr(ConsoleTestMaster, "sig_call_in", lambda *_, **__: True)
