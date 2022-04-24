@@ -388,7 +388,7 @@ class FUrl(_Rex):
         if isinstance(f, http.HTTPFlow):
             return self.re.search(f.request.pretty_url)
         elif isinstance(f, dns.DNSFlow):
-            return self.re.search(f.request.questions[0].name)
+            return f.request.questions and self.re.search(f.request.questions[0].name)
 
 
 class FSrc(_Rex):
