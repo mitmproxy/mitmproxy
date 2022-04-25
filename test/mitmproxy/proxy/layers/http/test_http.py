@@ -1,7 +1,8 @@
+import gc
+
 import pytest
 
 from mitmproxy.connection import ConnectionState, Server
-from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Response
 from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy import layer
@@ -12,7 +13,7 @@ from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.tcp import TCPFlow, TCPMessage
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
+from test.mitmproxy.proxy.tutils import BytesMatching, Placeholder, Playbook, reply, reply_next_layer
 
 
 def test_http_proxy(tctx):
@@ -495,17 +496,15 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
                 << CloseConnection(tctx.client)
         )
     elif response == "early kill":
-        err = Placeholder(bytes)
         assert (
                 playbook
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
                 << http.HttpErrorHook(flow)
                 >> reply()
-                << SendData(tctx.client, err)
+                << SendData(tctx.client, BytesMatching(b"502 Bad Gateway"))
                 << CloseConnection(tctx.client)
         )
-        assert b"502 Bad Gateway" in err()
     else:  # pragma: no cover
         assert False
 
@@ -515,7 +514,6 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
 def test_body_size_limit(tctx, where, transfer_encoding):
     """Test HTTP request body_size_limit"""
     tctx.options.body_size_limit = "3"
-    err = Placeholder(bytes)
     flow = Placeholder(HTTPFlow)
 
     if transfer_encoding == "identity":
@@ -532,11 +530,9 @@ def test_body_size_limit(tctx, where, transfer_encoding):
             >> reply()
             << http.HttpErrorHook(flow)
             >> reply()
-            << SendData(tctx.client, err)
+            << SendData(tctx.client, BytesMatching(b"413 Payload Too Large.+body_size_limit"))
             << CloseConnection(tctx.client)
         )
-        assert b"413 Payload Too Large" in err()
-        assert b"body_size_limit" in err()
         assert not flow().live
     else:
         server = Placeholder(Server)
@@ -557,12 +553,10 @@ def test_body_size_limit(tctx, where, transfer_encoding):
             >> reply()
             << http.HttpErrorHook(flow)
             >> reply()
-            << SendData(tctx.client, err)
+            << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+body_size_limit"))
             << CloseConnection(tctx.client)
             << CloseConnection(server)
         )
-        assert b"502 Bad Gateway" in err()
-        assert b"body_size_limit" in err()
         assert not flow().live
 
 
@@ -572,7 +566,6 @@ def test_server_unreachable(tctx, connect):
     tctx.options.connection_strategy = "eager"
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    err = Placeholder(bytes)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     if connect:
         playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
@@ -587,7 +580,7 @@ def test_server_unreachable(tctx, connect):
         # or by adding dedicated ok/error hooks.
         playbook << http.HttpErrorHook(flow)
         playbook >> reply()
-    playbook << SendData(tctx.client, err)
+    playbook << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed"))
     if not connect:
         playbook << CloseConnection(tctx.client)
 
@@ -595,8 +588,6 @@ def test_server_unreachable(tctx, connect):
     if not connect:
         assert flow().error
         assert not flow().live
-    assert b"502 Bad Gateway" in err()
-    assert b"Connection failed" in err()
 
 
 @pytest.mark.parametrize("data", [
@@ -608,7 +599,6 @@ def test_server_aborts(tctx, data):
     """Test the scenario where the server doesn't serve a response"""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    err = Placeholder(bytes)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
             playbook
@@ -625,11 +615,10 @@ def test_server_aborts(tctx, data):
             << CloseConnection(server)
             << http.HttpErrorHook(flow)
             >> reply()
-            << SendData(tctx.client, err)
+            << SendData(tctx.client, BytesMatching(b"502 Bad Gateway"))
             << CloseConnection(tctx.client)
     )
     assert flow().error
-    assert b"502 Bad Gateway" in err()
     assert not flow().live
 
 
@@ -851,15 +840,13 @@ def test_http_proxy_relative_request(tctx):
 
 def test_http_proxy_relative_request_no_host_header(tctx):
     """Test handling of a relative-form "GET /" in regular proxy mode, but without a host header."""
-    err = Placeholder(bytes)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
-            << SendData(tctx.client, err)
+            << SendData(tctx.client, BytesMatching(b"400 Bad Request.+"
+                                                   b"HTTP request has no host header, destination unknown."))
             << CloseConnection(tctx.client)
     )
-    assert b"400 Bad Request" in err()
-    assert b"HTTP request has no host header, destination unknown." in err()
 
 
 def test_http_expect(tctx):
@@ -988,15 +975,12 @@ def test_http_server_aborts(tctx, stream):
                 << CloseConnection(tctx.client)
         )
     else:
-        error_html = Placeholder(bytes)
         assert (
                 playbook
                 >> reply()
-                << SendData(tctx.client, error_html)
+                << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+peer closed connection"))
                 << CloseConnection(tctx.client)
         )
-        assert b"502 Bad Gateway" in error_html()
-        assert b"peer closed connection" in error_html()
 
     assert "peer closed connection" in flow().error.msg
     assert not flow().live
@@ -1013,8 +997,7 @@ def test_kill_flow(tctx, when):
     flow = Placeholder(HTTPFlow)
 
     def kill(flow: HTTPFlow):
-        # Can't use flow.kill() here because that currently still depends on a reply object.
-        flow.error = Error(Error.KILLED_MESSAGE)
+        flow.kill()
 
     def assert_kill(err_hook: bool = True):
         playbook >> reply(side_effect=kill)
@@ -1203,15 +1186,12 @@ def test_reuse_error(tctx):
     """Test that an errored connection is reused."""
     tctx.server.address = ("example.com", 443)
     tctx.server.error = "tls verify failed"
-    error_html = Placeholder(bytes)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
-            << SendData(tctx.client, error_html)
+            << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+tls verify failed"))
             << CloseConnection(tctx.client)
     )
-    assert b"502 Bad Gateway" in error_html()
-    assert b"tls verify failed" in error_html()
 
 
 def test_transparent_sni(tctx):
@@ -1248,31 +1228,27 @@ def test_original_server_disconnects(tctx):
 
 def test_request_smuggling(tctx):
     """Test that we reject request smuggling"""
-    err = Placeholder(bytes)
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
         >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
                                      b"Host: example.com\r\n"
                                      b"Content-Length: 42\r\n"
                                      b"Transfer-Encoding: chunked\r\n\r\n")
-        << SendData(tctx.client, err)
+        << SendData(tctx.client, BytesMatching(b"Received both a Transfer-Encoding and a Content-Length header"))
         << CloseConnection(tctx.client)
     )
-    assert b"Received both a Transfer-Encoding and a Content-Length header" in err()
 
 
 def test_request_smuggling_whitespace(tctx):
     """Test that we reject header names with whitespace"""
-    err = Placeholder(bytes)
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
         >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
                                      b"Host: example.com\r\n"
                                      b"Content-Length : 42\r\n\r\n")
-        << SendData(tctx.client, err)
+        << SendData(tctx.client, BytesMatching(b"Received an invalid header name"))
         << CloseConnection(tctx.client)
     )
-    assert b"Received an invalid header name" in err()
 
 
 def test_request_smuggling_validation_disabled(tctx):
@@ -1294,35 +1270,31 @@ def test_request_smuggling_validation_disabled(tctx):
 
 def test_request_smuggling_te_te(tctx):
     """Test that we reject transfer-encoding headers that are weird in some way"""
-    err = Placeholder(bytes)
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
         >> DataReceived(tctx.client, ("GET http://example.com/ HTTP/1.1\r\n"
                                       "Host: example.com\r\n"
                                       "Transfer-Encoding: chunKed\r\n\r\n").encode())  # note the non-standard "K"
-        << SendData(tctx.client, err)
+        << SendData(tctx.client, BytesMatching(b"Invalid transfer encoding"))
         << CloseConnection(tctx.client)
     )
-    assert b"Invalid transfer encoding" in err()
 
 
 def test_invalid_content_length(tctx):
     """Test that we still trigger flow hooks for requests with semantic errors"""
-    err = Placeholder(bytes)
     flow = Placeholder(HTTPFlow)
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular))
         >> DataReceived(tctx.client, (b"GET http://example.com/ HTTP/1.1\r\n"
                                       b"Host: example.com\r\n"
                                       b"Content-Length: NaN\r\n\r\n"))
-        << SendData(tctx.client, err)
+        << SendData(tctx.client, BytesMatching(b"Invalid Content-Length header"))
         << CloseConnection(tctx.client)
         << http.HttpRequestHeadersHook(flow)
         >> reply()
         << http.HttpErrorHook(flow)
         >> reply()
     )
-    assert b"Invalid Content-Length header" in err()
 
 
 def test_chunked_and_content_length_set_by_addon(tctx):
@@ -1386,3 +1358,48 @@ def test_connect_more_newlines(tctx):
         << layer.NextLayerHook(nl)
     )
     assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"
+
+
+def flows_tracked() -> int:
+    return sum(
+        isinstance(x, HTTPFlow)
+        for x in gc.get_objects()
+    )
+
+
+def test_memory_usage_completed_flows(tctx):
+    """Make sure that flows are not kept in memory after they are completed."""
+    gc.collect()
+    flow_count = flows_tracked()
+
+    server = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 204 No Content\r\n\r\n")
+    )
+
+    gc.collect()
+    assert flows_tracked() == flow_count
+
+
+def test_memory_usage_errored_flows(tctx):
+    """Make sure that flows are not kept in memory after they errored."""
+    gc.collect()
+    flow_count = flows_tracked()
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(Placeholder(Server))
+            >> reply("connection failed")
+            << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+connection failed"))
+            << CloseConnection(tctx.client)
+    )
+
+    gc.collect()
+    assert flows_tracked() == flow_count

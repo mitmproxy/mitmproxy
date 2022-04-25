@@ -1,7 +1,5 @@
 import asyncio
 
-import pytest
-
 from mitmproxy.utils import asyncio_utils
 
 
@@ -27,20 +25,3 @@ async def test_simple():
     asyncio_utils.cancel_task(task, "bye")
     await asyncio.sleep(0)
     assert task.cancelled()
-
-
-def test_closed_loop():
-    # Crude test for line coverage.
-    # This should eventually go, see the description in asyncio_utils.create_task for details.
-    asyncio_utils.create_task(
-        ttask(),
-        name="ttask",
-    )
-    t = ttask()
-    with pytest.raises(RuntimeError):
-        asyncio_utils.create_task(
-            t,
-            name="ttask",
-            ignore_closed_loop=False,
-        )
-    t.close()  # suppress "not awaited" warning

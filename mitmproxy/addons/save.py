@@ -147,7 +147,8 @@ class Save:
         self.save_flow(flow)
 
     def request(self, flow: http.HTTPFlow):
-        self.active_flows.add(flow)
+        if self.stream:
+            self.active_flows.add(flow)
 
     def response(self, flow: http.HTTPFlow):
         # websocket flows will receive a websocket_end,

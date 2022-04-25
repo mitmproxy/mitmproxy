@@ -93,6 +93,12 @@ class SendHttp(HttpCommand):
         return f"Send({self.event})"
 
 
+@dataclass
+class DropStream(HttpCommand):
+    """Signal to the HTTP layer that this stream is done processing and can be dropped from memory."""
+    stream_id: StreamId
+
+
 class HttpStream(layer.Layer):
     request_body_buf: bytes
     response_body_buf: bytes
@@ -261,6 +267,9 @@ class HttpStream(layer.Layer):
                 yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
             yield SendHttp(event, self.context.server)
 
+            if self.server_state == self.state_done:
+                yield from self.flow_done()
+
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
@@ -395,8 +404,15 @@ class HttpStream(layer.Layer):
         if self.flow.response.trailers:
             yield SendHttp(ResponseTrailers(self.stream_id, self.flow.response.trailers), self.context.client)
 
+        if self.client_state == self.state_done:
+            yield from self.flow_done()
+
+    def flow_done(self):
+        if not self.flow.websocket:
+            self.flow.live = False
+
         if self.flow.response.status_code == 101:
-            if is_websocket:
+            if self.flow.websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
             elif self.context.options.rawtcp:
                 self.child_layer = tcp.TCPLayer(self.context)
@@ -409,13 +425,12 @@ class HttpStream(layer.Layer):
                 yield commands.Log(f"{self.debug}[http] upgrading to {self.child_layer}", "debug")
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+        else:
+            yield DropStream(self.stream_id)
 
         # delay sending EOM until the child layer is set up,
         # we may get data immediately and need to be prepared to handle it.
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-
-        if not is_websocket:
-            self.flow.live = False
 
     def check_body_size(self, request: bool) -> layer.CommandGenerator[bool]:
         """
@@ -512,7 +527,7 @@ class HttpStream(layer.Layer):
                 self.context.client
             )
             self.flow.live = False
-            self._handle_event = self.state_errored
+            self.client_state = self.server_state = self.state_errored
             return True
         return False
 
@@ -550,6 +565,7 @@ class HttpStream(layer.Layer):
             self.server_state = self.state_errored
 
         self.flow.live = False
+        yield DropStream(self.stream_id)
 
     def make_server_connection(self) -> layer.CommandGenerator[bool]:
         connection, err = yield GetHttpConnection(
@@ -774,11 +790,18 @@ class HttpLayer(layer.Layer):
             if isinstance(command, ReceiveHttp):
                 if isinstance(command.event, RequestHeaders):
                     yield from self.make_stream(command.event.stream_id)
-                stream = self.streams[command.event.stream_id]
-                yield from self.event_to_child(stream, command.event)
+                try:
+                    stream = self.streams[command.event.stream_id]
+                except KeyError:
+                    # We may be getting errors for a specific stream even though we've already finished handling it.
+                    assert isinstance(command.event, (RequestProtocolError, ResponseProtocolError))
+                else:
+                    yield from self.event_to_child(stream, command.event)
             elif isinstance(command, SendHttp):
                 conn = self.connections[command.connection]
                 yield from self.event_to_child(conn, command.event)
+            elif isinstance(command, DropStream):
+                self.streams.pop(command.stream_id, None)
             elif isinstance(command, GetHttpConnection):
                 yield from self.get_connection(command)
             elif isinstance(command, RegisterHttpConnection):

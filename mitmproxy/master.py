@@ -66,18 +66,26 @@ class Master:
         await self.addons.trigger_event(hooks.DoneHook())
 
     def _asyncio_exception_handler(self, loop, context):
-        exc: Exception = context["exception"]
-        if isinstance(exc, OSError) and exc.errno == 10038:
-            return  # suppress https://bugs.python.org/issue43253
-        self.log.error(
-            "\n".join(traceback.format_exception(
-                type(exc),
-                exc,
-                exc.__traceback__
-            )) +
-            "\nPlease lodge a bug report at:" +
-            "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
-        )
+        try:
+            exc: Exception = context["exception"]
+        except KeyError:
+            self.log.error(
+                f"Unhandled asyncio error: {context}"
+                "\nPlease lodge a bug report at:" +
+                "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+            )
+        else:
+            if isinstance(exc, OSError) and exc.errno == 10038:
+                return  # suppress https://bugs.python.org/issue43253
+            self.log.error(
+                "\n".join(traceback.format_exception(
+                    type(exc),
+                    exc,
+                    exc.__traceback__
+                )) +
+                "\nPlease lodge a bug report at:" +
+                "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+            )
 
     async def load_flow(self, f):
         """
