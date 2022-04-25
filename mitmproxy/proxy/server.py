@@ -32,7 +32,7 @@ class TimeoutWatchdog:
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, callback: typing.Callable[[], typing.Any]):
+    def __init__(self, callback: typing.Callable[[], typing.Awaitable]):
         self.callback = callback
         self.last_activity = time.time()
         self.can_timeout = asyncio.Event()
@@ -43,12 +43,15 @@ class TimeoutWatchdog:
         self.last_activity = time.time()
 
     async def watch(self):
-        while True:
-            await self.can_timeout.wait()
-            await asyncio.sleep(self.CONNECTION_TIMEOUT - (time.time() - self.last_activity))
-            if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
-                await self.callback()
-                return
+        try:
+            while True:
+                await self.can_timeout.wait()
+                await asyncio.sleep(self.CONNECTION_TIMEOUT - (time.time() - self.last_activity))
+                if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
+                    await self.callback()
+                    return
+        except asyncio.CancelledError:
+            return
 
     @contextmanager
     def disarm(self):
@@ -97,8 +100,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             name="timeout watchdog",
             client=self.client.peername,
         )
-        if not watch:
-            return  # this should not be needed, see asyncio_utils.create_task
 
         self.log("client connect")
         await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
@@ -113,8 +114,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 name=f"client connection handler",
                 client=self.client.peername,
             )
-            if not handler:
-                return   # this should not be needed, see asyncio_utils.create_task
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
@@ -190,8 +189,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     name=f"server connection handler for {addr}",
                     client=self.client.peername,
                 )
-                if not new_handler:
-                    return  # this should not be needed, see asyncio_utils.create_task
                 self.transports[command.connection].handler = new_handler
                 await asyncio.wait([new_handler])
 

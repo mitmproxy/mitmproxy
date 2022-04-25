@@ -19,8 +19,7 @@ def create_task(
     coro: Coroutine, *,
     name: str,
     client: Optional[tuple] = None,
-    ignore_closed_loop: bool = True,
-) -> Optional[asyncio.Task]:
+) -> asyncio.Task:
     """
     Like asyncio.create_task, but also store some debug info on the task object.
 
@@ -28,14 +27,7 @@ def create_task(
     This is currently useful during shutdown where no new tasks can be spawned.
     Ideally we stop closing the event loop during shutdown and then remove this parameter.
     """
-    try:
-        t = asyncio.create_task(coro, name=name)
-    except RuntimeError:
-        if ignore_closed_loop:
-            coro.close()
-            return None
-        else:
-            raise
+    t = asyncio.create_task(coro)
     set_task_debug_info(t, name=name, client=client)
     return t
 
