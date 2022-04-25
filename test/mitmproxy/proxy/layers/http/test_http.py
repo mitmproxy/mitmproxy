@@ -3,7 +3,6 @@ import gc
 import pytest
 
 from mitmproxy.connection import ConnectionState, Server
-from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Response
 from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy import layer
@@ -845,7 +844,7 @@ def test_http_proxy_relative_request_no_host_header(tctx):
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
             << SendData(tctx.client, BytesMatching(b"400 Bad Request.+"
-                                                      b"HTTP request has no host header, destination unknown."))
+                                                   b"HTTP request has no host header, destination unknown."))
             << CloseConnection(tctx.client)
     )
 
@@ -1193,6 +1192,7 @@ def test_reuse_error(tctx):
             << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+tls verify failed"))
             << CloseConnection(tctx.client)
     )
+
 
 def test_transparent_sni(tctx):
     """Test that we keep the SNI in lazy transparent mode."""
