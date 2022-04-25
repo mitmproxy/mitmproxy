@@ -371,6 +371,24 @@ def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, _Placeholde
     return _Placeholder(cls)
 
 
+class _AnyStrPlaceholder(_Placeholder[typing.AnyStr]):
+    def __init__(self, match: typing.AnyStr):
+        super().__init__(type(match))
+        self._match = match
+
+    def setdefault(self, value: typing.AnyStr) -> typing.AnyStr:
+        if self._obj is None:
+            super().setdefault(value)
+            if not re.search(self._match, self._obj, re.DOTALL):  # type: ignore
+                raise ValueError(f"{self._obj!r} does not match {self._match!r}.")
+        return self._obj
+
+
+# noinspection PyPep8Naming
+def BytesMatching(match: bytes) -> typing.Union[bytes, _AnyStrPlaceholder[bytes]]:
+    return _AnyStrPlaceholder(match)
+
+
 class EchoLayer(Layer):
     """Echo layer that sends all data back to the client in lowercase."""
 
