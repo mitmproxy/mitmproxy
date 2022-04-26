@@ -3,9 +3,10 @@ import gzip
 import json
 import logging
 import textwrap
-import typing
+from collections.abc import Sequence
 from contextlib import redirect_stdout
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 import pytest
@@ -96,9 +97,9 @@ async def test_generate_options_js():
             return "string"
         if t == int:
             return "number"
-        if t == typing.Sequence[str]:
+        if t == Sequence[str]:
             return "string[]"
-        if t == typing.Optional[str]:
+        if t == Optional[str]:
             return "string | undefined"
         raise RuntimeError(t)
 

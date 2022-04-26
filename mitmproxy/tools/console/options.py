@@ -1,8 +1,10 @@
+from collections.abc import Sequence
+
 import urwid
 import blinker
 import textwrap
 import pprint
-from typing import Optional, Sequence
+from typing import Optional
 
 from mitmproxy import exceptions
 from mitmproxy import optmanager

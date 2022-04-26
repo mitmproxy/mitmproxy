@@ -1,6 +1,6 @@
 import os
 import pathlib
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -60,7 +60,7 @@ class CommandHistory:
         self.set_filter('')
 
     @command.command("commands.history.get")
-    def get_history(self) -> typing.Sequence[str]:
+    def get_history(self) -> Sequence[str]:
         """Get the entire command history."""
         return self.history.copy()
 

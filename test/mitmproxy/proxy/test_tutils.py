@@ -1,5 +1,6 @@
-import typing
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
@@ -8,14 +9,14 @@ from . import tutils
 
 
 class TEvent(events.Event):
-    commands: typing.Iterable[typing.Any]
+    commands: Iterable[Any]
 
     def __init__(self, cmds=(None,)):
         self.commands = cmds
 
 
 class TCommand(commands.Command):
-    x: typing.Any
+    x: Any
 
     def __init__(self, x=None):
         self.x = x

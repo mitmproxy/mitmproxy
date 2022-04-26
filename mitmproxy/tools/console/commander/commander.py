@@ -1,5 +1,6 @@
 import abc
-import typing
+from collections.abc import Sequence
+from typing import NamedTuple, Optional
 
 import urwid
 from urwid.text_layout import calc_coords
@@ -20,7 +21,7 @@ class ListCompleter(Completer):
     def __init__(
             self,
             start: str,
-            options: typing.Sequence[str],
+            options: Sequence[str],
     ) -> None:
         self.start = start
         self.options: list[str] = []
@@ -41,9 +42,9 @@ class ListCompleter(Completer):
         return self.options[self.pos]
 
 
-class CompletionState(typing.NamedTuple):
+class CompletionState(NamedTuple):
     completer: Completer
-    parsed: typing.Sequence[mitmproxy.command.ParseResult]
+    parsed: Sequence[mitmproxy.command.ParseResult]
 
 
 class CommandBuffer:
@@ -52,7 +53,7 @@ class CommandBuffer:
         self.text = start
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
-        self.completion: typing.Optional[CompletionState] = None
+        self.completion: Optional[CompletionState] = None
 
     @property
     def cursor(self) -> int:

@@ -1,6 +1,6 @@
 import ssl
 import time
-import typing
+from typing import Optional
 
 import pytest
 
@@ -91,9 +91,9 @@ class SSLTest:
     def __init__(
         self,
         server_side: bool = False,
-        alpn: typing.Optional[list[str]] = None,
-        sni: typing.Optional[bytes] = b"example.mitmproxy.org",
-        max_ver: typing.Optional[ssl.TLSVersion] = None,
+        alpn: Optional[list[str]] = None,
+        sni: Optional[bytes] = b"example.mitmproxy.org",
+        max_ver: Optional[ssl.TLSVersion] = None,
     ):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
@@ -144,7 +144,7 @@ def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: connection.Connec
 
 
 class TlsEchoLayer(tutils.EchoLayer):
-    err: typing.Optional[str] = None
+    err: Optional[str] = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
@@ -173,7 +173,7 @@ def finish_handshake(playbook: tutils.Playbook, conn: connection.Connection, tss
     tssl.bio_write(data())
 
 
-def reply_tls_start_client(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_client(alpn: Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_client hooks.
     """
@@ -198,7 +198,7 @@ def reply_tls_start_client(alpn: typing.Optional[bytes] = None, *args, **kwargs)
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_server(alpn: Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_server hooks.
     """

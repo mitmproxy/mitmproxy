@@ -4,8 +4,9 @@ import importlib.util
 import importlib.machinery
 import sys
 import types
-import typing
 import traceback
+from collections.abc import Sequence
+from typing import Optional
 
 from mitmproxy import addonmanager, hooks
 from mitmproxy import exceptions
@@ -17,7 +18,7 @@ import mitmproxy.types as mtypes
 from mitmproxy.utils import asyncio_utils
 
 
-def load_script(path: str) -> typing.Optional[types.ModuleType]:
+def load_script(path: str) -> Optional[types.ModuleType]:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )
@@ -149,7 +150,7 @@ class ScriptLoader:
 
     def load(self, loader):
         loader.add_option(
-            "scripts", typing.Sequence[str], [],
+            "scripts", Sequence[str], [],
             "Execute a script."
         )
 
@@ -157,7 +158,7 @@ class ScriptLoader:
         self.is_running = True
 
     @command.command("script.run")
-    def script_run(self, flows: typing.Sequence[flow.Flow], path: mtypes.Path) -> None:
+    def script_run(self, flows: Sequence[flow.Flow], path: mtypes.Path) -> None:
         """
             Run a script on the specified flows. The script is configured with
             the current options and all lifecycle events for each flow are

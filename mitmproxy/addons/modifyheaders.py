@@ -1,6 +1,7 @@
 import re
-import typing
+from collections.abc import Sequence
 from pathlib import Path
+from typing import NamedTuple
 
 from mitmproxy import ctx, exceptions, flowfilter, http
 from mitmproxy.http import Headers
@@ -8,7 +9,7 @@ from mitmproxy.utils import strutils
 from mitmproxy.utils.spec import parse_spec
 
 
-class ModifySpec(typing.NamedTuple):
+class ModifySpec(NamedTuple):
     matches: flowfilter.TFilter
     subject: bytes
     replacement_str: str
@@ -54,7 +55,7 @@ class ModifyHeaders:
 
     def load(self, loader):
         loader.add_option(
-            "modify_headers", typing.Sequence[str], [],
+            "modify_headers", Sequence[str], [],
             """
             Header modify pattern of the form "[/flow-filter]/header-name/[@]header-value", where the
             separator can be any character. The @ allows to provide a file path that is used to read

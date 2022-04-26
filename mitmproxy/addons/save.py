@@ -1,9 +1,10 @@
 import os.path
 import sys
-import typing
+from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal, Optional
 
 import mitmproxy.types
 from mitmproxy import command, tcp
@@ -25,7 +26,7 @@ def _path(path: str) -> str:
 
 
 @lru_cache
-def _mode(path: str) -> typing.Literal["ab", "wb"]:
+def _mode(path: str) -> Literal["ab", "wb"]:
     """Extract the writing mode (overwrite or append) from a path spec"""
     if path.startswith("+"):
         return "ab"
@@ -35,14 +36,14 @@ def _mode(path: str) -> typing.Literal["ab", "wb"]:
 
 class Save:
     def __init__(self) -> None:
-        self.stream: typing.Optional[io.FilteredFlowWriter] = None
-        self.filt: typing.Optional[flowfilter.TFilter] = None
+        self.stream: Optional[io.FilteredFlowWriter] = None
+        self.filt: Optional[flowfilter.TFilter] = None
         self.active_flows: set[flow.Flow] = set()
-        self.current_path: typing.Optional[str] = None
+        self.current_path: Optional[str] = None
 
     def load(self, loader):
         loader.add_option(
-            "save_stream_file", typing.Optional[str], None,
+            "save_stream_file", Optional[str], None,
             """
             Stream flows to file as they arrive. Prefix path with + to append.
             The full path can use python strftime() formating, missing
@@ -51,7 +52,7 @@ class Save:
             """
         )
         loader.add_option(
-            "save_stream_filter", typing.Optional[str], None,
+            "save_stream_filter", Optional[str], None,
             "Filter which flows are written to file."
         )
 
@@ -119,7 +120,7 @@ class Save:
             self.stream = None
 
     @command.command("save.file")
-    def save(self, flows: typing.Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
+    def save(self, flows: Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
         """
             Save flows to a file. If the path starts with a +, flows are
             appended to the file, otherwise it is over-written.

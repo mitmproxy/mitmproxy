@@ -4,7 +4,8 @@ import itertools
 import re
 import textwrap
 import traceback
-import typing
+from collections.abc import Callable, Iterable
+from typing import Any, AnyStr, Generic, Optional, TypeVar, Union
 
 from mitmproxy.proxy import commands, context, layer
 from mitmproxy.proxy import events
@@ -12,7 +13,7 @@ from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import command_reply_subclasses
 from mitmproxy.proxy.layer import Layer
 
-PlaybookEntry = typing.Union[commands.Command, events.Event]
+PlaybookEntry = Union[commands.Command, events.Event]
 PlaybookEntryList = list[PlaybookEntry]
 
 
@@ -48,8 +49,8 @@ def _eq(
 
 
 def eq(
-        a: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]],
-        b: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]]
+        a: Union[PlaybookEntry, Iterable[PlaybookEntry]],
+        b: Union[PlaybookEntry, Iterable[PlaybookEntry]]
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
@@ -136,7 +137,7 @@ class Playbook:
             layer: Layer,
             hooks: bool = True,
             logs: bool = False,
-            expected: typing.Optional[PlaybookEntryList] = None,
+            expected: Optional[PlaybookEntryList] = None,
     ):
         if expected is None:
             expected = [
@@ -280,15 +281,15 @@ class Playbook:
 
 
 class reply(events.Event):
-    args: tuple[typing.Any, ...]
-    to: typing.Union[commands.Command, int]
-    side_effect: typing.Callable[[typing.Any], typing.Any]
+    args: tuple[Any, ...]
+    to: Union[commands.Command, int]
+    side_effect: Callable[[Any], Any]
 
     def __init__(
             self,
             *args,
-            to: typing.Union[commands.Command, int] = -1,
-            side_effect: typing.Callable[[typing.Any], None] = lambda x: None
+            to: Union[commands.Command, int] = -1,
+            side_effect: Callable[[Any], None] = lambda x: None
     ):
         """Utility method to reply to the latest hook in playbooks."""
         assert not args or not isinstance(args[0], commands.Command)
@@ -326,10 +327,10 @@ class reply(events.Event):
         return inst
 
 
-T = typing.TypeVar("T")
+T = TypeVar("T")
 
 
-class _Placeholder(typing.Generic[T]):
+class _Placeholder(Generic[T]):
     """
     Placeholder value in playbooks, so that objects (flows in particular) can be referenced before
     they are known. Example:
@@ -354,7 +355,7 @@ class _Placeholder(typing.Generic[T]):
 
     def setdefault(self, value: T) -> T:
         if self._obj is None:
-            if self._cls is not typing.Any and not isinstance(value, self._cls):
+            if self._cls is not Any and not isinstance(value, self._cls):
                 raise TypeError(f"expected {self._cls.__name__}, got {type(value).__name__}.")
             self._obj = value
         return self._obj
@@ -367,16 +368,16 @@ class _Placeholder(typing.Generic[T]):
 
 
 # noinspection PyPep8Naming
-def Placeholder(cls: type[T] = typing.Any) -> typing.Union[T, _Placeholder[T]]:
+def Placeholder(cls: type[T] = Any) -> Union[T, _Placeholder[T]]:
     return _Placeholder(cls)
 
 
-class _AnyStrPlaceholder(_Placeholder[typing.AnyStr]):
-    def __init__(self, match: typing.AnyStr):
+class _AnyStrPlaceholder(_Placeholder[AnyStr]):
+    def __init__(self, match: AnyStr):
         super().__init__(type(match))
         self._match = match
 
-    def setdefault(self, value: typing.AnyStr) -> typing.AnyStr:
+    def setdefault(self, value: AnyStr) -> AnyStr:
         if self._obj is None:
             super().setdefault(value)
             if not re.search(self._match, self._obj, re.DOTALL):  # type: ignore
@@ -385,7 +386,7 @@ class _AnyStrPlaceholder(_Placeholder[typing.AnyStr]):
 
 
 # noinspection PyPep8Naming
-def BytesMatching(match: bytes) -> typing.Union[bytes, _AnyStrPlaceholder[bytes]]:
+def BytesMatching(match: bytes) -> Union[bytes, _AnyStrPlaceholder[bytes]]:
     return _AnyStrPlaceholder(match)
 
 
@@ -413,7 +414,7 @@ class RecordLayer(Layer):
 
 
 def reply_next_layer(
-        child_layer: typing.Union[type[Layer], typing.Callable[[context.Context], Layer]],
+        child_layer: Union[type[Layer], Callable[[context.Context], Layer]],
         *args,
         **kwargs
 ) -> reply:

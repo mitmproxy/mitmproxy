@@ -1,7 +1,9 @@
 import copy
 import io
+from collections.abc import Sequence
+from typing import Optional
+
 import pytest
-import typing
 import argparse
 
 from mitmproxy import options
@@ -12,8 +14,8 @@ from mitmproxy import exceptions
 class TO(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", typing.Optional[int], None, "help")
-        self.add_option("two", typing.Optional[int], 2, "help")
+        self.add_option("one", Optional[int], None, "help")
+        self.add_option("two", Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("required_int", int, 2, "help")
 
@@ -35,8 +37,8 @@ class TD2(TD):
 class TM(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("two", typing.Sequence[str], ["foo"], "help")
-        self.add_option("one", typing.Optional[str], None, "help")
+        self.add_option("two", Sequence[str], ["foo"], "help")
+        self.add_option("one", Optional[str], None, "help")
 
 
 def test_defaults():
@@ -372,12 +374,12 @@ class TTypes(optmanager.OptManager):
         super().__init__()
         self.add_option("str", str, "str", "help")
         self.add_option("choices", str, "foo", "help", ["foo", "bar", "baz"])
-        self.add_option("optstr", typing.Optional[str], "optstr", "help")
+        self.add_option("optstr", Optional[str], "optstr", "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("bool_on", bool, True, "help")
         self.add_option("int", int, 0, "help")
-        self.add_option("optint", typing.Optional[int], 0, "help")
-        self.add_option("seqstr", typing.Sequence[str], [], "help")
+        self.add_option("optint", Optional[int], 0, "help")
+        self.add_option("seqstr", Sequence[str], [], "help")
         self.add_option("unknown", float, 0.0, "help")
 
 
@@ -457,7 +459,7 @@ def test_set():
     assert "deferredsequenceoption" in opts.deferred
     opts.process_deferred()
     assert "deferredsequenceoption" in opts.deferred
-    opts.add_option("deferredsequenceoption", typing.Sequence[str], [], "help")
+    opts.add_option("deferredsequenceoption", Sequence[str], [], "help")
     opts.process_deferred()
     assert "deferredsequenceoption" not in opts.deferred
     assert opts.deferredsequenceoption == ["a", "b"]

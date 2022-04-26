@@ -1,7 +1,7 @@
 import math
 import sys
-import typing
 from functools import lru_cache
+from typing import Optional
 
 import urwid
 
@@ -393,7 +393,7 @@ class FlowDetails(tabs.Tabs):
             ]
         return searchable.Searchable(txt)
 
-    def dns_message_text(self, type: str, message: typing.Optional[dns.Message]) -> searchable.Searchable:
+    def dns_message_text(self, type: str, message: Optional[dns.Message]) -> searchable.Searchable:
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:
             def rr_text(rr: dns.ResourceRecord):

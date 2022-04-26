@@ -4,9 +4,9 @@ Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
 import socket
-import typing
 import warnings
 from dataclasses import dataclass, is_dataclass
+from typing import Any, Generic, Optional, TypeVar
 
 from mitmproxy import flow
 from mitmproxy.proxy import commands
@@ -61,7 +61,7 @@ class CommandCompleted(Event):
     when the master has replied or when we have established a server connection.
     """
     command: commands.Command
-    reply: typing.Any
+    reply: Any
 
     def __new__(cls, *args, **kwargs):
         if cls is CommandCompleted:
@@ -93,7 +93,7 @@ command_reply_subclasses: dict[commands.Command, type[CommandCompleted]] = {}
 @dataclass(repr=False)
 class OpenConnectionCompleted(CommandCompleted):
     command: commands.OpenConnection
-    reply: typing.Optional[str]
+    reply: Optional[str]
     """error message"""
 
 
@@ -109,11 +109,11 @@ class GetSocketCompleted(CommandCompleted):
     reply: socket.socket
 
 
-T = typing.TypeVar('T')
+T = TypeVar('T')
 
 
 @dataclass
-class MessageInjected(Event, typing.Generic[T]):
+class MessageInjected(Event, Generic[T]):
     """
     The user has injected a custom WebSocket/TCP/... message.
     """

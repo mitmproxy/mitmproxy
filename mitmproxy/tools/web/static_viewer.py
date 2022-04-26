@@ -3,7 +3,8 @@ import os.path
 import pathlib
 import shutil
 import time
-import typing
+from collections.abc import Iterable
+from typing import Optional
 
 from mitmproxy import contentviews, http
 from mitmproxy import ctx
@@ -39,7 +40,7 @@ def save_settings(path: pathlib.Path) -> None:
         json.dump(dict(version=version.VERSION), f)
 
 
-def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
+def save_flows(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
     with open(str(path / 'flows.json'), 'w') as f:
         json.dump(
             [flow_to_json(f) for f in flows],
@@ -47,7 +48,7 @@ def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
         )
 
 
-def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
+def save_flows_content(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
     for f in flows:
         assert isinstance(f, http.HTTPFlow)
         for m in ('request', 'response'):
@@ -89,7 +90,7 @@ class StaticViewer:
     # TODO: make this a command at some point.
     def load(self, loader):
         loader.add_option(
-            "web_static_viewer", typing.Optional[str], "",
+            "web_static_viewer", Optional[str], "",
             "The path to output a static viewer."
         )
 
@@ -99,7 +100,7 @@ class StaticViewer:
             p = pathlib.Path(ctx.options.web_static_viewer).expanduser()
             self.export(p, flows)
 
-    def export(self, path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
+    def export(self, path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
         save_static(path)
         save_filter_help(path)
         save_flows(path, flows)

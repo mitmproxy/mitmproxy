@@ -1,4 +1,4 @@
-import typing
+from typing import Any, Optional
 
 import msgpack
 
@@ -8,7 +8,7 @@ from mitmproxy.contentviews import base
 PARSE_ERROR = object()
 
 
-def parse_msgpack(s: bytes) -> typing.Any:
+def parse_msgpack(s: bytes) -> Any:
     try:
         return msgpack.unpackb(s, raw=False)
     except (ValueError, msgpack.ExtraData, msgpack.FormatError, msgpack.StackError):
@@ -49,5 +49,5 @@ class ViewMsgPack(base.View):
         if data is not PARSE_ERROR:
             return "MsgPack", format_msgpack(data)
 
-    def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
         return float(bool(data) and content_type in self.__content_types)

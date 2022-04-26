@@ -1,11 +1,12 @@
 import contextlib
 import copy
+from collections.abc import Sequence
 from dataclasses import dataclass
 import functools
 import os
 import pprint
 import textwrap
-import typing
+from typing import Any, Optional, TextIO, Union
 
 import blinker
 import blinker._saferef
@@ -27,10 +28,10 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: typing.Union[type, object],  # object for Optional[x], which is not a type.
-        default: typing.Any,
+        typespec: Union[type, object],  # object for Optional[x], which is not a type.
+        default: Any,
         help: str,
-        choices: typing.Optional[typing.Sequence[str]]
+        choices: Optional[Sequence[str]]
     ) -> None:
         typecheck.check_option_type(name, default, typespec)
         self.name = name
@@ -47,14 +48,14 @@ class _Option:
     def default(self):
         return copy.deepcopy(self._default)
 
-    def current(self) -> typing.Any:
+    def current(self) -> Any:
         if self.value is unset:
             v = self.default
         else:
             v = self.value
         return copy.deepcopy(v)
 
-    def set(self, value: typing.Any) -> None:
+    def set(self, value: Any) -> None:
         typecheck.check_option_type(self.name, value, self.typespec)
         self.value = value
 
@@ -97,20 +98,20 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: dict[str, typing.Any] = {}
+        self.deferred: dict[str, Any] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
-        self._options: dict[str, typing.Any] = {}
+        self._options: dict[str, Any] = {}
 
     def add_option(
         self,
         name: str,
-        typespec: typing.Union[type, object],
-        default: typing.Any,
+        typespec: Union[type, object],
+        default: Any,
         help: str,
-        choices: typing.Optional[typing.Sequence[str]] = None
+        choices: Optional[Sequence[str]] = None
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
         self.changed.send(self, updated={name})
@@ -259,7 +260,7 @@ class OptManager:
             setattr(self, attr, not getattr(self, attr))
         return toggle
 
-    def default(self, option: str) -> typing.Any:
+    def default(self, option: str) -> Any:
         return self._options[option].default
 
     def has_changed(self, option):
@@ -312,7 +313,7 @@ class OptManager:
                 unprocessed.setdefault(spec, [])
 
         # Second, convert values to the correct type.
-        processed: dict[str, typing.Any] = {}
+        processed: dict[str, Any] = {}
         for name in list(unprocessed.keys()):
             if name in self._options:
                 processed[name] = self._parse_setval(self._options[name], unprocessed.pop(name))
@@ -334,7 +335,7 @@ class OptManager:
             Processes options that were deferred in previous calls to set, and
             have since been added.
         """
-        update: dict[str, typing.Any] = {}
+        update: dict[str, Any] = {}
         for optname, value in self.deferred.items():
             if optname in self._options:
                 if isinstance(value, _UnconvertedStrings):
@@ -344,26 +345,26 @@ class OptManager:
         for k in update.keys():
             del self.deferred[k]
 
-    def _parse_setval(self, o: _Option, values: list[str]) -> typing.Any:
+    def _parse_setval(self, o: _Option, values: list[str]) -> Any:
         """
             Convert a string to a value appropriate for the option type.
         """
-        if o.typespec == typing.Sequence[str]:
+        if o.typespec == Sequence[str]:
             return values
         if len(values) > 1:
             raise exceptions.OptionsError(f"Received multiple values for {o.name}: {values}")
 
-        optstr: typing.Optional[str]
+        optstr: Optional[str]
         if values:
             optstr = values[0]
         else:
             optstr = None
 
-        if o.typespec in (str, typing.Optional[str]):
+        if o.typespec in (str, Optional[str]):
             if o.typespec == str and optstr is None:
                 raise exceptions.OptionsError(f"Option is required: {o.name}")
             return optstr
-        elif o.typespec in (int, typing.Optional[int]):
+        elif o.typespec in (int, Optional[int]):
             if optstr:
                 try:
                     return int(optstr)
@@ -427,7 +428,7 @@ class OptManager:
                 help=o.help
             )
             parser.set_defaults(**{optname: None})
-        elif o.typespec in (int, typing.Optional[int]):
+        elif o.typespec in (int, Optional[int]):
             parser.add_argument(
                 *flags,
                 action="store",
@@ -436,7 +437,7 @@ class OptManager:
                 help=o.help,
                 metavar=metavar,
             )
-        elif o.typespec in (str, typing.Optional[str]):
+        elif o.typespec in (str, Optional[str]):
             parser.add_argument(
                 *flags,
                 action="store",
@@ -446,7 +447,7 @@ class OptManager:
                 metavar=metavar,
                 choices=o.choices
             )
-        elif o.typespec == typing.Sequence[str]:
+        elif o.typespec == Sequence[str]:
             parser.add_argument(
                 *flags,
                 action="append",
@@ -460,7 +461,7 @@ class OptManager:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
 
-def dump_defaults(opts, out: typing.TextIO):
+def dump_defaults(opts, out: TextIO):
     """
         Dumps an annotated file with all options.
     """
@@ -559,7 +560,7 @@ def load_paths(opts: OptManager, *paths: str) -> None:
                 )
 
 
-def serialize(opts: OptManager, file: typing.TextIO, text: str, defaults: bool = False) -> None:
+def serialize(opts: OptManager, file: TextIO, text: str, defaults: bool = False) -> None:
     """
         Performs a round-trip serialization. If text is not None, it is
         treated as a previous serialization that should be modified

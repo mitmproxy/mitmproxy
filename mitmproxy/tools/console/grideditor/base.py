@@ -1,7 +1,9 @@
 import abc
 import copy
 import os
-import typing
+from collections.abc import Callable, Container, Iterable, Sequence
+from typing import Any, AnyStr, Optional
+
 import urwid
 
 from mitmproxy.utils import strutils
@@ -11,7 +13,7 @@ from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master
 
 
-def read_file(filename: str, escaped: bool) -> typing.AnyStr:
+def read_file(filename: str, escaped: bool) -> AnyStr:
     filename = os.path.expanduser(filename)
     try:
         with open(filename, "r" if escaped else "rb") as f:
@@ -53,10 +55,10 @@ class Column(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def blank(self) -> typing.Any:
+    def blank(self) -> Any:
         pass
 
-    def keypress(self, key: str, editor: "GridEditor") -> typing.Optional[str]:
+    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
         return key
 
 
@@ -64,17 +66,17 @@ class GridRow(urwid.WidgetWrap):
 
     def __init__(
             self,
-            focused: typing.Optional[int],
+            focused: Optional[int],
             editing: bool,
             editor: "GridEditor",
-            values: tuple[typing.Iterable[bytes], typing.Container[int]]
+            values: tuple[Iterable[bytes], Container[int]]
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col: typing.Optional[Cell] = None
+        self.edit_col: Optional[Cell] = None
 
         errors = values[1]
-        self.fields: typing.Sequence[typing.Any] = []
+        self.fields: Sequence[Any] = []
         for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.edit_col = self.editor.columns[i].Edit(v)
@@ -120,14 +122,14 @@ class GridWalker(urwid.ListWalker):
 
     def __init__(
             self,
-            lst: typing.Iterable[list],
+            lst: Iterable[list],
             editor: "GridEditor"
     ) -> None:
-        self.lst: typing.Sequence[tuple[typing.Any, set]] = [(i, set()) for i in lst]
+        self.lst: Sequence[tuple[Any, set]] = [(i, set()) for i in lst]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row: typing.Optional[GridRow] = None
+        self.edit_row: Optional[GridRow] = None
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -262,8 +264,8 @@ class BaseGridEditor(urwid.WidgetWrap):
             master: "mitmproxy.tools.console.master.ConsoleMaster",
             title,
             columns,
-            value: typing.Any,
-            callback: typing.Callable[..., None],
+            value: Any,
+            callback: Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:
@@ -356,20 +358,20 @@ class BaseGridEditor(urwid.WidgetWrap):
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
-    def data_out(self, data: typing.Sequence[list]) -> typing.Any:
+    def data_out(self, data: Sequence[list]) -> Any:
         """
             Called on raw list data, before data is returned through the
             callback.
         """
         return data
 
-    def data_in(self, data: typing.Any) -> typing.Iterable[list]:
+    def data_in(self, data: Any) -> Iterable[list]:
         """
             Called to prepare provided data.
         """
         return data
 
-    def is_error(self, col: int, val: typing.Any) -> typing.Optional[str]:
+    def is_error(self, col: int, val: Any) -> Optional[str]:
         """
             Return None, or a string error message.
         """
@@ -403,14 +405,14 @@ class BaseGridEditor(urwid.WidgetWrap):
 
 class GridEditor(BaseGridEditor):
     title = ""
-    columns: typing.Sequence[Column] = ()
+    columns: Sequence[Column] = ()
     keyctx = "grideditor"
 
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
-            value: typing.Any,
-            callback: typing.Callable[..., None],
+            value: Any,
+            callback: Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:

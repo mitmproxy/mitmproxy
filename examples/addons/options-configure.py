@@ -1,5 +1,5 @@
 """React to configuration changes."""
-import typing
+from typing import Optional
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -9,7 +9,7 @@ class AddHeader:
     def load(self, loader):
         loader.add_option(
             name = "addheader",
-            typespec = typing.Optional[int],
+            typespec = Optional[int],
             default = None,
             help = "Add a header to responses",
         )

@@ -1,9 +1,10 @@
-import typing
 # Low-color themes should ONLY use the standard foreground and background
 # colours listed here:
 #
 # http://urwid.org/manual/displayattributes.html
 #
+from collections.abc import Mapping, Sequence
+from typing import Optional
 
 
 class Palette:
@@ -47,7 +48,7 @@ class Palette:
         'commander_command', 'commander_invalid', 'commander_hint'
     ]
     _fields.extend(['gradient_%02d' % i for i in range(100)])
-    high: typing.Optional[typing.Mapping[str, typing.Sequence[str]]] = None
+    high: Optional[Mapping[str, Sequence[str]]] = None
 
     def palette(self, transparent):
         l = []

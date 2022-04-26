@@ -1,6 +1,7 @@
+from collections.abc import Sequence
+
 import pytest
 import os
-import typing
 import contextlib
 
 import mitmproxy.exceptions
@@ -169,18 +170,18 @@ def test_arg():
 def test_strseq():
     with taddons.context() as tctx:
         b = mitmproxy.types._StrSeqType()
-        assert b.completion(tctx.master.commands, typing.Sequence[str], "") == []
-        assert b.parse(tctx.master.commands, typing.Sequence[str], "foo") == ["foo"]
-        assert b.parse(tctx.master.commands, typing.Sequence[str], "foo,bar") == ["foo", "bar"]
-        assert b.is_valid(tctx.master.commands, typing.Sequence[str], ["foo"]) is True
-        assert b.is_valid(tctx.master.commands, typing.Sequence[str], ["a", "b", 3]) is False
-        assert b.is_valid(tctx.master.commands, typing.Sequence[str], 1) is False
-        assert b.is_valid(tctx.master.commands, typing.Sequence[str], "foo") is False
+        assert b.completion(tctx.master.commands, Sequence[str], "") == []
+        assert b.parse(tctx.master.commands, Sequence[str], "foo") == ["foo"]
+        assert b.parse(tctx.master.commands, Sequence[str], "foo,bar") == ["foo", "bar"]
+        assert b.is_valid(tctx.master.commands, Sequence[str], ["foo"]) is True
+        assert b.is_valid(tctx.master.commands, Sequence[str], ["a", "b", 3]) is False
+        assert b.is_valid(tctx.master.commands, Sequence[str], 1) is False
+        assert b.is_valid(tctx.master.commands, Sequence[str], "foo") is False
 
 
 class DummyConsole:
     @command.command("view.flows.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
+    def resolve(self, spec: str) -> Sequence[flow.Flow]:
         if spec == "err":
             raise mitmproxy.exceptions.CommandError()
         try:
@@ -194,7 +195,7 @@ class DummyConsole:
         return [["test"]]
 
     @command.command("options")
-    def options(self) -> typing.Sequence[str]:
+    def options(self) -> Sequence[str]:
         return ["one", "two", "three"]
 
 
@@ -220,17 +221,17 @@ def test_flows():
         tctx.master.addons.add(DummyConsole())
         b = mitmproxy.types._FlowsType()
         assert len(
-            b.completion(tctx.master.commands, typing.Sequence[flow.Flow], "")
+            b.completion(tctx.master.commands, Sequence[flow.Flow], "")
         ) == len(b.valid_prefixes)
-        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], [tflow.tflow()]) is True
-        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], "xx") is False
-        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], 0) is False
-        assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "0")) == 0
-        assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "1")) == 1
-        assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "2")) == 2
-        assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "has space")) == 1
+        assert b.is_valid(tctx.master.commands, Sequence[flow.Flow], [tflow.tflow()]) is True
+        assert b.is_valid(tctx.master.commands, Sequence[flow.Flow], "xx") is False
+        assert b.is_valid(tctx.master.commands, Sequence[flow.Flow], 0) is False
+        assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "0")) == 0
+        assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "1")) == 1
+        assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "2")) == 2
+        assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "has space")) == 1
         with pytest.raises(mitmproxy.exceptions.TypeError):
-            b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "err")
+            b.parse(tctx.master.commands, Sequence[flow.Flow], "err")
 
 
 def test_data():

@@ -3,7 +3,8 @@ import asyncio
 import os
 import signal
 import sys
-import typing
+from collections.abc import Callable, Sequence
+from typing import Any, Optional, TypeVar
 
 from mitmproxy import exceptions, master
 from mitmproxy import options
@@ -32,14 +33,14 @@ def process_options(parser, opts, args):
     opts.merge(adict)
 
 
-T = typing.TypeVar("T", bound=master.Master)
+T = TypeVar("T", bound=master.Master)
 
 
 def run(
         master_cls: type[T],
-        make_parser: typing.Callable[[options.Options], argparse.ArgumentParser],
-        arguments: typing.Sequence[str],
-        extra: typing.Callable[[typing.Any], dict] = None
+        make_parser: Callable[[options.Options], argparse.ArgumentParser],
+        arguments: Sequence[str],
+        extra: Callable[[Any], dict] = None
 ) -> T:  # pragma: no cover
     """
         extra: Extra argument processing callable which returns a dict of
@@ -106,13 +107,13 @@ def run(
     return asyncio.run(main())
 
 
-def mitmproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
+def mitmproxy(args=None) -> Optional[int]:  # pragma: no cover
     from mitmproxy.tools import console
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None
 
 
-def mitmdump(args=None) -> typing.Optional[int]:  # pragma: no cover
+def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
     from mitmproxy.tools import dump
 
     def extra(args):
@@ -129,7 +130,7 @@ def mitmdump(args=None) -> typing.Optional[int]:  # pragma: no cover
     return None
 
 
-def mitmweb(args=None) -> typing.Optional[int]:  # pragma: no cover
+def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
     from mitmproxy.tools import web
     run(web.master.WebMaster, cmdline.mitmweb, args)
     return None

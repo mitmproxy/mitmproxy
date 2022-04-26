@@ -1,4 +1,4 @@
-import typing
+from typing import Any
 
 import pytest
 
@@ -45,7 +45,7 @@ class TDict(TObject):
 
 class TAny(TObject):
     _stateobject_attributes = dict(
-        x=typing.Any
+        x=Any
     )
 
 

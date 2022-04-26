@@ -1,5 +1,6 @@
-import typing
 import os
+from collections.abc import Sequence
+from typing import Optional
 
 import ruamel.yaml
 import ruamel.yaml.error
@@ -74,7 +75,7 @@ class Keymap:
         self,
         key: str,
         command: str,
-        contexts: typing.Sequence[str],
+        contexts: Sequence[str],
         help=""
     ) -> None:
         """
@@ -96,7 +97,7 @@ class Keymap:
             self.bind(b)
         signals.keybindings_change.send(self)
 
-    def remove(self, key: str, contexts: typing.Sequence[str]) -> None:
+    def remove(self, key: str, contexts: Sequence[str]) -> None:
         """
             Remove a key from the key map.
         """
@@ -123,12 +124,12 @@ class Keymap:
             del self.keys[c][binding.keyspec()]
             self.bindings = [b for b in self.bindings if b != binding]
 
-    def get(self, context: str, key: str) -> typing.Optional[Binding]:
+    def get(self, context: str, key: str) -> Optional[Binding]:
         if context in self.keys:
             return self.keys[context].get(key, None)
         return None
 
-    def list(self, context: str) -> typing.Sequence[Binding]:
+    def list(self, context: str) -> Sequence[Binding]:
         b = [x for x in self.bindings if context in x.contexts or context == "all"]
         single = [x for x in b if len(x.key.split()) == 1]
         multi = [x for x in b if len(x.key.split()) != 1]
@@ -136,7 +137,7 @@ class Keymap:
         multi.sort(key=lambda x: x.sortkey())
         return single + multi
 
-    def handle(self, context: str, key: str) -> typing.Optional[str]:
+    def handle(self, context: str, key: str) -> Optional[str]:
         """
             Returns the key if it has not been handled, or None.
         """
@@ -145,7 +146,7 @@ class Keymap:
             return self.executor(b.command)
         return key
 
-    def handle_only(self, context: str, key: str) -> typing.Optional[str]:
+    def handle_only(self, context: str, key: str) -> Optional[str]:
         """
             Like handle, but ignores global bindings. Returns the key if it has
             not been handled, or None.

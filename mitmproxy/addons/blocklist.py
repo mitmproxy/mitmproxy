@@ -1,11 +1,12 @@
-import typing
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from mitmproxy import ctx, exceptions, flowfilter, http, version
 from mitmproxy.net.http.status_codes import NO_RESPONSE
 from mitmproxy.net.http.status_codes import RESPONSES
 
 
-class BlockSpec(typing.NamedTuple):
+class BlockSpec(NamedTuple):
     matches: flowfilter.TFilter
     status_code: int
 
@@ -40,7 +41,7 @@ class BlockList:
 
     def load(self, loader):
         loader.add_option(
-            "block_list", typing.Sequence[str], [],
+            "block_list", Sequence[str], [],
             """
             Block matching requests and return an empty response with the specified HTTP status.
             Option syntax is "/flow-filter/status-code", where flow-filter describes

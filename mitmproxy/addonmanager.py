@@ -4,8 +4,9 @@ import pprint
 import sys
 import traceback
 import types
-import typing
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Any, Optional
 
 from mitmproxy import hooks
 from mitmproxy import exceptions
@@ -66,9 +67,9 @@ class Loader:
             self,
             name: str,
             typespec: type,
-            default: typing.Any,
+            default: Any,
             help: str,
-            choices: typing.Optional[typing.Sequence[str]] = None
+            choices: Optional[Sequence[str]] = None
     ) -> None:
         """
             Add an option to mitmproxy.
@@ -98,7 +99,7 @@ class Loader:
             choices
         )
 
-    def add_command(self, path: str, func: typing.Callable) -> None:
+    def add_command(self, path: str, func: Callable) -> None:
         """Add a command to mitmproxy.
 
         Unless you are generating commands programatically,

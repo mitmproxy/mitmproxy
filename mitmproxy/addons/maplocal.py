@@ -1,8 +1,9 @@
 import mimetypes
 import re
-import typing
 import urllib.parse
+from collections.abc import Sequence
 from pathlib import Path
+from typing import NamedTuple
 
 from werkzeug.security import safe_join
 
@@ -10,7 +11,7 @@ from mitmproxy import ctx, exceptions, flowfilter, http, version
 from mitmproxy.utils.spec import parse_spec
 
 
-class MapLocalSpec(typing.NamedTuple):
+class MapLocalSpec(NamedTuple):
     matches: flowfilter.TFilter
     regex: str
     local_path: Path
@@ -85,7 +86,7 @@ class MapLocal:
 
     def load(self, loader):
         loader.add_option(
-            "map_local", typing.Sequence[str], [],
+            "map_local", Sequence[str], [],
             """
             Map remote resources to a local file using a pattern of the form
             "[/flow-filter]/url-regex/file-or-directory-path", where the

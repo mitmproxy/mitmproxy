@@ -1,7 +1,7 @@
 import asyncio
 import os.path
 import sys
-import typing
+from typing import BinaryIO, Optional
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -20,11 +20,11 @@ class ReadFile:
 
     def load(self, loader):
         loader.add_option(
-            "rfile", typing.Optional[str], None,
+            "rfile", Optional[str], None,
             "Read flows from file."
         )
         loader.add_option(
-            "readfile_filter", typing.Optional[str], None,
+            "readfile_filter", Optional[str], None,
             "Read only matching flows."
         )
 
@@ -38,7 +38,7 @@ class ReadFile:
             else:
                 self.filter = None
 
-    async def load_flows(self, fo: typing.IO[bytes]) -> int:
+    async def load_flows(self, fo: BinaryIO) -> int:
         cnt = 0
         freader = io.FlowReader(fo)
         try:

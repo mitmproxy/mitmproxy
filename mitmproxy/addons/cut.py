@@ -1,7 +1,8 @@
 import io
 import csv
-import typing
 import os.path
+from collections.abc import Sequence
+from typing import Any, Union
 
 from mitmproxy import command
 from mitmproxy import exceptions
@@ -23,9 +24,9 @@ def is_addr(v):
     return isinstance(v, tuple) and len(v) > 1
 
 
-def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
+def extract(cut: str, f: flow.Flow) -> Union[str, bytes]:
     path = cut.split(".")
-    current: typing.Any = f
+    current: Any = f
     for i, spec in enumerate(path):
         if spec.startswith("_"):
             raise exceptions.CommandError("Can't access internal attribute %s" % spec)
@@ -65,7 +66,7 @@ class Cut:
     @command.command("cut")
     def cut(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         cuts: mitmproxy.types.CutSpec,
     ) -> mitmproxy.types.Data:
         """
@@ -77,7 +78,7 @@ class Cut:
             or "false", "bytes" are preserved, and all other values are
             converted to strings.
         """
-        ret: list[list[typing.Union[str, bytes]]] = []
+        ret: list[list[Union[str, bytes]]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore
@@ -85,7 +86,7 @@ class Cut:
     @command.command("cut.save")
     def save(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         cuts: mitmproxy.types.CutSpec,
         path: mitmproxy.types.Path
     ) -> None:
@@ -126,7 +127,7 @@ class Cut:
     @command.command("cut.clip")
     def clip(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         cuts: mitmproxy.types.CutSpec,
     ) -> None:
         """
@@ -134,7 +135,7 @@ class Cut:
             format is UTF-8 encoded CSV. If there is exactly one row and one
             column, the data is written to file as-is, with raw bytes preserved.
         """
-        v: typing.Union[str, bytes]
+        v: Union[str, bytes]
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
             v = extract_str(cuts[0], flows[0])

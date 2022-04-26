@@ -1,7 +1,8 @@
 import collections
 import time
+from collections.abc import Sequence
 from enum import Enum
-from typing import ClassVar, DefaultDict, Optional, Sequence, Union
+from typing import ClassVar, Optional, Union
 
 import h2.config
 import h2.connection
@@ -354,7 +355,7 @@ class Http2Client(Http2Connection):
 
     our_stream_id: dict[int, int]
     their_stream_id: dict[int, int]
-    stream_queue: DefaultDict[int, list[Event]]
+    stream_queue: collections.defaultdict[int, list[Event]]
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
     provisional_max_concurrency: Optional[int] = 10
     """A provisional currency limit before we get the server's first settings frame."""

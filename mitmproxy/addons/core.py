@@ -1,6 +1,7 @@
-import typing
 
 import os
+from collections.abc import Sequence
+from typing import Union
 
 from mitmproxy.utils import emoji
 from mitmproxy import ctx, hooks
@@ -67,7 +68,7 @@ class Core:
             raise exceptions.CommandError(e) from e
 
     @command.command("flow.resume")
-    def resume(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def resume(self, flows: Sequence[flow.Flow]) -> None:
         """
             Resume flows if they are intercepted.
         """
@@ -78,7 +79,7 @@ class Core:
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[flow.Flow], marker: mitmproxy.types.Marker) -> None:
+    def mark(self, flows:Sequence[flow.Flow], marker: mitmproxy.types.Marker) -> None:
         """
             Mark flows.
         """
@@ -93,7 +94,7 @@ class Core:
 
     # FIXME: this will become view.mark.toggle later
     @command.command("flow.mark.toggle")
-    def mark_toggle(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def mark_toggle(self, flows:Sequence[flow.Flow]) -> None:
         """
             Toggle mark for flows.
         """
@@ -105,7 +106,7 @@ class Core:
         ctx.master.addons.trigger(hooks.UpdateHook(flows))
 
     @command.command("flow.kill")
-    def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def kill(self, flows:Sequence[flow.Flow]) -> None:
         """
             Kill running flows.
         """
@@ -119,7 +120,7 @@ class Core:
 
     # FIXME: this will become view.revert later
     @command.command("flow.revert")
-    def revert(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def revert(self, flows:Sequence[flow.Flow]) -> None:
         """
             Revert flow changes.
         """
@@ -132,7 +133,7 @@ class Core:
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     @command.command("flow.set.options")
-    def flow_set_options(self) -> typing.Sequence[str]:
+    def flow_set_options(self) -> Sequence[str]:
         return [
             "host",
             "status_code",
@@ -146,14 +147,14 @@ class Core:
     @command.argument("attr", type=mitmproxy.types.Choice("flow.set.options"))
     def flow_set(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         attr: str,
         value: str
     ) -> None:
         """
             Quickly set a number of common values on flows.
         """
-        val: typing.Union[int, str] = value
+        val: Union[int, str] = value
         if attr == "status_code":
             try:
                 val = int(val)  # type: ignore
@@ -202,7 +203,7 @@ class Core:
         ctx.log.alert(f"Set {attr} on  {len(updated)} flows.")
 
     @command.command("flow.decode")
-    def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def decode(self, flows:Sequence[flow.Flow], part: str) -> None:
         """
             Decode flows.
         """
@@ -217,7 +218,7 @@ class Core:
         ctx.log.alert("Decoded %s flows." % len(updated))
 
     @command.command("flow.encode.toggle")
-    def encode_toggle(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def encode_toggle(self, flows:Sequence[flow.Flow], part: str) -> None:
         """
             Toggle flow encoding on and off, using deflate for encoding.
         """
@@ -239,7 +240,7 @@ class Core:
     @command.argument("encoding", type=mitmproxy.types.Choice("flow.encode.options"))
     def encode(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows:Sequence[flow.Flow],
         part: str,
         encoding: str,
     ) -> None:
@@ -259,7 +260,7 @@ class Core:
         ctx.log.alert("Encoded %s flows." % len(updated))
 
     @command.command("flow.encode.options")
-    def encode_options(self) -> typing.Sequence[str]:
+    def encode_options(self) ->Sequence[str]:
         """
             The possible values for an encoding specification.
         """

@@ -1,13 +1,14 @@
 import json
+from typing import NamedTuple, Optional
+
 import libtmux
 import random
 import subprocess
 import threading
 import time
-import typing
 
 
-class InstructionSpec(typing.NamedTuple):
+class InstructionSpec(NamedTuple):
     instruction: str
     time_from: float
     time_to: float
@@ -56,7 +57,7 @@ class CliDirector:
     def end_session(self) -> None:
         self.tmux_session.kill_session()
 
-    def press_key(self, keys: str, count=1, pause: typing.Optional[float] = None, target = None) -> None:
+    def press_key(self, keys: str, count=1, pause: Optional[float] = None, target = None) -> None:
         if pause is None:
             pause = self.pause_between_keys
         if target is None:
@@ -78,7 +79,7 @@ class CliDirector:
                 real_pause += 2 * pause
             self.pause(real_pause)
 
-    def type(self, keys: str, pause: typing.Optional[float] = None, target = None) -> None:
+    def type(self, keys: str, pause: Optional[float] = None, target = None) -> None:
         if pause is None:
             pause = self.pause_between_keys
         if target is None:
@@ -106,7 +107,7 @@ class CliDirector:
     def run_external(self, command: str) -> None:
         subprocess.run(command, shell=True)
 
-    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = True, instruction_html: str = "") -> None:
+    def message(self, msg: str, duration: Optional[int] = None, add_instruction: bool = True, instruction_html: str = "") -> None:
         if duration is None:
             duration = len(msg) * 0.08  # seconds
         self.tmux_session.set_option("display-time", int(duration * 1000))  # milliseconds
@@ -133,7 +134,7 @@ class CliDirector:
         self.pause(duration)
         self.tmux_pane.cmd("display-popup", "-C")
 
-    def instruction(self, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None) -> None:
+    def instruction(self, instruction: str, duration: float = 3, time_from: Optional[float] = None) -> None:
         if time_from is None:
             time_from = self.current_time
 

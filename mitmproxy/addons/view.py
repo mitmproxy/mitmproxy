@@ -10,7 +10,8 @@ The View:
 """
 import collections
 import re
-import typing
+from collections.abc import Iterator, MutableMapping, Sequence
+from typing import Any, Optional
 
 import blinker
 import sortedcontainers
@@ -44,7 +45,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: mitmproxy.flow.Flow) -> Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -173,7 +174,7 @@ class View(collections.abc.Sequence):
 
     def load(self, loader):
         loader.add_option(
-            "view_filter", typing.Optional[str], None,
+            "view_filter", Optional[str], None,
             "Limit the view to matching flows."
         )
         loader.add_option(
@@ -209,7 +210,7 @@ class View(collections.abc.Sequence):
     def __len__(self):
         return len(self._view)
 
-    def __getitem__(self, offset) -> typing.Any:
+    def __getitem__(self, offset) -> Any:
         return self._view[self._rev(offset)]
 
     # Reflect some methods to the efficient underlying implementation
@@ -218,10 +219,10 @@ class View(collections.abc.Sequence):
         v = self._view.bisect_right(f)
         return self._rev(v - 1) + 1
 
-    def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
+    def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: Optional[int] = None) -> int:
         return self._rev(self._view.index(f, start, stop))
 
-    def __contains__(self, f: typing.Any) -> bool:
+    def __contains__(self, f: Any) -> bool:
         return self._view.__contains__(f)
 
     def _order_key_name(self):
@@ -286,7 +287,7 @@ class View(collections.abc.Sequence):
 
     # Order
     @command.command("view.order.options")
-    def order_options(self) -> typing.Sequence[str]:
+    def order_options(self) -> Sequence[str]:
         """
             Choices supported by the view_order option.
         """
@@ -337,7 +338,7 @@ class View(collections.abc.Sequence):
                 raise exceptions.CommandError(str(e)) from e
         self.set_filter(filt)
 
-    def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
+    def set_filter(self, flt: Optional[flowfilter.TFilter]):
         self.filter = flt or flowfilter.match_all
         self._refilter()
 
@@ -375,7 +376,7 @@ class View(collections.abc.Sequence):
     @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: Sequence[mitmproxy.flow.Flow],
         key: str
     ) -> None:
         """
@@ -392,7 +393,7 @@ class View(collections.abc.Sequence):
     @command.command("view.settings.setval")
     def setvalue(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: Sequence[mitmproxy.flow.Flow],
         key: str, value: str
     ) -> None:
         """
@@ -406,7 +407,7 @@ class View(collections.abc.Sequence):
 
     # Flows
     @command.command("view.flows.duplicate")
-    def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def duplicate(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first
             duplicate.
@@ -418,7 +419,7 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Duplicated %s flows" % len(dups))
 
     @command.command("view.flows.remove")
-    def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def remove(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Removes the flow from the underlying store and the view.
         """
@@ -438,7 +439,7 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
-    def resolve(self, flow_spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, flow_spec: str) -> Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
@@ -496,7 +497,7 @@ class View(collections.abc.Sequence):
         except exceptions.FlowReadException as e:
             ctx.log.error(str(e))
 
-    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def add(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
@@ -510,7 +511,7 @@ class View(collections.abc.Sequence):
                         self.focus.flow = f
                     self.sig_view_add.send(self, flow=f)
 
-    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
+    def get_by_id(self, flow_id: str) -> Optional[mitmproxy.flow.Flow]:
         """
             Get flow with the given id from the store.
             Returns None if the flow is not found.
@@ -607,7 +608,7 @@ class View(collections.abc.Sequence):
     def dns_error(self, f):
         self.update([f])
 
-    def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def update(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.
         """
@@ -643,7 +644,7 @@ class Focus:
 
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: typing.Optional[mitmproxy.flow.Flow] = None
+        self._flow: Optional[mitmproxy.flow.Flow] = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
@@ -652,18 +653,18 @@ class Focus:
         v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
-    def flow(self) -> typing.Optional[mitmproxy.flow.Flow]:
+    def flow(self) -> Optional[mitmproxy.flow.Flow]:
         return self._flow
 
     @flow.setter
-    def flow(self, f: typing.Optional[mitmproxy.flow.Flow]):
+    def flow(self, f: Optional[mitmproxy.flow.Flow]):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
         self.sig_change.send(self)
 
     @property
-    def index(self) -> typing.Optional[int]:
+    def index(self) -> Optional[int]:
         if self.flow:
             return self.view.index(self.flow)
         return None
@@ -700,11 +701,11 @@ class Focus:
 class Settings(collections.abc.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
-        self._values: typing.MutableMapping[str, dict] = {}
+        self._values: MutableMapping[str, dict] = {}
         view.sig_store_remove.connect(self._sig_store_remove)
         view.sig_store_refresh.connect(self._sig_store_refresh)
 
-    def __iter__(self) -> typing.Iterator:
+    def __iter__(self) -> Iterator:
         return iter(self._values)
 
     def __len__(self) -> int:

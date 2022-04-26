@@ -4,9 +4,10 @@ import json
 import logging
 import os.path
 import re
+from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
-from typing import ClassVar, Optional, Sequence, Union
+from typing import ClassVar, Optional, Union
 
 import tornado.escape
 import tornado.web

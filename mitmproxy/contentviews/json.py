@@ -1,8 +1,8 @@
 import re
 import json
+from collections.abc import Iterator
 from functools import lru_cache
-
-import typing
+from typing import Any, Optional
 
 from mitmproxy.contentviews import base
 
@@ -10,14 +10,14 @@ PARSE_ERROR = object()
 
 
 @lru_cache(1)
-def parse_json(s: bytes) -> typing.Any:
+def parse_json(s: bytes) -> Any:
     try:
         return json.loads(s.decode('utf-8'))
     except ValueError:
         return PARSE_ERROR
 
 
-def format_json(data: typing.Any) -> typing.Iterator[base.TViewLine]:
+def format_json(data: Any) -> Iterator[base.TViewLine]:
     encoder = json.JSONEncoder(indent=4, sort_keys=True, ensure_ascii=False)
     current_line: base.TViewLine = []
     for chunk in encoder.iterencode(data):
@@ -46,7 +46,7 @@ class ViewJSON(base.View):
         if data is not PARSE_ERROR:
             return "JSON", format_json(data)
 
-    def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
         if not data:
             return 0
         if content_type in (

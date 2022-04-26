@@ -1,5 +1,5 @@
 import csv
-import typing
+from collections.abc import Sequence
 
 import mitmproxy.types
 from mitmproxy import command, command_lexer
@@ -102,7 +102,7 @@ class ConsoleAddon:
         )
 
     @command.command("console.layout.options")
-    def layout_options(self) -> typing.Sequence[str]:
+    def layout_options(self) -> Sequence[str]:
         """
             Returns the available options for the console_layout option.
         """
@@ -210,7 +210,7 @@ class ConsoleAddon:
     def console_choose(
         self,
         prompt: str,
-        choices: typing.Sequence[str],
+        choices: Sequence[str],
         cmd: mitmproxy.types.Cmd,
         *args: mitmproxy.types.CmdArgs
     ) -> None:
@@ -347,14 +347,14 @@ class ConsoleAddon:
         self.master.spawn_external_viewer(content, t)
 
     @command.command("console.bodyview.options")
-    def bodyview_options(self) -> typing.Sequence[str]:
+    def bodyview_options(self) -> Sequence[str]:
         """
             Possible parts for console.bodyview.
         """
         return ["request", "response"]
 
     @command.command("console.edit.focus.options")
-    def edit_focus_options(self) -> typing.Sequence[str]:
+    def edit_focus_options(self) -> Sequence[str]:
         """
             Possible components for console.edit.focus.
         """
@@ -538,7 +538,7 @@ class ConsoleAddon:
             ctx.log.error(str(e))
 
     @command.command("console.flowview.mode.options")
-    def flowview_mode_options(self) -> typing.Sequence[str]:
+    def flowview_mode_options(self) -> Sequence[str]:
         """
             Returns the valid options for the flowview mode.
         """
@@ -560,7 +560,7 @@ class ConsoleAddon:
         )
 
     @command.command("console.key.contexts")
-    def key_contexts(self) -> typing.Sequence[str]:
+    def key_contexts(self) -> Sequence[str]:
         """
             The available contexts for key binding.
         """
@@ -569,7 +569,7 @@ class ConsoleAddon:
     @command.command("console.key.bind")
     def key_bind(
         self,
-        contexts: typing.Sequence[str],
+        contexts: Sequence[str],
         key: str,
         cmd: mitmproxy.types.Cmd,
         *args: mitmproxy.types.CmdArgs
@@ -588,7 +588,7 @@ class ConsoleAddon:
             raise exceptions.CommandError(v)
 
     @command.command("console.key.unbind")
-    def key_unbind(self, contexts: typing.Sequence[str], key: str) -> None:
+    def key_unbind(self, contexts: Sequence[str], key: str) -> None:
         """
             Un-bind a shortcut key.
         """

@@ -1,7 +1,7 @@
 import asyncio
 import time
-import typing
 import uuid
+from typing import Any, ClassVar, Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
@@ -25,9 +25,9 @@ class Error(stateobject.StateObject):
     timestamp: float
     """Unix timestamp of when this error happened."""
 
-    KILLED_MESSAGE: typing.ClassVar[str] = "Connection killed."
+    KILLED_MESSAGE: ClassVar[str] = "Connection killed."
 
-    def __init__(self, msg: str, timestamp: typing.Optional[float] = None) -> None:
+    def __init__(self, msg: str, timestamp: Optional[float] = None) -> None:
         """Create an error. If no timestamp is passed, the current time is used."""
         self.msg = msg
         self.timestamp = timestamp or time.time()
@@ -74,7 +74,7 @@ class Flow(stateobject.StateObject):
     with a `timestamp_start` set to `None`.
     """
 
-    error: typing.Optional[Error] = None
+    error: Optional[Error] = None
     """A connection or protocol error affecting this flow."""
 
     intercepted: bool
@@ -97,7 +97,7 @@ class Flow(stateobject.StateObject):
     The default marker for the view will be used if the Unicode emoji name can not be interpreted.
     """
 
-    is_replay: typing.Optional[str]
+    is_replay: Optional[str]
     """
     This attribute indicates if this flow has been replayed in either direction.
 
@@ -133,11 +133,11 @@ class Flow(stateobject.StateObject):
         self.timestamp_created = time.time()
 
         self.intercepted: bool = False
-        self._resume_event: typing.Optional[asyncio.Event] = None
-        self._backup: typing.Optional[Flow] = None
+        self._resume_event: Optional[asyncio.Event] = None
+        self._backup: Optional[Flow] = None
         self.marked: str = ""
-        self.is_replay: typing.Optional[str] = None
-        self.metadata: dict[str, typing.Any] = dict()
+        self.is_replay: Optional[str] = None
+        self.metadata: dict[str, Any] = dict()
         self.comment: str = ""
 
     _stateobject_attributes = dict(
@@ -149,7 +149,7 @@ class Flow(stateobject.StateObject):
         intercepted=bool,
         is_replay=str,
         marked=str,
-        metadata=dict[str, typing.Any],
+        metadata=dict[str, Any],
         comment=str,
         timestamp_created=float,
     )

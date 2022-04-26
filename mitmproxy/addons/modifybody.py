@@ -1,5 +1,5 @@
 import re
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import ctx, exceptions
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
@@ -11,7 +11,7 @@ class ModifyBody:
 
     def load(self, loader):
         loader.add_option(
-            "modify_body", typing.Sequence[str], [],
+            "modify_body", Sequence[str], [],
             """
             Replacement pattern of the form "[/flow-filter]/regex/[@]replacement", where
             the separator can be any character. The @ allows to provide a file path that

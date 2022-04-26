@@ -11,9 +11,10 @@ import asyncio
 import collections
 import time
 import traceback
-import typing
+from collections.abc import Awaitable, Callable, MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import DefaultDict, Optional, Union
 
 from OpenSSL import SSL
 from mitmproxy import http, options as moptions, tls
@@ -33,7 +34,7 @@ class TimeoutWatchdog:
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, callback: typing.Callable[[], typing.Awaitable]):
+    def __init__(self, callback: Callable[[], Awaitable]):
         self.callback = callback
         self.last_activity = time.time()
         self.can_timeout = asyncio.Event()
@@ -69,16 +70,16 @@ class TimeoutWatchdog:
 
 @dataclass
 class ConnectionIO:
-    handler: typing.Optional[asyncio.Task] = None
-    reader: typing.Optional[typing.Union[asyncio.StreamReader, udp.DatagramReader]] = None
-    writer: typing.Optional[typing.Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
+    handler: Optional[asyncio.Task] = None
+    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader]] = None
+    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
-    transports: typing.MutableMapping[Connection, ConnectionIO]
+    transports: MutableMapping[Connection, ConnectionIO]
     timeout_watchdog: TimeoutWatchdog
     client: Client
-    max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
+    max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: layer.Layer
     wakeup_timer: set[asyncio.Task]
 
@@ -155,8 +156,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: typing.Union[asyncio.StreamReader, udp.DatagramReader]
-            writer: typing.Union[asyncio.StreamWriter, udp.DatagramWriter]
+            reader: Union[asyncio.StreamReader, udp.DatagramReader]
+            writer: Union[asyncio.StreamWriter, udp.DatagramWriter]
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -388,7 +389,7 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
 class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
     """Simple handler that does not really process any hooks."""
 
-    hook_handlers: dict[str, typing.Callable]
+    hook_handlers: dict[str, Callable]
 
     def __init__(self, reader, writer, options, hooks):
         super().__init__(reader, writer, options)

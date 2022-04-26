@@ -41,9 +41,9 @@ all other strings are returned as plain bytes.
 """
 
 import collections
-import typing
+from typing import BinaryIO, Union
 
-TSerializable = typing.Union[None, str, bool, int, float, bytes, list, tuple, dict]
+TSerializable = Union[None, str, bool, int, float, bytes, list, tuple, dict]
 
 
 def dumps(value: TSerializable) -> bytes:
@@ -58,7 +58,7 @@ def dumps(value: TSerializable) -> bytes:
     return b''.join(q)
 
 
-def dump(value: TSerializable, file_handle: typing.IO[bytes]) -> None:
+def dump(value: TSerializable, file_handle: BinaryIO) -> None:
     """
     This function dumps a python object as a tnetstring and
     writes it to the given file.
@@ -156,7 +156,7 @@ def loads(string: bytes) -> TSerializable:
     return pop(string)[0]
 
 
-def load(file_handle: typing.IO[bytes]) -> TSerializable:
+def load(file_handle: BinaryIO) -> TSerializable:
     """load(file) -> object
 
     This function reads a tnetstring from a file and parses it into a

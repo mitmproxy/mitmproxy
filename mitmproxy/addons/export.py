@@ -1,5 +1,6 @@
 import shlex
-import typing
+from collections.abc import Callable, Sequence
+from typing import Any, Union
 
 import pyperclip
 
@@ -130,7 +131,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats: dict[str, typing.Callable[[flow.Flow], typing.Union[str, bytes]]] = dict(
+formats: dict[str, Callable[[flow.Flow], Union[str, bytes]]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,
@@ -153,7 +154,7 @@ class Export:
         )
 
     @command.command("export.formats")
-    def formats(self) -> typing.Sequence[str]:
+    def formats(self) -> Sequence[str]:
         """
             Return a list of the supported export formats.
         """
@@ -166,7 +167,7 @@ class Export:
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func: typing.Any = formats[format]
+        func: Any = formats[format]
         v = func(flow)
         try:
             with open(path, "wb") as fp:

@@ -1,8 +1,10 @@
 import enum
 import platform
-import typing
 import math
+from collections.abc import Iterable
 from functools import lru_cache
+from typing import Optional, Union
+
 from publicsuffix2 import get_sld, get_tld
 
 import urwid
@@ -42,7 +44,7 @@ KEY_MAX = 30
 
 
 def format_keyvals(
-        entries: typing.Iterable[tuple[str, typing.Union[None, str, urwid.Widget]]],
+        entries: Iterable[tuple[str, Union[None, str, urwid.Widget]]],
         key_format: str = "key",
         value_format: str = "text",
         indent: int = 0
@@ -358,7 +360,7 @@ def format_left_indicators(
         intercepted: bool,
         timestamp: float
 ):
-    indicators: list[typing.Union[str, tuple[str, str]]] = []
+    indicators: list[Union[str, tuple[str, str]]] = []
     if focused:
         indicators.append(("focus", ">>"))
     else:
@@ -376,7 +378,7 @@ def format_right_indicators(
         replay: bool,
         marked: str,
 ):
-    indicators: list[typing.Union[str, tuple[str, str]]] = []
+    indicators: list[Union[str, tuple[str, str]]] = []
     if replay:
         indicators.append(("replay", SYMBOL_REPLAY))
     else:
@@ -404,12 +406,12 @@ def format_http_flow_list(
         request_timestamp: float,
         request_is_push_promise: bool,
         intercepted: bool,
-        response_code: typing.Optional[int],
-        response_reason: typing.Optional[str],
-        response_content_length: typing.Optional[int],
-        response_content_type: typing.Optional[str],
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+        response_code: Optional[int],
+        response_reason: Optional[str],
+        response_content_length: Optional[int],
+        response_content_type: Optional[str],
+        duration: Optional[float],
+        error_message: Optional[str],
 ) -> urwid.Widget:
     req = []
 
@@ -495,7 +497,7 @@ def format_http_flow_table(
         render_mode: RenderMode,
         focused: bool,
         marked: str,
-        is_replay: typing.Optional[str],
+        is_replay: Optional[str],
         request_method: str,
         request_scheme: str,
         request_host: str,
@@ -505,12 +507,12 @@ def format_http_flow_table(
         request_timestamp: float,
         request_is_push_promise: bool,
         intercepted: bool,
-        response_code: typing.Optional[int],
-        response_reason: typing.Optional[str],
-        response_content_length: typing.Optional[int],
-        response_content_type: typing.Optional[str],
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+        response_code: Optional[int],
+        response_reason: Optional[str],
+        response_content_length: Optional[int],
+        response_content_type: Optional[str],
+        duration: Optional[float],
+        error_message: Optional[str],
 ) -> urwid.Widget:
     items = [
         format_left_indicators(
@@ -604,8 +606,8 @@ def format_tcp_flow(
         client_address,
         server_address,
         total_size: int,
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+        duration: Optional[float],
+        error_message: Optional[str],
 ):
     conn = f"{human.format_address(client_address)} <-> {human.format_address(server_address)}"
 
@@ -656,16 +658,16 @@ def format_dns_flow(
         focused: bool,
         intercepted: bool,
         marked: str,
-        is_replay: typing.Optional[str],
+        is_replay: Optional[str],
         op_code: str,
         request_timestamp: float,
         domain: str,
         type: str,
-        response_code: typing.Optional[str],
+        response_code: Optional[str],
         response_code_http_equiv: int,
-        answer: typing.Optional[str],
+        answer: Optional[str],
         error_message: str,
-        duration: typing.Optional[float],
+        duration: Optional[float],
 ):
     items = []
 
@@ -718,8 +720,8 @@ def format_flow(
     relevant for display and call the render with only that. This assures that rows
     are updated if the flow is changed.
     """
-    duration: typing.Optional[float]
-    error_message: typing.Optional[str]
+    duration: Optional[float]
+    error_message: Optional[str]
     if f.error:
         error_message = f.error.msg
     else:
@@ -747,7 +749,7 @@ def format_flow(
     elif isinstance(f, DNSFlow):
         if f.response:
             duration = f.response.timestamp - f.request.timestamp
-            response_code_str: typing.Optional[str] = dns.response_codes.to_str(f.response.response_code)
+            response_code_str: Optional[str] = dns.response_codes.to_str(f.response.response_code)
             response_code_http_equiv = dns.response_codes.http_equiv_status_code(f.response.response_code)
             answer = ", ".join(str(x) for x in f.response.answers)
         else:
@@ -773,14 +775,14 @@ def format_flow(
         )
     elif isinstance(f, HTTPFlow):
         intercepted = f.intercepted
-        response_content_length: typing.Optional[int]
+        response_content_length: Optional[int]
         if f.response:
             if f.response.raw_content is not None:
                 response_content_length = len(f.response.raw_content)
             else:
                 response_content_length = None
-            response_code: typing.Optional[int] = f.response.status_code
-            response_reason: typing.Optional[str] = f.response.reason
+            response_code: Optional[int] = f.response.status_code
+            response_reason: Optional[str] = f.response.reason
             response_content_type = f.response.headers.get("content-type")
             if f.response.timestamp_end:
                 duration = max([f.response.timestamp_end - f.request.timestamp_start, 0])

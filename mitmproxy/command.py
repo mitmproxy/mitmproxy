@@ -6,14 +6,15 @@ import inspect
 import sys
 import textwrap
 import types
-import typing
+from collections.abc import Sequence, Callable, Iterable
+from typing import Any, NamedTuple, Optional
 
 import mitmproxy.types
 from mitmproxy import exceptions, command_lexer
 from mitmproxy.command_lexer import unquote
 
 
-def verify_arg_signature(f: typing.Callable, args: typing.Iterable[typing.Any], kwargs: dict) -> None:
+def verify_arg_signature(f: Callable, args: Iterable[Any], kwargs: dict) -> None:
     sig = inspect.signature(f)
     try:
         sig.bind(*args, **kwargs)
@@ -33,13 +34,13 @@ def typename(t: type) -> str:
     return to.display
 
 
-def _empty_as_none(x: typing.Any) -> typing.Any:
+def _empty_as_none(x: Any) -> Any:
     if x == inspect.Signature.empty:
         return None
     return x
 
 
-class CommandParameter(typing.NamedTuple):
+class CommandParameter(NamedTuple):
     name: str
     type: type
     kind: inspect._ParameterKind = inspect.Parameter.POSITIONAL_OR_KEYWORD
@@ -55,9 +56,9 @@ class Command:
     name: str
     manager: "CommandManager"
     signature: inspect.Signature
-    help: typing.Optional[str]
+    help: Optional[str]
 
-    def __init__(self, manager: "CommandManager", name: str, func: typing.Callable) -> None:
+    def __init__(self, manager: "CommandManager", name: str, func: Callable) -> None:
         self.name = name
         self.manager = manager
         self.func = func
@@ -78,7 +79,7 @@ class Command:
             raise exceptions.CommandError(f"Return type has an unknown type ({self.return_type}) in {func}.")
 
     @property
-    def return_type(self) -> typing.Optional[type]:
+    def return_type(self) -> Optional[type]:
         return _empty_as_none(self.signature.return_annotation)
 
     @property
@@ -97,7 +98,7 @@ class Command:
             ret = ""
         return f"{self.name} {params}{ret}"
 
-    def prepare_args(self, args: typing.Sequence[str]) -> inspect.BoundArguments:
+    def prepare_args(self, args: Sequence[str]) -> inspect.BoundArguments:
         try:
             bound_arguments = self.signature.bind(*args)
         except TypeError:
@@ -120,7 +121,7 @@ class Command:
 
         return bound_arguments
 
-    def call(self, args: typing.Sequence[str]) -> typing.Any:
+    def call(self, args: Sequence[str]) -> Any:
         """
         Call the command with a list of arguments. At this point, all
         arguments are strings.
@@ -138,7 +139,7 @@ class Command:
         return ret
 
 
-class ParseResult(typing.NamedTuple):
+class ParseResult(NamedTuple):
     value: str
     type: type
     valid: bool
@@ -169,14 +170,14 @@ class CommandManager:
                                 f"Could not load command {o.command_name}: {e}"
                             )
 
-    def add(self, path: str, func: typing.Callable):
+    def add(self, path: str, func: Callable):
         self.commands[path] = Command(self, path, func)
 
     @functools.lru_cache(maxsize=128)
     def parse_partial(
             self,
             cmdstr: str
-    ) -> tuple[typing.Sequence[ParseResult], typing.Sequence[CommandParameter]]:
+    ) -> tuple[Sequence[ParseResult], Sequence[CommandParameter]]:
         """
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
@@ -188,7 +189,7 @@ class CommandManager:
             CommandParameter("", mitmproxy.types.Cmd),
             CommandParameter("", mitmproxy.types.CmdArgs),
         ]
-        expected: typing.Optional[CommandParameter] = None
+        expected: Optional[CommandParameter] = None
         for part in parts:
             if part.isspace():
                 parsed.append(
@@ -241,7 +242,7 @@ class CommandManager:
 
         return parsed, next_params
 
-    def call(self, command_name: str, *args: typing.Any) -> typing.Any:
+    def call(self, command_name: str, *args: Any) -> Any:
         """
         Call a command with native arguments. May raise CommandError.
         """
@@ -249,7 +250,7 @@ class CommandManager:
             raise exceptions.CommandError("Unknown command: %s" % command_name)
         return self.commands[command_name].func(*args)
 
-    def call_strings(self, command_name: str, args: typing.Sequence[str]) -> typing.Any:
+    def call_strings(self, command_name: str, args: Sequence[str]) -> Any:
         """
         Call a command using a list of string arguments. May raise CommandError.
         """
@@ -258,7 +259,7 @@ class CommandManager:
 
         return self.commands[command_name].call(args)
 
-    def execute(self, cmdstr: str) -> typing.Any:
+    def execute(self, cmdstr: str) -> Any:
         """
         Execute a command string. May raise CommandError.
         """
@@ -282,7 +283,7 @@ class CommandManager:
             print(file=out)
 
 
-def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
+def parsearg(manager: CommandManager, spec: str, argtype: type) -> Any:
     """
         Convert a string to a argument to the appropriate type.
     """
@@ -295,7 +296,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         raise exceptions.CommandError(str(e)) from e
 
 
-def command(name: typing.Optional[str] = None):
+def command(name: Optional[str] = None):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):

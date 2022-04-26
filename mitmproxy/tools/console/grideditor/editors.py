@@ -1,5 +1,6 @@
+from typing import Any, Union
+
 import urwid
-import typing
 
 from mitmproxy import exceptions
 from mitmproxy.http import Headers
@@ -210,10 +211,10 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
     def __init__(
             self,
             master,
-            vals: typing.Union[
-                list[list[typing.Any]],
-                list[typing.Any],
-                typing.Any,
+            vals: Union[
+                list[list[Any]],
+                list[Any],
+                Any,
             ]) -> None:
         if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.

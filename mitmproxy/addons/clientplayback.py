@@ -1,7 +1,8 @@
 import asyncio
 import time
 import traceback
-import typing
+from collections.abc import Sequence
+from typing import Optional, cast
 
 import mitmproxy.types
 from mitmproxy import command
@@ -109,8 +110,8 @@ class ReplayHandler(server.ConnectionHandler):
 
 
 class ClientPlayback:
-    playback_task: typing.Optional[asyncio.Task] = None
-    inflight: typing.Optional[http.HTTPFlow]
+    playback_task: Optional[asyncio.Task] = None
+    inflight: Optional[http.HTTPFlow]
     queue: asyncio.Queue
     options: Options
 
@@ -144,7 +145,7 @@ class ClientPlayback:
             self.queue.task_done()
             self.inflight = None
 
-    def check(self, f: flow.Flow) -> typing.Optional[str]:
+    def check(self, f: flow.Flow) -> Optional[str]:
         if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:
@@ -162,7 +163,7 @@ class ClientPlayback:
 
     def load(self, loader):
         loader.add_option(
-            "client_replay", typing.Sequence[str], [],
+            "client_replay", Sequence[str], [],
             "Replay client requests from a saved file."
         )
         loader.add_option(
@@ -209,7 +210,7 @@ class ClientPlayback:
         ctx.log.alert("Client replay queue cleared.")
 
     @command.command("replay.client")
-    def start_replay(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def start_replay(self, flows: Sequence[flow.Flow]) -> None:
         """
             Add flows to the replay queue, skipping flows that can't be replayed.
         """
@@ -220,7 +221,7 @@ class ClientPlayback:
                 ctx.log.warn(err)
                 continue
 
-            http_flow = typing.cast(http.HTTPFlow, f)
+            http_flow = cast(http.HTTPFlow, f)
 
             # Prepare the flow for replay
             http_flow.backup()

@@ -1,4 +1,4 @@
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -20,7 +20,7 @@ class CommandExecutor:
                 ctx.log.error(str(e))
             else:
                 if ret is not None:
-                    if type(ret) == typing.Sequence[flow.Flow]:
+                    if type(ret) == Sequence[flow.Flow]:
                         signals.status_message.send(
                             message="Command returned %s flows" % len(ret)
                         )

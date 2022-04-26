@@ -1,7 +1,7 @@
 import webbrowser
+from collections.abc import Sequence
 
 from mitmproxy import ctx
-from typing import Sequence
 
 
 class WebAddon:

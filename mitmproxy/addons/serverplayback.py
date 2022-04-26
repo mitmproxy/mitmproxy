@@ -1,6 +1,7 @@
 import hashlib
-import typing
 import urllib
+from collections.abc import Hashable, Sequence
+from typing import Any, Optional
 
 import mitmproxy.types
 from mitmproxy import command, hooks
@@ -11,7 +12,7 @@ from mitmproxy import io
 
 
 class ServerPlayback:
-    flowmap: dict[typing.Hashable, list[http.HTTPFlow]]
+    flowmap: dict[Hashable, list[http.HTTPFlow]]
     configured: bool
 
     def __init__(self):
@@ -38,14 +39,14 @@ class ServerPlayback:
             """
         )
         loader.add_option(
-            "server_replay_use_headers", typing.Sequence[str], [],
+            "server_replay_use_headers", Sequence[str], [],
             """
             Request headers that need to match while searching for a saved flow
             to replay.
             """
         )
         loader.add_option(
-            "server_replay", typing.Sequence[str], [],
+            "server_replay", Sequence[str], [],
             "Replay server responses from a saved file."
         )
         loader.add_option(
@@ -53,14 +54,14 @@ class ServerPlayback:
             "Ignore request content while searching for a saved flow to replay."
         )
         loader.add_option(
-            "server_replay_ignore_params", typing.Sequence[str], [],
+            "server_replay_ignore_params", Sequence[str], [],
             """
             Request parameters to be ignored while searching for a saved flow
             to replay.
             """
         )
         loader.add_option(
-            "server_replay_ignore_payload_params", typing.Sequence[str], [],
+            "server_replay_ignore_payload_params", Sequence[str], [],
             """
             Request payload parameters (application/x-www-form-urlencoded or
             multipart/form-data) to be ignored while searching for a saved flow
@@ -83,7 +84,7 @@ class ServerPlayback:
         )
 
     @command.command("replay.server")
-    def load_flows(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def load_flows(self, flows: Sequence[flow.Flow]) -> None:
         """
             Replay server responses from flows.
         """
@@ -114,7 +115,7 @@ class ServerPlayback:
     def count(self) -> int:
         return sum(len(i) for i in self.flowmap.values())
 
-    def _hash(self, flow: http.HTTPFlow) -> typing.Hashable:
+    def _hash(self, flow: http.HTTPFlow) -> Hashable:
         """
             Calculates a loose hash of the flow request.
         """
@@ -122,7 +123,7 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key: list[typing.Any] = [str(r.scheme), str(r.method), str(path)]
+        key: list[Any] = [str(r.scheme), str(r.method), str(path)]
         if not ctx.options.server_replay_ignore_content:
             if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(
@@ -163,7 +164,7 @@ class ServerPlayback:
             repr(key).encode("utf8", "surrogateescape")
         ).digest()
 
-    def next_flow(self, flow: http.HTTPFlow) -> typing.Optional[http.HTTPFlow]:
+    def next_flow(self, flow: http.HTTPFlow) -> Optional[http.HTTPFlow]:
         """
             Returns the next flow object, or None if no matching flow was
             found.

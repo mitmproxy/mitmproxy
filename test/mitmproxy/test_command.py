@@ -1,6 +1,6 @@
 import inspect
 import io
-import typing
+from collections.abc import Sequence
 
 import pytest
 
@@ -39,14 +39,14 @@ class TAddon:
         pass
 
     @command.command("varargs")
-    def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
+    def varargs(self, one: str, *var: str) -> Sequence[str]:
         return list(var)
 
-    def choices(self) -> typing.Sequence[str]:
+    def choices(self) -> Sequence[str]:
         return ["one", "two", "three"]
 
     @command.argument("arg", type=mitmproxy.types.Choice("choices"))
-    def choose(self, arg: str) -> typing.Sequence[str]:
+    def choose(self, arg: str) -> Sequence[str]:
         return ["one", "two", "three"]
 
     @command.command("path")
@@ -429,13 +429,13 @@ def test_simple():
 
 def test_typename():
     assert command.typename(str) == "str"
-    assert command.typename(typing.Sequence[flow.Flow]) == "flow[]"
+    assert command.typename(Sequence[flow.Flow]) == "flow[]"
 
     assert command.typename(mitmproxy.types.Data) == "data[][]"
     assert command.typename(mitmproxy.types.CutSpec) == "cut[]"
 
     assert command.typename(flow.Flow) == "flow"
-    assert command.typename(typing.Sequence[str]) == "str[]"
+    assert command.typename(Sequence[str]) == "str[]"
 
     assert command.typename(mitmproxy.types.Choice("foo")) == "choice"
     assert command.typename(mitmproxy.types.Path) == "path"
@@ -449,7 +449,7 @@ def test_typename():
 
 class DummyConsole:
     @command.command("view.flows.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
+    def resolve(self, spec: str) -> Sequence[flow.Flow]:
         n = int(spec)
         return [tflow.tflow(resp=True)] * n
 

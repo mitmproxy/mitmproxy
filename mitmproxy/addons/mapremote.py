@@ -1,11 +1,12 @@
 import re
-import typing
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from mitmproxy import ctx, exceptions, flowfilter, http
 from mitmproxy.utils.spec import parse_spec
 
 
-class MapRemoteSpec(typing.NamedTuple):
+class MapRemoteSpec(NamedTuple):
     matches: flowfilter.TFilter
     subject: str
     replacement: str
@@ -28,7 +29,7 @@ class MapRemote:
 
     def load(self, loader):
         loader.add_option(
-            "map_remote", typing.Sequence[str], [],
+            "map_remote", Sequence[str], [],
             """
             Map remote resources to another remote URL using a pattern of the form
             "[/flow-filter]/url-regex/replacement", where the separator can

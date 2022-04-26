@@ -1,4 +1,4 @@
-import typing
+from typing import Optional
 
 from mitmproxy import flow, flowfilter
 from mitmproxy import exceptions
@@ -6,7 +6,7 @@ from mitmproxy import ctx
 
 
 class Intercept:
-    filt: typing.Optional[flowfilter.TFilter] = None
+    filt: Optional[flowfilter.TFilter] = None
 
     def load(self, loader):
         loader.add_option(
@@ -14,7 +14,7 @@ class Intercept:
             "Intercept toggle"
         )
         loader.add_option(
-            "intercept", typing.Optional[str], None,
+            "intercept", Optional[str], None,
             "Intercept filter expression."
         )
 
