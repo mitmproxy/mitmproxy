@@ -36,7 +36,6 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
@@ -63,7 +62,7 @@ setup(
             "mitmweb = mitmproxy.tools.main:mitmweb",
         ]
     },
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
