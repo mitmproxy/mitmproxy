@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+from typing import Any, Callable, Union, cast
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human

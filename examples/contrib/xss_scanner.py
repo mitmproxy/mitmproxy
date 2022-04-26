@@ -36,7 +36,7 @@ Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
 """
 
 from html.parser import HTMLParser
-from typing import Dict, Union, Tuple, Optional, List, NamedTuple
+from typing import NamedTuple, Optional, Union
 from urllib.parse import urlparse
 import re
 import socket

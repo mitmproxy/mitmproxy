@@ -1,5 +1,5 @@
 import itertools
-from typing import TypeVar, Iterable, Iterator, Tuple, Optional, List
+from typing import Iterable, Iterator, Optional, TypeVar
 
 T = TypeVar('T')
 

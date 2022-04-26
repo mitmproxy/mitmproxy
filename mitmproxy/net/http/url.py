@@ -2,7 +2,6 @@ import re
 import urllib.parse
 from typing import AnyStr, Optional
 from typing import Sequence
-from typing import Tuple
 
 from mitmproxy.net import check
 # This regex extracts & splits the host header into host and port.

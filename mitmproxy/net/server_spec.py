@@ -3,7 +3,7 @@ Server specs are used to describe an upstream proxy or server.
 """
 import functools
 import re
-from typing import Tuple, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from mitmproxy.net import check
 

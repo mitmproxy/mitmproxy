@@ -2,7 +2,6 @@ import json
 from json import JSONDecodeError
 from pathlib import Path
 from unittest import mock
-from typing import List
 from unittest.mock import patch
 
 from mitmproxy.test import tflow

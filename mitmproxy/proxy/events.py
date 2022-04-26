@@ -27,7 +27,6 @@ class Start(Event):
     Every layer initially receives a start event.
     This is useful to emit events on startup.
     """
-    pass
 
 
 @dataclass
@@ -54,7 +53,6 @@ class ConnectionClosed(ConnectionEvent):
     """
     Remote has closed a connection.
     """
-    pass
 
 
 class CommandCompleted(Event):

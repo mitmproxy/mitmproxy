@@ -1,5 +1,5 @@
 import abc
-from typing import Callable, Optional, Type, Union
+from typing import Callable, Optional, Union
 
 import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader

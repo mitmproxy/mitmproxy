@@ -1,5 +1,4 @@
 import time
-from typing import List
 
 from mitmproxy import flow
 from mitmproxy.coretypes import serializable

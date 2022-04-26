@@ -1,4 +1,3 @@
-from typing import List, Tuple
 
 import h2.settings
 import hpack

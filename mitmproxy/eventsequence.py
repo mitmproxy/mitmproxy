@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterator, Type
+from typing import Any, Callable, Iterator
 
 from mitmproxy import dns
 from mitmproxy import flow

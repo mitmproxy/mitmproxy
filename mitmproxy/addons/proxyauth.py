@@ -5,7 +5,6 @@ import weakref
 from abc import ABC, abstractmethod
 from typing import MutableMapping
 from typing import Optional
-from typing import Tuple
 
 import ldap3
 import passlib.apache

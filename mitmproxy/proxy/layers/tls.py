@@ -1,7 +1,7 @@
 import struct
 import time
 from dataclasses import dataclass
-from typing import Iterator, Literal, Optional, Tuple
+from typing import Iterator, Literal, Optional
 
 from OpenSSL import SSL
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData

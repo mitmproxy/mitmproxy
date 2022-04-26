@@ -1,7 +1,7 @@
 import ipaddress
 import os
 from pathlib import Path
-from typing import List, Optional, TypedDict, Any
+from typing import Any, Optional, TypedDict
 
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls

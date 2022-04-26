@@ -7,7 +7,7 @@ This module only defines the classes for individual `WebSocketMessage`s and the 
 """
 import time
 import warnings
-from typing import List, Tuple, Union
+from typing import Union
 from typing import Optional
 
 from mitmproxy import stateobject

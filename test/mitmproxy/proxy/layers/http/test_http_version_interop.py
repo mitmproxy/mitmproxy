@@ -1,4 +1,3 @@
-from typing import Tuple
 
 import h2.config
 import h2.connection

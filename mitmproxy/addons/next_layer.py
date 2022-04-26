@@ -15,7 +15,7 @@ In that case it's not necessary to modify mitmproxy's source, adding a custom ad
 that sets nextlayer.layer works just as well.
 """
 import re
-from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
+from typing import Any, Iterable, Optional, Sequence, Union
 
 from mitmproxy import ctx, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic

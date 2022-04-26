@@ -2,7 +2,7 @@ import itertools
 import json
 import typing
 from collections.abc import MutableMapping
-from typing import Any, Dict, Generator, List, TextIO, Callable
+from typing import Any, Callable, Generator, TextIO
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow

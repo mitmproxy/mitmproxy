@@ -12,7 +12,7 @@ metadata depend on the protocol in use. Known attributes can be found in
 `base.View`.
 """
 import traceback
-from typing import List, Union
+from typing import Union
 from typing import Optional
 
 import blinker

@@ -2,7 +2,7 @@ import collections
 import enum
 import time
 from dataclasses import dataclass
-from typing import DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import DefaultDict, Optional, Union
 
 import wsproto.handshake
 from mitmproxy import flow, http

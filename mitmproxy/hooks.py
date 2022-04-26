@@ -1,7 +1,7 @@
 import re
 import warnings
 from dataclasses import dataclass, is_dataclass, fields
-from typing import ClassVar, Any, Dict, Type, Set, List, TYPE_CHECKING, Sequence
+from typing import Any, ClassVar, Sequence, TYPE_CHECKING
 
 import mitmproxy.flow
 

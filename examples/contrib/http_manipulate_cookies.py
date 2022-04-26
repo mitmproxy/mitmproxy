@@ -14,7 +14,6 @@ Note:
     https://stackoverflow.com/questions/55358072/cookie-manipulation-in-mitmproxy-requests-and-responses
 
 """
-from typing import List, Dict
 import json
 from mitmproxy import http
 

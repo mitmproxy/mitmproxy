@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, IO, Iterable, Type, Union, cast
+from typing import Any, IO, Iterable, Union, cast
 
 from mitmproxy import dns
 from mitmproxy import exceptions

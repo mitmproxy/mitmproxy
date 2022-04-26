@@ -1,6 +1,6 @@
 import io
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from kaitaistruct import KaitaiStream
 

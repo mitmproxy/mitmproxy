@@ -1,7 +1,7 @@
 import email.utils
 import re
 import time
-from typing import Tuple, List, Iterable
+from typing import Iterable
 
 from mitmproxy.coretypes import multidict
 

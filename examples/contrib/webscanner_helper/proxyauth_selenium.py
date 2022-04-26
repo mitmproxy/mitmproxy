@@ -3,7 +3,7 @@ import logging
 import random
 import string
 import time
-from typing import Dict, List, cast, Any
+from typing import Any, cast
 
 import mitmproxy.http
 from mitmproxy import flowfilter

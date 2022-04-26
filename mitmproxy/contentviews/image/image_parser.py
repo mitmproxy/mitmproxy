@@ -1,5 +1,4 @@
 import io
-import typing
 
 from kaitaistruct import KaitaiStream
 

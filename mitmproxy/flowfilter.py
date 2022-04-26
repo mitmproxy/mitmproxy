@@ -36,7 +36,7 @@
 import functools
 import re
 import sys
-from typing import ClassVar, Sequence, Type, Protocol, Union
+from typing import ClassVar, Protocol, Sequence, Union
 import pyparsing as pp
 
 from mitmproxy import dns, flow, http, tcp

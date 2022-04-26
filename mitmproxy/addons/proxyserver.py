@@ -3,7 +3,7 @@ from asyncio import base_events
 import ipaddress
 import re
 import struct
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from mitmproxy import command, ctx, exceptions, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.connection import Address

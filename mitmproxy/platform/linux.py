@@ -1,6 +1,5 @@
 import socket
 import struct
-import typing
 
 # Python's socket module does not have these constants
 SO_ORIGINAL_DST = 80

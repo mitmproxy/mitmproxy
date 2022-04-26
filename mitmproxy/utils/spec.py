@@ -1,4 +1,3 @@
-import typing
 from mitmproxy import flowfilter
 
 

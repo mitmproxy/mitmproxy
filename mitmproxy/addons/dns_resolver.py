@@ -1,7 +1,7 @@
 import asyncio
 import ipaddress
 import socket
-from typing import Callable, Iterable, List, Tuple, Union
+from typing import Callable, Iterable, Union
 from mitmproxy import ctx, dns
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"

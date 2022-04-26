@@ -2,7 +2,7 @@ import uuid
 import warnings
 from abc import ABCMeta
 from enum import Flag
-from typing import Literal, Optional, Sequence, Tuple
+from typing import Literal, Optional, Sequence
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable

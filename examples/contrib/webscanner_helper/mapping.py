@@ -1,7 +1,6 @@
 import copy
 import logging
 import typing
-from typing import Dict
 
 from bs4 import BeautifulSoup
 

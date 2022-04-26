@@ -5,7 +5,7 @@ import collections
 import textwrap
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
+from typing import Any, ClassVar, Deque, Generator, NamedTuple, Optional, TypeVar
 
 from mitmproxy.connection import Connection
 from mitmproxy.proxy import commands, events

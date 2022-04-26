@@ -5,7 +5,7 @@ import random
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import ClassVar, List, Optional, Tuple, Union
+from typing import ClassVar
 
 from mitmproxy import connection, flow, stateobject
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types

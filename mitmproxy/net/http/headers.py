@@ -1,5 +1,5 @@
 import collections
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 
 def parse_content_type(c: str) -> Optional[tuple[str, str, dict[str, str]]]:

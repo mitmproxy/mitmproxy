@@ -1,7 +1,7 @@
 import re
 import socket
 import sys
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 
 def init_transparent_mode() -> None:

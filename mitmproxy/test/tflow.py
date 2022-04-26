@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from mitmproxy import connection
 from mitmproxy import dns

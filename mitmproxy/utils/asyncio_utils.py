@@ -1,5 +1,4 @@
 import asyncio
-import sys
 import time
 from collections.abc import Coroutine
 from typing import Optional

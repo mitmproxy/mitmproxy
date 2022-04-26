@@ -1,7 +1,7 @@
 import collections
 import time
 from enum import Enum
-from typing import ClassVar, DefaultDict, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import ClassVar, DefaultDict, Optional, Sequence, Union
 
 import h2.config
 import h2.connection

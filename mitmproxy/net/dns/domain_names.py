@@ -1,5 +1,5 @@
 import struct
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 
 _LABEL_SIZE = struct.Struct("!B")

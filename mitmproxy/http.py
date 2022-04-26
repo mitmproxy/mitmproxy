@@ -10,13 +10,10 @@ from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
 from typing import Callable
-from typing import Dict
 from typing import Iterable
 from typing import Iterator
-from typing import List
 from typing import Mapping
 from typing import Optional
-from typing import Tuple
 from typing import Union
 from typing import cast
 from typing import Any

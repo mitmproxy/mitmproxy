@@ -19,22 +19,18 @@ class LayoutWidget:
             The view focus has changed. Layout objects should implement the API
             rather than directly subscribing to events.
         """
-        pass
 
     def view_changed(self):
         """
             The view list has changed.
         """
-        pass
 
     def layout_popping(self):
         """
             We are just about to pop a window off the stack, or exit an overlay.
         """
-        pass
 
     def layout_pushed(self, prev):
         """
             We have just pushed a window onto the stack.
         """
-        pass

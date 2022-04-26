@@ -13,7 +13,6 @@ import json
 import base64
 import zlib
 import os
-import typing
 
 from datetime import datetime
 from datetime import timezone

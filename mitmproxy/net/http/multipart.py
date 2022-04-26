@@ -1,6 +1,6 @@
 import mimetypes
 import re
-from typing import Tuple, List, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from mitmproxy.net.http import headers

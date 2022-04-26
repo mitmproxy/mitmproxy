@@ -1,6 +1,5 @@
 import pytest
 
-from typing import List
 from mitmproxy.contentviews import grpc
 from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
 from mitmproxy.net.encoding import encode

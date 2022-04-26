@@ -462,7 +462,6 @@ def cli():  # pragma: no cover
     """
     mitmproxy build tool
     """
-    pass
 
 
 @cli.command("build")

@@ -1,6 +1,6 @@
 import collections
 from http import cookiejar
-from typing import List, Tuple, Dict, Optional
+from typing import Optional
 
 from mitmproxy import http, flowfilter, ctx, exceptions
 from mitmproxy.net.http import cookies

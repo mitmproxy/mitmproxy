@@ -1,6 +1,6 @@
 import time
 from enum import Enum, auto
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands, context, events, layer

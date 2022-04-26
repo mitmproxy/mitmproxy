@@ -3,7 +3,6 @@ import contextlib
 import inspect
 import textwrap
 from pathlib import Path
-from typing import List, Type
 
 from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer

@@ -1,4 +1,4 @@
-from typing import Set, Union, Dict, Optional
+from typing import Optional, Union
 import json
 from dataclasses import dataclass
 from mitmproxy import ctx

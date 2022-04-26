@@ -1,10 +1,8 @@
 from abc import ABCMeta
 from abc import abstractmethod
 from typing import Iterator
-from typing import List
 from typing import MutableMapping
 from typing import Sequence
-from typing import Tuple
 from typing import TypeVar
 
 from mitmproxy.coretypes import serializable

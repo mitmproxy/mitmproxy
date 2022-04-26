@@ -3,7 +3,7 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Generator, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Generator, Iterable, Iterator
 
 from mitmproxy import contentviews, ctx, flow, flowfilter, http
 from mitmproxy.contentviews import base
@@ -41,7 +41,6 @@ class ProtoParser:
 
         The rule only applies if the processed message is a server response.
         """
-        pass
 
     @dataclass
     class ParserRuleRequest(ParserRule):
@@ -50,7 +49,6 @@ class ProtoParser:
 
         The rule only applies if the processed message is a client request.
         """
-        pass
 
     @dataclass
     class ParserFieldDefinition:
@@ -512,7 +510,6 @@ class ProtoParser:
                 self.try_unpack = as_packed
             except Exception as e:
                 ctx.log.warn(e)
-                pass
 
         def _gen_tag_str(self):
             tags = self.parent_tags[:]

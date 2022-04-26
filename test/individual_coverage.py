@@ -77,7 +77,6 @@ def main():
 
     if any(e != 0 for _, _, e in result):
         sys.exit(1)
-        pass
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple
+from typing import Optional
 
 from h11._receivebuffer import ReceiveBuffer
 

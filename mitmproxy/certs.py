@@ -6,7 +6,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Optional, Union, Dict, List, NewType
+from typing import NewType, Optional, Union
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization

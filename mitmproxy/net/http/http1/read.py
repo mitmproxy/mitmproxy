@@ -1,6 +1,6 @@
 import re
 import time
-from typing import List, Tuple, Iterable, Optional
+from typing import Iterable, Optional
 
 from mitmproxy.http import Request, Headers, Response
 from mitmproxy.net.http import url

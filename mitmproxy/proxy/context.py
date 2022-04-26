@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from mitmproxy import connection
 from mitmproxy.options import Options

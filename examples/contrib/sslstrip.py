@@ -4,7 +4,6 @@ https://moxie.org/software/sslstrip/
 """
 import re
 import urllib.parse
-import typing
 
 from mitmproxy import http
 
