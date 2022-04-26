@@ -11,7 +11,7 @@ _STRINGS = {
     STATUS: "STATUS",
     NOTIFY: "NOTIFY",
     UPDATE: "UPDATE",
-    DSO: "DSO"
+    DSO: "DSO",
 }
 
 

@@ -12,8 +12,10 @@ class StickyAuth:
 
     def load(self, loader):
         loader.add_option(
-            "stickyauth", Optional[str], None,
-            "Set sticky auth filter. Matched against requests."
+            "stickyauth",
+            Optional[str],
+            None,
+            "Set sticky auth filter. Matched against requests.",
         )
 
     def configure(self, updated):

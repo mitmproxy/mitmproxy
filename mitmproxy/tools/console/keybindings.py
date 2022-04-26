@@ -120,9 +120,7 @@ class KeyHelp(urwid.Frame):
 
     def widget(self, txt):
         cols, _ = self.master.ui.get_cols_rows()
-        return urwid.ListBox(
-            [urwid.Text(i) for i in textwrap.wrap(txt, cols)]
-        )
+        return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
     def sig_mod(self, txt):
         self.set_body(self.widget(txt))
@@ -150,9 +148,7 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         if key == "m_next":
-            self.focus_position = (
-                self.focus_position + 1
-            ) % len(self.widget_list)
+            self.focus_position = (self.focus_position + 1) % len(self.widget_list)
             self.widget_list[1].set_active(self.focus_position == 1)
             key = None
 
@@ -160,7 +156,7 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
         # So much for "closed for modification, but open for extension".
         item_rows = None
         if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus = True)
+            item_rows = self.get_item_rows(size, focus=True)
         i = self.widget_list.index(self.focus_item)
         tsize = self.get_item_size(size, i, True, item_rows)
         return self.focus_item.keypress(tsize, key)

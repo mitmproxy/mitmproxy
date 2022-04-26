@@ -195,16 +195,19 @@ def test_buildenviron_windows(tmp_path):
     assert (tmp_path / "arch").exists()
 
 
-@pytest.mark.parametrize("version, tag, ok", [
-    ("3.0.0.dev", "", True),  # regular snapshot
-    ("3.0.0.dev", "v3.0.0", False),  # forgot to remove ".dev" on bump
-    ("3.0.0", "", False),  # forgot to re-add ".dev"
-    ("3.0.0", "v4.0.0", False),  # version mismatch
-    ("3.0.0", "v3.0.0", True),  # regular release
-    ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
-    ("3.0.0.dev", "anyname", True),  # tagged test/dev release
-    ("3.0.0", "3.0.0", False),  # tagged, but without v prefix
-])
+@pytest.mark.parametrize(
+    "version, tag, ok",
+    [
+        ("3.0.0.dev", "", True),  # regular snapshot
+        ("3.0.0.dev", "v3.0.0", False),  # forgot to remove ".dev" on bump
+        ("3.0.0", "", False),  # forgot to re-add ".dev"
+        ("3.0.0", "v4.0.0", False),  # version mismatch
+        ("3.0.0", "v3.0.0", True),  # regular release
+        ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
+        ("3.0.0.dev", "anyname", True),  # tagged test/dev release
+        ("3.0.0", "3.0.0", False),  # tagged, but without v prefix
+    ],
+)
 def test_buildenviron_check_version(version, tag, ok, tmpdir):
     tmpdir.mkdir("mitmproxy").join("version.py").write(f'VERSION = "{version}"')
 

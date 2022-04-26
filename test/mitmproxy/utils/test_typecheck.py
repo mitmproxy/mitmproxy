@@ -1,7 +1,7 @@
 import io
-from collections.abc import Mapping, Sequence
-from typing import Any, Optional, TextIO, Union
 import typing
+from collections.abc import Sequence
+from typing import Any, Optional, TextIO, Union
 
 import pytest
 
@@ -73,15 +73,15 @@ def test_check_any():
 
 
 def test_typesec_to_str():
-    assert(typecheck.typespec_to_str(str)) == "str"
-    assert(typecheck.typespec_to_str(Sequence[str])) == "sequence of str"
-    assert(typecheck.typespec_to_str(Optional[str])) == "optional str"
-    assert(typecheck.typespec_to_str(Optional[int])) == "optional int"
+    assert (typecheck.typespec_to_str(str)) == "str"
+    assert (typecheck.typespec_to_str(Sequence[str])) == "sequence of str"
+    assert (typecheck.typespec_to_str(Optional[str])) == "optional str"
+    assert (typecheck.typespec_to_str(Optional[int])) == "optional int"
     with pytest.raises(NotImplementedError):
         typecheck.typespec_to_str(dict)
 
 
 def test_typing_aliases():
-    assert(typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
+    assert (typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
     typecheck.check_option_type("foo", [10], typing.Sequence[int])
     typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])

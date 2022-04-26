@@ -34,6 +34,7 @@ class ConnectionEvent(Event):
     """
     All events involving connection IO.
     """
+
     connection: Connection
 
 
@@ -42,6 +43,7 @@ class DataReceived(ConnectionEvent):
     """
     Remote has sent some data.
     """
+
     data: bytes
 
     def __repr__(self):
@@ -60,6 +62,7 @@ class CommandCompleted(Event):
     Emitted when a command has been finished, e.g.
     when the master has replied or when we have established a server connection.
     """
+
     command: commands.Command
     reply: Any
 
@@ -72,15 +75,21 @@ class CommandCompleted(Event):
     def __init_subclass__(cls, **kwargs):
         command_cls = cls.__annotations__.get("command", None)
         valid_command_subclass = (
-                isinstance(command_cls, type)
-                and issubclass(command_cls, commands.Command)
-                and command_cls is not commands.Command
+            isinstance(command_cls, type)
+            and issubclass(command_cls, commands.Command)
+            and command_cls is not commands.Command
         )
         if not valid_command_subclass:
-            warnings.warn(f"{command_cls} needs a properly annotated command attribute.", RuntimeWarning)
+            warnings.warn(
+                f"{command_cls} needs a properly annotated command attribute.",
+                RuntimeWarning,
+            )
         if command_cls in command_reply_subclasses:
             other = command_reply_subclasses[command_cls]
-            warnings.warn(f"Two conflicting subclasses for {command_cls}: {cls} and {other}", RuntimeWarning)
+            warnings.warn(
+                f"Two conflicting subclasses for {command_cls}: {cls} and {other}",
+                RuntimeWarning,
+            )
         command_reply_subclasses[command_cls] = cls
 
     def __repr__(self):
@@ -109,7 +118,7 @@ class GetSocketCompleted(CommandCompleted):
     reply: socket.socket
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
@@ -117,6 +126,7 @@ class MessageInjected(Event, Generic[T]):
     """
     The user has injected a custom WebSocket/TCP/... message.
     """
+
     flow: flow.Flow
     message: T
 
@@ -126,4 +136,5 @@ class Wakeup(CommandCompleted):
     """
     Event sent to layers that requested a wakeup using RequestWakeup.
     """
+
     command: commands.RequestWakeup

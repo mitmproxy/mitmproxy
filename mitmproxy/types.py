@@ -61,23 +61,23 @@ class _BaseType:
 
     def completion(self, manager: "CommandManager", t: Any, s: str) -> Sequence[str]:
         """
-            Returns a list of completion strings for a given prefix. The strings
-            returned don't necessarily need to be suffixes of the prefix, since
-            completers will do prefix filtering themselves..
+        Returns a list of completion strings for a given prefix. The strings
+        returned don't necessarily need to be suffixes of the prefix, since
+        completers will do prefix filtering themselves..
         """
         raise NotImplementedError
 
     def parse(self, manager: "CommandManager", typ: Any, s: str) -> Any:
         """
-            Parse a string, given the specific type instance (to allow rich type annotations like Choice) and a string.
+        Parse a string, given the specific type instance (to allow rich type annotations like Choice) and a string.
 
-            Raises exceptions.TypeError if the value is invalid.
+        Raises exceptions.TypeError if the value is invalid.
         """
         raise NotImplementedError
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         """
-            Check if data is valid for this type.
+        Check if data is valid for this type.
         """
         raise NotImplementedError
 
@@ -95,9 +95,7 @@ class _BoolType(_BaseType):
         elif s == "false":
             return False
         else:
-            raise exceptions.TypeError(
-                "Booleans are 'true' or 'false', got %s" % s
-            )
+            raise exceptions.TypeError("Booleans are 'true' or 'false', got %s" % s)
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         return val in [True, False]
@@ -108,7 +106,8 @@ class _StrType(_BaseType):
     display = "str"
 
     # https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
-    escape_sequences = re.compile(r"""
+    escape_sequences = re.compile(
+        r"""
         \\ (
         [\\'"abfnrtv]  # Standard C escape sequence
         | [0-7]{1,3}   # Character with octal value
@@ -117,7 +116,9 @@ class _StrType(_BaseType):
         | u....        # Character with 16-bit hex value
         | U........    # Character with 32-bit hex value
         )
-        """, re.VERBOSE)
+        """,
+        re.VERBOSE,
+    )
 
     @staticmethod
     def _unescape(match: re.Match) -> str:
@@ -188,7 +189,9 @@ class _PathType(_BaseType):
     typ = Path
     display = "path"
 
-    def completion(self, manager: "CommandManager", t: type, start: str) -> Sequence[str]:
+    def completion(
+        self, manager: "CommandManager", t: type, start: str
+    ) -> Sequence[str]:
         if not start:
             start = "./"
         path = os.path.expanduser(start)
@@ -286,7 +289,6 @@ class _CutSpecType(_BaseType):
         "request.timestamp_start",
         "request.timestamp_end",
         "request.header[",
-
         "response.status_code",
         "response.reason",
         "response.text",
@@ -295,13 +297,11 @@ class _CutSpecType(_BaseType):
         "response.timestamp_end",
         "response.raw_content",
         "response.header[",
-
         "client_conn.peername.port",
         "client_conn.peername.host",
         "client_conn.tls_version",
         "client_conn.sni",
         "client_conn.tls_established",
-
         "server_conn.address.port",
         "server_conn.address.host",
         "server_conn.ip_address.host",
@@ -450,7 +450,7 @@ class _ChoiceType(_BaseType):
         return val in opts
 
 
-ALL_MARKERS = ['true', 'false'] + list(emoji.emoji)
+ALL_MARKERS = ["true", "false"] + list(emoji.emoji)
 
 
 class _MarkerType(_BaseType):
@@ -463,9 +463,9 @@ class _MarkerType(_BaseType):
     def parse(self, manager: "CommandManager", t: Choice, s: str) -> str:
         if s not in ALL_MARKERS:
             raise exceptions.TypeError("Invalid choice.")
-        if s == 'true':
+        if s == "true":
             return ":default:"
-        elif s == 'false':
+        elif s == "false":
             return ""
         return s
 

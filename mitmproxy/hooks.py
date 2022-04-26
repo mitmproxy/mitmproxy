@@ -31,10 +31,13 @@ class Hook:
         # initialize .name attribute. HttpRequestHook -> http_request
         if cls.__dict__.get("name", None) is None:
             name = cls.__name__.replace("Hook", "")
-            cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', name).lower()
+            cls.name = re.sub("(?!^)([A-Z]+)", r"_\1", name).lower()
         if cls.name in all_hooks:
             other = all_hooks[cls.name]
-            warnings.warn(f"Two conflicting event classes for {cls.name}: {cls} and {other}", RuntimeWarning)
+            warnings.warn(
+                f"Two conflicting event classes for {cls.name}: {cls} and {other}",
+                RuntimeWarning,
+            )
         if cls.name == "":
             return  # don't register Hook class.
         all_hooks[cls.name] = cls
@@ -54,6 +57,7 @@ class ConfigureHook(Hook):
     set-like object containing the keys of all changed options. This
     event is called during startup with all options in the updated set.
     """
+
     updated: set[str]
 
 
@@ -83,4 +87,5 @@ class UpdateHook(Hook):
     Update is called when one or more flow objects have been modified,
     usually from a different addon.
     """
+
     flows: Sequence[mitmproxy.flow.Flow]

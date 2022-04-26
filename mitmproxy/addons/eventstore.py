@@ -1,5 +1,5 @@
 import collections
-from typing import Deque, Optional
+from typing import Optional
 
 import blinker
 
@@ -9,7 +9,7 @@ from mitmproxy.log import LogEntry
 
 class EventStore:
     def __init__(self, size=10000):
-        self.data: Deque[LogEntry] = collections.deque(maxlen=size)
+        self.data: collections.deque[LogEntry] = collections.deque(maxlen=size)
         self.sig_add = blinker.Signal()
         self.sig_refresh = blinker.Signal()
 

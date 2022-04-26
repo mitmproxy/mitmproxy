@@ -22,19 +22,23 @@ class ProxyAuth:
     validator: Validator | None = None
 
     def __init__(self):
-        self.authenticated: MutableMapping[connection.Client, tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[
+            connection.Client, tuple[str, str]
+        ] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
         loader.add_option(
-            "proxyauth", Optional[str], None,
+            "proxyauth",
+            Optional[str],
+            None,
             """
             Require proxy authentication. Format:
             "username:pass",
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
             or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree" for LDAP authentication.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -43,7 +47,9 @@ class ProxyAuth:
         auth = ctx.options.proxyauth
         if auth:
             if ctx.options.mode == "transparent":
-                raise exceptions.OptionsError("Proxy Authentication not supported in transparent mode.")
+                raise exceptions.OptionsError(
+                    "Proxy Authentication not supported in transparent mode."
+                )
 
             if auth == "any":
                 self.validator = AcceptAll()
@@ -119,7 +125,7 @@ class ProxyAuth:
                 f"<body><h1>{status_code} {reason}</h1></body>"
                 f"</html>"
             ),
-            headers
+            headers,
         )
 
     @property
@@ -143,9 +149,7 @@ def mkauth(username: str, password: str, scheme: str = "basic") -> str:
     """
     Craft a basic auth string
     """
-    v = binascii.b2a_base64(
-        (username + ":" + password).encode("utf8")
-    ).decode("ascii")
+    v = binascii.b2a_base64((username + ":" + password).encode("utf8")).decode("ascii")
     return scheme + " " + v
 
 
@@ -158,7 +162,9 @@ def parse_http_basic_auth(s: str) -> tuple[str, str, str]:
     if scheme.lower() != "basic":
         raise ValueError("Unknown scheme")
     try:
-        user, password = binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        user, password = (
+            binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        )
     except binascii.Error as e:
         raise ValueError(str(e))
     return scheme, user, password
@@ -180,7 +186,7 @@ class AcceptAll(Validator):
 class SingleUser(Validator):
     def __init__(self, proxyauth: str):
         try:
-            self.username, self.password = proxyauth.split(':')
+            self.username, self.password = proxyauth.split(":")
         except ValueError:
             raise exceptions.OptionsError("Invalid single-user auth specification.")
 
@@ -215,12 +221,7 @@ class Ldap(Validator):
             self.dn_subtree,
         ) = self.parse_spec(proxyauth)
         server = ldap3.Server(url, port=port, use_ssl=use_ssl)
-        conn = ldap3.Connection(
-            server,
-            ldap_user,
-            ldap_pass,
-            auto_bind=True
-        )
+        conn = ldap3.Connection(server, ldap_user, ldap_pass, auto_bind=True)
         self.conn = conn
         self.server = server
 
@@ -258,10 +259,7 @@ class Ldap(Validator):
         self.conn.search(self.dn_subtree, f"(cn={username})")
         if self.conn.response:
             c = ldap3.Connection(
-                self.server,
-                self.conn.response[0]["dn"],
-                password,
-                auto_bind=True
+                self.server, self.conn.response[0]["dn"], password, auto_bind=True
             )
             if c:
                 return True

@@ -21,8 +21,22 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.utils import strutils
 from . import (
-    auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack, graphql, grpc
+    auto,
+    raw,
+    hex,
+    json,
+    xml_html,
+    wbxml,
+    javascript,
+    css,
+    urlencoded,
+    multipart,
+    image,
+    query,
+    protobuf,
+    msgpack,
+    graphql,
+    grpc,
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
@@ -92,9 +106,7 @@ def get_message_content_view(
         enc = "[cannot decode]"
     else:
         if isinstance(message, http.Message) and content != message.raw_content:
-            enc = "[decoded {}]".format(
-                message.headers.get("content-encoding")
-            )
+            enc = "[decoded {}]".format(message.headers.get("content-encoding"))
         else:
             enc = ""
 
@@ -110,7 +122,8 @@ def get_message_content_view(
                 content_type = f"{ct[0]}/{ct[1]}"
 
     description, lines, error = get_content_view(
-        viewmode, content,
+        viewmode,
+        content,
         content_type=content_type,
         flow=flow,
         http_message=http_message,
@@ -148,22 +161,30 @@ def get_content_view(
     http_message: Optional[http.Message] = None,
 ):
     """
-        Args:
-            viewmode: the view to use.
-            data, **metadata: arguments passed to View instance.
+    Args:
+        viewmode: the view to use.
+        data, **metadata: arguments passed to View instance.
 
-        Returns:
-            A (description, content generator, error) tuple.
-            If the content view raised an exception generating the view,
-            the exception is returned in error and the flow is formatted in raw mode.
-            In contrast to calling the views directly, text is always safe-to-print unicode.
+    Returns:
+        A (description, content generator, error) tuple.
+        If the content view raised an exception generating the view,
+        the exception is returned in error and the flow is formatted in raw mode.
+        In contrast to calling the views directly, text is always safe-to-print unicode.
     """
     try:
-        ret = viewmode(data, content_type=content_type, flow=flow, http_message=http_message)
+        ret = viewmode(
+            data, content_type=content_type, flow=flow, http_message=http_message
+        )
         if ret is None:
-            ret = "Couldn't parse: falling back to Raw", get("Raw")(
-                data, content_type=content_type, flow=flow, http_message=http_message
-            )[1]
+            ret = (
+                "Couldn't parse: falling back to Raw",
+                get("Raw")(
+                    data,
+                    content_type=content_type,
+                    flow=flow,
+                    http_message=http_message,
+                )[1],
+            )
         desc, content = ret
         error = None
     # Third-party viewers can fail in unexpected ways...
@@ -171,7 +192,9 @@ def get_content_view(
         desc = "Couldn't parse: falling back to Raw"
         raw = get("Raw")
         assert raw
-        content = raw(data, content_type=content_type, flow=flow, http_message=http_message)[1]
+        content = raw(
+            data, content_type=content_type, flow=flow, http_message=http_message
+        )[1]
         error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
     return desc, safe_to_print(content), error
@@ -196,6 +219,14 @@ add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
 
 __all__ = [
-    "View", "KEY_MAX", "format_text", "format_dict", "TViewResult",
-    "get", "add", "remove", "get_content_view", "get_message_content_view",
+    "View",
+    "KEY_MAX",
+    "format_text",
+    "format_dict",
+    "TViewResult",
+    "get",
+    "add",
+    "remove",
+    "get_content_view",
+    "get_message_content_view",
 ]

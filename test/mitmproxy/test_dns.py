@@ -9,20 +9,51 @@ from mitmproxy.test import tutils
 
 
 class TestResourceRecord:
-
     def test_str(self):
-        assert str(dns.ResourceRecord.A("test", ipaddress.IPv4Address("1.2.3.4"))) == "1.2.3.4"
-        assert str(dns.ResourceRecord.AAAA("test", ipaddress.IPv6Address("::1"))) == "::1"
-        assert str(dns.ResourceRecord.CNAME("test", "some.other.host")) == "some.other.host"
-        assert str(dns.ResourceRecord.PTR("test", "some.other.host")) == "some.other.host"
+        assert (
+            str(dns.ResourceRecord.A("test", ipaddress.IPv4Address("1.2.3.4")))
+            == "1.2.3.4"
+        )
+        assert (
+            str(dns.ResourceRecord.AAAA("test", ipaddress.IPv6Address("::1"))) == "::1"
+        )
+        assert (
+            str(dns.ResourceRecord.CNAME("test", "some.other.host"))
+            == "some.other.host"
+        )
+        assert (
+            str(dns.ResourceRecord.PTR("test", "some.other.host")) == "some.other.host"
+        )
         assert str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
-        assert str(dns.ResourceRecord("test", dns.types.A, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'')) == "0x (invalid A data)"
-        assert str(
-            dns.ResourceRecord("test", dns.types.SOA, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'\x00\x01\x02\x03')
-        ) == "0x00010203"
+        assert (
+            str(
+                dns.ResourceRecord(
+                    "test",
+                    dns.types.A,
+                    dns.classes.IN,
+                    dns.ResourceRecord.DEFAULT_TTL,
+                    b"",
+                )
+            )
+            == "0x (invalid A data)"
+        )
+        assert (
+            str(
+                dns.ResourceRecord(
+                    "test",
+                    dns.types.SOA,
+                    dns.classes.IN,
+                    dns.ResourceRecord.DEFAULT_TTL,
+                    b"\x00\x01\x02\x03",
+                )
+            )
+            == "0x00010203"
+        )
 
     def test_setter(self):
-        rr = dns.ResourceRecord("test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b'')
+        rr = dns.ResourceRecord(
+            "test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b""
+        )
         rr.ipv4_address = ipaddress.IPv4Address("8.8.4.4")
         assert rr.ipv4_address == ipaddress.IPv4Address("8.8.4.4")
         rr.ipv6_address = ipaddress.IPv6Address("2001:4860:4860::8844")
@@ -34,7 +65,6 @@ class TestResourceRecord:
 
 
 class TestMessage:
-
     def test_json(self):
         resp = tutils.tdnsresp()
         json = resp.to_json()
@@ -47,16 +77,25 @@ class TestMessage:
     def test_responses(self):
         req = tutils.tdnsreq()
         resp = tutils.tdnsresp()
-        resp2 = req.succeed([
-            dns.ResourceRecord.A("dns.google", ipaddress.IPv4Address("8.8.8.8"), ttl=32),
-            dns.ResourceRecord.A("dns.google", ipaddress.IPv4Address("8.8.4.4"), ttl=32)
-        ])
+        resp2 = req.succeed(
+            [
+                dns.ResourceRecord.A(
+                    "dns.google", ipaddress.IPv4Address("8.8.8.8"), ttl=32
+                ),
+                dns.ResourceRecord.A(
+                    "dns.google", ipaddress.IPv4Address("8.8.4.4"), ttl=32
+                ),
+            ]
+        )
         resp2.timestamp = resp.timestamp
         assert resp == resp2
         assert resp2.size == 8
         with pytest.raises(ValueError):
             req.fail(dns.response_codes.NOERROR)
-        assert req.fail(dns.response_codes.FORMERR).response_code == dns.response_codes.FORMERR
+        assert (
+            req.fail(dns.response_codes.FORMERR).response_code
+            == dns.response_codes.FORMERR
+        )
 
     def test_range(self):
         def test(what: str, min: int, max: int):
@@ -84,37 +123,53 @@ class TestMessage:
             assert m_b == m
             assert m_b.packed == m.packed
 
-        assert_eq(tutils.tdnsreq(), b'\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01')
+        assert_eq(
+            tutils.tdnsreq(),
+            b"\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01",
+        )
         with pytest.raises(struct.error):
-            dns.Message.unpack(b'\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01\x00')
-        assert_eq(tutils.tdnsresp(), (
-            b'\x00\x2a\x81\x80\x00\x01\x00\x02\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01' +
-            b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x08\x08\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x04\x04'
-        ))
+            dns.Message.unpack(
+                b"\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01\x00"
+            )
+        assert_eq(
+            tutils.tdnsresp(),
+            (
+                b"\x00\x2a\x81\x80\x00\x01\x00\x02\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01"
+                b"\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x08\x08\xc0\x0c\x00\x01\x00\x01"
+                b"\x00\x00\x00 \x00\x04\x08\x08\x04\x04"
+            ),
+        )
         with pytest.raises(struct.error):  # question error
-            dns.Message.unpack(b'\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06goo')
+            dns.Message.unpack(
+                b"\x00\x2a\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03dns\x06goo"
+            )
         with pytest.raises(struct.error):  # rr length error
             dns.Message.unpack(
-                b'\x00\x2a\x81\x80\x00\x01\x00\x02\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01' +
-                b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x08\x08\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x04'
+                b"\x00\x2a\x81\x80\x00\x01\x00\x02\x00\x00\x00\x00\x03dns\x06google\x00\x00\x01\x00\x01"
+                + b"\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x08\x08\xc0\x0c\x00\x01\x00\x01\x00\x00\x00 \x00\x04\x08\x08\x04"
             )
         txt = dns.Message.unpack(
-            b'V\x1a\x81\x80\x00\x01\x00\x01\x00\x01\x00\x01\x05alive\x06github\x03com\x00\x00' +
-            b'\x10\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x0b\xc6\x00\x07\x04live\xc0\x12\xc0\x12\x00\x06\x00\x01' +
-            b'\x00\x00\x03\x84\x00H\x07ns-1707\tawsdns-21\x02co\x02uk\x00\x11awsdns-hostmaster\x06amazon\xc0\x19\x00' +
-            b'\x00\x00\x01\x00\x00\x1c \x00\x00\x03\x84\x00\x12u\x00\x00\x01Q\x80\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00'
+            b"V\x1a\x81\x80\x00\x01\x00\x01\x00\x01\x00\x01\x05alive\x06github\x03com\x00\x00"
+            + b"\x10\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x0b\xc6\x00\x07\x04live\xc0\x12\xc0\x12\x00\x06\x00\x01"
+            + b"\x00\x00\x03\x84\x00H\x07ns-1707\tawsdns-21\x02co\x02uk\x00\x11awsdns-hostmaster\x06amazon\xc0\x19\x00"
+            + b"\x00\x00\x01\x00\x00\x1c \x00\x00\x03\x84\x00\x12u\x00\x00\x01Q\x80\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
         )
         assert txt.answers[0].domain_name == "live.github.com"
         invalid_rr_domain_name = dns.Message.unpack(
-            b'V\x1a\x81\x80\x00\x01\x00\x01\x00\x01\x00\x01\x05alive\x06github\x03com\x00\x00' +
-            b'\x10\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x0b\xc6\x00\x07\x99live\xc0\x12\xc0\x12\x00\x06\x00\x01' +
-            b'\x00\x00\x03\x84\x00H\x07ns-1707\tawsdns-21\x02co\x02uk\x00\x11awsdns-hostmaster\x06amazon\xc0\x19\x00' +
-            b'\x00\x00\x01\x00\x00\x1c \x00\x00\x03\x84\x00\x12u\x00\x00\x01Q\x80\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00'
+            b"V\x1a\x81\x80\x00\x01\x00\x01\x00\x01\x00\x01\x05alive\x06github\x03com\x00\x00"
+            + b"\x10\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x0b\xc6\x00\x07\x99live\xc0\x12\xc0\x12\x00\x06\x00\x01"
+            + b"\x00\x00\x03\x84\x00H\x07ns-1707\tawsdns-21\x02co\x02uk\x00\x11awsdns-hostmaster\x06amazon\xc0\x19\x00"
+            + b"\x00\x00\x01\x00\x00\x1c \x00\x00\x03\x84\x00\x12u\x00\x00\x01Q\x80\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
         )
-        assert invalid_rr_domain_name.answers[0].data == b'\x99live\xc0\x12'
+        assert invalid_rr_domain_name.answers[0].data == b"\x99live\xc0\x12"
 
         req = tutils.tdnsreq()
-        for flag in "authoritative_answer", "truncation", "recursion_desired", "recursion_available":
+        for flag in (
+            "authoritative_answer",
+            "truncation",
+            "recursion_desired",
+            "recursion_available",
+        ):
             setattr(req, flag, True)
             assert getattr(dns.Message.unpack(req.packed), flag) is True
             setattr(req, flag, False)
@@ -139,7 +194,6 @@ class TestMessage:
 
 
 class TestDNSFlow:
-
     def test_copy(self):
         f = tflow.tdnsflow(resp=True)
         assert repr(f)
@@ -193,4 +247,4 @@ class TestDNSFlow:
 
     def test_repr(self):
         f = tflow.tdnsflow()
-        assert 'DNSFlow' in repr(f)
+        assert "DNSFlow" in repr(f)

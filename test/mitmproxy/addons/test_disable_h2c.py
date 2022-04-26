@@ -11,14 +11,14 @@ class TestDisableH2CleartextUpgrade:
             tctx.configure(a)
 
             f = tflow.tflow()
-            f.request.headers['upgrade'] = 'h2c'
-            f.request.headers['connection'] = 'foo'
-            f.request.headers['http2-settings'] = 'bar'
+            f.request.headers["upgrade"] = "h2c"
+            f.request.headers["connection"] = "foo"
+            f.request.headers["http2-settings"] = "bar"
 
             a.request(f)
-            assert 'upgrade' not in f.request.headers
-            assert 'connection' not in f.request.headers
-            assert 'http2-settings' not in f.request.headers
+            assert "upgrade" not in f.request.headers
+            assert "connection" not in f.request.headers
+            assert "http2-settings" not in f.request.headers
 
     def test_prior_knowledge(self):
         with taddons.context() as tctx:

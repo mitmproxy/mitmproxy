@@ -30,7 +30,6 @@ class State:
 
 
 class TestSerialize:
-
     def test_roundtrip(self):
         sio = io.BytesIO()
         f = tflow.tflow()
@@ -73,7 +72,7 @@ class TestSerialize:
         sio.write(b"bogus")
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises(FlowReadException, match='Invalid data format'):
+        with pytest.raises(FlowReadException, match="Invalid data format"):
             list(r.stream())
 
         sio = io.BytesIO()
@@ -82,7 +81,7 @@ class TestSerialize:
         w.add(f)
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        with pytest.raises(FlowReadException, match='Unknown flow type'):
+        with pytest.raises(FlowReadException, match="Unknown flow type"):
             list(r.stream())
 
         f = FlowReadException("foo")
@@ -114,9 +113,7 @@ class TestSerialize:
 
 class TestFlowMaster:
     async def test_load_http_flow_reverse(self):
-        opts = options.Options(
-            mode="reverse:https://use-this-domain"
-        )
+        opts = options.Options(mode="reverse:https://use-this-domain")
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(resp=True)
@@ -124,13 +121,13 @@ class TestFlowMaster:
             assert s.flows[0].request.host == "use-this-domain"
 
     async def test_all(self):
-        opts = options.Options(
-            mode="reverse:https://use-this-domain"
-        )
+        opts = options.Options(mode="reverse:https://use-this-domain")
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(req=None)
-            await ctx.master.addons.handle_lifecycle(server_hooks.ClientConnectedHook(f.client_conn))
+            await ctx.master.addons.handle_lifecycle(
+                server_hooks.ClientConnectedHook(f.client_conn)
+            )
             f.request = mitmproxy.test.tutils.treq()
             await ctx.master.addons.handle_lifecycle(layers.http.HttpRequestHook(f))
             assert len(s.flows) == 1
@@ -139,14 +136,15 @@ class TestFlowMaster:
             await ctx.master.addons.handle_lifecycle(layers.http.HttpResponseHook(f))
             assert len(s.flows) == 1
 
-            await ctx.master.addons.handle_lifecycle(server_hooks.ClientDisconnectedHook(f.client_conn))
+            await ctx.master.addons.handle_lifecycle(
+                server_hooks.ClientDisconnectedHook(f.client_conn)
+            )
 
             f.error = flow.Error("msg")
             await ctx.master.addons.handle_lifecycle(layers.http.HttpErrorHook(f))
 
 
 class TestError:
-
     def test_getset_state(self):
         e = flow.Error("Error")
         state = e.get_state()

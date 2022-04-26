@@ -24,34 +24,59 @@ config.parser_rules = [
     #
     # The actual 'filter' definition in the rule, would still match the whole flow. This means '~u' expressions could
     # be used, to match the URL from the request of a flow, while the ParserRuleResponse is only applied to the response.
-
     ProtoParser.ParserRuleRequest(
-        name = "Geo coordinate lookup request",
+        name="Geo coordinate lookup request",
         # note on flowfilter: for tflow the port gets appended to the URL's host part
-        filter = "example\\.com.*/ReverseGeocode",
+        filter="example\\.com.*/ReverseGeocode",
         field_definitions=[
             ProtoParser.ParserFieldDefinition(tag="1", name="position"),
-            ProtoParser.ParserFieldDefinition(tag="1.1", name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),
-            ProtoParser.ParserFieldDefinition(tag="1.2", name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),
+            ProtoParser.ParserFieldDefinition(
+                tag="1.1",
+                name="latitude",
+                intended_decoding=ProtoParser.DecodedTypes.double,
+            ),
+            ProtoParser.ParserFieldDefinition(
+                tag="1.2",
+                name="longitude",
+                intended_decoding=ProtoParser.DecodedTypes.double,
+            ),
             ProtoParser.ParserFieldDefinition(tag="3", name="country"),
             ProtoParser.ParserFieldDefinition(tag="7", name="app"),
-        ]
+        ],
     ),
     ProtoParser.ParserRuleResponse(
-        name = "Geo coordinate lookup response",
+        name="Geo coordinate lookup response",
         # note on flowfilter: for tflow the port gets appended to the URL's host part
-        filter = "example\\.com.*/ReverseGeocode",
+        filter="example\\.com.*/ReverseGeocode",
         field_definitions=[
             ProtoParser.ParserFieldDefinition(tag="1.2", name="address"),
             ProtoParser.ParserFieldDefinition(tag="1.3", name="address array element"),
-            ProtoParser.ParserFieldDefinition(tag="1.3.1", name="unknown bytes", intended_decoding=ProtoParser.DecodedTypes.bytes),
+            ProtoParser.ParserFieldDefinition(
+                tag="1.3.1",
+                name="unknown bytes",
+                intended_decoding=ProtoParser.DecodedTypes.bytes,
+            ),
             ProtoParser.ParserFieldDefinition(tag="1.3.2", name="element value long"),
             ProtoParser.ParserFieldDefinition(tag="1.3.3", name="element value short"),
-            ProtoParser.ParserFieldDefinition(tag="", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="position"),
-            ProtoParser.ParserFieldDefinition(tag=".1", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="latitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
-            ProtoParser.ParserFieldDefinition(tag=".2", tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"], name="longitude", intended_decoding=ProtoParser.DecodedTypes.double),  # noqa: E501
+            ProtoParser.ParserFieldDefinition(
+                tag="",
+                tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"],
+                name="position",
+            ),
+            ProtoParser.ParserFieldDefinition(
+                tag=".1",
+                tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"],
+                name="latitude",
+                intended_decoding=ProtoParser.DecodedTypes.double,
+            ),  # noqa: E501
+            ProtoParser.ParserFieldDefinition(
+                tag=".2",
+                tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"],
+                name="longitude",
+                intended_decoding=ProtoParser.DecodedTypes.double,
+            ),  # noqa: E501
             ProtoParser.ParserFieldDefinition(tag="7", name="app"),
-        ]
+        ],
     ),
 ]
 

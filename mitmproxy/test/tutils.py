@@ -45,8 +45,12 @@ def tdnsresp(**kwargs) -> dns.Message:
         response_code=dns.response_codes.NOERROR,
         questions=[dns.Question("dns.google", dns.types.A, dns.classes.IN)],
         answers=[
-            dns.ResourceRecord("dns.google", dns.types.A, dns.classes.IN, 32, b'\x08\x08\x08\x08'),
-            dns.ResourceRecord("dns.google", dns.types.A, dns.classes.IN, 32, b'\x08\x08\x04\x04')
+            dns.ResourceRecord(
+                "dns.google", dns.types.A, dns.classes.IN, 32, b"\x08\x08\x08\x08"
+            ),
+            dns.ResourceRecord(
+                "dns.google", dns.types.A, dns.classes.IN, 32, b"\x08\x08\x04\x04"
+            ),
         ],
         authorities=[],
         additionals=[],
@@ -87,7 +91,9 @@ def tresp(**kwargs) -> http.Response:
         http_version=b"HTTP/1.1",
         status_code=200,
         reason=b"OK",
-        headers=http.Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
+        headers=http.Headers(
+            ((b"header-response", b"svalue"), (b"content-length", b"7"))
+        ),
         content=b"message",
         trailers=None,
         timestamp_start=946681202,

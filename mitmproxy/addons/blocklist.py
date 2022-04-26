@@ -41,14 +41,16 @@ class BlockList:
 
     def load(self, loader):
         loader.add_option(
-            "block_list", Sequence[str], [],
+            "block_list",
+            Sequence[str],
+            [],
             """
             Block matching requests and return an empty response with the specified HTTP status.
             Option syntax is "/flow-filter/status-code", where flow-filter describes
             which requests this rule should be applied to and status-code is the HTTP status code to return for
             blocked requests. The separator ("/" in the example) can be any character.
             Setting a non-standard status code of 444 will close the connection without sending a response.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -58,7 +60,9 @@ class BlockList:
                 try:
                     spec = parse_spec(option)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse block_list option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse block_list option {option}: {e}"
+                    ) from e
                 self.items.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
@@ -67,11 +71,10 @@ class BlockList:
 
         for spec in self.items:
             if spec.matches(flow):
-                flow.metadata['blocklisted'] = True
+                flow.metadata["blocklisted"] = True
                 if spec.status_code == NO_RESPONSE:
                     flow.kill()
                 else:
                     flow.response = http.Response.make(
-                        spec.status_code,
-                        headers={"Server": version.MITMPROXY}
+                        spec.status_code, headers={"Server": version.MITMPROXY}
                     )

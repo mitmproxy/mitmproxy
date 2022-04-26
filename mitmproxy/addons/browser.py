@@ -9,17 +9,17 @@ from mitmproxy import ctx
 
 def get_chrome_executable() -> Optional[str]:
     for browser in (
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
-            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-            r"C:\Program Files (x86)\Google\Application\chrome.exe",
-            # Linux binary names from Python's webbrowser module.
-            "google-chrome",
-            "google-chrome-stable",
-            "chrome",
-            "chromium",
-            "chromium-browser",
-            "google-chrome-unstable",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Application\chrome.exe",
+        # Linux binary names from Python's webbrowser module.
+        "google-chrome",
+        "google-chrome-stable",
+        "chrome",
+        "chromium",
+        "chromium-browser",
+        "google-chrome-unstable",
     ):
         if shutil.which(browser):
             return browser
@@ -35,11 +35,14 @@ def get_chrome_flatpak() -> Optional[str]:
             "com.github.Eloston.UngoogledChromium",
             "com.google.ChromeDev",
         ):
-            if subprocess.run(
-                ["flatpak", "info", browser],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            ).returncode == 0:
+            if (
+                subprocess.run(
+                    ["flatpak", "info", browser],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                ).returncode
+                == 0
+            ):
                 return browser
 
     return None
@@ -61,8 +64,8 @@ class Browser:
     @command.command("browser.start")
     def start(self) -> None:
         """
-            Start an isolated instance of Chrome that points to the currently
-            running proxy.
+        Start an isolated instance of Chrome that points to the currently
+        running proxy.
         """
         if len(self.browser) > 0:
             ctx.log.alert("Starting additional browser")
@@ -74,24 +77,24 @@ class Browser:
 
         tdir = tempfile.TemporaryDirectory()
         self.tdir.append(tdir)
-        self.browser.append(subprocess.Popen(
-            [
-                *cmd,
-                "--user-data-dir=%s" % str(tdir.name),
-                "--proxy-server={}:{}".format(
-                    ctx.options.listen_host or "127.0.0.1",
-                    ctx.options.listen_port
-                ),
-                "--disable-fre",
-                "--no-default-browser-check",
-                "--no-first-run",
-                "--disable-extensions",
-
-                "about:blank",
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ))
+        self.browser.append(
+            subprocess.Popen(
+                [
+                    *cmd,
+                    "--user-data-dir=%s" % str(tdir.name),
+                    "--proxy-server={}:{}".format(
+                        ctx.options.listen_host or "127.0.0.1", ctx.options.listen_port
+                    ),
+                    "--disable-fre",
+                    "--no-default-browser-check",
+                    "--no-first-run",
+                    "--disable-extensions",
+                    "about:blank",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        )
 
     def done(self):
         for browser in self.browser:

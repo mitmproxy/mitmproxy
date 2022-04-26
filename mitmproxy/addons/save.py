@@ -43,17 +43,21 @@ class Save:
 
     def load(self, loader):
         loader.add_option(
-            "save_stream_file", Optional[str], None,
+            "save_stream_file",
+            Optional[str],
+            None,
             """
             Stream flows to file as they arrive. Prefix path with + to append.
             The full path can use python strftime() formating, missing
             directories are created as needed. A new file is opened every time
             the formatted string changes.
-            """
+            """,
         )
         loader.add_option(
-            "save_stream_filter", Optional[str], None,
-            "Filter which flows are written to file."
+            "save_stream_filter",
+            Optional[str],
+            None,
+            "Filter which flows are written to file.",
         )
 
     def configure(self, updated):
@@ -122,8 +126,8 @@ class Save:
     @command.command("save.file")
     def save(self, flows: Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
         """
-            Save flows to a file. If the path starts with a +, flows are
-            appended to the file, otherwise it is over-written.
+        Save flows to a file. If the path starts with a +, flows are
+        appended to the file, otherwise it is over-written.
         """
         try:
             with open(_path(path), _mode(path)) as f:

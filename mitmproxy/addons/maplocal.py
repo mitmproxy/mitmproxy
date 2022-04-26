@@ -39,10 +39,7 @@ def _safe_path_join(root: Path, untrusted: str) -> Path:
     This is a convenience wrapper for werkzeug's safe_join,
     raising a ValueError if the path is malformed."""
     untrusted_parts = Path(untrusted).parts
-    joined = safe_join(
-        root.as_posix(),
-        *untrusted_parts
-    )
+    joined = safe_join(root.as_posix(), *untrusted_parts)
     if joined is None:
         raise ValueError("Untrusted paths.")
     return Path(joined)
@@ -70,10 +67,7 @@ def file_candidates(url: str, spec: MapLocalSpec) -> list[Path]:
         if decoded_suffix != escaped_suffix:
             suffix_candidates.extend([escaped_suffix, f"{escaped_suffix}/index.html"])
         try:
-            return [
-                _safe_path_join(spec.local_path, x)
-                for x in suffix_candidates
-            ]
+            return [_safe_path_join(spec.local_path, x) for x in suffix_candidates]
         except ValueError:
             return []
     else:
@@ -86,12 +80,14 @@ class MapLocal:
 
     def load(self, loader):
         loader.add_option(
-            "map_local", Sequence[str], [],
+            "map_local",
+            Sequence[str],
+            [],
             """
             Map remote resources to a local file using a pattern of the form
             "[/flow-filter]/url-regex/file-or-directory-path", where the
             separator can be any character.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -101,7 +97,9 @@ class MapLocal:
                 try:
                     spec = parse_map_local_spec(option)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse map_local option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse map_local option {option}: {e}"
+                    ) from e
 
                 self.replacements.append(spec)
 
@@ -127,9 +125,7 @@ class MapLocal:
                         break
 
                 if local_file:
-                    headers = {
-                        "Server": version.MITMPROXY
-                    }
+                    headers = {"Server": version.MITMPROXY}
                     mimetype = mimetypes.guess_type(str(local_file))[0]
                     if mimetype:
                         headers["Content-Type"] = mimetype
@@ -140,13 +136,11 @@ class MapLocal:
                         ctx.log.warn(f"Could not read file: {e}")
                         continue
 
-                    flow.response = http.Response.make(
-                        200,
-                        contents,
-                        headers
-                    )
+                    flow.response = http.Response.make(200, contents, headers)
                     # only set flow.response once, for the first matching rule
                     return
         if all_candidates:
             flow.response = http.Response.make(404)
-            ctx.log.info(f"None of the local file candidates exist: {', '.join(str(x) for x in all_candidates)}")
+            ctx.log.info(
+                f"None of the local file candidates exist: {', '.join(str(x) for x in all_candidates)}"
+            )

@@ -42,7 +42,9 @@ class Dumper:
 
     def load(self, loader):
         loader.add_option(
-            "flow_detail", int, 1,
+            "flow_detail",
+            int,
+            1,
             """
             The display detail level for flows in mitmdump: 0 (quiet) to 4 (very verbose).
               0: no output
@@ -50,16 +52,17 @@ class Dumper:
               2: full request URL with response status code and HTTP headers
               3: 2 + truncated response content, content of WebSocket and TCP messages
               4: 3 + nothing is truncated
-            """
+            """,
         )
         loader.add_option(
-            "dumper_default_contentview", str, "auto",
+            "dumper_default_contentview",
+            str,
+            "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views]
+            choices=[i.name.lower() for i in contentviews.views],
         )
         loader.add_option(
-            "dumper_filter", Optional[str], None,
-            "Limit which flows are dumped."
+            "dumper_filter", Optional[str], None, "Limit which flows are dumped."
         )
 
     def configure(self, updated):
@@ -86,7 +89,7 @@ class Dumper:
     def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
             ks = strutils.bytes_to_escaped_str(k)
-            ks = self.style(ks, fg='blue')
+            ks = self.style(ks, fg="blue")
             vs = strutils.bytes_to_escaped_str(v)
             self.echo(f"{ks}: {vs}", ident=4)
 
@@ -104,12 +107,10 @@ class Dumper:
     def _echo_message(
         self,
         message: Union[http.Message, TCPMessage, WebSocketMessage],
-        flow: Union[http.HTTPFlow, TCPFlow]
+        flow: Union[http.HTTPFlow, TCPFlow],
     ):
         _, lines, error = contentviews.get_message_content_view(
-            ctx.options.dumper_default_contentview,
-            message,
-            flow
+            ctx.options.dumper_default_contentview, message, flow
         )
         if error:
             ctx.log.debug(error)
@@ -119,9 +120,7 @@ class Dumper:
         else:
             lines_to_echo = lines
 
-        content = "\r\n".join(
-            "".join(self._colorful(line)) for line in lines_to_echo
-        )
+        content = "\r\n".join("".join(self._colorful(line)) for line in lines_to_echo)
         if content:
             self.echo("")
             self.echo(content)
@@ -148,16 +147,11 @@ class Dumper:
     def _echo_request_line(self, flow: http.HTTPFlow) -> None:
         client = self._fmt_client(flow)
 
-        pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
+        pushed = " PUSH_PROMISE" if "h2-pushed-stream" in flow.metadata else ""
         method = flow.request.method + pushed
-        method_color = dict(
-            GET="green",
-            DELETE="red"
-        ).get(method.upper(), "magenta")
+        method_color = dict(GET="green", DELETE="red").get(method.upper(), "magenta")
         method = self.style(
-            strutils.escape_control_characters(method),
-            fg=method_color,
-            bold=True
+            strutils.escape_control_characters(method), fg=method_color, bold=True
         )
         if ctx.options.showhost:
             url = flow.request.pretty_url
@@ -172,9 +166,10 @@ class Dumper:
         url = self.style(strutils.escape_control_characters(url), bold=True)
 
         http_version = ""
-        if (
-            not (flow.request.is_http10 or flow.request.is_http11)
-            or flow.request.http_version != getattr(flow.response, "http_version", "HTTP/1.1")
+        if not (
+            flow.request.is_http10 or flow.request.is_http11
+        ) or flow.request.http_version != getattr(
+            flow.response, "http_version", "HTTP/1.1"
         ):
             # Hide version for h1 <-> h1 connections.
             http_version = " " + flow.request.http_version
@@ -210,9 +205,7 @@ class Dumper:
         else:
             reason = http.status_codes.RESPONSES.get(flow.response.status_code, "")
         reason = self.style(
-            strutils.escape_control_characters(reason),
-            fg=code_color,
-            bold=True
+            strutils.escape_control_characters(reason), fg=code_color, bold=True
         )
 
         if flow.response.raw_content is None:
@@ -234,8 +227,11 @@ class Dumper:
             # This aligns the HTTP response code with the HTTP request method:
             # 127.0.0.1:59519: GET http://example.com/
             #               << 304 Not Modified 0b
-            pad = max(0,
-                      len(human.format_address(flow.client_conn.peername)) - (2 + len(http_version) + len(replay_str)))
+            pad = max(
+                0,
+                len(human.format_address(flow.client_conn.peername))
+                - (2 + len(http_version) + len(replay_str)),
+            )
             arrows = " " * pad + arrows
 
         self.echo(f"{replay}{arrows} {http_version}{code} {reason} {size}")
@@ -300,13 +296,17 @@ class Dumper:
         assert f.websocket is not None  # satisfy type checker
         if self.match(f):
             if f.websocket.close_code in {1000, 1001, 1005}:
-                c = 'client' if f.websocket.closed_by_client else 'server'
-                self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
+                c = "client" if f.websocket.closed_by_client else "server"
+                self.echo(
+                    f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}"
+                )
             else:
-                error = flow.Error(f"WebSocket Error: {self.format_websocket_error(f.websocket)}")
+                error = flow.Error(
+                    f"WebSocket Error: {self.format_websocket_error(f.websocket)}"
+                )
                 self.echo(
                     f"Error in WebSocket connection to {human.format_address(f.server_conn.address)}: {error}",
-                    fg="red"
+                    fg="red",
                 )
 
     def format_websocket_error(self, websocket: WebSocketData) -> str:
@@ -322,24 +322,26 @@ class Dumper:
         if self.match(f):
             self.echo(
                 f"Error in TCP connection to {human.format_address(f.server_conn.address)}: {f.error}",
-                fg="red"
+                fg="red",
             )
 
     def tcp_message(self, f):
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
-            self.echo("{client} {direction} tcp {direction} {server}".format(
-                client=human.format_address(f.client_conn.peername),
-                server=human.format_address(f.server_conn.address),
-                direction=direction,
-            ))
+            self.echo(
+                "{client} {direction} tcp {direction} {server}".format(
+                    client=human.format_address(f.client_conn.peername),
+                    server=human.format_address(f.server_conn.address),
+                    direction=direction,
+                )
+            )
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message, f)
 
     def _echo_dns_query(self, f: dns.DNSFlow) -> None:
         client = self._fmt_client(f)
-        opcode = dns.op_codes.to_str(f.request.op_code),
+        opcode = dns.op_codes.to_str(f.request.op_code)
         type = dns.types.to_str(f.request.questions[0].type)
 
         desc = f"DNS {opcode} ({type})"
@@ -358,7 +360,9 @@ class Dumper:
             self._echo_dns_query(f)
 
             arrows = self.style(" <<", bold=True)
-            answers = ", ".join(self.style(str(x), fg="bright_blue") for x in f.response.answers)
+            answers = ", ".join(
+                self.style(str(x), fg="bright_blue") for x in f.response.answers
+            )
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):

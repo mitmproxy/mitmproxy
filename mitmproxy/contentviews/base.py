@@ -66,9 +66,7 @@ class View(ABC):
         return self.name.__lt__(other.name)
 
 
-def format_pairs(
-    items: Iterable[tuple[TTextType, TTextType]]
-) -> Iterator[TViewLine]:
+def format_pairs(items: Iterable[tuple[TTextType, TTextType]]) -> Iterator[TViewLine]:
     """
     Helper function that accepts a list of (k,v) pairs into a list of
     [
@@ -90,15 +88,10 @@ def format_pairs(
 
         key = key.ljust(max_key_len + 2)
 
-        yield [
-            ("header", key),
-            ("text", value)
-        ]
+        yield [("header", key), ("text", value)]
 
 
-def format_dict(
-    d: Mapping[TTextType, TTextType]
-) -> Iterator[TViewLine]:
+def format_dict(d: Mapping[TTextType, TTextType]) -> Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of
     [

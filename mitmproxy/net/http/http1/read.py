@@ -8,9 +8,9 @@ from mitmproxy.net.http import url
 
 def get_header_tokens(headers, key):
     """
-        Retrieve all tokens for a header key. A number of different headers
-        follow a pattern where each header line can containe comma-separated
-        tokens, and headers can be set multiple times.
+    Retrieve all tokens for a header key. A number of different headers
+    follow a pattern where each header line can containe comma-separated
+    tokens, and headers can be set multiple times.
     """
     if key not in headers:
         return []
@@ -20,10 +20,10 @@ def get_header_tokens(headers, key):
 
 def connection_close(http_version, headers):
     """
-        Checks the message to see if the client connection should be closed
-        according to RFC 2616 Section 8.1.
-        If we don't have a Connection header, HTTP 1.1 connections are assumed
-        to be persistent.
+    Checks the message to see if the client connection should be closed
+    according to RFC 2616 Section 8.1.
+    If we don't have a Connection header, HTTP 1.1 connections are assumed
+    to be persistent.
     """
     if "connection" in headers:
         tokens = get_header_tokens(headers, "connection")
@@ -33,8 +33,10 @@ def connection_close(http_version, headers):
             return False
 
     return http_version not in (
-        "HTTP/1.1", b"HTTP/1.1",
-        "HTTP/2.0", b"HTTP/2.0",
+        "HTTP/1.1",
+        b"HTTP/1.1",
+        "HTTP/2.0",
+        b"HTTP/2.0",
     )
 
 
@@ -43,9 +45,7 @@ def connection_close(http_version, headers):
 _valid_header_name = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$")
 
 
-def validate_headers(
-    headers: Headers
-) -> None:
+def validate_headers(headers: Headers) -> None:
     """
     Validate headers to avoid request smuggling attacks. Raises a ValueError if they are malformed.
     """
@@ -55,34 +55,37 @@ def validate_headers(
 
     for (name, value) in headers.fields:
         if not _valid_header_name.match(name):
-            raise ValueError(f"Received an invalid header name: {name!r}. Invalid header names may introduce "
-                             f"request smuggling vulnerabilities. Disable the validate_inbound_headers option "
-                             f"to skip this security check.")
+            raise ValueError(
+                f"Received an invalid header name: {name!r}. Invalid header names may introduce "
+                f"request smuggling vulnerabilities. Disable the validate_inbound_headers option "
+                f"to skip this security check."
+            )
 
         name_lower = name.lower()
         te_found = te_found or name_lower == b"transfer-encoding"
         cl_found = cl_found or name_lower == b"content-length"
 
     if te_found and cl_found:
-        raise ValueError("Received both a Transfer-Encoding and a Content-Length header, "
-                         "refusing as recommended in RFC 7230 Section 3.3.3. "
-                         "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details. "
-                         "Disable the validate_inbound_headers option to skip this security check.")
+        raise ValueError(
+            "Received both a Transfer-Encoding and a Content-Length header, "
+            "refusing as recommended in RFC 7230 Section 3.3.3. "
+            "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details. "
+            "Disable the validate_inbound_headers option to skip this security check."
+        )
 
 
 def expected_http_body_size(
-        request: Request,
-        response: Optional[Response] = None
+    request: Request, response: Optional[Response] = None
 ) -> Optional[int]:
     """
-        Returns:
-            The expected body length:
-            - a positive integer, if the size is known in advance
-            - None, if the size in unknown in advance (chunked encoding)
-            - -1, if all data should be read until end of stream.
+    Returns:
+        The expected body length:
+        - a positive integer, if the size is known in advance
+        - None, if the size in unknown in advance (chunked encoding)
+        - -1, if all data should be read until end of stream.
 
-        Raises:
-            ValueError, if the content length header is invalid
+    Raises:
+        ValueError, if the content length header is invalid
     """
     # Determine response size according to http://tools.ietf.org/html/rfc7230#section-3.3, which is inlined below.
     if not response:
@@ -158,9 +161,13 @@ def expected_http_body_size(
             if response:
                 return -1
             else:
-                raise ValueError(f"Invalid request transfer encoding, message body cannot be determined reliably.")
+                raise ValueError(
+                    f"Invalid request transfer encoding, message body cannot be determined reliably."
+                )
         else:
-            raise ValueError(f"Unknown transfer encoding: {headers['transfer-encoding']!r}")
+            raise ValueError(
+                f"Unknown transfer encoding: {headers['transfer-encoding']!r}"
+            )
 
     #    4.  If a message is received without Transfer-Encoding and with
     #        either multiple Content-Length header fields having differing
@@ -211,7 +218,9 @@ def raise_if_http_version_unknown(http_version: bytes) -> None:
         raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 
-def _read_request_line(line: bytes) -> tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
+def _read_request_line(
+    line: bytes,
+) -> tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
         port: Optional[int]
@@ -259,14 +268,14 @@ def _read_response_line(line: bytes) -> tuple[bytes, int, bytes]:
 
 def _read_headers(lines: Iterable[bytes]) -> Headers:
     """
-        Read a set of headers.
-        Stop once a blank line is reached.
+    Read a set of headers.
+    Stop once a blank line is reached.
 
-        Returns:
-            A headers object
+    Returns:
+        A headers object
 
-        Raises:
-            exceptions.HttpSyntaxException
+    Raises:
+        exceptions.HttpSyntaxException
     """
     ret: list[tuple[bytes, bytes]] = []
     for line in lines:
@@ -274,7 +283,7 @@ def _read_headers(lines: Iterable[bytes]) -> Headers:
             if not ret:
                 raise ValueError("Invalid headers")
             # continued header
-            ret[-1] = (ret[-1][0], ret[-1][1] + b'\r\n ' + line.strip())
+            ret[-1] = (ret[-1][0], ret[-1][1] + b"\r\n " + line.strip())
         else:
             try:
                 name, value = line.split(b":", 1)
@@ -300,7 +309,9 @@ def read_request_head(lines: list[bytes]) -> Request:
     Raises:
         ValueError: The input is malformed.
     """
-    host, port, method, scheme, authority, path, http_version = _read_request_line(lines[0])
+    host, port, method, scheme, authority, path, http_version = _read_request_line(
+        lines[0]
+    )
     headers = _read_headers(lines[1:])
 
     return Request(
@@ -315,7 +326,7 @@ def read_request_head(lines: list[bytes]) -> Request:
         content=None,
         trailers=None,
         timestamp_start=time.time(),
-        timestamp_end=None
+        timestamp_end=None,
     )
 
 

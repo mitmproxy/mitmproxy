@@ -1,5 +1,5 @@
 import os
-from typing import Any, IO, Iterable, Union, cast
+from typing import Any, BinaryIO, Iterable, Union, cast
 
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -27,12 +27,12 @@ class FlowWriter:
 
 
 class FlowReader:
-    def __init__(self, fo: IO[bytes]):
-        self.fo: IO[bytes] = fo
+    def __init__(self, fo: BinaryIO):
+        self.fo: BinaryIO = fo
 
     def stream(self) -> Iterable[flow.Flow]:
         """
-            Yields Flow objects from the dump.
+        Yields Flow objects from the dump.
         """
         try:
             while True:
@@ -46,7 +46,9 @@ class FlowReader:
                 except ValueError as e:
                     raise exceptions.FlowReadException(str(e))
                 if mdata["type"] not in FLOW_TYPES:
-                    raise exceptions.FlowReadException("Unknown flow type: {}".format(mdata["type"]))
+                    raise exceptions.FlowReadException(
+                        "Unknown flow type: {}".format(mdata["type"])
+                    )
                 yield FLOW_TYPES[mdata["type"]].from_state(mdata)
         except (ValueError, TypeError, IndexError) as e:
             if str(e) == "not a tnetstring: empty file":

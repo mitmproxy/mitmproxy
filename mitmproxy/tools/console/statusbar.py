@@ -33,7 +33,6 @@ class PromptStub:
 
 
 class ActionBar(urwid.WidgetWrap):
-
     def __init__(self, master):
         self.master = master
         urwid.WidgetWrap.__init__(self, None)
@@ -54,6 +53,7 @@ class ActionBar(urwid.WidgetWrap):
         w = urwid.Text(self.shorten_message(message, cols))
         self._w = w
         if expire:
+
             def cb(*args):
                 if w == self._w:
                     self.clear()
@@ -99,7 +99,9 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
 
-    def sig_prompt_command(self, sender, partial: str = "", cursor: Optional[int] = None):
+    def sig_prompt_command(
+        self, sender, partial: str = "", cursor: Optional[int] = None
+    ):
         signals.focus.send(self, section="footer")
         self._w = commander.CommandEdit(
             self.master,
@@ -117,8 +119,8 @@ class ActionBar(urwid.WidgetWrap):
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
-            Keys are a set of (word, key) tuples. The appropriate key in the
-            word is highlighted.
+        Keys are a set of (word, key) tuples. The appropriate key in the
+        word is highlighted.
         """
         signals.focus.send(self, section="footer")
         prompt = [prompt, " ("]
@@ -176,9 +178,7 @@ class StatusBar(urwid.WidgetWrap):
     REFRESHTIME = 0.5  # Timed refresh time in seconds
     keyctx = ""
 
-    def __init__(
-            self, master: "mitmproxy.tools.console.master.ConsoleMaster"
-    ) -> None:
+    def __init__(self, master: "mitmproxy.tools.console.master.ConsoleMaster") -> None:
         self.master = master
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
@@ -251,8 +251,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]" % self.master.options.stickyauth)
-        if self.master.options.console_default_contentview != 'auto':
-            r.append("[contentview:%s]" % (self.master.options.console_default_contentview))
+        if self.master.options.console_default_contentview != "auto":
+            r.append(
+                "[contentview:%s]" % (self.master.options.console_default_contentview)
+            )
         if self.master.options.has_changed("view_order"):
             r.append("[")
             r.append(("heading_key", "o"))
@@ -306,7 +308,7 @@ class StatusBar(urwid.WidgetWrap):
             marked = "M"
 
         t = [
-            ('heading', (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
+            ("heading", (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
         ]
 
         if self.master.options.server:
@@ -317,10 +319,15 @@ class StatusBar(urwid.WidgetWrap):
         else:
             boundaddr = ""
         t.extend(self.get_status())
-        status = urwid.AttrWrap(urwid.Columns([
-            urwid.Text(t),
-            urwid.Text(boundaddr, align="right"),
-        ]), "heading")
+        status = urwid.AttrWrap(
+            urwid.Columns(
+                [
+                    urwid.Text(t),
+                    urwid.Text(boundaddr, align="right"),
+                ]
+            ),
+            "heading",
+        )
         self.ib._w = status
 
     def selectable(self):

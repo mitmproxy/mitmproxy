@@ -16,7 +16,7 @@ client_hello_with_extensions = bytes.fromhex(
 
 
 @given(i=integers(0, len(client_hello_with_extensions)), data=binary())
-@example(i=183, data=b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+@example(i=183, data=b"\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 def test_fuzz_parse_client_hello(i, data):
     try:
         ch = parse_client_hello(client_hello_with_extensions[:i] + data)

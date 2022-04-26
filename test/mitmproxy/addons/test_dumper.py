@@ -118,12 +118,16 @@ def test_echo_trailer():
         f.request.headers["transfer-encoding"] = "chunked"
         f.request.headers["trailer"] = "my-little-request-trailer"
         f.request.content = b"some request content\n" * 100
-        f.request.trailers = Headers([(b"my-little-request-trailer", b"foobar-request-trailer")])
+        f.request.trailers = Headers(
+            [(b"my-little-request-trailer", b"foobar-request-trailer")]
+        )
 
         f.response.headers["transfer-encoding"] = "chunked"
         f.response.headers["trailer"] = "my-little-response-trailer"
         f.response.content = b"some response content\n" * 100
-        f.response.trailers = Headers([(b"my-little-response-trailer", b"foobar-response-trailer")])
+        f.response.trailers = Headers(
+            [(b"my-little-response-trailer", b"foobar-response-trailer")]
+        )
 
         d.echo_flow(f)
         t = sio.getvalue()
@@ -161,7 +165,9 @@ def test_echo_request_line():
         ctx.configure(d, flow_detail=1, showhost=True)
         f = tflow.tflow(resp=True)
         terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
-        f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
+        f.request.url = (
+            "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
+        )
         d._echo_request_line(f)
         assert "textToBeTruncated" not in sio.getvalue()
         sio.truncate(0)
@@ -229,7 +235,7 @@ def test_websocket():
         assert "(reason:" not in sio.getvalue()
         sio.truncate(0)
 
-        f = tflow.twebsocketflow(err=True, close_reason='Some lame excuse')
+        f = tflow.twebsocketflow(err=True, close_reason="Some lame excuse")
         d.websocket_end(f)
         assert "Error in WebSocket" in sio.getvalue()
         assert "(reason: Some lame excuse)" in sio.getvalue()
@@ -241,7 +247,7 @@ def test_websocket():
         assert "(reason:" not in sio.getvalue()
         sio.truncate(0)
 
-        f = tflow.twebsocketflow(close_code=4000, close_reason='I swear I had a reason')
+        f = tflow.twebsocketflow(close_code=4000, close_reason="I swear I had a reason")
         d.websocket_end(f)
         assert "UNKNOWN_ERROR=4000" in sio.getvalue()
         assert "(reason: I swear I had a reason)" in sio.getvalue()

@@ -6,13 +6,9 @@ from typing import Optional
 from mitmproxy.utils import human
 
 
-def cancel_task(task: asyncio.Task, message: str) -> None:
-    """Like task.cancel(), but optionally with a message if the Python version supports it."""
-    task.cancel(message)  # type: ignore
-
-
 def create_task(
-    coro: Coroutine, *,
+    coro: Coroutine,
+    *,
     name: str,
     client: Optional[tuple] = None,
 ) -> asyncio.Task:

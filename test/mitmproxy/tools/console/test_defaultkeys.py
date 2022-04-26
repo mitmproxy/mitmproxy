@@ -21,10 +21,7 @@ async def test_commands_exist():
             parsed, _ = command_manager.parse_partial(binding.command.strip())
 
             cmd = parsed[0].value
-            args = [
-                a.value for a in parsed[1:]
-                if a.type != mitmproxy.types.Space
-            ]
+            args = [a.value for a in parsed[1:] if a.type != mitmproxy.types.Space]
 
             assert cmd in m.commands.commands
 

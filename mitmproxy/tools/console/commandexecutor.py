@@ -25,14 +25,12 @@ class CommandExecutor:
                             message="Command returned %s flows" % len(ret)
                         )
                     elif type(ret) == flow.Flow:
-                        signals.status_message.send(
-                            message="Command returned 1 flow"
-                        )
+                        signals.status_message.send(message="Command returned 1 flow")
                     else:
                         self.master.overlay(
                             overlay.DataViewerOverlay(
                                 self.master,
                                 ret,
                             ),
-                            valign="top"
+                            valign="top",
                         )

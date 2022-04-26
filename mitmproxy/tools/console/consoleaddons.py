@@ -22,7 +22,7 @@ console_palettes = [
     "light",
     "dark",
     "solarized_light",
-    "solarized_dark"
+    "solarized_dark",
 ]
 view_orders = [
     "time",
@@ -36,17 +36,13 @@ console_layouts = [
     "horizontal",
 ]
 
-console_flowlist_layout = [
-    "default",
-    "table",
-    "list"
-]
+console_flowlist_layout = ["default", "table", "list"]
 
 
 class ConsoleAddon:
     """
-        An addon that exposes console-specific commands, and hooks into required
-        events.
+    An addon that exposes console-specific commands, and hooks into required
+    events.
     """
 
     def __init__(self, master):
@@ -55,81 +51,90 @@ class ConsoleAddon:
 
     def load(self, loader):
         loader.add_option(
-            "console_default_contentview", str, "auto",
+            "console_default_contentview",
+            str,
+            "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views]
+            choices=[i.name.lower() for i in contentviews.views],
         )
         loader.add_option(
-            "console_eventlog_verbosity", str, 'info',
+            "console_eventlog_verbosity",
+            str,
+            "info",
             "EventLog verbosity.",
-            choices=log.LogTierOrder
+            choices=log.LogTierOrder,
         )
         loader.add_option(
-            "console_layout", str, "single",
+            "console_layout",
+            str,
+            "single",
             "Console layout.",
             choices=sorted(console_layouts),
         )
         loader.add_option(
-            "console_layout_headers", bool, True,
+            "console_layout_headers",
+            bool,
+            True,
             "Show layout component headers",
         )
         loader.add_option(
-            "console_focus_follow", bool, False,
-            "Focus follows new flows."
+            "console_focus_follow", bool, False, "Focus follows new flows."
         )
         loader.add_option(
-            "console_palette", str, "solarized_dark",
+            "console_palette",
+            str,
+            "solarized_dark",
             "Color palette.",
             choices=sorted(console_palettes),
         )
         loader.add_option(
-            "console_palette_transparent", bool, True,
-            "Set transparent background for palette."
+            "console_palette_transparent",
+            bool,
+            True,
+            "Set transparent background for palette.",
         )
-        loader.add_option(
-            "console_mouse", bool, True,
-            "Console mouse interaction."
-        )
+        loader.add_option("console_mouse", bool, True, "Console mouse interaction.")
         loader.add_option(
             "console_flowlist_layout",
-            str, "default",
+            str,
+            "default",
             "Set the flowlist layout",
-            choices=sorted(console_flowlist_layout)
+            choices=sorted(console_flowlist_layout),
         )
         loader.add_option(
-            "console_strip_trailing_newlines", bool, False,
-            "Strip trailing newlines from edited request/response bodies."
+            "console_strip_trailing_newlines",
+            bool,
+            False,
+            "Strip trailing newlines from edited request/response bodies.",
         )
 
     @command.command("console.layout.options")
     def layout_options(self) -> Sequence[str]:
         """
-            Returns the available options for the console_layout option.
+        Returns the available options for the console_layout option.
         """
         return ["single", "vertical", "horizontal"]
 
     @command.command("console.layout.cycle")
     def layout_cycle(self) -> None:
         """
-            Cycle through the console layout options.
+        Cycle through the console layout options.
         """
         opts = self.layout_options()
         off = self.layout_options().index(ctx.options.console_layout)
-        ctx.options.update(
-            console_layout=opts[(off + 1) % len(opts)]
-        )
+        ctx.options.update(console_layout=opts[(off + 1) % len(opts)])
 
     @command.command("console.panes.next")
     def panes_next(self) -> None:
         """
-            Go to the next layout pane.
+        Go to the next layout pane.
         """
         self.master.window.switch()
 
     @command.command("console.options.reset.focus")
     def options_reset_current(self) -> None:
         """
-            Reset the current option in the options editor.
+        Reset the current option in the options editor.
         """
         fv = self.master.window.current("options")
         if not fv:
@@ -139,70 +144,70 @@ class ConsoleAddon:
     @command.command("console.nav.start")
     def nav_start(self) -> None:
         """
-            Go to the start of a list or scrollable.
+        Go to the start of a list or scrollable.
         """
         self.master.inject_key("m_start")
 
     @command.command("console.nav.end")
     def nav_end(self) -> None:
         """
-            Go to the end of a list or scrollable.
+        Go to the end of a list or scrollable.
         """
         self.master.inject_key("m_end")
 
     @command.command("console.nav.next")
     def nav_next(self) -> None:
         """
-            Go to the next navigatable item.
+        Go to the next navigatable item.
         """
         self.master.inject_key("m_next")
 
     @command.command("console.nav.select")
     def nav_select(self) -> None:
         """
-            Select a navigable item for viewing or editing.
+        Select a navigable item for viewing or editing.
         """
         self.master.inject_key("m_select")
 
     @command.command("console.nav.up")
     def nav_up(self) -> None:
         """
-            Go up.
+        Go up.
         """
         self.master.inject_key("up")
 
     @command.command("console.nav.down")
     def nav_down(self) -> None:
         """
-            Go down.
+        Go down.
         """
         self.master.inject_key("down")
 
     @command.command("console.nav.pageup")
     def nav_pageup(self) -> None:
         """
-            Go up.
+        Go up.
         """
         self.master.inject_key("page up")
 
     @command.command("console.nav.pagedown")
     def nav_pagedown(self) -> None:
         """
-            Go down.
+        Go down.
         """
         self.master.inject_key("page down")
 
     @command.command("console.nav.left")
     def nav_left(self) -> None:
         """
-            Go left.
+        Go left.
         """
         self.master.inject_key("left")
 
     @command.command("console.nav.right")
     def nav_right(self) -> None:
         """
-            Go right.
+        Go right.
         """
         self.master.inject_key("right")
 
@@ -212,12 +217,12 @@ class ConsoleAddon:
         prompt: str,
         choices: Sequence[str],
         cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+        *args: mitmproxy.types.CmdArgs,
     ) -> None:
         """
-            Prompt the user to choose from a specified list of strings, then
-            invoke another command with all occurrences of {choice} replaced by
-            the choice the user made.
+        Prompt the user to choose from a specified list of strings, then
+        invoke another command with all occurrences of {choice} replaced by
+        the choice the user made.
         """
 
         def callback(opt):
@@ -228,9 +233,7 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 ctx.log.error(str(e))
 
-        self.master.overlay(
-            overlay.Chooser(self.master, prompt, choices, "", callback)
-        )
+        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
@@ -238,12 +241,12 @@ class ConsoleAddon:
         prompt: str,
         choicecmd: mitmproxy.types.Cmd,
         subcmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+        *args: mitmproxy.types.CmdArgs,
     ) -> None:
         """
-            Prompt the user to choose from a list of strings returned by a
-            command, then invoke another command with all occurrences of {choice}
-            replaced by the choice the user made.
+        Prompt the user to choose from a list of strings returned by a
+        command, then invoke another command with all occurrences of {choice}
+        replaced by the choice the user made.
         """
         choices = ctx.master.commands.execute(choicecmd)
 
@@ -255,9 +258,7 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 ctx.log.error(str(e))
 
-        self.master.overlay(
-            overlay.Chooser(self.master, prompt, choices, "", callback)
-        )
+        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
 
     @command.command("console.command")
     def console_command(self, *command_str: str) -> None:
@@ -277,10 +278,7 @@ class ConsoleAddon:
         option_value = getattr(self.master.options, option_name, None) or ""
         set_command = f"set {option_name} {option_value!r}"
         cursor = len(set_command) - 1
-        signals.status_prompt_command.send(
-            partial=set_command,
-            cursor=cursor
-        )
+        signals.status_prompt_command.send(partial=set_command, cursor=cursor)
 
     @command.command("console.view.keybindings")
     def view_keybindings(self) -> None:
@@ -323,8 +321,8 @@ class ConsoleAddon:
     @command.command("console.view.pop")
     def view_pop(self) -> None:
         """
-            Pop a view off the console stack. At the top level, this prompts the
-            user to exit mitmproxy.
+        Pop a view off the console stack. At the top level, this prompts the
+        user to exit mitmproxy.
         """
         signals.pop_view_state.send(self)
 
@@ -332,14 +330,16 @@ class ConsoleAddon:
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
     def bodyview(self, flow: flow.Flow, part: str) -> None:
         """
-            Spawn an external viewer for a flow request or response body based
-            on the detected MIME type. We use the mailcap system to find the
-            correct viewer, and fall back to the programs in $PAGER or $EDITOR
-            if necessary.
+        Spawn an external viewer for a flow request or response body based
+        on the detected MIME type. We use the mailcap system to find the
+        correct viewer, and fall back to the programs in $PAGER or $EDITOR
+        if necessary.
         """
         fpart = getattr(flow, part, None)
         if not fpart:
-            raise exceptions.CommandError("Part must be either request or response, not %s." % part)
+            raise exceptions.CommandError(
+                "Part must be either request or response, not %s." % part
+            )
         t = fpart.headers.get("content-type")
         content = fpart.get_content(strict=False)
         if not content:
@@ -349,14 +349,14 @@ class ConsoleAddon:
     @command.command("console.bodyview.options")
     def bodyview_options(self) -> Sequence[str]:
         """
-            Possible parts for console.bodyview.
+        Possible parts for console.bodyview.
         """
         return ["request", "response"]
 
     @command.command("console.edit.focus.options")
     def edit_focus_options(self) -> Sequence[str]:
         """
-            Possible components for console.edit.focus.
+        Possible components for console.edit.focus.
         """
         flow = self.master.view.focus.flow
         focus_options = []
@@ -381,15 +381,19 @@ class ConsoleAddon:
                 "url",
             ]
         elif isinstance(flow, dns.DNSFlow):
-            raise exceptions.CommandError("Cannot edit DNS flows yet, please submit a patch.")
+            raise exceptions.CommandError(
+                "Cannot edit DNS flows yet, please submit a patch."
+            )
 
         return focus_options
 
     @command.command("console.edit.focus")
-    @command.argument("flow_part", type=mitmproxy.types.Choice("console.edit.focus.options"))
+    @command.argument(
+        "flow_part", type=mitmproxy.types.Choice("console.edit.focus.options")
+    )
     def edit_focus(self, flow_part: str) -> None:
         """
-            Edit a component of the currently focused flow.
+        Edit a component of the currently focused flow.
         """
         flow = self.master.view.focus.flow
         # This shouldn't be necessary once this command is "console.edit @focus",
@@ -399,8 +403,8 @@ class ConsoleAddon:
         flow.backup()
 
         require_dummy_response = (
-            flow_part in ("response-headers", "response-body", "set-cookies") and
-            flow.response is None
+            flow_part in ("response-headers", "response-body", "set-cookies")
+            and flow.response is None
         )
         if require_dummy_response:
             flow.response = http.Response.make()
@@ -441,8 +445,7 @@ class ConsoleAddon:
             flow.request.url = url.decode()
         elif flow_part in ["method", "status_code", "reason"]:
             self.master.commands.call_strings(
-                "console.command",
-                ["flow.set", "@focus", flow_part]
+                "console.command", ["flow.set", "@focus", flow_part]
             )
         elif flow_part == "tcp-message":
             message = flow.messages[-1]
@@ -458,47 +461,47 @@ class ConsoleAddon:
     @command.command("console.grideditor.add")
     def grideditor_add(self) -> None:
         """
-            Add a row after the cursor.
+        Add a row after the cursor.
         """
         self._grideditor().cmd_add()
 
     @command.command("console.grideditor.insert")
     def grideditor_insert(self) -> None:
         """
-            Insert a row before the cursor.
+        Insert a row before the cursor.
         """
         self._grideditor().cmd_insert()
 
     @command.command("console.grideditor.delete")
     def grideditor_delete(self) -> None:
         """
-            Delete row
+        Delete row
         """
         self._grideditor().cmd_delete()
 
     @command.command("console.grideditor.load")
     def grideditor_load(self, path: mitmproxy.types.Path) -> None:
         """
-            Read a file into the currrent cell.
+        Read a file into the currrent cell.
         """
         self._grideditor().cmd_read_file(path)
 
     @command.command("console.grideditor.load_escaped")
     def grideditor_load_escaped(self, path: mitmproxy.types.Path) -> None:
         """
-            Read a file containing a Python-style escaped string into the
-            currrent cell.
+        Read a file containing a Python-style escaped string into the
+        currrent cell.
         """
         self._grideditor().cmd_read_file_escaped(path)
 
     @command.command("console.grideditor.save")
     def grideditor_save(self, path: mitmproxy.types.Path) -> None:
         """
-            Save data to file as a CSV.
+        Save data to file as a CSV.
         """
         rows = self._grideditor().value
         try:
-            with open(path, "w", newline='', encoding="utf8") as fp:
+            with open(path, "w", newline="", encoding="utf8") as fp:
                 writer = csv.writer(fp)
                 for row in rows:
                     writer.writerow(
@@ -511,15 +514,17 @@ class ConsoleAddon:
     @command.command("console.grideditor.editor")
     def grideditor_editor(self) -> None:
         """
-            Spawn an external editor on the current cell.
+        Spawn an external editor on the current cell.
         """
         self._grideditor().cmd_spawn_editor()
 
     @command.command("console.flowview.mode.set")
-    @command.argument("mode", type=mitmproxy.types.Choice("console.flowview.mode.options"))
+    @command.argument(
+        "mode", type=mitmproxy.types.Choice("console.flowview.mode.options")
+    )
     def flowview_mode_set(self, mode: str) -> None:
         """
-            Set the display mode for the current flow view.
+        Set the display mode for the current flow view.
         """
         fv = self.master.window.current_window("flowview")
         if not fv:
@@ -531,8 +536,7 @@ class ConsoleAddon:
 
         try:
             self.master.commands.call_strings(
-                "view.settings.setval",
-                ["@focus", f"flowview_mode_{idx}", mode]
+                "view.settings.setval", ["@focus", f"flowview_mode_{idx}", mode]
             )
         except exceptions.CommandError as e:
             ctx.log.error(str(e))
@@ -540,14 +544,14 @@ class ConsoleAddon:
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> Sequence[str]:
         """
-            Returns the valid options for the flowview mode.
+        Returns the valid options for the flowview mode.
         """
         return [i.name.lower() for i in contentviews.views]
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:
         """
-            Get the display mode for the current flow view.
+        Get the display mode for the current flow view.
         """
         fv = self.master.window.current_window("flowview")
         if not fv:
@@ -556,13 +560,17 @@ class ConsoleAddon:
 
         return self.master.commands.call_strings(
             "view.settings.getval",
-            ["@focus", f"flowview_mode_{idx}", self.master.options.console_default_contentview]
+            [
+                "@focus",
+                f"flowview_mode_{idx}",
+                self.master.options.console_default_contentview,
+            ],
         )
 
     @command.command("console.key.contexts")
     def key_contexts(self) -> Sequence[str]:
         """
-            The available contexts for key binding.
+        The available contexts for key binding.
         """
         return list(sorted(keymap.Contexts))
 
@@ -572,25 +580,20 @@ class ConsoleAddon:
         contexts: Sequence[str],
         key: str,
         cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+        *args: mitmproxy.types.CmdArgs,
     ) -> None:
         """
-            Bind a shortcut key.
+        Bind a shortcut key.
         """
         try:
-            self.master.keymap.add(
-                key,
-                cmd + " " + " ".join(args),
-                contexts,
-                ""
-            )
+            self.master.keymap.add(key, cmd + " " + " ".join(args), contexts, "")
         except ValueError as v:
             raise exceptions.CommandError(v)
 
     @command.command("console.key.unbind")
     def key_unbind(self, contexts: Sequence[str], key: str) -> None:
         """
-            Un-bind a shortcut key.
+        Un-bind a shortcut key.
         """
         try:
             self.master.keymap.remove(key, contexts)
@@ -609,7 +612,7 @@ class ConsoleAddon:
     @command.command("console.key.unbind.focus")
     def key_unbind_focus(self) -> None:
         """
-            Un-bind the shortcut key currently focused in the key binding viewer.
+        Un-bind the shortcut key currently focused in the key binding viewer.
         """
         b = self._keyfocus()
         try:
@@ -620,7 +623,7 @@ class ConsoleAddon:
     @command.command("console.key.execute.focus")
     def key_execute_focus(self) -> None:
         """
-            Execute the currently focused key binding.
+        Execute the currently focused key binding.
         """
         b = self._keyfocus()
         self.console_command(b.command)
@@ -628,7 +631,7 @@ class ConsoleAddon:
     @command.command("console.key.edit.focus")
     def key_edit_focus(self) -> None:
         """
-            Execute the currently focused key binding.
+        Execute the currently focused key binding.
         """
         b = self._keyfocus()
         self.console_command(

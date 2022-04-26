@@ -14,7 +14,7 @@ from . import ctx as mitmproxy_ctx
 
 class Master:
     """
-        The master handles mitmproxy's main event loop.
+    The master handles mitmproxy's main event loop.
     """
 
     event_loop: asyncio.AbstractEventLoop
@@ -71,20 +71,16 @@ class Master:
         except KeyError:
             self.log.error(
                 f"Unhandled asyncio error: {context}"
-                "\nPlease lodge a bug report at:" +
-                "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+                "\nPlease lodge a bug report at:"
+                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
             )
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
             self.log.error(
-                "\n".join(traceback.format_exception(
-                    type(exc),
-                    exc,
-                    exc.__traceback__
-                )) +
-                "\nPlease lodge a bug report at:" +
-                "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+                "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+                + "\nPlease lodge a bug report at:"
+                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
             )
 
     async def load_flow(self, f):

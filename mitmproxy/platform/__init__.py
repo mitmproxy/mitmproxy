@@ -37,7 +37,4 @@ elif sys.platform == "win32":
 else:
     original_addr = None
 
-__all__ = [
-    "original_addr",
-    "init_transparent_mode"
-]
+__all__ = ["original_addr", "init_transparent_mode"]

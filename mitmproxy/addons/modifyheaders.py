@@ -55,12 +55,14 @@ class ModifyHeaders:
 
     def load(self, loader):
         loader.add_option(
-            "modify_headers", Sequence[str], [],
+            "modify_headers",
+            Sequence[str],
+            [],
             """
             Header modify pattern of the form "[/flow-filter]/header-name/[@]header-value", where the
             separator can be any character. The @ allows to provide a file path that is used to read
             the header value string. An empty header-value removes existing header-name headers.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -70,7 +72,9 @@ class ModifyHeaders:
                 try:
                     spec = parse_modify_spec(option, False)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse modify_headers option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse modify_headers option {option}: {e}"
+                    ) from e
                 self.replacements.append(spec)
 
     def request(self, flow):

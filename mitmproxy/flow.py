@@ -32,10 +32,7 @@ class Error(stateobject.StateObject):
         self.msg = msg
         self.timestamp = timestamp or time.time()
 
-    _stateobject_attributes = dict(
-        msg=str,
-        timestamp=float
-    )
+    _stateobject_attributes = dict(msg=str, timestamp=float)
 
     def __str__(self):
         return self.msg
@@ -61,6 +58,7 @@ class Flow(stateobject.StateObject):
      - mitmproxy.http.HTTPFlow
      - mitmproxy.tcp.TCPFlow
     """
+
     client_conn: connection.Client
     """The client that connected to mitmproxy."""
 
@@ -198,7 +196,7 @@ class Flow(stateobject.StateObject):
 
     def revert(self):
         """
-            Revert to the last backed up state.
+        Revert to the last backed up state.
         """
         if self._backup:
             self.set_state(self._backup)
@@ -207,10 +205,7 @@ class Flow(stateobject.StateObject):
     @property
     def killable(self):
         """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
-        return (
-            self.live and
-            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
-        )
+        return self.live and not (self.error and self.error.msg == Error.KILLED_MESSAGE)
 
     def kill(self):
         """

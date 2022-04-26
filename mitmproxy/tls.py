@@ -40,9 +40,13 @@ class ClientHello:
         if wrap_in_record:
             return (
                 # record layer
-                b"\x16\x03\x03" + (len(self._raw_bytes) + 4).to_bytes(2, byteorder="big") +
+                b"\x16\x03\x03"
+                + (len(self._raw_bytes) + 4).to_bytes(2, byteorder="big")
+                +
                 # handshake header
-                b"\x01" + len(self._raw_bytes).to_bytes(3, byteorder="big") +
+                b"\x01"
+                + len(self._raw_bytes).to_bytes(3, byteorder="big")
+                +
                 # ClientHello as defined in https://datatracker.ietf.org/doc/html/rfc8446#section-4.1.2.
                 self._raw_bytes
             )
@@ -63,10 +67,10 @@ class ClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
-                    extension.type == 0x00 and
-                    len(extension.body.server_names) == 1 and
-                    extension.body.server_names[0].name_type == 0 and
-                    check.is_valid_host(extension.body.server_names[0].host_name)
+                    extension.type == 0x00
+                    and len(extension.body.server_names) == 1
+                    and extension.body.server_names[0].name_type == 0
+                    and check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
                     return extension.body.server_names[0].host_name.decode("ascii")
@@ -103,6 +107,7 @@ class ClientHelloData:
     """
     Event data for `tls_clienthello` event hooks.
     """
+
     context: context.Context
     """The context object for this connection."""
     client_hello: ClientHello
@@ -123,6 +128,7 @@ class TlsData:
     """
     Event data for `tls_start_client`, `tls_start_server`, and `tls_handshake` event hooks.
     """
+
     conn: connection.Connection
     """The affected connection."""
     context: context.Context

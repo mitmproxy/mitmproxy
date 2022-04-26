@@ -10,9 +10,17 @@ This module contains helpers for the h2 tests.
 """
 from hpack.hpack import Encoder
 from hyperframe.frame import (
-    HeadersFrame, DataFrame, SettingsFrame, WindowUpdateFrame, PingFrame,
-    GoAwayFrame, RstStreamFrame, PushPromiseFrame, PriorityFrame,
-    ContinuationFrame, AltSvcFrame
+    HeadersFrame,
+    DataFrame,
+    SettingsFrame,
+    WindowUpdateFrame,
+    PingFrame,
+    GoAwayFrame,
+    RstStreamFrame,
+    PushPromiseFrame,
+    PriorityFrame,
+    ContinuationFrame,
+    AltSvcFrame,
 )
 
 SAMPLE_SETTINGS = {
@@ -36,19 +44,15 @@ class FrameFactory:
         self.encoder = Encoder()
 
     def preamble(self):
-        return b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'
+        return b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 
-    def build_headers_frame(self,
-                            headers,
-                            flags=[],
-                            stream_id=1,
-                            **priority_kwargs):
+    def build_headers_frame(self, headers, flags=[], stream_id=1, **priority_kwargs):
         """
         Builds a single valid headers frame out of the contained headers.
         """
         f = HeadersFrame(stream_id)
         f.data = self.encoder.encode(headers)
-        f.flags.add('END_HEADERS')
+        f.flags.add("END_HEADERS")
         for flag in flags:
             f.flags.add(flag)
 
@@ -77,7 +81,7 @@ class FrameFactory:
         f.flags = flags
 
         if padding_len:
-            flags.add('PADDED')
+            flags.add("PADDED")
             f.pad_length = padding_len
 
         return f
@@ -88,7 +92,7 @@ class FrameFactory:
         """
         f = SettingsFrame(0)
         if ack:
-            f.flags.add('ACK')
+            f.flags.add("ACK")
 
         f.settings = settings
         return f
@@ -112,10 +116,7 @@ class FrameFactory:
 
         return f
 
-    def build_goaway_frame(self,
-                           last_stream_id,
-                           error_code=0,
-                           additional_data=b''):
+    def build_goaway_frame(self, last_stream_id, error_code=0, additional_data=b""):
         """
         Builds a single GOAWAY frame.
         """
@@ -133,11 +134,9 @@ class FrameFactory:
         f.error_code = error_code
         return f
 
-    def build_push_promise_frame(self,
-                                 stream_id,
-                                 promised_stream_id,
-                                 headers,
-                                 flags=[]):
+    def build_push_promise_frame(
+        self, stream_id, promised_stream_id, headers, flags=[]
+    ):
         """
         Builds a single PUSH_PROMISE frame.
         """
@@ -145,14 +144,10 @@ class FrameFactory:
         f.promised_stream_id = promised_stream_id
         f.data = self.encoder.encode(headers)
         f.flags = set(flags)
-        f.flags.add('END_HEADERS')
+        f.flags.add("END_HEADERS")
         return f
 
-    def build_priority_frame(self,
-                             stream_id,
-                             weight,
-                             depends_on=0,
-                             exclusive=False):
+    def build_priority_frame(self, stream_id, weight, depends_on=0, exclusive=False):
         """
         Builds a single priority frame.
         """

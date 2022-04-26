@@ -45,8 +45,8 @@ def load_script(path: str) -> Optional[types.ModuleType]:
 
 def script_error_handler(path, exc, msg="", tb=False):
     """
-        Handles all the user's script errors with
-        an optional traceback
+    Handles all the user's script errors with
+    an optional traceback
     """
     exception = type(exc).__name__
     if msg:
@@ -58,7 +58,9 @@ def script_error_handler(path, exc, msg="", tb=False):
     if tb:
         etype, value, tback = sys.exc_info()
         tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
-        log_msg = log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
+        log_msg = (
+            log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
+        )
     ctx.log.error(log_msg)
 
 
@@ -67,20 +69,18 @@ ReloadInterval = 1
 
 class Script:
     """
-        An addon that manages a single script.
+    An addon that manages a single script.
     """
 
     def __init__(self, path: str, reload: bool) -> None:
         self.name = "scriptmanager:" + path
         self.path = path
-        self.fullpath = os.path.expanduser(
-            path.strip("'\" ")
-        )
+        self.fullpath = os.path.expanduser(path.strip("'\" "))
         self.ns = None
         self.is_running = False
 
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError('No such script')
+            raise exceptions.OptionsError("No such script")
 
         self.reloadtask = None
         if reload:
@@ -114,8 +114,7 @@ class Script:
         if self.ns:
             try:
                 ctx.master.addons.invoke_addon_sync(
-                    self.ns,
-                    hooks.ConfigureHook(ctx.options.keys())
+                    self.ns, hooks.ConfigureHook(ctx.options.keys())
                 )
             except exceptions.OptionsError as e:
                 script_error_handler(self.fullpath, e, msg=str(e))
@@ -142,17 +141,15 @@ class Script:
 
 class ScriptLoader:
     """
-        An addon that manages loading scripts from options.
+    An addon that manages loading scripts from options.
     """
+
     def __init__(self):
         self.is_running = False
         self.addons = []
 
     def load(self, loader):
-        loader.add_option(
-            "scripts", Sequence[str], [],
-            "Execute a script."
-        )
+        loader.add_option("scripts", Sequence[str], [], "Execute a script.")
 
     def running(self):
         self.is_running = True
@@ -160,12 +157,12 @@ class ScriptLoader:
     @command.command("script.run")
     def script_run(self, flows: Sequence[flow.Flow], path: mtypes.Path) -> None:
         """
-            Run a script on the specified flows. The script is configured with
-            the current options and all lifecycle events for each flow are
-            simulated. Note that the load event is not invoked.
+        Run a script on the specified flows. The script is configured with
+        the current options and all lifecycle events for each flow are
+        simulated. Note that the load event is not invoked.
         """
         if not os.path.isfile(path):
-            ctx.log.error('No such script: %s' % path)
+            ctx.log.error("No such script: %s" % path)
             return
         mod = load_script(path)
         if mod:

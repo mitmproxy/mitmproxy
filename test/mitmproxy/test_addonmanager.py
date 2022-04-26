@@ -227,13 +227,7 @@ async def test_nesting():
     a = addonmanager.AddonManager(m)
 
     a.add(
-        TAddon(
-            "one",
-            addons=[
-                TAddon("two"),
-                TAddon("three", addons=[TAddon("four")])
-            ]
-        )
+        TAddon("one", addons=[TAddon("two"), TAddon("three", addons=[TAddon("four")])])
     )
     assert len(a.chain) == 1
     assert a.get("one")

@@ -29,12 +29,14 @@ class MapRemote:
 
     def load(self, loader):
         loader.add_option(
-            "map_remote", Sequence[str], [],
+            "map_remote",
+            Sequence[str],
+            [],
             """
             Map remote resources to another remote URL using a pattern of the form
             "[/flow-filter]/url-regex/replacement", where the separator can
             be any character.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -44,7 +46,9 @@ class MapRemote:
                 try:
                     spec = parse_map_remote_spec(option)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse map_remote option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse map_remote option {option}: {e}"
+                    ) from e
 
                 self.replacements.append(spec)
 

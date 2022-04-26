@@ -27,6 +27,4 @@ class MyAddon:
         ctx.log.alert("done")
 
 
-addons = [
-    MyAddon()
-]
+addons = [MyAddon()]

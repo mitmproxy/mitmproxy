@@ -37,7 +37,7 @@ class HelperAddon:
 
 @asynccontextmanager
 async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, '127.0.0.1', 0)
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -46,7 +46,9 @@ async def tcp_server(handle_conn) -> Address:
 
 
 async def test_start_stop():
-    async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         assert await reader.readuntil(b"\r\n\r\n") == b"GET /hello HTTP/1.1\r\n\r\n"
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
@@ -67,7 +69,10 @@ async def test_start_stop():
             reader, writer = await asyncio.open_connection(*proxy_addr)
             req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
             writer.write(req.encode())
-            assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 204 No Content\r\n\r\n"
+            assert (
+                await reader.readuntil(b"\r\n\r\n")
+                == b"HTTP/1.1 204 No Content\r\n\r\n"
+            )
             assert repr(ps) == "ProxyServer(running, 1 active conns)"
 
             tctx.configure(ps, server=False)
@@ -93,7 +98,9 @@ async def test_start_stop():
 
 
 async def test_inject() -> None:
-    async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         while s := await reader.read(1):
             writer.write(s.upper())
 
@@ -110,7 +117,10 @@ async def test_inject() -> None:
 
             req = f"CONNECT {addr[0]}:{addr[1]} HTTP/1.1\r\n\r\n"
             writer.write(req.encode())
-            assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 200 Connection established\r\n\r\n"
+            assert (
+                await reader.readuntil(b"\r\n\r\n")
+                == b"HTTP/1.1 200 Connection established\r\n\r\n"
+            )
 
             writer.write(b"a")
             assert await reader.read(1) == b"A"
@@ -123,30 +133,18 @@ async def test_inject() -> None:
 async def test_inject_fail() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        ps.inject_websocket(
-            tflow.tflow(),
-            True,
-            b"test"
+        ps.inject_websocket(tflow.tflow(), True, b"test")
+        await tctx.master.await_log(
+            "Cannot inject WebSocket messages into non-WebSocket flows.", level="warn"
         )
-        await tctx.master.await_log("Cannot inject WebSocket messages into non-WebSocket flows.", level="warn")
-        ps.inject_tcp(
-            tflow.tflow(),
-            True,
-            b"test"
+        ps.inject_tcp(tflow.tflow(), True, b"test")
+        await tctx.master.await_log(
+            "Cannot inject TCP messages into non-TCP flows.", level="warn"
         )
-        await tctx.master.await_log("Cannot inject TCP messages into non-TCP flows.", level="warn")
 
-        ps.inject_websocket(
-            tflow.twebsocketflow(),
-            True,
-            b"test"
-        )
+        ps.inject_websocket(tflow.twebsocketflow(), True, b"test")
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
-        ps.inject_websocket(
-            tflow.ttcpflow(),
-            True,
-            b"test"
-        )
+        ps.inject_websocket(tflow.ttcpflow(), True, b"test")
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
 
 
@@ -160,7 +158,9 @@ async def test_warn_no_nextlayer():
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         await ps.running()
         await tctx.master.await_log("Proxy server listening at", level="info")
-        assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
+        assert tctx.master.has_log(
+            "Warning: Running proxyserver without nextlayer addon!", level="warn"
+        )
         await ps.shutdown_server()
 
 
@@ -172,9 +172,7 @@ async def test_self_connect():
     with taddons.context(ps) as tctx:
         # not calling .running() here to avoid unnecessary socket
         ps.options = tctx.options
-        ps.server_connect(
-            server_hooks.ServerConnectionHookData(server, client)
-        )
+        ps.server_connect(server_hooks.ServerConnectionHookData(server, client))
         assert "Request destination unknown" in server.error
 
 
@@ -232,7 +230,6 @@ async def test_shutdown_err() -> None:
 
 
 class DummyResolver:
-
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         flow.response = await dns_resolver.resolve_message(flow.request, self)
 
@@ -247,13 +244,20 @@ class DummyResolver:
 async def test_dns() -> None:
     ps = Proxyserver()
     with taddons.context(ps, DummyResolver()) as tctx:
-        tctx.configure(ps, server=False, dns_server=True, dns_listen_host="127.0.0.1", dns_listen_port=0, dns_mode="regular")
+        tctx.configure(
+            ps,
+            server=False,
+            dns_server=True,
+            dns_listen_host="127.0.0.1",
+            dns_listen_port=0,
+            dns_mode="regular",
+        )
         await ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.dns_server
         dns_addr = ps.dns_server.sockets[0].getsockname()[:2]
         r, w = await udp.open_connection(*dns_addr)
-        w.write(b'\x00')
+        w.write(b"\x00")
         await tctx.master.await_log("Invalid DNS datagram received", level="info")
         req = tdnsreq()
         w.write(req.packed)

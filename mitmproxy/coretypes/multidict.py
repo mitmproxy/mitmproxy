@@ -5,8 +5,8 @@ from typing import TypeVar
 
 from mitmproxy.coretypes import serializable
 
-KT = TypeVar('KT')
-VT = TypeVar('VT')
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
 
 class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
@@ -18,13 +18,9 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
     """The underlying raw datastructure."""
 
     def __repr__(self):
-        fields = (
-            repr(field)
-            for field in self.fields
-        )
+        fields = (repr(field) for field in self.fields)
         return "{cls}[{fields}]".format(
-            cls=type(self).__name__,
-            fields=", ".join(fields)
+            cls=type(self).__name__, fields=", ".join(fields)
         )
 
     @staticmethod
@@ -59,8 +55,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
             raise KeyError(key)
         key = self._kconv(key)
         self.fields = tuple(
-            field for field in self.fields
-            if key != self._kconv(field[0])
+            field for field in self.fields if key != self._kconv(field[0])
         )
 
     def __iter__(self) -> Iterator[KT]:
@@ -85,11 +80,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         If that key is not in the MultiDict, the return value will be an empty list.
         """
         key = self._kconv(key)
-        return [
-            value
-            for k, value in self.fields
-            if self._kconv(k) == key
-        ]
+        return [value for k, value in self.fields if self._kconv(k) == key]
 
     def set_all(self, key: KT, values: list[VT]) -> None:
         """
@@ -101,15 +92,11 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         for field in self.fields:
             if self._kconv(field[0]) == key_kconv:
                 if values:
-                    new_fields.append(
-                        (field[0], values.pop(0))
-                    )
+                    new_fields.append((field[0], values.pop(0)))
             else:
                 new_fields.append(field)
         while values:
-            new_fields.append(
-                (key, values.pop(0))
-            )
+            new_fields.append((key, values.pop(0)))
         self.fields = tuple(new_fields)
 
     def add(self, key: KT, value: VT) -> None:
@@ -132,10 +119,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         If `multi` is True, one key per value will be returned.
         If `multi` is False, duplicate keys will only be returned once.
         """
-        return (
-            k
-            for k, _ in self.items(multi)
-        )
+        return (k for k, _ in self.items(multi))
 
     def values(self, multi: bool = False):
         """
@@ -144,10 +128,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         If `multi` is True, all values will be returned.
         If `multi` is False, only the first value per key will be returned.
         """
-        return (
-            v
-            for _, v in self.items(multi)
-        )
+        return (v for _, v in self.items(multi))
 
     def items(self, multi: bool = False):
         """
@@ -167,9 +148,7 @@ class MultiDict(_MultiDict[KT, VT], serializable.Serializable):
 
     def __init__(self, fields=()):
         super().__init__()
-        self.fields = tuple(
-            tuple(i) for i in fields
-        )
+        self.fields = tuple(tuple(i) for i in fields)
 
     @staticmethod
     def _reduce_values(values):

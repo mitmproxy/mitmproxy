@@ -29,8 +29,7 @@ class TCPMessage(serializable.Serializable):
 
     def __repr__(self):
         return "{direction} {content}".format(
-            direction="->" if self.from_client else "<-",
-            content=repr(self.content)
+            direction="->" if self.from_client else "<-", content=repr(self.content)
         )
 
 

@@ -9,13 +9,9 @@ class Intercept:
     filt: Optional[flowfilter.TFilter] = None
 
     def load(self, loader):
+        loader.add_option("intercept_active", bool, False, "Intercept toggle")
         loader.add_option(
-            "intercept_active", bool, False,
-            "Intercept toggle"
-        )
-        loader.add_option(
-            "intercept", Optional[str], None,
-            "Intercept filter expression."
+            "intercept", Optional[str], None, "Intercept filter expression."
         )
 
     def configure(self, updated):
@@ -32,10 +28,10 @@ class Intercept:
 
     def should_intercept(self, f: flow.Flow) -> bool:
         return bool(
-                ctx.options.intercept_active
-                and self.filt
-                and self.filt(f)
-                and not f.is_replay
+            ctx.options.intercept_active
+            and self.filt
+            and self.filt(f)
+            and not f.is_replay
         )
 
     def process_flow(self, f: flow.Flow) -> None:

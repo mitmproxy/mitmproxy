@@ -24,10 +24,7 @@ def pretty(value, htchar="    ", lfchar="\n", indent=0):
         ]
         return "{%s}" % (",".join(items) + lfchar + htchar * indent)
     elif type(value) is list:
-        items = [
-            nlch + pretty(item, htchar, lfchar, indent + 1)
-            for item in value
-        ]
+        items = [nlch + pretty(item, htchar, lfchar, indent + 1) for item in value]
         return "[%s]" % (",".join(items) + lfchar + htchar * indent)
     else:
         return repr(value)
@@ -49,5 +46,7 @@ class ViewMsgPack(base.View):
         if data is not PARSE_ERROR:
             return "MsgPack", format_msgpack(data)
 
-    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+    def render_priority(
+        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+    ) -> float:
         return float(bool(data) and content_type in self.__content_types)

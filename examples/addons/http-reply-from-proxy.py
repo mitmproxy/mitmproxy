@@ -7,5 +7,5 @@ def request(flow: http.HTTPFlow) -> None:
         flow.response = http.Response.make(
             200,  # (optional) status code
             b"Hello World",  # (optional) content
-            {"Content-Type": "text/html"}  # (optional) headers
+            {"Content-Type": "text/html"},  # (optional) headers
         )

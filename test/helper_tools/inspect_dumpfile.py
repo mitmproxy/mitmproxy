@@ -18,7 +18,7 @@ def read_tnetstring(input):
 
 
 @click.command()
-@click.argument("input", type=click.File('rb'))
+@click.argument("input", type=click.File("rb"))
 def inspect(input):
     """
     pretty-print a dumpfile

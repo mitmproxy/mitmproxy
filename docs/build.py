@@ -10,7 +10,9 @@ for script in sorted((here / "scripts").glob("*.py")):
     print(f"Generating output for {script.name}...")
     out = subprocess.check_output(["python3", script.absolute()], cwd=here, text=True)
     if out:
-        (here / "src" / "generated" / f"{script.stem}.html").write_text(out, encoding="utf8")
+        (here / "src" / "generated" / f"{script.stem}.html").write_text(
+            out, encoding="utf8"
+        )
 
 if (here / "public").exists():
     shutil.rmtree(here / "public")

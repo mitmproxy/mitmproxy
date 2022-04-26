@@ -9,7 +9,7 @@ from mitmproxy.utils import debug
 @pytest.mark.parametrize("precompiled", [True, False])
 def test_dump_system_info_precompiled(precompiled):
     sys.frozen = None
-    with mock.patch.object(sys, 'frozen', precompiled):
+    with mock.patch.object(sys, "frozen", precompiled):
         assert ("binary" in debug.dump_system_info()) == precompiled
 
 

@@ -16,7 +16,7 @@ class TestAntiCache:
             assert "if-modified-since" in f.request.headers
             assert "if-none-match" in f.request.headers
 
-            tctx.configure(sa, anticache = True)
+            tctx.configure(sa, anticache=True)
             sa.request(f)
             assert "if-modified-since" not in f.request.headers
             assert "if-none-match" not in f.request.headers

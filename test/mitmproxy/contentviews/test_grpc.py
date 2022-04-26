@@ -1,7 +1,12 @@
 import pytest
 
 from mitmproxy.contentviews import grpc
-from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser, parse_grpc_messages
+from mitmproxy.contentviews.grpc import (
+    ViewGrpcProtobuf,
+    ViewConfig,
+    ProtoParser,
+    parse_grpc_messages,
+)
 from mitmproxy.net.encoding import encode
 from mitmproxy.test import tflow, tutils
 import struct
@@ -13,10 +18,11 @@ datadir = "mitmproxy/contentviews/test_grpc_data/"
 def helper_pack_grpc_message(data: bytes, compress=False, encoding="gzip") -> bytes:
     if compress:
         data = encode(data, encoding)
-    header = struct.pack('!?i', compress, len(data))
+    header = struct.pack("!?i", compress, len(data))
     return header + data
 
 
+# fmt: off
 custom_parser_rules = [
     ProtoParser.ParserRuleRequest(
         name = "Geo coordinate lookup request",

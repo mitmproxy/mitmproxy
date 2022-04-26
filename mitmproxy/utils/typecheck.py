@@ -4,7 +4,7 @@ from collections import abc
 try:
     from types import UnionType
 except ImportError:
-    UnionType = typing.Union
+    UnionType = object()  # type: ignore
 
 Type = typing.Union[
     typing.Any  # anything more elaborate really fails with mypy at the moment.
@@ -17,11 +17,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
     TypeError otherwise. This function supports only those types required for
     options.
     """
-    e = TypeError("Expected {} for {}, but got {}.".format(
-        typeinfo,
-        name,
-        type(value)
-    ))
+    e = TypeError("Expected {} for {}, but got {}.".format(typeinfo, name, type(value)))
 
     origin = typing.get_origin(typeinfo)
 
@@ -66,11 +62,11 @@ def typespec_to_str(typespec: typing.Any) -> str:
     if typespec in (str, int, float, bool):
         t = typespec.__name__
     elif typespec == typing.Optional[str]:
-        t = 'optional str'
+        t = "optional str"
     elif typespec in (typing.Sequence[str], abc.Sequence[str]):
-        t = 'sequence of str'
+        t = "sequence of str"
     elif typespec == typing.Optional[int]:
-        t = 'optional int'
+        t = "optional int"
     else:
         raise NotImplementedError
     return t

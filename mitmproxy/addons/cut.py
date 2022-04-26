@@ -17,7 +17,7 @@ import pyperclip
 def headername(spec: str):
     if not (spec.startswith("header[") and spec.endswith("]")):
         raise exceptions.CommandError("Invalid header spec: %s" % spec)
-    return spec[len("header["):-1].strip()
+    return spec[len("header[") : -1].strip()
 
 
 def is_addr(v):
@@ -47,7 +47,11 @@ def extract(cut: str, f: flow.Flow) -> Union[str, bytes]:
                 return "true" if part else "false"
             elif isinstance(part, certs.Cert):  # pragma: no cover
                 return part.to_pem().decode("ascii")
-            elif isinstance(part, list) and len(part) > 0 and isinstance(part[0], certs.Cert):
+            elif (
+                isinstance(part, list)
+                and len(part) > 0
+                and isinstance(part[0], certs.Cert)
+            ):
                 # TODO: currently this extracts only the very first cert as PEM-encoded string.
                 return part[0].to_pem().decode("ascii")
         current = part
@@ -70,13 +74,13 @@ class Cut:
         cuts: mitmproxy.types.CutSpec,
     ) -> mitmproxy.types.Data:
         """
-            Cut data from a set of flows. Cut specifications are attribute paths
-            from the base of the flow object, with a few conveniences - "port"
-            and "host" retrieve parts of an address tuple, ".header[key]"
-            retrieves a header value. Return values converted to strings or
-            bytes: SSL certificates are converted to PEM format, bools are "true"
-            or "false", "bytes" are preserved, and all other values are
-            converted to strings.
+        Cut data from a set of flows. Cut specifications are attribute paths
+        from the base of the flow object, with a few conveniences - "port"
+        and "host" retrieve parts of an address tuple, ".header[key]"
+        retrieves a header value. Return values converted to strings or
+        bytes: SSL certificates are converted to PEM format, bools are "true"
+        or "false", "bytes" are preserved, and all other values are
+        converted to strings.
         """
         ret: list[list[Union[str, bytes]]] = []
         for f in flows:
@@ -88,14 +92,14 @@ class Cut:
         self,
         flows: Sequence[flow.Flow],
         cuts: mitmproxy.types.CutSpec,
-        path: mitmproxy.types.Path
+        path: mitmproxy.types.Path,
     ) -> None:
         """
-            Save cuts to file. If there are multiple flows or cuts, the format
-            is UTF-8 encoded CSV. If there is exactly one row and one column,
-            the data is written to file as-is, with raw bytes preserved. If the
-            path is prefixed with a "+", values are appended if there is an
-            existing file.
+        Save cuts to file. If there are multiple flows or cuts, the format
+        is UTF-8 encoded CSV. If there is exactly one row and one column,
+        the data is written to file as-is, with raw bytes preserved. If the
+        path is prefixed with a "+", values are appended if there is an
+        existing file.
         """
         append = False
         if path.startswith("+"):
@@ -115,12 +119,16 @@ class Cut:
                         fp.write(v.encode("utf8"))
                 ctx.log.alert("Saved single cut.")
             else:
-                with open(path, "a" if append else "w", newline='', encoding="utf8") as tfp:
+                with open(
+                    path, "a" if append else "w", newline="", encoding="utf8"
+                ) as tfp:
                     writer = csv.writer(tfp)
                     for f in flows:
                         vals = [extract_str(c, f) for c in cuts]
                         writer.writerow(vals)
-                ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
+                ctx.log.alert(
+                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows))
+                )
         except OSError as e:
             ctx.log.error(str(e))
 
@@ -131,9 +139,9 @@ class Cut:
         cuts: mitmproxy.types.CutSpec,
     ) -> None:
         """
-            Send cuts to the clipboard. If there are multiple flows or cuts, the
-            format is UTF-8 encoded CSV. If there is exactly one row and one
-            column, the data is written to file as-is, with raw bytes preserved.
+        Send cuts to the clipboard. If there are multiple flows or cuts, the
+        format is UTF-8 encoded CSV. If there is exactly one row and one
+        column, the data is written to file as-is, with raw bytes preserved.
         """
         v: Union[str, bytes]
         fp = io.StringIO(newline="")

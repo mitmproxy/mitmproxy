@@ -12,20 +12,17 @@ from mitmproxy import command
 
 class ReadFile:
     """
-        An addon that handles reading from file on startup.
+    An addon that handles reading from file on startup.
     """
+
     def __init__(self):
         self.filter = None
         self.is_reading = False
 
     def load(self, loader):
+        loader.add_option("rfile", Optional[str], None, "Read flows from file.")
         loader.add_option(
-            "rfile", Optional[str], None,
-            "Read flows from file."
-        )
-        loader.add_option(
-            "readfile_filter", Optional[str], None,
-            "Read only matching flows."
+            "readfile_filter", Optional[str], None, "Read only matching flows."
         )
 
     def configure(self, updated):
@@ -85,6 +82,7 @@ class ReadFile:
 
 class ReadFileStdin(ReadFile):
     """Support the special case of "-" for reading from stdin"""
+
     async def load_flows_from_path(self, path: str) -> int:
         if path == "-":  # pragma: no cover
             # Need to think about how to test this. This function is scheduled

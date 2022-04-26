@@ -25,7 +25,6 @@ def test_extract(tdata):
         ["request.timestamp_start", "946681200"],
         ["request.timestamp_end", "946681201"],
         ["request.header[header]", "qvalue"],
-
         ["response.status_code", "200"],
         ["response.reason", "OK"],
         ["response.text", "message"],
@@ -34,13 +33,11 @@ def test_extract(tdata):
         ["response.header[header-response]", "svalue"],
         ["response.timestamp_start", "946681202"],
         ["response.timestamp_end", "946681203"],
-
         ["client_conn.peername.port", "22"],
         ["client_conn.peername.host", "127.0.0.1"],
         ["client_conn.tls_version", "TLSv1.2"],
         ["client_conn.sni", "address"],
         ["client_conn.tls_established", "true"],
-
         ["server_conn.address.port", "22"],
         ["server_conn.address.host", "address"],
         ["server_conn.peername.host", "192.168.0.1"],
@@ -82,21 +79,22 @@ async def test_cut_clip():
         tctx.master.addons.add(v, c)
         v.add([tflow.tflow(resp=True)])
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             tctx.command(c.clip, "@all", "request.method")
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             tctx.command(c.clip, "@all", "request.content")
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             tctx.command(c.clip, "@all", "request.method,request.content")
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
-            log_message = "Pyperclip could not find a " \
-                          "copy/paste mechanism for your system."
+        with mock.patch("pyperclip.copy") as pc:
+            log_message = (
+                "Pyperclip could not find a " "copy/paste mechanism for your system."
+            )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
             await tctx.master.await_log(log_message, level="error")
@@ -124,11 +122,14 @@ def test_cut_save(tmpdir):
         assert qr(f).splitlines() == [b"GET,b'content'", b"GET,b'content'"]
 
 
-@pytest.mark.parametrize("exception, log_message", [
-    (PermissionError, "Permission denied"),
-    (IsADirectoryError, "Is a directory"),
-    (FileNotFoundError, "No such file or directory")
-])
+@pytest.mark.parametrize(
+    "exception, log_message",
+    [
+        (PermissionError, "Permission denied"),
+        (IsADirectoryError, "Is a directory"),
+        (FileNotFoundError, "No such file or directory"),
+    ],
+)
 async def test_cut_save_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     v = view.View()

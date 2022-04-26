@@ -66,14 +66,11 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
         Ts = typing.get_args(typeinfo)
         if len(Ts) != len(val):
             raise ValueError(f"Invalid data. Expected {Ts}, got {val}.")
-        return tuple(
-            _process(T, x, make) for T, x in zip(Ts, val)
-        )
+        return tuple(_process(T, x, make) for T, x in zip(Ts, val))
     elif origin is dict:
         k_cls, v_cls = typing.get_args(typeinfo)
         return {
-            _process(k_cls, k, make): _process(v_cls, v, make)
-            for k, v in val.items()
+            _process(k_cls, k, make): _process(v_cls, v, make) for k, v in val.items()
         }
     elif typeinfo is typing.Any:
         # This requires a bit of explanation. We can't import our IO layer here,

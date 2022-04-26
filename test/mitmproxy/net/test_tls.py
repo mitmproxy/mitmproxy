@@ -12,11 +12,13 @@ def test_make_master_secret_logger():
 
 def test_sslkeylogfile(tdata, monkeypatch):
     keylog = []
-    monkeypatch.setattr(tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets))
+    monkeypatch.setattr(
+        tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets)
+    )
 
     store = certs.CertStore.from_files(
         Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
-        Path(tdata.path("mitmproxy/net/data/dhparam.pem"))
+        Path(tdata.path("mitmproxy/net/data/dhparam.pem")),
     )
     entry = store.get_cert("example.com", [], None)
 

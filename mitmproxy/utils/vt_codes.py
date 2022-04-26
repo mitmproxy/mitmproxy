@@ -44,8 +44,13 @@ if os.name == "nt":
         if not ok:
             return False
 
-        ok = SetConsoleMode(handle, console_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        ok = SetConsoleMode(
+            handle, console_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        )
         return ok
+
+
 else:
+
     def ensure_supported(f: IO[str]) -> bool:
         return f.isatty()

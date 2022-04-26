@@ -33,7 +33,6 @@ from mitmproxy.tools.console import window
 
 
 class ConsoleMaster(master.Master):
-
     def __init__(self, opts):
         super().__init__(opts)
 
@@ -66,37 +65,37 @@ class ConsoleMaster(master.Master):
         signals.update_settings.send(self)
 
     def options_error(self, opts, exc):
-        signals.status_message.send(
-            message=str(exc),
-            expire=1
-        )
+        signals.status_message.send(message=str(exc), expire=1)
 
     def prompt_for_exit(self):
         signals.status_prompt_onekey.send(
             self,
-            prompt = "Quit",
-            keys = (
+            prompt="Quit",
+            keys=(
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            callback = self.quit,
+            callback=self.quit,
         )
 
     def sig_add_log(self, event_store, entry: log.LogEntry):
-        if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(entry.level):
+        if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(
+            entry.level
+        ):
             return
         if entry.level in ("error", "warn", "alert"):
             signals.status_message.send(
-                message = (
+                message=(
                     entry.level,
-                    f"{entry.level.title()}: {str(entry.msg).lstrip()}"
+                    f"{entry.level.title()}: {str(entry.msg).lstrip()}",
                 ),
-                expire=5
+                expire=5,
             )
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
             return callback(*args)
+
         self.loop.set_alarm_in(seconds, cb)
 
     @contextlib.contextmanager
@@ -125,7 +124,7 @@ class ConsoleMaster(master.Master):
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
-        fd, name = tempfile.mkstemp('', "mitmproxy", text=text)
+        fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         c = self.get_editor()
@@ -135,9 +134,7 @@ class ConsoleMaster(master.Master):
             try:
                 subprocess.call(cmd)
             except:
-                signals.status_message.send(
-                    message="Can't start editor: %s" % c
-                )
+                signals.status_message.send(message="Can't start editor: %s" % c)
             else:
                 with open(name, "r" if text else "rb") as f:
                     data = f.read()
@@ -167,7 +164,11 @@ class ConsoleMaster(master.Master):
                 shell = True
         if not cmd:
             # hm which one should get priority?
-            c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("PAGER") or os.environ.get("EDITOR")
+            c = (
+                os.environ.get("MITMPROXY_EDITOR")
+                or os.environ.get("PAGER")
+                or os.environ.get("EDITOR")
+            )
             if not c:
                 c = "less"
             cmd = shlex.split(c)
@@ -196,15 +197,18 @@ class ConsoleMaster(master.Master):
 
     async def running(self) -> None:
         if not sys.stdout.isatty():
-            print("Error: mitmproxy's console interface requires a tty. "
-                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
+            print(
+                "Error: mitmproxy's console interface requires a tty. "
+                "Please run mitmproxy in an interactive shell environment.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         if os.name != "nt" and "utf" not in urwid.detected_encoding.lower():
             print(
                 f"mitmproxy expects a UTF-8 console environment, not {urwid.detected_encoding!r}. "
                 f"Set your LANG environment variable to something like en_US.UTF-8.",
-                file=sys.stderr
+                file=sys.stderr,
             )
             # Experimental (04/2022): We just don't exit here and see if/how that affects users.
             # sys.exit(1)
@@ -215,8 +219,7 @@ class ConsoleMaster(master.Master):
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)
         self.options.subscribe(
-            self.set_palette,
-            ["console_palette", "console_palette_transparent"]
+            self.set_palette, ["console_palette", "console_palette_transparent"]
         )
 
         loop = asyncio.get_running_loop()
