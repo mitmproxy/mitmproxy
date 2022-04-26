@@ -67,7 +67,7 @@ class GridRow(urwid.WidgetWrap):
             focused: typing.Optional[int],
             editing: bool,
             editor: "GridEditor",
-            values: typing.Tuple[typing.Iterable[bytes], typing.Container[int]]
+            values: tuple[typing.Iterable[bytes], typing.Container[int]]
     ) -> None:
         self.focused = focused
         self.editor = editor
@@ -123,7 +123,7 @@ class GridWalker(urwid.ListWalker):
             lst: typing.Iterable[list],
             editor: "GridEditor"
     ) -> None:
-        self.lst: typing.Sequence[typing.Tuple[typing.Any, typing.Set]] = [(i, set()) for i in lst]
+        self.lst: typing.Sequence[tuple[typing.Any, set]] = [(i, set()) for i in lst]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0

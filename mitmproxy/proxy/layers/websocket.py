@@ -60,7 +60,7 @@ class WebsocketConnection(wsproto.Connection):
      - we wrap .send() so that we can directly yield it.
     """
     conn: connection.Connection
-    frame_buf: List[bytes]
+    frame_buf: list[bytes]
 
     def __init__(self, *args, conn: connection.Connection, **kwargs):
         super().__init__(*args, **kwargs)
@@ -223,7 +223,7 @@ class Fragmentizer:
     # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
 
-    def __init__(self, fragments: List[bytes], is_text: bool):
+    def __init__(self, fragments: list[bytes], is_text: bool):
         self.fragment_lengths = [len(x) for x in fragments]
         self.is_text = is_text
 

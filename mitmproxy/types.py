@@ -55,7 +55,7 @@ class Choice:
 
 
 class _BaseType:
-    typ: typing.Type = object
+    typ: type = object
     display: str = ""
 
     def completion(self, manager: "CommandManager", t: typing.Any, s: str) -> typing.Sequence[str]:
@@ -478,7 +478,7 @@ class TypeManager:
         for t in types:
             self.typemap[t.typ] = t()
 
-    def get(self, t: typing.Optional[typing.Type], default=None) -> typing.Optional[_BaseType]:
+    def get(self, t: typing.Optional[type], default=None) -> typing.Optional[_BaseType]:
         if type(t) in self.typemap:
             return self.typemap[type(t)]
         return self.typemap.get(t, default)

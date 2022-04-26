@@ -40,8 +40,8 @@ class CookieAttrs(multidict.MultiDict):
         return values[-1]
 
 
-TSetCookie = Tuple[str, str, CookieAttrs]
-TPairs = List[List[str]]  # TODO: Should be List[Tuple[str,str]]?
+TSetCookie = tuple[str, str, CookieAttrs]
+TPairs = list[list[str]]  # TODO: Should be List[Tuple[str,str]]?
 
 
 def _read_until(s, start, term):
@@ -128,14 +128,14 @@ def _read_cookie_pairs(s, off=0):
     return pairs, off
 
 
-def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
+def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
     """
         Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
 
         off: start offset
         specials: attributes that are treated specially
     """
-    cookies: List[TPairs] = []
+    cookies: list[TPairs] = []
     pairs: TPairs = []
 
     while True:
@@ -235,7 +235,7 @@ def format_cookie_header(lst):
     return _format_pairs(lst)
 
 
-def parse_set_cookie_header(line: str) -> List[TSetCookie]:
+def parse_set_cookie_header(line: str) -> list[TSetCookie]:
     """
     Parse a Set-Cookie header value
 
@@ -257,7 +257,7 @@ def parse_set_cookie_header(line: str) -> List[TSetCookie]:
     return cookies
 
 
-def parse_set_cookie_headers(headers: Iterable[str]) -> List[TSetCookie]:
+def parse_set_cookie_headers(headers: Iterable[str]) -> list[TSetCookie]:
     rv = []
     for header in headers:
         cookies = parse_set_cookie_header(header)
@@ -265,7 +265,7 @@ def parse_set_cookie_headers(headers: Iterable[str]) -> List[TSetCookie]:
     return rv
 
 
-def format_set_cookie_header(set_cookies: List[TSetCookie]) -> str:
+def format_set_cookie_header(set_cookies: list[TSetCookie]) -> str:
     """
         Formats a Set-Cookie header value.
     """

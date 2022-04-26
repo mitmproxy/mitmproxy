@@ -41,7 +41,7 @@ def _empty_as_none(x: typing.Any) -> typing.Any:
 
 class CommandParameter(typing.NamedTuple):
     name: str
-    type: typing.Type
+    type: type
     kind: inspect._ParameterKind = inspect.Parameter.POSITIONAL_OR_KEYWORD
 
     def __str__(self):
@@ -78,11 +78,11 @@ class Command:
             raise exceptions.CommandError(f"Return type has an unknown type ({self.return_type}) in {func}.")
 
     @property
-    def return_type(self) -> typing.Optional[typing.Type]:
+    def return_type(self) -> typing.Optional[type]:
         return _empty_as_none(self.signature.return_annotation)
 
     @property
-    def parameters(self) -> typing.List[CommandParameter]:
+    def parameters(self) -> list[CommandParameter]:
         """Returns a list of CommandParameters."""
         ret = []
         for name, param in self.signature.parameters.items():
@@ -140,12 +140,12 @@ class Command:
 
 class ParseResult(typing.NamedTuple):
     value: str
-    type: typing.Type
+    type: type
     valid: bool
 
 
 class CommandManager:
-    commands: typing.Dict[str, Command]
+    commands: dict[str, Command]
 
     def __init__(self, master):
         self.master = master
@@ -176,15 +176,15 @@ class CommandManager:
     def parse_partial(
             self,
             cmdstr: str
-    ) -> typing.Tuple[typing.Sequence[ParseResult], typing.Sequence[CommandParameter]]:
+    ) -> tuple[typing.Sequence[ParseResult], typing.Sequence[CommandParameter]]:
         """
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: typing.List[str] = command_lexer.expr.parseString(cmdstr, parseAll=True)
+        parts: list[str] = command_lexer.expr.parseString(cmdstr, parseAll=True)
 
-        parsed: typing.List[ParseResult] = []
-        next_params: typing.List[CommandParameter] = [
+        parsed: list[ParseResult] = []
+        next_params: list[CommandParameter] = [
             CommandParameter("", mitmproxy.types.Cmd),
             CommandParameter("", mitmproxy.types.CmdArgs),
         ]

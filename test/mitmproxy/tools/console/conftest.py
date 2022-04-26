@@ -9,7 +9,7 @@ from mitmproxy.tools.console import window
 from mitmproxy.tools.console.master import ConsoleMaster
 
 
-def tokenize(input: str) -> List[str]:
+def tokenize(input: str) -> list[str]:
     keys = []
     for i, k in enumerate(re.split("[<>]", input)):
         if i % 2:

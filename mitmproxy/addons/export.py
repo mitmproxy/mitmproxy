@@ -130,7 +130,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats: typing.Dict[str, typing.Callable[[flow.Flow], typing.Union[str, bytes]]] = dict(
+formats: dict[str, typing.Callable[[flow.Flow], typing.Union[str, bytes]]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,

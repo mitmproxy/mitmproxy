@@ -26,7 +26,7 @@ class TunnelLayer(layer.Layer):
     """The 'inner' connection which provides data I/O"""
     tunnel_state: TunnelState = TunnelState.INACTIVE
     command_to_reply_to: Optional[commands.OpenConnection] = None
-    _event_queue: List[events.Event]
+    _event_queue: list[events.Event]
     """
     If the connection already exists when we receive the start event,
     we buffer commands until we have established the tunnel.
@@ -135,7 +135,7 @@ class TunnelLayer(layer.Layer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from self._handle_event(events.DataReceived(self.tunnel_connection, b""))
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         """returns a (done, err) tuple"""
         yield from ()
         return True, None
@@ -163,7 +163,7 @@ class TunnelLayer(layer.Layer):
 
 class LayerStack:
     def __init__(self) -> None:
-        self._stack: List[Layer] = []
+        self._stack: list[Layer] = []
 
     def __getitem__(self, item: int) -> Layer:
         return self._stack.__getitem__(item)

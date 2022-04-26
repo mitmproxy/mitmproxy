@@ -211,7 +211,7 @@ def raise_if_http_version_unknown(http_version: bytes) -> None:
         raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 
-def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
+def _read_request_line(line: bytes) -> tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
         port: Optional[int]
@@ -242,7 +242,7 @@ def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, byte
     return host, port, method, scheme, authority, path, http_version
 
 
-def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
+def _read_response_line(line: bytes) -> tuple[bytes, int, bytes]:
     try:
         parts = line.split(None, 2)
         if len(parts) == 2:  # handle missing message gracefully
@@ -268,7 +268,7 @@ def _read_headers(lines: Iterable[bytes]) -> Headers:
         Raises:
             exceptions.HttpSyntaxException
     """
-    ret: List[Tuple[bytes, bytes]] = []
+    ret: list[tuple[bytes, bytes]] = []
     for line in lines:
         if line[0] in b" \t":
             if not ret:
@@ -287,7 +287,7 @@ def _read_headers(lines: Iterable[bytes]) -> Headers:
     return Headers(ret)
 
 
-def read_request_head(lines: List[bytes]) -> Request:
+def read_request_head(lines: list[bytes]) -> Request:
     """
     Parse an HTTP request head (request line + headers) from an iterable of lines
 
@@ -319,7 +319,7 @@ def read_request_head(lines: List[bytes]) -> Request:
     )
 
 
-def read_response_head(lines: List[bytes]) -> Response:
+def read_response_head(lines: list[bytes]) -> Response:
     """
     Parse an HTTP response head (response line + headers) from an iterable of lines
 

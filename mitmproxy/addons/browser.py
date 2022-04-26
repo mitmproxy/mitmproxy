@@ -45,7 +45,7 @@ def get_chrome_flatpak() -> typing.Optional[str]:
     return None
 
 
-def get_browser_cmd() -> typing.Optional[typing.List[str]]:
+def get_browser_cmd() -> typing.Optional[list[str]]:
     if browser := get_chrome_executable():
         return [browser]
     elif browser := get_chrome_flatpak():
@@ -55,8 +55,8 @@ def get_browser_cmd() -> typing.Optional[typing.List[str]]:
 
 
 class Browser:
-    browser: typing.List[subprocess.Popen] = []
-    tdir: typing.List[tempfile.TemporaryDirectory] = []
+    browser: list[subprocess.Popen] = []
+    tdir: list[tempfile.TemporaryDirectory] = []
 
     @command.command("browser.start")
     def start(self) -> None:

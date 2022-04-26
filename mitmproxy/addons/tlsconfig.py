@@ -31,7 +31,7 @@ class AppData(TypedDict):
     http2: bool
 
 
-def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
+def alpn_select_callback(conn: SSL.Connection, options: list[bytes]) -> Any:
     app_data: AppData = conn.get_app_data()
     client_alpn = app_data["client_alpn"]
     server_alpn = app_data["server_alpn"]
@@ -289,7 +289,7 @@ class TlsConfig:
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
         """
-        altnames: List[str] = []
+        altnames: list[str] = []
         organization: Optional[str] = None
 
         # Use upstream certificate if available.

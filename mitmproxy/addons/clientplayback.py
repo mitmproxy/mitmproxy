@@ -213,7 +213,7 @@ class ClientPlayback:
         """
             Add flows to the replay queue, skipping flows that can't be replayed.
         """
-        updated: typing.List[http.HTTPFlow] = []
+        updated: list[http.HTTPFlow] = []
         for f in flows:
             err = self.check(f)
             if err:

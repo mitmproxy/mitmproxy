@@ -9,10 +9,7 @@ from mitmproxy.utils import human
 
 def cancel_task(task: asyncio.Task, message: str) -> None:
     """Like task.cancel(), but optionally with a message if the Python version supports it."""
-    if sys.version_info >= (3, 9):
-        task.cancel(message)  # type: ignore
-    else:  # pragma: no cover
-        task.cancel()
+    task.cancel(message)  # type: ignore
 
 
 def create_task(

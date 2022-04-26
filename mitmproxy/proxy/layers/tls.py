@@ -204,7 +204,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             else:
                 yield commands.SendData(self.conn, data)
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         # bio_write errors for b"", so we need to check first if we actually received something.
         if data:
             self.tls.bio_write(data)
@@ -416,7 +416,7 @@ class ClientTLSLayer(_TLSLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         if self.client_hello_parsed:
             return (yield from super().receive_handshake_data(data))
         self.recv_buffer.extend(data)

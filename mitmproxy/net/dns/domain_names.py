@@ -7,14 +7,14 @@ _POINTER_OFFSET = struct.Struct("!H")
 _POINTER_INDICATOR = 0b11000000
 
 
-Cache = Dict[int, Optional[Tuple[str, int]]]
+Cache = dict[int, Optional[tuple[str, int]]]
 
 
 def cache() -> Cache:
     return dict()
 
 
-def _unpack_label_into(labels: List[str], buffer: bytes, offset: int) -> int:
+def _unpack_label_into(labels: list[str], buffer: bytes, offset: int) -> int:
     size, = _LABEL_SIZE.unpack_from(buffer, offset)
     if size >= 64:
         raise struct.error(f"unpack encountered a label of length {size}")
@@ -32,7 +32,7 @@ def _unpack_label_into(labels: List[str], buffer: bytes, offset: int) -> int:
         return _LABEL_SIZE.size + size
 
 
-def unpack_from_with_compression(buffer: bytes, offset: int, cache: Cache) -> Tuple[str, int]:
+def unpack_from_with_compression(buffer: bytes, offset: int, cache: Cache) -> tuple[str, int]:
     if offset in cache:
         result = cache[offset]
         if result is None:
@@ -58,9 +58,9 @@ def unpack_from_with_compression(buffer: bytes, offset: int, cache: Cache) -> Tu
     return result
 
 
-def unpack_from(buffer: bytes, offset: int) -> Tuple[str, int]:
+def unpack_from(buffer: bytes, offset: int) -> tuple[str, int]:
     """Converts RDATA into a domain name without pointer compression from a given offset and also returns the binary size."""
-    labels: List[str] = []
+    labels: list[str] = []
     while True:
         size, = _LABEL_SIZE.unpack_from(buffer, offset)
         if size & _POINTER_INDICATOR == _POINTER_INDICATOR:

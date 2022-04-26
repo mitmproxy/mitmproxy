@@ -51,7 +51,7 @@ def _iterate_dns(f: dns.DNSFlow) -> TEventGenerator:
         yield layers.dns.DnsErrorHook(f)
 
 
-_iterate_map: Dict[Type[flow.Flow], Callable[[Any], TEventGenerator]] = {
+_iterate_map: dict[type[flow.Flow], Callable[[Any], TEventGenerator]] = {
     http.HTTPFlow: _iterate_http,
     tcp.TCPFlow: _iterate_tcp,
     dns.DNSFlow: _iterate_dns,

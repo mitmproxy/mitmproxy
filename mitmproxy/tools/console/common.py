@@ -42,11 +42,11 @@ KEY_MAX = 30
 
 
 def format_keyvals(
-        entries: typing.Iterable[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
+        entries: typing.Iterable[tuple[str, typing.Union[None, str, urwid.Widget]]],
         key_format: str = "key",
         value_format: str = "text",
         indent: int = 0
-) -> typing.List[urwid.Columns]:
+) -> list[urwid.Columns]:
     """
     Format a list of (key, value) tuples.
 
@@ -86,7 +86,7 @@ def format_keyvals(
     return ret
 
 
-def fcol(s: str, attr: str) -> typing.Tuple[str, int, urwid.Text]:
+def fcol(s: str, attr: str) -> tuple[str, int, urwid.Text]:
     s = str(s)
     return (
         "fixed",
@@ -320,7 +320,7 @@ def colorize_url(url):
            ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
 
 
-def format_http_content_type(content_type: str) -> typing.Tuple[str, str]:
+def format_http_content_type(content_type: str) -> tuple[str, str]:
     content_type = content_type.split(";")[0]
     if content_type.endswith('/javascript'):
         style = 'content_script'
@@ -340,13 +340,13 @@ def format_http_content_type(content_type: str) -> typing.Tuple[str, str]:
     return content_type, style
 
 
-def format_duration(duration: float) -> typing.Tuple[str, str]:
+def format_duration(duration: float) -> tuple[str, str]:
     pretty_duration = human.pretty_duration(duration)
     style = 'gradient_%02d' % int(99 - 100 * min(math.log2(1 + 1000 * duration) / 12, 0.99))
     return pretty_duration, style
 
 
-def format_size(num_bytes: int) -> typing.Tuple[str, str]:
+def format_size(num_bytes: int) -> tuple[str, str]:
     pretty_size = human.pretty_size(num_bytes)
     style = 'gradient_%02d' % int(99 - 100 * min(math.log2(1 + num_bytes) / 20, 0.99))
     return pretty_size, style
@@ -358,7 +358,7 @@ def format_left_indicators(
         intercepted: bool,
         timestamp: float
 ):
-    indicators: typing.List[typing.Union[str, typing.Tuple[str, str]]] = []
+    indicators: list[typing.Union[str, tuple[str, str]]] = []
     if focused:
         indicators.append(("focus", ">>"))
     else:
@@ -376,7 +376,7 @@ def format_right_indicators(
         replay: bool,
         marked: str,
 ):
-    indicators: typing.List[typing.Union[str, typing.Tuple[str, str]]] = []
+    indicators: list[typing.Union[str, tuple[str, str]]] = []
     if replay:
         indicators.append(("replay", SYMBOL_REPLAY))
     else:

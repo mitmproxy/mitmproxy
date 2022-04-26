@@ -17,7 +17,7 @@ class CliDirector:
     def __init__(self):
         self.record_start = None
         self.pause_between_keys = 0.2
-        self.instructions: typing.List[InstructionSpec] = []
+        self.instructions: list[InstructionSpec] = []
 
     def start(self, filename: str, width: int = 0, height: int = 0) -> libtmux.Session:
         self.start_session(width, height)

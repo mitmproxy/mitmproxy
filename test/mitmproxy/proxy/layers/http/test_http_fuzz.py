@@ -358,7 +358,7 @@ def _test_cancel(stream_req, stream_resp, draw):
     server_disc = ConnectionClosed(server)
     server_rst = DataReceived(server, cff.build_rst_stream_frame(1).serialize())
 
-    evts: Dict[str, Tuple[Any, Any, Any]] = {}
+    evts: dict[str, tuple[Any, Any, Any]] = {}
     # precondition, but-not-after-this
     evts["data_req"] = data_req, None, client_disc
     evts["data_reqbody"] = data_reqbody, data_req, client_disc

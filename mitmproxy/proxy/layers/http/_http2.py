@@ -45,13 +45,13 @@ class Http2Connection(HttpConnection):
         normalize_outbound_headers=False,
     )
     h2_conn: BufferedH2Connection
-    streams: Dict[int, StreamState]
+    streams: dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
-    ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: Type[Union[RequestData, ResponseData]]
-    ReceiveTrailers: Type[Union[RequestTrailers, ResponseTrailers]]
-    ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
+    ReceiveData: type[Union[RequestData, ResponseData]]
+    ReceiveTrailers: type[Union[RequestTrailers, ResponseTrailers]]
+    ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
@@ -257,7 +257,7 @@ class Http2Connection(HttpConnection):
         yield from ()
 
 
-def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) -> List[Tuple[bytes, bytes]]:
+def normalize_h1_headers(headers: list[tuple[bytes, bytes]], is_client: bool) -> list[tuple[bytes, bytes]]:
     # HTTP/1 servers commonly send capitalized headers (Content-Length vs content-length),
     # which isn't valid HTTP/2. As such we normalize.
     headers = h2.utilities.normalize_outbound_headers(
@@ -270,7 +270,7 @@ def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) ->
     return headers
 
 
-def normalize_h2_headers(headers: List[Tuple[bytes, bytes]]) -> CommandGenerator[None]:
+def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:
     for i in range(len(headers)):
         if not headers[i][0].islower():
             yield Log(f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2.")
@@ -352,9 +352,9 @@ class Http2Client(Http2Connection):
     ReceiveTrailers = ResponseTrailers
     ReceiveEndOfMessage = ResponseEndOfMessage
 
-    our_stream_id: Dict[int, int]
-    their_stream_id: Dict[int, int]
-    stream_queue: DefaultDict[int, List[Event]]
+    our_stream_id: dict[int, int]
+    their_stream_id: dict[int, int]
+    stream_queue: DefaultDict[int, list[Event]]
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
     provisional_max_concurrency: Optional[int] = 10
     """A provisional currency limit before we get the server's first settings frame."""
@@ -499,8 +499,8 @@ class Http2Client(Http2Connection):
             return (yield from super().handle_h2_event(event))
 
 
-def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], http.Headers]:
-    pseudo_headers: Dict[bytes, bytes] = {}
+def split_pseudo_headers(h2_headers: Sequence[tuple[bytes, bytes]]) -> tuple[dict[bytes, bytes], http.Headers]:
+    pseudo_headers: dict[bytes, bytes] = {}
     i = 0
     for (header, value) in h2_headers:
         if header.startswith(b":"):
@@ -518,8 +518,8 @@ def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dic
 
 
 def parse_h2_request_headers(
-    h2_headers: Sequence[Tuple[bytes, bytes]]
-) -> Tuple[str, int, bytes, bytes, bytes, bytes, http.Headers]:
+    h2_headers: Sequence[tuple[bytes, bytes]]
+) -> tuple[str, int, bytes, bytes, bytes, bytes, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
 
@@ -545,7 +545,7 @@ def parse_h2_request_headers(
     return host, port, method, scheme, authority, path, headers
 
 
-def parse_h2_response_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[int, http.Headers]:
+def parse_h2_response_headers(h2_headers: Sequence[tuple[bytes, bytes]]) -> tuple[int, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
 

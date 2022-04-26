@@ -371,7 +371,7 @@ def helper_gen_lendel_msg_field(f_idx: int, f_val: bytes):
     return msg
 
 
-def helper_gen_bits64_msg_field_packed(f_idx: int, values: List[int]):
+def helper_gen_bits64_msg_field_packed(f_idx: int, values: list[int]):
     # manual encoding of protobuf data
     msg_inner = b""
     for f_val in values:
@@ -379,7 +379,7 @@ def helper_gen_bits64_msg_field_packed(f_idx: int, values: List[int]):
     return helper_gen_lendel_msg_field(f_idx, msg_inner)
 
 
-def helper_gen_bits32_msg_field_packed(f_idx: int, values: List[int]):
+def helper_gen_bits32_msg_field_packed(f_idx: int, values: list[int]):
     # manual encoding of protobuf data
     msg_inner = b""
     for f_val in values:
@@ -387,7 +387,7 @@ def helper_gen_bits32_msg_field_packed(f_idx: int, values: List[int]):
     return helper_gen_lendel_msg_field(f_idx, msg_inner)
 
 
-def helper_gen_varint_msg_field_packed(f_idx: int, values: List[int]):
+def helper_gen_varint_msg_field_packed(f_idx: int, values: list[int]):
     # manual encoding of protobuf data
     msg_inner = b""
     for f_val in values:
@@ -395,7 +395,7 @@ def helper_gen_varint_msg_field_packed(f_idx: int, values: List[int]):
     return helper_gen_lendel_msg_field(f_idx, msg_inner)
 
 
-def helper_gen_lendel_msg_field_packed(f_idx: int, values: List[bytes]):
+def helper_gen_lendel_msg_field_packed(f_idx: int, values: list[bytes]):
     # manual encoding of protobuf data
     msg_inner = b""
     for f_val in values:

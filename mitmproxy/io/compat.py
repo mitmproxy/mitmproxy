@@ -402,7 +402,7 @@ converters = {
 }
 
 
-def migrate_flow(flow_data: Dict[Union[bytes, str], Any]) -> Dict[Union[bytes, str], Any]:
+def migrate_flow(flow_data: dict[Union[bytes, str], Any]) -> dict[Union[bytes, str], Any]:
     while True:
         flow_version = flow_data.get(b"version", flow_data.get("version"))
 

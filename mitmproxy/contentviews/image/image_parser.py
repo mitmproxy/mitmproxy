@@ -8,7 +8,7 @@ from mitmproxy.contrib.kaitaistruct import ico
 from mitmproxy.contrib.kaitaistruct import jpeg
 from mitmproxy.contrib.kaitaistruct import png
 
-Metadata = typing.List[typing.Tuple[str, str]]
+Metadata = list[tuple[str, str]]
 
 
 def parse_png(data: bytes) -> Metadata:

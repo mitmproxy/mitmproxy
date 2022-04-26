@@ -10,7 +10,7 @@ def init_transparent_mode() -> None:
     """
 
 
-original_addr: Optional[Callable[[socket.socket], Tuple[str, int]]]
+original_addr: Optional[Callable[[socket.socket], tuple[str, int]]]
 """
 Get the original destination for the given socket.
 This function will be None if transparent mode is not supported.

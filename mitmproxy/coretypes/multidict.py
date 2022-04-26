@@ -18,7 +18,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
     A MultiDict is a dictionary-like data structure that supports multiple values per key.
     """
 
-    fields: Tuple[Tuple[KT, VT], ...]
+    fields: tuple[tuple[KT, VT], ...]
     """The underlying raw datastructure."""
 
     def __repr__(self):
@@ -83,7 +83,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
             return self.fields == other.fields
         return False
 
-    def get_all(self, key: KT) -> List[VT]:
+    def get_all(self, key: KT) -> list[VT]:
         """
         Return the list of all values for a given key.
         If that key is not in the MultiDict, the return value will be an empty list.
@@ -95,13 +95,13 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
             if self._kconv(k) == key
         ]
 
-    def set_all(self, key: KT, values: List[VT]) -> None:
+    def set_all(self, key: KT, values: list[VT]) -> None:
         """
         Remove the old values for a key and add new ones.
         """
         key_kconv = self._kconv(key)
 
-        new_fields: List[Tuple[KT, VT]] = []
+        new_fields: list[tuple[KT, VT]] = []
         for field in self.fields:
             if self._kconv(field[0]) == key_kconv:
                 if values:

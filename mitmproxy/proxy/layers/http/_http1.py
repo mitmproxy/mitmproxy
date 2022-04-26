@@ -31,9 +31,9 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
-    ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: Type[Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
+    ReceiveData: type[Union[RequestData, ResponseData]]
+    ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)

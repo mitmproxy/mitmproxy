@@ -36,7 +36,7 @@ T = typing.TypeVar("T", bound=master.Master)
 
 
 def run(
-        master_cls: typing.Type[T],
+        master_cls: type[T],
         make_parser: typing.Callable[[options.Options], argparse.ArgumentParser],
         arguments: typing.Sequence[str],
         extra: typing.Callable[[typing.Any], dict] = None

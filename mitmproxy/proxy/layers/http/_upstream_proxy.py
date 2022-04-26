@@ -71,7 +71,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         raw = http1.assemble_request(flow.request)
         yield commands.SendData(self.tunnel_connection, raw)
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data

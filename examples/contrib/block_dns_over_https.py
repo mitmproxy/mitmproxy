@@ -74,12 +74,12 @@ default_blocklist: dict = {
 }
 
 # additional hostnames to block
-additional_doh_names: List[str] = [
+additional_doh_names: list[str] = [
     'dns.google.com'
 ]
 
 # additional IPs to block
-additional_doh_ips: List[str] = [
+additional_doh_ips: list[str] = [
 
 ]
 

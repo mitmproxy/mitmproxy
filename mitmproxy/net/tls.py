@@ -123,13 +123,13 @@ def create_proxy_server_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
+        cipher_list: Optional[tuple[str, ...]],
         verify: Verify,
         hostname: Optional[str],
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
-        alpn_protos: Optional[Tuple[bytes, ...]],
+        alpn_protos: Optional[tuple[bytes, ...]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -191,13 +191,13 @@ def create_client_proxy_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
+        cipher_list: Optional[tuple[str, ...]],
         cert: certs.Cert,
         key: rsa.RSAPrivateKey,
         chain_file: Optional[Path],
-        alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
+        alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
         request_client_cert: bool,
-        extra_chain_certs: Tuple[certs.Cert, ...],
+        extra_chain_certs: tuple[certs.Cert, ...],
         dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(

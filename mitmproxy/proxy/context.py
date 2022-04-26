@@ -25,7 +25,7 @@ class Context:
     """
     Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
     """
-    layers: List["mitmproxy.proxy.layer.Layer"]
+    layers: list["mitmproxy.proxy.layer.Layer"]
     """
     The protocol layer stack.
     """

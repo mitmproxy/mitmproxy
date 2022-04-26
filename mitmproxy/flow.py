@@ -137,7 +137,7 @@ class Flow(stateobject.StateObject):
         self._backup: typing.Optional[Flow] = None
         self.marked: str = ""
         self.is_replay: typing.Optional[str] = None
-        self.metadata: typing.Dict[str, typing.Any] = dict()
+        self.metadata: dict[str, typing.Any] = dict()
         self.comment: str = ""
 
     _stateobject_attributes = dict(
@@ -149,7 +149,7 @@ class Flow(stateobject.StateObject):
         intercepted=bool,
         is_replay=str,
         marked=str,
-        metadata=typing.Dict[str, typing.Any],
+        metadata=dict[str, typing.Any],
         comment=str,
         timestamp_created=float,
     )

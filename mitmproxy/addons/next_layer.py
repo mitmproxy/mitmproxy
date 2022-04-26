@@ -24,12 +24,12 @@ from mitmproxy.proxy import context, layer, layers
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello
 
-LayerCls = Type[layer.Layer]
+LayerCls = type[layer.Layer]
 
 
 def stack_match(
         context: context.Context,
-        layers: Sequence[Union[LayerCls, Tuple[LayerCls, ...]]]
+        layers: Sequence[Union[LayerCls, tuple[LayerCls, ...]]]
 ) -> bool:
     if len(context.layers) != len(layers):
         return False
@@ -69,7 +69,7 @@ class NextLayer:
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
 
-        hostnames: List[str] = []
+        hostnames: list[str] = []
         if server_address is not None:
             hostnames.append(server_address[0])
         if is_tls_record_magic(data_client):

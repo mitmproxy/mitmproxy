@@ -15,7 +15,7 @@ class MyAddon:
         flows: typing.Sequence[flow.Flow],
         path: types.Path,
     ) -> None:
-        totals: typing.Dict[str, int] = {}
+        totals: dict[str, int] = {}
         for f in flows:
             if isinstance(f, http.HTTPFlow):
                 totals[f.request.host] = totals.setdefault(f.request.host, 0) + 1

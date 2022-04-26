@@ -20,10 +20,10 @@ REALM = "mitmproxy"
 
 
 class ProxyAuth:
-    validator: Optional[Validator] = None
+    validator: Validator | None = None
 
     def __init__(self):
-        self.authenticated: MutableMapping[connection.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[connection.Client, tuple[str, str]] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
@@ -150,7 +150,7 @@ def mkauth(username: str, password: str, scheme: str = "basic") -> str:
     return scheme + " " + v
 
 
-def parse_http_basic_auth(s: str) -> Tuple[str, str, str]:
+def parse_http_basic_auth(s: str) -> tuple[str, str, str]:
     """
     Parse a basic auth header.
     Raises a ValueError if the input is invalid.
@@ -226,7 +226,7 @@ class Ldap(Validator):
         self.server = server
 
     @staticmethod
-    def parse_spec(spec: str) -> Tuple[bool, str, Optional[int], str, str, str]:
+    def parse_spec(spec: str) -> tuple[bool, str, int | None, str, str, str]:
         try:
             if spec.count(":") > 4:
                 (

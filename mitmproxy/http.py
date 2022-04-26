@@ -93,7 +93,7 @@ class Headers(multidict.MultiDict):  # type: ignore
      - For use with the "Set-Cookie" and "Cookie" headers, either use `Response.cookies` or see `Headers.get_all`.
     """
 
-    def __init__(self, fields: Iterable[Tuple[bytes, bytes]] = (), **headers):
+    def __init__(self, fields: Iterable[tuple[bytes, bytes]] = (), **headers):
         """
         *Args:*
          - *fields:* (optional) list of ``(name, value)`` header byte tuples,
@@ -117,7 +117,7 @@ class Headers(multidict.MultiDict):  # type: ignore
             for name, value in headers.items()
         })
 
-    fields: Tuple[Tuple[bytes, bytes], ...]
+    fields: tuple[tuple[bytes, bytes], ...]
 
     @staticmethod
     def _reduce_values(values) -> str:
@@ -143,7 +143,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         for x in super().__iter__():
             yield _native(x)
 
-    def get_all(self, name: Union[str, bytes]) -> List[str]:
+    def get_all(self, name: Union[str, bytes]) -> list[str]:
         """
         Like `Headers.get`, but does not fold multiple headers into a single one.
         This is useful for Set-Cookie and Cookie headers, which do not support folding.
@@ -159,7 +159,7 @@ class Headers(multidict.MultiDict):  # type: ignore
             super().get_all(name)
         ]
 
-    def set_all(self, name: Union[str, bytes], values: List[Union[str, bytes]]):
+    def set_all(self, name: Union[str, bytes], values: list[Union[str, bytes]]):
         """
         Explicitly set multiple headers for the given key.
         See `Headers.get_all`.
@@ -547,9 +547,9 @@ class Request(Message):
         authority: bytes,
         path: bytes,
         http_version: bytes,
-        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
         content: Optional[bytes],
-        trailers: Union[Headers, Tuple[Tuple[bytes, bytes], ...], None],
+        trailers: Union[Headers, tuple[tuple[bytes, bytes], ...], None],
         timestamp_start: float,
         timestamp_end: Optional[float],
     ):
@@ -603,7 +603,7 @@ class Request(Message):
         method: str,
         url: str,
         content: Union[bytes, str] = "",
-        headers: Union[Headers, Dict[Union[str, bytes], Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        headers: Union[Headers, dict[Union[str, bytes], Union[str, bytes]], Iterable[tuple[bytes, bytes]]] = ()
     ) -> "Request":
         """
         Simplified API for creating request objects.
@@ -885,7 +885,7 @@ class Request(Message):
         self._set_cookies(value)
 
     @property
-    def path_components(self) -> Tuple[str, ...]:
+    def path_components(self) -> tuple[str, ...]:
         """
         The URL's path components as a tuple of strings.
         Components are unquoted.
@@ -1020,9 +1020,9 @@ class Response(Message):
         http_version: bytes,
         status_code: int,
         reason: bytes,
-        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
         content: Optional[bytes],
-        trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+        trailers: Union[None, Headers, tuple[tuple[bytes, bytes], ...]],
         timestamp_start: float,
         timestamp_end: Optional[float],
     ):
@@ -1064,7 +1064,7 @@ class Response(Message):
         cls,
         status_code: int = 200,
         content: Union[bytes, str] = b"",
-        headers: Union[Headers, Mapping[str, Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        headers: Union[Headers, Mapping[str, Union[str, bytes]], Iterable[tuple[bytes, bytes]]] = ()
     ) -> "Response":
         """
         Simplified API for creating response objects.
@@ -1146,7 +1146,7 @@ class Response(Message):
         self.headers.set_all("set-cookie", cookie_headers)
 
     @property
-    def cookies(self) -> multidict.MultiDictView[str, Tuple[str, multidict.MultiDict[str, Optional[str]]]]:
+    def cookies(self) -> multidict.MultiDictView[str, tuple[str, multidict.MultiDict[str, Optional[str]]]]:
         """
         The response cookies. A possibly empty `MultiDictView`, where the keys are cookie
         name strings, and values are `(cookie value, attributes)` tuples. Within

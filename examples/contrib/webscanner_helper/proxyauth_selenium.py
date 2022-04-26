@@ -65,7 +65,7 @@ class SeleniumAddon:
         profile.set_preference('network.proxy.type', 0)
         self.browser = webdriver.Firefox(firefox_profile=profile,
                                          options=options)
-        self.cookies: List[Dict[str, str]] = []
+        self.cookies: list[dict[str, str]] = []
 
     def _login(self, flow):
         self.cookies = self.login(flow)
@@ -128,5 +128,5 @@ class SeleniumAddon:
             flow.request.headers["cookie"] = cookies
 
     @abc.abstractmethod
-    def login(self, flow: mitmproxy.http.HTTPFlow) -> List[Dict[str, str]]:
+    def login(self, flow: mitmproxy.http.HTTPFlow) -> list[dict[str, str]]:
         pass

@@ -49,7 +49,7 @@ class GetHttpConnection(HttpCommand):
     Open an HTTP Connection. This may not actually open a connection, but return an existing HTTP connection instead.
     """
     blocking = True
-    address: Tuple[str, int]
+    address: tuple[str, int]
     tls: bool
     via: Optional[server_spec.ServerSpec]
 
@@ -71,7 +71,7 @@ class GetHttpConnection(HttpCommand):
 @dataclass
 class GetHttpConnectionCompleted(events.CommandCompleted):
     command: GetHttpConnection
-    reply: Union[Tuple[None, str], Tuple[Connection, None]]
+    reply: Union[tuple[None, str], tuple[Connection, None]]
     """connection object, error message"""
 
 
@@ -693,10 +693,10 @@ class HttpLayer(layer.Layer):
     ConnectionEvent -> HttpEvent -> HttpCommand -> ConnectionCommand
     """
     mode: HTTPMode
-    command_sources: Dict[commands.Command, layer.Layer]
-    streams: Dict[int, HttpStream]
-    connections: Dict[Connection, layer.Layer]
-    waiting_for_establishment: DefaultDict[Connection, List[GetHttpConnection]]
+    command_sources: dict[commands.Command, layer.Layer]
+    streams: dict[int, HttpStream]
+    connections: dict[Connection, layer.Layer]
+    waiting_for_establishment: DefaultDict[Connection, list[GetHttpConnection]]
 
     def __init__(self, context: Context, mode: HTTPMode):
         super().__init__(context)
@@ -892,7 +892,7 @@ class HttpLayer(layer.Layer):
     def register_connection(self, command: RegisterHttpConnection) -> layer.CommandGenerator[None]:
         waiting = self.waiting_for_establishment.pop(command.connection)
 
-        reply: Union[Tuple[None, str], Tuple[Connection, None]]
+        reply: Union[tuple[None, str], tuple[Connection, None]]
         if command.err:
             reply = (None, command.err)
         else:

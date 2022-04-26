@@ -50,7 +50,7 @@ class ClientHello:
             return self._raw_bytes
 
     @property
-    def cipher_suites(self) -> List[int]:
+    def cipher_suites(self) -> list[int]:
         """The cipher suites offered by the client (as raw ints)."""
         return self._client_hello.cipher_suites.cipher_suites
 
@@ -73,7 +73,7 @@ class ClientHello:
         return None
 
     @property
-    def alpn_protocols(self) -> List[bytes]:
+    def alpn_protocols(self) -> list[bytes]:
         """
         The application layer protocols offered by the client as part of the
         [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation) TLS extension.
@@ -85,7 +85,7 @@ class ClientHello:
         return []
 
     @property
-    def extensions(self) -> List[Tuple[int, bytes]]:
+    def extensions(self) -> list[tuple[int, bytes]]:
         """The raw list of extensions in the form of `(extension_type, raw_bytes)` tuples."""
         ret = []
         if self._client_hello.extensions:

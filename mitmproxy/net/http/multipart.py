@@ -39,7 +39,7 @@ def encode(head, l):
             return temp
 
 
-def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes, bytes]]:
+def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, bytes]]:
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """

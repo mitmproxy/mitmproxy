@@ -211,8 +211,8 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
             self,
             master,
             vals: typing.Union[
-                typing.List[typing.List[typing.Any]],
-                typing.List[typing.Any],
+                list[list[typing.Any]],
+                list[typing.Any],
                 typing.Any,
             ]) -> None:
         if vals is not None:

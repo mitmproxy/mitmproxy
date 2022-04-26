@@ -91,7 +91,7 @@ class SSLTest:
     def __init__(
         self,
         server_side: bool = False,
-        alpn: typing.Optional[typing.List[str]] = None,
+        alpn: typing.Optional[list[str]] = None,
         sni: typing.Optional[bytes] = b"example.mitmproxy.org",
         max_ver: typing.Optional[ssl.TLSVersion] = None,
     ):
@@ -409,7 +409,7 @@ class TestServerTLS:
 def make_client_tls_layer(
     tctx: context.Context,
     **kwargs
-) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
+) -> tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
     # This is a bit contrived as the client layer expects a server layer as parent.
     # We also set child layers manually to avoid NextLayer noise.
     server_layer = tls.ServerTLSLayer(tctx)

@@ -23,7 +23,7 @@ class ListCompleter(Completer):
             options: typing.Sequence[str],
     ) -> None:
         self.start = start
-        self.options: typing.List[str] = []
+        self.options: list[str] = []
         for o in options:
             if o.startswith(start):
                 self.options.append(o)
@@ -245,7 +245,7 @@ class CommandEdit(urwid.WidgetWrap):
         canv.cursor = self.get_cursor_coords((maxcol,))
         return canv
 
-    def get_cursor_coords(self, size) -> typing.Tuple[int, int]:
+    def get_cursor_coords(self, size) -> tuple[int, int]:
         p = self.cbuf.cursor + len(self.leader)
         trans = self._w.get_line_translation(size[0])
         x, y = calc_coords(self._w.get_text()[0], trans, p)

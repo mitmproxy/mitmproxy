@@ -23,7 +23,7 @@ In the case of transparent server, the last argument is the original destination
 """
 
 # to make mypy happy
-SockAddress = Union[Tuple[str, int], Tuple[str, int, int, int]]
+SockAddress = Union[tuple[str, int], tuple[str, int, int, int]]
 
 
 class TransparentSocket(socket.socket):
@@ -59,7 +59,7 @@ class TransparentSocket(socket.socket):
         else:
             raise NotImplementedError(f"family {family} not implemented")
 
-    def recvfrom(self, bufsize: int, flags: int = 0) -> Tuple[bytes, Tuple[SockAddress, SockAddress]]:
+    def recvfrom(self, bufsize: int, flags: int = 0) -> tuple[bytes, tuple[SockAddress, SockAddress]]:
         """Same as recvfrom, but always returns source and destination addresses."""
 
         data, ancdata, _, client_addr = self._recvmsg(bufsize, socket.CMSG_SPACE(1024), flags)
@@ -78,9 +78,9 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
     _closed: asyncio.Event
     _paused: int
     _can_write: asyncio.Event
-    _sock: Optional[socket.socket]
+    _sock: socket.socket | None
 
-    def __init__(self, loop: Optional[asyncio.AbstractEventLoop]) -> None:
+    def __init__(self, loop: asyncio.AbstractEventLoop | None) -> None:
         self._loop = asyncio.get_running_loop() if loop is None else loop
         self._closed = asyncio.Event()
         self._paused = 0
@@ -92,13 +92,13 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         return f"<{self.__class__.__name__} socket={self._sock!r}>"
 
     @property
-    def sockets(self) -> Tuple[socket.socket, ...]:
+    def sockets(self) -> tuple[socket.socket, ...]:
         return () if self._sock is None else (self._sock,)
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self._sock = transport.get_extra_info("socket")
 
-    def connection_lost(self, exc: Optional[Exception]) -> None:
+    def connection_lost(self, exc: Exception | None) -> None:
         self._closed.set()
         if exc:
             ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")
@@ -128,14 +128,14 @@ class UdpServer(DrainableDatagramProtocol):
     """UDP server similar to base_events.Server"""
 
     # _datagram_received_cb: DatagramReceivedCallback
-    _transport: Optional[asyncio.DatagramTransport]
-    _transparent_transports: Optional[Dict[Address, asyncio.DatagramTransport]]
-    _local_addr: Optional[Address]
+    _transport: asyncio.DatagramTransport | None
+    _transparent_transports: dict[Address, asyncio.DatagramTransport] | None
+    _local_addr: Address | None
 
     def __init__(
         self,
         datagram_received_cb: DatagramReceivedCallback,
-        loop: Optional[asyncio.AbstractEventLoop],
+        loop: asyncio.AbstractEventLoop | None,
         transparent: bool
     ) -> None:
         super().__init__(loop)
@@ -227,10 +227,10 @@ class DatagramWriter:
 
     _transport: asyncio.DatagramTransport
     _remote_addr: Address
-    _reader: Optional[DatagramReader]
-    _closed: Optional[asyncio.Event]
+    _reader: DatagramReader | None
+    _closed: asyncio.Event | None
 
-    def __init__(self, transport: asyncio.DatagramTransport, remote_addr: Address, reader: Optional[DatagramReader] = None) -> None:
+    def __init__(self, transport: asyncio.DatagramTransport, remote_addr: Address, reader: DatagramReader | None = None) -> None:
         """
         Create a new datagram writer around the given transport.
         Specify a reader to prevent closing the transport and instead only feed EOF to the reader.
@@ -284,14 +284,14 @@ class UdpClient(DrainableDatagramProtocol):
 
     _reader: DatagramReader
 
-    def __init__(self, reader: DatagramReader, loop: Optional[asyncio.AbstractEventLoop]):
+    def __init__(self, reader: DatagramReader, loop: asyncio.AbstractEventLoop | None):
         super().__init__(loop)
         self._reader = reader
 
     def datagram_received(self, data: bytes, remote_addr: Address) -> None:
         self._reader.feed_data(data, remote_addr)
 
-    def connection_lost(self, exc: Optional[Exception]) -> None:
+    def connection_lost(self, exc: Exception | None) -> None:
         self._reader.feed_eof()
         super().connection_lost(exc)
 
@@ -331,7 +331,7 @@ async def start_server(
     return protocol
 
 
-async def open_connection(host: str, port: int) -> Tuple[DatagramReader, DatagramWriter]:
+async def open_connection(host: str, port: int) -> tuple[DatagramReader, DatagramWriter]:
     """UDP variant of asyncio.open_connection."""
 
     loop = asyncio.get_running_loop()

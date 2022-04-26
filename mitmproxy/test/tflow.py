@@ -258,7 +258,7 @@ def twebsocket(messages: bool = True) -> websocket.WebSocketData:
     return ws
 
 
-def tflows() -> List[flow.Flow]:
+def tflows() -> list[flow.Flow]:
     return [
         tflow(resp=True),
         tflow(err=True),

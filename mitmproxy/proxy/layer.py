@@ -234,7 +234,7 @@ class NextLayer(Layer):
     layer: Optional[Layer]
     """The next layer. To be set by an addon."""
 
-    events: List[mevents.Event]
+    events: list[mevents.Event]
     """All events that happened before a decision was made."""
 
     _ask_on_start: bool

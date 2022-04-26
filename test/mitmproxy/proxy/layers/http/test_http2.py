@@ -52,7 +52,7 @@ def open_h2_server_conn():
     return s
 
 
-def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
+def decode_frames(data: bytes) -> list[hyperframe.frame.Frame]:
     # swallow preamble
     if data.startswith(b"PRI * HTTP/2.0"):
         data = data[24:]
@@ -65,7 +65,7 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
     return frames
 
 
-def start_h2_client(tctx: Context, keepalive: int = 0) -> Tuple[Playbook, FrameFactory]:
+def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameFactory]:
     tctx.client.alpn = b"h2"
     tctx.options.http2_ping_keepalive = keepalive
     frame_factory = FrameFactory()

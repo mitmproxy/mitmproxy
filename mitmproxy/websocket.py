@@ -14,7 +14,7 @@ from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
 from wsproto.frame_protocol import Opcode
 
-WebSocketMessageState = Tuple[int, bool, bytes, float, bool, bool]
+WebSocketMessageState = tuple[int, bool, bytes, float, bool, bool]
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -128,7 +128,7 @@ class WebSocketData(stateobject.StateObject):
     This is typically accessed as `mitmproxy.http.HTTPFlow.websocket`.
     """
 
-    messages: List[WebSocketMessage]
+    messages: list[WebSocketMessage]
     """All `WebSocketMessage`s transferred over this connection."""
 
     closed_by_client: Optional[bool] = None
@@ -146,7 +146,7 @@ class WebSocketData(stateobject.StateObject):
     """*Timestamp:* WebSocket connection closed."""
 
     _stateobject_attributes = dict(
-        messages=List[WebSocketMessage],
+        messages=list[WebSocketMessage],
         closed_by_client=bool,
         close_code=int,
         close_reason=str,

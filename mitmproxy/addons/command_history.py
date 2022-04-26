@@ -10,8 +10,8 @@ class CommandHistory:
     VACUUM_SIZE = 1024
 
     def __init__(self) -> None:
-        self.history: typing.List[str] = []
-        self.filtered_history: typing.List[str] = [""]
+        self.history: list[str] = []
+        self.filtered_history: list[str] = [""]
         self.current_index: int = 0
 
     def load(self, loader):

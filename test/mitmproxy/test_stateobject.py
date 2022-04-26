@@ -27,19 +27,19 @@ class Child(TObject):
 
 class TTuple(TObject):
     _stateobject_attributes = dict(
-        x=typing.Tuple[int, Child]
+        x=tuple[int, Child]
     )
 
 
 class TList(TObject):
     _stateobject_attributes = dict(
-        x=typing.List[Child]
+        x=list[Child]
     )
 
 
 class TDict(TObject):
     _stateobject_attributes = dict(
-        x=typing.Dict[str, Child]
+        x=dict[str, Child]
     )
 
 

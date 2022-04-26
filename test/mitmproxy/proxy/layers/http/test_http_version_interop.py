@@ -22,7 +22,7 @@ def event_types(events):
     return [type(x) for x in events]
 
 
-def h2_client(tctx: Context) -> Tuple[h2.connection.H2Connection, Playbook]:
+def h2_client(tctx: Context) -> tuple[h2.connection.H2Connection, Playbook]:
     tctx.client.alpn = b"h2"
     tctx.options.http2_ping_keepalive = 0
 

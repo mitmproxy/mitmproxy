@@ -12,7 +12,7 @@ from mitmproxy.proxy.layers import dns, http, modes, tcp, tls, websocket
 known = set()
 
 
-def category(name: str, desc: str, hooks: List[Type[hooks.Hook]]) -> None:
+def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     all_params = [
         list(inspect.signature(hook.__init__).parameters.values())[1:]
         for hook in hooks

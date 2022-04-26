@@ -24,7 +24,7 @@ TransportProtocol = Literal["tcp", "udp"]
 # practically speaking we may have IPv6 addresses with flowinfo and scope_id,
 # but type checking isn't good enough to properly handle tuple unions.
 # this version at least provides useful type checking messages.
-Address = Tuple[str, int]
+Address = tuple[str, int]
 
 
 class Connection(serializable.Serializable, metaclass=ABCMeta):

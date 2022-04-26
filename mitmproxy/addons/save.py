@@ -37,7 +37,7 @@ class Save:
     def __init__(self) -> None:
         self.stream: typing.Optional[io.FilteredFlowWriter] = None
         self.filt: typing.Optional[flowfilter.TFilter] = None
-        self.active_flows: typing.Set[flow.Flow] = set()
+        self.active_flows: set[flow.Flow] = set()
         self.current_path: typing.Optional[str] = None
 
     def load(self, loader):

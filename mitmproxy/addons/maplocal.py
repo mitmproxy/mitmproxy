@@ -47,7 +47,7 @@ def _safe_path_join(root: Path, untrusted: str) -> Path:
     return Path(joined)
 
 
-def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
+def file_candidates(url: str, spec: MapLocalSpec) -> list[Path]:
     """
     Get all potential file candidates given a URL and a mapping spec ordered by preference.
     This function already assumes that the spec regex matches the URL.
@@ -81,7 +81,7 @@ def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
 
 class MapLocal:
     def __init__(self):
-        self.replacements: typing.List[MapLocalSpec] = []
+        self.replacements: list[MapLocalSpec] = []
 
     def load(self, loader):
         loader.add_option(

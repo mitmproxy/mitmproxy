@@ -50,7 +50,7 @@ def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
 
 class ModifyHeaders:
     def __init__(self):
-        self.replacements: typing.List[ModifySpec] = []
+        self.replacements: list[ModifySpec] = []
 
     def load(self, loader):
         loader.add_option(

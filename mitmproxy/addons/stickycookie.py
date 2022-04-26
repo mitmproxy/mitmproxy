@@ -5,10 +5,10 @@ from typing import List, Tuple, Dict, Optional
 from mitmproxy import http, flowfilter, ctx, exceptions
 from mitmproxy.net.http import cookies
 
-TOrigin = Tuple[str, int, str]
+TOrigin = tuple[str, int, str]
 
 
-def ckey(attrs: Dict[str, str], f: http.HTTPFlow) -> TOrigin:
+def ckey(attrs: dict[str, str], f: http.HTTPFlow) -> TOrigin:
     """
         Returns a (domain, port, path) tuple.
     """
@@ -31,7 +31,7 @@ def domain_match(a: str, b: str) -> bool:
 
 class StickyCookie:
     def __init__(self):
-        self.jar: Dict[TOrigin, Dict[str, str]] = collections.defaultdict(dict)
+        self.jar: dict[TOrigin, dict[str, str]] = collections.defaultdict(dict)
         self.flt: Optional[flowfilter.TFilter] = None
 
     def load(self, loader):
@@ -72,7 +72,7 @@ class StickyCookie:
 
     def request(self, flow: http.HTTPFlow):
         if self.flt:
-            cookie_list: List[Tuple[str, str]] = []
+            cookie_list: list[tuple[str, str]] = []
             if flowfilter.match(self.flt, flow):
                 for (domain, port, path), c in self.jar.items():
                     match = [

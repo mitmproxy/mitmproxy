@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Hook:
     name: ClassVar[str]
 
-    def args(self) -> List[Any]:
+    def args(self) -> list[Any]:
         args = []
         for field in fields(self):
             args.append(getattr(self, field.name))
@@ -43,7 +43,7 @@ class Hook:
         cls.__eq__ = object.__eq__
 
 
-all_hooks: Dict[str, Type[Hook]] = {}
+all_hooks: dict[str, type[Hook]] = {}
 
 
 @dataclass
@@ -53,7 +53,7 @@ class ConfigureHook(Hook):
     set-like object containing the keys of all changed options. This
     event is called during startup with all options in the updated set.
     """
-    updated: Set[str]
+    updated: set[str]
 
 
 @dataclass

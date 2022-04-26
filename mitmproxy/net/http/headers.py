@@ -2,7 +2,7 @@ import collections
 from typing import Dict, Optional, Tuple
 
 
-def parse_content_type(c: str) -> Optional[Tuple[str, str, Dict[str, str]]]:
+def parse_content_type(c: str) -> Optional[tuple[str, str, dict[str, str]]]:
     """
         A simple parser for content-type values. Returns a (type, subtype,
         parameters) tuple, where type and subtype are strings, and parameters

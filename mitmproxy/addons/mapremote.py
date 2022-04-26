@@ -24,7 +24,7 @@ def parse_map_remote_spec(option: str) -> MapRemoteSpec:
 
 class MapRemote:
     def __init__(self):
-        self.replacements: typing.List[MapRemoteSpec] = []
+        self.replacements: list[MapRemoteSpec] = []
 
     def load(self, loader):
         loader.add_option(

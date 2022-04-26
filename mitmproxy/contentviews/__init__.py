@@ -29,7 +29,7 @@ from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
 from ..websocket import WebSocketMessage
 
-views: List[View] = []
+views: list[View] = []
 
 on_add = blinker.Signal()
 """A new contentview has been added."""

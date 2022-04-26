@@ -11,7 +11,7 @@ from mitmproxy import io
 
 
 class ServerPlayback:
-    flowmap: typing.Dict[typing.Hashable, typing.List[http.HTTPFlow]]
+    flowmap: dict[typing.Hashable, list[http.HTTPFlow]]
     configured: bool
 
     def __init__(self):
@@ -122,7 +122,7 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key: typing.List[typing.Any] = [str(r.scheme), str(r.method), str(path)]
+        key: list[typing.Any] = [str(r.scheme), str(r.method), str(path)]
         if not ctx.options.server_replay_ignore_content:
             if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(

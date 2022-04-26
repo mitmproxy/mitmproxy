@@ -81,7 +81,7 @@ class _Option:
 
 @dataclass
 class _UnconvertedStrings:
-    val: typing.List[str]
+    val: list[str]
 
 
 class OptManager:
@@ -97,12 +97,12 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: typing.Dict[str, typing.Any] = {}
+        self.deferred: dict[str, typing.Any] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
-        self._options: typing.Dict[str, typing.Any] = {}
+        self._options: dict[str, typing.Any] = {}
 
     def add_option(
         self,
@@ -303,7 +303,7 @@ class OptManager:
         May raise an `OptionsError` if a value is malformed or an option is unknown and defer is False.
         """
         # First, group specs by option name.
-        unprocessed: typing.Dict[str, typing.List[str]] = {}
+        unprocessed: dict[str, list[str]] = {}
         for spec in specs:
             if "=" in spec:
                 name, value = spec.split("=", maxsplit=1)
@@ -312,7 +312,7 @@ class OptManager:
                 unprocessed.setdefault(spec, [])
 
         # Second, convert values to the correct type.
-        processed: typing.Dict[str, typing.Any] = {}
+        processed: dict[str, typing.Any] = {}
         for name in list(unprocessed.keys()):
             if name in self._options:
                 processed[name] = self._parse_setval(self._options[name], unprocessed.pop(name))
@@ -334,7 +334,7 @@ class OptManager:
             Processes options that were deferred in previous calls to set, and
             have since been added.
         """
-        update: typing.Dict[str, typing.Any] = {}
+        update: dict[str, typing.Any] = {}
         for optname, value in self.deferred.items():
             if optname in self._options:
                 if isinstance(value, _UnconvertedStrings):
@@ -344,7 +344,7 @@ class OptManager:
         for k in update.keys():
             del self.deferred[k]
 
-    def _parse_setval(self, o: _Option, values: typing.List[str]) -> typing.Any:
+    def _parse_setval(self, o: _Option, values: list[str]) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
@@ -482,7 +482,7 @@ def dump_defaults(opts, out: typing.TextIO):
     return ruamel.yaml.YAML().dump(s, out)
 
 
-def dump_dicts(opts, keys: typing.List[str]=None):
+def dump_dicts(opts, keys: list[str]=None):
     """
         Dumps the options into a list of dict object.
 

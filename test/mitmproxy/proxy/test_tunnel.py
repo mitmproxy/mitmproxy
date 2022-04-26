@@ -36,7 +36,7 @@ class TTunnelLayer(tunnel.TunnelLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield SendData(self.tunnel_connection, b"handshake-hello")
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         yield SendData(self.tunnel_connection, data)
         if data == b"handshake-success":
             return True, None

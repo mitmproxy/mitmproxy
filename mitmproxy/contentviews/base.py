@@ -8,8 +8,8 @@ from mitmproxy import http
 KEY_MAX = 30
 
 TTextType = typing.Union[str, bytes]  # FIXME: This should be either bytes or str ultimately.
-TViewLine = typing.List[typing.Tuple[str, TTextType]]
-TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
+TViewLine = list[tuple[str, TTextType]]
+TViewResult = tuple[str, typing.Iterator[TViewLine]]
 
 
 class View(ABC):
@@ -66,7 +66,7 @@ class View(ABC):
 
 
 def format_pairs(
-    items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
+    items: typing.Iterable[tuple[TTextType, TTextType]]
 ) -> typing.Iterator[TViewLine]:
     """
     Helper function that accepts a list of (k,v) pairs into a list of

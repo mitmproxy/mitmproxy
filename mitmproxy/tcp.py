@@ -40,7 +40,7 @@ class TCPFlow(flow.Flow):
     A TCPFlow is a simplified representation of a TCP session.
     """
 
-    messages: List[TCPMessage]
+    messages: list[TCPMessage]
     """
     The messages transmitted over this connection.
 
@@ -52,7 +52,7 @@ class TCPFlow(flow.Flow):
         self.messages = []
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes["messages"] = List[TCPMessage]
+    _stateobject_attributes["messages"] = list[TCPMessage]
 
     def __repr__(self):
         return f"<TCPFlow ({len(self.messages)} messages)>"

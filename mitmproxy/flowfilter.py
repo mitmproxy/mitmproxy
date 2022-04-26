@@ -526,7 +526,7 @@ class FNot(_Token):
         return not self.itm(f)
 
 
-filter_unary: Sequence[Type[_Action]] = [
+filter_unary: Sequence[type[_Action]] = [
     FAsset,
     FErr,
     FHTTP,
@@ -541,7 +541,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FWebSocket,
     FAll,
 ]
-filter_rex: Sequence[Type[_Rex]] = [
+filter_rex: Sequence[type[_Rex]] = [
     FBod,
     FBodRequest,
     FBodResponse,

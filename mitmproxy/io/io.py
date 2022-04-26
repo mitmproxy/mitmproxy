@@ -10,7 +10,7 @@ from mitmproxy import tcp
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 
-FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
+FLOW_TYPES: dict[str, type[flow.Flow]] = dict(
     http=http.HTTPFlow,
     tcp=tcp.TCPFlow,
     dns=dns.DNSFlow,
@@ -38,7 +38,7 @@ class FlowReader:
             while True:
                 # FIXME: This cast hides a lack of dynamic type checking
                 loaded = cast(
-                    Dict[Union[bytes, str], Any],
+                    dict[Union[bytes, str], Any],
                     tnetstring.load(self.fo),
                 )
                 try:

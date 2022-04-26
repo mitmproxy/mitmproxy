@@ -700,7 +700,7 @@ class Focus:
 class Settings(collections.abc.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
-        self._values: typing.MutableMapping[str, typing.Dict] = {}
+        self._values: typing.MutableMapping[str, dict] = {}
         view.sig_store_remove.connect(self._sig_store_remove)
         view.sig_store_refresh.connect(self._sig_store_refresh)
 

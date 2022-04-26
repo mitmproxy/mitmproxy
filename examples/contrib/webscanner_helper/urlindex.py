@@ -97,7 +97,7 @@ class TextUrlIndexWriter(UrlIndexWriter):
         pass
 
 
-WRITER: Dict[str, Type[UrlIndexWriter]] = {
+WRITER: dict[str, type[UrlIndexWriter]] = {
     "json": JSONUrlIndexWriter,
     "text": TextUrlIndexWriter,
 }

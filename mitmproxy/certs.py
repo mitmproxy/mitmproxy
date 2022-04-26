@@ -85,7 +85,7 @@ class Cert(serializable.Serializable):
         return self._cert.fingerprint(hashes.SHA256())
 
     @property
-    def issuer(self) -> List[Tuple[str, str]]:
+    def issuer(self) -> list[tuple[str, str]]:
         return _name_to_keyval(self._cert.issuer)
 
     @property
@@ -102,7 +102,7 @@ class Cert(serializable.Serializable):
         return datetime.datetime.utcnow() > self._cert.not_valid_after
 
     @property
-    def subject(self) -> List[Tuple[str, str]]:
+    def subject(self) -> list[tuple[str, str]]:
         return _name_to_keyval(self._cert.subject)
 
     @property
@@ -110,7 +110,7 @@ class Cert(serializable.Serializable):
         return self._cert.serial_number
 
     @property
-    def keyinfo(self) -> Tuple[str, int]:
+    def keyinfo(self) -> tuple[str, int]:
         public_key = self._cert.public_key()
         if isinstance(public_key, rsa.RSAPublicKey):
             return "RSA", public_key.key_size
@@ -136,7 +136,7 @@ class Cert(serializable.Serializable):
         return None
 
     @property
-    def altnames(self) -> List[str]:
+    def altnames(self) -> list[str]:
         """
         Get all SubjectAlternativeName DNS altnames.
         """
@@ -152,7 +152,7 @@ class Cert(serializable.Serializable):
             )
 
 
-def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
+def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
     parts = []
     for attr in name:
         # pyca cryptography <35.0.0 backwards compatiblity
@@ -169,7 +169,7 @@ def create_ca(
     organization: str,
     cn: str,
     key_size: int,
-) -> Tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
+) -> tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
     now = datetime.datetime.now()
 
     private_key = rsa.generate_private_key(
@@ -210,7 +210,7 @@ def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: Optional[str],
-    sans: List[str],
+    sans: list[str],
     organization: Optional[str] = None,
 ) -> Cert:
     """
@@ -246,7 +246,7 @@ def dummy_cert(
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
-    ss: List[x509.GeneralName] = []
+    ss: list[x509.GeneralName] = []
     for x in sans:
         try:
             ip = ipaddress.ip_address(x)
@@ -268,7 +268,7 @@ class CertStoreEntry:
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = Tuple[Optional[str], Tuple[str, ...]]  # (common_name, sans)
+TGeneratedCertId = tuple[Optional[str], tuple[str, ...]]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 DHParams = NewType("DHParams", bytes)
@@ -279,8 +279,8 @@ class CertStore:
         Implements an in-memory certificate store.
     """
     STORE_CAP = 100
-    certs: Dict[TCertId, CertStoreEntry]
-    expire_queue: List[CertStoreEntry]
+    certs: dict[TCertId, CertStoreEntry]
+    expire_queue: list[CertStoreEntry]
 
     def __init__(
         self,
@@ -446,7 +446,7 @@ class CertStore:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: str) -> List[str]:
+    def asterisk_forms(dn: str) -> list[str]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
@@ -460,7 +460,7 @@ class CertStore:
     def get_cert(
         self,
         commonname: Optional[str],
-        sans: List[str],
+        sans: list[str],
         organization: Optional[str] = None
     ) -> CertStoreEntry:
         """
@@ -472,7 +472,7 @@ class CertStore:
             organization: Organization name for the generated certificate.
         """
 
-        potential_keys: List[TCertId] = []
+        potential_keys: list[TCertId] = []
         if commonname:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:

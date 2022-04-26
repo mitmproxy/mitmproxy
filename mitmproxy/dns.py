@@ -178,16 +178,16 @@ class Message(stateobject.StateObject):
     """Reserved for future use.  Must be zero in all queries and responses."""
     response_code: int
     """This field is set as part of responses."""
-    questions: List[Question]
+    questions: list[Question]
     """
     The question section is used to carry the "question" in most queries, i.e.
     the parameters that define what is being asked.
     """
-    answers: List[ResourceRecord]
+    answers: list[ResourceRecord]
     """First resource record section."""
-    authorities: List[ResourceRecord]
+    authorities: list[ResourceRecord]
     """Second resource record section."""
-    additionals: List[ResourceRecord]
+    additionals: list[ResourceRecord]
     """Third resource record section."""
 
     _stateobject_attributes = dict(
@@ -201,10 +201,10 @@ class Message(stateobject.StateObject):
         recursion_available=bool,
         reserved=int,
         response_code=int,
-        questions=List[Question],
-        answers=List[ResourceRecord],
-        authorities=List[ResourceRecord],
-        additionals=List[ResourceRecord],
+        questions=list[Question],
+        answers=list[ResourceRecord],
+        authorities=list[ResourceRecord],
+        additionals=list[ResourceRecord],
     )
 
     @classmethod
@@ -246,7 +246,7 @@ class Message(stateobject.StateObject):
             additionals=[],
         )
 
-    def succeed(self, answers: List[ResourceRecord]) -> Message:
+    def succeed(self, answers: list[ResourceRecord]) -> Message:
         return Message(
             timestamp=time.time(),
             id=self.id,
@@ -273,7 +273,7 @@ class Message(stateobject.StateObject):
         return msg
 
     @classmethod
-    def unpack_from(cls, buffer: Union[bytes, bytearray], offset: int) -> Tuple[int, Message]:
+    def unpack_from(cls, buffer: bytes | bytearray, offset: int) -> tuple[int, Message]:
         """Converts the buffer from a given offset into a DNS message and also returns its length."""
         id, flags, len_questions, len_answers, len_authorities, len_additionals = Message.HEADER.unpack_from(buffer, offset)
         msg = Message(
@@ -310,7 +310,7 @@ class Message(stateobject.StateObject):
             except struct.error as e:
                 raise struct.error(f"question #{i}: {str(e)}")
 
-        def unpack_rrs(section: List[ResourceRecord], section_name: str, count: int) -> None:
+        def unpack_rrs(section: list[ResourceRecord], section_name: str, count: int) -> None:
             nonlocal buffer, offset
             for i in range(0, count):
                 try:
@@ -418,7 +418,7 @@ class DNSFlow(flow.Flow):
 
     request: Message
     """The DNS request."""
-    response: Optional[Message] = None
+    response: Message | None = None
     """The DNS response."""
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()

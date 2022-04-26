@@ -89,7 +89,7 @@ class CommandCompleted(Event):
         return f"Reply({repr(self.command)}, {repr(self.reply)})"
 
 
-command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandCompleted]] = {}
+command_reply_subclasses: dict[commands.Command, type[CommandCompleted]] = {}
 
 
 @dataclass(repr=False)

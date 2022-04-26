@@ -10,7 +10,7 @@ from mitmproxy.net import check
 
 class ServerSpec(NamedTuple):
     scheme: Literal["http", "https"]
-    address: Tuple[str, int]
+    address: tuple[str, int]
 
 
 server_spec_re = re.compile(
@@ -69,7 +69,7 @@ def parse(server_spec: str) -> ServerSpec:
     return ServerSpec(scheme, (host, port))  # type: ignore
 
 
-def parse_with_mode(mode: str) -> Tuple[str, ServerSpec]:
+def parse_with_mode(mode: str) -> tuple[str, ServerSpec]:
     """
     Parse a proxy mode specification, which is usually just `(reverse|upstream):server-spec`.
 

@@ -34,15 +34,15 @@ def test_check_union():
 
 
 def test_check_tuple():
-    typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])
+    typecheck.check_option_type("foo", (42, "42"), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", None, typing.Tuple[int, str])
+        typecheck.check_option_type("foo", None, tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", (), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", (), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", (42, 42), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", (42, 42), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", ("42", 42), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", ("42", 42), tuple[int, str])
 
 
 def test_check_sequence():

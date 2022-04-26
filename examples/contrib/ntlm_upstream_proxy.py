@@ -70,7 +70,7 @@ class NTLMUpstreamAuth:
                         for _, stream in l.streams.items():
                             return stream.flow if isinstance(stream, HttpStream) else None
 
-        def build_connect_flow(context: Context, connect_header: typing.Tuple) -> http.HTTPFlow:
+        def build_connect_flow(context: Context, connect_header: tuple) -> http.HTTPFlow:
             flow = extract_flow_from_context(context)
             if not flow:
                 ctx.log.error("failed to build connect flow")
@@ -100,7 +100,7 @@ class NTLMUpstreamAuth:
                         raise
                     return token
 
-        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[typing.Tuple[bool, typing.Optional[str]]]:
+        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[tuple[bool, typing.Optional[str]]]:
             self.buf += data
             response_head = self.buf.maybe_extract_lines()
             if response_head:

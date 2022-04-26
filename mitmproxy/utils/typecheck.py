@@ -5,22 +5,22 @@ Type = typing.Union[
 ]
 
 
-def sequence_type(typeinfo: typing.Type[typing.List]) -> Type:
+def sequence_type(typeinfo: type[list]) -> Type:
     """Return the type of a sequence, e.g. typing.List"""
     return typeinfo.__args__[0]  # type: ignore
 
 
-def tuple_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
+def tuple_types(typeinfo: type[tuple]) -> typing.Sequence[Type]:
     """Return the types of a typing.Tuple"""
     return typeinfo.__args__  # type: ignore
 
 
-def union_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
+def union_types(typeinfo: type[tuple]) -> typing.Sequence[Type]:
     """return the types of a typing.Union"""
     return typeinfo.__args__  # type: ignore
 
 
-def mapping_types(typeinfo: typing.Type[typing.Mapping]) -> typing.Tuple[Type, Type]:
+def mapping_types(typeinfo: type[typing.Mapping]) -> tuple[Type, Type]:
     """return the types of a mapping, e.g. typing.Dict"""
     return typeinfo.__args__  # type: ignore
 

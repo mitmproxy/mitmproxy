@@ -80,7 +80,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
     layer: layer.Layer
-    wakeup_timer: typing.Set[asyncio.Task]
+    wakeup_timer: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
@@ -388,7 +388,7 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
 class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
     """Simple handler that does not really process any hooks."""
 
-    hook_handlers: typing.Dict[str, typing.Callable]
+    hook_handlers: dict[str, typing.Callable]
 
     def __init__(self, reader, writer, options, hooks):
         super().__init__(reader, writer, options)

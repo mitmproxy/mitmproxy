@@ -225,7 +225,7 @@ def parse(data_type: int, data: bytes) -> TSerializable:
     raise ValueError(f"unknown type tag: {data_type}")
 
 
-def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
+def pop(data: bytes) -> tuple[TSerializable, bytes]:
     """
     This function parses a tnetstring into a python object.
     It returns a tuple giving the parsed object and a string

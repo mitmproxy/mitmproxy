@@ -50,11 +50,11 @@ class Proxyserver:
     tcp_server: Optional[base_events.Server]
     dns_server: Optional[udp.UdpServer]
     listen_port: int
-    dns_reverse_addr: Optional[Tuple[str, int]]
+    dns_reverse_addr: Optional[tuple[str, int]]
     master: master.Master
     options: options.Options
     is_running: bool
-    _connections: Dict[Tuple, ProxyConnectionHandler]
+    _connections: dict[tuple, ProxyConnectionHandler]
 
     def __init__(self):
         self._lock = asyncio.Lock()
@@ -224,7 +224,7 @@ class Proxyserver:
                 else:
                     set_instance(None)
 
-    async def handle_connection(self, connection_id: Tuple):
+    async def handle_connection(self, connection_id: tuple):
         handler = self._connections[connection_id]
         task = asyncio.current_task()
         assert task

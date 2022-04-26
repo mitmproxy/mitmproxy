@@ -13,7 +13,7 @@ from mitmproxy.proxy.events import command_reply_subclasses
 from mitmproxy.proxy.layer import Layer
 
 PlaybookEntry = typing.Union[commands.Command, events.Event]
-PlaybookEntryList = typing.List[PlaybookEntry]
+PlaybookEntryList = list[PlaybookEntry]
 
 
 def _eq(
@@ -70,7 +70,7 @@ def _fmt_entry(x: PlaybookEntry):
     return f"{arrow} {x}"
 
 
-def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_logs: bool) -> PlaybookEntryList:
+def _merge_sends(lst: list[commands.Command], ignore_hooks: bool, ignore_logs: bool) -> PlaybookEntryList:
     current_send = None
     for x in lst:
         if isinstance(x, commands.SendData):
@@ -201,7 +201,7 @@ class Playbook:
                     x.connection.timestamp_end = 1624544787
 
                 self.actual.append(x)
-                cmds: typing.List[commands.Command] = []
+                cmds: list[commands.Command] = []
                 try:
                     # consume them one by one so that we can extend the log with all commands until traceback.
                     for cmd in self.layer.handle_event(x):
@@ -280,7 +280,7 @@ class Playbook:
 
 
 class reply(events.Event):
-    args: typing.Tuple[typing.Any, ...]
+    args: tuple[typing.Any, ...]
     to: typing.Union[commands.Command, int]
     side_effect: typing.Callable[[typing.Any], typing.Any]
 
@@ -344,7 +344,7 @@ class _Placeholder(typing.Generic[T]):
     assert f().messages == 0
     """
 
-    def __init__(self, cls: typing.Type[T]):
+    def __init__(self, cls: type[T]):
         self._obj = None
         self._cls = cls
 
@@ -367,7 +367,7 @@ class _Placeholder(typing.Generic[T]):
 
 
 # noinspection PyPep8Naming
-def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, _Placeholder[T]]:
+def Placeholder(cls: type[T] = typing.Any) -> typing.Union[T, _Placeholder[T]]:
     return _Placeholder(cls)
 
 
@@ -401,7 +401,7 @@ class EchoLayer(Layer):
 
 class RecordLayer(Layer):
     """Layer that records all events but does nothing."""
-    event_log: typing.List[events.Event]
+    event_log: list[events.Event]
 
     def __init__(self, context: context.Context) -> None:
         super().__init__(context)
@@ -413,7 +413,7 @@ class RecordLayer(Layer):
 
 
 def reply_next_layer(
-        child_layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
+        child_layer: typing.Union[type[Layer], typing.Callable[[context.Context], Layer]],
         *args,
         **kwargs
 ) -> reply:

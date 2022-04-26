@@ -319,7 +319,7 @@ class Redirect(threading.Thread):
 
 
 class RedirectLocal(Redirect):
-    trusted_pids: typing.Set[int]
+    trusted_pids: set[int]
 
     def __init__(
         self,
@@ -349,7 +349,7 @@ class RedirectLocal(Redirect):
             self.windivert.send(packet, recalculate_checksum=True)
 
 
-TConnection = typing.Tuple[str, int]
+TConnection = tuple[str, int]
 
 
 class ClientServerMap:

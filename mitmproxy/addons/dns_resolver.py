@@ -43,7 +43,7 @@ async def resolve_question_by_addr(
     question: dns.Question,
     loop: asyncio.AbstractEventLoop,
     suffix: str,
-    sockaddr: Callable[[List[str]], Union[Tuple[str, int], Tuple[str, int, int, int]]]
+    sockaddr: Callable[[list[str]], Union[tuple[str, int], tuple[str, int, int, int]]]
 ) -> Iterable[dns.ResourceRecord]:
     try:
         addr = sockaddr(question.name[:-len(suffix)].split(".")[::-1])
@@ -99,7 +99,7 @@ async def resolve_message(message: dns.Message, loop: asyncio.AbstractEventLoop)
             raise ResolveError(dns.response_codes.REFUSED)  # we cannot resolve an answer
         if message.op_code != dns.op_codes.QUERY:
             raise ResolveError(dns.response_codes.NOTIMP)  # inverse queries and others are not supported
-        rrs: List[dns.ResourceRecord] = []
+        rrs: list[dns.ResourceRecord] = []
         for question in message.questions:
             rrs.extend(await resolve_question(question, loop))
     except ResolveError as e:

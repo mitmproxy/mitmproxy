@@ -30,7 +30,7 @@ class TestSetEncoder:
     def test_set_encoder_set(self):
         test_set = {"foo", "bar", "42"}
         result = SetEncoder.default(SetEncoder(), test_set)
-        assert isinstance(result, List)
+        assert isinstance(result, list)
         assert 'foo' in result
         assert 'bar' in result
         assert '42' in result

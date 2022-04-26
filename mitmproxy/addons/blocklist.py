@@ -36,7 +36,7 @@ def parse_spec(option: str) -> BlockSpec:
 
 class BlockList:
     def __init__(self):
-        self.items: typing.List[BlockSpec] = []
+        self.items: list[BlockSpec] = []
 
     def load(self, loader):
         loader.add_option(

@@ -77,7 +77,7 @@ class Cut:
             or "false", "bytes" are preserved, and all other values are
             converted to strings.
         """
-        ret: typing.List[typing.List[typing.Union[str, bytes]]] = []
+        ret: list[list[typing.Union[str, bytes]]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore
