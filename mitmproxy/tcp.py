@@ -1,6 +1,6 @@
 import time
 
-from mitmproxy import flow
+from mitmproxy import connection, flow
 from mitmproxy.coretypes import serializable
 
 
@@ -45,8 +45,13 @@ class TCPFlow(flow.Flow):
     The latest message can be accessed as `flow.messages[-1]` in event hooks.
     """
 
-    def __init__(self, client_conn, server_conn, live=False):
-        super().__init__("tcp", client_conn, server_conn, live)
+    def __init__(
+        self,
+        client_conn: connection.Client,
+        server_conn: connection.Server,
+        live: bool = False,
+    ):
+        super().__init__(client_conn, server_conn, live)
         self.messages = []
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()

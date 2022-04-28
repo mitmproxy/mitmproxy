@@ -118,12 +118,10 @@ class Flow(stateobject.StateObject):
 
     def __init__(
         self,
-        type: str,
         client_conn: connection.Client,
         server_conn: connection.Server,
         live: bool = False,
     ) -> None:
-        self.type = type
         self.id = str(uuid.uuid4())
         self.client_conn = client_conn
         self.server_conn = server_conn
@@ -143,7 +141,6 @@ class Flow(stateobject.StateObject):
         error=Error,
         client_conn=connection.Client,
         server_conn=connection.Server,
-        type=str,
         intercepted=bool,
         is_replay=str,
         marked=str,
@@ -152,9 +149,20 @@ class Flow(stateobject.StateObject):
         timestamp_created=float,
     )
 
+    __types: dict[str, type["Flow"]] = {}
+
+    @classmethod
+    @property
+    def type(cls) -> str:
+        """The flow type, for example `http`, `tcp`, or `dns`."""
+        return cls.__name__.removesuffix("Flow").lower()
+
+    def __init_subclass__(cls, **kwargs):
+        Flow.__types[cls.type] = cls
+
     def get_state(self):
         d = super().get_state()
-        d.update(version=version.FLOW_FORMAT_VERSION)
+        d.update(version=version.FLOW_FORMAT_VERSION, type=self.type)
         if self._backup and self._backup != d:
             d.update(backup=self._backup)
         return d
@@ -162,13 +170,18 @@ class Flow(stateobject.StateObject):
     def set_state(self, state):
         state = state.copy()
         state.pop("version")
+        state.pop("type")
         if "backup" in state:
             self._backup = state.pop("backup")
         super().set_state(state)
 
     @classmethod
     def from_state(cls, state):
-        f = cls(None, None)
+        try:
+            flow_cls = Flow.__types[state["type"]]
+        except KeyError:
+            raise ValueError(f"Unknown flow type: {state['type']}")
+        f = flow_cls(None, None)  # noqa
         f.set_state(state)
         return f
 
