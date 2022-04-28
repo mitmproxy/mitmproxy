@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import Iterator, List
+from typing import Iterator
 
 import wsproto
 import wsproto.extensions
@@ -21,6 +21,7 @@ class WebsocketStartHook(StartHook):
     """
     A WebSocket connection has commenced.
     """
+
     flow: http.HTTPFlow
 
 
@@ -32,6 +33,7 @@ class WebsocketMessageHook(StartHook):
     message is user-modifiable. Currently there are two types of
     messages, corresponding to the BINARY and TEXT frame types.
     """
+
     flow: http.HTTPFlow
 
 
@@ -59,8 +61,9 @@ class WebsocketConnection(wsproto.Connection):
      - we add a framebuffer for incomplete messages
      - we wrap .send() so that we can directly yield it.
     """
+
     conn: connection.Connection
-    frame_buf: List[bytes]
+    frame_buf: list[bytes]
 
     def __init__(self, *args, conn: connection.Connection, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,6 +82,7 @@ class WebsocketLayer(layer.Layer):
     """
     WebSocket layer that intercepts and relays messages.
     """
+
     flow: http.HTTPFlow
     client_ws: WebsocketConnection
     server_ws: WebsocketConnection
@@ -97,7 +101,9 @@ class WebsocketLayer(layer.Layer):
         assert self.flow.response  # satisfy type checker
         ext_header = self.flow.response.headers.get("Sec-WebSocket-Extensions", "")
         if ext_header:
-            for ext in wsproto.utilities.split_comma_header(ext_header.encode("ascii", "replace")):
+            for ext in wsproto.utilities.split_comma_header(
+                ext_header.encode("ascii", "replace")
+            ):
                 ext_name = ext.split(";", 1)[0].strip()
                 if ext_name == wsproto.extensions.PerMessageDeflate.name:
                     client_deflate = wsproto.extensions.PerMessageDeflate()
@@ -107,10 +113,16 @@ class WebsocketLayer(layer.Layer):
                     server_deflate.finalize(ext)
                     server_extensions.append(server_deflate)
                 else:
-                    yield commands.Log(f"Ignoring unknown WebSocket extension {ext_name!r}.")
+                    yield commands.Log(
+                        f"Ignoring unknown WebSocket extension {ext_name!r}."
+                    )
 
-        self.client_ws = WebsocketConnection(wsproto.ConnectionType.SERVER, client_extensions, conn=self.context.client)
-        self.server_ws = WebsocketConnection(wsproto.ConnectionType.CLIENT, server_extensions, conn=self.context.server)
+        self.client_ws = WebsocketConnection(
+            wsproto.ConnectionType.SERVER, client_extensions, conn=self.context.client
+        )
+        self.server_ws = WebsocketConnection(
+            wsproto.ConnectionType.CLIENT, server_extensions, conn=self.context.server
+        )
 
         yield WebsocketStartHook(self.flow)
 
@@ -131,7 +143,7 @@ class WebsocketLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-        from_str = 'client' if from_client else 'server'
+        from_str = "client" if from_client else "server"
         if from_client:
             src_ws = self.client_ws
             dst_ws = self.server_ws
@@ -145,9 +157,7 @@ class WebsocketLayer(layer.Layer):
             src_ws.receive_data(None)
         elif isinstance(event, WebSocketMessageInjected):
             fragmentizer = Fragmentizer([], event.message.type == Opcode.TEXT)
-            src_ws._events.extend(
-                fragmentizer(event.message.content)
-            )
+            src_ws._events.extend(fragmentizer(event.message.content))
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -167,7 +177,9 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf = [b""]
 
-                    message = websocket.WebSocketMessage(typ, from_client, content, injected=injected)
+                    message = websocket.WebSocketMessage(
+                        typ, from_client, content, injected=injected
+                    )
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
@@ -191,7 +203,10 @@ class WebsocketLayer(layer.Layer):
                 self.flow.websocket.close_reason = ws_event.reason
 
                 for ws in [self.server_ws, self.client_ws]:
-                    if ws.state in {ConnectionState.OPEN, ConnectionState.REMOTE_CLOSING}:
+                    if ws.state in {
+                        ConnectionState.OPEN,
+                        ConnectionState.REMOTE_CLOSING,
+                    }:
                         # response == original event, so no need to differentiate here.
                         yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)
@@ -220,17 +235,20 @@ class Fragmentizer:
     If one deals with web servers that do not support CONTINUATION frames, addons need to monkeypatch FRAGMENT_SIZE
     if they need to modify the message.
     """
+
     # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
 
-    def __init__(self, fragments: List[bytes], is_text: bool):
+    def __init__(self, fragments: list[bytes], is_text: bool):
         self.fragment_lengths = [len(x) for x in fragments]
         self.is_text = is_text
 
     def msg(self, data: bytes, message_finished: bool):
         if self.is_text:
             data_str = data.decode(errors="replace")
-            return wsproto.events.TextMessage(data_str, message_finished=message_finished)
+            return wsproto.events.TextMessage(
+                data_str, message_finished=message_finished
+            )
         else:
             return wsproto.events.BytesMessage(data, message_finished=message_finished)
 
@@ -239,13 +257,13 @@ class Fragmentizer:
             # message has the same length, we can reuse the same sizes
             offset = 0
             for fl in self.fragment_lengths[:-1]:
-                yield self.msg(content[offset:offset + fl], False)
+                yield self.msg(content[offset : offset + fl], False)
                 offset += fl
             yield self.msg(content[offset:], True)
         else:
             offset = 0
             total = len(content) - self.FRAGMENT_SIZE
             while offset < total:
-                yield self.msg(content[offset:offset + self.FRAGMENT_SIZE], False)
+                yield self.msg(content[offset : offset + self.FRAGMENT_SIZE], False)
                 offset += self.FRAGMENT_SIZE
             yield self.msg(content[offset:], True)

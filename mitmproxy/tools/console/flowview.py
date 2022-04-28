@@ -1,7 +1,7 @@
 import math
 import sys
-import typing
 from functools import lru_cache
+from typing import Optional
 
 import urwid
 
@@ -25,7 +25,6 @@ class SearchError(Exception):
 
 
 class FlowViewHeader(urwid.WidgetWrap):
-
     def __init__(
         self,
         master: "mitmproxy.tools.console.master.ConsoleMaster",
@@ -170,12 +169,12 @@ class FlowDetails(tabs.Tabs):
             urwid.Text(
                 [
                     " ",
-                    ('heading', "["),
-                    ('heading_key', "m"),
-                    ('heading', (":%s]" % viewmode)),
+                    ("heading", "["),
+                    ("heading_key", "m"),
+                    ("heading", (":%s]" % viewmode)),
                 ],
-                align="right"
-            )
+                align="right",
+            ),
         ]
         contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
         return contentview_status_bar
@@ -206,17 +205,31 @@ class FlowDetails(tabs.Tabs):
                 widget_lines.append(urwid.Text(line))
 
         if flow.websocket.closed_by_client is not None:
-            widget_lines.append(urwid.Text([
-                (self.FROM_CLIENT_MARKER if flow.websocket.closed_by_client else self.TO_CLIENT_MARKER),
-                ("alert" if flow.websocket.close_code in (1000, 1001, 1005) else "error",
-                 f"Connection closed: {flow.websocket.close_code} {flow.websocket.close_reason}")
-            ]))
+            widget_lines.append(
+                urwid.Text(
+                    [
+                        (
+                            self.FROM_CLIENT_MARKER
+                            if flow.websocket.closed_by_client
+                            else self.TO_CLIENT_MARKER
+                        ),
+                        (
+                            "alert"
+                            if flow.websocket.close_code in (1000, 1001, 1005)
+                            else "error",
+                            f"Connection closed: {flow.websocket.close_code} {flow.websocket.close_reason}",
+                        ),
+                    ]
+                )
+            )
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
             widget_lines[-1].set_text(("intercept", markup))
 
-        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+        widget_lines.insert(
+            0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
+        )
 
         return searchable.Searchable(widget_lines)
 
@@ -260,7 +273,9 @@ class FlowDetails(tabs.Tabs):
             markup = widget_lines[-1].get_text()[0]
             widget_lines[-1].set_text(("intercept", markup))
 
-        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+        widget_lines.insert(
+            0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
+        )
 
         return searchable.Searchable(widget_lines)
 
@@ -272,20 +287,26 @@ class FlowDetails(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.master.commands.execute("view.settings.getval @focus fullcontents false")
+            full = self.master.commands.execute(
+                "view.settings.getval @focus fullcontents false"
+            )
             if full == "true":
                 limit = sys.maxsize
             else:
                 limit = ctx.options.content_view_lines_cutoff
 
-            flow_modify_cache_invalidation = hash((
-                message.raw_content,
-                message.headers.fields,
-                getattr(message, "path", None),
-            ))
+            flow_modify_cache_invalidation = hash(
+                (
+                    message.raw_content,
+                    message.headers.fields,
+                    getattr(message, "path", None),
+                )
+            )
             # we need to pass the message off-band because it's not hashable
             self._get_content_view_message = message
-            return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
+            return self._get_content_view(
+                viewmode, limit, flow_modify_cache_invalidation
+            )
 
     @lru_cache(maxsize=200)
     def _get_content_view(self, viewmode, max_lines, _):
@@ -309,7 +330,7 @@ class FlowDetails(tabs.Tabs):
             txt = []
             for (style, text) in line:
                 if total_chars + len(text) > max_chars:
-                    text = text[:max_chars - total_chars]
+                    text = text[: max_chars - total_chars]
                 txt.append((style, text))
                 total_chars += len(text)
                 if total_chars == max_chars:
@@ -320,11 +341,19 @@ class FlowDetails(tabs.Tabs):
 
             text_objects.append(urwid.Text(txt))
             if total_chars == max_chars:
-                text_objects.append(urwid.Text([
-                    ("highlight", "Stopped displaying data after %d lines. Press " % max_lines),
-                    ("key", "f"),
-                    ("highlight", " to load all data.")
-                ]))
+                text_objects.append(
+                    urwid.Text(
+                        [
+                            (
+                                "highlight",
+                                "Stopped displaying data after %d lines. Press "
+                                % max_lines,
+                            ),
+                            ("key", "f"),
+                            ("highlight", " to load all data."),
+                        ]
+                    )
+                )
                 break
 
         return description, text_objects
@@ -353,10 +382,7 @@ class FlowDetails(tabs.Tabs):
                 k = strutils.bytes_to_escaped_str(k) + ":"
                 v = strutils.bytes_to_escaped_str(v)
                 hdrs.append((k, v))
-            txt = common.format_keyvals(
-                hdrs,
-                key_format="header"
-            )
+            txt = common.format_keyvals(hdrs, key_format="header")
             viewmode = self.master.commands.call("console.flowview.mode")
             msg, body = self.content_view(viewmode, conn)
 
@@ -369,12 +395,12 @@ class FlowDetails(tabs.Tabs):
                 urwid.Text(
                     [
                         " ",
-                        ('heading', "["),
-                        ('heading_key', "m"),
-                        ('heading', (":%s]" % viewmode)),
+                        ("heading", "["),
+                        ("heading_key", "m"),
+                        ("heading", (":%s]" % viewmode)),
                     ],
-                    align="right"
-                )
+                    align="right",
+                ),
             ]
             title = urwid.AttrWrap(urwid.Columns(cols), "heading")
 
@@ -389,25 +415,46 @@ class FlowDetails(tabs.Tabs):
                         ("key", "e"),
                         ("highlight", " and edit any aspect to add one."),
                     ]
-                )
+                ),
             ]
         return searchable.Searchable(txt)
 
-    def dns_message_text(self, type: str, message: typing.Optional[dns.Message]) -> searchable.Searchable:
+    def dns_message_text(
+        self, type: str, message: Optional[dns.Message]
+    ) -> searchable.Searchable:
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:
+
             def rr_text(rr: dns.ResourceRecord):
-                return urwid.Text(f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}")
+                return urwid.Text(
+                    f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}"
+                )
+
             txt = []
-            txt.append(urwid.Text("{recursive}Question".format(
-                recursive="Recursive " if message.recursion_desired else "",
-            )))
-            txt.extend(urwid.Text(f"  {q.name} {dns.types.to_str(q.type)} {dns.classes.to_str(q.class_)}") for q in message.questions)
+            txt.append(
+                urwid.Text(
+                    "{recursive}Question".format(
+                        recursive="Recursive " if message.recursion_desired else "",
+                    )
+                )
+            )
+            txt.extend(
+                urwid.Text(
+                    f"  {q.name} {dns.types.to_str(q.type)} {dns.classes.to_str(q.class_)}"
+                )
+                for q in message.questions
+            )
             txt.append(urwid.Text(""))
-            txt.append(urwid.Text("{authoritative}{recursive}Answer".format(
-                authoritative="Authoritative " if message.authoritative_answer else "",
-                recursive="Recursive " if message.recursion_available else "",
-            )))
+            txt.append(
+                urwid.Text(
+                    "{authoritative}{recursive}Answer".format(
+                        authoritative="Authoritative "
+                        if message.authoritative_answer
+                        else "",
+                        recursive="Recursive " if message.recursion_available else "",
+                    )
+                )
+            )
             txt.extend(map(rr_text, message.answers))
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("Authority"))

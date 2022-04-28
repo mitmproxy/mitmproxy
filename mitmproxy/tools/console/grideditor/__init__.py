@@ -1,9 +1,17 @@
 from . import base
-from .editors import CookieAttributeEditor, CookieEditor, DataViewer, OptionsEditor, PathEditor, QueryEditor, \
-    RequestHeaderEditor, \
-    RequestMultipartEditor, \
-    RequestUrlEncodedEditor, \
-    ResponseHeaderEditor, SetCookieEditor
+from .editors import (
+    CookieAttributeEditor,
+    CookieEditor,
+    DataViewer,
+    OptionsEditor,
+    PathEditor,
+    QueryEditor,
+    RequestHeaderEditor,
+    RequestMultipartEditor,
+    RequestUrlEncodedEditor,
+    ResponseHeaderEditor,
+    SetCookieEditor,
+)
 
 __all__ = [
     "base",

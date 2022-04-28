@@ -6,7 +6,7 @@ v3.0.0dev) and versioning. Every change or migration gets a new flow file
 version number, this prevents issues with developer builds and snapshots.
 """
 import uuid
-from typing import Any, Dict, Mapping, Union
+from typing import Any, Mapping, Union
 
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -24,10 +24,14 @@ def convert_012_013(data):
 
 def convert_013_014(data):
     data[b"request"][b"first_line_format"] = data[b"request"].pop(b"form_in")
-    data[b"request"][b"http_version"] = b"HTTP/" + ".".join(
-        str(x) for x in data[b"request"].pop(b"httpversion")).encode()
-    data[b"response"][b"http_version"] = b"HTTP/" + ".".join(
-        str(x) for x in data[b"response"].pop(b"httpversion")).encode()
+    data[b"request"][b"http_version"] = (
+        b"HTTP/"
+        + ".".join(str(x) for x in data[b"request"].pop(b"httpversion")).encode()
+    )
+    data[b"response"][b"http_version"] = (
+        b"HTTP/"
+        + ".".join(str(x) for x in data[b"response"].pop(b"httpversion")).encode()
+    )
     data[b"response"][b"status_code"] = data[b"response"].pop(b"code")
     data[b"response"][b"body"] = data[b"response"].pop(b"content")
     data[b"server_conn"].pop(b"state")
@@ -99,15 +103,23 @@ def convert_100_200(data):
     data["version"] = (2, 0, 0)
     data["client_conn"]["address"] = data["client_conn"]["address"]["address"]
     data["server_conn"]["address"] = data["server_conn"]["address"]["address"]
-    data["server_conn"]["source_address"] = data["server_conn"]["source_address"]["address"]
+    data["server_conn"]["source_address"] = data["server_conn"]["source_address"][
+        "address"
+    ]
     if data["server_conn"]["ip_address"]:
         data["server_conn"]["ip_address"] = data["server_conn"]["ip_address"]["address"]
 
     if data["server_conn"]["via"]:
-        data["server_conn"]["via"]["address"] = data["server_conn"]["via"]["address"]["address"]
-        data["server_conn"]["via"]["source_address"] = data["server_conn"]["via"]["source_address"]["address"]
+        data["server_conn"]["via"]["address"] = data["server_conn"]["via"]["address"][
+            "address"
+        ]
+        data["server_conn"]["via"]["source_address"] = data["server_conn"]["via"][
+            "source_address"
+        ]["address"]
         if data["server_conn"]["via"]["ip_address"]:
-            data["server_conn"]["via"]["ip_address"] = data["server_conn"]["via"]["ip_address"]["address"]
+            data["server_conn"]["via"]["ip_address"] = data["server_conn"]["via"][
+                "ip_address"
+            ]["address"]
 
     return data
 
@@ -135,21 +147,27 @@ def convert_4_5(data):
     data["version"] = 5
     client_conn_key = (
         data["client_conn"]["timestamp_start"],
-        *data["client_conn"]["address"]
+        *data["client_conn"]["address"],
     )
     server_conn_key = (
         data["server_conn"]["timestamp_start"],
-        *data["server_conn"]["source_address"]
+        *data["server_conn"]["source_address"],
     )
-    data["client_conn"]["id"] = client_connections.setdefault(client_conn_key, str(uuid.uuid4()))
-    data["server_conn"]["id"] = server_connections.setdefault(server_conn_key, str(uuid.uuid4()))
+    data["client_conn"]["id"] = client_connections.setdefault(
+        client_conn_key, str(uuid.uuid4())
+    )
+    data["server_conn"]["id"] = server_connections.setdefault(
+        server_conn_key, str(uuid.uuid4())
+    )
 
     if data["server_conn"]["via"]:
         server_conn_key = (
             data["server_conn"]["via"]["timestamp_start"],
-            *data["server_conn"]["via"]["source_address"]
+            *data["server_conn"]["via"]["source_address"],
         )
-        data["server_conn"]["via"]["id"] = server_connections.setdefault(server_conn_key, str(uuid.uuid4()))
+        data["server_conn"]["via"]["id"] = server_connections.setdefault(
+            server_conn_key, str(uuid.uuid4())
+        )
 
     return data
 
@@ -157,12 +175,20 @@ def convert_4_5(data):
 def convert_5_6(data):
     data["version"] = 6
     data["client_conn"]["tls_established"] = data["client_conn"].pop("ssl_established")
-    data["client_conn"]["timestamp_tls_setup"] = data["client_conn"].pop("timestamp_ssl_setup")
+    data["client_conn"]["timestamp_tls_setup"] = data["client_conn"].pop(
+        "timestamp_ssl_setup"
+    )
     data["server_conn"]["tls_established"] = data["server_conn"].pop("ssl_established")
-    data["server_conn"]["timestamp_tls_setup"] = data["server_conn"].pop("timestamp_ssl_setup")
+    data["server_conn"]["timestamp_tls_setup"] = data["server_conn"].pop(
+        "timestamp_ssl_setup"
+    )
     if data["server_conn"]["via"]:
-        data["server_conn"]["via"]["tls_established"] = data["server_conn"]["via"].pop("ssl_established")
-        data["server_conn"]["via"]["timestamp_tls_setup"] = data["server_conn"]["via"].pop("timestamp_ssl_setup")
+        data["server_conn"]["via"]["tls_established"] = data["server_conn"]["via"].pop(
+            "ssl_established"
+        )
+        data["server_conn"]["via"]["timestamp_tls_setup"] = data["server_conn"][
+            "via"
+        ].pop("timestamp_ssl_setup")
     return data
 
 
@@ -266,21 +292,32 @@ def convert_11_12(data):
         except KeyError:
             # The handshake flow is missing, which should never really happen. We make up a dummy.
             data = {
-                'client_conn': data["client_conn"],
-                'error': data["error"],
-                'id': data["id"],
-                'intercepted': data["intercepted"],
-                'is_replay': data["is_replay"],
-                'marked': data["marked"],
-                'metadata': {},
-                'mode': 'transparent',
-                'request': {'authority': b'', 'content': None, 'headers': [], 'host': b'unknown',
-                            'http_version': b'HTTP/1.1', 'method': b'GET', 'path': b'/', 'port': 80, 'scheme': b'http',
-                            'timestamp_end': 0, 'timestamp_start': 0, 'trailers': None, },
-                'response': None,
-                'server_conn': data["server_conn"],
-                'type': 'http',
-                'version': 12
+                "client_conn": data["client_conn"],
+                "error": data["error"],
+                "id": data["id"],
+                "intercepted": data["intercepted"],
+                "is_replay": data["is_replay"],
+                "marked": data["marked"],
+                "metadata": {},
+                "mode": "transparent",
+                "request": {
+                    "authority": b"",
+                    "content": None,
+                    "headers": [],
+                    "host": b"unknown",
+                    "http_version": b"HTTP/1.1",
+                    "method": b"GET",
+                    "path": b"/",
+                    "port": 80,
+                    "scheme": b"http",
+                    "timestamp_end": 0,
+                    "timestamp_start": 0,
+                    "trailers": None,
+                },
+                "response": None,
+                "server_conn": data["server_conn"],
+                "type": "http",
+                "version": 12,
             }
         data["metadata"]["duplicated"] = (
             "This WebSocket flow has been migrated from an old file format version "
@@ -324,15 +361,16 @@ def convert_14_15(data):
     if data.get("websocket", None):
         # Add "injected" attribute.
         data["websocket"]["messages"] = [
-            msg + [False]
-            for msg in data["websocket"]["messages"]
+            msg + [False] for msg in data["websocket"]["messages"]
         ]
     return data
 
 
 def convert_15_16(data):
     data["version"] = 16
-    data["timestamp_created"] = data.get("request", data["client_conn"])["timestamp_start"]
+    data["timestamp_created"] = data.get("request", data["client_conn"])[
+        "timestamp_start"
+    ]
     return data
 
 
@@ -360,16 +398,13 @@ def convert_unicode(data: dict) -> dict:
     """
     data = _convert_dict_keys(data)
     data = _convert_dict_vals(
-        data, {
+        data,
+        {
             "type": True,
             "id": True,
-            "request": {
-                "first_line_format": True
-            },
-            "error": {
-                "msg": True
-            }
-        }
+            "request": {"first_line_format": True},
+            "error": {"msg": True},
+        },
     )
     return data
 
@@ -402,7 +437,9 @@ converters = {
 }
 
 
-def migrate_flow(flow_data: Dict[Union[bytes, str], Any]) -> Dict[Union[bytes, str], Any]:
+def migrate_flow(
+    flow_data: dict[Union[bytes, str], Any]
+) -> dict[Union[bytes, str], Any]:
     while True:
         flow_version = flow_data.get(b"version", flow_data.get("version"))
 
@@ -423,7 +460,7 @@ def migrate_flow(flow_data: Dict[Union[bytes, str], Any]) -> Dict[Union[bytes, s
                 "{} cannot read files with flow format version {}{}.".format(
                     version.MITMPROXY,
                     flow_version,
-                    ", please update mitmproxy" if should_upgrade else ""
+                    ", please update mitmproxy" if should_upgrade else "",
                 )
             )
     return flow_data

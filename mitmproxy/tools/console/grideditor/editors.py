@@ -1,5 +1,6 @@
+from typing import Any, Union
+
 import urwid
-import typing
 
 from mitmproxy import exceptions
 from mitmproxy.http import Headers
@@ -14,10 +15,7 @@ from mitmproxy.tools.console.grideditor import col_viewany
 
 class QueryEditor(base.FocusEditor):
     title = "Edit Query"
-    columns = [
-        col_text.Column("Key"),
-        col_text.Column("Value")
-    ]
+    columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
         return flow.request.query.items(multi=True)
@@ -27,10 +25,7 @@ class QueryEditor(base.FocusEditor):
 
 
 class HeaderEditor(base.FocusEditor):
-    columns = [
-        col_bytes.Column("Key"),
-        col_bytes.Column("Value")
-    ]
+    columns = [col_bytes.Column("Key"), col_bytes.Column("Value")]
 
 
 class RequestHeaderEditor(HeaderEditor):
@@ -55,10 +50,7 @@ class ResponseHeaderEditor(HeaderEditor):
 
 class RequestMultipartEditor(base.FocusEditor):
     title = "Edit Multipart Form"
-    columns = [
-        col_text.Column("Key"),
-        col_text.Column("Value")
-    ]
+    columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
 
@@ -70,10 +62,7 @@ class RequestMultipartEditor(base.FocusEditor):
 
 class RequestUrlEncodedEditor(base.FocusEditor):
     title = "Edit UrlEncoded Form"
-    columns = [
-        col_text.Column("Key"),
-        col_text.Column("Value")
-    ]
+    columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
 
@@ -146,7 +135,7 @@ class CookieAttributeEditor(base.FocusEditor):
                 self.grideditor.walker.get_current_value(),
                 self.grideditor.set_subeditor_value,
                 self.grideditor.walker.focus,
-                self.grideditor.walker.focus_col
+                self.grideditor.walker.focus_col,
             )
         else:
             self._w = urwid.Pile([])
@@ -169,12 +158,7 @@ class SetCookieEditor(base.FocusEditor):
     def data_out(self, data):
         vals = []
         for key, value, attrs in data:
-            vals.append(
-                [
-                    key,
-                    (value, attrs)
-                ]
-            )
+            vals.append([key, (value, attrs)])
         return vals
 
     def get_data(self, flow):
@@ -186,9 +170,7 @@ class SetCookieEditor(base.FocusEditor):
 
 class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
     title = ""
-    columns = [
-        col_text.Column("")
-    ]
+    columns = [col_text.Column("")]
 
     def __init__(self, master, name, vals):
         self.name = name
@@ -208,13 +190,14 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
     title = ""
 
     def __init__(
-            self,
-            master,
-            vals: typing.Union[
-                typing.List[typing.List[typing.Any]],
-                typing.List[typing.Any],
-                typing.Any,
-            ]) -> None:
+        self,
+        master,
+        vals: Union[
+            list[list[Any]],
+            list[Any],
+            Any,
+        ],
+    ) -> None:
         if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.
             if not isinstance(vals, list):

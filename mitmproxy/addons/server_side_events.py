@@ -11,7 +11,9 @@ class ServerSideEvents:
 
     def response(self, flow: http.HTTPFlow):
         assert flow.response
-        is_sse = flow.response.headers.get("content-type", "").startswith("text/event-stream")
+        is_sse = flow.response.headers.get("content-type", "").startswith(
+            "text/event-stream"
+        )
         if is_sse and not flow.response.stream:
             ctx.log.warn(
                 "mitmproxy currently does not support server side events. As a workaround, you can enable response "

@@ -22,13 +22,14 @@ def get_dev_version() -> str:
         # Check that we're in the mitmproxy repository: https://github.com/mitmproxy/mitmproxy/issues/3987
         # cb0e3287090786fad566feb67ac07b8ef361b2c3 is the first mitmproxy commit.
         subprocess.run(
-            ['git', 'cat-file', '-e', 'cb0e3287090786fad566feb67ac07b8ef361b2c3'],
+            ["git", "cat-file", "-e", "cb0e3287090786fad566feb67ac07b8ef361b2c3"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             cwd=here,
-            check=True)
+            check=True,
+        )
         git_describe = subprocess.check_output(
-            ['git', 'describe', '--tags', '--long'],
+            ["git", "describe", "--tags", "--long"],
             stderr=subprocess.STDOUT,
             cwd=here,
         )
@@ -43,7 +44,7 @@ def get_dev_version() -> str:
             mitmproxy_version += f" (+{tag_dist}, commit {commit})"
 
     # PyInstaller build indicator, if using precompiled binary
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         mitmproxy_version += " binary"
 
     return mitmproxy_version

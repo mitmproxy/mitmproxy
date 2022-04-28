@@ -14,7 +14,6 @@ Note:
     https://stackoverflow.com/questions/55358072/cookie-manipulation-in-mitmproxy-requests-and-responses
 
 """
-from typing import List, Dict
 import json
 from mitmproxy import http
 
@@ -28,25 +27,25 @@ FILTER_COOKIES = {
 
 
 # -- Helper functions --
-def load_json_cookies() -> List[Dict[str, str]]:
+def load_json_cookies() -> list[dict[str, str]]:
     """
     Load a particular json file containing a list of cookies.
     """
-    with open(PATH_TO_COOKIES, "r") as f:
+    with open(PATH_TO_COOKIES) as f:
         return json.load(f)
 
 
 # NOTE: or just hardcode the cookies as [{"name": "", "value": ""}]
 
 
-def stringify_cookies(cookies: List[Dict]) -> str:
+def stringify_cookies(cookies: list[dict]) -> str:
     """
     Creates a cookie string from a list of cookie dicts.
     """
     return ";".join([f"{c['name']}={c['value']}" for c in cookies])
 
 
-def parse_cookies(cookie_string: str) -> List[Dict[str, str]]:
+def parse_cookies(cookie_string: str) -> list[dict[str, str]]:
     """
     Parses a cookie string into a list of cookie dicts.
     """

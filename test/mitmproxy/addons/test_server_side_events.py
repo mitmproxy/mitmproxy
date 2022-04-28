@@ -9,4 +9,6 @@ async def test_simple():
         f = tflow(resp=True)
         f.response.headers["content-type"] = "text/event-stream"
         s.response(f)
-        await tctx.master.await_log("mitmproxy currently does not support server side events.")
+        await tctx.master.await_log(
+            "mitmproxy currently does not support server side events."
+        )

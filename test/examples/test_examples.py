@@ -18,7 +18,7 @@ class TestScripts:
             tctx.script(tdata.path("../examples/addons/contentview.py"))
             swapcase = contentviews.get("swapcase")
             _, fmt = swapcase(b"<html>Test!</html>")
-            assert any(b'tEST!' in val[0][1] for val in fmt)
+            assert any(b"tEST!" in val[0][1] for val in fmt)
 
     def test_custom_grpc_contentview(self, tdata):
         with taddons.context() as tctx:
@@ -30,28 +30,55 @@ class TestScripts:
                 raw = f.read()
 
             sim_msg_req = tutils.treq(
-                port=443,
-                host="example.com",
-                path="/ReverseGeocode"
+                port=443, host="example.com", path="/ReverseGeocode"
             )
 
             sim_msg_resp = tutils.tresp()
 
-            sim_flow = tflow.tflow(
-                req=sim_msg_req,
-                resp=sim_msg_resp
-            )
+            sim_flow = tflow.tflow(req=sim_msg_req, resp=sim_msg_resp)
 
-            view_text, output = v(raw, flow=sim_flow, http_message=sim_flow.request)  # simulate request message
+            view_text, output = v(
+                raw, flow=sim_flow, http_message=sim_flow.request
+            )  # simulate request message
             assert view_text == "Protobuf (flattened) (addon with custom rules)"
             output = list(output)  # assure list conversion if generator
             assert output == [
-                [('text', '[message]  '), ('text', 'position   '), ('text', '1    '), ('text', '                               ')],
-                [('text', '[double]   '), ('text', 'latitude   '), ('text', '1.1  '), ('text', '38.89816675798073              ')],
-                [('text', '[double]   '), ('text', 'longitude  '), ('text', '1.2  '), ('text', '-77.03829828366696             ')],
-                [('text', '[string]   '), ('text', 'country    '), ('text', '3    '), ('text', 'de_DE                          ')],
-                [('text', '[uint32]   '), ('text', '           '), ('text', '6    '), ('text', '1                              ')],
-                [('text', '[string]   '), ('text', 'app        '), ('text', '7    '), ('text', 'de.mcdonalds.mcdonaldsinfoapp  ')]
+                [
+                    ("text", "[message]  "),
+                    ("text", "position   "),
+                    ("text", "1    "),
+                    ("text", "                               "),
+                ],
+                [
+                    ("text", "[double]   "),
+                    ("text", "latitude   "),
+                    ("text", "1.1  "),
+                    ("text", "38.89816675798073              "),
+                ],
+                [
+                    ("text", "[double]   "),
+                    ("text", "longitude  "),
+                    ("text", "1.2  "),
+                    ("text", "-77.03829828366696             "),
+                ],
+                [
+                    ("text", "[string]   "),
+                    ("text", "country    "),
+                    ("text", "3    "),
+                    ("text", "de_DE                          "),
+                ],
+                [
+                    ("text", "[uint32]   "),
+                    ("text", "           "),
+                    ("text", "6    "),
+                    ("text", "1                              "),
+                ],
+                [
+                    ("text", "[string]   "),
+                    ("text", "app        "),
+                    ("text", "7    "),
+                    ("text", "de.mcdonalds.mcdonaldsinfoapp  "),
+                ],
             ]
 
     def test_modify_form(self, tdata):
@@ -70,7 +97,9 @@ class TestScripts:
 
     def test_modify_querystring(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/addons/http-modify-query-string.py"))
+            sc = tctx.script(
+                tdata.path("../examples/addons/http-modify-query-string.py")
+            )
             f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
             sc.request(f)

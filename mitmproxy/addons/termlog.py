@@ -6,7 +6,7 @@ from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
 
-LOG_COLORS = {'error': "red", 'warn': "yellow", 'alert': "magenta"}
+LOG_COLORS = {"error": "red", "warn": "yellow", "alert": "magenta"}
 
 
 class TermLog:
@@ -22,9 +22,7 @@ class TermLog:
 
     def load(self, loader):
         loader.add_option(
-            "termlog_verbosity", str, 'info',
-            "Log verbosity.",
-            choices=log.LogTierOrder
+            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogTierOrder
         )
 
     def add_log(self, e: log.LogEntry):

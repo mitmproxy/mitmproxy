@@ -1,5 +1,4 @@
 import time
-from typing import List
 
 from mitmproxy import flow
 from mitmproxy.coretypes import serializable
@@ -30,8 +29,7 @@ class TCPMessage(serializable.Serializable):
 
     def __repr__(self):
         return "{direction} {content}".format(
-            direction="->" if self.from_client else "<-",
-            content=repr(self.content)
+            direction="->" if self.from_client else "<-", content=repr(self.content)
         )
 
 
@@ -40,7 +38,7 @@ class TCPFlow(flow.Flow):
     A TCPFlow is a simplified representation of a TCP session.
     """
 
-    messages: List[TCPMessage]
+    messages: list[TCPMessage]
     """
     The messages transmitted over this connection.
 
@@ -52,7 +50,7 @@ class TCPFlow(flow.Flow):
         self.messages = []
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes["messages"] = List[TCPMessage]
+    _stateobject_attributes["messages"] = list[TCPMessage]
 
     def __repr__(self):
         return f"<TCPFlow ({len(self.messages)} messages)>"

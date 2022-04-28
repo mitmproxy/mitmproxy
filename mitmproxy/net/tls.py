@@ -4,7 +4,7 @@ import threading
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
+from typing import Any, BinaryIO, Callable, Iterable, Optional
 
 import certifi
 
@@ -24,7 +24,9 @@ class Method(Enum):
 try:
     SSL._lib.TLS_server_method  # type: ignore
 except AttributeError as e:  # pragma: no cover
-    raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
+    raise RuntimeError(
+        "Your installation of the cryptography Python package is outdated."
+    ) from e
 
 
 class Version(Enum):
@@ -43,10 +45,7 @@ class Verify(Enum):
 
 DEFAULT_MIN_VERSION = Version.TLS1_2
 DEFAULT_MAX_VERSION = Version.UNBOUNDED
-DEFAULT_OPTIONS = (
-        SSL.OP_CIPHER_SERVER_PREFERENCE
-        | SSL.OP_NO_COMPRESSION
-)
+DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
 
 class MasterSecretLogger:
@@ -85,11 +84,11 @@ log_master_secret = make_master_secret_logger(
 
 
 def _create_ssl_context(
-        *,
-        method: Method,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+    *,
+    method: Method,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[Iterable[str]],
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -120,16 +119,16 @@ def _create_ssl_context(
 
 @lru_cache(256)
 def create_proxy_server_context(
-        *,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
-        verify: Verify,
-        hostname: Optional[str],
-        ca_path: Optional[str],
-        ca_pemfile: Optional[str],
-        client_cert: Optional[str],
-        alpn_protos: Optional[Tuple[bytes, ...]],
+    *,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[tuple[str, ...]],
+    verify: Verify,
+    hostname: Optional[str],
+    ca_path: Optional[str],
+    ca_pemfile: Optional[str],
+    client_cert: Optional[str],
+    alpn_protos: Optional[tuple[bytes, ...]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -151,7 +150,7 @@ def create_proxy_server_context(
         # https://www.chromestatus.com/feature/4981025180483584
         SSL._lib.X509_VERIFY_PARAM_set_hostflags(  # type: ignore
             param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT  # type: ignore
+            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT,  # type: ignore
         )
         try:
             ip: bytes = ipaddress.ip_address(hostname).packed
@@ -169,7 +168,9 @@ def create_proxy_server_context(
     try:
         context.load_verify_locations(ca_pemfile, ca_path)
     except SSL.Error as e:
-        raise RuntimeError(f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=}).") from e
+        raise RuntimeError(
+            f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=})."
+        ) from e
 
     # Client Certs
     if client_cert:
@@ -188,17 +189,17 @@ def create_proxy_server_context(
 
 @lru_cache(256)
 def create_client_proxy_context(
-        *,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
-        cert: certs.Cert,
-        key: rsa.RSAPrivateKey,
-        chain_file: Optional[Path],
-        alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
-        request_client_cert: bool,
-        extra_chain_certs: Tuple[certs.Cert, ...],
-        dhparams: certs.DHParams,
+    *,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[tuple[str, ...]],
+    cert: certs.Cert,
+    key: rsa.RSAPrivateKey,
+    chain_file: Optional[Path],
+    alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
+    request_client_cert: bool,
+    extra_chain_certs: tuple[certs.Cert, ...],
+    dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_SERVER_METHOD,
@@ -242,11 +243,11 @@ def create_client_proxy_context(
 
 
 def accept_all(
-        conn_: SSL.Connection,
-        x509: X509,
-        errno: int,
-        err_depth: int,
-        is_cert_verified: int,
+    conn_: SSL.Connection,
+    x509: X509,
+    errno: int,
+    err_depth: int,
+    is_cert_verified: int,
 ) -> bool:
     # Return true to prevent cert verification error
     return True
@@ -263,9 +264,4 @@ def is_tls_record_magic(d):
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     # https://tls13.ulfheim.net/
-    return (
-            len(d) == 3 and
-            d[0] == 0x16 and
-            d[1] == 0x03 and
-            0x0 <= d[2] <= 0x03
-    )
+    return len(d) == 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03

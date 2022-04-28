@@ -80,17 +80,17 @@ def test_load_path(tmpdir):
         km = keymap.Keymap(tctx.master)
         tctx.master.keymap = km
 
-        with open(dst, 'wb') as f:
+        with open(dst, "wb") as f:
             f.write(b"\xff\xff\xff")
         with pytest.raises(keymap.KeyBindingError, match="expected UTF8"):
             kmc.load_path(km, dst)
 
-        with open(dst, 'w') as f:
+        with open(dst, "w") as f:
             f.write("'''")
         with pytest.raises(keymap.KeyBindingError):
             kmc.load_path(km, dst)
 
-        with open(dst, 'w') as f:
+        with open(dst, "w") as f:
             f.write(
                 """
                     -   key: key1
@@ -103,7 +103,7 @@ def test_load_path(tmpdir):
         with pytest.raises(keymap.KeyBindingError):
             kmc.load_path(km, dst)
 
-        with open(dst, 'w') as f:
+        with open(dst, "w") as f:
             f.write(
                 """
                     -   key: key1
@@ -115,9 +115,9 @@ def test_load_path(tmpdir):
                 """
             )
         kmc.load_path(km, dst)
-        assert(km.get("chooser", "key1"))
+        assert km.get("chooser", "key1")
 
-        with open(dst, 'w') as f:
+        with open(dst, "w") as f:
             f.write(
                 """
                     -   key: key2
@@ -129,11 +129,11 @@ def test_load_path(tmpdir):
                 """
             )
         kmc.load_path(km, dst)
-        assert(km.get("flowlist", "key2"))
-        assert(km.get("flowview", "key2"))
+        assert km.get("flowlist", "key2")
+        assert km.get("flowview", "key2")
 
         km.add("key123", "str", ["flowlist", "flowview"])
-        with open(dst, 'w') as f:
+        with open(dst, "w") as f:
             f.write(
                 """
                     -   key: key123
@@ -142,9 +142,9 @@ def test_load_path(tmpdir):
                 """
             )
         kmc.load_path(km, dst)
-        assert(km.get("flowlist", "key123"))
-        assert(km.get("flowview", "key123"))
-        assert(km.get("options", "key123"))
+        assert km.get("flowlist", "key123")
+        assert km.get("flowview", "key123")
+        assert km.get("options", "key123")
 
 
 def test_parse():
@@ -163,7 +163,9 @@ def test_parse():
                         nonexistent: bar
                 """
             )
-        with pytest.raises(keymap.KeyBindingError, match="Missing required key attributes"):
+        with pytest.raises(
+            keymap.KeyBindingError, match="Missing required key attributes"
+        ):
             kmc.parse(
                 """
                     -   help: key1
@@ -184,8 +186,9 @@ def test_parse():
                         cmd: cmd
                 """
             )
-        assert kmc.parse(
-            """
+        assert (
+            kmc.parse(
+                """
                 -   key: key1
                     ctx: [one, two]
                     help: one
@@ -193,4 +196,13 @@ def test_parse():
                         foo bar
                         foo bar
             """
-        ) == [{"key": "key1", "ctx": ["one", "two"], "help": "one", "cmd": "foo bar foo bar\n"}]
+            )
+            == [
+                {
+                    "key": "key1",
+                    "ctx": ["one", "two"],
+                    "help": "one",
+                    "cmd": "foo bar foo bar\n",
+                }
+            ]
+        )

@@ -1,5 +1,4 @@
 import asyncio
-import sys
 import time
 from collections.abc import Coroutine
 from typing import Optional
@@ -7,16 +6,9 @@ from typing import Optional
 from mitmproxy.utils import human
 
 
-def cancel_task(task: asyncio.Task, message: str) -> None:
-    """Like task.cancel(), but optionally with a message if the Python version supports it."""
-    if sys.version_info >= (3, 9):
-        task.cancel(message)  # type: ignore
-    else:  # pragma: no cover
-        task.cancel()
-
-
 def create_task(
-    coro: Coroutine, *,
+    coro: Coroutine,
+    *,
     name: str,
     client: Optional[tuple] = None,
 ) -> asyncio.Task:

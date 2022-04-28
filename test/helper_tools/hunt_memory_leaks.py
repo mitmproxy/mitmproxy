@@ -36,7 +36,9 @@ def debug1(*_):
     print()
     print("Memory")
     print("=======")
-    for t, count in collections.Counter([str(type(o)) for o in gc.get_objects()]).most_common(50):
+    for t, count in collections.Counter(
+        [str(type(o)) for o in gc.get_objects()]
+    ).most_common(50):
         print(count, t)
 
 
@@ -69,7 +71,12 @@ def print_refs(x, ignore: set, seen: set, depth: int = 0, max_depth: int = 10):
         return
 
     if id(x) in seen:
-        print("  " * depth + "↖ " + repr(str(x))[1:60] + f" (\x1b[31mseen\x1b[0m: {id(x):x})")
+        print(
+            "  " * depth
+            + "↖ "
+            + repr(str(x))[1:60]
+            + f" (\x1b[31mseen\x1b[0m: {id(x):x})"
+        )
         return
     else:
         if depth == 0:

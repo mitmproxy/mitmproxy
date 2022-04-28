@@ -1,8 +1,7 @@
 """
 A display-only column that displays any data type.
 """
-
-import typing
+from typing import Any
 
 import urwid
 from mitmproxy.tools.console.grideditor import base
@@ -20,7 +19,7 @@ class Column(base.Column):
 
 
 class Display(base.Cell):
-    def __init__(self, data: typing.Any) -> None:
+    def __init__(self, data: Any) -> None:
         self.data = data
         if isinstance(data, bytes):
             data = strutils.bytes_to_escaped_str(data)
@@ -29,5 +28,5 @@ class Display(base.Cell):
         w = urwid.Text(data, wrap="any")
         super().__init__(w)
 
-    def get_data(self) -> typing.Any:
+    def get_data(self) -> Any:
         return self.data

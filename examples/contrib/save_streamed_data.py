@@ -18,11 +18,12 @@ for associating a file with its corresponding flow in the stream saved with
 This addon is not compatible with addons that use the same mechanism to
 capture streamed data, http-stream-modify.py for instance.
 """
+from typing import Optional
+
 from mitmproxy import ctx
 from datetime import datetime
 from pathlib import Path
 import os
-import typing
 
 
 class StreamSaver:
@@ -87,7 +88,7 @@ class StreamSaver:
 
 def load(loader):
     loader.add_option(
-        "save_streamed_data", typing.Optional[str], None,
+        "save_streamed_data", Optional[str], None,
         "Format string for saving streamed data to files. If set each streamed request or response is written "
         "to a file with a name derived from the string. In addition to formating supported by python "
         "strftime() (using the request start time) the code '%+T' is replaced with the time stamp of the request, "

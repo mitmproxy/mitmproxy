@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+from typing import Any, Callable, Union, cast
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -12,7 +12,9 @@ from mitmproxy.utils import human
 
 MAX_DATAGRAM_SIZE = 65535 - 20
 
-DatagramReceivedCallback = Callable[[asyncio.DatagramTransport, bytes, Address, Address], None]
+DatagramReceivedCallback = Callable[
+    [asyncio.DatagramTransport, bytes, Address, Address], None
+]
 """
 Callable that gets invoked when a datagram is received.
 The first argument is the outgoing transport.
@@ -23,7 +25,7 @@ In the case of transparent server, the last argument is the original destination
 """
 
 # to make mypy happy
-SockAddress = Union[Tuple[str, int], Tuple[str, int, int, int]]
+SockAddress = Union[tuple[str, int], tuple[str, int, int, int]]
 
 
 class TransparentSocket(socket.socket):
@@ -34,12 +36,20 @@ class TransparentSocket(socket.socket):
     def __init__(self, family: socket.AddressFamily, local_addr: SockAddress) -> None:
         self._recvmsg = getattr(self, "recvmsg")
         if not self._recvmsg:
-            raise NotImplementedError("Transparent UDP sockets are only supporting on platforms providing recvmsg.")
-        super().__init__(family=family, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
+            raise NotImplementedError(
+                "Transparent UDP sockets are only supporting on platforms providing recvmsg."
+            )
+        super().__init__(
+            family=family, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP
+        )
         try:
             self.setblocking(False)
-            self.setsockopt(TransparentSocket.SOL_IP, TransparentSocket.IP_TRANSPARENT, 1)
-            self.setsockopt(TransparentSocket.SOL_IP, TransparentSocket.IP_RECVORIGDSTADDR, 1)
+            self.setsockopt(
+                TransparentSocket.SOL_IP, TransparentSocket.IP_TRANSPARENT, 1
+            )
+            self.setsockopt(
+                TransparentSocket.SOL_IP, TransparentSocket.IP_RECVORIGDSTADDR, 1
+            )
             self.bind(local_addr)
         except:
             self.close()
@@ -54,17 +64,26 @@ class TransparentSocket(socket.socket):
             port, in4_addr, _ = struct.unpack_from("!H4s8s", sockaddr_in, 2)
             return str(ipaddress.IPv4Address(in4_addr)), port
         elif family == socket.AF_INET6:
-            port, flowinfo, in6_addr, scopeid = struct.unpack_from("!HL16sL", sockaddr_in, 2)
+            port, flowinfo, in6_addr, scopeid = struct.unpack_from(
+                "!HL16sL", sockaddr_in, 2
+            )
             return str(ipaddress.IPv6Address(in6_addr)), port, flowinfo, scopeid
         else:
             raise NotImplementedError(f"family {family} not implemented")
 
-    def recvfrom(self, bufsize: int, flags: int = 0) -> Tuple[bytes, Tuple[SockAddress, SockAddress]]:
+    def recvfrom(
+        self, bufsize: int, flags: int = 0
+    ) -> tuple[bytes, tuple[SockAddress, SockAddress]]:
         """Same as recvfrom, but always returns source and destination addresses."""
 
-        data, ancdata, _, client_addr = self._recvmsg(bufsize, socket.CMSG_SPACE(1024), flags)
+        data, ancdata, _, client_addr = self._recvmsg(
+            bufsize, socket.CMSG_SPACE(1024), flags
+        )
         for cmsg_level, cmsg_type, cmsg_data in ancdata:
-            if cmsg_level == TransparentSocket.SOL_IP and cmsg_type == TransparentSocket.IP_RECVORIGDSTADDR:
+            if (
+                cmsg_level == TransparentSocket.SOL_IP
+                and cmsg_type == TransparentSocket.IP_RECVORIGDSTADDR
+            ):
                 server_addr = TransparentSocket._unpack_addr(cmsg_data)
                 break
         else:
@@ -78,9 +97,9 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
     _closed: asyncio.Event
     _paused: int
     _can_write: asyncio.Event
-    _sock: Optional[socket.socket]
+    _sock: socket.socket | None
 
-    def __init__(self, loop: Optional[asyncio.AbstractEventLoop]) -> None:
+    def __init__(self, loop: asyncio.AbstractEventLoop | None) -> None:
         self._loop = asyncio.get_running_loop() if loop is None else loop
         self._closed = asyncio.Event()
         self._paused = 0
@@ -92,13 +111,13 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         return f"<{self.__class__.__name__} socket={self._sock!r}>"
 
     @property
-    def sockets(self) -> Tuple[socket.socket, ...]:
+    def sockets(self) -> tuple[socket.socket, ...]:
         return () if self._sock is None else (self._sock,)
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self._sock = transport.get_extra_info("socket")
 
-    def connection_lost(self, exc: Optional[Exception]) -> None:
+    def connection_lost(self, exc: Exception | None) -> None:
         self._closed.set()
         if exc:
             ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")
@@ -128,15 +147,15 @@ class UdpServer(DrainableDatagramProtocol):
     """UDP server similar to base_events.Server"""
 
     # _datagram_received_cb: DatagramReceivedCallback
-    _transport: Optional[asyncio.DatagramTransport]
-    _transparent_transports: Optional[Dict[Address, asyncio.DatagramTransport]]
-    _local_addr: Optional[Address]
+    _transport: asyncio.DatagramTransport | None
+    _transparent_transports: dict[Address, asyncio.DatagramTransport] | None
+    _local_addr: Address | None
 
     def __init__(
         self,
         datagram_received_cb: DatagramReceivedCallback,
-        loop: Optional[asyncio.AbstractEventLoop],
-        transparent: bool
+        loop: asyncio.AbstractEventLoop | None,
+        transparent: bool,
     ) -> None:
         super().__init__(loop)
         self._datagram_received_cb = datagram_received_cb
@@ -150,21 +169,33 @@ class UdpServer(DrainableDatagramProtocol):
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
 
-    async def _datagram_received_for_new_transparent_addr(self, data: bytes, remote_addr: Address, local_addr: Address) -> None:
+    async def _datagram_received_for_new_transparent_addr(
+        self, data: bytes, remote_addr: Address, local_addr: Address
+    ) -> None:
         assert self._sock is not None
         assert self._transparent_transports is not None
-        sock = socket.socket(family=self._sock.family, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
+        sock = socket.socket(
+            family=self._sock.family, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP
+        )
         try:
             sock.setblocking(False)
-            sock.setsockopt(TransparentSocket.SOL_IP, TransparentSocket.IP_TRANSPARENT, 1)
+            sock.setsockopt(
+                TransparentSocket.SOL_IP, TransparentSocket.IP_TRANSPARENT, 1
+            )
             sock.shutdown(socket.SHUT_RD)
             sock.bind(local_addr)
         except:
             sock.close()
             raise
-        transport, _ = await self._loop.create_datagram_endpoint(lambda: self, sock=sock)
-        self._transparent_transports[local_addr] = cast(asyncio.DatagramTransport, transport)
-        self._datagram_received_cb(self._transparent_transports[local_addr], data, remote_addr, local_addr)
+        transport, _ = await self._loop.create_datagram_endpoint(
+            lambda: self, sock=sock
+        )
+        self._transparent_transports[local_addr] = cast(
+            asyncio.DatagramTransport, transport
+        )
+        self._datagram_received_cb(
+            self._transparent_transports[local_addr], data, remote_addr, local_addr
+        )
 
     def datagram_received(self, data: bytes, addr: Any) -> None:
         assert self._transport is not None
@@ -174,9 +205,18 @@ class UdpServer(DrainableDatagramProtocol):
         else:
             remote_addr, local_addr = addr
             if local_addr in self._transparent_transports:
-                self._datagram_received_cb(self._transparent_transports[local_addr], data, remote_addr, local_addr)
+                self._datagram_received_cb(
+                    self._transparent_transports[local_addr],
+                    data,
+                    remote_addr,
+                    local_addr,
+                )
             else:
-                self._loop.create_task(self._datagram_received_for_new_transparent_addr(data, remote_addr, local_addr))
+                self._loop.create_task(
+                    self._datagram_received_for_new_transparent_addr(
+                        data, remote_addr, local_addr
+                    )
+                )
 
     def close(self) -> None:
         if self._transport is not None:
@@ -198,17 +238,21 @@ class DatagramReader:
     def feed_data(self, data: bytes, remote_addr: Address) -> None:
         assert len(data) <= MAX_DATAGRAM_SIZE
         if self._eof:
-            ctx.log.info(f"Received UDP packet from {human.format_address(remote_addr)} after EOF.")
+            ctx.log.info(
+                f"Received UDP packet from {human.format_address(remote_addr)} after EOF."
+            )
         else:
             try:
                 self._packets.put_nowait(data)
             except asyncio.QueueFull:
-                ctx.log.debug(f"Dropped UDP packet from {human.format_address(remote_addr)}.")
+                ctx.log.debug(
+                    f"Dropped UDP packet from {human.format_address(remote_addr)}."
+                )
 
     def feed_eof(self) -> None:
         self._eof = True
         try:
-            self._packets.put_nowait(b'')
+            self._packets.put_nowait(b"")
         except asyncio.QueueFull:
             pass
 
@@ -218,7 +262,7 @@ class DatagramReader:
             try:
                 return self._packets.get_nowait()
             except asyncio.QueueEmpty:
-                return b''
+                return b""
         else:
             return await self._packets.get()
 
@@ -227,10 +271,15 @@ class DatagramWriter:
 
     _transport: asyncio.DatagramTransport
     _remote_addr: Address
-    _reader: Optional[DatagramReader]
-    _closed: Optional[asyncio.Event]
+    _reader: DatagramReader | None
+    _closed: asyncio.Event | None
 
-    def __init__(self, transport: asyncio.DatagramTransport, remote_addr: Address, reader: Optional[DatagramReader] = None) -> None:
+    def __init__(
+        self,
+        transport: asyncio.DatagramTransport,
+        remote_addr: Address,
+        reader: DatagramReader | None = None,
+    ) -> None:
         """
         Create a new datagram writer around the given transport.
         Specify a reader to prevent closing the transport and instead only feed EOF to the reader.
@@ -244,10 +293,7 @@ class DatagramWriter:
 
     @property
     def _protocol(self) -> DrainableDatagramProtocol:
-        return cast(
-            DrainableDatagramProtocol,
-            self._transport.get_protocol()
-        )
+        return cast(DrainableDatagramProtocol, self._transport.get_protocol())
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)
@@ -284,14 +330,14 @@ class UdpClient(DrainableDatagramProtocol):
 
     _reader: DatagramReader
 
-    def __init__(self, reader: DatagramReader, loop: Optional[asyncio.AbstractEventLoop]):
+    def __init__(self, reader: DatagramReader, loop: asyncio.AbstractEventLoop | None):
         super().__init__(loop)
         self._reader = reader
 
     def datagram_received(self, data: bytes, remote_addr: Address) -> None:
         self._reader.feed_data(data, remote_addr)
 
-    def connection_lost(self, exc: Optional[Exception]) -> None:
+    def connection_lost(self, exc: Exception | None) -> None:
         self._reader.feed_eof()
         super().connection_lost(exc)
 
@@ -301,7 +347,7 @@ async def start_server(
     host: str,
     port: int,
     *,
-    transparent: bool = False
+    transparent: bool = False,
 ) -> UdpServer:
     """UDP variant of asyncio.start_server."""
 
@@ -325,23 +371,24 @@ async def start_server(
     _, protocol = await loop.create_datagram_endpoint(
         lambda: UdpServer(datagram_received_cb, loop, transparent),
         local_addr=(host, port),
-        sock=sock
+        sock=sock,
     )
     assert isinstance(protocol, UdpServer)
     return protocol
 
 
-async def open_connection(host: str, port: int) -> Tuple[DatagramReader, DatagramWriter]:
+async def open_connection(
+    host: str, port: int
+) -> tuple[DatagramReader, DatagramWriter]:
     """UDP variant of asyncio.open_connection."""
 
     loop = asyncio.get_running_loop()
     reader = DatagramReader()
     transport, _ = await loop.create_datagram_endpoint(
-        lambda: UdpClient(reader, loop),
-        remote_addr=(host, port)
+        lambda: UdpClient(reader, loop), remote_addr=(host, port)
     )
     writer = DatagramWriter(
         cast(asyncio.DatagramTransport, transport),
-        remote_addr=transport.get_extra_info("peername")
+        remote_addr=transport.get_extra_info("peername"),
     )
     return reader, writer

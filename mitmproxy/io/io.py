@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, IO, Iterable, Type, Union, cast
+from typing import Any, BinaryIO, Iterable, Union, cast
 
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -10,7 +10,7 @@ from mitmproxy import tcp
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 
-FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
+FLOW_TYPES: dict[str, type[flow.Flow]] = dict(
     http=http.HTTPFlow,
     tcp=tcp.TCPFlow,
     dns=dns.DNSFlow,
@@ -27,18 +27,18 @@ class FlowWriter:
 
 
 class FlowReader:
-    def __init__(self, fo: IO[bytes]):
-        self.fo: IO[bytes] = fo
+    def __init__(self, fo: BinaryIO):
+        self.fo: BinaryIO = fo
 
     def stream(self) -> Iterable[flow.Flow]:
         """
-            Yields Flow objects from the dump.
+        Yields Flow objects from the dump.
         """
         try:
             while True:
                 # FIXME: This cast hides a lack of dynamic type checking
                 loaded = cast(
-                    Dict[Union[bytes, str], Any],
+                    dict[Union[bytes, str], Any],
                     tnetstring.load(self.fo),
                 )
                 try:
@@ -46,7 +46,9 @@ class FlowReader:
                 except ValueError as e:
                     raise exceptions.FlowReadException(str(e))
                 if mdata["type"] not in FLOW_TYPES:
-                    raise exceptions.FlowReadException("Unknown flow type: {}".format(mdata["type"]))
+                    raise exceptions.FlowReadException(
+                        "Unknown flow type: {}".format(mdata["type"])
+                    )
                 yield FLOW_TYPES[mdata["type"]].from_state(mdata)
         except (ValueError, TypeError, IndexError) as e:
             if str(e) == "not a tnetstring: empty file":

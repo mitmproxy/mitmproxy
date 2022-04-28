@@ -26,6 +26,7 @@ def test_command_completed():
         pass
 
     with pytest.warns(RuntimeWarning, match="properly annotated"):
+
         class FooCompleted(events.CommandCompleted):
             pass
 
@@ -33,5 +34,6 @@ def test_command_completed():
         command: FooCommand
 
     with pytest.warns(RuntimeWarning, match="conflicting subclasses"):
+
         class FooCompleted2(events.CommandCompleted):
             command: FooCommand

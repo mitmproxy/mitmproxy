@@ -4,13 +4,16 @@ from mitmproxy import io
 from mitmproxy import exceptions
 
 
-@pytest.mark.parametrize("dumpfile, url, count", [
-    ["dumpfile-011.mitm", "https://example.com/", 1],
-    ["dumpfile-018.mitm", "https://www.example.com/", 1],
-    ["dumpfile-019.mitm", "https://webrv.rtb-seller.com/", 1],
-    ["dumpfile-7-websocket.mitm", "https://echo.websocket.org/", 6],
-    ["dumpfile-10.mitm", "https://example.com/", 1]
-])
+@pytest.mark.parametrize(
+    "dumpfile, url, count",
+    [
+        ["dumpfile-011.mitm", "https://example.com/", 1],
+        ["dumpfile-018.mitm", "https://www.example.com/", 1],
+        ["dumpfile-019.mitm", "https://webrv.rtb-seller.com/", 1],
+        ["dumpfile-7-websocket.mitm", "https://echo.websocket.org/", 6],
+        ["dumpfile-10.mitm", "https://example.com/", 1],
+    ],
+)
 def test_load(tdata, dumpfile, url, count):
     with open(tdata.path("mitmproxy/data/" + dumpfile), "rb") as f:
         flow_reader = io.FlowReader(f)

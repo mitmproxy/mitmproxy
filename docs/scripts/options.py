@@ -7,7 +7,7 @@ from mitmproxy.tools import dump, console, web
 masters = {
     "mitmproxy": console.master.ConsoleMaster,
     "mitmdump": dump.DumpMaster,
-    "mitmweb": web.master.WebMaster
+    "mitmweb": web.master.WebMaster,
 }
 
 unified_options = {}
@@ -19,15 +19,16 @@ async def dump():
         _ = master(opts)
         for key, option in optmanager.dump_dicts(opts).items():
             if key in unified_options:
-                unified_options[key]['tools'].append(tool_name)
+                unified_options[key]["tools"].append(tool_name)
             else:
                 unified_options[key] = option
-                unified_options[key]['tools'] = [tool_name]
+                unified_options[key]["tools"] = [tool_name]
 
 
 asyncio.run(dump())
 
-print("""
+print(
+    """
       <table class=\"table optiontable\">
         <thead>
           <tr>
@@ -37,9 +38,11 @@ print("""
         </tr>
         </thead>
         <tbody>
-      """.strip())
+      """.strip()
+)
 for key, option in sorted(unified_options.items(), key=lambda t: t[0]):
-    print(f"""
+    print(
+        f"""
           <tr id="{key}">
           <th>
             <a class="anchor" href="#{key}">#&nbsp;&nbsp;</a>
@@ -51,5 +54,6 @@ for key, option in sorted(unified_options.items(), key=lambda t: t[0]):
             {"<br/>Choices: {}".format(', '.join(option['choices'])) if option['choices'] else ""}
           </td>
           </tr>
-          """.strip())
+          """.strip()
+    )
 print("</tbody></table>")

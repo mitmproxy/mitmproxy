@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from mitmproxy import connection
 from mitmproxy import dns
@@ -12,7 +12,9 @@ from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
 
 
-def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp.TCPFlow:
+def ttcpflow(
+    client_conn=True, server_conn=True, messages=True, err=None
+) -> tcp.TCPFlow:
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -33,7 +35,9 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None) -> tcp
     return f
 
 
-def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') -> http.HTTPFlow:
+def twebsocketflow(
+    messages=True, err=None, close_code=None, close_reason=""
+) -> http.HTTPFlow:
     flow = http.HTTPFlow(tclient_conn(), tserver_conn())
     flow.request = http.Request(
         "example.com",
@@ -49,22 +53,21 @@ def twebsocketflow(messages=True, err=None, close_code=None, close_reason='') ->
             sec_websocket_version="13",
             sec_websocket_key="1234",
         ),
-        content=b'',
+        content=b"",
         trailers=None,
         timestamp_start=946681200,
         timestamp_end=946681201,
-
     )
     flow.response = http.Response(
         b"HTTP/1.1",
         101,
         reason=b"Switching Protocols",
         headers=http.Headers(
-            connection='upgrade',
-            upgrade='websocket',
-            sec_websocket_accept=b'',
+            connection="upgrade",
+            upgrade="websocket",
+            sec_websocket_accept=b"",
         ),
-        content=b'',
+        content=b"",
         trailers=None,
         timestamp_start=946681202,
         timestamp_end=946681203,
@@ -185,54 +188,58 @@ def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
 
 
 def tclient_conn() -> connection.Client:
-    c = connection.Client.from_state(dict(
-        id=str(uuid.uuid4()),
-        address=("127.0.0.1", 22),
-        mitmcert=None,
-        tls_established=True,
-        timestamp_start=946681200,
-        timestamp_tls_setup=946681201,
-        timestamp_end=946681206,
-        sni="address",
-        cipher_name="cipher",
-        alpn=b"http/1.1",
-        tls_version="TLSv1.2",
-        tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
-        state=0,
-        sockname=("", 0),
-        error=None,
-        tls=False,
-        certificate_list=[],
-        alpn_offers=[],
-        cipher_list=[],
-    ))
+    c = connection.Client.from_state(
+        dict(
+            id=str(uuid.uuid4()),
+            address=("127.0.0.1", 22),
+            mitmcert=None,
+            tls_established=True,
+            timestamp_start=946681200,
+            timestamp_tls_setup=946681201,
+            timestamp_end=946681206,
+            sni="address",
+            cipher_name="cipher",
+            alpn=b"http/1.1",
+            tls_version="TLSv1.2",
+            tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
+            state=0,
+            sockname=("", 0),
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_list=[],
+        )
+    )
     return c
 
 
 def tserver_conn() -> connection.Server:
-    c = connection.Server.from_state(dict(
-        id=str(uuid.uuid4()),
-        address=("address", 22),
-        source_address=("address", 22),
-        ip_address=("192.168.0.1", 22),
-        timestamp_start=946681202,
-        timestamp_tcp_setup=946681203,
-        timestamp_tls_setup=946681204,
-        timestamp_end=946681205,
-        tls_established=True,
-        sni="address",
-        alpn=None,
-        tls_version="TLSv1.2",
-        via=None,
-        state=0,
-        error=None,
-        tls=False,
-        certificate_list=[],
-        alpn_offers=[],
-        cipher_name=None,
-        cipher_list=[],
-        via2=None,
-    ))
+    c = connection.Server.from_state(
+        dict(
+            id=str(uuid.uuid4()),
+            address=("address", 22),
+            source_address=("address", 22),
+            ip_address=("192.168.0.1", 22),
+            timestamp_start=946681202,
+            timestamp_tcp_setup=946681203,
+            timestamp_tls_setup=946681204,
+            timestamp_end=946681205,
+            tls_established=True,
+            sni="address",
+            alpn=None,
+            tls_version="TLSv1.2",
+            via=None,
+            state=0,
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_name=None,
+            cipher_list=[],
+            via2=None,
+        )
+    )
     return c
 
 
@@ -258,7 +265,7 @@ def twebsocket(messages: bool = True) -> websocket.WebSocketData:
     return ws
 
 
-def tflows() -> List[flow.Flow]:
+def tflows() -> list[flow.Flow]:
     return [
         tflow(resp=True),
         tflow(err=True),

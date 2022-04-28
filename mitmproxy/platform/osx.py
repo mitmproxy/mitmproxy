@@ -27,10 +27,13 @@ def original_addr(csock):
         else:
             raise RuntimeError("Error getting pfctl state: " + repr(e))
     else:
-        insufficient_priv = "sudo: a password is required" in stxt.decode(errors="replace")
+        insufficient_priv = "sudo: a password is required" in stxt.decode(
+            errors="replace"
+        )
 
     if insufficient_priv:
         raise RuntimeError(
             "Insufficient privileges to access pfctl. "
-            "See https://mitmproxy.org/docs/latest/howto-transparent/#macos for details.")
+            "See https://mitmproxy.org/docs/latest/howto-transparent/#macos for details."
+        )
     return pf.lookup(peer[0], peer[1], stxt)

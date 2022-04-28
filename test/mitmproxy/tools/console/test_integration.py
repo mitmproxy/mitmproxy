@@ -1,5 +1,7 @@
 def test_integration(tdata, console):
-    console.type(f":view.flows.load {tdata.path('mitmproxy/data/dumpfile-7.mitm')}<enter>")
+    console.type(
+        f":view.flows.load {tdata.path('mitmproxy/data/dumpfile-7.mitm')}<enter>"
+    )
     console.type("<enter><tab><tab>")
     console.type("<space><tab><tab>")  # view second flow
     assert "http://example.com/" in console.screen_contents()

@@ -1,7 +1,7 @@
 import base64
 import binascii
 import socket
-import typing
+from typing import Any, Optional
 
 from ntlm_auth import gss_channel_bindings, ntlm
 
@@ -28,7 +28,7 @@ class NTLMUpstreamAuth:
         ctx.log.info("NTLMUpstreamAuth loader")
         loader.add_option(
             name="upstream_ntlm_auth",
-            typespec=typing.Optional[str],
+            typespec=Optional[str],
             default=None,
             help="""
             Add HTTP NTLM authentication to upstream proxy requests.
@@ -37,7 +37,7 @@ class NTLMUpstreamAuth:
         )
         loader.add_option(
             name="upstream_ntlm_domain",
-            typespec=typing.Optional[str],
+            typespec=Optional[str],
             default=None,
             help="""
             Add HTTP NTLM domain for authentication to upstream proxy requests.
@@ -45,7 +45,7 @@ class NTLMUpstreamAuth:
         )
         loader.add_option(
             name="upstream_proxy_address",
-            typespec=typing.Optional[str],
+            typespec=Optional[str],
             default=None,
             help="""
                 upstream poxy address.
@@ -70,7 +70,7 @@ class NTLMUpstreamAuth:
                         for _, stream in l.streams.items():
                             return stream.flow if isinstance(stream, HttpStream) else None
 
-        def build_connect_flow(context: Context, connect_header: typing.Tuple) -> http.HTTPFlow:
+        def build_connect_flow(context: Context, connect_header: tuple) -> http.HTTPFlow:
             flow = extract_flow_from_context(context)
             if not flow:
                 ctx.log.error("failed to build connect flow")
@@ -100,7 +100,7 @@ class NTLMUpstreamAuth:
                         raise
                     return token
 
-        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[typing.Tuple[bool, typing.Optional[str]]]:
+        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
             self.buf += data
             response_head = self.buf.maybe_extract_lines()
             if response_head:
@@ -170,7 +170,7 @@ class CustomNTLMContext:
         )
         return negotiate_message_base_64_final
 
-    def get_ntlm_challenge_response_message(self, challenge_message: str) -> typing.Any:
+    def get_ntlm_challenge_response_message(self, challenge_message: str) -> Any:
         challenge_message = challenge_message.replace(self.preferred_type + " ", "", 1)
         try:
             challenge_message_ascii_bytes = base64.b64decode(challenge_message, validate=True)

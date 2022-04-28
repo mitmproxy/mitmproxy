@@ -18,7 +18,7 @@ CSS_SPECIAL_AREAS = (
     "'" + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + "'",
     '"' + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + '"',
     r"/\*" + strutils.MULTILINE_CONTENT + r"\*/",
-    "//" + strutils.SINGLELINE_CONTENT + "$"
+    "//" + strutils.SINGLELINE_CONTENT + "$",
 )
 CSS_SPECIAL_CHARS = "{};:"
 
@@ -57,7 +57,9 @@ class ViewCSS(base.View):
         beautified = beautify(data)
         return "CSS", base.format_text(beautified)
 
-    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+    def render_priority(
+        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+    ) -> float:
         return float(bool(data) and content_type == "text/css")
 
 

@@ -11,12 +11,14 @@ from ..tutils import Placeholder, Playbook, reply
 def test_invalid_and_dummy_end(tctx):
     assert (
         Playbook(dns.DNSLayer(tctx))
-        >> DataReceived(tctx.client, b'Not a DNS packet')
-        << Log('Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99')
+        >> DataReceived(tctx.client, b"Not a DNS packet")
+        << Log(
+            "Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99"
+        )
         >> ConnectionClosed(tctx.client)
-        >> DataReceived(tctx.client, b'You still there?')
+        >> DataReceived(tctx.client, b"You still there?")
         >> DataReceived(tctx.client, tdnsreq().packed)
-        >> DataReceived(tctx.client, b'Hello?')
+        >> DataReceived(tctx.client, b"Hello?")
         << None
     )
 
@@ -82,7 +84,7 @@ def test_regular_mode_no_hook(tctx):
 def test_reverse_premature_close(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
-    layer.context.server.address = ('8.8.8.8', 53)
+    layer.context.server.address = ("8.8.8.8", 53)
 
     req = tdnsreq()
 
@@ -108,7 +110,7 @@ def test_reverse_premature_close(tctx):
 def test_reverse(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
-    layer.context.server.address = ('8.8.8.8', 53)
+    layer.context.server.address = ("8.8.8.8", 53)
 
     req = tdnsreq()
     resp = tdnsresp()
@@ -140,7 +142,7 @@ def test_reverse(tctx):
 def test_reverse_fail_connection(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
-    layer.context.server.address = ('8.8.8.8', 53)
+    layer.context.server.address = ("8.8.8.8", 53)
 
     req = tdnsreq()
 
@@ -165,7 +167,7 @@ def test_reverse_fail_connection(tctx):
 def test_reverse_with_query_resend(tctx):
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
-    layer.context.server.address = ('8.8.8.8', 53)
+    layer.context.server.address = ("8.8.8.8", 53)
 
     req = tdnsreq()
     req2 = tdnsreq()

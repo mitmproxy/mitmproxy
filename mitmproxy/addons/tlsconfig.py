@@ -1,7 +1,7 @@
 import ipaddress
 import os
 from pathlib import Path
-from typing import List, Optional, TypedDict, Any
+from typing import Any, Optional, TypedDict
 
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
@@ -15,13 +15,32 @@ from mitmproxy.proxy.layers import tls as proxy_tls
 # https://ssl-config.mozilla.org/#config=old
 
 DEFAULT_CIPHERS = (
-    'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
-    'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305', 'ECDHE-RSA-CHACHA20-POLY1305',
-    'DHE-RSA-AES128-GCM-SHA256', 'DHE-RSA-AES256-GCM-SHA384', 'DHE-RSA-CHACHA20-POLY1305', 'ECDHE-ECDSA-AES128-SHA256',
-    'ECDHE-RSA-AES128-SHA256', 'ECDHE-ECDSA-AES128-SHA', 'ECDHE-RSA-AES128-SHA', 'ECDHE-ECDSA-AES256-SHA384',
-    'ECDHE-RSA-AES256-SHA384', 'ECDHE-ECDSA-AES256-SHA', 'ECDHE-RSA-AES256-SHA', 'DHE-RSA-AES128-SHA256',
-    'DHE-RSA-AES256-SHA256', 'AES128-GCM-SHA256', 'AES256-GCM-SHA384', 'AES128-SHA256', 'AES256-SHA256', 'AES128-SHA',
-    'AES256-SHA', 'DES-CBC3-SHA'
+    "ECDHE-ECDSA-AES128-GCM-SHA256",
+    "ECDHE-RSA-AES128-GCM-SHA256",
+    "ECDHE-ECDSA-AES256-GCM-SHA384",
+    "ECDHE-RSA-AES256-GCM-SHA384",
+    "ECDHE-ECDSA-CHACHA20-POLY1305",
+    "ECDHE-RSA-CHACHA20-POLY1305",
+    "DHE-RSA-AES128-GCM-SHA256",
+    "DHE-RSA-AES256-GCM-SHA384",
+    "DHE-RSA-CHACHA20-POLY1305",
+    "ECDHE-ECDSA-AES128-SHA256",
+    "ECDHE-RSA-AES128-SHA256",
+    "ECDHE-ECDSA-AES128-SHA",
+    "ECDHE-RSA-AES128-SHA",
+    "ECDHE-ECDSA-AES256-SHA384",
+    "ECDHE-RSA-AES256-SHA384",
+    "ECDHE-ECDSA-AES256-SHA",
+    "ECDHE-RSA-AES256-SHA",
+    "DHE-RSA-AES128-SHA256",
+    "DHE-RSA-AES256-SHA256",
+    "AES128-GCM-SHA256",
+    "AES256-GCM-SHA384",
+    "AES128-SHA256",
+    "AES256-SHA256",
+    "AES128-SHA",
+    "AES256-SHA",
+    "DES-CBC3-SHA",
 )
 
 
@@ -31,7 +50,7 @@ class AppData(TypedDict):
     http2: bool
 
 
-def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
+def alpn_select_callback(conn: SSL.Connection, options: list[bytes]) -> Any:
     app_data: AppData = conn.get_app_data()
     client_alpn = app_data["client_alpn"]
     server_alpn = app_data["server_alpn"]
@@ -48,7 +67,8 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
         # We need to mirror this on the client connection.
         return SSL.NO_OVERLAPPING_PROTOCOLS
     http_alpns = proxy_tls.HTTP_ALPNS if http2 else proxy_tls.HTTP1_ALPNS
-    for alpn in options:  # client sends in order of preference, so we are nice and respect that.
+    # client sends in order of preference, so we are nice and respect that.
+    for alpn in options:
         if alpn in http_alpns:
             return alpn
     else:
@@ -59,6 +79,7 @@ class TlsConfig:
     """
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
     """
+
     certstore: certs.CertStore = None  # type: ignore
 
     # TODO: We should support configuring TLS 1.3 cipher suites (https://github.com/mitmproxy/mitmproxy/issues/4260)
@@ -108,9 +129,9 @@ class TlsConfig:
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
         tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
-                ctx.options.connection_strategy == "eager" or
-                ctx.options.add_upstream_certs_to_client_chain or
-                ctx.options.upstream_cert
+            ctx.options.connection_strategy == "eager"
+            or ctx.options.add_upstream_certs_to_client_chain
+            or ctx.options.upstream_cert
         )
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
@@ -153,16 +174,20 @@ class TlsConfig:
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
         # but the complexity outweighs the benefits for now.
-        if len(tls_start.context.layers) == 2 and isinstance(tls_start.context.layers[0], modes.HttpProxy):
+        if len(tls_start.context.layers) == 2 and isinstance(
+            tls_start.context.layers[0], modes.HttpProxy
+        ):
             client_alpn: Optional[bytes] = b"http/1.1"
         else:
             client_alpn = client.alpn
 
-        tls_start.ssl_conn.set_app_data(AppData(
-            client_alpn=client_alpn,
-            server_alpn=server.alpn,
-            http2=ctx.options.http2,
-        ))
+        tls_start.ssl_conn.set_app_data(
+            AppData(
+                client_alpn=client_alpn,
+                server_alpn=server.alpn,
+                http2=ctx.options.http2,
+            )
+        )
         tls_start.ssl_conn.set_accept_state()
 
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
@@ -193,7 +218,9 @@ class TlsConfig:
                     # accurately, for example header capitalization.
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
-                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
+                    server.alpn_offers = tuple(
+                        x for x in client.alpn_offers if x != b"h2"
+                    )
             else:
                 # We either have no client TLS or a client without ALPN.
                 # - If the client does use TLS but did not send an ALPN extension, we want to mirror that upstream.
@@ -257,7 +284,9 @@ class TlsConfig:
             path=certstore_path,
             basename=CONF_BASENAME,
             key_size=ctx.options.key_size,
-            passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
+            passphrase=ctx.options.cert_passphrase.encode("utf8")
+            if ctx.options.cert_passphrase
+            else None,
         )
         if self.certstore.default_ca.has_expired():
             ctx.log.warn(
@@ -274,22 +303,28 @@ class TlsConfig:
 
             cert = Path(parts[1]).expanduser()
             if not cert.exists():
-                raise exceptions.OptionsError(f"Certificate file does not exist: {cert}")
+                raise exceptions.OptionsError(
+                    f"Certificate file does not exist: {cert}"
+                )
             try:
                 self.certstore.add_cert_file(
                     parts[0],
                     cert,
-                    passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
+                    passphrase=ctx.options.cert_passphrase.encode("utf8")
+                    if ctx.options.cert_passphrase
+                    else None,
                 )
             except ValueError as e:
-                raise exceptions.OptionsError(f"Invalid certificate format for {cert}: {e}") from e
+                raise exceptions.OptionsError(
+                    f"Invalid certificate format for {cert}: {e}"
+                ) from e
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
         """
-        altnames: List[str] = []
+        altnames: list[str] = []
         organization: Optional[str] = None
 
         # Use upstream certificate if available.

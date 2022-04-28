@@ -7,14 +7,14 @@ This module only defines the classes for individual `WebSocketMessage`s and the 
 """
 import time
 import warnings
-from typing import List, Tuple, Union
+from typing import Union
 from typing import Optional
 
 from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
 from wsproto.frame_protocol import Opcode
 
-WebSocketMessageState = Tuple[int, bool, bytes, float, bool, bool]
+WebSocketMessageState = tuple[int, bool, bytes, float, bool, bool]
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -71,10 +71,24 @@ class WebSocketMessage(serializable.Serializable):
         return cls(*state)
 
     def get_state(self) -> WebSocketMessageState:
-        return int(self.type), self.from_client, self.content, self.timestamp, self.dropped, self.injected
+        return (
+            int(self.type),
+            self.from_client,
+            self.content,
+            self.timestamp,
+            self.dropped,
+            self.injected,
+        )
 
     def set_state(self, state: WebSocketMessageState) -> None:
-        typ, self.from_client, self.content, self.timestamp, self.dropped, self.injected = state
+        (
+            typ,
+            self.from_client,
+            self.content,
+            self.timestamp,
+            self.dropped,
+            self.injected,
+        ) = state
         self.type = Opcode(typ)
 
     def __repr__(self):
@@ -97,7 +111,11 @@ class WebSocketMessage(serializable.Serializable):
 
     def kill(self):  # pragma: no cover
         """A deprecated alias for `.drop()`."""
-        warnings.warn("WebSocketMessage.kill() is deprecated, use .drop() instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "WebSocketMessage.kill() is deprecated, use .drop() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.drop()
 
     @property
@@ -110,14 +128,18 @@ class WebSocketMessage(serializable.Serializable):
         *See also:* `WebSocketMessage.content`
         """
         if self.type != Opcode.TEXT:
-            raise AttributeError(f"{self.type.name.title()} WebSocket frames do not have a 'text' attribute.")
+            raise AttributeError(
+                f"{self.type.name.title()} WebSocket frames do not have a 'text' attribute."
+            )
 
         return self.content.decode()
 
     @text.setter
     def text(self, value: str) -> None:
         if self.type != Opcode.TEXT:
-            raise AttributeError(f"{self.type.name.title()} WebSocket frames do not have a 'text' attribute.")
+            raise AttributeError(
+                f"{self.type.name.title()} WebSocket frames do not have a 'text' attribute."
+            )
 
         self.content = value.encode()
 
@@ -128,7 +150,7 @@ class WebSocketData(stateobject.StateObject):
     This is typically accessed as `mitmproxy.http.HTTPFlow.websocket`.
     """
 
-    messages: List[WebSocketMessage]
+    messages: list[WebSocketMessage]
     """All `WebSocketMessage`s transferred over this connection."""
 
     closed_by_client: Optional[bool] = None
@@ -146,7 +168,7 @@ class WebSocketData(stateobject.StateObject):
     """*Timestamp:* WebSocket connection closed."""
 
     _stateobject_attributes = dict(
-        messages=List[WebSocketMessage],
+        messages=list[WebSocketMessage],
         closed_by_client=bool,
         close_code=int,
         close_reason=str,

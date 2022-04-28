@@ -11,9 +11,9 @@ from mitmproxy.addons import asgiapp
 app = Flask("proxapp")
 
 
-@app.route('/')
+@app.route("/")
 def hello_world() -> str:
-    return 'Hello World!'
+    return "Hello World!"
 
 
 addons = [

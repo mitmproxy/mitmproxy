@@ -5,7 +5,7 @@ import random
 import struct
 from ipaddress import IPv4Address, IPv6Address
 import time
-from typing import ClassVar, List, Optional, Tuple, Union
+from typing import ClassVar
 
 from mitmproxy import connection, flow, stateobject
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types
@@ -124,12 +124,16 @@ class ResourceRecord(stateobject.StateObject):
         return cls(name, types.A, classes.IN, ttl, ip.packed)
 
     @classmethod
-    def AAAA(cls, name: str, ip: IPv6Address, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
+    def AAAA(
+        cls, name: str, ip: IPv6Address, *, ttl: int = DEFAULT_TTL
+    ) -> ResourceRecord:
         """Create an IPv6 resource record."""
         return cls(name, types.AAAA, classes.IN, ttl, ip.packed)
 
     @classmethod
-    def CNAME(cls, alias: str, canonical: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
+    def CNAME(
+        cls, alias: str, canonical: str, *, ttl: int = DEFAULT_TTL
+    ) -> ResourceRecord:
         """Create a canonical internet name resource record."""
         return cls(alias, types.CNAME, classes.IN, ttl, domain_names.pack(canonical))
 
@@ -178,16 +182,16 @@ class Message(stateobject.StateObject):
     """Reserved for future use.  Must be zero in all queries and responses."""
     response_code: int
     """This field is set as part of responses."""
-    questions: List[Question]
+    questions: list[Question]
     """
     The question section is used to carry the "question" in most queries, i.e.
     the parameters that define what is being asked.
     """
-    answers: List[ResourceRecord]
+    answers: list[ResourceRecord]
     """First resource record section."""
-    authorities: List[ResourceRecord]
+    authorities: list[ResourceRecord]
     """Second resource record section."""
-    additionals: List[ResourceRecord]
+    additionals: list[ResourceRecord]
     """Third resource record section."""
 
     _stateobject_attributes = dict(
@@ -201,10 +205,10 @@ class Message(stateobject.StateObject):
         recursion_available=bool,
         reserved=int,
         response_code=int,
-        questions=List[Question],
-        answers=List[ResourceRecord],
-        authorities=List[ResourceRecord],
-        additionals=List[ResourceRecord],
+        questions=list[Question],
+        answers=list[ResourceRecord],
+        authorities=list[ResourceRecord],
+        additionals=list[ResourceRecord],
     )
 
     @classmethod
@@ -214,7 +218,14 @@ class Message(stateobject.StateObject):
         return obj
 
     def __str__(self) -> str:
-        return "\r\n".join(map(str, itertools.chain(self.questions, self.answers, self.authorities, self.additionals)))
+        return "\r\n".join(
+            map(
+                str,
+                itertools.chain(
+                    self.questions, self.answers, self.authorities, self.additionals
+                ),
+            )
+        )
 
     @property
     def content(self) -> bytes:
@@ -224,7 +235,12 @@ class Message(stateobject.StateObject):
     @property
     def size(self) -> int:
         """Returns the cumulative data size of all resource record sections."""
-        return sum(len(x.data) for x in itertools.chain.from_iterable([self.answers, self.authorities, self.additionals]))
+        return sum(
+            len(x.data)
+            for x in itertools.chain.from_iterable(
+                [self.answers, self.authorities, self.additionals]
+            )
+        )
 
     def fail(self, response_code: int) -> Message:
         if response_code == response_codes.NOERROR:
@@ -246,7 +262,7 @@ class Message(stateobject.StateObject):
             additionals=[],
         )
 
-    def succeed(self, answers: List[ResourceRecord]) -> Message:
+    def succeed(self, answers: list[ResourceRecord]) -> Message:
         return Message(
             timestamp=time.time(),
             id=self.id,
@@ -273,9 +289,16 @@ class Message(stateobject.StateObject):
         return msg
 
     @classmethod
-    def unpack_from(cls, buffer: Union[bytes, bytearray], offset: int) -> Tuple[int, Message]:
+    def unpack_from(cls, buffer: bytes | bytearray, offset: int) -> tuple[int, Message]:
         """Converts the buffer from a given offset into a DNS message and also returns its length."""
-        id, flags, len_questions, len_answers, len_authorities, len_additionals = Message.HEADER.unpack_from(buffer, offset)
+        (
+            id,
+            flags,
+            len_questions,
+            len_answers,
+            len_authorities,
+            len_additionals,
+        ) = Message.HEADER.unpack_from(buffer, offset)
         msg = Message(
             timestamp=time.time(),
             id=id,
@@ -297,7 +320,9 @@ class Message(stateobject.StateObject):
 
         def unpack_domain_name() -> str:
             nonlocal buffer, offset, cached_names
-            name, length = domain_names.unpack_from_with_compression(buffer, offset, cached_names)
+            name, length = domain_names.unpack_from_with_compression(
+                buffer, offset, cached_names
+            )
             offset += length
             return name
 
@@ -310,21 +335,32 @@ class Message(stateobject.StateObject):
             except struct.error as e:
                 raise struct.error(f"question #{i}: {str(e)}")
 
-        def unpack_rrs(section: List[ResourceRecord], section_name: str, count: int) -> None:
+        def unpack_rrs(
+            section: list[ResourceRecord], section_name: str, count: int
+        ) -> None:
             nonlocal buffer, offset
             for i in range(0, count):
                 try:
                     name = unpack_domain_name()
-                    type, class_, ttl, len_data = ResourceRecord.HEADER.unpack_from(buffer, offset)
+                    type, class_, ttl, len_data = ResourceRecord.HEADER.unpack_from(
+                        buffer, offset
+                    )
                     offset += ResourceRecord.HEADER.size
                     end_data = offset + len_data
                     if len(buffer) < end_data:
-                        raise struct.error(f"unpack requires a data buffer of {len_data} bytes")
+                        raise struct.error(
+                            f"unpack requires a data buffer of {len_data} bytes"
+                        )
                     data = buffer[offset:end_data]
                     if 0b11000000 in data:
                         # the resource record might contains a compressed domain name, if so, uncompressed in advance
                         try:
-                            rr_name, rr_name_len = domain_names.unpack_from_with_compression(buffer, offset, cached_names)
+                            (
+                                rr_name,
+                                rr_name_len,
+                            ) = domain_names.unpack_from_with_compression(
+                                buffer, offset, cached_names
+                            )
                             if rr_name_len == len_data:
                                 data = domain_names.pack(rr_name)
                         except struct.error:
@@ -359,27 +395,35 @@ class Message(stateobject.StateObject):
         if self.recursion_available:
             flags |= 1 << 7
         if self.reserved < 0 or self.reserved > 0b111:
-            raise ValueError(f"DNS message's reserved value of {self.reserved} is out of bounds.")
+            raise ValueError(
+                f"DNS message's reserved value of {self.reserved} is out of bounds."
+            )
         flags |= self.reserved << 4
         if self.response_code < 0 or self.response_code > 0b1111:
-            raise ValueError(f"DNS message's response_code {self.response_code} is out of bounds.")
+            raise ValueError(
+                f"DNS message's response_code {self.response_code} is out of bounds."
+            )
         flags |= self.response_code
         data = bytearray()
-        data.extend(Message.HEADER.pack(
-            self.id,
-            flags,
-            len(self.questions),
-            len(self.answers),
-            len(self.authorities),
-            len(self.additionals),
-        ))
+        data.extend(
+            Message.HEADER.pack(
+                self.id,
+                flags,
+                len(self.questions),
+                len(self.answers),
+                len(self.authorities),
+                len(self.additionals),
+            )
+        )
         # TODO implement compression
         for question in self.questions:
             data.extend(domain_names.pack(question.name))
             data.extend(Question.HEADER.pack(question.type, question.class_))
         for rr in (*self.answers, *self.authorities, *self.additionals):
             data.extend(domain_names.pack(rr.name))
-            data.extend(ResourceRecord.HEADER.pack(rr.type, rr.class_, rr.ttl, len(rr.data)))
+            data.extend(
+                ResourceRecord.HEADER.pack(rr.type, rr.class_, rr.ttl, len(rr.data))
+            )
             data.extend(rr.data)
         return bytes(data)
 
@@ -418,14 +462,19 @@ class DNSFlow(flow.Flow):
 
     request: Message
     """The DNS request."""
-    response: Optional[Message] = None
+    response: Message | None = None
     """The DNS response."""
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["request"] = Message
     _stateobject_attributes["response"] = Message
 
-    def __init__(self, client_conn: connection.Client, server_conn: connection.Server, live: bool = False):
+    def __init__(
+        self,
+        client_conn: connection.Client,
+        server_conn: connection.Server,
+        live: bool = False,
+    ):
         super().__init__("dns", client_conn, server_conn, live)
 
     def __repr__(self) -> str:

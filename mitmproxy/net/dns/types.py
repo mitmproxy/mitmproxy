@@ -177,7 +177,7 @@ _STRINGS = {
     DOA: "DOA",
     AMTRELAY: "AMTRELAY",
     TA: "TA",
-    DLV: "DLV"
+    DLV: "DLV",
 }
 
 

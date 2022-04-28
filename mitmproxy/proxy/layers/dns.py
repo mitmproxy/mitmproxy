@@ -13,6 +13,7 @@ class DnsRequestHook(commands.StartHook):
     """
     A DNS query has been received.
     """
+
     flow: dns.DNSFlow
 
 
@@ -21,6 +22,7 @@ class DnsResponseHook(commands.StartHook):
     """
     A DNS response has been received or set.
     """
+
     flow: dns.DNSFlow
 
 
@@ -29,6 +31,7 @@ class DnsErrorHook(commands.StartHook):
     """
     A DNS error has occurred.
     """
+
     flow: dns.DNSFlow
 
 
@@ -36,6 +39,7 @@ class DNSLayer(layer.Layer):
     """
     Layer that handles resolving DNS queries.
     """
+
     flow: dns.DNSFlow
 
     def __init__(self, context: Context):
@@ -44,13 +48,17 @@ class DNSLayer(layer.Layer):
 
     def handle_request(self, msg: dns.Message) -> layer.CommandGenerator[None]:
         self.flow.request = msg  # if already set, continue and query upstream again
-        yield DnsRequestHook(self.flow)  # give hooks a chance to change the request or produce a response
+        yield DnsRequestHook(
+            self.flow
+        )  # give hooks a chance to change the request or produce a response
         if self.flow.response:
             yield from self.handle_response(self.flow.response)
         elif not self.flow.server_conn.address:
             yield from self.handle_error("No hook has set a response.")
         else:
-            if self.flow.server_conn.state is connection.ConnectionState.CLOSED:  # we need an upstream connection
+            if (
+                self.flow.server_conn.state is connection.ConnectionState.CLOSED
+            ):  # we need an upstream connection
                 err = yield commands.OpenConnection(self.flow.server_conn)
                 if err:
                     yield from self.handle_error(str(err))

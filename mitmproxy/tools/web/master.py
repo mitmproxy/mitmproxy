@@ -41,56 +41,36 @@ class WebMaster(master.Master):
             self.events,
             errorcheck.ErrorCheck(),
         )
-        self.app = app.Application(
-            self, self.options.web_debug
-        )
+        self.app = app.Application(self, self.options.web_debug)
 
     def _sig_view_add(self, view, flow):
         app.ClientConnection.broadcast(
-            resource="flows",
-            cmd="add",
-            data=app.flow_to_json(flow)
+            resource="flows", cmd="add", data=app.flow_to_json(flow)
         )
 
     def _sig_view_update(self, view, flow):
         app.ClientConnection.broadcast(
-            resource="flows",
-            cmd="update",
-            data=app.flow_to_json(flow)
+            resource="flows", cmd="update", data=app.flow_to_json(flow)
         )
 
     def _sig_view_remove(self, view, flow, index):
-        app.ClientConnection.broadcast(
-            resource="flows",
-            cmd="remove",
-            data=flow.id
-        )
+        app.ClientConnection.broadcast(resource="flows", cmd="remove", data=flow.id)
 
     def _sig_view_refresh(self, view):
-        app.ClientConnection.broadcast(
-            resource="flows",
-            cmd="reset"
-        )
+        app.ClientConnection.broadcast(resource="flows", cmd="reset")
 
     def _sig_events_add(self, event_store, entry: log.LogEntry):
         app.ClientConnection.broadcast(
-            resource="events",
-            cmd="add",
-            data=app.logentry_to_json(entry)
+            resource="events", cmd="add", data=app.logentry_to_json(entry)
         )
 
     def _sig_events_refresh(self, event_store):
-        app.ClientConnection.broadcast(
-            resource="events",
-            cmd="reset"
-        )
+        app.ClientConnection.broadcast(resource="events", cmd="reset")
 
     def _sig_options_update(self, options, updated):
         options_dict = optmanager.dump_dicts(options, updated)
         app.ClientConnection.broadcast(
-            resource="options",
-            cmd="update",
-            data=options_dict
+            resource="options", cmd="update", data=options_dict
         )
 
     async def running(self):

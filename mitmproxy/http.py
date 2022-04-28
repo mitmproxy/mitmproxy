@@ -10,13 +10,10 @@ from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
 from typing import Callable
-from typing import Dict
 from typing import Iterable
 from typing import Iterator
-from typing import List
 from typing import Mapping
 from typing import Optional
-from typing import Tuple
 from typing import Union
 from typing import cast
 from typing import Any
@@ -93,7 +90,7 @@ class Headers(multidict.MultiDict):  # type: ignore
      - For use with the "Set-Cookie" and "Cookie" headers, either use `Response.cookies` or see `Headers.get_all`.
     """
 
-    def __init__(self, fields: Iterable[Tuple[bytes, bytes]] = (), **headers):
+    def __init__(self, fields: Iterable[tuple[bytes, bytes]] = (), **headers):
         """
         *Args:*
          - *fields:* (optional) list of ``(name, value)`` header byte tuples,
@@ -112,12 +109,14 @@ class Headers(multidict.MultiDict):  # type: ignore
                 raise TypeError("Header fields must be bytes.")
 
         # content_type -> content-type
-        self.update({
-            _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
-            for name, value in headers.items()
-        })
+        self.update(
+            {
+                _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
+                for name, value in headers.items()
+            }
+        )
 
-    fields: Tuple[Tuple[bytes, bytes], ...]
+    fields: tuple[tuple[bytes, bytes], ...]
 
     @staticmethod
     def _reduce_values(values) -> str:
@@ -143,7 +142,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         for x in super().__iter__():
             yield _native(x)
 
-    def get_all(self, name: Union[str, bytes]) -> List[str]:
+    def get_all(self, name: Union[str, bytes]) -> list[str]:
         """
         Like `Headers.get`, but does not fold multiple headers into a single one.
         This is useful for Set-Cookie and Cookie headers, which do not support folding.
@@ -154,12 +153,9 @@ class Headers(multidict.MultiDict):  # type: ignore
          - <https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.5>
         """
         name = _always_bytes(name)
-        return [
-            _native(x) for x in
-            super().get_all(name)
-        ]
+        return [_native(x) for x in super().get_all(name)]
 
-    def set_all(self, name: Union[str, bytes], values: List[Union[str, bytes]]):
+    def set_all(self, name: Union[str, bytes], values: list[Union[str, bytes]]):
         """
         Explicitly set multiple headers for the given key.
         See `Headers.get_all`.
@@ -175,10 +171,7 @@ class Headers(multidict.MultiDict):  # type: ignore
 
     def items(self, multi=False):
         if multi:
-            return (
-                (_native(k), _native(v))
-                for k, v in self.fields
-            )
+            return ((_native(k), _native(v)) for k, v in self.fields)
         else:
             return super().items()
 
@@ -194,6 +187,7 @@ class MessageData(serializable.Serializable):
 
     # noinspection PyUnreachableCode
     if __debug__:
+
         def __post_init__(self):
             for field in fields(self):
                 val = getattr(self, field.name)
@@ -274,7 +268,9 @@ class Message(serializable.Serializable):
 
     @http_version.setter
     def http_version(self, http_version: Union[str, bytes]) -> None:
-        self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
+        self.data.http_version = strutils.always_bytes(
+            http_version, "utf-8", "surrogateescape"
+        )
 
     @property
     def is_http10(self) -> bool:
@@ -415,13 +411,17 @@ class Message(serializable.Serializable):
                 enc = "utf8"
         if not enc:
             if "html" in self.headers.get("content-type", ""):
-                meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE)
+                meta_charset = re.search(
+                    rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE
+                )
                 if meta_charset:
                     enc = meta_charset.group(1).decode("ascii", "ignore")
         if not enc:
             if "text/css" in self.headers.get("content-type", ""):
                 # @charset rule must be the very first thing.
-                css_charset = re.match(rb"""@charset "([^"]+)";""", content, re.IGNORECASE)
+                css_charset = re.match(
+                    rb"""@charset "([^"]+)";""", content, re.IGNORECASE
+                )
                 if css_charset:
                     enc = css_charset.group(1).decode("ascii", "ignore")
         if not enc:
@@ -442,7 +442,11 @@ class Message(serializable.Serializable):
             self.content = cast(bytes, encoding.encode(text, enc))
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
-            ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct = parse_content_type(self.headers.get("content-type", "")) or (
+                "text",
+                "plain",
+                {},
+            )
             ct[2]["charset"] = "utf-8"
             self.headers["content-type"] = assemble_content_type(*ct)
             enc = "utf8"
@@ -527,7 +531,7 @@ class Message(serializable.Serializable):
         """
         content = self.get_content(strict=False)
         if content is None:
-            raise TypeError('Message content is not available.')
+            raise TypeError("Message content is not available.")
         else:
             return json.loads(content, **kwargs)
 
@@ -536,6 +540,7 @@ class Request(Message):
     """
     An HTTP request.
     """
+
     data: RequestData
 
     def __init__(
@@ -547,9 +552,9 @@ class Request(Message):
         authority: bytes,
         path: bytes,
         http_version: bytes,
-        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
         content: Optional[bytes],
-        trailers: Union[Headers, Tuple[Tuple[bytes, bytes], ...], None],
+        trailers: Union[Headers, tuple[tuple[bytes, bytes], ...], None],
         timestamp_start: float,
         timestamp_end: Optional[float],
     ):
@@ -603,7 +608,11 @@ class Request(Message):
         method: str,
         url: str,
         content: Union[bytes, str] = "",
-        headers: Union[Headers, Dict[Union[str, bytes], Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        headers: Union[
+            Headers,
+            dict[Union[str, bytes], Union[str, bytes]],
+            Iterable[tuple[bytes, bytes]],
+        ] = (),
     ) -> "Request":
         """
         Simplified API for creating request objects.
@@ -613,16 +622,20 @@ class Request(Message):
             pass
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),
-                 always_bytes(v, "utf-8", "surrogateescape"))
+                (
+                    always_bytes(k, "utf-8", "surrogateescape"),
+                    always_bytes(v, "utf-8", "surrogateescape"),
+                )
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
             headers = Headers(headers)  # type: ignore
         else:
-            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
-                type(headers).__name__
-            ))
+            raise TypeError(
+                "Expected headers to be an iterable or dict, but is {}.".format(
+                    type(headers).__name__
+                )
+            )
 
         req = cls(
             "",
@@ -646,7 +659,9 @@ class Request(Message):
         elif isinstance(content, str):
             req.text = content
         else:
-            raise TypeError(f"Expected content to be str or bytes, but is {type(content).__name__}.")
+            raise TypeError(
+                f"Expected content to be str or bytes, but is {type(content).__name__}."
+            )
 
         return req
 
@@ -852,10 +867,7 @@ class Request(Message):
         For the most part, this behaves like a dictionary.
         Modifications to the MultiDictView update `Request.path`, and vice versa.
         """
-        return multidict.MultiDictView(
-            self._get_query,
-            self._set_query
-        )
+        return multidict.MultiDictView(self._get_query, self._set_query)
 
     @query.setter
     def query(self, value):
@@ -875,17 +887,14 @@ class Request(Message):
         For the most part, this behaves like a dictionary.
         Modifications to the MultiDictView update `Request.headers`, and vice versa.
         """
-        return multidict.MultiDictView(
-            self._get_cookies,
-            self._set_cookies
-        )
+        return multidict.MultiDictView(self._get_cookies, self._set_cookies)
 
     @cookies.setter
     def cookies(self, value):
         self._set_cookies(value)
 
     @property
-    def path_components(self) -> Tuple[str, ...]:
+    def path_components(self) -> tuple[str, ...]:
         """
         The URL's path components as a tuple of strings.
         Components are unquoted.
@@ -926,16 +935,17 @@ class Request(Message):
         """
         accept_encoding = self.headers.get("accept-encoding")
         if accept_encoding:
-            self.headers["accept-encoding"] = (
-                ', '.join(
-                    e
-                    for e in {"gzip", "identity", "deflate", "br", "zstd"}
-                    if e in accept_encoding
-                )
+            self.headers["accept-encoding"] = ", ".join(
+                e
+                for e in {"gzip", "identity", "deflate", "br", "zstd"}
+                if e in accept_encoding
             )
 
     def _get_urlencoded_form(self):
-        is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
+        is_valid_content_type = (
+            "application/x-www-form-urlencoded"
+            in self.headers.get("content-type", "").lower()
+        )
         if is_valid_content_type:
             return tuple(url.decode(self.get_text(strict=False)))
         return ()
@@ -959,8 +969,7 @@ class Request(Message):
         Modifications to the MultiDictView update `Request.content`, and vice versa.
         """
         return multidict.MultiDictView(
-            self._get_urlencoded_form,
-            self._set_urlencoded_form
+            self._get_urlencoded_form, self._set_urlencoded_form
         )
 
     @urlencoded_form.setter
@@ -968,7 +977,9 @@ class Request(Message):
         self._set_urlencoded_form(value)
 
     def _get_multipart_form(self):
-        is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
+        is_valid_content_type = (
+            "multipart/form-data" in self.headers.get("content-type", "").lower()
+        )
         if is_valid_content_type:
             try:
                 return multipart.decode(self.headers.get("content-type"), self.content)
@@ -977,7 +988,11 @@ class Request(Message):
         return ()
 
     def _set_multipart_form(self, value):
-        is_valid_content_type = self.headers.get("content-type", "").lower().startswith("multipart/form-data")
+        is_valid_content_type = (
+            self.headers.get("content-type", "")
+            .lower()
+            .startswith("multipart/form-data")
+        )
         if not is_valid_content_type:
             """
             Generate a random boundary here.
@@ -1000,8 +1015,7 @@ class Request(Message):
         Modifications to the MultiDictView update `Request.content`, and vice versa.
         """
         return multidict.MultiDictView(
-            self._get_multipart_form,
-            self._set_multipart_form
+            self._get_multipart_form, self._set_multipart_form
         )
 
     @multipart_form.setter
@@ -1013,6 +1027,7 @@ class Response(Message):
     """
     An HTTP response.
     """
+
     data: ResponseData
 
     def __init__(
@@ -1020,9 +1035,9 @@ class Response(Message):
         http_version: bytes,
         status_code: int,
         reason: bytes,
-        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
         content: Optional[bytes],
-        trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+        trailers: Union[None, Headers, tuple[tuple[bytes, bytes], ...]],
         timestamp_start: float,
         timestamp_end: Optional[float],
     ):
@@ -1064,7 +1079,9 @@ class Response(Message):
         cls,
         status_code: int = 200,
         content: Union[bytes, str] = b"",
-        headers: Union[Headers, Mapping[str, Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        headers: Union[
+            Headers, Mapping[str, Union[str, bytes]], Iterable[tuple[bytes, bytes]]
+        ] = (),
     ) -> "Response":
         """
         Simplified API for creating response objects.
@@ -1073,16 +1090,20 @@ class Response(Message):
             headers = headers
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),  # type: ignore
-                 always_bytes(v, "utf-8", "surrogateescape"))
+                (
+                    always_bytes(k, "utf-8", "surrogateescape"),  # type: ignore
+                    always_bytes(v, "utf-8", "surrogateescape"),
+                )
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
             headers = Headers(headers)  # type: ignore
         else:
-            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
-                type(headers).__name__
-            ))
+            raise TypeError(
+                "Expected headers to be an iterable or dict, but is {}.".format(
+                    type(headers).__name__
+                )
+            )
 
         resp = cls(
             b"HTTP/1.1",
@@ -1101,7 +1122,9 @@ class Response(Message):
         elif isinstance(content, str):
             resp.text = content
         else:
-            raise TypeError(f"Expected content to be str or bytes, but is {type(content).__name__}.")
+            raise TypeError(
+                f"Expected content to be str or bytes, but is {type(content).__name__}."
+            )
 
         return resp
 
@@ -1133,10 +1156,7 @@ class Response(Message):
     def _get_cookies(self):
         h = self.headers.get_all("set-cookie")
         all_cookies = cookies.parse_set_cookie_headers(h)
-        return tuple(
-            (name, (value, attrs))
-            for name, value, attrs in all_cookies
-        )
+        return tuple((name, (value, attrs)) for name, value, attrs in all_cookies)
 
     def _set_cookies(self, value):
         cookie_headers = []
@@ -1146,7 +1166,11 @@ class Response(Message):
         self.headers.set_all("set-cookie", cookie_headers)
 
     @property
-    def cookies(self) -> multidict.MultiDictView[str, Tuple[str, multidict.MultiDict[str, Optional[str]]]]:
+    def cookies(
+        self,
+    ) -> multidict.MultiDictView[
+        str, tuple[str, multidict.MultiDict[str, Optional[str]]]
+    ]:
         """
         The response cookies. A possibly empty `MultiDictView`, where the keys are cookie
         name strings, and values are `(cookie value, attributes)` tuples. Within
@@ -1156,10 +1180,7 @@ class Response(Message):
         *Warning:* Changes to `attributes` will not be picked up unless you also reassign
         the `(cookie value, attributes)` tuple directly in the `MultiDictView`.
         """
-        return multidict.MultiDictView(
-            self._get_cookies,
-            self._set_cookies
-        )
+        return multidict.MultiDictView(self._get_cookies, self._set_cookies)
 
     @cookies.setter
     def cookies(self, value):
@@ -1206,6 +1227,7 @@ class HTTPFlow(flow.Flow):
     An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
     """
+
     request: Request
     """The client's HTTP request."""
     response: Optional[Response] = None
@@ -1230,16 +1252,20 @@ class HTTPFlow(flow.Flow):
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
-    _stateobject_attributes.update(dict(
-        request=Request,
-        response=Response,
-        websocket=WebSocketData,
-        mode=str
-    ))
+    _stateobject_attributes.update(
+        dict(request=Request, response=Response, websocket=WebSocketData, mode=str)
+    )
 
     def __repr__(self):
         s = "<HTTPFlow"
-        for a in ("request", "response", "websocket", "error", "client_conn", "server_conn"):
+        for a in (
+            "request",
+            "response",
+            "websocket",
+            "error",
+            "client_conn",
+            "server_conn",
+        ):
             if getattr(self, a, False):
                 s += f"\r\n  {a} = {{flow.{a}}}"
         s += ">"

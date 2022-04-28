@@ -58,16 +58,14 @@ class RecordingMaster(mitmproxy.master.Master):
 
 class context:
     """
-        A context for testing addons, which sets up the mitmproxy.ctx module so
-        handlers can run as they would within mitmproxy. The context also
-        provides a number of helper methods for common testing scenarios.
+    A context for testing addons, which sets up the mitmproxy.ctx module so
+    handlers can run as they would within mitmproxy. The context also
+    provides a number of helper methods for common testing scenarios.
     """
 
     def __init__(self, *addons, options=None, loadcore=True):
         options = options or mitmproxy.options.Options()
-        self.master = RecordingMaster(
-            options
-        )
+        self.master = RecordingMaster(options)
         self.options = self.master.options
 
         if loadcore:
@@ -84,22 +82,19 @@ class context:
 
     async def cycle(self, addon, f):
         """
-            Cycles the flow through the events for the flow. Stops if the flow
-            is intercepted.
+        Cycles the flow through the events for the flow. Stops if the flow
+        is intercepted.
         """
         for evt in eventsequence.iterate(f):
-            await self.master.addons.invoke_addon(
-                addon,
-                evt
-            )
+            await self.master.addons.invoke_addon(addon, evt)
             if f.intercepted:
                 return
 
     def configure(self, addon, **kwargs):
         """
-            A helper for testing configure methods. Modifies the registered
-            Options object with the given keyword arguments, then calls the
-            configure method on the addon with the updated value.
+        A helper for testing configure methods. Modifies the registered
+        Options object with the given keyword arguments, then calls the
+        configure method on the addon with the updated value.
         """
         if addon not in self.master.addons:
             self.master.addons.register(addon)
@@ -111,14 +106,14 @@ class context:
 
     def script(self, path):
         """
-            Loads a script from path, and returns the enclosed addon.
+        Loads a script from path, and returns the enclosed addon.
         """
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
     def command(self, func, *args):
         """
-            Invoke a command function with a list of string arguments within a command context, mimicking the actual command environment.
+        Invoke a command function with a list of string arguments within a command context, mimicking the actual command environment.
         """
         cmd = command.Command(self.master.commands, "test.command", func)
         return cmd.call(args)

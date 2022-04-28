@@ -1,6 +1,6 @@
 import os
 import pathlib
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -10,14 +10,16 @@ class CommandHistory:
     VACUUM_SIZE = 1024
 
     def __init__(self) -> None:
-        self.history: typing.List[str] = []
-        self.filtered_history: typing.List[str] = [""]
+        self.history: list[str] = []
+        self.filtered_history: list[str] = [""]
         self.current_index: int = 0
 
     def load(self, loader):
         loader.add_option(
-            "command_history", bool, True,
-            """Persist command history between mitmproxy invocations."""
+            "command_history",
+            bool,
+            True,
+            """Persist command history between mitmproxy invocations.""",
         )
 
     @property
@@ -33,12 +35,12 @@ class CommandHistory:
         if "command_history" in updated or "confdir" in updated:
             if ctx.options.command_history and self.history_file.is_file():
                 self.history = self.history_file.read_text().splitlines()
-                self.set_filter('')
+                self.set_filter("")
 
     def done(self):
         if ctx.options.command_history and len(self.history) >= self.VACUUM_SIZE:
             # vacuum history so that it doesn't grow indefinitely.
-            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2:]) + "\n"
+            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2 :]) + "\n"
             try:
                 self.history_file.write_text(history_str)
             except Exception as e:
@@ -57,10 +59,10 @@ class CommandHistory:
             except Exception as e:
                 ctx.log.alert(f"Failed writing to {self.history_file}: {e}")
 
-        self.set_filter('')
+        self.set_filter("")
 
     @command.command("commands.history.get")
-    def get_history(self) -> typing.Sequence[str]:
+    def get_history(self) -> Sequence[str]:
         """Get the entire command history."""
         return self.history.copy()
 
@@ -72,17 +74,13 @@ class CommandHistory:
             except Exception as e:
                 ctx.log.alert(f"Failed deleting {self.history_file}: {e}")
         self.history = []
-        self.set_filter('')
+        self.set_filter("")
 
     # Functionality to provide a filtered list that can be iterated through.
 
     @command.command("commands.history.filter")
     def set_filter(self, prefix: str) -> None:
-        self.filtered_history = [
-            cmd
-            for cmd in self.history
-            if cmd.startswith(prefix)
-        ]
+        self.filtered_history = [cmd for cmd in self.history if cmd.startswith(prefix)]
         self.filtered_history.append(prefix)
         self.current_index = len(self.filtered_history) - 1
 

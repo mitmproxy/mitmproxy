@@ -1,6 +1,6 @@
 def setbit(byte, offset, value):
     """
-        Set a bit in a byte to 1 if value is truthy, 0 if not.
+    Set a bit in a byte to 1 if value is truthy, 0 if not.
     """
     if value:
         return byte | (1 << offset)

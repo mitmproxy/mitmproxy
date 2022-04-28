@@ -3,9 +3,10 @@ import gzip
 import json
 import logging
 import textwrap
-import typing
+from collections.abc import Sequence
 from contextlib import redirect_stdout
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 import pytest
@@ -22,13 +23,13 @@ from mitmproxy.tools.web import master as webmaster
 
 @pytest.fixture(scope="module")
 def no_tornado_logging():
-    logging.getLogger('tornado.access').disabled = True
-    logging.getLogger('tornado.application').disabled = True
-    logging.getLogger('tornado.general').disabled = True
+    logging.getLogger("tornado.access").disabled = True
+    logging.getLogger("tornado.application").disabled = True
+    logging.getLogger("tornado.general").disabled = True
     yield
-    logging.getLogger('tornado.access').disabled = False
-    logging.getLogger('tornado.application').disabled = False
-    logging.getLogger('tornado.general').disabled = False
+    logging.getLogger("tornado.access").disabled = False
+    logging.getLogger("tornado.application").disabled = False
+    logging.getLogger("tornado.general").disabled = False
 
 
 def get_json(resp: httpclient.HTTPResponse):
@@ -42,7 +43,9 @@ def test_generate_tflow_js(tdata):
     tf_http.server_conn.id = "f087e7b2-6d0a-41a8-a8f0-e1a4761395f8"
     tf_http.server_conn.certificate_list = [
         certs.Cert.from_pem(
-            Path(tdata.path("mitmproxy/net/data/verificationcerts/self-signed.pem")).read_bytes()
+            Path(
+                tdata.path("mitmproxy/net/data/verificationcerts/self-signed.pem")
+            ).read_bytes()
         )
     ]
     tf_http.request.trailers = Headers(trailer="qvalue")
@@ -71,17 +74,24 @@ def test_generate_tflow_js(tdata):
         "}\n"
         "export function TDNSFlow(): Required<DNSFlow> {\n"
         "    return %s\n"
-        "}\n" % (
-            textwrap.indent(json.dumps(app.flow_to_json(tf_http), indent=4, sort_keys=True), "    "),
-            textwrap.indent(json.dumps(app.flow_to_json(tf_tcp), indent=4, sort_keys=True), "    "),
-            textwrap.indent(json.dumps(app.flow_to_json(tf_dns), indent=4, sort_keys=True), "    "),
+        "}\n"
+        % (
+            textwrap.indent(
+                json.dumps(app.flow_to_json(tf_http), indent=4, sort_keys=True), "    "
+            ),
+            textwrap.indent(
+                json.dumps(app.flow_to_json(tf_tcp), indent=4, sort_keys=True), "    "
+            ),
+            textwrap.indent(
+                json.dumps(app.flow_to_json(tf_dns), indent=4, sort_keys=True), "    "
+            ),
         )
     )
     content = content.replace(": null", ": undefined")
 
-    (Path(__file__).parent / "../../../../web/src/js/__tests__/ducks/_tflow.ts").write_bytes(
-        content.encode()
-    )
+    (
+        Path(__file__).parent / "../../../../web/src/js/__tests__/ducks/_tflow.ts"
+    ).write_bytes(content.encode())
 
 
 async def test_generate_options_js():
@@ -96,9 +106,9 @@ async def test_generate_options_js():
             return "string"
         if t == int:
             return "number"
-        if t == typing.Sequence[str]:
+        if t == Sequence[str]:
             return "string[]"
-        if t == typing.Optional[str]:
+        if t == Optional[str]:
             return "string | undefined"
         raise RuntimeError(t)
 
@@ -115,12 +125,16 @@ async def test_generate_options_js():
         print("")
         print("export const defaultState: OptionsState = {")
         for _, opt in sorted(m.options.items()):
-            print(f"    {opt.name}: {json.dumps(opt.default)},".replace(": null", ": undefined"))
+            print(
+                f"    {opt.name}: {json.dumps(opt.default)},".replace(
+                    ": null", ": undefined"
+                )
+            )
         print("}")
 
-    (Path(__file__).parent / "../../../../web/src/js/ducks/_options_gen.ts").write_bytes(
-        s.getvalue().encode()
-    )
+    (
+        Path(__file__).parent / "../../../../web/src/js/ducks/_options_gen.ts"
+    ).write_bytes(s.getvalue().encode())
 
 
 @pytest.mark.usefixtures("no_tornado_logging", "tdata")
@@ -194,8 +208,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         for f in self.view:
             f.intercept()
 
-        assert self.fetch(
-            "/flows/42/resume", method="POST").code == 200
+        assert self.fetch("/flows/42/resume", method="POST").code == 200
         assert sum(f.intercepted for f in self.view) >= 1
         assert self.fetch("/flows/resume", method="POST").code == 200
         assert all(not f.intercepted for f in self.view)
@@ -256,8 +269,12 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.response.text == "resp"
 
         upd = {
-            "request": {"trailers": [("foo", "baz")], },
-            "response": {"trailers": [("foo", "baz")], },
+            "request": {
+                "trailers": [("foo", "baz")],
+            },
+            "response": {
+                "trailers": [("foo", "baz")],
+            },
         }
         assert self.put_json("/flows/42", upd).code == 200
         assert f.request.trailers["foo"] == "baz"
@@ -268,12 +285,15 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.put_json("/flows/42", {"request": {"foo": 42}}).code == 400
         assert self.put_json("/flows/42", {"response": {"foo": 42}}).code == 400
         assert self.fetch("/flows/42", method="PUT", body="{}").code == 400
-        assert self.fetch(
-            "/flows/42",
-            method="PUT",
-            headers={"Content-Type": "application/json"},
-            body="!!"
-        ).code == 400
+        assert (
+            self.fetch(
+                "/flows/42",
+                method="PUT",
+                headers={"Content-Type": "application/json"},
+                body="!!",
+            ).code
+            == 400
+        )
 
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
@@ -306,9 +326,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         del f.response.headers["Content-Disposition"]
         f.request.path = "/foo/bar.jpg"
-        assert self.fetch(
-            "/flows/42/response/content.data"
-        ).headers["Content-Disposition"] == 'attachment; filename=bar.jpg'
+        assert (
+            self.fetch("/flows/42/response/content.data").headers["Content-Disposition"]
+            == "attachment; filename=bar.jpg"
+        )
 
         f.response.content = b""
         r = self.fetch("/flows/42/response/content.data")
@@ -323,7 +344,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         f.response.headers["Content-Encoding"] = "gzip"
         # replace gzip magic number with garbage
-        invalid_encoded_content = gzip.compress(b"Hello world!").replace(b"\x1f\x8b", b"\xff\xff")
+        invalid_encoded_content = gzip.compress(b"Hello world!").replace(
+            b"\x1f\x8b", b"\xff\xff"
+        )
         f.response.raw_content = invalid_encoded_content
 
         r = self.fetch("/flows/42/response/content.data")
@@ -333,11 +356,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.revert()
 
     def test_update_flow_content(self):
-        assert self.fetch(
-            "/flows/42/request/content.data",
-            method="POST",
-            body="new"
-        ).code == 200
+        assert (
+            self.fetch("/flows/42/request/content.data", method="POST", body="new").code
+            == 200
+        )
         f = self.view.get_by_id("42")
         assert f.request.content == b"new"
         assert f.modified()
@@ -345,18 +367,23 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_update_flow_content_multipart(self):
         body = (
-            b'--somefancyboundary\r\n'
+            b"--somefancyboundary\r\n"
             b'Content-Disposition: form-data; name="a"; filename="a.txt"\r\n'
-            b'\r\n'
-            b'such multipart. very wow.\r\n'
-            b'--somefancyboundary--\r\n'
+            b"\r\n"
+            b"such multipart. very wow.\r\n"
+            b"--somefancyboundary--\r\n"
         )
-        assert self.fetch(
-            "/flows/42/request/content.data",
-            method="POST",
-            headers={"Content-Type": 'multipart/form-data; boundary="somefancyboundary"'},
-            body=body
-        ).code == 200
+        assert (
+            self.fetch(
+                "/flows/42/request/content.data",
+                method="POST",
+                headers={
+                    "Content-Type": 'multipart/form-data; boundary="somefancyboundary"'
+                },
+                body=body,
+            ).code
+            == 200
+        )
         f = self.view.get_by_id("42")
         assert f.request.content == b"such multipart. very wow."
         assert f.modified()
@@ -364,30 +391,29 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_flow_contentview(self):
         assert get_json(self.fetch("/flows/42/request/content/raw")) == {
-            "lines": [
-                [["text", "foo"]],
-                [["text", "bar"]]
-            ],
-            "description": "Raw"
+            "lines": [[["text", "foo"]], [["text", "bar"]]],
+            "description": "Raw",
         }
         assert get_json(self.fetch("/flows/42/request/content/raw?lines=1")) == {
-            "lines": [
-                [["text", "foo"]]
-            ],
-            "description": "Raw"
+            "lines": [[["text", "foo"]]],
+            "description": "Raw",
         }
         assert self.fetch("/flows/42/messages/content/raw").code == 400
 
     def test_flow_contentview_websocket(self):
         assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
-            {'description': 'Raw',
-             'from_client': True,
-             'lines': [[['text', 'hello binary']]],
-             'timestamp': 946681203},
-            {'description': 'Raw',
-             'from_client': True,
-             'lines': [[['text', 'hello text']]],
-             'timestamp': 946681204}
+            {
+                "description": "Raw",
+                "from_client": True,
+                "lines": [[["text", "hello binary"]]],
+                "timestamp": 946681203,
+            },
+            {
+                "description": "Raw",
+                "from_client": True,
+                "lines": [[["text", "hello text"]]],
+                "timestamp": 946681204,
+            },
         ]
 
     def test_commands(self):
@@ -411,7 +437,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_options(self):
         j = get_json(self.fetch("/options"))
         assert type(j) == dict
-        assert type(j['anticache']) == dict
+        assert type(j["anticache"]) == dict
 
     def test_option_update(self):
         assert self.put_json("/options", {"anticache": True}).code == 200
@@ -449,7 +475,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                     "help": "Try to convince servers to send us un-compressed data.",
                     "type": "bool",
                 }
-            }
+            },
         }
         ws_client.close()
 

@@ -1,6 +1,11 @@
 def map(km):
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
-    km.add(";", "console.command flow.comment @focus ''", ["flowlist", "flowview"], "Add comment to flow")
+    km.add(
+        ";",
+        "console.command flow.comment @focus ''",
+        ["flowlist", "flowview"],
+        "Add comment to flow",
+    )
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("B", "browser.start", ["global"], "Start an attached browser")
     km.add("C", "console.view.commands", ["global"], "View commands")
@@ -28,18 +33,41 @@ def map(km):
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
-    km.add("I", "set intercept_active toggle", ["global"], "Toggle whether the filtering via the intercept option is enabled")
+    km.add(
+        "I",
+        "set intercept_active toggle",
+        ["global"],
+        "Toggle whether the filtering via the intercept option is enabled",
+    )
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
-    km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
-    km.add("a", "flow.resume @focus", ["flowlist", "flowview"], "Resume this intercepted flow")
     km.add(
-        "b", "console.command cut.save @focus response.content ",
+        "A",
+        "flow.resume @all",
         ["flowlist", "flowview"],
-        "Save response body to file"
+        "Resume all intercepted flows",
     )
-    km.add("d", "view.flows.remove @focus", ["flowlist", "flowview"], "Delete flow from view")
-    km.add("D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
+    km.add(
+        "a",
+        "flow.resume @focus",
+        ["flowlist", "flowview"],
+        "Resume this intercepted flow",
+    )
+    km.add(
+        "b",
+        "console.command cut.save @focus response.content ",
+        ["flowlist", "flowview"],
+        "Save response body to file",
+    )
+    km.add(
+        "d",
+        "view.flows.remove @focus",
+        ["flowlist", "flowview"],
+        "Delete flow from view",
+    )
+    km.add(
+        "D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow"
+    )
     km.add(
         "e",
         """
@@ -47,7 +75,7 @@ def map(km):
         console.command export.file {choice} @focus
         """,
         ["flowlist", "flowview"],
-        "Export this flow to file"
+        "Export this flow to file",
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
     km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
@@ -55,16 +83,23 @@ def map(km):
         "ctrl l",
         "console.command cut.clip ",
         ["flowlist", "flowview"],
-        "Send cuts to clipboard"
+        "Send cuts to clipboard",
     )
-    km.add("L", "console.command view.flows.load ", ["flowlist"], "Load flows from file")
+    km.add(
+        "L", "console.command view.flows.load ", ["flowlist"], "Load flows from file"
+    )
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
-    km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
+    km.add(
+        "M",
+        "view.properties.marked.toggle",
+        ["flowlist"],
+        "Toggle viewing marked flows",
+    )
     km.add(
         "n",
         "console.command view.flows.create get https://example.com/",
         ["flowlist"],
-        "Create a new flow"
+        "Create a new flow",
     )
     km.add(
         "o",
@@ -73,22 +108,36 @@ def map(km):
         set view_order {choice}
         """,
         ["flowlist"],
-        "Set flow list order"
+        "Set flow list order",
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"], "Replay this flow")
     km.add("S", "console.command replay.server ", ["flowlist"], "Start server replay")
-    km.add("v", "set view_order_reversed toggle", ["flowlist"], "Reverse flow list order")
+    km.add(
+        "v", "set view_order_reversed toggle", ["flowlist"], "Reverse flow list order"
+    )
     km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
-    km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
-    km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")
+    km.add(
+        "w",
+        "console.command save.file @shown ",
+        ["flowlist"],
+        "Save listed flows to file",
+    )
+    km.add(
+        "V",
+        "flow.revert @focus",
+        ["flowlist", "flowview"],
+        "Revert changes to this flow",
+    )
     km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
     km.add("z", "view.flows.remove @all", ["flowlist"], "Clear flow list")
-    km.add("Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing")
+    km.add(
+        "Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing"
+    )
     km.add(
         "|",
         "console.command script.run @focus ",
         ["flowlist", "flowview"],
-        "Run a script on this flow"
+        "Run a script on this flow",
     )
 
     km.add(
@@ -98,7 +147,7 @@ def map(km):
         console.edit.focus {choice}
         """,
         ["flowview"],
-        "Edit a flow component"
+        "Edit a flow component",
     )
     km.add(
         "f",
@@ -116,7 +165,7 @@ def map(km):
         console.bodyview @focus {choice}
         """,
         ["flowview"],
-        "View flow body in an external viewer"
+        "View flow body in an external viewer",
     )
     km.add("p", "view.focus.prev", ["flowview"], "Go to previous flow")
     km.add(
@@ -126,7 +175,7 @@ def map(km):
         console.flowview.mode.set {choice}
         """,
         ["flowview"],
-        "Set flow view mode"
+        "Set flow view mode",
     )
     km.add(
         "z",
@@ -135,7 +184,7 @@ def map(km):
         flow.encode.toggle @focus {choice}
         """,
         ["flowview"],
-        "Encode/decode flow body"
+        "Encode/decode flow body",
     )
 
     km.add("L", "console.command options.load ", ["options"], "Load from file")
@@ -144,26 +193,28 @@ def map(km):
     km.add("d", "console.options.reset.focus", ["options"], "Reset this option")
 
     km.add("a", "console.grideditor.add", ["grideditor"], "Add a row after cursor")
-    km.add("A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor")
+    km.add(
+        "A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor"
+    )
     km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row")
     km.add(
         "r",
         "console.command console.grideditor.load",
         ["grideditor"],
-        "Read unescaped data into the current cell from file"
+        "Read unescaped data into the current cell from file",
     )
     km.add(
         "R",
         "console.command console.grideditor.load_escaped",
         ["grideditor"],
-        "Load a Python-style escaped string into the current cell from file"
+        "Load a Python-style escaped string into the current cell from file",
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
     km.add(
         "w",
         "console.command console.grideditor.save ",
         ["grideditor"],
-        "Save data to file as CSV"
+        "Save data to file as CSV",
     )
 
     km.add("z", "eventstore.clear", ["eventlog"], "Clear")
@@ -175,23 +226,23 @@ def map(km):
         console.command console.key.bind {choice}
         """,
         ["keybindings"],
-        "Add a key binding"
+        "Add a key binding",
     )
     km.add(
         "d",
         "console.key.unbind.focus",
         ["keybindings"],
-        "Unbind the currently focused key binding"
+        "Unbind the currently focused key binding",
     )
     km.add(
         "x",
         "console.key.execute.focus",
         ["keybindings"],
-        "Execute the currently focused key binding"
+        "Execute the currently focused key binding",
     )
     km.add(
         "enter",
         "console.key.edit.focus",
         ["keybindings"],
-        "Edit the currently focused key binding"
+        "Edit the currently focused key binding",
     )

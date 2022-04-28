@@ -10,6 +10,7 @@ class Recorder:
 
     def __getattr__(self, attr):
         if attr in hooks.all_hooks:
+
             def prox(*args, **kwargs):
                 lg = (self.name, attr, args, kwargs)
                 if attr != "add_log":

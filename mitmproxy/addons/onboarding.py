@@ -14,19 +14,19 @@ class Onboarding(asgiapp.WSGIApp):
 
     def load(self, loader):
         loader.add_option(
-            "onboarding", bool, True,
-            "Toggle the mitmproxy onboarding app."
+            "onboarding", bool, True, "Toggle the mitmproxy onboarding app."
         )
         loader.add_option(
-            "onboarding_host", str, APP_HOST,
+            "onboarding_host",
+            str,
+            APP_HOST,
             """
             Onboarding app domain. For transparent mode, use an IP when a DNS
             entry for the app domain is not present.
-            """
+            """,
         )
         loader.add_option(
-            "onboarding_port", int, APP_PORT,
-            "Port to serve the onboarding app from."
+            "onboarding_port", int, APP_PORT, "Port to serve the onboarding app from."
         )
 
     def configure(self, updated):

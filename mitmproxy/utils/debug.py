@@ -74,10 +74,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
         print("Memory")
         print("======")
         gc.collect()
-        objs = Counter(
-            str(type(i))
-            for i in gc.get_objects()
-        )
+        objs = Counter(str(type(i)) for i in gc.get_objects())
 
         for cls, count in objs.most_common(20):
             print(f"{count} {cls}")
@@ -85,11 +82,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
         print()
         print("Memory (mitmproxy only)")
         print("=======================")
-        mitm_objs = Counter({
-            k: v
-            for k, v in objs.items()
-            if "mitmproxy" in k
-        })
+        mitm_objs = Counter({k: v for k, v in objs.items() if "mitmproxy" in k})
         for cls, count in mitm_objs.most_common(20):
             print(f"{count} {cls}")
 
@@ -103,10 +96,11 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
             print("=======")
             for task in asyncio.all_tasks():
                 f = task.get_stack(limit=1)[0]
-                line = linecache.getline(f.f_code.co_filename, f.f_lineno, f.f_globals).strip()
+                line = linecache.getline(
+                    f.f_code.co_filename, f.f_lineno, f.f_globals
+                ).strip()
                 line = f"{line}  # at {os.path.basename(f.f_code.co_filename)}:{f.f_lineno}"
-                print(f"{asyncio_utils.task_repr(task)}\n"
-                      f"    {line}")
+                print(f"{asyncio_utils.task_repr(task)}\n" f"    {line}")
 
         print("****************************************************")
 
@@ -118,11 +112,7 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
     for threadId, stack in sys._current_frames().items():
-        code.append(
-            "\n# Thread: %s(%d)" % (
-                id2name.get(threadId, ""), threadId
-            )
-        )
+        code.append("\n# Thread: %s(%d)" % (id2name.get(threadId, ""), threadId))
         for filename, lineno, name, line in traceback.extract_stack(stack):
             code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
             if line:

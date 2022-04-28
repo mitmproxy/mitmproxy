@@ -2,7 +2,6 @@ import json
 from json import JSONDecodeError
 from pathlib import Path
 from unittest import mock
-from typing import List
 from unittest.mock import patch
 
 from mitmproxy.test import tflow
@@ -30,7 +29,7 @@ class TestSetEncoder:
     def test_set_encoder_set(self):
         test_set = {"foo", "bar", "42"}
         result = SetEncoder.default(SetEncoder(), test_set)
-        assert isinstance(result, List)
+        assert isinstance(result, list)
         assert 'foo' in result
         assert 'bar' in result
         assert '42' in result

@@ -22,10 +22,14 @@ class HttpProxy(layer.Layer):
 
 class DestinationKnown(layer.Layer, metaclass=ABCMeta):
     """Base layer for layers that gather connection destination info and then delegate."""
+
     child_layer: layer.Layer
 
     def finish_start(self) -> layer.CommandGenerator[Optional[str]]:
-        if self.context.options.connection_strategy == "eager" and self.context.server.address:
+        if (
+            self.context.options.connection_strategy == "eager"
+            and self.context.server.address
+        ):
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 self._handle_event = self.done  # type: ignore
@@ -105,6 +109,7 @@ class Socks5AuthHook(StartHook):
 
     This hook decides whether they are valid by setting `data.valid`.
     """
+
     data: Socks5AuthData
 
 
@@ -119,7 +124,8 @@ class Socks5Proxy(DestinationKnown):
         if reply_code is not None:
             yield commands.SendData(
                 self.context.client,
-                bytes([SOCKS5_VERSION, reply_code]) + b"\x00\x01\x00\x00\x00\x00\x00\x00"
+                bytes([SOCKS5_VERSION, reply_code])
+                + b"\x00\x01\x00\x00\x00\x00\x00\x00",
             )
         yield commands.CloseConnection(self.context.client)
         yield commands.Log(message)
@@ -134,7 +140,9 @@ class Socks5Proxy(DestinationKnown):
             yield from self.state()
         elif isinstance(event, events.ConnectionClosed):
             if self.buf:
-                yield commands.Log(f"Client closed connection before completing SOCKS5 handshake: {self.buf!r}")
+                yield commands.Log(
+                    f"Client closed connection before completing SOCKS5 handshake: {self.buf!r}"
+                )
             yield commands.CloseConnection(event.connection)
         else:
             raise AssertionError(f"Unknown event: {event}")
@@ -148,7 +156,9 @@ class Socks5Proxy(DestinationKnown):
                 guess = "Probably not a SOCKS request but a regular HTTP request. "
             else:
                 guess = ""
-            yield from self.socks_err(guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.buf[0])
+            yield from self.socks_err(
+                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.buf[0]
+            )
             return
 
         n_methods = self.buf[1]
@@ -162,15 +172,19 @@ class Socks5Proxy(DestinationKnown):
             method = SOCKS5_METHOD_NO_AUTHENTICATION_REQUIRED
             self.state = self.state_connect
 
-        if method not in self.buf[2:2 + n_methods]:
-            method_str = "user/password" if method == SOCKS5_METHOD_USER_PASSWORD_AUTHENTICATION else "no"
+        if method not in self.buf[2 : 2 + n_methods]:
+            method_str = (
+                "user/password"
+                if method == SOCKS5_METHOD_USER_PASSWORD_AUTHENTICATION
+                else "no"
+            )
             yield from self.socks_err(
                 f"Client does not support SOCKS5 with {method_str} authentication.",
-                SOCKS5_METHOD_NO_ACCEPTABLE_METHODS
+                SOCKS5_METHOD_NO_ACCEPTABLE_METHODS,
             )
             return
         yield commands.SendData(self.context.client, bytes([SOCKS5_VERSION, method]))
-        self.buf = self.buf[2 + n_methods:]
+        self.buf = self.buf[2 + n_methods :]
         yield from self.state()
 
     state = state_greet
@@ -186,8 +200,10 @@ class Socks5Proxy(DestinationKnown):
         pass_len = self.buf[2 + user_len]
         if len(self.buf) < 3 + user_len + pass_len:
             return
-        user = self.buf[2:(2 + user_len)].decode("utf-8", "backslashreplace")
-        password = self.buf[(3 + user_len):(3 + user_len + pass_len)].decode("utf-8", "backslashreplace")
+        user = self.buf[2 : (2 + user_len)].decode("utf-8", "backslashreplace")
+        password = self.buf[(3 + user_len) : (3 + user_len + pass_len)].decode(
+            "utf-8", "backslashreplace"
+        )
 
         data = Socks5AuthData(self.context.client, user, password)
         yield Socks5AuthHook(data)
@@ -198,7 +214,7 @@ class Socks5Proxy(DestinationKnown):
             return
 
         yield commands.SendData(self.context.client, b"\x01\x00")
-        self.buf = self.buf[3 + user_len + pass_len:]
+        self.buf = self.buf[3 + user_len + pass_len :]
         self.state = self.state_connect
         yield from self.state()
 
@@ -208,7 +224,10 @@ class Socks5Proxy(DestinationKnown):
             return
 
         if self.buf[:3] != b"\x05\x01\x00":
-            yield from self.socks_err(f"Unsupported SOCKS5 request: {self.buf!r}", SOCKS5_REP_COMMAND_NOT_SUPPORTED)
+            yield from self.socks_err(
+                f"Unsupported SOCKS5 request: {self.buf!r}",
+                SOCKS5_REP_COMMAND_NOT_SUPPORTED,
+            )
             return
 
         # Determine message length
@@ -221,7 +240,9 @@ class Socks5Proxy(DestinationKnown):
         elif atyp == SOCKS5_ATYP_DOMAINNAME:
             message_len = 4 + 1 + self.buf[4] + 2
         else:
-            yield from self.socks_err(f"Unknown address type: {atyp}", SOCKS5_REP_ADDRESS_TYPE_NOT_SUPPORTED)
+            yield from self.socks_err(
+                f"Unknown address type: {atyp}", SOCKS5_REP_ADDRESS_TYPE_NOT_SUPPORTED
+            )
             return
 
         # Do we have enough bytes yet?
@@ -240,7 +261,7 @@ class Socks5Proxy(DestinationKnown):
             host_bytes = msg[5:-2]
             host = host_bytes.decode("ascii", "replace")
 
-        port, = struct.unpack("!H", msg[-2:])
+        (port,) = struct.unpack("!H", msg[-2:])
 
         # We now have all we need, let's get going.
         self.context.server.address = (host, port)
@@ -250,10 +271,16 @@ class Socks5Proxy(DestinationKnown):
         # but that's not a problem in practice...
         err = yield from self.finish_start()
         if err:
-            yield commands.SendData(self.context.client, b"\x05\x04\x00\x01\x00\x00\x00\x00\x00\x00")
+            yield commands.SendData(
+                self.context.client, b"\x05\x04\x00\x01\x00\x00\x00\x00\x00\x00"
+            )
             yield commands.CloseConnection(self.context.client)
         else:
-            yield commands.SendData(self.context.client, b"\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00")
+            yield commands.SendData(
+                self.context.client, b"\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00"
+            )
             if self.buf:
-                yield from self.child_layer.handle_event(events.DataReceived(self.context.client, self.buf))
+                yield from self.child_layer.handle_event(
+                    events.DataReceived(self.context.client, self.buf)
+                )
                 del self.buf
