@@ -33,9 +33,7 @@ class FlowReader:
                     tnetstring.load(self.fo),
                 )
                 try:
-                    yield flow.Flow.from_state(
-                        compat.migrate_flow(loaded)
-                    )
+                    yield flow.Flow.from_state(compat.migrate_flow(loaded))
                 except ValueError as e:
                     raise exceptions.FlowReadException(e)
         except (ValueError, TypeError, IndexError) as e:

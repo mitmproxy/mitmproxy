@@ -4,6 +4,7 @@ import re
 import time
 import urllib.parse
 import json
+import warnings
 from dataclasses import dataclass
 from dataclasses import fields
 from email.utils import formatdate
@@ -1246,10 +1247,6 @@ class HTTPFlow(flow.Flow):
     If this HTTP flow initiated a WebSocket connection, this attribute contains all associated WebSocket data.
     """
 
-    def __init__(self, client_conn, server_conn, live=False, mode="regular"):
-        super().__init__("http", client_conn, server_conn, live)
-        self.mode = mode
-
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
     _stateobject_attributes.update(
@@ -1275,6 +1272,16 @@ class HTTPFlow(flow.Flow):
     def timestamp_start(self) -> float:
         """*Read-only:* An alias for `Request.timestamp_start`."""
         return self.request.timestamp_start
+
+    @property
+    def mode(self) -> str:
+        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning)
+        return getattr(self, "_mode", "regular")
+
+    @mode.setter
+    def mode(self, val: str) -> None:
+        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning)
+        self._mode = val
 
     def copy(self):
         f = super().copy()

@@ -68,19 +68,20 @@ class TestSerialize:
         assert len(list(r.stream()))
 
     def test_error(self):
-        sio = io.BytesIO()
-        sio.write(b"bogus")
-        sio.seek(0)
-        r = mitmproxy.io.FlowReader(sio)
+        buf = io.BytesIO()
+        buf.write(b"bogus")
+        buf.seek(0)
+        r = mitmproxy.io.FlowReader(buf)
         with pytest.raises(FlowReadException, match="Invalid data format"):
             list(r.stream())
 
-        sio = io.BytesIO()
+        buf = io.BytesIO()
         f = tflow.tdummyflow()
-        w = mitmproxy.io.FlowWriter(sio)
+        w = mitmproxy.io.FlowWriter(buf)
         w.add(f)
-        sio.seek(0)
-        r = mitmproxy.io.FlowReader(sio)
+
+        buf = io.BytesIO(buf.getvalue().replace(b"dummy", b"nknwn"))
+        r = mitmproxy.io.FlowReader(buf)
         with pytest.raises(FlowReadException, match="Unknown flow type"):
             list(r.stream())
 
