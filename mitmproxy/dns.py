@@ -7,7 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 import time
 from typing import ClassVar
 
-from mitmproxy import connection, flow, stateobject
+from mitmproxy import flow, stateobject
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
@@ -468,14 +468,6 @@ class DNSFlow(flow.Flow):
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["request"] = Message
     _stateobject_attributes["response"] = Message
-
-    def __init__(
-        self,
-        client_conn: connection.Client,
-        server_conn: connection.Server,
-        live: bool = False,
-    ):
-        super().__init__("dns", client_conn, server_conn, live)
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"
