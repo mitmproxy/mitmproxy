@@ -12,6 +12,7 @@ from mitmproxy.proxy.layers import tls
 from mitmproxy.tls import ClientHelloData, TlsData
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
+from test.mitmproxy.proxy.tutils import BytesMatching, StrMatching
 
 tlsdata = data.Data(__name__)
 
@@ -357,7 +358,8 @@ class TestServerTLS:
             playbook
             >> events.DataReceived(tctx.server, tssl.bio_read())
             << commands.Log(
-                "Server TLS handshake failed. Certificate verify failed: Hostname mismatch",
+                # different casing in OpenSSL < 3.0
+                StrMatching("Server TLS handshake failed. Certificate verify failed: [Hh]ostname mismatch"),
                 "warn",
             )
             << tls.TlsFailedServerHook(tls_hook_data)
@@ -365,11 +367,12 @@ class TestServerTLS:
             << commands.CloseConnection(tctx.server)
             << commands.SendData(
                 tctx.client,
-                b"open-connection failed: Certificate verify failed: Hostname mismatch",
+                # different casing in OpenSSL < 3.0
+                BytesMatching(b"open-connection failed: Certificate verify failed: [Hh]ostname mismatch"),
             )
         )
         assert (
-            tls_hook_data().conn.error == "Certificate verify failed: Hostname mismatch"
+            tls_hook_data().conn.error.lower() == "Certificate verify failed: Hostname mismatch".lower()
         )
         assert not tctx.server.tls_established
 

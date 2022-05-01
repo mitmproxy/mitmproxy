@@ -73,7 +73,7 @@ setup(
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
-        "cryptography>=36,<37",
+        "cryptography>=36,<38",
         "flask>=1.1.1,<2.2",
         "h11>=0.11,<0.14",
         "h2>=4.1,<5",

@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from typing import Iterator, Literal, Optional
 
 from OpenSSL import SSL
-from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
+
 from mitmproxy import certs, connection
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.layers import tcp
+from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 from mitmproxy.utils import human
 
 
@@ -224,30 +225,38 @@ class _TLSLayer(tunnel.TunnelLayer):
             last_err = (
                 e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
             )
-            if last_err == (
-                "SSL routines",
-                "tls_process_server_certificate",
-                "certificate verify failed",
-            ):
+            if last_err in [
+                (
+                    "SSL routines",
+                    "tls_process_server_certificate",
+                    "certificate verify failed",
+                ),
+                ("SSL routines", "", "certificate verify failed"),  # OpenSSL 3+
+            ]:
                 verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)  # type: ignore
                 error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()  # type: ignore
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
                 ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),
                 ("SSL routines", "ssl3_read_bytes", "sslv3 alert bad certificate"),
+                ("SSL routines", "", "tlsv1 alert unknown ca"),  # OpenSSL 3+
+                ("SSL routines", "", "sslv3 alert bad certificate"),  # OpenSSL 3+
             ]:
                 assert isinstance(last_err, tuple)
                 err = last_err[2]
             elif (
-                last_err == ("SSL routines", "ssl3_get_record", "wrong version number")
+                last_err
+                in [
+                    ("SSL routines", "ssl3_get_record", "wrong version number"),
+                    ("SSL routines", "", "wrong version number"),  # OpenSSL 3+
+                ]
                 and data[:4].isascii()
             ):
                 err = f"The remote server does not speak TLS."
-            elif last_err == (
-                "SSL routines",
-                "ssl3_read_bytes",
-                "tlsv1 alert protocol version",
-            ):
+            elif last_err in [
+                ("SSL routines", "ssl3_read_bytes", "tlsv1 alert protocol version"),
+                ("SSL routines", "", "tlsv1 alert protocol version"),  # OpenSSL 3+
+            ]:
                 err = (
                     f"The remote server and mitmproxy cannot agree on a TLS version to use. "
                     f"You may need to adjust mitmproxy's tls_version_server_min option."
@@ -528,6 +537,7 @@ class ClientTLSLayer(_TLSLayer):
         elif (
             "('SSL routines', 'tls_early_post_process_client_hello', 'unsupported protocol')"
             in err
+            or "('SSL routines', '', 'unsupported protocol')" in err  # OpenSSL 3+
         ):
             err = (
                 f"Client and mitmproxy cannot agree on a TLS version to use. "

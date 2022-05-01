@@ -401,6 +401,11 @@ def BytesMatching(match: bytes) -> Union[bytes, _AnyStrPlaceholder[bytes]]:
     return _AnyStrPlaceholder(match)
 
 
+# noinspection PyPep8Naming
+def StrMatching(match: str) -> Union[str, _AnyStrPlaceholder[str]]:
+    return _AnyStrPlaceholder(match)
+
+
 class EchoLayer(Layer):
     """Echo layer that sends all data back to the client in lowercase."""
 
