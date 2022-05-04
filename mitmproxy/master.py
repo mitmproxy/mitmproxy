@@ -46,9 +46,11 @@ class Master:
             # Handle scheduled tasks (configure()) first.
             await asyncio.sleep(0)
             await self.running()
-            await self.should_exit.wait()
-
-            await self.done()
+            try:
+                await self.should_exit.wait()
+            finally:
+                # .wait might be cancelled (e.g. by sys.exit)
+                await self.done()
         finally:
             self.event_loop.set_exception_handler(old_handler)
 
