@@ -47,6 +47,8 @@ views: list[View] = []
 
 on_add = blinker.Signal()
 """A new contentview has been added."""
+on_remove = blinker.Signal()
+"""A contentview has been removed."""
 
 
 def get(name: str) -> Optional[View]:
@@ -68,6 +70,7 @@ def add(view: View) -> None:
 
 def remove(view: View) -> None:
     views.remove(view)
+    on_remove.send(view)
 
 
 def safe_to_print(lines, encoding="utf8"):
