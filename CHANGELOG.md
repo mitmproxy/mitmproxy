@@ -28,8 +28,11 @@
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
-* Added example script for manipulating cookies.
+* Add example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
+* When opening an external viewer for message contents, mailcap files are not considered anymore.  
+  This preempts the upcoming deprecation of Python's `mailcap` module. 
+  ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
   
 ## 19 March 2022: mitmproxy 8.0.0
 
