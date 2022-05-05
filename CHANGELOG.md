@@ -30,6 +30,8 @@
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
 * Added example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
+* Removed usage of deprecated for Python 3.11 module `mailcap`
+  ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
   
 ## 19 March 2022: mitmproxy 8.0.0
 
