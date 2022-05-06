@@ -722,8 +722,9 @@ def test_server_aborts(tctx, data):
 
 
 @pytest.mark.parametrize("redirect", ["", "change-destination", "change-proxy"])
+@pytest.mark.parametrize("domain", [b"example.com", b"xn--eckwd4c7c.xn--zckzah"])
 @pytest.mark.parametrize("scheme", ["http", "https"])
-def test_upstream_proxy(tctx, redirect, scheme):
+def test_upstream_proxy(tctx, redirect, domain, scheme):
     """Test that an upstream HTTP proxy is used."""
     server = Placeholder(Server)
     server2 = Placeholder(Server)
@@ -736,28 +737,28 @@ def test_upstream_proxy(tctx, redirect, scheme):
             playbook
             >> DataReceived(
                 tctx.client,
-                b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+                b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
             << OpenConnection(server)
             >> reply(None)
             << SendData(
-                server, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n"
+                server, b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
         )
 
     else:
         assert (
             playbook
-            >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+            >> DataReceived(tctx.client, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
             << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
-            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % domain)
             << layer.NextLayerHook(Placeholder())
             >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
             << OpenConnection(server)
             >> reply(None)
-            << SendData(server, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+            << SendData(server, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
             >> DataReceived(server, b"HTTP/1.1 200 Connection established\r\n\r\n")
-            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % domain)
         )
 
     playbook >> DataReceived(server, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
@@ -769,17 +770,17 @@ def test_upstream_proxy(tctx, redirect, scheme):
     if scheme == "http":
         playbook >> DataReceived(
             tctx.client,
-            b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n",
+            b"GET http://%s/two HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
         )
     else:
         playbook >> DataReceived(
-            tctx.client, b"GET /two HTTP/1.1\r\nHost: example.com\r\n\r\n"
+            tctx.client, b"GET /two HTTP/1.1\r\nHost: %s\r\n\r\n" % domain
         )
 
     assert playbook << http.HttpRequestHook(flow)
     if redirect == "change-destination":
-        flow().request.host = "other-server"
-        flow().request.host_header = "example.com"
+        flow().request.host = domain + b".test"
+        flow().request.host_header = domain
     elif redirect == "change-proxy":
         flow().server_conn.via = ServerSpec("http", address=("other-proxy", 1234))
     playbook >> reply()
@@ -796,25 +797,25 @@ def test_upstream_proxy(tctx, redirect, scheme):
         if redirect == "change-destination":
             playbook << SendData(
                 server2,
-                b"GET http://other-server/two HTTP/1.1\r\nHost: example.com\r\n\r\n",
+                b"GET http://%s.test/two HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
         else:
             playbook << SendData(
                 server2,
-                b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n",
+                b"GET http://%s/two HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
     else:
         if redirect == "change-destination":
-            playbook << SendData(server2, b"CONNECT other-server:443 HTTP/1.1\r\n\r\n")
+            playbook << SendData(server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain)
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
         elif redirect == "change-proxy":
-            playbook << SendData(server2, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+            playbook << SendData(server2, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
-        playbook << SendData(server2, b"GET /two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        playbook << SendData(server2, b"GET /two HTTP/1.1\r\nHost: %s\r\n\r\n" % domain)
 
     playbook >> DataReceived(server2, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
     playbook << SendData(tctx.client, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
@@ -822,9 +823,9 @@ def test_upstream_proxy(tctx, redirect, scheme):
     assert playbook
 
     if redirect == "change-destination":
-        assert flow().server_conn.address[0] == "other-server"
+        assert flow().server_conn.address[0] == (domain + b".test").decode("idna")
     else:
-        assert flow().server_conn.address[0] == "example.com"
+        assert flow().server_conn.address[0] == domain.decode("idna")
 
     if redirect == "change-proxy":
         assert (
