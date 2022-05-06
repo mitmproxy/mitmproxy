@@ -33,6 +33,8 @@
 * When opening an external viewer for message contents, mailcap files are not considered anymore.  
   This preempts the upcoming deprecation of Python's `mailcap` module. 
   ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
+* Fixed hot reloading of contentviews.
+  ([#5319](https://github.com/mitmproxy/mitmproxy/issues/5319), @nneonneo)
   
 ## 19 March 2022: mitmproxy 8.0.0
 
