@@ -35,6 +35,8 @@
   ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
 * Fix hostname encoding for IDNA domains in upstream mode.
   ([#5316](https://github.com/mitmproxy/mitmproxy/issues/5316), @nneonneo)
+* Fixed hot reloading of contentviews.
+  ([#5319](https://github.com/mitmproxy/mitmproxy/issues/5319), @nneonneo)
   
 ## 19 March 2022: mitmproxy 8.0.0
 
