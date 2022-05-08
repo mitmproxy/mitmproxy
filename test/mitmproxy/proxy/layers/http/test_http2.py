@@ -850,6 +850,34 @@ class TestClient:
             )
         )  # important: no ResponseData event here!
 
+    @pytest.mark.parametrize(
+        "code,log_msg",
+        [
+            (b"103", "103 Early Hints"),
+            (b"1not_a_number", "<unknown status> "),
+        ],
+    )
+    def test_informational_response(self, tctx, code, log_msg):
+        tctx.options.http2_ping_keepalive = 0
+        frame_factory = FrameFactory()
+        req = Request.make("GET", "http://example.com/")
+        resp = {":status": code}
+        assert (
+            Playbook(Http2Client(tctx), logs=True)
+            << SendData(
+                tctx.server, Placeholder(bytes)
+            )  # preamble + initial settings frame
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << SendData(
+                tctx.server,
+                b"\x00\x00\x06\x01\x05\x00\x00\x00\x01\x82\x86\x84\\\x81\x07",
+            )
+            >> DataReceived(
+                tctx.server, frame_factory.build_headers_frame(resp).serialize()
+            )
+            << Log(f"Swallowing HTTP/2 informational response: {log_msg}", "info")
+        )
+
 
 def test_early_server_data(tctx):
     playbook, cff = start_h2_client(tctx)
