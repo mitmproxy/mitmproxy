@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any, Optional, TypedDict
 
-from OpenSSL import SSL
+from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
@@ -166,8 +166,6 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
-            cert=entry.cert,
-            key=entry.privatekey,
             chain_file=entry.chain_file,
             request_client_cert=False,
             alpn_select_callback=alpn_select_callback,
@@ -175,6 +173,11 @@ class TlsConfig:
             dhparams=self.certstore.dhparams,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
+
+        ok = SSL._lib.SSL_use_certificate(tls_start.ssl_conn._ssl, entry.cert.to_pyopenssl()._x509)  # type: ignore
+        SSL._openssl_assert(ok == 1)  # type: ignore
+        ok = SSL._lib.SSL_use_PrivateKey(tls_start.ssl_conn._ssl, crypto.PKey.from_cryptography_key(entry.privatekey)._pkey)  # type: ignore
+        SSL._openssl_assert(ok == 1)  # type: ignore
 
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
