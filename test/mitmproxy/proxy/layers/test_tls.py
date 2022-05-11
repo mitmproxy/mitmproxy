@@ -109,12 +109,16 @@ class SSLTest:
         if alpn:
             self.ctx.set_alpn_protocols(alpn)
         if server_side:
+            if sni == b"192.0.2.42":
+                filename = "trusted-leaf-ip"
+            else:
+                filename = "trusted-leaf"
             self.ctx.load_cert_chain(
                 certfile=tlsdata.path(
-                    "../../net/data/verificationcerts/trusted-leaf.crt"
+                    f"../../net/data/verificationcerts/{filename}.crt"
                 ),
                 keyfile=tlsdata.path(
-                    "../../net/data/verificationcerts/trusted-leaf.key"
+                    f"../../net/data/verificationcerts/{filename}.key"
                 ),
             )
         if max_ver:
