@@ -1,4 +1,3 @@
-import ipaddress
 import os
 import threading
 from enum import Enum
@@ -124,11 +123,9 @@ def create_proxy_server_context(
     max_version: Version,
     cipher_list: Optional[tuple[str, ...]],
     verify: Verify,
-    hostname: Optional[str],
     ca_path: Optional[str],
     ca_pemfile: Optional[str],
     client_cert: Optional[str],
-    alpn_protos: Optional[tuple[bytes, ...]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -136,32 +133,7 @@ def create_proxy_server_context(
         max_version=max_version,
         cipher_list=cipher_list,
     )
-
-    if verify is not Verify.VERIFY_NONE and hostname is None:
-        raise ValueError("Cannot validate certificate hostname without SNI")
-
     context.set_verify(verify.value, None)
-    if hostname is not None:
-        assert isinstance(hostname, str)
-        # Manually enable hostname verification on the context object.
-        # https://wiki.openssl.org/index.php/Hostname_validation
-        param = SSL._lib.SSL_CTX_get0_param(context._context)  # type: ignore
-        # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
-        # https://www.chromestatus.com/feature/4981025180483584
-        SSL._lib.X509_VERIFY_PARAM_set_hostflags(  # type: ignore
-            param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT,  # type: ignore
-        )
-        try:
-            ip: bytes = ipaddress.ip_address(hostname).packed
-        except ValueError:
-            SSL._openssl_assert(  # type: ignore
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), len(hostname.encode())) == 1  # type: ignore
-            )
-        else:
-            SSL._openssl_assert(  # type: ignore
-                SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip)) == 1  # type: ignore
-            )
 
     if ca_path is None and ca_pemfile is None:
         ca_pemfile = certifi.where()
@@ -179,10 +151,6 @@ def create_proxy_server_context(
             context.use_certificate_chain_file(client_cert)
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
-
-    if alpn_protos:
-        # advertise application layer protocols
-        context.set_alpn_protos(alpn_protos)
 
     return context
 
@@ -237,7 +205,8 @@ def create_client_proxy_context(
         context.add_extra_chain_cert(i.to_pyopenssl())
 
     if dhparams:
-        SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
+        res = SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
+        SSL._openssl_assert(res == 1)  # type: ignore
 
     return context
 

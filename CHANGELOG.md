@@ -39,7 +39,9 @@
   ([#5319](https://github.com/mitmproxy/mitmproxy/issues/5319), @nneonneo)
 * Ignore HTTP/2 information responses instead of raising an error.
   ([#5332](https://github.com/mitmproxy/mitmproxy/issues/5332), @mhils)
-  
+* Improve performance and memory usage by reusing OpenSSL contexts.
+  ([#5339](https://github.com/mitmproxy/mitmproxy/issues/5339), @mhils)
+
 ## 19 March 2022: mitmproxy 8.0.0
 
 ### Major Changes
