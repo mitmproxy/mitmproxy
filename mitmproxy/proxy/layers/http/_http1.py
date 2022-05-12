@@ -347,6 +347,11 @@ class Http1Client(Http1Connection):
                 request.http_version = "HTTP/1.1"
                 if "Host" not in request.headers and request.authority:
                     request.headers.insert(0, "Host", request.authority)
+                if "Cookie" in request.headers and len(request.headers.get_all("Cookie")) > 1:
+                    # we should merge multiple Cookie headers to one, since HTTP/2 supporting multiple cookie headers but HTTP/1.x is not.
+                    # see: https://www.rfc-editor.org/rfc/rfc6265#section-5.4
+                    #      https://www.rfc-editor.org/rfc/rfc7540#section-8.1.2.5
+                    request.headers.set_all("Cookie", ["; ".join(request.headers.get_all("Cookie"))])
                 request.authority = ""
             raw = http1.assemble_request_head(request)
             yield commands.SendData(self.conn, raw)
