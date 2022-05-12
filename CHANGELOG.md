@@ -43,6 +43,7 @@
   ([#5339](https://github.com/mitmproxy/mitmproxy/issues/5339), @mhils)
 * Fix handling of multiple Cookie headers when proxying HTTP/2 to HTTP/1
   ([#5337](https://github.com/mitmproxy/mitmproxy/issues/5337), @rinsuki)
+
 ## 19 March 2022: mitmproxy 8.0.0
 
 ### Major Changes
