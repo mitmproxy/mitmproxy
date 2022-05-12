@@ -469,7 +469,8 @@ class Http2Client(Http2Connection):
                 data = self.h2_conn.data_to_send()
                 if data is not None:
                     yield Log(
-                        f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}"
+                        f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}",
+                        "debug",
                     )
                     yield SendData(self.conn, data)
             time_until_next_ping = self.context.options.http2_ping_keepalive - (
