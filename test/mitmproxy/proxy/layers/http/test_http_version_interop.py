@@ -11,11 +11,19 @@ from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy.layers.http.test_http2 import (
-    example_request_headers,
     example_response_headers,
     make_h2,
 )
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
+
+example_request_headers = (
+    (b":method", b"GET"),
+    (b":scheme", b"http"),
+    (b":path", b"/"),
+    (b":authority", b"example.com"),
+    (b"cookie", "a=1"),
+    (b"cookie", "b=2"),
+)
 
 h2f = FrameFactory()
 
@@ -69,7 +77,7 @@ def test_h2_to_h1(tctx):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\ncookie: a=1; b=2\r\n\r\n")
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\n")
         << http.HttpResponseHeadersHook(flow)
         >> reply()
