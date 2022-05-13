@@ -67,6 +67,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            py: "3.11-dev"
+          - os: ubuntu-latest
             py: "3.10"
           - os: windows-latest
             py: "3.10"
