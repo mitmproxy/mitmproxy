@@ -910,10 +910,9 @@ class HttpLayer(layer.Layer):
                 try:
                     stream = self.streams[command.event.stream_id]
                 except KeyError:
-                    # We may be getting errors for a specific stream even though we've already finished handling it.
-                    assert isinstance(
-                        command.event, (RequestProtocolError, ResponseProtocolError)
-                    )
+                    # We may be getting data or errors for a stream even though we've already finished handling it,
+                    # see for example https://github.com/mitmproxy/mitmproxy/issues/5343.
+                    pass
                 else:
                     yield from self.event_to_child(stream, command.event)
             elif isinstance(command, SendHttp):
