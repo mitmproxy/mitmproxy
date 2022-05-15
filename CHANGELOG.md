@@ -2,8 +2,12 @@
 
 ## Unreleased: mitmproxy next
 
-* DNS support (@meitinger)
+## 15 May 2022: mitmproxy 8.1.0
+
+* DNS support
+  ([#5232](https://github.com/mitmproxy/mitmproxy/issues/5227), @meitinger)
 * Mitmproxy now requires Python 3.9 or above.
+  ([#5233](https://github.com/mitmproxy/mitmproxy/issues/5233), @mhils)
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Periodically send HTTP/2 ping frames to keep connections alive.
