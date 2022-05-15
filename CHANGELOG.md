@@ -8,6 +8,8 @@
   ([#5232](https://github.com/mitmproxy/mitmproxy/issues/5227), @meitinger)
 * Mitmproxy now requires Python 3.9 or above.
   ([#5233](https://github.com/mitmproxy/mitmproxy/issues/5233), @mhils)
+* Fix a memory leak in mitmdump where flows were kept in memory.
+  ([#4786](https://github.com/mitmproxy/mitmproxy/issues/4786), @mhils)
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Periodically send HTTP/2 ping frames to keep connections alive.
