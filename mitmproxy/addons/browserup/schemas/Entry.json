@@ -1,0 +1,408 @@
+{
+  "type": "object",
+  "required": [
+    "startedDateTime",
+    "time",
+    "request",
+    "response",
+    "cache",
+    "timings"
+  ],
+  "properties": {
+    "pageref": {
+      "type": "string"
+    },
+    "startedDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "time": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "method",
+        "url",
+        "httpVersion",
+        "cookies",
+        "headers",
+        "queryString",
+        "headersSize",
+        "bodySize"
+      ],
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "httpVersion": {
+          "type": "string"
+        },
+        "cookies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "expires": {
+                "type": "string"
+              },
+              "httpOnly": {
+                "type": "boolean"
+              },
+              "secure": {
+                "type": "boolean"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Header"
+          }
+        },
+        "queryString": {
+          "type": "array",
+          "items":  {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "postData": {
+          "description": "Posted data info.",
+          "required": ["mimeType"],
+          "properties": {
+            "mimeType": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "params": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headersSize": {
+          "type": "integer"
+        },
+        "bodySize": {
+          "type": "integer"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": [
+        "status",
+        "statusText",
+        "httpVersion",
+        "cookies",
+        "headers",
+        "content",
+        "redirectURL",
+        "headersSize",
+        "bodySize"
+      ],
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "statusText": {
+          "type": "string"
+        },
+        "httpVersion": {
+          "type": "string"
+        },
+        "cookies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "expires": {
+                "type": "string"
+              },
+              "httpOnly": {
+                "type": "boolean"
+              },
+              "secure": {
+                "type": "boolean"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Header"
+          }
+        },
+        "content": {
+          "type": "object",
+          "required": [
+            "size",
+            "mimeType"
+          ],
+          "properties": {
+            "size": {
+              "type": "integer"
+            },
+            "compression": {
+              "type": "integer"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "encoding": {
+              "type": "string"
+            },
+            "comment": {
+              "type": "string"
+            }
+          }
+        },
+        "redirectURL": {
+          "type": "string"
+        },
+        "headersSize": {
+          "type": "integer"
+        },
+        "bodySize": {
+          "type": "integer"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "cache": {
+      "properties": {
+        "beforeRequest": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "lastAccess",
+                "eTag",
+                "hitCount"
+              ],
+              "properties": {
+                "expires": {
+                  "type": "string"
+                },
+                "lastAccess": {
+                  "type": "string"
+                },
+                "eTag": {
+                  "type": "string"
+                },
+                "hitCount": {
+                  "type": "integer"
+                },
+                "comment": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "afterRequest": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "lastAccess",
+                "eTag",
+                "hitCount"
+              ],
+              "properties": {
+                "expires": {
+                  "type": "string"
+                },
+                "lastAccess": {
+                  "type": "string"
+                },
+                "eTag": {
+                  "type": "string"
+                },
+                "hitCount": {
+                  "type": "integer"
+                },
+                "comment": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "timings": {
+      "type": "object",
+      "required": [
+        "send",
+        "wait",
+        "receive",
+        "dns",
+        "blocked",
+        "ssl",
+        "connect"
+      ],
+      "properties": {
+        "dns": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "connect": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "blocked": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "send": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "wait": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "receive": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "ssl": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "serverIPAddress": {
+      "type": "string"
+    },
+    "_webSocketMessages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/WebSocketMessage"
+      }
+    },
+    "connection": {
+      "type": "string"
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}
