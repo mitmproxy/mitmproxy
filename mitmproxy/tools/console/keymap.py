@@ -48,9 +48,10 @@ navkeys = [
 
 
 class Binding:
-    def __init__(self, key, command, contexts, help):
+    def __init__(self, key, command, contexts, long_help, short_help):
         self.key, self.command, self.contexts = key, command, sorted(contexts)
-        self.help = help
+        self.long_help = long_help
+        self.short_help = short_help
 
     def keyspec(self):
         """
@@ -78,7 +79,7 @@ class Keymap:
             if c not in Contexts:
                 raise ValueError("Unsupported context: %s" % c)
 
-    def add(self, key: str, command: str, contexts: Sequence[str], help="") -> None:
+    def add(self, key: str, command: str, contexts: Sequence[str], long_help="", short_help="") -> None:
         """
         Add a key to the key map.
         """
@@ -87,13 +88,13 @@ class Keymap:
         for b in self.bindings:
             if b.key == key and b.command.strip() == command.strip():
                 b.contexts = sorted(list(set(b.contexts + contexts)))
-                if help:
-                    b.help = help
+                if long_help:
+                    b.long_help = long_help
                 self.bind(b)
                 break
         else:
             self.remove(key, contexts)
-            b = Binding(key=key, command=command, contexts=contexts, help=help)
+            b = Binding(key=key, command=command, contexts=contexts, long_help=long_help, short_help=short_help)
             self.bindings.append(b)
             self.bind(b)
         signals.keybindings_change.send(self)
@@ -205,7 +206,7 @@ class KeymapConfig:
                         key=v["key"],
                         command=v["cmd"],
                         contexts=user_ctxs,
-                        help=v.get("help", None),
+                        long_help=v.get("help", None),
                     )
                 except ValueError as e:
                     raise KeyBindingError(f"Error reading {p}: {e}") from e

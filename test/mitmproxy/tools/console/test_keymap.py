@@ -5,7 +5,7 @@ import pytest
 
 
 def test_binding():
-    b = keymap.Binding("space", "cmd", ["options"], "")
+    b = keymap.Binding("space", "cmd", ["options"], "", "")
     assert b.keyspec() == " "
 
 
@@ -45,11 +45,11 @@ def test_join():
 
         assert len(km.bindings) == 1
         assert len(km.bindings[0].contexts) == 2
-        assert km.bindings[0].help == "help1"
+        assert km.bindings[0].long_help == "help1"
         km.add("key", "str", ["commands"], "help2")
         assert len(km.bindings) == 1
         assert len(km.bindings[0].contexts) == 2
-        assert km.bindings[0].help == "help2"
+        assert km.bindings[0].long_help == "help2"
 
         assert km.get("commands", "key")
         km.unbind(km.bindings[0])

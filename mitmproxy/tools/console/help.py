@@ -44,7 +44,7 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
             k = b.key
             if b.key == " ":
                 k = "space"
-            kvs.append((k, b.help or b.command))
+            kvs.append((k, b.long_help or b.command))
         return common.format_keyvals(kvs)
 
     def keybindings(self):

@@ -65,7 +65,7 @@ class KeyListWalker(urwid.ListWalker):
         binding = self.bindings[index]
         self.index = index
         self.focus_obj = self._get(self.index)
-        keybinding_focus_change.send(binding.help or "")
+        keybinding_focus_change.send(binding.long_help or "")
         self._modified()
 
     def get_next(self, pos):
