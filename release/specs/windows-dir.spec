@@ -6,7 +6,7 @@ from PyInstaller.building.build_main import Analysis
 assert SPECPATH == "."
 
 here = Path(r".")
-tools = ["mitmproxy", "mitmdump", "mitmweb"]
+tools = ["mitmproxy", "mitmdump", "mitmweb", "browserup-proxy"]
 
 analysis = Analysis(
     tools,

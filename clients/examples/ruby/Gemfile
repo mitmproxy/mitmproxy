@@ -1,0 +1,5 @@
+source "https://rubygems.org"
+
+gem "rake", "~> 12.0"
+gem "rspec", "~> 3.0"
+gem 'browserup_mitmproxy_client', '~> 1.1'
