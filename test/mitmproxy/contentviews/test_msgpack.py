@@ -18,17 +18,9 @@ def test_parse_msgpack():
 
 
 def test_format_msgpack():
-    assert list(msgpack.format_msgpack({
-        "data": [
-            "str",
-            42,
-            True,
-            False,
-            None,
-            {},
-            []
-        ]
-    }))
+    assert list(
+        msgpack.format_msgpack({"data": ["str", 42, True, False, None, {}, []]})
+    )
 
 
 def test_view_msgpack():

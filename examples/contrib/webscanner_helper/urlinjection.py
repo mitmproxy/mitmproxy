@@ -16,7 +16,6 @@ class InjectionGenerator:
     @abc.abstractmethod
     def inject(self, index, flow: HTTPFlow):
         """Injects the given URL index into the given flow."""
-        pass
 
 
 class HTMLInjection(InjectionGenerator):

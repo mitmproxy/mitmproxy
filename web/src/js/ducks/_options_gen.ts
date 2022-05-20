@@ -20,8 +20,13 @@ export interface OptionsState {
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
+    dns_listen_host: string
+    dns_listen_port: number
+    dns_mode: string
+    dns_server: boolean
     export_preserve_original_ip: boolean
     http2: boolean
+    http2_ping_keepalive: number
     ignore_hosts: string[]
     intercept: string | undefined
     intercept_active: boolean
@@ -34,6 +39,7 @@ export interface OptionsState {
     mode: string
     modify_body: string[]
     modify_headers: string[]
+    normalize_outbound_headers: boolean
     onboarding: boolean
     onboarding_host: string
     onboarding_port: number
@@ -71,6 +77,7 @@ export interface OptionsState {
     tls_version_server_min: string
     upstream_auth: string | undefined
     upstream_cert: boolean
+    validate_inbound_headers: boolean
     view_filter: string | undefined
     view_order: string
     view_order_reversed: boolean
@@ -106,8 +113,13 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    dns_listen_host: "",
+    dns_listen_port: 53,
+    dns_mode: "regular",
+    dns_server: false,
     export_preserve_original_ip: false,
     http2: true,
+    http2_ping_keepalive: 58,
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,
@@ -120,6 +132,7 @@ export const defaultState: OptionsState = {
     mode: "regular",
     modify_body: [],
     modify_headers: [],
+    normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
     onboarding_port: 80,
@@ -157,6 +170,7 @@ export const defaultState: OptionsState = {
     tls_version_server_min: "TLS1_2",
     upstream_auth: undefined,
     upstream_cert: true,
+    validate_inbound_headers: true,
     view_filter: undefined,
     view_order: "time",
     view_order_reversed: false,

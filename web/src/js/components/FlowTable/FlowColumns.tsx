@@ -37,8 +37,8 @@ icon.headerName = ''
 icon.sortKey = flow => getIcon(flow)
 
 const getIcon = (flow: Flow): string => {
-    if (flow.type === "tcp") {
-        return "resource-icon-tcp"
+    if (flow.type === "tcp" || flow.type === "dns") {
+        return `resource-icon-${flow.type}`
     }
     if (flow.websocket) {
         return 'resource-icon-websocket'
@@ -77,6 +77,8 @@ const mainPath = (flow: Flow): string => {
             return RequestUtils.pretty_url(flow.request)
         case "tcp":
             return `${flow.client_conn.peername.join(':')} ↔ ${flow.server_conn?.address?.join(':')}`
+        case "dns":
+            return `${flow.request.questions.map(q => `${q.name} ${q.type}`).join(", ")} = ${(flow.response?.answers.map(q => q.data).join(", ") ?? "...") || "?"}`
     }
 }
 
@@ -106,18 +108,20 @@ export const path: FlowColumn = ({flow}) => {
 path.headerName = 'Path'
 path.sortKey = flow => mainPath(flow)
 
-export const method: FlowColumn = ({flow}) => {
-    return (
-        <td className="col-method">{flow.type === "http" ? flow.request.method : flow.type.toUpperCase()}</td>
-    )
-};
+export const method: FlowColumn = ({flow}) => <td className="col-method">{method.sortKey(flow)}</td>
 method.headerName = 'Method'
-method.sortKey = flow => flow.type === "http" ? flow.request.method : flow.type.toUpperCase()
+method.sortKey = flow => {
+    switch (flow.type) {
+        case "http": return flow.websocket ? (flow.client_conn.tls_established ? "WSS" : "WS") : flow.request.method
+        case "dns": return flow.request.op_code
+        default: return flow.type.toUpperCase()
+    }
+}
 
 export const status: FlowColumn = ({flow}) => {
-    let color = 'darkred';
+    let color = 'darkred'
 
-    if (flow.type !== "http" || !flow.response)
+    if ((flow.type !== "http" && flow.type != "dns") || !flow.response)
         return <td className="col-status"/>
 
     if (100 <= flow.response.status_code && flow.response.status_code < 200) {
@@ -127,17 +131,23 @@ export const status: FlowColumn = ({flow}) => {
     } else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
         color = 'lightblue'
     } else if (400 <= flow.response.status_code && flow.response.status_code < 500) {
-        color = 'lightred'
+        color = 'red'
     } else if (500 <= flow.response.status_code && flow.response.status_code < 600) {
-        color = 'lightred'
+        color = 'red'
     }
 
     return (
-        <td className="col-status" style={{color: color}}>{flow.response.status_code}</td>
+        <td className="col-status" style={{color: color}}>{status.sortKey(flow)}</td>
     )
 }
 status.headerName = 'Status'
-status.sortKey = flow => flow.type === "http" && flow.response && flow.response.status_code
+status.sortKey = flow => {
+    switch (flow.type) {
+        case "http": return flow.response?.status_code
+        case "dns": return flow.response?.response_code
+        default: return undefined
+    }
+}
 
 export const size: FlowColumn = ({flow}) => {
     return (

@@ -6,7 +6,6 @@ from mitmproxy.test import tflow
 
 
 class TestTCPFlow:
-
     def test_copy(self):
         f = tflow.ttcpflow()
         f.get_state()
@@ -31,7 +30,7 @@ class TestTCPFlow:
             b = m2.get_state()
             assert a == b
 
-        m = tcp.TCPMessage(False, 'foo')
+        m = tcp.TCPMessage(False, "foo")
         m.set_state(f.messages[0].get_state())
         assert m.timestamp == f.messages[0].timestamp
 
@@ -55,5 +54,5 @@ class TestTCPFlow:
 
     def test_repr(self):
         f = tflow.ttcpflow()
-        assert 'TCPFlow' in repr(f)
-        assert '-> ' in repr(f.messages[0])
+        assert "TCPFlow" in repr(f)
+        assert "-> " in repr(f.messages[0])

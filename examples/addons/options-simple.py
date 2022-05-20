@@ -14,10 +14,10 @@ class AddHeader:
 
     def load(self, loader):
         loader.add_option(
-            name = "addheader",
-            typespec = bool,
-            default = False,
-            help = "Add a count header to responses",
+            name="addheader",
+            typespec=bool,
+            default=False,
+            help="Add a count header to responses",
         )
 
     def response(self, flow):
@@ -26,6 +26,4 @@ class AddHeader:
             flow.response.headers["count"] = str(self.num)
 
 
-addons = [
-    AddHeader()
-]
+addons = [AddHeader()]

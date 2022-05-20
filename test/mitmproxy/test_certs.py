@@ -42,11 +42,12 @@ from ..conftest import skip_windows
 
 @pytest.fixture()
 def tstore(tdata):
-    return certs.CertStore.from_store(tdata.path("mitmproxy/data/confdir"), "mitmproxy", 2048)
+    return certs.CertStore.from_store(
+        tdata.path("mitmproxy/data/confdir"), "mitmproxy", 2048
+    )
 
 
 class TestCertStore:
-
     def test_create_explicit(self, tmpdir):
         ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca.get_cert("foo", [])
@@ -132,25 +133,20 @@ class TestCertStore:
 
 
 class TestDummyCert:
-
     def test_with_ca(self, tstore):
         r = certs.dummy_cert(
             tstore.default_privatekey,
             tstore.default_ca._cert,
             "foo.com",
             ["one.com", "two.com", "*.three.com", "127.0.0.1"],
-            "Foo Ltd."
+            "Foo Ltd.",
         )
         assert r.cn == "foo.com"
         assert r.altnames == ["one.com", "two.com", "*.three.com", "127.0.0.1"]
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
-            tstore.default_privatekey,
-            tstore.default_ca._cert,
-            None,
-            [],
-            None
+            tstore.default_privatekey, tstore.default_ca._cert, None, [], None
         )
         assert r.cn is None
         assert r.organization is None
@@ -158,7 +154,6 @@ class TestDummyCert:
 
 
 class TestCert:
-
     def test_simple(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
@@ -198,7 +193,10 @@ class TestCert:
         assert c2.issuer
         assert c2.to_pem()
         assert c2.has_expired() is not None
-        assert repr(c2) == "<Cert(cn='www.inode.co.nz', altnames=['www.inode.co.nz', 'inode.co.nz'])>"
+        assert (
+            repr(c2)
+            == "<Cert(cn='www.inode.co.nz', altnames=['www.inode.co.nz', 'inode.co.nz'])>"
+        )
 
         assert c1 != c2
 
@@ -211,11 +209,14 @@ class TestCert:
         assert c == certs.Cert.from_state(c.get_state())
         assert c == certs.Cert.from_pyopenssl(c.to_pyopenssl())
 
-    @pytest.mark.parametrize("filename,name,bits", [
-        ("text_cert", "RSA", 1024),
-        ("dsa_cert.pem", "DSA", 1024),
-        ("ec_cert.pem", "EC (secp256r1)", 256),
-    ])
+    @pytest.mark.parametrize(
+        "filename,name,bits",
+        [
+            ("text_cert", "RSA", 1024),
+            ("dsa_cert.pem", "DSA", 1024),
+            ("ec_cert.pem", "EC (secp256r1)", 256),
+        ],
+    )
     def test_keyinfo(self, tdata, filename, name, bits):
         with open(tdata.path(f"mitmproxy/net/data/{filename}"), "rb") as f:
             d = f.read()
@@ -246,32 +247,56 @@ class TestCert:
         assert c == c2
 
     def test_from_store_with_passphrase(self, tdata, tstore):
-        tstore.add_cert_file("unencrypted-no-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), None)
-        tstore.add_cert_file("unencrypted-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), b"password")
-        tstore.add_cert_file("encrypted-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), b"password")
+        tstore.add_cert_file(
+            "unencrypted-no-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), None
+        )
+        tstore.add_cert_file(
+            "unencrypted-pass",
+            Path(tdata.path("mitmproxy/data/testkey.pem")),
+            b"password",
+        )
+        tstore.add_cert_file(
+            "encrypted-pass",
+            Path(tdata.path("mitmproxy/data/mitmproxy.pem")),
+            b"password",
+        )
 
         with pytest.raises(TypeError):
-            tstore.add_cert_file("encrypted-no-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), None)
+            tstore.add_cert_file(
+                "encrypted-no-pass",
+                Path(tdata.path("mitmproxy/data/mitmproxy.pem")),
+                None,
+            )
 
     def test_special_character(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:
             d = f.read()
         c = certs.Cert.from_pem(d)
 
-        assert dict(c.issuer).get('O') == 'DigiCert, Inc.'
-        assert dict(c.subject).get('O') == 'GitHub, Inc.'
+        assert dict(c.issuer).get("O") == "DigiCert, Inc."
+        assert dict(c.subject).get("O") == "GitHub, Inc."
 
     def test_multi_valued_rdns(self, tdata):
-        subject = x509.Name([
-            x509.RelativeDistinguishedName([
-                x509.NameAttribute(NameOID.TITLE, u'Test'),
-                x509.NameAttribute(NameOID.COMMON_NAME, u'Multivalue'),
-                x509.NameAttribute(NameOID.SURNAME, u'RDNs'),
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'TSLA'),
-            ]),
-            x509.RelativeDistinguishedName([
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'PyCA')
-            ]),
-        ])
-        expected = [('2.5.4.12', 'Test'), ('CN', 'Multivalue'), ('2.5.4.4', 'RDNs'), ('O', 'TSLA'), ('O', 'PyCA')]
-        assert(certs._name_to_keyval(subject)) == expected
+        subject = x509.Name(
+            [
+                x509.RelativeDistinguishedName(
+                    [
+                        x509.NameAttribute(NameOID.TITLE, "Test"),
+                        x509.NameAttribute(NameOID.COMMON_NAME, "Multivalue"),
+                        x509.NameAttribute(NameOID.SURNAME, "RDNs"),
+                        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "TSLA"),
+                    ]
+                ),
+                x509.RelativeDistinguishedName(
+                    [x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PyCA")]
+                ),
+            ]
+        )
+        expected = [
+            ("2.5.4.12", "Test"),
+            ("CN", "Multivalue"),
+            ("2.5.4.4", "RDNs"),
+            ("O", "TSLA"),
+            ("O", "PyCA"),
+        ]
+        assert (certs._name_to_keyval(subject)) == expected

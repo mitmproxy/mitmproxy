@@ -2,10 +2,9 @@ import urwid
 
 
 class Tab(urwid.WidgetWrap):
-
     def __init__(self, offset, content, attr, onclick):
         """
-            onclick is called on click with the tab offset as argument
+        onclick is called on click with the tab offset as argument
         """
         p = urwid.Text(content, align="center")
         p = urwid.Padding(p, align="center", width=("relative", 100))
@@ -21,7 +20,6 @@ class Tab(urwid.WidgetWrap):
 
 
 class Tabs(urwid.WidgetWrap):
-
     def __init__(self, tabs, tab_offset=0):
         super().__init__("")
         self.tab_offset = tab_offset
@@ -51,26 +49,11 @@ class Tabs(urwid.WidgetWrap):
         for i in range(len(self.tabs)):
             txt = self.tabs[i][0]()
             if i == self.tab_offset % len(self.tabs):
-                headers.append(
-                    Tab(
-                        i,
-                        txt,
-                        "heading",
-                        self.change_tab
-                    )
-                )
+                headers.append(Tab(i, txt, "heading", self.change_tab))
             else:
-                headers.append(
-                    Tab(
-                        i,
-                        txt,
-                        "heading_inactive",
-                        self.change_tab
-                    )
-                )
+                headers.append(Tab(i, txt, "heading_inactive", self.change_tab))
         headers = urwid.Columns(headers, dividechars=1)
         self._w = urwid.Frame(
-            body = self.tabs[self.tab_offset % len(self.tabs)][1](),
-            header = headers
+            body=self.tabs[self.tab_offset % len(self.tabs)][1](), header=headers
         )
         self._w.set_focus("body")

@@ -1,3 +1,4 @@
+/* Line Numbers */ .chroma span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 20px; }
 /* Background */ .chroma { background-color: #ffffff }
 /* Other */ .chroma .x {  }
 /* Error */ .chroma .err { color: #a61717; background-color: #e3d2d2 }

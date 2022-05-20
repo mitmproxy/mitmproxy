@@ -3,7 +3,7 @@ import datetime
 import json
 import logging
 from pathlib import Path
-from typing import Type, Dict, Union, Optional
+from typing import Optional, Union
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow
@@ -29,12 +29,10 @@ class UrlIndexWriter(abc.ABC):
     @abc.abstractmethod
     def load(self):
         """Load existing URL index."""
-        pass
 
     @abc.abstractmethod
     def add_url(self, flow: HTTPFlow):
         """Add new URL to URL index."""
-        pass
 
     @abc.abstractmethod
     def save(self):
@@ -97,7 +95,7 @@ class TextUrlIndexWriter(UrlIndexWriter):
         pass
 
 
-WRITER: Dict[str, Type[UrlIndexWriter]] = {
+WRITER: dict[str, type[UrlIndexWriter]] = {
     "json": JSONUrlIndexWriter,
     "text": TextUrlIndexWriter,
 }

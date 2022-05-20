@@ -1,6 +1,6 @@
 import io
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from kaitaistruct import KaitaiStream
 
@@ -40,9 +40,13 @@ class ClientHello:
         if wrap_in_record:
             return (
                 # record layer
-                b"\x16\x03\x03" + (len(self._raw_bytes) + 4).to_bytes(2, byteorder="big") +
+                b"\x16\x03\x03"
+                + (len(self._raw_bytes) + 4).to_bytes(2, byteorder="big")
+                +
                 # handshake header
-                b"\x01" + len(self._raw_bytes).to_bytes(3, byteorder="big") +
+                b"\x01"
+                + len(self._raw_bytes).to_bytes(3, byteorder="big")
+                +
                 # ClientHello as defined in https://datatracker.ietf.org/doc/html/rfc8446#section-4.1.2.
                 self._raw_bytes
             )
@@ -50,7 +54,7 @@ class ClientHello:
             return self._raw_bytes
 
     @property
-    def cipher_suites(self) -> List[int]:
+    def cipher_suites(self) -> list[int]:
         """The cipher suites offered by the client (as raw ints)."""
         return self._client_hello.cipher_suites.cipher_suites
 
@@ -63,17 +67,17 @@ class ClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
-                    extension.type == 0x00 and
-                    len(extension.body.server_names) == 1 and
-                    extension.body.server_names[0].name_type == 0 and
-                    check.is_valid_host(extension.body.server_names[0].host_name)
+                    extension.type == 0x00
+                    and len(extension.body.server_names) == 1
+                    and extension.body.server_names[0].name_type == 0
+                    and check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
                     return extension.body.server_names[0].host_name.decode("ascii")
         return None
 
     @property
-    def alpn_protocols(self) -> List[bytes]:
+    def alpn_protocols(self) -> list[bytes]:
         """
         The application layer protocols offered by the client as part of the
         [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation) TLS extension.
@@ -85,7 +89,7 @@ class ClientHello:
         return []
 
     @property
-    def extensions(self) -> List[Tuple[int, bytes]]:
+    def extensions(self) -> list[tuple[int, bytes]]:
         """The raw list of extensions in the form of `(extension_type, raw_bytes)` tuples."""
         ret = []
         if self._client_hello.extensions:
@@ -103,6 +107,7 @@ class ClientHelloData:
     """
     Event data for `tls_clienthello` event hooks.
     """
+
     context: context.Context
     """The context object for this connection."""
     client_hello: ClientHello
@@ -123,6 +128,7 @@ class TlsData:
     """
     Event data for `tls_start_client`, `tls_start_server`, and `tls_handshake` event hooks.
     """
+
     conn: connection.Connection
     """The affected connection."""
     context: context.Context

@@ -1,4 +1,4 @@
-import typing
+from typing import Any
 
 import pytest
 
@@ -17,42 +17,30 @@ class TObject(StateObject):
 
 
 class Child(TObject):
-    _stateobject_attributes = dict(
-        x=int
-    )
+    _stateobject_attributes = dict(x=int)
 
     def __eq__(self, other):
         return isinstance(other, Child) and self.x == other.x
 
 
 class TTuple(TObject):
-    _stateobject_attributes = dict(
-        x=typing.Tuple[int, Child]
-    )
+    _stateobject_attributes = dict(x=tuple[int, Child])
 
 
 class TList(TObject):
-    _stateobject_attributes = dict(
-        x=typing.List[Child]
-    )
+    _stateobject_attributes = dict(x=list[Child])
 
 
 class TDict(TObject):
-    _stateobject_attributes = dict(
-        x=typing.Dict[str, Child]
-    )
+    _stateobject_attributes = dict(x=dict[str, Child])
 
 
 class TAny(TObject):
-    _stateobject_attributes = dict(
-        x=typing.Any
-    )
+    _stateobject_attributes = dict(x=Any)
 
 
 class TSerializableChild(TObject):
-    _stateobject_attributes = dict(
-        x=Child
-    )
+    _stateobject_attributes = dict(x=Child)
 
 
 def test_simple():
@@ -67,12 +55,8 @@ def test_simple():
 def test_serializable_child():
     child = Child(42)
     a = TSerializableChild(child)
-    assert a.get_state() == {
-        "x": {"x": 42}
-    }
-    a.set_state({
-        "x": {"x": 43}
-    })
+    assert a.get_state() == {"x": {"x": 42}}
+    a.set_state({"x": {"x": 43}})
     assert a.x.x == 43
     assert a.x is child
     b = a.copy()
@@ -82,9 +66,7 @@ def test_serializable_child():
 
 def test_tuple():
     a = TTuple((42, Child(43)))
-    assert a.get_state() == {
-        "x": (42, {"x": 43})
-    }
+    assert a.get_state() == {"x": (42, {"x": 43})}
     b = a.copy()
     a.set_state({"x": (44, {"x": 45})})
     assert a.x == (44, Child(45))
@@ -110,9 +92,7 @@ def test_list():
 
 def test_dict():
     a = TDict({"foo": Child(42)})
-    assert a.get_state() == {
-        "x": {"foo": {"x": 42}}
-    }
+    assert a.get_state() == {"x": {"foo": {"x": 42}}}
     b = a.copy()
     assert list(a.x.items()) == list(b.x.items())
     assert a.x is not b.x
@@ -132,7 +112,7 @@ def test_any():
 def test_too_much_state():
     a = Child(42)
     s = a.get_state()
-    s['foo'] = 'bar'
+    s["foo"] = "bar"
 
     with pytest.raises(RuntimeWarning):
         a.set_state(s)

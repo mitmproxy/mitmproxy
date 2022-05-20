@@ -4,7 +4,6 @@ import inspect
 
 
 class Data:
-
     def __init__(self, name):
         self.name = name
         m = importlib.import_module(name)
@@ -13,7 +12,7 @@ class Data:
 
     def push(self, subpath):
         """
-            Change the data object to a path relative to the module.
+        Change the data object to a path relative to the module.
         """
         dirname = os.path.normpath(os.path.join(self.dirname, subpath))
         ret = Data(self.name)
@@ -22,10 +21,10 @@ class Data:
 
     def path(self, path):
         """
-            Returns a path to the package data housed at 'path' under this
-            module.Path can be a path to a file, or to a directory.
+        Returns a path to the package data housed at 'path' under this
+        module.Path can be a path to a file, or to a directory.
 
-            This function will raise ValueError if the path does not exist.
+        This function will raise ValueError if the path does not exist.
         """
         fullpath = os.path.normpath(os.path.join(self.dirname, path))
         if not os.path.exists(fullpath):

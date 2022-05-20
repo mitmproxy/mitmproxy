@@ -15,36 +15,36 @@ from unittest import mock
 @pytest.fixture
 def get_request():
     return tflow.tflow(
-        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"))
+        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz")
+    )
 
 
 @pytest.fixture
 def get_response():
     return tflow.tflow(
-        resp=tutils.tresp(status_code=404, content=b"Test Response Body"))
+        resp=tutils.tresp(status_code=404, content=b"Test Response Body")
+    )
 
 
 @pytest.fixture
 def get_flow():
     return tflow.tflow(
-        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"),
-        resp=tutils.tresp(status_code=404, content=b"Test Response Body"))
+        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz"),
+        resp=tutils.tresp(status_code=404, content=b"Test Response Body"),
+    )
 
 
 @pytest.fixture
 def post_request():
     return tflow.tflow(
-        req=tutils.treq(method=b'POST', headers=(), content=bytes(range(256))))
+        req=tutils.treq(method=b"POST", headers=(), content=bytes(range(256)))
+    )
 
 
 @pytest.fixture
 def patch_request():
     return tflow.tflow(
-        req=tutils.treq(
-            method=b'PATCH',
-            content=b'content',
-            path=b"/path?query=param"
-        )
+        req=tutils.treq(method=b"PATCH", content=b"content", path=b"/path?query=param")
     )
 
 
@@ -63,11 +63,13 @@ def export_curl():
 
 class TestExportCurlCommand:
     def test_get(self, export_curl, get_request):
-        result = """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = (
+            """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        )
         assert export_curl(get_request) == result
 
     def test_post(self, export_curl, post_request):
-        post_request.request.content = b'nobinarysupport'
+        post_request.request.content = b"nobinarysupport"
         result = "curl -X POST http://address:22/path -d nobinarysupport"
         assert export_curl(post_request) == result
 
@@ -88,14 +90,10 @@ class TestExportCurlCommand:
 
     def test_escape_single_quotes_in_body(self, export_curl):
         request = tflow.tflow(
-            req=tutils.treq(
-                method=b'POST',
-                headers=(),
-                content=b"'&#"
-            )
+            req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
         )
         command = export_curl(request)
-        assert shlex.split(command)[-2] == '-d'
+        assert shlex.split(command)[-2] == "-d"
         assert shlex.split(command)[-1] == "'&#"
 
     def test_strip_unnecessary(self, export_curl, get_request):
@@ -121,18 +119,22 @@ class TestExportCurlCommand:
             assert export.curl_command(get_request) == result
 
             tctx.options.export_preserve_original_ip = True
-            result = """curl --resolve 'domain:22:[192.168.0.1]' -H 'header: qvalue' -H 'host: domain:22' """ \
-                     """'http://domain:22/path?a=foo&a=bar&b=baz'"""
+            result = (
+                """curl --resolve 'domain:22:[192.168.0.1]' -H 'header: qvalue' -H 'host: domain:22' """
+                """'http://domain:22/path?a=foo&a=bar&b=baz'"""
+            )
             assert export.curl_command(get_request) == result
 
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
-        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' 'header: qvalue'"""
+        result = (
+            """http GET 'http://address:22/path?a=foo&a=bar&b=baz' 'header: qvalue'"""
+        )
         assert export.httpie_command(get_request) == result
 
     def test_post(self, post_request):
-        post_request.request.content = b'nobinarysupport'
+        post_request.request.content = b"nobinarysupport"
         result = "http POST http://address:22/path <<< nobinarysupport"
         assert export.httpie_command(post_request) == result
 
@@ -153,14 +155,10 @@ class TestExportHttpieCommand:
 
     def test_escape_single_quotes_in_body(self):
         request = tflow.tflow(
-            req=tutils.treq(
-                method=b'POST',
-                headers=(),
-                content=b"'&#"
-            )
+            req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
         )
         command = export.httpie_command(request)
-        assert shlex.split(command)[-2] == '<<<'
+        assert shlex.split(command)[-2] == "<<<"
         assert shlex.split(command)[-1] == "'&#"
 
     # See comment in `TestExportCurlCommand.test_correct_host_used`. httpie
@@ -172,8 +170,10 @@ class TestExportHttpieCommand:
     def test_correct_host_used(self, get_request):
         get_request.request.headers["host"] = "domain:22"
 
-        result = """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' """ \
-                 """'header: qvalue' 'host: domain:22'"""
+        result = (
+            """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' """
+            """'header: qvalue' 'host: domain:22'"""
+        )
         assert export.httpie_command(get_request) == result
 
 
@@ -191,7 +191,10 @@ class TestRaw:
         assert b"header-response: svalue" in export.raw(get_response)
 
     def test_tcp(self, tcp_flow):
-        with pytest.raises(exceptions.CommandError, match="Can't export flow with no request or response"):
+        with pytest.raises(
+            exceptions.CommandError,
+            match="Can't export flow with no request or response",
+        ):
             export.raw(tcp_flow)
 
 
@@ -256,12 +259,14 @@ def test_export(tmp_path) -> None:
         os.unlink(f)
 
 
-@pytest.mark.parametrize("exception, log_message", [
-    (PermissionError, "Permission denied"),
-    (IsADirectoryError, "Is a directory"),
-    (FileNotFoundError, "No such file or directory")
-])
-@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "exception, log_message",
+    [
+        (PermissionError, "Permission denied"),
+        (IsADirectoryError, "Is a directory"),
+        (FileNotFoundError, "No such file or directory"),
+    ],
+)
 async def test_export_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
@@ -272,7 +277,6 @@ async def test_export_open(exception, log_message, tmpdir):
             await tctx.master.await_log(log_message, level="error")
 
 
-@pytest.mark.asyncio
 async def test_clip(tmpdir):
     e = export.Export()
     with taddons.context() as tctx:
@@ -281,25 +285,26 @@ async def test_clip(tmpdir):
         with pytest.raises(exceptions.CommandError):
             e.clip("nonexistent", tflow.tflow(resp=True))
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("raw_request", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("raw_response", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("curl", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("httpie", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
-            log_message = "Pyperclip could not find a " \
-                          "copy/paste mechanism for your system."
+        with mock.patch("pyperclip.copy") as pc:
+            log_message = (
+                "Pyperclip could not find a " "copy/paste mechanism for your system."
+            )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw_request", tflow.tflow(resp=True))
             await tctx.master.await_log(log_message, level="error")

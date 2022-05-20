@@ -1,7 +1,9 @@
 import copy
 import io
+from collections.abc import Sequence
+from typing import Optional
+
 import pytest
-import typing
 import argparse
 
 from mitmproxy import options
@@ -12,8 +14,8 @@ from mitmproxy import exceptions
 class TO(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("one", typing.Optional[int], None, "help")
-        self.add_option("two", typing.Optional[int], 2, "help")
+        self.add_option("one", Optional[int], None, "help")
+        self.add_option("two", Optional[int], 2, "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("required_int", int, 2, "help")
 
@@ -35,8 +37,8 @@ class TD2(TD):
 class TM(optmanager.OptManager):
     def __init__(self):
         super().__init__()
-        self.add_option("two", typing.Sequence[str], ["foo"], "help")
-        self.add_option("one", typing.Optional[str], None, "help")
+        self.add_option("two", Sequence[str], ["foo"], "help")
+        self.add_option("one", Optional[str], None, "help")
 
 
 def test_defaults():
@@ -71,7 +73,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval(o._options["required_int"], None, None)
+        o._parse_setval(o._options["required_int"], [])
 
 
 def test_deepcopy():
@@ -89,12 +91,12 @@ def test_options():
     assert o.one == 1
 
     with pytest.raises(TypeError):
-        TO(nonexistent = "value")
+        TO(nonexistent="value")
     with pytest.raises(Exception, match="Unknown options"):
         o.nonexistent = "value"
     with pytest.raises(Exception, match="Unknown options"):
-        o.update(nonexistent = "value")
-    assert o.update_known(nonexistent = "value") == {"nonexistent": "value"}
+        o.update(nonexistent="value")
+    assert o.update_known(nonexistent="value") == {"nonexistent": "value"}
 
     rec = []
 
@@ -240,7 +242,9 @@ def test_items():
 
 
 def test_serialize():
-    def serialize(opts: optmanager.OptManager, text: str, defaults: bool = False) -> str:
+    def serialize(
+        opts: optmanager.OptManager, text: str, defaults: bool = False
+    ) -> str:
         buf = io.StringIO()
         optmanager.serialize(opts, buf, text, defaults)
         return buf.getvalue()
@@ -305,24 +309,24 @@ def test_saving(tmpdir):
     optmanager.load_paths(o, dst)
     assert o.three == "foo"
 
-    with open(dst, 'a') as f:
+    with open(dst, "a") as f:
         f.write("foobar: '123'")
     optmanager.load_paths(o, dst)
     assert o.deferred == {"foobar": "123"}
 
-    with open(dst, 'a') as f:
+    with open(dst, "a") as f:
         f.write("'''")
     with pytest.raises(exceptions.OptionsError):
         optmanager.load_paths(o, dst)
 
-    with open(dst, 'wb') as f:
+    with open(dst, "wb") as f:
         f.write(b"\x01\x02\x03")
     with pytest.raises(exceptions.OptionsError):
         optmanager.load_paths(o, dst)
     with pytest.raises(exceptions.OptionsError):
         optmanager.save(o, dst)
 
-    with open(dst, 'wb') as f:
+    with open(dst, "wb") as f:
         f.write(b"\xff\xff\xff")
     with pytest.raises(exceptions.OptionsError):
         optmanager.load_paths(o, dst)
@@ -364,7 +368,7 @@ def test_dump_defaults():
 def test_dump_dicts():
     o = options.Options()
     assert optmanager.dump_dicts(o)
-    assert optmanager.dump_dicts(o, ['http2', 'listen_port'])
+    assert optmanager.dump_dicts(o, ["http2", "listen_port"])
 
 
 class TTypes(optmanager.OptManager):
@@ -372,12 +376,12 @@ class TTypes(optmanager.OptManager):
         super().__init__()
         self.add_option("str", str, "str", "help")
         self.add_option("choices", str, "foo", "help", ["foo", "bar", "baz"])
-        self.add_option("optstr", typing.Optional[str], "optstr", "help")
+        self.add_option("optstr", Optional[str], "optstr", "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("bool_on", bool, True, "help")
         self.add_option("int", int, 0, "help")
-        self.add_option("optint", typing.Optional[int], 0, "help")
-        self.add_option("seqstr", typing.Sequence[str], [], "help")
+        self.add_option("optint", Optional[int], 0, "help")
+        self.add_option("seqstr", Sequence[str], [], "help")
         self.add_option("unknown", float, 0.0, "help")
 
 
@@ -402,13 +406,15 @@ def test_set():
 
     opts.set("str=foo")
     assert opts.str == "foo"
-    with pytest.raises(TypeError):
+    with pytest.raises(exceptions.OptionsError):
         opts.set("str")
 
     opts.set("optstr=foo")
     assert opts.optstr == "foo"
     opts.set("optstr")
     assert opts.optstr is None
+    with pytest.raises(exceptions.OptionsError, match="Received multiple values"):
+        opts.set("optstr=foo", "optstr=bar")
 
     opts.set("bool=false")
     assert opts.bool is False
@@ -451,11 +457,11 @@ def test_set():
     assert "deferredoption" not in opts.deferred
     assert opts.deferredoption == "wobble"
 
-    opts.set(*('deferredsequenceoption=a', 'deferredsequenceoption=b'), defer=True)
+    opts.set(*("deferredsequenceoption=a", "deferredsequenceoption=b"), defer=True)
     assert "deferredsequenceoption" in opts.deferred
     opts.process_deferred()
     assert "deferredsequenceoption" in opts.deferred
-    opts.add_option("deferredsequenceoption", typing.Sequence[str], [], "help")
+    opts.add_option("deferredsequenceoption", Sequence[str], [], "help")
     opts.process_deferred()
     assert "deferredsequenceoption" not in opts.deferred
     assert opts.deferredsequenceoption == ["a", "b"]

@@ -1,6 +1,6 @@
-import typing
-
 import os
+from collections.abc import Sequence
+from typing import Union
 
 from mitmproxy.utils import emoji
 from mitmproxy import ctx, hooks
@@ -38,9 +38,7 @@ class Core:
                         "Transparent mode not supported on this platform."
                     )
             elif mode not in ["regular", "socks5"]:
-                raise exceptions.OptionsError(
-                    "Invalid mode specification: %s" % mode
-                )
+                raise exceptions.OptionsError("Invalid mode specification: %s" % mode)
         if "client_certs" in updated:
             if opts.client_certs:
                 client_certs = os.path.expanduser(opts.client_certs)
@@ -50,25 +48,26 @@ class Core:
                     )
 
     @command.command("set")
-    def set(self, option: str, value: str = "") -> None:
+    def set(self, option: str, *value: str) -> None:
         """
-            Set an option. When the value is omitted, booleans are set to true,
-            strings and integers are set to None (if permitted), and sequences
-            are emptied. Boolean values can be true, false or toggle.
-            Multiple values are concatenated with a single space.
-            Sequences are set using multiple invocations to set for
-            the same option.
+        Set an option. When the value is omitted, booleans are set to true,
+        strings and integers are set to None (if permitted), and sequences
+        are emptied. Boolean values can be true, false or toggle.
+        Multiple values are concatenated with a single space.
         """
-        strspec = f"{option}={value}"
+        if value:
+            specs = [f"{option}={v}" for v in value]
+        else:
+            specs = [option]
         try:
-            ctx.options.set(strspec)
+            ctx.options.set(*specs)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
 
     @command.command("flow.resume")
-    def resume(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def resume(self, flows: Sequence[flow.Flow]) -> None:
         """
-            Resume flows if they are intercepted.
+        Resume flows if they are intercepted.
         """
         intercepted = [i for i in flows if i.intercepted]
         for f in intercepted:
@@ -77,9 +76,9 @@ class Core:
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[flow.Flow], marker: mitmproxy.types.Marker) -> None:
+    def mark(self, flows: Sequence[flow.Flow], marker: mitmproxy.types.Marker) -> None:
         """
-            Mark flows.
+        Mark flows.
         """
         updated = []
         if marker not in emoji.emoji:
@@ -92,9 +91,9 @@ class Core:
 
     # FIXME: this will become view.mark.toggle later
     @command.command("flow.mark.toggle")
-    def mark_toggle(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def mark_toggle(self, flows: Sequence[flow.Flow]) -> None:
         """
-            Toggle mark for flows.
+        Toggle mark for flows.
         """
         for i in flows:
             if i.marked:
@@ -104,9 +103,9 @@ class Core:
         ctx.master.addons.trigger(hooks.UpdateHook(flows))
 
     @command.command("flow.kill")
-    def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def kill(self, flows: Sequence[flow.Flow]) -> None:
         """
-            Kill running flows.
+        Kill running flows.
         """
         updated = []
         for f in flows:
@@ -118,9 +117,9 @@ class Core:
 
     # FIXME: this will become view.revert later
     @command.command("flow.revert")
-    def revert(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def revert(self, flows: Sequence[flow.Flow]) -> None:
         """
-            Revert flow changes.
+        Revert flow changes.
         """
         updated = []
         for f in flows:
@@ -131,7 +130,7 @@ class Core:
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     @command.command("flow.set.options")
-    def flow_set_options(self) -> typing.Sequence[str]:
+    def flow_set_options(self) -> Sequence[str]:
         return [
             "host",
             "status_code",
@@ -143,16 +142,11 @@ class Core:
 
     @command.command("flow.set")
     @command.argument("attr", type=mitmproxy.types.Choice("flow.set.options"))
-    def flow_set(
-        self,
-        flows: typing.Sequence[flow.Flow],
-        attr: str,
-        value: str
-    ) -> None:
+    def flow_set(self, flows: Sequence[flow.Flow], attr: str, value: str) -> None:
         """
-            Quickly set a number of common values on flows.
+        Quickly set a number of common values on flows.
         """
-        val: typing.Union[int, str] = value
+        val: Union[int, str] = value
         if attr == "status_code":
             try:
                 val = int(val)  # type: ignore
@@ -177,7 +171,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            "URL {} is invalid: {}".format(repr(val), e)
+                            f"URL {repr(val)} is invalid: {e}"
                         ) from e
                 else:
                     self.rupdate = False
@@ -198,12 +192,12 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Set {} on  {} flows.".format(attr, len(updated)))
+        ctx.log.alert(f"Set {attr} on  {len(updated)} flows.")
 
     @command.command("flow.decode")
-    def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def decode(self, flows: Sequence[flow.Flow], part: str) -> None:
         """
-            Decode flows.
+        Decode flows.
         """
         updated = []
         for f in flows:
@@ -216,9 +210,9 @@ class Core:
         ctx.log.alert("Decoded %s flows." % len(updated))
 
     @command.command("flow.encode.toggle")
-    def encode_toggle(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def encode_toggle(self, flows: Sequence[flow.Flow], part: str) -> None:
         """
-            Toggle flow encoding on and off, using deflate for encoding.
+        Toggle flow encoding on and off, using deflate for encoding.
         """
         updated = []
         for f in flows:
@@ -238,12 +232,12 @@ class Core:
     @command.argument("encoding", type=mitmproxy.types.Choice("flow.encode.options"))
     def encode(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         part: str,
         encoding: str,
     ) -> None:
         """
-            Encode flows with a specified encoding.
+        Encode flows with a specified encoding.
         """
         updated = []
         for f in flows:
@@ -258,47 +252,43 @@ class Core:
         ctx.log.alert("Encoded %s flows." % len(updated))
 
     @command.command("flow.encode.options")
-    def encode_options(self) -> typing.Sequence[str]:
+    def encode_options(self) -> Sequence[str]:
         """
-            The possible values for an encoding specification.
+        The possible values for an encoding specification.
         """
         return ["gzip", "deflate", "br", "zstd"]
 
     @command.command("options.load")
     def options_load(self, path: mitmproxy.types.Path) -> None:
         """
-            Load options from a file.
+        Load options from a file.
         """
         try:
             optmanager.load_paths(ctx.options, path)
         except (OSError, exceptions.OptionsError) as e:
-            raise exceptions.CommandError(
-                "Could not load options - %s" % e
-            ) from e
+            raise exceptions.CommandError("Could not load options - %s" % e) from e
 
     @command.command("options.save")
     def options_save(self, path: mitmproxy.types.Path) -> None:
         """
-            Save options to a file.
+        Save options to a file.
         """
         try:
             optmanager.save(ctx.options, path)
         except OSError as e:
-            raise exceptions.CommandError(
-                "Could not save options - %s" % e
-            ) from e
+            raise exceptions.CommandError("Could not save options - %s" % e) from e
 
     @command.command("options.reset")
     def options_reset(self) -> None:
         """
-            Reset all options to defaults.
+        Reset all options to defaults.
         """
         ctx.options.reset()
 
     @command.command("options.reset.one")
     def options_reset_one(self, name: str) -> None:
         """
-            Reset one option to its default value.
+        Reset one option to its default value.
         """
         if name not in ctx.options:
             raise exceptions.CommandError("No such option: %s" % name)

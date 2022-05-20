@@ -9,22 +9,22 @@ app = Flask(__name__)
 app.config["CONFDIR"] = CONF_DIR
 
 
-@app.route('/')
+@app.route("/")
 def index():
     return render_template("index.html")
 
 
-@app.route('/cert/pem')
+@app.route("/cert/pem")
 def pem():
     return read_cert("pem", "application/x-x509-ca-cert")
 
 
-@app.route('/cert/p12')
+@app.route("/cert/p12")
 def p12():
     return read_cert("p12", "application/x-pkcs12")
 
 
-@app.route('/cert/cer')
+@app.route("/cert/cer")
 def cer():
     return read_cert("cer", "application/x-x509-ca-cert")
 

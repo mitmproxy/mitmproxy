@@ -15,7 +15,8 @@ In that case it's not necessary to modify mitmproxy's source, adding a custom ad
 that sets nextlayer.layer works just as well.
 """
 import re
-from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
+from collections.abc import Sequence
+from typing import Any, Iterable, Optional, Union
 
 from mitmproxy import ctx, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
@@ -24,12 +25,11 @@ from mitmproxy.proxy import context, layer, layers
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello
 
-LayerCls = Type[layer.Layer]
+LayerCls = type[layer.Layer]
 
 
 def stack_match(
-        context: context.Context,
-        layers: Sequence[Union[LayerCls, Tuple[LayerCls, ...]]]
+    context: context.Context, layers: Sequence[Union[LayerCls, tuple[LayerCls, ...]]]
 ) -> bool:
     if len(context.layers) != len(layers):
         return False
@@ -51,7 +51,9 @@ class NextLayer:
             ]
         if "allow_hosts" in updated or "ignore_hosts" in updated:
             if ctx.options.allow_hosts and ctx.options.ignore_hosts:
-                raise exceptions.OptionsError("The allow_hosts and ignore_hosts options are mutually exclusive.")
+                raise exceptions.OptionsError(
+                    "The allow_hosts and ignore_hosts options are mutually exclusive."
+                )
             self.ignore_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.ignore_hosts
             ]
@@ -59,7 +61,9 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.allow_hosts
             ]
 
-    def ignore_connection(self, server_address: Optional[connection.Address], data_client: bytes) -> Optional[bool]:
+    def ignore_connection(
+        self, server_address: Optional[connection.Address], data_client: bytes
+    ) -> Optional[bool]:
         """
         Returns:
             True, if the connection should be ignored.
@@ -69,7 +73,7 @@ class NextLayer:
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
 
-        hostnames: List[str] = []
+        hostnames: list[str] = []
         if server_address is not None:
             hostnames.append(server_address[0])
         if is_tls_record_magic(data_client):
@@ -110,7 +114,9 @@ class NextLayer:
                 nextlayer.data_server(),
             )
 
-    def _next_layer(self, context: context.Context, data_client: bytes, data_server: bytes) -> Optional[layer.Layer]:
+    def _next_layer(
+        self, context: context.Context, data_client: bytes, data_server: bytes
+    ) -> Optional[layer.Layer]:
         if len(context.layers) == 0:
             return self.make_top_layer(context)
 
@@ -135,9 +141,9 @@ class NextLayer:
             #  - a secure web proxy doesn't have a server part.
             #  - reverse proxy mode manages this itself.
             if (
-                s(modes.HttpProxy) or
-                s(modes.ReverseProxy) or
-                s(modes.ReverseProxy, layers.ServerTLSLayer)
+                s(modes.HttpProxy)
+                or s(modes.ReverseProxy)
+                or s(modes.ReverseProxy, layers.ServerTLSLayer)
             ):
                 return layers.ClientTLSLayer(context)
             else:
@@ -149,7 +155,8 @@ class NextLayer:
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
         if (
-            s(modes.HttpProxy) or
+            s(modes.HttpProxy)
+            or
             # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
             s(modes.HttpProxy, layers.ClientTLSLayer)
         ):
@@ -160,19 +167,19 @@ class NextLayer:
 
         # 4. Check for --tcp
         if any(
-                (context.server.address and rex.search(context.server.address[0])) or
-                (context.client.sni and rex.search(context.client.sni))
-                for rex in self.tcp_hosts
+            (context.server.address and rex.search(context.server.address[0]))
+            or (context.client.sni and rex.search(context.client.sni))
+            for rex in self.tcp_hosts
         ):
             return layers.TCPLayer(context)
 
         # 5. Check for raw tcp mode.
-        very_likely_http = (
-                context.client.alpn and context.client.alpn in HTTP_ALPNS
-        )
+        very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
         probably_no_http = not very_likely_http and (
-                not data_client[:3].isalpha()  # the first three bytes should be the HTTP verb, so A-Za-z is expected.
-                or data_server  # a server greeting would be uncharacteristic.
+            not data_client[
+                :3
+            ].isalpha()  # the first three bytes should be the HTTP verb, so A-Za-z is expected.
+            or data_server  # a server greeting would be uncharacteristic.
         )
         if ctx.options.rawtcp and probably_no_http:
             return layers.TCPLayer(context)

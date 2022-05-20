@@ -15,8 +15,8 @@ def websocket_message(flow: http.HTTPFlow):
         ctx.log.info(f"Server sent a message: {message.content!r}")
 
     # manipulate the message content
-    message.content = re.sub(rb'^Hello', b'HAPPY', message.content)
+    message.content = re.sub(rb"^Hello", b"HAPPY", message.content)
 
-    if b'FOOBAR' in message.content:
+    if b"FOOBAR" in message.content:
         # kill the message and not send it to the other endpoint
         message.drop()

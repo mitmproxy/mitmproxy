@@ -5,16 +5,12 @@ from mitmproxy.utils import data
 
 import pytest
 
-pytest_plugins = ('test.full_coverage_plugin',)
+pytest_plugins = ("test.full_coverage_plugin",)
 
-skip_windows = pytest.mark.skipif(
-    os.name == "nt",
-    reason='Skipping due to Windows'
-)
+skip_windows = pytest.mark.skipif(os.name == "nt", reason="Skipping due to Windows")
 
 skip_not_windows = pytest.mark.skipif(
-    os.name != "nt",
-    reason='Skipping due to not Windows'
+    os.name != "nt", reason="Skipping due to not Windows"
 )
 
 try:
@@ -26,10 +22,7 @@ except OSError:
 else:
     no_ipv6 = False
 
-skip_no_ipv6 = pytest.mark.skipif(
-    no_ipv6,
-    reason='Host has no IPv6 support'
-)
+skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
 
 @pytest.fixture()

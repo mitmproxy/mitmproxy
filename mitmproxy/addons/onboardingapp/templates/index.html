@@ -83,14 +83,15 @@
     </ol>
 
     <p>Some Android distributions require you to install the certificate via <samp>Settings -> Security -> Advanced ->
-        Encryption and credentials -> Install from storage</samp> instead.</p>
+        Encryption and credentials -> Install a certificate -> CA certificate</samp> (or similar) instead.</p>
 
     <div class="alert alert-warning" role="alert">
         <p><strong>Warning: </strong>Apps that target Android API Level 24 (introduced in 2016) and above only accept
             certificates from the system trust store
             (<a href="https://github.com/mitmproxy/mitmproxy/issues/2054">#2054</a>).
             User-added CAs are not accepted unless the application manually opts in. Except for browsers, you need to
-            patch most apps manually.
+            patch most apps manually
+            (<a href="https://developer.android.com/training/articles/security-config">Android network security config</a>).
         </p>
     </div>
     {% endcall %}

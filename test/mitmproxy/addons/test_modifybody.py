@@ -22,7 +22,7 @@ class TestModifyBody:
                 modify_body=[
                     "/~q/foo/bar",
                     "/~s/foo/bar",
-                ]
+                ],
             )
             f = tflow.tflow()
             f.request.content = b"foo"
@@ -63,7 +63,7 @@ class TestModifyBody:
                     "/bar/baz",
                     "/foo/oh noes!",
                     "/bar/oh noes!",
-                ]
+                ],
             )
             f = tflow.tflow()
             f.request.content = b"foo"
@@ -77,31 +77,21 @@ class TestModifyBodyFile:
         with taddons.context(mb) as tctx:
             tmpfile = tmpdir.join("replacement")
             tmpfile.write("bar")
-            tctx.configure(
-                mb,
-                modify_body=["/~q/foo/@" + str(tmpfile)]
-            )
+            tctx.configure(mb, modify_body=["/~q/foo/@" + str(tmpfile)])
             f = tflow.tflow()
             f.request.content = b"foo"
             mb.request(f)
             assert f.request.content == b"bar"
 
-    @pytest.mark.asyncio
     async def test_nonexistent(self, tmpdir):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:
             with pytest.raises(Exception, match="Invalid file path"):
-                tctx.configure(
-                    mb,
-                    modify_body=["/~q/foo/@nonexistent"]
-                )
+                tctx.configure(mb, modify_body=["/~q/foo/@nonexistent"])
 
             tmpfile = tmpdir.join("replacement")
             tmpfile.write("bar")
-            tctx.configure(
-                mb,
-                modify_body=["/~q/foo/@" + str(tmpfile)]
-            )
+            tctx.configure(mb, modify_body=["/~q/foo/@" + str(tmpfile)])
             tmpfile.remove()
             f = tflow.tflow()
             f.request.content = b"foo"

@@ -1,5 +1,6 @@
-from typing import Any, Callable, Dict, Iterator, Type
+from typing import Any, Callable, Iterator
 
+from mitmproxy import dns
 from mitmproxy import flow
 from mitmproxy import hooks
 from mitmproxy import http
@@ -41,9 +42,19 @@ def _iterate_tcp(f: tcp.TCPFlow) -> TEventGenerator:
         yield layers.tcp.TcpEndHook(f)
 
 
-_iterate_map: Dict[Type[flow.Flow], Callable[[Any], TEventGenerator]] = {
+def _iterate_dns(f: dns.DNSFlow) -> TEventGenerator:
+    if f.request:
+        yield layers.dns.DnsRequestHook(f)
+    if f.response:
+        yield layers.dns.DnsResponseHook(f)
+    if f.error:
+        yield layers.dns.DnsErrorHook(f)
+
+
+_iterate_map: dict[type[flow.Flow], Callable[[Any], TEventGenerator]] = {
     http.HTTPFlow: _iterate_http,
     tcp.TCPFlow: _iterate_tcp,
+    dns.DNSFlow: _iterate_dns,
 }
 
 

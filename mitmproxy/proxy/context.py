@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from mitmproxy import connection
 from mitmproxy.options import Options
@@ -25,7 +25,7 @@ class Context:
     """
     Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
     """
-    layers: List["mitmproxy.proxy.layer.Layer"]
+    layers: list["mitmproxy.proxy.layer.Layer"]
     """
     The protocol layer stack.
     """
@@ -37,7 +37,9 @@ class Context:
     ) -> None:
         self.client = client
         self.options = options
-        self.server = connection.Server(None)
+        self.server = connection.Server(
+            None, transport_protocol=client.transport_protocol
+        )
         self.layers = []
 
     def fork(self) -> "Context":

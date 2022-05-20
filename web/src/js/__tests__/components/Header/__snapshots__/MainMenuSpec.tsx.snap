@@ -26,7 +26,7 @@ exports[`MainMenu 1`] = `
             class="form-control"
             placeholder="Search"
             type="text"
-            value="~u /second | ~tcp"
+            value="~u /second | ~tcp | ~dns"
           />
         </div>
         <div

@@ -1,4 +1,3 @@
-import typing
 
 from mitmproxy import http
 from mitmproxy.connection import Server
@@ -17,7 +16,7 @@ from mitmproxy.net.server_spec import ServerSpec
 # If you want to change the target server, you should modify flow.request.host and flow.request.port
 
 
-def proxy_address(flow: http.HTTPFlow) -> typing.Tuple[str, int]:
+def proxy_address(flow: http.HTTPFlow) -> tuple[str, int]:
     # Poor man's loadbalancing: route every second domain through the alternative proxy.
     if hash(flow.request.host) % 2 == 1:
         return ("localhost", 8082)

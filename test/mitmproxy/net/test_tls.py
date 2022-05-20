@@ -12,11 +12,13 @@ def test_make_master_secret_logger():
 
 def test_sslkeylogfile(tdata, monkeypatch):
     keylog = []
-    monkeypatch.setattr(tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets))
+    monkeypatch.setattr(
+        tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets)
+    )
 
     store = certs.CertStore.from_files(
         Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
-        Path(tdata.path("mitmproxy/net/data/dhparam.pem"))
+        Path(tdata.path("mitmproxy/net/data/dhparam.pem")),
     )
     entry = store.get_cert("example.com", [], None)
 
@@ -25,11 +27,9 @@ def test_sslkeylogfile(tdata, monkeypatch):
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
         verify=tls.Verify.VERIFY_NONE,
-        hostname=None,
         ca_path=None,
         ca_pemfile=None,
         client_cert=None,
-        alpn_protos=(),
     )
     sctx = tls.create_client_proxy_context(
         min_version=tls.DEFAULT_MIN_VERSION,

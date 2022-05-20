@@ -1,14 +1,15 @@
-import collections
 import contextlib
-import blinker
-import blinker._saferef
-import pprint
 import copy
+from collections.abc import Sequence
+from dataclasses import dataclass
 import functools
 import os
-import typing
+import pprint
 import textwrap
+from typing import Any, Optional, TextIO, Union
 
+import blinker
+import blinker._saferef
 import ruamel.yaml
 
 from mitmproxy import exceptions
@@ -27,10 +28,10 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: typing.Union[type, object],  # object for Optional[x], which is not a type.
-        default: typing.Any,
+        typespec: Union[type, object],  # object for Optional[x], which is not a type.
+        default: Any,
         help: str,
-        choices: typing.Optional[typing.Sequence[str]]
+        choices: Optional[Sequence[str]],
     ) -> None:
         typecheck.check_option_type(name, default, typespec)
         self.name = name
@@ -47,14 +48,14 @@ class _Option:
     def default(self):
         return copy.deepcopy(self._default)
 
-    def current(self) -> typing.Any:
+    def current(self) -> Any:
         if self.value is unset:
             v = self.default
         else:
             v = self.value
         return copy.deepcopy(v)
 
-    def set(self, value: typing.Any) -> None:
+    def set(self, value: Any) -> None:
         typecheck.check_option_type(self.name, value, self.typespec)
         self.value = value
 
@@ -71,41 +72,45 @@ class _Option:
         return True
 
     def __deepcopy__(self, _):
-        o = _Option(
-            self.name, self.typespec, self.default, self.help, self.choices
-        )
+        o = _Option(self.name, self.typespec, self.default, self.help, self.choices)
         if self.has_changed():
             o.value = self.current()
         return o
 
 
+@dataclass
+class _UnconvertedStrings:
+    val: list[str]
+
+
 class OptManager:
     """
-        OptManager is the base class from which Options objects are derived.
+    OptManager is the base class from which Options objects are derived.
 
-        .changed is a blinker Signal that triggers whenever options are
-        updated. If any handler in the chain raises an exceptions.OptionsError
-        exception, all changes are rolled back, the exception is suppressed,
-        and the .errored signal is notified.
+    .changed is a blinker Signal that triggers whenever options are
+    updated. If any handler in the chain raises an exceptions.OptionsError
+    exception, all changes are rolled back, the exception is suppressed,
+    and the .errored signal is notified.
 
-        Optmanager always returns a deep copy of options to ensure that
-        mutation doesn't change the option state inadvertently.
+    Optmanager always returns a deep copy of options to ensure that
+    mutation doesn't change the option state inadvertently.
     """
+
     def __init__(self):
-        self.deferred: typing.Dict[str, typing.List[str]] = {}
+        self.deferred: dict[str, Any] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
-        self._options: typing.Dict[str, typing.Any] = {}
+        self._options: dict[str, Any] = {}
 
     def add_option(
         self,
         name: str,
-        typespec: typing.Union[type, object],
-        default: typing.Any,
+        typespec: Union[type, object],
+        default: Any,
         help: str,
-        choices: typing.Optional[typing.Sequence[str]] = None
+        choices: Optional[Sequence[str]] = None,
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
         self.changed.send(self, updated={name})
@@ -126,11 +131,11 @@ class OptManager:
 
     def subscribe(self, func, opts):
         """
-            Subscribe a callable to the .changed signal, but only for a
-            specified list of options. The callable should accept arguments
-            (options, updated), and may raise an OptionsError.
+        Subscribe a callable to the .changed signal, but only for a
+        specified list of options. The callable should accept arguments
+        (options, updated), and may raise an OptionsError.
 
-            The event will automatically be unsubscribed if the callable goes out of scope.
+        The event will automatically be unsubscribed if the callable goes out of scope.
         """
         for i in opts:
             if i not in self._options:
@@ -159,7 +164,7 @@ class OptManager:
             return self._options == other._options
         return False
 
-    def __deepcopy__(self, memodict = None):
+    def __deepcopy__(self, memodict=None):
         o = OptManager()
         o.__dict__["_options"] = copy.deepcopy(self._options, memodict)
         return o
@@ -193,7 +198,7 @@ class OptManager:
 
     def reset(self):
         """
-            Restore defaults for all options.
+        Restore defaults for all options.
         """
         for o in self._options.values():
             o.reset()
@@ -201,8 +206,8 @@ class OptManager:
 
     def update_known(self, **kwargs):
         """
-            Update and set all known options from kwargs. Returns a dictionary
-            of unknown options.
+        Update and set all known options from kwargs. Returns a dictionary
+        of unknown options.
         """
         known, unknown = {}, {}
         for k, v in kwargs.items():
@@ -229,20 +234,21 @@ class OptManager:
 
     def setter(self, attr):
         """
-            Generate a setter for a given attribute. This returns a callable
-            taking a single argument.
+        Generate a setter for a given attribute. This returns a callable
+        taking a single argument.
         """
         if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
 
         def setter(x):
             setattr(self, attr, x)
+
         return setter
 
     def toggler(self, attr):
         """
-            Generate a toggler for a boolean attribute. This returns a callable
-            that takes no arguments.
+        Generate a toggler for a boolean attribute. This returns a callable
+        that takes no arguments.
         """
         if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
@@ -252,22 +258,23 @@ class OptManager:
 
         def toggle():
             setattr(self, attr, not getattr(self, attr))
+
         return toggle
 
-    def default(self, option: str) -> typing.Any:
+    def default(self, option: str) -> Any:
         return self._options[option].default
 
     def has_changed(self, option):
         """
-            Has the option changed from the default?
+        Has the option changed from the default?
         """
         return self._options[option].has_changed()
 
     def merge(self, opts):
         """
-            Merge a dict of options into this object. Options that have None
-            value are ignored. Lists and tuples are appended to the current
-            option value.
+        Merge a dict of options into this object. Options that have None
+        value are ignored. Lists and tuples are appended to the current
+        option value.
         """
         toset = {}
         for k, v in opts.items():
@@ -283,65 +290,92 @@ class OptManager:
         if "\n" in options:
             options = "\n    " + options + "\n"
         return "{mod}.{cls}({{{options}}})".format(
-            mod=type(self).__module__,
-            cls=type(self).__name__,
-            options=options
+            mod=type(self).__module__, cls=type(self).__name__, options=options
         )
 
-    def set(self, *spec, defer=False):
+    def set(self, *specs: str, defer: bool = False) -> None:
         """
-            Takes a list of set specification in standard form (option=value).
-            Options that are known are updated immediately. If defer is true,
-            options that are not known are deferred, and will be set once they
-            are added.
-        """
-        vals = {}
-        unknown: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
-        for i in spec:
-            parts = i.split("=", maxsplit=1)
-            if len(parts) == 1:
-                optname, optval = parts[0], None
-            else:
-                optname, optval = parts[0], parts[1]
-            if optname in self._options:
-                vals[optname] = self.parse_setval(self._options[optname], optval, vals.get(optname))
-            else:
-                unknown[optname].append(optval)
-        if defer:
-            self.deferred.update(unknown)
-        elif unknown:
-            raise exceptions.OptionsError("Unknown options: %s" % ", ".join(unknown.keys()))
-        self.update(**vals)
+        Takes a list of set specification in standard form (option=value).
+        Options that are known are updated immediately. If defer is true,
+        options that are not known are deferred, and will be set once they
+        are added.
 
-    def process_deferred(self):
+        May raise an `OptionsError` if a value is malformed or an option is unknown and defer is False.
         """
-            Processes options that were deferred in previous calls to set, and
-            have since been added.
+        # First, group specs by option name.
+        unprocessed: dict[str, list[str]] = {}
+        for spec in specs:
+            if "=" in spec:
+                name, value = spec.split("=", maxsplit=1)
+                unprocessed.setdefault(name, []).append(value)
+            else:
+                unprocessed.setdefault(spec, [])
+
+        # Second, convert values to the correct type.
+        processed: dict[str, Any] = {}
+        for name in list(unprocessed.keys()):
+            if name in self._options:
+                processed[name] = self._parse_setval(
+                    self._options[name], unprocessed.pop(name)
+                )
+
+        # Third, stash away unrecognized options or complain about them.
+        if defer:
+            self.deferred.update(
+                {k: _UnconvertedStrings(v) for k, v in unprocessed.items()}
+            )
+        elif unprocessed:
+            raise exceptions.OptionsError(
+                f"Unknown option(s): {', '.join(unprocessed)}"
+            )
+
+        # Finally, apply updated options.
+        self.update(**processed)
+
+    def process_deferred(self) -> None:
         """
-        update = {}
-        for optname, optvals in self.deferred.items():
+        Processes options that were deferred in previous calls to set, and
+        have since been added.
+        """
+        update: dict[str, Any] = {}
+        for optname, value in self.deferred.items():
             if optname in self._options:
-                for optval in optvals:
-                    optval = self.parse_setval(self._options[optname], optval, update.get(optname))
-                    update[optname] = optval
+                if isinstance(value, _UnconvertedStrings):
+                    value = self._parse_setval(self._options[optname], value.val)
+                update[optname] = value
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
 
-    def parse_setval(self, o: _Option, optstr: typing.Optional[str], currentvalue: typing.Any) -> typing.Any:
+    def _parse_setval(self, o: _Option, values: list[str]) -> Any:
         """
-            Convert a string to a value appropriate for the option type.
+        Convert a string to a value appropriate for the option type.
         """
-        if o.typespec in (str, typing.Optional[str]):
+        if o.typespec == Sequence[str]:
+            return values
+        if len(values) > 1:
+            raise exceptions.OptionsError(
+                f"Received multiple values for {o.name}: {values}"
+            )
+
+        optstr: Optional[str]
+        if values:
+            optstr = values[0]
+        else:
+            optstr = None
+
+        if o.typespec in (str, Optional[str]):
+            if o.typespec == str and optstr is None:
+                raise exceptions.OptionsError(f"Option is required: {o.name}")
             return optstr
-        elif o.typespec in (int, typing.Optional[int]):
+        elif o.typespec in (int, Optional[int]):
             if optstr:
                 try:
                     return int(optstr)
                 except ValueError:
-                    raise exceptions.OptionsError("Not an integer: %s" % optstr)
+                    raise exceptions.OptionsError(f"Not an integer: {optstr}")
             elif o.typespec == int:
-                raise exceptions.OptionsError("Option is required: %s" % o.name)
+                raise exceptions.OptionsError(f"Option is required: {o.name}")
             else:
                 return None
         elif o.typespec == bool:
@@ -353,22 +387,14 @@ class OptManager:
                 return False
             else:
                 raise exceptions.OptionsError(
-                    "Boolean must be \"true\", \"false\", or have the value " "omitted (a synonym for \"true\")."
+                    'Boolean must be "true", "false", or have the value omitted (a synonym for "true").'
                 )
-        elif o.typespec == typing.Sequence[str]:
-            if not optstr:
-                return []
-            else:
-                if currentvalue:
-                    return currentvalue + [optstr]
-                else:
-                    return [optstr]
-        raise NotImplementedError("Unsupported option type: %s", o.typespec)
+        raise NotImplementedError(f"Unsupported option type: {o.typespec}")
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """
-            Auto-Create a command-line parser entry for a named option. If the
-            option does not exist, it is ignored.
+        Auto-Create a command-line parser entry for a named option. If the
+        option does not exist, it is ignored.
         """
         if optname not in self._options:
             return
@@ -399,14 +425,9 @@ class OptManager:
                 action="store_false",
                 dest=optname,
             )
-            g.add_argument(
-                *onf,
-                action="store_true",
-                dest=optname,
-                help=o.help
-            )
+            g.add_argument(*onf, action="store_true", dest=optname, help=o.help)
             parser.set_defaults(**{optname: None})
-        elif o.typespec in (int, typing.Optional[int]):
+        elif o.typespec in (int, Optional[int]):
             parser.add_argument(
                 *flags,
                 action="store",
@@ -415,7 +436,7 @@ class OptManager:
                 help=o.help,
                 metavar=metavar,
             )
-        elif o.typespec in (str, typing.Optional[str]):
+        elif o.typespec in (str, Optional[str]):
             parser.add_argument(
                 *flags,
                 action="store",
@@ -423,9 +444,9 @@ class OptManager:
                 dest=optname,
                 help=o.help,
                 metavar=metavar,
-                choices=o.choices
+                choices=o.choices,
             )
-        elif o.typespec == typing.Sequence[str]:
+        elif o.typespec == Sequence[str]:
             parser.add_argument(
                 *flags,
                 action="append",
@@ -439,9 +460,9 @@ class OptManager:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
 
-def dump_defaults(opts, out: typing.TextIO):
+def dump_defaults(opts, out: TextIO):
     """
-        Dumps an annotated file with all options.
+    Dumps an annotated file with all options.
     """
     # Sort data
     s = ruamel.yaml.comments.CommentedMap()
@@ -461,11 +482,11 @@ def dump_defaults(opts, out: typing.TextIO):
     return ruamel.yaml.YAML().dump(s, out)
 
 
-def dump_dicts(opts, keys: typing.List[str]=None):
+def dump_dicts(opts, keys: list[str] = None):
     """
-        Dumps the options into a list of dict object.
+    Dumps the options into a list of dict object.
 
-        Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
+    Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
     """
     options_dict = {}
     keys = keys if keys else opts.keys()
@@ -473,11 +494,11 @@ def dump_dicts(opts, keys: typing.List[str]=None):
         o = opts._options[k]
         t = typecheck.typespec_to_str(o.typespec)
         option = {
-            'type': t,
-            'default': o.default,
-            'value': o.current(),
-            'help': o.help,
-            'choices': o.choices
+            "type": t,
+            "default": o.default,
+            "value": o.current(),
+            "help": o.help,
+            "choices": o.choices,
         }
         options_dict[k] = option
     return options_dict
@@ -487,14 +508,14 @@ def parse(text):
     if not text:
         return {}
     try:
-        yaml = ruamel.yaml.YAML(typ='unsafe', pure=True)
+        yaml = ruamel.yaml.YAML(typ="unsafe", pure=True)
         data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(
-                "Config error at line %s:\n%s\n%s" %
-                (v.problem_mark.line + 1, snip, v.problem)
+                "Config error at line %s:\n%s\n%s"
+                % (v.problem_mark.line + 1, snip, v.problem)
             )
         else:
             raise exceptions.OptionsError("Could not parse options.")
@@ -507,8 +528,8 @@ def parse(text):
 
 def load(opts: OptManager, text: str) -> None:
     """
-        Load configuration from text, over-writing options already set in
-        this object. May raise OptionsError if the config file is invalid.
+    Load configuration from text, over-writing options already set in
+    this object. May raise OptionsError if the config file is invalid.
     """
     data = parse(text)
     opts.update_defer(**data)
@@ -516,9 +537,9 @@ def load(opts: OptManager, text: str) -> None:
 
 def load_paths(opts: OptManager, *paths: str) -> None:
     """
-        Load paths in order. Each path takes precedence over the previous
-        path. Paths that don't exist are ignored, errors raise an
-        OptionsError.
+    Load paths in order. Each path takes precedence over the previous
+    path. Paths that don't exist are ignored, errors raise an
+    OptionsError.
     """
     for p in paths:
         p = os.path.expanduser(p)
@@ -527,27 +548,25 @@ def load_paths(opts: OptManager, *paths: str) -> None:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
-                    raise exceptions.OptionsError(
-                        f"Error reading {p}: {e}"
-                    )
+                    raise exceptions.OptionsError(f"Error reading {p}: {e}")
             try:
                 load(opts, txt)
             except exceptions.OptionsError as e:
-                raise exceptions.OptionsError(
-                    f"Error reading {p}: {e}"
-                )
+                raise exceptions.OptionsError(f"Error reading {p}: {e}")
 
 
-def serialize(opts: OptManager, file: typing.TextIO, text: str, defaults: bool = False) -> None:
+def serialize(
+    opts: OptManager, file: TextIO, text: str, defaults: bool = False
+) -> None:
     """
-        Performs a round-trip serialization. If text is not None, it is
-        treated as a previous serialization that should be modified
-        in-place.
+    Performs a round-trip serialization. If text is not None, it is
+    treated as a previous serialization that should be modified
+    in-place.
 
-        - If "defaults" is False, only options with non-default values are
-            serialized. Default values in text are preserved.
-        - Unknown options in text are removed.
-        - Raises OptionsError if text is invalid.
+    - If "defaults" is False, only options with non-default values are
+        serialized. Default values in text are preserved.
+    - Unknown options in text are removed.
+    - Raises OptionsError if text is invalid.
     """
     data = parse(text)
     for k in opts.keys():
@@ -560,11 +579,11 @@ def serialize(opts: OptManager, file: typing.TextIO, text: str, defaults: bool =
     ruamel.yaml.YAML().dump(data, file)
 
 
-def save(opts: OptManager, path: str, defaults: bool =False) -> None:
+def save(opts: OptManager, path: str, defaults: bool = False) -> None:
     """
-        Save to path. If the destination file exists, modify it in-place.
+    Save to path. If the destination file exists, modify it in-place.
 
-        Raises OptionsError if the existing data is corrupt.
+    Raises OptionsError if the existing data is corrupt.
     """
     path = os.path.expanduser(path)
     if os.path.exists(path) and os.path.isfile(path):
@@ -572,9 +591,7 @@ def save(opts: OptManager, path: str, defaults: bool =False) -> None:
             try:
                 data = f.read()
             except UnicodeDecodeError as e:
-                raise exceptions.OptionsError(
-                    f"Error trying to modify {path}: {e}"
-                )
+                raise exceptions.OptionsError(f"Error trying to modify {path}: {e}")
     else:
         data = ""
 

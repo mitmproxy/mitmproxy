@@ -4,10 +4,13 @@ import pytest
 from mitmproxy.net import encoding
 
 
-@pytest.mark.parametrize("encoder", [
-    'identity',
-    'none',
-])
+@pytest.mark.parametrize(
+    "encoder",
+    [
+        "identity",
+        "none",
+    ],
+)
 def test_identity(encoder):
     assert b"string" == encoding.decode(b"string", encoder)
     assert b"string" == encoding.encode(b"string", encoder)
@@ -15,29 +18,26 @@ def test_identity(encoder):
         encoding.encode(b"string", "nonexistent encoding")
 
 
-@pytest.mark.parametrize("encoder", [
-    'gzip',
-    'GZIP',
-    'br',
-    'deflate',
-    'zstd',
-])
+@pytest.mark.parametrize(
+    "encoder",
+    [
+        "gzip",
+        "GZIP",
+        "br",
+        "deflate",
+        "zstd",
+    ],
+)
 def test_encoders(encoder):
     """
-        This test is for testing byte->byte encoding/decoding
+    This test is for testing byte->byte encoding/decoding
     """
     assert encoding.decode(None, encoder) is None
     assert encoding.encode(None, encoder) is None
 
     assert b"" == encoding.decode(b"", encoder)
 
-    assert b"string" == encoding.decode(
-        encoding.encode(
-            b"string",
-            encoder
-        ),
-        encoder
-    )
+    assert b"string" == encoding.decode(encoding.encode(b"string", encoder), encoder)
 
     with pytest.raises(TypeError):
         encoding.encode("string", encoder)
@@ -48,24 +48,15 @@ def test_encoders(encoder):
         encoding.decode(b"foobar", encoder)
 
 
-@pytest.mark.parametrize("encoder", [
-    'utf8',
-    'latin-1'
-])
+@pytest.mark.parametrize("encoder", ["utf8", "latin-1"])
 def test_encoders_strings(encoder):
     """
-        This test is for testing byte->str decoding
-        and str->byte encoding
+    This test is for testing byte->str decoding
+    and str->byte encoding
     """
     assert "" == encoding.decode(b"", encoder)
 
-    assert "string" == encoding.decode(
-        encoding.encode(
-            "string",
-            encoder
-        ),
-        encoder
-    )
+    assert "string" == encoding.decode(encoding.encode("string", encoder), encoder)
 
     with pytest.raises(TypeError):
         encoding.encode(b"string", encoder)

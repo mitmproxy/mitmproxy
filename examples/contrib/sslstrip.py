@@ -4,12 +4,11 @@ https://moxie.org/software/sslstrip/
 """
 import re
 import urllib.parse
-import typing  # noqa
 
 from mitmproxy import http
 
 # set of SSL/TLS capable hosts
-secure_hosts: typing.Set[str] = set()
+secure_hosts: set[str] = set()
 
 
 def request(flow: http.HTTPFlow) -> None:

@@ -12,7 +12,7 @@ from mitmproxy.test import taddons, tflow
 
 @asynccontextmanager
 async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, '127.0.0.1', 0)
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -20,7 +20,6 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
 async def test_playback(mode, concurrency):
@@ -33,16 +32,11 @@ async def test_playback(mode, concurrency):
             return
         req = await reader.readline()
         if mode == "upstream":
-            assert req == b'GET http://address:22/path HTTP/1.1\r\n'
+            assert req == b"GET http://address:22/path HTTP/1.1\r\n"
         else:
-            assert req == b'GET /path HTTP/1.1\r\n'
+            assert req == b"GET /path HTTP/1.1\r\n"
         req = await reader.readuntil(b"data")
-        assert req == (
-            b'header: qvalue\r\n'
-            b'content-length: 4\r\n'
-            b'\r\n'
-            b'data'
-        )
+        assert req == (b"header: qvalue\r\n" b"content-length: 4\r\n" b"\r\n" b"data")
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
@@ -60,7 +54,7 @@ async def test_playback(mode, concurrency):
             if mode == "upstream":
                 tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
                 flow.request.authority = f"{addr[0]}:{addr[1]}"
-                flow.request.host, flow.request.port = 'address', 22
+                flow.request.host, flow.request.port = "address", 22
             else:
                 flow.request.host, flow.request.port = addr
             cp.start_replay([flow])
@@ -72,13 +66,12 @@ async def test_playback(mode, concurrency):
                 assert flow.response.status_code == 204
 
 
-@pytest.mark.asyncio
 async def test_playback_https_upstream():
     handler_ok = asyncio.Event()
 
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         conn_req = await reader.readuntil(b"\r\n\r\n")
-        assert conn_req == b'CONNECT address:22 HTTP/1.1\r\n\r\n'
+        assert conn_req == b"CONNECT address:22 HTTP/1.1\r\n\r\n"
         writer.write(b"HTTP/1.1 502 Bad Gateway\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
@@ -100,10 +93,12 @@ async def test_playback_https_upstream():
             await asyncio.wait_for(handler_ok.wait(), 5)
             cp.done()
             assert flow.response is None
-            assert str(flow.error) == f'Upstream proxy {addr[0]}:{addr[1]} refused HTTP CONNECT request: 502 Bad Gateway'
+            assert (
+                str(flow.error)
+                == f"Upstream proxy {addr[0]}:{addr[1]} refused HTTP CONNECT request: 502 Bad Gateway"
+            )
 
 
-@pytest.mark.asyncio
 async def test_playback_crash(monkeypatch):
     async def raise_err():
         raise ValueError("oops")
@@ -141,7 +136,6 @@ def test_check():
     assert "Can only replay HTTP" in cp.check(f)
 
 
-@pytest.mark.asyncio
 async def test_start_stop(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
@@ -173,7 +167,9 @@ def test_configure(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
         assert cp.count() == 0
-        tctx.configure(cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.mitm")])
+        tctx.configure(
+            cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.mitm")]
+        )
         assert cp.count() == 1
         tctx.configure(cp, client_replay=[])
         with pytest.raises(OptionsError):

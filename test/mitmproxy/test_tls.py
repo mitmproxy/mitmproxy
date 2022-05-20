@@ -7,9 +7,8 @@ CLIENT_HELLO_NO_EXTENSIONS = bytes.fromhex(
     "61006200640100"
 )
 FULL_CLIENT_HELLO_NO_EXTENSIONS = (
-        b"\x16\x03\x03\x00\x65"  # record layer
-        b"\x01\x00\x00\x61" +  # handshake header
-        CLIENT_HELLO_NO_EXTENSIONS
+    b"\x16\x03\x03\x00\x65"  # record layer
+    b"\x01\x00\x00\x61" + CLIENT_HELLO_NO_EXTENSIONS  # handshake header
 )
 
 
@@ -34,22 +33,40 @@ class TestClientHello:
         )
         c = tls.ClientHello(data)
         assert repr(c)
-        assert c.sni == 'example.com'
+        assert c.sni == "example.com"
         assert c.cipher_suites == [
-            49195, 49199, 49196, 49200, 52393, 52392, 52244, 52243, 49161,
-            49171, 49162, 49172, 156, 157, 47, 53, 10
+            49195,
+            49199,
+            49196,
+            49200,
+            52393,
+            52392,
+            52244,
+            52243,
+            49161,
+            49171,
+            49162,
+            49172,
+            156,
+            157,
+            47,
+            53,
+            10,
         ]
-        assert c.alpn_protocols == [b'h2', b'http/1.1']
+        assert c.alpn_protocols == [b"h2", b"http/1.1"]
         assert c.extensions == [
-            (65281, b'\x00'),
-            (0, b'\x00\x0e\x00\x00\x0bexample.com'),
-            (23, b''),
-            (35, b''),
-            (13, b'\x00\x10\x06\x01\x06\x03\x05\x01\x05\x03\x04\x01\x04\x03\x02\x01\x02\x03'),
-            (5, b'\x01\x00\x00\x00\x00'),
-            (18, b''),
-            (16, b'\x00\x0c\x02h2\x08http/1.1'),
-            (30032, b''),
-            (11, b'\x01\x00'),
-            (10, b'\x00\x06\x00\x1d\x00\x17\x00\x18')
+            (65281, b"\x00"),
+            (0, b"\x00\x0e\x00\x00\x0bexample.com"),
+            (23, b""),
+            (35, b""),
+            (
+                13,
+                b"\x00\x10\x06\x01\x06\x03\x05\x01\x05\x03\x04\x01\x04\x03\x02\x01\x02\x03",
+            ),
+            (5, b"\x01\x00\x00\x00\x00"),
+            (18, b""),
+            (16, b"\x00\x0c\x02h2\x08http/1.1"),
+            (30032, b""),
+            (11, b"\x01\x00"),
+            (10, b"\x00\x06\x00\x1d\x00\x17\x00\x18"),
         ]
