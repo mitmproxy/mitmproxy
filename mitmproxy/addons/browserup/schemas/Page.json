@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "required": [
+    "startedDateTime",
+    "id",
+    "title",
+    "pageTimings",
+    "_verifications"
+  ],
+  "properties": {
+    "startedDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "_verifications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/VerifyResult"
+      },
+      "default": []
+    },
+    "_counters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Counter"
+      },
+      "default": []
+    },
+    "_errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Error"
+      },
+      "default": []
+    },
+    "pageTimings": {
+      "type": "object",
+      "required": [
+        "onLoad",
+        "onContentLoad"
+      ],
+      "properties": {
+        "onContentLoad": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "onLoad": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

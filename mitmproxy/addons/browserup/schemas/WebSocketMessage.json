@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": [
+    "type",
+    "opcode",
+    "data",
+    "time"
+  ],
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "opcode": {
+      "type": "number"
+    },
+    "data": {
+      "type": "string"
+    },
+    "time": {
+      "type": "number"
+    }
+  }
+}
