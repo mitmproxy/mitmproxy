@@ -469,7 +469,8 @@ class Http2Client(Http2Connection):
                 data = self.h2_conn.data_to_send()
                 if data is not None:
                     yield Log(
-                        f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}"
+                        f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}",
+                        "debug",
                     )
                     yield SendData(self.conn, data)
             time_until_next_ping = self.context.options.http2_ping_keepalive - (
@@ -542,6 +543,22 @@ class Http2Client(Http2Connection):
             yield ReceiveHttp(
                 ResponseHeaders(event.stream_id, response, bool(event.stream_ended))
             )
+            return False
+        elif isinstance(event, h2.events.InformationalResponseReceived):
+            # We violate the spec here ("A proxy MUST forward 1xx responses", RFC 7231),
+            # but that's probably fine:
+            # - 100 Continue is sent by mitmproxy to clients (irrespective of what the server does).
+            # - 101 Switching Protocols is not allowed for HTTP/2.
+            # - 102 Processing is WebDAV only and also ignorable.
+            # - 103 Early Hints is not mission-critical.
+            headers = http.Headers(event.headers)
+            status: Union[str, int] = "<unknown status>"
+            try:
+                status = int(headers[":status"])
+                reason = status_codes.RESPONSES.get(status, "")
+            except (KeyError, ValueError):
+                reason = ""
+            yield Log(f"Swallowing HTTP/2 informational response: {status} {reason}")
             return False
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(

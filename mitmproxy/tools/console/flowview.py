@@ -50,7 +50,8 @@ class FlowDetails(tabs.Tabs):
         super().__init__([])
         self.show()
         self.last_displayed_body = None
-        contentviews.on_add.connect(self.contentview_added)
+        contentviews.on_add.connect(self.contentview_changed)
+        contentviews.on_remove.connect(self.contentview_changed)
 
     @property
     def view(self):
@@ -60,11 +61,12 @@ class FlowDetails(tabs.Tabs):
     def flow(self) -> mitmproxy.flow.Flow:
         return self.master.view.focus.flow
 
-    def contentview_added(self, view):
+    def contentview_changed(self, view):
         # this is called when a contentview addon is live-reloaded.
         # we clear our cache and then rerender
         self._get_content_view.cache_clear()
-        self.show()
+        if self.master.window.current_window("flowview"):
+            self.show()
 
     def focus_changed(self):
         f = self.flow

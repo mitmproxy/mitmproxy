@@ -1,5 +1,4 @@
 import asyncio
-import mailcap
 import mimetypes
 import os
 import os.path
@@ -154,28 +153,20 @@ class ConsoleMaster(master.Master):
         # read-only to remind the user that this is a view function
         os.chmod(name, stat.S_IREAD)
 
-        cmd = None
-        shell = False
+        # hm which one should get priority?
+        c = (
+            os.environ.get("MITMPROXY_EDITOR")
+            or os.environ.get("PAGER")
+            or os.environ.get("EDITOR")
+        )
+        if not c:
+            c = "less"
+        cmd = shlex.split(c)
+        cmd.append(name)
 
-        if contenttype:
-            c = mailcap.getcaps()
-            cmd, _ = mailcap.findmatch(c, contenttype, filename=name)
-            if cmd:
-                shell = True
-        if not cmd:
-            # hm which one should get priority?
-            c = (
-                os.environ.get("MITMPROXY_EDITOR")
-                or os.environ.get("PAGER")
-                or os.environ.get("EDITOR")
-            )
-            if not c:
-                c = "less"
-            cmd = shlex.split(c)
-            cmd.append(name)
         with self.uistopped():
             try:
-                subprocess.call(cmd, shell=shell)
+                subprocess.call(cmd, shell=False)
             except:
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)

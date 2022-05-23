@@ -14,10 +14,6 @@ def create_task(
 ) -> asyncio.Task:
     """
     Like asyncio.create_task, but also store some debug info on the task object.
-
-    If ignore_closed_loop is True, the task will be silently discarded if the event loop is closed.
-    This is currently useful during shutdown where no new tasks can be spawned.
-    Ideally we stop closing the event loop during shutdown and then remove this parameter.
     """
     t = asyncio.create_task(coro)
     set_task_debug_info(t, name=name, client=client)

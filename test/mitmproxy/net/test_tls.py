@@ -27,11 +27,9 @@ def test_sslkeylogfile(tdata, monkeypatch):
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
         verify=tls.Verify.VERIFY_NONE,
-        hostname=None,
         ca_path=None,
         ca_pemfile=None,
         client_cert=None,
-        alpn_protos=(),
     )
     sctx = tls.create_client_proxy_context(
         min_version=tls.DEFAULT_MIN_VERSION,

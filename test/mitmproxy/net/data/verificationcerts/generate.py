@@ -22,7 +22,7 @@ def genrsa(cert: str):
     do(f"openssl genrsa -out {cert}.key 2048")
 
 
-def sign(cert: str, subject: str):
+def sign(cert: str, subject: str, ip: bool):
     with open(f"openssl-{cert}.conf", "w") as f:
         f.write(
             textwrap.dedent(
@@ -30,7 +30,7 @@ def sign(cert: str, subject: str):
         authorityKeyIdentifier=keyid,issuer
         basicConstraints=CA:FALSE
         keyUsage = digitalSignature, keyEncipherment
-        subjectAltName = DNS:{subject}
+        subjectAltName = {"IP" if ip else "DNS" }:{subject}
         """
             )
         )
@@ -47,16 +47,16 @@ def sign(cert: str, subject: str):
     os.remove(f"openssl-{cert}.conf")
 
 
-def mkcert(cert, subject):
+def mkcert(cert, subject, ip: bool):
     genrsa(cert)
     do(
         f"openssl req -new -nodes -batch "
         f"-key {cert}.key "
         f"-subj /CN={subject}/O=mitmproxy "
-        f'-addext "subjectAltName = DNS:{subject}" '
+        f'-addext "subjectAltName = {"IP" if ip else "DNS" }:{subject}" '
         f"-out {cert}.csr"
     )
-    sign(cert, subject)
+    sign(cert, subject, ip)
     os.remove(f"{cert}.csr")
 
 
@@ -72,7 +72,8 @@ h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", f"{h}.0")
 
 # create trusted leaf cert.
-mkcert("trusted-leaf", SUBJECT)
+mkcert("trusted-leaf", SUBJECT, False)
+mkcert("trusted-leaf-ip", "192.0.2.42", True)
 
 # create self-signed cert
 genrsa("self-signed")
@@ -84,7 +85,7 @@ do(
     "-out self-signed.crt"
 )
 
-for x in ["self-signed", "trusted-leaf", "trusted-root"]:
+for x in ["self-signed", "trusted-leaf", "trusted-leaf-ip", "trusted-root"]:
     with open(f"{x}.crt") as crt, open(f"{x}.key") as key, open(f"{x}.pem", "w") as pem:
         pem.write(crt.read())
         pem.write(key.read())
