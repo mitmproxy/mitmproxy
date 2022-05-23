@@ -2,6 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Support specifying the local address for outgoing connections
+  ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
+
 ## 15 May 2022: mitmproxy 8.1.0
 
 * DNS support

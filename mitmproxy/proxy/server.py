@@ -173,11 +173,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
                     reader, writer = await asyncio.open_connection(
-                        *command.connection.address
+                        *command.connection.address,
+                        local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
                     reader, writer = await udp.open_connection(
-                        *command.connection.address
+                        *command.connection.address,
+                        local_addr=command.connection.sockname,
                     )
                 else:
                     raise AssertionError(command.connection.transport_protocol)

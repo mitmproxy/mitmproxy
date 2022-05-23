@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -378,14 +378,14 @@ async def start_server(
 
 
 async def open_connection(
-    host: str, port: int
+    host: str, port: int, *, local_addr: Optional[Address] = None
 ) -> tuple[DatagramReader, DatagramWriter]:
     """UDP variant of asyncio.open_connection."""
 
     loop = asyncio.get_running_loop()
     reader = DatagramReader()
     transport, _ = await loop.create_datagram_endpoint(
-        lambda: UdpClient(reader, loop), remote_addr=(host, port)
+        lambda: UdpClient(reader, loop), local_addr=local_addr, remote_addr=(host, port)
     )
     writer = DatagramWriter(
         cast(asyncio.DatagramTransport, transport),
