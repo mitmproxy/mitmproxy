@@ -176,7 +176,7 @@ class Proxyserver:
             "connect_addr",
             Optional[str],
             None,
-            """Set this to an IP that mitmproxy should use as local address when connecting to upstream servers.""",
+            """Set the local IP address that mitmproxy should use when connecting to upstream servers.""",
         )
         loader.add_option(
             "dns_server", bool, False, """Start a DNS server. Disabled by default."""
