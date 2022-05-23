@@ -513,13 +513,13 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name"
-          },
           "result": {
             "type": "boolean",
             "description": "Result True / False"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name"
           },
           "type": {
             "type": "string",
