@@ -222,7 +222,7 @@ class Proxyserver:
                 )
         if "connect_addr" in updated:
             try:
-                self.connect_addr = (str(ipaddress.ip_address(ctx.options.connect_addr)), 0)
+                self.connect_addr = (str(ipaddress.ip_address(ctx.options.connect_addr)), 0) if ctx.options.connect_addr else None
             except ValueError:
                 raise exceptions.OptionsError(
                     f"Invalid connection address {ctx.options.connect_addr!r}, specify a valid IP address."
