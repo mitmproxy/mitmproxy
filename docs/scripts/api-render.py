@@ -20,7 +20,7 @@ pdoc.render.configure(
     edit_url_map=edit_url_map,
 )
 # We can't configure Hugo, but we can configure pdoc.
-pdoc.render_helpers.formatter.cssclass = "chroma"
+pdoc.render_helpers.formatter.cssclass = "chroma pdoc-code"
 
 modules = [
     "mitmproxy.addonmanager",

@@ -42,5 +42,6 @@ async def console(monkeypatch) -> ConsoleTestMaster:  # noqa
     opts = options.Options()
     m = ConsoleTestMaster(opts)
     opts.server = False
+    opts.console_mouse = False
     await m.running()
     return m

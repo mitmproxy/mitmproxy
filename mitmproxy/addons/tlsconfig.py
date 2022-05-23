@@ -43,6 +43,12 @@ DEFAULT_CIPHERS = (
     "DES-CBC3-SHA",
 )
 
+# 2022/05: X509_CHECK_FLAG_NEVER_CHECK_SUBJECT is not available in LibreSSL, ignore gracefully as it's not critical.
+DEFAULT_HOSTFLAGS = (
+    SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS  # type: ignore
+    | getattr(SSL._lib, "X509_CHECK_FLAG_NEVER_CHECK_SUBJECT", 0)  # type: ignore
+)
+
 
 class AppData(TypedDict):
     client_alpn: Optional[bytes]
@@ -250,24 +256,41 @@ class TlsConfig:
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
             verify=verify,
-            hostname=server.sni,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
-            alpn_protos=tuple(server.alpn_offers),
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         if server.sni:
+            # We need to set SNI + enable hostname verification.
+            assert isinstance(server.sni, str)
+            # Manually enable hostname verification on the context object.
+            # https://wiki.openssl.org/index.php/Hostname_validation
+            param = SSL._lib.SSL_get0_param(tls_start.ssl_conn._ssl)  # type: ignore
+            # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
+            # https://www.chromestatus.com/feature/4981025180483584
+
+            SSL._lib.X509_VERIFY_PARAM_set_hostflags(param, DEFAULT_HOSTFLAGS)  # type: ignore
+
             try:
-                ipaddress.ip_address(server.sni)
+                ip: bytes = ipaddress.ip_address(server.sni).packed
             except ValueError:
-                tls_start.ssl_conn.set_tlsext_host_name(server.sni.encode())
+                host_name = server.sni.encode("idna")
+                tls_start.ssl_conn.set_tlsext_host_name(host_name)
+                ok = SSL._lib.X509_VERIFY_PARAM_set1_host(param, host_name, len(host_name))  # type: ignore
+                SSL._openssl_assert(ok == 1)  # type: ignore
             else:
-                # RFC 6066: Literal IPv4 and IPv6 addresses are not permitted in "HostName".
-                # It's not really ideal that we only enforce that here, but otherwise we need to add checks everywhere
-                # where we assign .sni, which is much less robust.
-                pass
+                # RFC 6066: Literal IPv4 and IPv6 addresses are not permitted in "HostName",
+                # so we don't call set_tlsext_host_name.
+                ok = SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip))  # type: ignore
+                SSL._openssl_assert(ok == 1)  # type: ignore
+        elif verify is not net_tls.Verify.VERIFY_NONE:
+            raise ValueError("Cannot validate certificate hostname without SNI")
+
+        if server.alpn_offers:
+            tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
+
         tls_start.ssl_conn.set_connect_state()
 
     def running(self):

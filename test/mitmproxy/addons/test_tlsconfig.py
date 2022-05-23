@@ -192,6 +192,20 @@ class TestTlsConfig:
                 ("DNS", "example.mitmproxy.org"),
             )
 
+    def test_tls_start_server_cannot_verify(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = context.Context(
+                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+                tctx.options,
+            )
+            ctx.server.address = ("example.mitmproxy.org", 443)
+            ctx.server.sni = ""  # explicitly opt out of using the address.
+
+            tls_start = tls.TlsData(ctx.server, context=ctx)
+            with pytest.raises(ValueError, match="Cannot validate certificate hostname without SNI"):
+                ta.tls_start_server(tls_start)
+
     def test_tls_start_server_verify_failed(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -210,14 +224,15 @@ class TestTlsConfig:
             with pytest.raises(SSL.Error, match="certificate verify failed"):
                 assert self.do_handshake(tssl_client, tssl_server)
 
-    def test_tls_start_server_verify_ok(self, tdata):
+    @pytest.mark.parametrize("hostname", ["example.mitmproxy.org", "192.0.2.42"])
+    def test_tls_start_server_verify_ok(self, hostname, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(
                 connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
                 tctx.options,
             )
-            ctx.server.address = ("example.mitmproxy.org", 443)
+            ctx.server.address = (hostname, 443)
             tctx.configure(
                 ta,
                 ssl_verify_upstream_trusted_ca=tdata.path(
@@ -233,7 +248,7 @@ class TestTlsConfig:
             ta.tls_start_server(tls_start)
             assert tssl_client is tls_start.ssl_conn
 
-            tssl_server = test_tls.SSLTest(server_side=True)
+            tssl_server = test_tls.SSLTest(server_side=True, sni=hostname.encode())
             assert self.do_handshake(tssl_client, tssl_server)
 
     def test_tls_start_server_insecure(self):

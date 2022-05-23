@@ -140,6 +140,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
         warnings.warn(
             "Connection.alpn_proto_negotiated is deprecated, use Connection.alpn instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.alpn
 
@@ -291,6 +292,7 @@ class Client(Connection):
         warnings.warn(
             "Client.clientcert is deprecated, use Client.certificate_list instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         if val:
             self.certificate_list = [val]

@@ -2,8 +2,14 @@
 
 ## Unreleased: mitmproxy next
 
-* DNS support (@meitinger)
+## 15 May 2022: mitmproxy 8.1.0
+
+* DNS support
+  ([#5232](https://github.com/mitmproxy/mitmproxy/issues/5227), @meitinger)
 * Mitmproxy now requires Python 3.9 or above.
+  ([#5233](https://github.com/mitmproxy/mitmproxy/issues/5233), @mhils)
+* Fix a memory leak in mitmdump where flows were kept in memory.
+  ([#4786](https://github.com/mitmproxy/mitmproxy/issues/4786), @mhils)
 * Replayed flows retain their current position in the flow list.
   ([#5227](https://github.com/mitmproxy/mitmproxy/issues/5227), @mhils)
 * Periodically send HTTP/2 ping frames to keep connections alive.
@@ -28,9 +34,22 @@
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
-* Added example script for manipulating cookies.
+* Add example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
-  
+* When opening an external viewer for message contents, mailcap files are not considered anymore.  
+  This preempts the upcoming deprecation of Python's `mailcap` module. 
+  ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
+* Fix hostname encoding for IDNA domains in upstream mode.
+  ([#5316](https://github.com/mitmproxy/mitmproxy/issues/5316), @nneonneo)
+* Fix hot reloading of contentviews.
+  ([#5319](https://github.com/mitmproxy/mitmproxy/issues/5319), @nneonneo)
+* Ignore HTTP/2 information responses instead of raising an error.
+  ([#5332](https://github.com/mitmproxy/mitmproxy/issues/5332), @mhils)
+* Improve performance and memory usage by reusing OpenSSL contexts.
+  ([#5339](https://github.com/mitmproxy/mitmproxy/issues/5339), @mhils)
+* Fix handling of multiple Cookie headers when proxying HTTP/2 to HTTP/1
+  ([#5337](https://github.com/mitmproxy/mitmproxy/issues/5337), @rinsuki)
+
 ## 19 March 2022: mitmproxy 8.0.0
 
 ### Major Changes

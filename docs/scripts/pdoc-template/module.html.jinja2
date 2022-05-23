@@ -7,19 +7,13 @@ To document all event hooks, we do a bit of hackery:
 
 #}
 {% if module.name == "events" %}
-    {% macro module_name() %}
-    {% endmacro %}
+    {% macro module_name() %}{% endmacro %}
     {% macro class(cls) %}
-        <div class="attr class">
-            {{ headerlink(cls) }}
-            <span class="name">{{ cls.qualname.replace("Events", " Events") }}</span>
-        </div>
+        <span class="name">{{ cls.qualname.replace("Events", " Events").replace("AdvancedLifecycle", "Advanced Lifecycle") }}</span>
     {% endmacro %}
-    {% macro view_source(doc) %}
-        {% if doc.type == "function" %}
-            {{ default_view_source(doc) }}
-        {% endif %}
-    {% endmacro %}
+    {% macro view_source_state(doc) %}{% endmacro %}
+    {% macro view_source_button(doc) %}{% endmacro %}
+    {% macro view_source_code(doc) %}{% endmacro %}
     {% macro is_public(doc) %}
         {% if doc.name != "__init__" %}
             {{ default_is_public(doc) }}

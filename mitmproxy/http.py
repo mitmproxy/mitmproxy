@@ -1250,7 +1250,7 @@ class HTTPFlow(flow.Flow):
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
     _stateobject_attributes.update(
-        dict(request=Request, response=Response, websocket=WebSocketData, mode=str)
+        dict(request=Request, response=Response, websocket=WebSocketData)
     )
 
     def __repr__(self):
@@ -1274,13 +1274,13 @@ class HTTPFlow(flow.Flow):
         return self.request.timestamp_start
 
     @property
-    def mode(self) -> str:
-        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning)
+    def mode(self) -> str:  # pragma: no cover
+        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning, stacklevel=2)
         return getattr(self, "_mode", "regular")
 
     @mode.setter
-    def mode(self, val: str) -> None:
-        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning)
+    def mode(self, val: str) -> None:  # pragma: no cover
+        warnings.warn("HTTPFlow.mode is deprecated.", DeprecationWarning, stacklevel=2)
         self._mode = val
 
     def copy(self):

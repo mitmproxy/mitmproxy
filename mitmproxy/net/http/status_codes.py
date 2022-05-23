@@ -1,5 +1,8 @@
 CONTINUE = 100
 SWITCHING = 101
+PROCESSING = 102
+EARLY_HINTS = 103
+
 OK = 200
 CREATED = 201
 ACCEPTED = 202
@@ -52,6 +55,8 @@ RESPONSES = {
     # 100
     CONTINUE: "Continue",
     SWITCHING: "Switching Protocols",
+    PROCESSING: "Processing",
+    EARLY_HINTS: "Early Hints",
     # 200
     OK: "OK",
     CREATED: "Created",
