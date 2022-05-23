@@ -200,6 +200,11 @@ def test_options():
         tctx.configure(ps, dns_mode="reverse:8.8.8.8:53")
         assert ps.dns_reverse_addr == ("8.8.8.8", 53)
 
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, connect_addr="invalid")
+        tctx.configure(ps, connect_addr="1.2.3.4")
+        assert ps.connect_addr == ("1.2.3.4", 0)
+
 
 async def test_startup_err(monkeypatch) -> None:
     async def _raise(*_):

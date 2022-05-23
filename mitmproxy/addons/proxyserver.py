@@ -62,6 +62,7 @@ class Proxyserver:
 
     tcp_server: Optional[base_events.Server]
     dns_server: Optional[udp.UdpServer]
+    connect_addr: Optional[Address]
     listen_port: int
     dns_reverse_addr: Optional[tuple[str, int]]
     master: master.Master
@@ -73,6 +74,7 @@ class Proxyserver:
         self._lock = asyncio.Lock()
         self.tcp_server = None
         self.dns_server = None
+        self.connect_addr = None
         self.dns_reverse_addr = None
         self.is_running = False
         self._connections = {}
@@ -171,6 +173,12 @@ class Proxyserver:
             """,
         )
         loader.add_option(
+            "connect_addr",
+            Optional[str],
+            None,
+            """Set this to an IP that mitmproxy should use as local address when connecting to upstream servers.""",
+        )
+        loader.add_option(
             "dns_server", bool, False, """Start a DNS server. Disabled by default."""
         )
         loader.add_option(
@@ -212,6 +220,14 @@ class Proxyserver:
                     f"Invalid body_size_limit specification: "
                     f"{ctx.options.body_size_limit}"
                 )
+        if "connect_addr" in updated:
+            try:
+                self.connect_addr = (str(ipaddress.ip_address(ctx.options.connect_addr)), 0)
+            except ValueError:
+                raise exceptions.OptionsError(
+                    f"Invalid connection address {ctx.options.connect_addr!r}, specify a valid IP address."
+                )
+
         if "dns_mode" in updated:
             m = re.match(
                 r"^(regular|reverse:(?P<host>[^:]+)(:(?P<port>\d+))?|transparent)$",
@@ -402,3 +418,5 @@ class Proxyserver:
                 "Request destination unknown. "
                 "Unable to figure out where this request should be forwarded to."
             )
+        if ctx.server.sockname is None:
+            ctx.server.sockname = self.connect_addr
