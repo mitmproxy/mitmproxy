@@ -5,7 +5,7 @@
 ## 15 May 2022: mitmproxy 8.1.0
 
 * DNS support
-  ([#5232](https://github.com/mitmproxy/mitmproxy/issues/5227), @meitinger)
+  ([#5232](https://github.com/mitmproxy/mitmproxy/pull/5232), @meitinger)
 * Mitmproxy now requires Python 3.9 or above.
   ([#5233](https://github.com/mitmproxy/mitmproxy/issues/5233), @mhils)
 * Fix a memory leak in mitmdump where flows were kept in memory.
