@@ -1,10 +1,9 @@
-# The BrowserUp MITM Proxy
+# The BrowserUp Fork of the MITM Proxy
 
-The BrowserUp MITM Proxy allows you to capture HTTP requests, and responses and content, 
+The BrowserUp MITM Proxy allows you to capture HTTP requests, responses and content, 
 and export performance data as a HAR file. 
 
-The BrowserUp MITM Proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), 
-with an added performance testing, QA and DevOps flavor. 
+The proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), with an added performance testing, QA and DevOps flavor. 
 
 Along with the standard mitmproxy features, the BrowserUp MITM Proxy offers adds a REST control API and native language clients in 
 Java, JavaScript, Python and Ruby. It allows HAR capture (websockets and HTTP/2 too), and provides the ability to 
@@ -24,15 +23,16 @@ Follow the mitmproxy [certificate setup instructions](https://docs.mitmproxy.org
 
 Run one of our [examples in clients/examples](clients/examples)
 
-The standard mitmproxy executables are also shipped, and should work as normal.
+The standard mitmproxy executables, like mitmweb are also shipped, and should work as normal.
 
 BrowserUp is a code contributor to the upstream project, and we hope to continue to support them with 
 code contributions where possible.
 
-The main code changes for our fork for HAR, and clients are in the browserup addons.
+The main changes for our fork are in the folders below/
 
 mitmproxy/addons/browserup/
 test/mitmproxy/addons/browserup
+clients/
 
 The standard MITMProxy documentation follows below.
 
