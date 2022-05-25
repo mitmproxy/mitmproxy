@@ -386,13 +386,13 @@
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name to match"
-          },
           "value": {
             "type": "string",
             "description": "Value to match"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to match"
           }
         }
       },
@@ -517,13 +517,13 @@
             "type": "boolean",
             "description": "Result True / False"
           },
-          "name": {
-            "type": "string",
-            "description": "Name"
-          },
           "type": {
             "type": "string",
             "description": "Type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name"
           }
         },
         "required": [
@@ -535,27 +535,27 @@
       "Error": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the Error to add. Stored in har under _errors"
-          },
           "details": {
             "type": "string",
             "description": "Short details of the error"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Error to add. Stored in har under _errors"
           }
         }
       },
       "Counter": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of Custom Counter value you are adding to the page under _counters"
-          },
           "value": {
             "type": "number",
             "format": "double",
             "description": "Value for the counter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of Custom Counter value you are adding to the page under _counters"
           }
         },
         "required": [
