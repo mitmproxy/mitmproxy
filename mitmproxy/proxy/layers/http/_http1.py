@@ -243,6 +243,7 @@ class Http1Server(Http1Connection):
             if raw:
                 yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseEndOfMessage):
+            assert self.request
             assert self.response
             if self.request.method.upper() != "HEAD" and "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
