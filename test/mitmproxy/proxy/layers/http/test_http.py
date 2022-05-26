@@ -947,6 +947,20 @@ def test_no_headers(tctx):
     assert server().address == ("example.com", 80)
 
 
+def test_http_proxy_without_empty_chunk_in_head_request(tctx):
+    """Test handling of an empty, "chunked" head response."""
+    server = Placeholder(Server)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(tctx.client, b"HEAD http://example.com/ HTTP/1.1\r\n\r\n")
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"HEAD / HTTP/1.1\r\n\r\n")
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+    )
+
+
 def test_http_proxy_relative_request(tctx):
     """Test handling of a relative-form "GET /" in regular proxy mode."""
     server = Placeholder(Server)
