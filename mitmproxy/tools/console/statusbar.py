@@ -185,10 +185,7 @@ class StatusBar(urwid.WidgetWrap):
         super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.flow_change.connect(self.sig_update)
         signals.update_settings.connect(self.sig_update)
-        signals.flowlist_change.connect(self.sig_update)
-        master.options.changed.connect(self.sig_update)
-        master.view.focus.sig_change.connect(self.sig_update)
-        master.view.sig_view_add.connect(self.sig_update)
+        master.options.changed.connect(self.sig_update)  # wrap options.changed to route port number changes
         self.refresh()
 
     def refresh(self):
@@ -292,39 +289,13 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = self.master.commands.execute("view.properties.length")
-        if self.master.view.focus.flow is None:
-            offset = 0
-        else:
-            offset = self.master.view.focus.index + 1
+        status = self.get_status()
+        if not status:
+            status.append("")
 
-        if self.master.options.view_order_reversed:
-            arrow = common.SYMBOL_UP
-        else:
-            arrow = common.SYMBOL_DOWN
-
-        marked = ""
-        if self.master.commands.execute("view.properties.marked"):
-            marked = "M"
-
-        t = [
-            ("heading", (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
-        ]
-
-        if self.master.options.server:
-            host = self.master.options.listen_host
-            if host == "0.0.0.0" or host == "":
-                host = "*"
-            boundaddr = f"[{host}:{self.master.options.listen_port}]"
-        else:
-            boundaddr = ""
-        t.extend(self.get_status())
         status = urwid.AttrWrap(
             urwid.Columns(
-                [
-                    urwid.Text(t),
-                    urwid.Text(boundaddr, align="right"),
-                ]
+                [urwid.Text(status)]
             ),
             "heading",
         )

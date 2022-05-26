@@ -4,7 +4,7 @@ from typing import Optional
 import urwid
 
 import mitmproxy.tools.console.master
-from mitmproxy.tools.console import common
+from mitmproxy.tools.console import common, signals
 from mitmproxy.tools.console import layoutwidget
 
 
@@ -92,6 +92,17 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         self.master.options.subscribe(
             self.set_flowlist_layout, ["console_flowlist_layout"]
         )
+        self.custom_header = urwid.WidgetWrap(urwid.Text(""))
+
+        signals.flow_change.connect(self.sig_update)
+        signals.flowlist_change.connect(self.sig_update)  # TODO: does this have a sender?
+        master.view.focus.sig_change.connect(self.sig_update)
+        master.view.sig_view_add.connect(self.sig_update)
+
+        self.redraw_header()
+
+    def sig_update(self, sender, flow=None, updated=None):
+        self.redraw_header()
 
     def keypress(self, size, key):
         if key == "m_start":
@@ -107,3 +118,26 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def set_flowlist_layout(self, opts, updated):
         self.master.ui.clear()
+
+    def redraw_header(self):
+        fc = self.master.commands.execute("view.properties.length")
+        if self.master.view.focus.flow is None:
+            offset = 0
+        else:
+            offset = self.master.view.focus.index + 1
+
+        if self.master.options.view_order_reversed:
+            arrow = common.SYMBOL_UP
+        else:
+            arrow = common.SYMBOL_DOWN
+
+        marked = ""
+        if self.master.commands.execute("view.properties.marked"):
+            marked = "M"
+
+        t = [
+            ("heading", (f" [{offset}/{fc}] {arrow} {marked}").ljust(11)),
+        ]
+
+        status = urwid.AttrWrap(urwid.Text([self.title, t]), "heading")
+        self.custom_header._w = status

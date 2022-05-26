@@ -22,17 +22,18 @@ else:
 
 
 class StackWidget(urwid.Frame):
-    def __init__(self, window, widget, title, focus):
+    def __init__(self, window, widget, focus, header=None):
         self.is_focused = focus
         self.window = window
 
-        if title:
-            header = urwid.AttrWrap(
-                urwid.Text(title), "heading" if focus else "heading_inactive"
+        super().__init__(
+            widget,
+            header=urwid.WidgetWrap(
+                urwid.AttrWrap(
+                    header, "heading" if focus else "heading_inactive"
+                )
             )
-        else:
-            header = None
-        super().__init__(widget, header=header)
+        )
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1 and not self.is_focused:
@@ -173,7 +174,13 @@ class Window(urwid.Frame):
                 title = self.stacks[idx].top_window().title
             else:
                 title = None
-            return StackWidget(self, widget, title, self.pane == idx)
+
+            return StackWidget(
+                self,
+                widget,
+                self.pane == idx,
+                header=MainHeader(self.master, widget, title)
+            )
 
         w = None
         if c == "single":
@@ -313,3 +320,37 @@ class Screen(raw_display.Screen):
             # at some point we may figure out what they actually do.
             data = re.sub("[\x0e\x0f]", "", data)
         super().write(data)
+
+
+class MainHeader(urwid.WidgetWrap):
+    def __init__(self, master, widget, title):
+        self.master = master
+        self.columns = None
+        self.title = title if title else ""
+        self.custom_header = getattr(widget, "custom_header", None)
+
+        self.redraw()
+
+    # TODO: send signal when options change
+    def sig_update(self, sender, flow=None, updated=None):
+        self.redraw()
+
+    def redraw(self):
+        if self.master.options.server:
+            host = self.master.options.listen_host
+            if host == "0.0.0.0" or host == "":
+                host = "*"
+            boundaddr = f"[{host}:{self.master.options.listen_port}]"
+        else:
+            boundaddr = ""
+
+        if self.custom_header:
+            header_widget = self.custom_header
+        else:
+            header_widget = urwid.Text(self.title)
+
+        self.columns = urwid.Columns([header_widget, urwid.Text(boundaddr, align="right")])
+        self._w = urwid.AttrWrap(
+            self.columns,
+            "heading",
+        )
