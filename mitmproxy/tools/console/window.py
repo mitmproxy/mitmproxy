@@ -22,7 +22,7 @@ else:
 
 
 class StackWidget(urwid.Frame):
-    def __init__(self, window, widget, focus, header=None):
+    def __init__(self, window, widget, focus, header_widget):
         self.is_focused = focus
         self.window = window
 
@@ -30,7 +30,7 @@ class StackWidget(urwid.Frame):
             widget,
             header=urwid.WidgetWrap(
                 urwid.AttrWrap(
-                    header, "heading" if focus else "heading_inactive"
+                    header_widget, "heading" if focus else "heading_inactive"
                 )
             )
         )
@@ -173,13 +173,14 @@ class Window(urwid.Frame):
             if self.master.options.console_layout_headers:
                 title = self.stacks[idx].top_window().title
             else:
-                title = None
+                title = ""
 
+            title_widget = getattr(widget, "title_widget", urwid.Text(title))
             return StackWidget(
                 self,
                 widget,
                 self.pane == idx,
-                header=MainHeader(self.master, widget, title)
+                HeaderWidget(self.master, title_widget)
             )
 
         w = None
@@ -322,12 +323,11 @@ class Screen(raw_display.Screen):
         super().write(data)
 
 
-class MainHeader(urwid.WidgetWrap):
-    def __init__(self, master, widget, title):
+class HeaderWidget(urwid.WidgetWrap):
+    def __init__(self, master, title_widget):
         self.master = master
         self.columns = None
-        self.title = title if title else ""
-        self.custom_header = getattr(widget, "custom_header", None)
+        self.title_widget = title_widget
 
         self.redraw()
 
@@ -344,12 +344,7 @@ class MainHeader(urwid.WidgetWrap):
         else:
             boundaddr = ""
 
-        if self.custom_header:
-            header_widget = self.custom_header
-        else:
-            header_widget = urwid.Text(self.title)
-
-        self.columns = urwid.Columns([header_widget, urwid.Text(boundaddr, align="right")])
+        self.columns = urwid.Columns([self.title_widget, urwid.Text(boundaddr, align="right")])
         self._w = urwid.AttrWrap(
             self.columns,
             "heading",

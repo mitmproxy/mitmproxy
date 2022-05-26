@@ -92,7 +92,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         self.master.options.subscribe(
             self.set_flowlist_layout, ["console_flowlist_layout"]
         )
-        self.custom_header = urwid.WidgetWrap(urwid.Text(""))
+        self.title_widget = urwid.WidgetWrap(urwid.Text(""))
 
         signals.flow_change.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)  # TODO: does this have a sender?
@@ -140,4 +140,4 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         ]
 
         status = urwid.AttrWrap(urwid.Text([self.title, t]), "heading")
-        self.custom_header._w = status
+        self.title_widget._w = status
