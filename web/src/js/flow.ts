@@ -9,12 +9,13 @@ interface _Flow {
     modified: boolean
     marked: string
     comment: string
+    timestamp_created: number
     client_conn: Client
     server_conn?: Server
     error?: Error
 }
 
-export type Flow = HTTPFlow | TCPFlow;
+export type Flow = HTTPFlow | TCPFlow | DNSFlow;
 
 export interface HTTPFlow extends _Flow {
     type: "http"
@@ -114,4 +115,42 @@ export interface WebSocketData {
     close_code?: number
     close_reason?: string
     timestamp_end?: number
+}
+
+export interface DNSQuestion {
+    name: string
+    type: string
+    class: string
+}
+
+export interface DNSResourceRecord {
+    name: string
+    type: string
+    class: string
+    ttl: number
+    data: string
+}
+
+export interface DNSMessage {
+    id: number
+    query: boolean
+    op_code: string
+    authoritative_answer: boolean
+    truncation: boolean
+    recursion_desired: boolean
+    recursion_available: boolean
+    response_code: string
+    status_code: number
+    questions: DNSQuestion[]
+    answers: DNSResourceRecord[]
+    authorities: DNSResourceRecord[]
+    additionals: DNSResourceRecord[]
+    size: number
+    timestamp: number
+}
+
+export interface DNSFlow extends _Flow {
+    type: "dns"
+    request: DNSMessage
+    response?: DNSMessage
 }

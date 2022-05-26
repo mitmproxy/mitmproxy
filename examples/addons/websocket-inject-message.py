@@ -10,15 +10,19 @@ from mitmproxy import ctx, http
 
 # Simple example: Inject a message as a response to an event
 
+
 def websocket_message(flow: http.HTTPFlow):
     assert flow.websocket is not None  # make type checker happy
     last_message = flow.websocket.messages[-1]
     if last_message.is_text and "secret" in last_message.text:
         last_message.drop()
-        ctx.master.commands.call("inject.websocket", flow, last_message.from_client, "ssssssh".encode())
+        ctx.master.commands.call(
+            "inject.websocket", flow, last_message.from_client, b"ssssssh"
+        )
 
 
 # Complex example: Schedule a periodic timer
+
 
 async def inject_async(flow: http.HTTPFlow):
     msg = "hello from mitmproxy! "

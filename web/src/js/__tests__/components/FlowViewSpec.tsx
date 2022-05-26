@@ -34,4 +34,16 @@ test("FlowView", async () => {
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Error"));
+    expect(asFragment()).toMatchSnapshot();
+
+    store.dispatch(flowActions.select(store.getState().flows.list[3].id));
+
+    fireEvent.click(screen.getByText("Request"));
+    expect(asFragment()).toMatchSnapshot();
+
+    fireEvent.click(screen.getByText("Response"));
+    expect(asFragment()).toMatchSnapshot();
+
+    fireEvent.click(screen.getByText("Error"));
+    expect(asFragment()).toMatchSnapshot();
 });

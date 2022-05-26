@@ -6,7 +6,7 @@ import {useAppSelector} from "../ducks";
 export default function Footer() {
     const version = useAppSelector(state => state.conf.version);
     let {
-        mode, intercept, showhost, upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
+        mode, intercept, showhost, upstream_cert, rawtcp, dns_server, http2, websocket, anticache, anticomp,
         stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, server, ssl_insecure
     } = useAppSelector(state => state.options);
 
@@ -29,6 +29,9 @@ export default function Footer() {
             )}
             {!rawtcp && (
                 <span className="label label-success">no-raw-tcp</span>
+            )}
+            {dns_server && (
+                <span className="label label-success">dns-server</span>
             )}
             {!http2 && (
                 <span className="label label-success">no-http2</span>

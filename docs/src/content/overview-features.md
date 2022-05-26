@@ -94,10 +94,10 @@ The _separator_ is arbitrary, and is defined by the first character (`|` in the 
 
 Pattern | Description
 ------- | -----------
-`|example.com/main.js|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
-`|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
-`|example.com/static/foo|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
-`|~m GET|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
+`\|example.com/main.js\|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
+`\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
+`\|example.com/static/foo\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
+`\|~m GET\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
 
 ### Details
 
@@ -358,7 +358,8 @@ By default, mitmproxy will read an entire request/response, perform any
 indicated manipulations on it, and then send the message on to the other party.
 This can be problematic when downloading or uploading large files. When
 streaming is enabled, message bodies are not buffered on the proxy but instead
-sent directly to the server/client. HTTP headers are still fully buffered before
+sent directly to the server/client. This currently means that the message body
+will not be accessible within mitmproxy. HTTP headers are still fully buffered before
 being sent.
 
 Request/response streaming is enabled by specifying a size cutoff in the

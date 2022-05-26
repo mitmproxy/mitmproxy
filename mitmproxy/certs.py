@@ -6,7 +6,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Optional, Union, Dict, List, NewType
+from typing import NewType, Optional, Union
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -41,6 +41,7 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 
 class Cert(serializable.Serializable):
     """Representation of a (TLS) certificate."""
+
     _cert: x509.Certificate
 
     def __init__(self, cert: x509.Certificate):
@@ -85,7 +86,7 @@ class Cert(serializable.Serializable):
         return self._cert.fingerprint(hashes.SHA256())
 
     @property
-    def issuer(self) -> List[Tuple[str, str]]:
+    def issuer(self) -> list[tuple[str, str]]:
         return _name_to_keyval(self._cert.issuer)
 
     @property
@@ -102,7 +103,7 @@ class Cert(serializable.Serializable):
         return datetime.datetime.utcnow() > self._cert.not_valid_after
 
     @property
-    def subject(self) -> List[Tuple[str, str]]:
+    def subject(self) -> list[tuple[str, str]]:
         return _name_to_keyval(self._cert.subject)
 
     @property
@@ -110,7 +111,7 @@ class Cert(serializable.Serializable):
         return self._cert.serial_number
 
     @property
-    def keyinfo(self) -> Tuple[str, int]:
+    def keyinfo(self) -> tuple[str, int]:
         public_key = self._cert.public_key()
         if isinstance(public_key, rsa.RSAPublicKey):
             return "RSA", public_key.key_size
@@ -118,8 +119,10 @@ class Cert(serializable.Serializable):
             return "DSA", public_key.key_size
         if isinstance(public_key, ec.EllipticCurvePublicKey):
             return f"EC ({public_key.curve.name})", public_key.key_size
-        return (public_key.__class__.__name__.replace("PublicKey", "").replace("_", ""),
-                getattr(public_key, "key_size", -1))  # pragma: no cover
+        return (
+            public_key.__class__.__name__.replace("PublicKey", "").replace("_", ""),
+            getattr(public_key, "key_size", -1),
+        )  # pragma: no cover
 
     @property
     def cn(self) -> Optional[str]:
@@ -130,29 +133,31 @@ class Cert(serializable.Serializable):
 
     @property
     def organization(self) -> Optional[str]:
-        attrs = self._cert.subject.get_attributes_for_oid(x509.NameOID.ORGANIZATION_NAME)
+        attrs = self._cert.subject.get_attributes_for_oid(
+            x509.NameOID.ORGANIZATION_NAME
+        )
         if attrs:
             return attrs[0].value
         return None
 
     @property
-    def altnames(self) -> List[str]:
+    def altnames(self) -> list[str]:
         """
         Get all SubjectAlternativeName DNS altnames.
         """
         try:
-            ext = self._cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+            ext = self._cert.extensions.get_extension_for_class(
+                x509.SubjectAlternativeName
+            ).value
         except x509.ExtensionNotFound:
             return []
         else:
-            return (
-                ext.get_values_for_type(x509.DNSName)
-                +
-                [str(x) for x in ext.get_values_for_type(x509.IPAddress)]
-            )
+            return ext.get_values_for_type(x509.DNSName) + [
+                str(x) for x in ext.get_values_for_type(x509.IPAddress)
+            ]
 
 
-def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
+def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
     parts = []
     for attr in name:
         # pyca cryptography <35.0.0 backwards compatiblity
@@ -169,17 +174,19 @@ def create_ca(
     organization: str,
     cn: str,
     key_size: int,
-) -> Tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
+) -> tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
     now = datetime.datetime.now()
 
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=key_size,
     )  # type: ignore
-    name = x509.Name([
-        x509.NameAttribute(NameOID.COMMON_NAME, cn),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization)
-    ])
+    name = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COMMON_NAME, cn),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization),
+        ]
+    )
     builder = x509.CertificateBuilder()
     builder = builder.serial_number(x509.random_serial_number())
     builder = builder.subject_name(name)
@@ -187,8 +194,12 @@ def create_ca(
     builder = builder.not_valid_after(now + CA_EXPIRY)
     builder = builder.issuer_name(name)
     builder = builder.public_key(private_key.public_key())
-    builder = builder.add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
-    builder = builder.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+    builder = builder.add_extension(
+        x509.BasicConstraints(ca=True, path_length=None), critical=True
+    )
+    builder = builder.add_extension(
+        x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False
+    )
     builder = builder.add_extension(
         x509.KeyUsage(
             digital_signature=False,
@@ -200,8 +211,13 @@ def create_ca(
             crl_sign=True,
             encipher_only=False,
             decipher_only=False,
-        ), critical=True)
-    builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()), critical=False)
+        ),
+        critical=True,
+    )
+    builder = builder.add_extension(
+        x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()),
+        critical=False,
+    )
     cert = builder.sign(private_key=private_key, algorithm=hashes.SHA256())  # type: ignore
     return private_key, cert
 
@@ -210,23 +226,25 @@ def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: Optional[str],
-    sans: List[str],
+    sans: list[str],
     organization: Optional[str] = None,
 ) -> Cert:
     """
-        Generates a dummy certificate.
+    Generates a dummy certificate.
 
-        privkey: CA private key
-        cacert: CA certificate
-        commonname: Common name for the generated certificate.
-        sans: A list of Subject Alternate Names.
-        organization: Organization name for the generated certificate.
+    privkey: CA private key
+    cacert: CA certificate
+    commonname: Common name for the generated certificate.
+    sans: A list of Subject Alternate Names.
+    organization: Organization name for the generated certificate.
 
-        Returns cert if operation succeeded, None if not.
+    Returns cert if operation succeeded, None if not.
     """
     builder = x509.CertificateBuilder()
     builder = builder.issuer_name(cacert.subject)
-    builder = builder.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+    builder = builder.add_extension(
+        x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False
+    )
     builder = builder.public_key(cacert.public_key())
 
     now = datetime.datetime.now()
@@ -234,9 +252,7 @@ def dummy_cert(
     builder = builder.not_valid_after(now + CERT_EXPIRY)
 
     subject = []
-    is_valid_commonname = (
-        commonname is not None and len(commonname) < 64
-    )
+    is_valid_commonname = commonname is not None and len(commonname) < 64
     if is_valid_commonname:
         assert commonname is not None
         subject.append(x509.NameAttribute(NameOID.COMMON_NAME, commonname))
@@ -246,7 +262,7 @@ def dummy_cert(
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
-    ss: List[x509.GeneralName] = []
+    ss: list[x509.GeneralName] = []
     for x in sans:
         try:
             ip = ipaddress.ip_address(x)
@@ -255,7 +271,9 @@ def dummy_cert(
         else:
             ss.append(x509.IPAddress(ip))
     # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
-    builder = builder.add_extension(x509.SubjectAlternativeName(ss), critical=not is_valid_commonname)
+    builder = builder.add_extension(
+        x509.SubjectAlternativeName(ss), critical=not is_valid_commonname
+    )
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
 
@@ -268,7 +286,7 @@ class CertStoreEntry:
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = Tuple[Optional[str], Tuple[str, ...]]  # (common_name, sans)
+TGeneratedCertId = tuple[Optional[str], tuple[str, ...]]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 DHParams = NewType("DHParams", bytes)
@@ -276,18 +294,19 @@ DHParams = NewType("DHParams", bytes)
 
 class CertStore:
     """
-        Implements an in-memory certificate store.
+    Implements an in-memory certificate store.
     """
+
     STORE_CAP = 100
-    certs: Dict[TCertId, CertStoreEntry]
-    expire_queue: List[CertStoreEntry]
+    certs: dict[TCertId, CertStoreEntry]
+    expire_queue: list[CertStoreEntry]
 
     def __init__(
         self,
         default_privatekey: rsa.RSAPrivateKey,
         default_ca: Cert,
         default_chain_file: Optional[Path],
-        dhparams: DHParams
+        dhparams: DHParams,
     ):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
@@ -318,7 +337,7 @@ class CertStore:
                 bio,
                 OpenSSL.SSL._ffi.NULL,  # type: ignore
                 OpenSSL.SSL._ffi.NULL,  # type: ignore
-                OpenSSL.SSL._ffi.NULL  # type: ignore
+                OpenSSL.SSL._ffi.NULL,  # type: ignore
             )
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)  # type: ignore
             return dh
@@ -330,7 +349,7 @@ class CertStore:
         path: Union[Path, str],
         basename: str,
         key_size: int,
-        passphrase: Optional[bytes] = None
+        passphrase: Optional[bytes] = None,
     ) -> "CertStore":
         path = Path(path)
         ca_file = path / f"{basename}-ca.pem"
@@ -340,7 +359,9 @@ class CertStore:
         return cls.from_files(ca_file, dhparam_file, passphrase)
 
     @classmethod
-    def from_files(cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None) -> "CertStore":
+    def from_files(
+        cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None
+    ) -> "CertStore":
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
         dh = cls.load_dhparam(dhparam_file)
@@ -356,9 +377,9 @@ class CertStore:
     @contextlib.contextmanager
     def umask_secret():
         """
-            Context to temporarily set umask to its original value bitor 0o77.
-            Useful when writing private keys to disk so that only the owner
-            will be able to read them.
+        Context to temporarily set umask to its original value bitor 0o77.
+        Useful when writing private keys to disk so that only the owner
+        will be able to read them.
         """
         original_umask = os.umask(0)
         os.umask(original_umask | 0o77)
@@ -368,7 +389,9 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path: Path, basename: str, key_size: int, organization=None, cn=None) -> None:
+    def create_store(
+        path: Path, basename: str, key_size: int, organization=None, cn=None
+    ) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
         organization = organization or basename
@@ -386,8 +409,8 @@ class CertStore:
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
                     encryption_algorithm=serialization.NoEncryption(),
-                ) +
-                ca.public_bytes(serialization.Encoding.PEM)
+                )
+                + ca.public_bytes(serialization.Encoding.PEM)
             )
 
             # PKCS12 format for Windows devices
@@ -420,7 +443,9 @@ class CertStore:
 
         (path / f"{basename}-dhparam.pem").write_bytes(DEFAULT_DHPARAM)
 
-    def add_cert_file(self, spec: str, path: Path, passphrase: Optional[bytes] = None) -> None:
+    def add_cert_file(
+        self, spec: str, path: Path, passphrase: Optional[bytes] = None
+    ) -> None:
         raw = path.read_bytes()
         cert = Cert.from_pem(raw)
         try:
@@ -428,15 +453,12 @@ class CertStore:
         except ValueError:
             key = self.default_privatekey
 
-        self.add_cert(
-            CertStoreEntry(cert, key, path),
-            spec
-        )
+        self.add_cert(CertStoreEntry(cert, key, path), spec)
 
     def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """
-            Adds a cert to the certstore. We register the CN in the cert plus
-            any SANs, and also the list of names provided as an argument.
+        Adds a cert to the certstore. We register the CN in the cert plus
+        any SANs, and also the list of names provided as an argument.
         """
         if entry.cert.cn:
             self.certs[entry.cert.cn] = entry
@@ -446,7 +468,7 @@ class CertStore:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: str) -> List[str]:
+    def asterisk_forms(dn: str) -> list[str]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
@@ -460,19 +482,19 @@ class CertStore:
     def get_cert(
         self,
         commonname: Optional[str],
-        sans: List[str],
-        organization: Optional[str] = None
+        sans: list[str],
+        organization: Optional[str] = None,
     ) -> CertStoreEntry:
         """
-            commonname: Common name for the generated certificate. Must be a
-            valid, plain-ASCII, IDNA-encoded domain name.
+        commonname: Common name for the generated certificate. Must be a
+        valid, plain-ASCII, IDNA-encoded domain name.
 
-            sans: A list of Subject Alternate Names.
+        sans: A list of Subject Alternate Names.
 
-            organization: Organization name for the generated certificate.
+        organization: Organization name for the generated certificate.
         """
 
-        potential_keys: List[TCertId] = []
+        potential_keys: list[TCertId] = []
         if commonname:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:
@@ -480,10 +502,7 @@ class CertStore:
         potential_keys.append("*")
         potential_keys.append((commonname, tuple(sans)))
 
-        name = next(
-            filter(lambda key: key in self.certs, potential_keys),
-            None
-        )
+        name = next(filter(lambda key: key in self.certs, potential_keys), None)
         if name:
             entry = self.certs[name]
         else:
@@ -493,9 +512,10 @@ class CertStore:
                     self.default_ca._cert,
                     commonname,
                     sans,
-                    organization),
+                    organization,
+                ),
                 privatekey=self.default_privatekey,
-                chain_file=self.default_chain_file
+                chain_file=self.default_chain_file,
             )
             self.certs[(commonname, tuple(sans))] = entry
             self.expire(entry)

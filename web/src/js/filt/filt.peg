@@ -122,6 +122,12 @@ function domain(regex){
     return domainFilter;
 }
 
+// ~dns
+function dnsFilter(flow){
+    return flow.type === "dns";
+}
+dnsFilter.desc = "is a DNS Flow";
+
 // ~dst
 function destination(regex){
     regex = new RegExp(regex, "i");
@@ -292,6 +298,10 @@ function contentType(regex){
 function url(regex){
     regex = new RegExp(regex, "i");
     function urlFilter(flow){
+        if (flow.type === "dns") {
+            const question = flow.request?.questions[0]
+            return question && regex.test(question.name)
+        }
         return flow.request && regex.test(flowutils.RequestUtils.pretty_url(flow.request));
     }
     urlFilter.desc = "url matches " + regex;
@@ -300,7 +310,7 @@ function url(regex){
 
 // ~websocket
 function websocketFilter(flow){
-    return flow.type === "websocket";
+    return !!flow.websocket;
 }
 websocketFilter.desc = "is a Websocket Flow";
 }
@@ -347,6 +357,7 @@ Expr
   / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
   / "~comment" ws+ s:StringLiteral { return comment(s); }
   / "~d" ws+ s:StringLiteral { return domain(s); }
+  / "~dns" { return dnsFilter; }
   / "~dst" ws+ s:StringLiteral { return destination(s); }
   / "~e" { return errorFilter; }
   / "~h" ws+ s:StringLiteral { return header(s); }

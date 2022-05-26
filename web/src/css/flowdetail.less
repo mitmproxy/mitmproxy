@@ -94,7 +94,7 @@
     }
 }
 
-.flow-detail table {
+.connection-table, .timing-table, .certificate-table {
     td:nth-child(2) {
         font-family: @font-family-monospace;
         width: 70%;
@@ -187,5 +187,11 @@ dl.cert-attributes {
 
     dd {
         flex: 0 0 calc(100% - 2em);
+    }
+}
+
+.dns-request table, .dns-response table  {
+    th, td {
+        padding-right: 1rem;
     }
 }

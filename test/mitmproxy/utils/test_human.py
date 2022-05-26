@@ -16,8 +16,8 @@ def test_parse_size():
     assert human.parse_size("0b") == 0
     assert human.parse_size("1") == 1
     assert human.parse_size("1k") == 1024
-    assert human.parse_size("1m") == 1024**2
-    assert human.parse_size("1g") == 1024**3
+    assert human.parse_size("1m") == 1024 ** 2
+    assert human.parse_size("1g") == 1024 ** 3
     with pytest.raises(ValueError):
         human.parse_size("1f")
     with pytest.raises(ValueError):
@@ -53,7 +53,10 @@ def test_pretty_duration():
 
 def test_format_address():
     assert human.format_address(("::1", "54010", "0", "0")) == "[::1]:54010"
-    assert human.format_address(("::ffff:127.0.0.1", "54010", "0", "0")) == "127.0.0.1:54010"
+    assert (
+        human.format_address(("::ffff:127.0.0.1", "54010", "0", "0"))
+        == "127.0.0.1:54010"
+    )
     assert human.format_address(("127.0.0.1", "54010")) == "127.0.0.1:54010"
     assert human.format_address(("example.com", "54010")) == "example.com:54010"
     assert human.format_address(("::", "8080")) == "*:8080"

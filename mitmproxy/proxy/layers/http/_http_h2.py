@@ -1,5 +1,5 @@
 import collections
-from typing import DefaultDict, Deque, NamedTuple
+from typing import NamedTuple
 
 import h2.config
 import h2.connection
@@ -32,7 +32,8 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
     To simplify implementation, padding is unsupported.
     """
-    stream_buffers: DefaultDict[int, Deque[SendH2Data]]
+
+    stream_buffers: collections.defaultdict[int, collections.deque[SendH2Data]]
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
@@ -43,7 +44,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
         stream_id: int,
         data: bytes,
         end_stream: bool = False,
-        pad_length: None = None
+        pad_length: None = None,
     ) -> None:
         """
         Send data on a given stream.
@@ -55,17 +56,15 @@ class BufferedH2Connection(h2.connection.H2Connection):
         assert pad_length is None
 
         while frame_size > self.max_outbound_frame_size:
-            chunk_data = data[:self.max_outbound_frame_size]
+            chunk_data = data[: self.max_outbound_frame_size]
             self.send_data(stream_id, chunk_data, end_stream=False)
 
-            data = data[self.max_outbound_frame_size:]
+            data = data[self.max_outbound_frame_size :]
             frame_size -= len(chunk_data)
 
         if self.stream_buffers.get(stream_id, None):
             # We already have some data buffered, let's append.
-            self.stream_buffers[stream_id].append(
-                SendH2Data(data, end_stream)
-            )
+            self.stream_buffers[stream_id].append(SendH2Data(data, end_stream))
         else:
             available_window = self.local_flow_control_window(stream_id)
             if frame_size <= available_window:
@@ -76,9 +75,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     super().send_data(stream_id, can_send_now, end_stream=False)
                     data = data[available_window:]
                 # We can't send right now, so we buffer.
-                self.stream_buffers[stream_id].append(
-                    SendH2Data(data, end_stream)
-                )
+                self.stream_buffers[stream_id].append(SendH2Data(data, end_stream))
 
     def end_stream(self, stream_id) -> None:
         self.send_data(stream_id, b"", end_stream=True)
@@ -98,7 +95,10 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     self.stream_window_updated(event.stream_id)
                 continue
             elif isinstance(event, h2.events.RemoteSettingsChanged):
-                if h2.settings.SettingCodes.INITIAL_WINDOW_SIZE in event.changed_settings:
+                if (
+                    h2.settings.SettingCodes.INITIAL_WINDOW_SIZE
+                    in event.changed_settings
+                ):
                     self.connection_window_updated()
             elif isinstance(event, h2.events.StreamReset):
                 self.stream_buffers.pop(event.stream_id, None)
@@ -117,8 +117,9 @@ class BufferedH2Connection(h2.connection.H2Connection):
         except KeyError:
             stream_was_reset = True
         else:
-            stream_was_reset = (
-                stream.state_machine.state not in (h2.stream.StreamState.OPEN, h2.stream.StreamState.HALF_CLOSED_REMOTE)
+            stream_was_reset = stream.state_machine.state not in (
+                h2.stream.StreamState.OPEN,
+                h2.stream.StreamState.HALF_CLOSED_REMOTE,
             )
         if stream_was_reset:
             self.stream_buffers.pop(stream_id, None)
@@ -158,7 +159,9 @@ class BufferedH2Connection(h2.connection.H2Connection):
         while sent_any_data:
             sent_any_data = False
             for stream_id in list(self.stream_buffers):
-                self.stream_buffers[stream_id] = self.stream_buffers.pop(stream_id)  # move to end of dict
+                self.stream_buffers[stream_id] = self.stream_buffers.pop(
+                    stream_id
+                )  # move to end of dict
                 if self.stream_window_updated(stream_id):
                     sent_any_data = True
                     if self.outbound_flow_control_window == 0:

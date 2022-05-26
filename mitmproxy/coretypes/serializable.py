@@ -1,8 +1,8 @@
 import abc
 import uuid
-from typing import Type, TypeVar
+from typing import TypeVar
 
-T = TypeVar('T', bound='Serializable')
+T = TypeVar("T", bound="Serializable")
 
 
 class Serializable(metaclass=abc.ABCMeta):
@@ -12,7 +12,7 @@ class Serializable(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_state(cls: Type[T], state) -> T:
+    def from_state(cls: type[T], state) -> T:
         """
         Create a new object from the given state.
         """

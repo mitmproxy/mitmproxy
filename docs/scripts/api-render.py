@@ -20,13 +20,14 @@ pdoc.render.configure(
     edit_url_map=edit_url_map,
 )
 # We can't configure Hugo, but we can configure pdoc.
-pdoc.render_helpers.formatter.cssclass = "chroma"
+pdoc.render_helpers.formatter.cssclass = "chroma pdoc-code"
 
 modules = [
     "mitmproxy.addonmanager",
     "mitmproxy.certs",
     "mitmproxy.connection",
     "mitmproxy.coretypes.multidict",
+    "mitmproxy.dns",
     "mitmproxy.flow",
     "mitmproxy.http",
     "mitmproxy.net.server_spec",
@@ -38,10 +39,7 @@ modules = [
     here / ".." / "src" / "generated" / "events.py",
 ]
 
-pdoc.pdoc(
-    *modules,
-    output_directory=here / ".." / "src" / "generated" / "api"
-)
+pdoc.pdoc(*modules, output_directory=here / ".." / "src" / "generated" / "api")
 
 api_content = here / ".." / "src" / "content" / "api"
 if api_content.exists():
@@ -53,7 +51,9 @@ for module in modules:
     if isinstance(module, Path):
         continue
     filename = f"api/{module.replace('.', '/')}.html"
-    (api_content / f"{module}.md").write_text(textwrap.dedent(f"""
+    (api_content / f"{module}.md").write_text(
+        textwrap.dedent(
+            f"""
         ---
         title: "{module}"
         url: "{filename}"
@@ -64,6 +64,8 @@ for module in modules:
         ---
 
         {{{{< readfile file="/generated/{filename}" >}}}}
-        """))
+        """
+        )
+    )
 
 (here / ".." / "src" / "content" / "addons-api.md").touch()

@@ -1,5 +1,3 @@
-import pytest
-
 import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
@@ -9,7 +7,6 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
 
 
-@pytest.mark.asyncio
 async def test_commands_exist():
     command_manager = command.CommandManager(ctx)
 
@@ -24,10 +21,7 @@ async def test_commands_exist():
             parsed, _ = command_manager.parse_partial(binding.command.strip())
 
             cmd = parsed[0].value
-            args = [
-                a.value for a in parsed[1:]
-                if a.type != mitmproxy.types.Space
-            ]
+            args = [a.value for a in parsed[1:] if a.type != mitmproxy.types.Space]
 
             assert cmd in m.commands.commands
 

@@ -30,10 +30,7 @@ class TestSerializable:
         assert b.i == 42
 
     def test_copy_id(self):
-        a = SerializableDummy({
-            "id": "foo",
-            "foo": 42
-        })
+        a = SerializableDummy({"id": "foo", "foo": 42})
         b = a.copy()
         assert a.get_state()["id"] != b.get_state()["id"]
         assert a.get_state()["foo"] == b.get_state()["foo"]

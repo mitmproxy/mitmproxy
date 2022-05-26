@@ -1,4 +1,5 @@
 from mitmproxy import ctx
+
 event_log = []
 
 

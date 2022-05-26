@@ -3,7 +3,7 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Generator, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Generator, Iterable, Iterator
 
 from mitmproxy import contentviews, ctx, flow, flowfilter, http
 from mitmproxy.contentviews import base
@@ -21,7 +21,7 @@ class ProtoParser:
         To restrict a rule to a responses only use 'ParserRuleResponse', instead.
         """
 
-        field_definitions: List[ProtoParser.ParserFieldDefinition]
+        field_definitions: list[ProtoParser.ParserFieldDefinition]
         """List of field definitions for this rule """
 
         name: str = ""
@@ -41,7 +41,6 @@ class ProtoParser:
 
         The rule only applies if the processed message is a server response.
         """
-        pass
 
     @dataclass
     class ParserRuleRequest(ParserRule):
@@ -50,7 +49,6 @@ class ProtoParser:
 
         The rule only applies if the processed message is a client request.
         """
-        pass
 
     @dataclass
     class ParserFieldDefinition:
@@ -97,16 +95,16 @@ class ProtoParser:
         tag: str
         """Field tag for which this description applies (including flattened tag path, f.e. '1.2.2.4')"""
 
-        tag_prefixes: List[str] = field(default_factory=list)
+        tag_prefixes: list[str] = field(default_factory=list)
         """List of prefixes for tag matching (f.e. tag_prefixes=['1.2.', '2.2.'] with tag='1' matches '1.2.1' and '2.2.1')"""
 
-        intended_decoding: Optional[ProtoParser.DecodedTypes] = None
+        intended_decoding: ProtoParser.DecodedTypes | None = None
         """optional: intended decoding for visualization (parser fails over to alternate decoding if not possible)"""
 
-        name: Optional[str] = None
+        name: str | None = None
         """optional: intended field for visualization (parser fails over to alternate decoding if not possible)"""
 
-        as_packed: Optional[bool] = False
+        as_packed: bool | None = False
         """optional: if set to true, the field is considered to be repeated and packed"""
 
     @dataclass
@@ -149,12 +147,12 @@ class ProtoParser:
         unknown = 17
 
     @staticmethod
-    def _read_base128le(data: bytes) -> Tuple[int, int]:
+    def _read_base128le(data: bytes) -> tuple[int, int]:
         res = 0
         offset = 0
         while offset < len(data):
             o = data[offset]
-            res += ((o & 0x7f) << (7 * offset))
+            res += (o & 0x7F) << (7 * offset)
             offset += 1
             if o < 0x80:
                 # the Kaitai parser for protobuf support base128 le values up
@@ -172,11 +170,11 @@ class ProtoParser:
         raise ValueError("varint exceeds bounds of provided data")
 
     @staticmethod
-    def _read_u32(data: bytes) -> Tuple[int, int]:
+    def _read_u32(data: bytes) -> tuple[int, int]:
         return 4, struct.unpack("<I", data[:4])[0]
 
     @staticmethod
-    def _read_u64(data: bytes) -> Tuple[int, int]:
+    def _read_u64(data: bytes) -> tuple[int, int]:
         return 8, struct.unpack("<Q", data[:8])[0]
 
     class WireTypes(Enum):
@@ -190,21 +188,21 @@ class ProtoParser:
     @staticmethod
     def read_fields(
         wire_data: bytes,
-        parent_field: Optional[ProtoParser.Field],
+        parent_field: ProtoParser.Field | None,
         options: ProtoParser.ParserOptions,
-        rules: List[ProtoParser.ParserRule]
-    ) -> List[ProtoParser.Field]:
-        res: List[ProtoParser.Field] = []
+        rules: list[ProtoParser.ParserRule],
+    ) -> list[ProtoParser.Field]:
+        res: list[ProtoParser.Field] = []
         pos = 0
         while pos < len(wire_data):
             # read field key (tag and wire_type)
             offset, key = ProtoParser._read_base128le(wire_data[pos:])
             # casting raises exception for invalid WireTypes
-            wt = ProtoParser.WireTypes((key & 7))
-            tag = (key >> 3)
+            wt = ProtoParser.WireTypes(key & 7)
+            tag = key >> 3
             pos += offset
 
-            val: Union[bytes, int]
+            val: bytes | int
             preferred_decoding: ProtoParser.DecodedTypes
             if wt == ProtoParser.WireTypes.varint:
                 offset, val = ProtoParser._read_base128le(wire_data[pos:])
@@ -225,14 +223,14 @@ class ProtoParser:
                 pos += offset
                 if length > len(wire_data[pos:]):
                     raise ValueError("length delimited field exceeds data size")
-                val = wire_data[pos:pos + length]
+                val = wire_data[pos : pos + length]
                 pos += length
                 preferred_decoding = ProtoParser.DecodedTypes.message
             elif (
-                wt == ProtoParser.WireTypes.group_start or
-                wt == ProtoParser.WireTypes.group_end
+                wt == ProtoParser.WireTypes.group_start
+                or wt == ProtoParser.WireTypes.group_end
             ):
-                raise ValueError("deprecated field: {}".format(wt))
+                raise ValueError(f"deprecated field: {wt}")
             elif wt == ProtoParser.WireTypes.bit_32:
                 offset, val = ProtoParser._read_u32(wire_data[pos:])
                 pos += offset
@@ -249,7 +247,7 @@ class ProtoParser:
                 rules=rules,
                 tag=tag,
                 wire_value=val,
-                parent_field=parent_field
+                parent_field=parent_field,
             )
             res.append(field)
 
@@ -258,113 +256,123 @@ class ProtoParser:
     @staticmethod
     def read_packed_fields(
         packed_field: ProtoParser.Field,
-    ) -> List[ProtoParser.Field]:
+    ) -> list[ProtoParser.Field]:
         if not isinstance(packed_field.wire_value, bytes):
             ctx.log(type(packed_field.wire_value))
             raise ValueError("can not unpack field with data other than bytes")
         wire_data: bytes = packed_field.wire_value
         tag: int = packed_field.tag
         options: ProtoParser.ParserOptions = packed_field.options
-        rules: List[ProtoParser.ParserRule] = packed_field.rules
+        rules: list[ProtoParser.ParserRule] = packed_field.rules
         intended_decoding: ProtoParser.DecodedTypes = packed_field.preferred_decoding
 
         # the packed field has to have WireType length delimited, whereas the contained
         # individual types have to have a different WireType, which is derived from
         # the intended decoding
         if (
-            packed_field.wire_type != ProtoParser.WireTypes.len_delimited or
-            not isinstance(packed_field.wire_value, bytes)
+            packed_field.wire_type != ProtoParser.WireTypes.len_delimited
+            or not isinstance(packed_field.wire_value, bytes)
         ):
-            raise ValueError("packed fields have to be embedded in a length delimited message")
+            raise ValueError(
+                "packed fields have to be embedded in a length delimited message"
+            )
         # wiretype to read has to be determined from intended decoding
         packed_wire_type: ProtoParser.WireTypes
         if (
-            intended_decoding == ProtoParser.DecodedTypes.int32 or
-            intended_decoding == ProtoParser.DecodedTypes.int64 or
-            intended_decoding == ProtoParser.DecodedTypes.uint32 or
-            intended_decoding == ProtoParser.DecodedTypes.uint64 or
-            intended_decoding == ProtoParser.DecodedTypes.sint32 or
-            intended_decoding == ProtoParser.DecodedTypes.sint64 or
-            intended_decoding == ProtoParser.DecodedTypes.bool or
-            intended_decoding == ProtoParser.DecodedTypes.enum
+            intended_decoding == ProtoParser.DecodedTypes.int32
+            or intended_decoding == ProtoParser.DecodedTypes.int64
+            or intended_decoding == ProtoParser.DecodedTypes.uint32
+            or intended_decoding == ProtoParser.DecodedTypes.uint64
+            or intended_decoding == ProtoParser.DecodedTypes.sint32
+            or intended_decoding == ProtoParser.DecodedTypes.sint64
+            or intended_decoding == ProtoParser.DecodedTypes.bool
+            or intended_decoding == ProtoParser.DecodedTypes.enum
         ):
             packed_wire_type = ProtoParser.WireTypes.varint
         elif (
-            intended_decoding == ProtoParser.DecodedTypes.fixed32 or
-            intended_decoding == ProtoParser.DecodedTypes.sfixed32 or
-            intended_decoding == ProtoParser.DecodedTypes.float
+            intended_decoding == ProtoParser.DecodedTypes.fixed32
+            or intended_decoding == ProtoParser.DecodedTypes.sfixed32
+            or intended_decoding == ProtoParser.DecodedTypes.float
         ):
             packed_wire_type = ProtoParser.WireTypes.bit_32
         elif (
-            intended_decoding == ProtoParser.DecodedTypes.fixed64 or
-            intended_decoding == ProtoParser.DecodedTypes.sfixed64 or
-            intended_decoding == ProtoParser.DecodedTypes.double
+            intended_decoding == ProtoParser.DecodedTypes.fixed64
+            or intended_decoding == ProtoParser.DecodedTypes.sfixed64
+            or intended_decoding == ProtoParser.DecodedTypes.double
         ):
             packed_wire_type = ProtoParser.WireTypes.bit_64
         elif (
-            intended_decoding == ProtoParser.DecodedTypes.string or
-            intended_decoding == ProtoParser.DecodedTypes.bytes or
-            intended_decoding == ProtoParser.DecodedTypes.message
+            intended_decoding == ProtoParser.DecodedTypes.string
+            or intended_decoding == ProtoParser.DecodedTypes.bytes
+            or intended_decoding == ProtoParser.DecodedTypes.message
         ):
             packed_wire_type = ProtoParser.WireTypes.len_delimited
         else:
             # should never happen, no test
-            raise TypeError("Wire type could not be determined from packed decoding type")
+            raise TypeError(
+                "Wire type could not be determined from packed decoding type"
+            )
 
-        res: List[ProtoParser.Field] = []
+        res: list[ProtoParser.Field] = []
         pos = 0
-        val: Union[bytes, int]
+        val: bytes | int
         if packed_wire_type == ProtoParser.WireTypes.varint:
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_base128le(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.Field(
-                    options=options,
-                    preferred_decoding=intended_decoding,
-                    rules=rules,
-                    tag=tag,
-                    wire_type=packed_wire_type,
-                    wire_value=val,
-                    parent_field=packed_field.parent_field,
-                    is_unpacked_children=True
-                ))
+                res.append(
+                    ProtoParser.Field(
+                        options=options,
+                        preferred_decoding=intended_decoding,
+                        rules=rules,
+                        tag=tag,
+                        wire_type=packed_wire_type,
+                        wire_value=val,
+                        parent_field=packed_field.parent_field,
+                        is_unpacked_children=True,
+                    )
+                )
         elif packed_wire_type == ProtoParser.WireTypes.bit_64:
             if len(wire_data) % 8 != 0:
                 raise ValueError("can not parse as packed bit64")
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_u64(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.Field(
-                    options=options,
-                    preferred_decoding=intended_decoding,
-                    rules=rules,
-                    tag=tag,
-                    wire_type=packed_wire_type,
-                    wire_value=val,
-                    parent_field=packed_field.parent_field,
-                    is_unpacked_children=True
-                ))
+                res.append(
+                    ProtoParser.Field(
+                        options=options,
+                        preferred_decoding=intended_decoding,
+                        rules=rules,
+                        tag=tag,
+                        wire_type=packed_wire_type,
+                        wire_value=val,
+                        parent_field=packed_field.parent_field,
+                        is_unpacked_children=True,
+                    )
+                )
         elif packed_wire_type == ProtoParser.WireTypes.len_delimited:
             while pos < len(wire_data):
                 offset, length = ProtoParser._read_base128le(wire_data[pos:])
                 pos += offset
-                val = wire_data[pos: pos + length]
+                val = wire_data[pos : pos + length]
                 if length > len(wire_data[pos:]):
                     raise ValueError("packed length delimited field exceeds data size")
-                res.append(ProtoParser.Field(
-                    options=options,
-                    preferred_decoding=intended_decoding,
-                    rules=rules,
-                    tag=tag,
-                    wire_type=packed_wire_type,
-                    wire_value=val,
-                    parent_field=packed_field.parent_field,
-                    is_unpacked_children=True
-                ))
+                res.append(
+                    ProtoParser.Field(
+                        options=options,
+                        preferred_decoding=intended_decoding,
+                        rules=rules,
+                        tag=tag,
+                        wire_type=packed_wire_type,
+                        wire_value=val,
+                        parent_field=packed_field.parent_field,
+                        is_unpacked_children=True,
+                    )
+                )
                 pos += length
         elif (
-            packed_wire_type == ProtoParser.WireTypes.group_start or
-            packed_wire_type == ProtoParser.WireTypes.group_end
+            packed_wire_type == ProtoParser.WireTypes.group_start
+            or packed_wire_type == ProtoParser.WireTypes.group_end
         ):
             raise ValueError("group tags can not be encoded packed")
         elif packed_wire_type == ProtoParser.WireTypes.bit_32:
@@ -373,16 +381,18 @@ class ProtoParser:
             while pos < len(wire_data):
                 offset, val = ProtoParser._read_u32(wire_data[pos:])
                 pos += offset
-                res.append(ProtoParser.Field(
-                    options=options,
-                    preferred_decoding=intended_decoding,
-                    rules=rules,
-                    tag=tag,
-                    wire_type=packed_wire_type,
-                    wire_value=val,
-                    parent_field=packed_field.parent_field,
-                    is_unpacked_children=True
-                ))
+                res.append(
+                    ProtoParser.Field(
+                        options=options,
+                        preferred_decoding=intended_decoding,
+                        rules=rules,
+                        tag=tag,
+                        wire_type=packed_wire_type,
+                        wire_value=val,
+                        parent_field=packed_field.parent_field,
+                        is_unpacked_children=True,
+                    )
+                )
         else:
             # should never happen
             raise ValueError("invalid WireType for protobuf messsage field")
@@ -442,23 +452,27 @@ class ProtoParser:
             wire_type: ProtoParser.WireTypes,
             preferred_decoding: ProtoParser.DecodedTypes,
             tag: int,
-            parent_field: Optional[ProtoParser.Field],
-            wire_value: Union[int, bytes],
+            parent_field: ProtoParser.Field | None,
+            wire_value: int | bytes,
             options: ProtoParser.ParserOptions,
-            rules: List[ProtoParser.ParserRule],
-            is_unpacked_children: bool = False
+            rules: list[ProtoParser.ParserRule],
+            is_unpacked_children: bool = False,
         ) -> None:
             self.wire_type: ProtoParser.WireTypes = wire_type
             self.preferred_decoding: ProtoParser.DecodedTypes = preferred_decoding
-            self.wire_value: Union[int, bytes] = wire_value
+            self.wire_value: int | bytes = wire_value
             self.tag: int = tag
             self.options: ProtoParser.ParserOptions = options
             self.name: str = ""
-            self.rules: List[ProtoParser.ParserRule] = rules
-            self.parent_field: Optional[ProtoParser.Field] = parent_field
-            self.is_unpacked_children: bool = is_unpacked_children  # marks field as being a result of unpacking
-            self.is_packed_parent: bool = False  # marks field as being parent of successfully unpacked children
-            self.parent_tags: List[int] = []
+            self.rules: list[ProtoParser.ParserRule] = rules
+            self.parent_field: ProtoParser.Field | None = parent_field
+            self.is_unpacked_children: bool = (
+                is_unpacked_children  # marks field as being a result of unpacking
+            )
+            self.is_packed_parent: bool = (
+                False  # marks field as being parent of successfully unpacked children
+            )
+            self.parent_tags: list[int] = []
             if self.parent_field is not None:
                 self.parent_tags = self.parent_field.parent_tags[:]
                 self.parent_tags.append(self.parent_field.tag)
@@ -467,10 +481,7 @@ class ProtoParser:
             # rules can overwrite self.try_unpack
             self.apply_rules()
             # do not unpack fields which are the result of unpacking
-            if (
-                parent_field is not None and
-                self.is_unpacked_children
-            ):
+            if parent_field is not None and self.is_unpacked_children:
                 self.try_unpack = False
 
         # no tests for only_first_hit=False, as not user-changable
@@ -501,7 +512,11 @@ class ProtoParser:
                                 # overwrite matches till last rule was inspected
                                 # (f.e. allows to define name in one rule and intended_decoding in another one)
                                 name = fd.name if fd.name else name
-                                decoding = fd.intended_decoding if fd.intended_decoding else decoding
+                                decoding = (
+                                    fd.intended_decoding
+                                    if fd.intended_decoding
+                                    else decoding
+                                )
                                 if fd.as_packed:
                                     as_packed = True
 
@@ -512,7 +527,6 @@ class ProtoParser:
                 self.try_unpack = as_packed
             except Exception as e:
                 ctx.log.warn(e)
-                pass
 
         def _gen_tag_str(self):
             tags = self.parent_tags[:]
@@ -522,8 +536,11 @@ class ProtoParser:
         def safe_decode_as(
             self,
             intended_decoding: ProtoParser.DecodedTypes,
-            try_as_packed: bool = False
-        ) -> Tuple[ProtoParser.DecodedTypes, Union[bool, float, int, bytes, str, List[ProtoParser.Field]]]:
+            try_as_packed: bool = False,
+        ) -> tuple[
+            ProtoParser.DecodedTypes,
+            bool | float | int | bytes | str | list[ProtoParser.Field],
+        ]:
             """
             Tries to decode as intended, applies failover, if not possible
 
@@ -531,7 +548,9 @@ class ProtoParser:
             """
             if self.wire_type == ProtoParser.WireTypes.varint:
                 try:
-                    return intended_decoding, self.decode_as(intended_decoding, try_as_packed)
+                    return intended_decoding, self.decode_as(
+                        intended_decoding, try_as_packed
+                    )
                 except:
                     if int(self.wire_value).bit_length() > 32:
                         # ignore the fact that varint could exceed 64bit (would violate the specs)
@@ -540,30 +559,38 @@ class ProtoParser:
                         return ProtoParser.DecodedTypes.uint32, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.bit_64:
                 try:
-                    return intended_decoding, self.decode_as(intended_decoding, try_as_packed)
+                    return intended_decoding, self.decode_as(
+                        intended_decoding, try_as_packed
+                    )
                 except:
                     return ProtoParser.DecodedTypes.fixed64, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.bit_32:
                 try:
-                    return intended_decoding, self.decode_as(intended_decoding, try_as_packed)
+                    return intended_decoding, self.decode_as(
+                        intended_decoding, try_as_packed
+                    )
                 except:
                     return ProtoParser.DecodedTypes.fixed32, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.len_delimited:
                 try:
-                    return intended_decoding, self.decode_as(intended_decoding, try_as_packed)
+                    return intended_decoding, self.decode_as(
+                        intended_decoding, try_as_packed
+                    )
                 except:
                     # failover strategy: message --> string (valid UTF-8) --> bytes
-                    len_delimited_strategy: List[ProtoParser.DecodedTypes] = [
+                    len_delimited_strategy: list[ProtoParser.DecodedTypes] = [
                         ProtoParser.DecodedTypes.message,
                         ProtoParser.DecodedTypes.string,
-                        ProtoParser.DecodedTypes.bytes  # should always work
+                        ProtoParser.DecodedTypes.bytes,  # should always work
                     ]
                     for failover_decoding in len_delimited_strategy:
                         if failover_decoding == intended_decoding and not try_as_packed:
                             # don't try same decoding twice, unless first attempt was packed
                             continue
                         try:
-                            return failover_decoding, self.decode_as(failover_decoding, False)
+                            return failover_decoding, self.decode_as(
+                                failover_decoding, False
+                            )
                         except:
                             pass
 
@@ -571,10 +598,8 @@ class ProtoParser:
             return ProtoParser.DecodedTypes.unknown, self.wire_value
 
         def decode_as(
-            self,
-            intended_decoding: ProtoParser.DecodedTypes,
-            as_packed: bool = False
-        ) -> Union[bool, int, float, bytes, str, List[ProtoParser.Field]]:
+            self, intended_decoding: ProtoParser.DecodedTypes, as_packed: bool = False
+        ) -> bool | int | float | bytes | str | list[ProtoParser.Field]:
             if as_packed is True:
                 return ProtoParser.read_packed_fields(packed_field=self)
 
@@ -582,7 +607,7 @@ class ProtoParser:
                 assert isinstance(self.wire_value, int)
                 if intended_decoding == ProtoParser.DecodedTypes.bool:
                     # clamp result to 64bit
-                    return self.wire_value & 0xffffffffffffffff != 0
+                    return self.wire_value & 0xFFFFFFFFFFFFFFFF != 0
                 elif intended_decoding == ProtoParser.DecodedTypes.int32:
                     if self.wire_value.bit_length() > 32:
                         raise TypeError("wire value too large for int32")
@@ -596,8 +621,8 @@ class ProtoParser:
                         raise TypeError("wire value too large for uint32")
                     return self.wire_value  # already 'int' which was parsed as unsigned
                 elif (
-                    intended_decoding == ProtoParser.DecodedTypes.uint64 or
-                    intended_decoding == ProtoParser.DecodedTypes.enum
+                    intended_decoding == ProtoParser.DecodedTypes.uint64
+                    or intended_decoding == ProtoParser.DecodedTypes.enum
                 ):
                     if self.wire_value.bit_length() > 64:
                         raise TypeError("wire value too large")
@@ -605,7 +630,9 @@ class ProtoParser:
                 elif intended_decoding == ProtoParser.DecodedTypes.sint32:
                     if self.wire_value.bit_length() > 32:
                         raise TypeError("wire value too large for sint32")
-                    return (self.wire_value >> 1) ^ -(self.wire_value & 1)  # zigzag_decode
+                    return (self.wire_value >> 1) ^ -(
+                        self.wire_value & 1
+                    )  # zigzag_decode
                 elif intended_decoding == ProtoParser.DecodedTypes.sint64:
                     if self.wire_value.bit_length() > 64:
                         raise TypeError("wire value too large for sint64")
@@ -613,8 +640,8 @@ class ProtoParser:
                     # Ref: https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba
                     return (self.wire_value >> 1) ^ -(self.wire_value & 1)
                 elif (
-                    intended_decoding == ProtoParser.DecodedTypes.float or
-                    intended_decoding == ProtoParser.DecodedTypes.double
+                    intended_decoding == ProtoParser.DecodedTypes.float
+                    or intended_decoding == ProtoParser.DecodedTypes.double
                 ):
                     # special case, not complying to protobuf specs
                     return self._wire_value_as_float()
@@ -709,7 +736,7 @@ class ProtoParser:
                 return res.replace("\n", "\\n") if escape_newline else res
             return str(self.wire_value)
 
-        def gen_flat_decoded_field_dicts(self) -> Generator[Dict, None, None]:
+        def gen_flat_decoded_field_dicts(self) -> Generator[dict, None, None]:
             """
             Returns a generator which passes the field as a dict.
 
@@ -718,7 +745,9 @@ class ProtoParser:
             If the field holds a nested message, the fields contained in the message are appended.
             Ultimately this flattens all fields recursively.
             """
-            selected_decoding, decoded_val = self.safe_decode_as(self.preferred_decoding, self.try_unpack)
+            selected_decoding, decoded_val = self.safe_decode_as(
+                self.preferred_decoding, self.try_unpack
+            )
             field_desc_dict = {
                 "tag": self._gen_tag_str(),
                 "wireType": self._wire_type_str(),
@@ -727,7 +756,8 @@ class ProtoParser:
             }
             if isinstance(decoded_val, list):
                 if (
-                    selected_decoding == ProtoParser.DecodedTypes.message  # field is a message with subfields
+                    selected_decoding
+                    == ProtoParser.DecodedTypes.message  # field is a message with subfields
                     and not self.is_packed_parent  # field is a message, but replaced by packed fields
                 ):
                     # Field is a message, not packed, thus include it as message header
@@ -735,8 +765,7 @@ class ProtoParser:
                     yield field_desc_dict
                 # add sub-fields of messages or packed fields
                 for f in decoded_val:
-                    for field_dict in f.gen_flat_decoded_field_dicts():
-                        yield field_dict
+                    yield from f.gen_flat_decoded_field_dicts()
             else:
                 field_desc_dict["val"] = decoded_val
                 yield field_desc_dict
@@ -744,8 +773,8 @@ class ProtoParser:
     def __init__(
         self,
         data: bytes,
-        rules: List[ProtoParser.ParserRule] = None,
-        parser_options: ParserOptions = None
+        rules: list[ProtoParser.ParserRule] = None,
+        parser_options: ParserOptions = None,
     ) -> None:
         self.data: bytes = data
         if parser_options is None:
@@ -756,23 +785,25 @@ class ProtoParser:
         self.rules = rules
 
         try:
-            self.root_fields: List[ProtoParser.Field] = ProtoParser.read_fields(
+            self.root_fields: list[ProtoParser.Field] = ProtoParser.read_fields(
                 wire_data=self.data,
                 options=self.options,
                 parent_field=None,
-                rules=self.rules
+                rules=self.rules,
             )
         except Exception as e:
             raise ValueError("not a valid protobuf message") from e
 
-    def gen_flat_decoded_field_dicts(self) -> Generator[Dict, None, None]:
+    def gen_flat_decoded_field_dicts(self) -> Generator[dict, None, None]:
         for f in self.root_fields:
-            for field_dict in f.gen_flat_decoded_field_dicts():
-                yield field_dict
+            yield from f.gen_flat_decoded_field_dicts()
 
-    def gen_str_rows(self) -> Generator[Tuple[str, ...], None, None]:
+    def gen_str_rows(self) -> Generator[tuple[str, ...], None, None]:
         for field_dict in self.gen_flat_decoded_field_dicts():
-            if self.options.exclude_message_headers and field_dict["decoding"] == "message":
+            if (
+                self.options.exclude_message_headers
+                and field_dict["decoding"] == "message"
+            ):
                 continue
 
             if self.options.include_wiretype:
@@ -789,7 +820,7 @@ class ProtoParser:
 #       allow it to be use independently.
 #       This function is generic enough, to consider moving it to mitmproxy.contentviews.base
 def format_table(
-    table_rows: Iterable[Tuple[str, ...]],
+    table_rows: Iterable[tuple[str, ...]],
     max_col_width=100,
 ) -> Iterator[base.TViewLine]:
     """
@@ -798,9 +829,9 @@ def format_table(
     Note: The function has to convert generators to a list, as all rows have to be processed twice (to determine
     the column widths first).
     """
-    rows: List[Tuple[str, ...]] = []
+    rows: list[tuple[str, ...]] = []
     col_count = 0
-    cols_width: List[int] = []
+    cols_width: list[int] = []
     for row in table_rows:
         col_count = max(col_count, len(row))
         while len(cols_width) < col_count:
@@ -822,25 +853,29 @@ def format_table(
         yield line
 
 
-def parse_grpc_messages(data, compression_scheme) -> Generator[Tuple[bool, bytes], None, None]:
+def parse_grpc_messages(
+    data, compression_scheme
+) -> Generator[tuple[bool, bytes], None, None]:
     """Generator iterates over body data and returns a boolean indicating if the messages
     was compressed, along with the raw message data (decompressed) for each gRPC message
     contained in the body data"""
     while data:
         try:
-            msg_is_compressed, length = struct.unpack('!?i', data[:5])
-            decoded_message = struct.unpack('!%is' % length, data[5:5 + length])[0]
+            msg_is_compressed, length = struct.unpack("!?i", data[:5])
+            decoded_message = struct.unpack("!%is" % length, data[5 : 5 + length])[0]
         except Exception as e:
             raise ValueError("invalid gRPC message") from e
 
         if msg_is_compressed:
             try:
-                decoded_message = decode(encoded=decoded_message, encoding=compression_scheme)
+                decoded_message = decode(
+                    encoded=decoded_message, encoding=compression_scheme
+                )
             except Exception as e:
                 raise ValueError("Failed to decompress gRPC message with gzip") from e
 
         yield msg_is_compressed, decoded_message
-        data = data[5 + length:]
+        data = data[5 + length :]
 
 
 # hacky fix for mitmproxy issue:
@@ -878,35 +913,46 @@ def hack_generator_to_list(generator_func):
     return list(generator_func)
 
 
-def format_pbuf(message: bytes, parser_options: ProtoParser.ParserOptions, rules: List[ProtoParser.ParserRule]):
-    for l in format_table(ProtoParser(data=message, parser_options=parser_options, rules=rules).gen_str_rows()):
-        yield l
+def format_pbuf(
+    message: bytes,
+    parser_options: ProtoParser.ParserOptions,
+    rules: list[ProtoParser.ParserRule],
+):
+    yield from format_table(
+        ProtoParser(
+            data=message, parser_options=parser_options, rules=rules
+        ).gen_str_rows()
+    )
 
 
 def format_grpc(
     data: bytes,
     parser_options: ProtoParser.ParserOptions,
-    rules: List[ProtoParser.ParserRule],
-    compression_scheme="gzip"
+    rules: list[ProtoParser.ParserRule],
+    compression_scheme="gzip",
 ):
     message_count = 0
-    for compressed, pb_message in parse_grpc_messages(data=data, compression_scheme=compression_scheme):
-        headline = 'gRPC message ' + str(message_count) + ' (compressed ' + str(
-            compression_scheme if compressed else compressed) + ')'
+    for compressed, pb_message in parse_grpc_messages(
+        data=data, compression_scheme=compression_scheme
+    ):
+        headline = (
+            "gRPC message "
+            + str(message_count)
+            + " (compressed "
+            + str(compression_scheme if compressed else compressed)
+            + ")"
+        )
 
         yield [("text", headline)]
-        for l in format_pbuf(
-            message=pb_message,
-            parser_options=parser_options,
-            rules=rules
-        ):
-            yield l
+        yield from format_pbuf(
+            message=pb_message, parser_options=parser_options, rules=rules
+        )
 
 
 @dataclass
 class ViewConfig:
     parser_options: ProtoParser.ParserOptions = ProtoParser.ParserOptions()
-    parser_rules: List[ProtoParser.ParserRule] = field(default_factory=list)
+    parser_rules: list[ProtoParser.ParserRule] = field(default_factory=list)
 
 
 class ViewGrpcProtobuf(base.View):
@@ -938,10 +984,10 @@ class ViewGrpcProtobuf(base.View):
 
     def _matching_rules(
         self,
-        rules: List[ProtoParser.ParserRule],
-        message: Optional[http.Message],
-        flow: Optional[flow.Flow]
-    ) -> List[ProtoParser.ParserRule]:
+        rules: list[ProtoParser.ParserRule],
+        message: http.Message | None,
+        flow: flow.Flow | None,
+    ) -> list[ProtoParser.ParserRule]:
         """
         Checks which of the give rules applies and returns a List only containing those rules
 
@@ -966,7 +1012,7 @@ class ViewGrpcProtobuf(base.View):
             - ParserRuleRequest: applies to requests only
             - ParserRuleResponse: applies to responses only
         """
-        res: List[ProtoParser.ParserRule] = []
+        res: list[ProtoParser.ParserRule] = []
         if not flow:
             return res
         is_request = isinstance(message, http.Request)
@@ -985,12 +1031,14 @@ class ViewGrpcProtobuf(base.View):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> contentviews.TViewResult:
-        applicabble_rules = self._matching_rules(rules=self.config.parser_rules, flow=flow, message=http_message)
+        applicabble_rules = self._matching_rules(
+            rules=self.config.parser_rules, flow=flow, message=http_message
+        )
         if content_type in self.__content_types_grpc:
             # If gRPC messages are flagged to be compressed, the compression algorithm is expressed in the
             # 'grpc-encoding' header.
@@ -1006,7 +1054,11 @@ class ViewGrpcProtobuf(base.View):
             try:
                 assert http_message is not None
                 h = http_message.headers["grpc-encoding"]
-                grpc_encoding = h if h in self.__valid_grpc_encodings else self.__valid_grpc_encodings[0]
+                grpc_encoding = (
+                    h
+                    if h in self.__valid_grpc_encodings
+                    else self.__valid_grpc_encodings[0]
+                )
             except:
                 grpc_encoding = self.__valid_grpc_encodings[0]
 
@@ -1014,14 +1066,14 @@ class ViewGrpcProtobuf(base.View):
                 data=data,
                 parser_options=self.config.parser_options,
                 compression_scheme=grpc_encoding,
-                rules=applicabble_rules
+                rules=applicabble_rules,
             )
             title = "gRPC"
         else:
             text_iter = format_pbuf(
                 message=data,
                 parser_options=self.config.parser_options,
-                rules=applicabble_rules
+                rules=applicabble_rules,
             )
             title = "Protobuf (flattened)"
 
@@ -1041,9 +1093,9 @@ class ViewGrpcProtobuf(base.View):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
 

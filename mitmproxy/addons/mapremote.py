@@ -1,11 +1,12 @@
 import re
-import typing
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from mitmproxy import ctx, exceptions, flowfilter, http
 from mitmproxy.utils.spec import parse_spec
 
 
-class MapRemoteSpec(typing.NamedTuple):
+class MapRemoteSpec(NamedTuple):
     matches: flowfilter.TFilter
     subject: str
     replacement: str
@@ -24,16 +25,18 @@ def parse_map_remote_spec(option: str) -> MapRemoteSpec:
 
 class MapRemote:
     def __init__(self):
-        self.replacements: typing.List[MapRemoteSpec] = []
+        self.replacements: list[MapRemoteSpec] = []
 
     def load(self, loader):
         loader.add_option(
-            "map_remote", typing.Sequence[str], [],
+            "map_remote",
+            Sequence[str],
+            [],
             """
             Map remote resources to another remote URL using a pattern of the form
             "[/flow-filter]/url-regex/replacement", where the separator can
             be any character.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -43,12 +46,14 @@ class MapRemote:
                 try:
                     spec = parse_map_remote_spec(option)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse map_remote option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse map_remote option {option}: {e}"
+                    ) from e
 
                 self.replacements.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
-        if flow.response or flow.error or (flow.reply and flow.reply.state == "taken"):
+        if flow.response or flow.error or not flow.live:
             return
         for spec in self.replacements:
             if spec.matches(flow):

@@ -6,7 +6,6 @@ from mitmproxy.test import tflow
 
 
 class TestMapRemote:
-
     def test_configure(self):
         mr = mapremote.MapRemote()
         with taddons.context(mr) as tctx:
@@ -21,19 +20,19 @@ class TestMapRemote:
                 mr,
                 map_remote=[
                     ":example.org/images/:mitmproxy.org/img/",
-                ]
+                ],
             )
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/test.jpg"
             mr.request(f)
             assert f.request.url == "https://mitmproxy.org/img/test.jpg"
 
-    def test_has_reply(self):
+    def test_is_killed(self):
         mr = mapremote.MapRemote()
         with taddons.context(mr) as tctx:
             tctx.configure(mr, map_remote=[":example.org:mitmproxy.org"])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/test.jpg"
-            f.reply.take()
+            f.kill()
             mr.request(f)
             assert f.request.url == "https://example.org/images/test.jpg"

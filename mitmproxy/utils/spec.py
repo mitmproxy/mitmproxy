@@ -1,8 +1,7 @@
-import typing
 from mitmproxy import flowfilter
 
 
-def parse_spec(option: str) -> typing.Tuple[flowfilter.TFilter, str, str]:
+def parse_spec(option: str) -> tuple[flowfilter.TFilter, str, str]:
     """
     Parse strings in the following format:
 

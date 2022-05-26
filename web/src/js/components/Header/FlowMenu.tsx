@@ -120,7 +120,7 @@ function DownloadButton({flow}: { flow: Flow }) {
 function ExportButton({flow}: { flow: Flow }) {
     return <Dropdown className="" text={
         <Button title="Export flow." icon="fa-clone" onClick={() => 1}
-                disabled={flow.type === "tcp"}>Export▾</Button>
+                disabled={flow.type !== "http"}>Export▾</Button>
     } options={{"placement": "bottom-start"}}>
         <MenuItem onClick={() => copy(flow, "raw_request")}>Copy raw request</MenuItem>
         <MenuItem onClick={() => copy(flow, "raw_response")}>Copy raw response</MenuItem>

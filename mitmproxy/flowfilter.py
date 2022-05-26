@@ -36,10 +36,11 @@
 import functools
 import re
 import sys
-from typing import ClassVar, Sequence, Type, Protocol, Union
+from collections.abc import Sequence
+from typing import ClassVar, Protocol, Union
 import pyparsing as pp
 
-from mitmproxy import flow, http, tcp
+from mitmproxy import dns, flow, http, tcp
 
 
 def only(*types):
@@ -56,13 +57,15 @@ def only(*types):
 
 
 class _Token:
-
     def dump(self, indent=0, fp=sys.stdout):
-        print("{spacing}{name}{expr}".format(
-            spacing="\t" * indent,
-            name=self.__class__.__name__,
-            expr=getattr(self, "expr", "")
-        ), file=fp)
+        print(
+            "{spacing}{name}{expr}".format(
+                spacing="\t" * indent,
+                name=self.__class__.__name__,
+                expr=getattr(self, "expr", ""),
+            ),
+            file=fp,
+        )
 
 
 class _Action(_Token):
@@ -117,11 +120,20 @@ class FTCP(_Action):
         return True
 
 
+class FDNS(_Action):
+    code = "dns"
+    help = "Match DNS flows"
+
+    @only(dns.DNSFlow)
+    def __call__(self, f):
+        return True
+
+
 class FReq(_Action):
     code = "q"
     help = "Match request with no response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f.response:
             return True
@@ -131,7 +143,7 @@ class FResp(_Action):
     code = "s"
     help = "Match response"
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         return bool(f.response)
 
@@ -160,8 +172,7 @@ class _Rex(_Action):
 
 def _check_content_type(rex, message):
     return any(
-        name.lower() == b"content-type" and
-        rex.search(value)
+        name.lower() == b"content-type" and rex.search(value)
         for name, value in message.headers.fields
     )
 
@@ -169,15 +180,18 @@ def _check_content_type(rex, message):
 class FAsset(_Action):
     code = "a"
     help = "Match asset in response: CSS, JavaScript, images, fonts."
-    ASSET_TYPES = [re.compile(x) for x in [
-        b"text/javascript",
-        b"application/x-javascript",
-        b"application/javascript",
-        b"text/css",
-        b"image/.*",
-        b"font/.*",
-        b"application/font-.*",
-    ]]
+    ASSET_TYPES = [
+        re.compile(x)
+        for x in [
+            b"text/javascript",
+            b"application/x-javascript",
+            b"application/javascript",
+            b"text/css",
+            b"image/.*",
+            b"font/.*",
+            b"application/font.*",
+        ]
+    ]
 
     @only(http.HTTPFlow)
     def __call__(self, f):
@@ -262,7 +276,7 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -279,6 +293,11 @@ class FBod(_Rex):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.request and self.re.search(f.request.content):
+                return True
+            if f.response and self.re.search(f.response.content):
+                return True
         return False
 
 
@@ -287,7 +306,7 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -301,6 +320,9 @@ class FBodRequest(_Rex):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.request and self.re.search(f.request.content):
+                return True
 
 
 class FBodResponse(_Rex):
@@ -308,7 +330,7 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
@@ -322,6 +344,9 @@ class FBodResponse(_Rex):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
+        elif isinstance(f, dns.DNSFlow):
+            if f.response and self.re.search(f.response.content):
+                return True
 
 
 class FMethod(_Rex):
@@ -343,8 +368,7 @@ class FDomain(_Rex):
     @only(http.HTTPFlow)
     def __call__(self, f):
         return bool(
-            self.re.search(f.request.host) or
-            self.re.search(f.request.pretty_host)
+            self.re.search(f.request.host) or self.re.search(f.request.pretty_host)
         )
 
 
@@ -361,11 +385,14 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f):
         if not f or not f.request:
             return False
-        return self.re.search(f.request.pretty_url)
+        if isinstance(f, http.HTTPFlow):
+            return self.re.search(f.request.pretty_url)
+        elif isinstance(f, dns.DNSFlow):
+            return f.request.questions and self.re.search(f.request.questions[0].name)
 
 
 class FSrc(_Rex):
@@ -376,7 +403,7 @@ class FSrc(_Rex):
     def __call__(self, f):
         if not f.client_conn or not f.client_conn.peername:
             return False
-        r = "{}:{}".format(f.client_conn.peername[0], f.client_conn.peername[1])
+        r = f"{f.client_conn.peername[0]}:{f.client_conn.peername[1]}"
         return f.client_conn.peername and self.re.search(r)
 
 
@@ -388,7 +415,7 @@ class FDst(_Rex):
     def __call__(self, f):
         if not f.server_conn or not f.server_conn.address:
             return False
-        r = "{}:{}".format(f.server_conn.address[0], f.server_conn.address[1])
+        r = f"{f.server_conn.address[0]}:{f.server_conn.address[1]}"
         return f.server_conn.address and self.re.search(r)
 
 
@@ -405,7 +432,7 @@ class FReplayClient(_Action):
     help = "Match replayed client request"
 
     def __call__(self, f):
-        return f.is_replay == 'request'
+        return f.is_replay == "request"
 
 
 class FReplayServer(_Action):
@@ -413,7 +440,7 @@ class FReplayServer(_Action):
     help = "Match replayed server response"
 
     def __call__(self, f):
-        return f.is_replay == 'response'
+        return f.is_replay == "response"
 
 
 class FMeta(_Rex):
@@ -447,7 +474,6 @@ class FComment(_Rex):
 
 
 class _Int(_Action):
-
     def __init__(self, num):
         self.num = int(num)
 
@@ -463,7 +489,6 @@ class FCode(_Int):
 
 
 class FAnd(_Token):
-
     def __init__(self, lst):
         self.lst = lst
 
@@ -477,7 +502,6 @@ class FAnd(_Token):
 
 
 class FOr(_Token):
-
     def __init__(self, lst):
         self.lst = lst
 
@@ -491,7 +515,6 @@ class FOr(_Token):
 
 
 class FNot(_Token):
-
     def __init__(self, itm):
         self.itm = itm[0]
 
@@ -503,7 +526,7 @@ class FNot(_Token):
         return not self.itm(f)
 
 
-filter_unary: Sequence[Type[_Action]] = [
+filter_unary: Sequence[type[_Action]] = [
     FAsset,
     FErr,
     FHTTP,
@@ -514,10 +537,11 @@ filter_unary: Sequence[Type[_Action]] = [
     FReq,
     FResp,
     FTCP,
+    FDNS,
     FWebSocket,
     FAll,
 ]
-filter_rex: Sequence[Type[_Rex]] = [
+filter_rex: Sequence[type[_Rex]] = [
     FBod,
     FBodRequest,
     FBodResponse,
@@ -536,9 +560,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FMarker,
     FComment,
 ]
-filter_int = [
-    FCode
-]
+filter_int = [FCode]
 
 
 def _make():
@@ -556,8 +578,8 @@ def _make():
     unicode_words.skipWhitespace = True
     regex = (
         unicode_words
-        | pp.QuotedString('"', escChar='\\')
-        | pp.QuotedString("'", escChar='\\')
+        | pp.QuotedString('"', escChar="\\")
+        | pp.QuotedString("'", escChar="\\")
     )
     for cls in filter_rex:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + regex.copy()
@@ -577,19 +599,12 @@ def _make():
     atom = pp.MatchFirst(parts)
     expr = pp.infixNotation(
         atom,
-        [(pp.Literal("!").suppress(),
-          1,
-          pp.opAssoc.RIGHT,
-          lambda x: FNot(*x)),
-         (pp.Literal("&").suppress(),
-          2,
-          pp.opAssoc.LEFT,
-          lambda x: FAnd(*x)),
-         (pp.Literal("|").suppress(),
-          2,
-          pp.opAssoc.LEFT,
-          lambda x: FOr(*x)),
-         ])
+        [
+            (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
+            (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
+            (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
+        ],
+    )
     expr = pp.OneOrMore(expr)
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
 
@@ -621,11 +636,11 @@ def parse(s: str) -> TFilter:
 
 def match(flt: Union[str, TFilter], flow: flow.Flow) -> bool:
     """
-        Matches a flow against a compiled filter expression.
-        Returns True if matched, False if not.
+    Matches a flow against a compiled filter expression.
+    Returns True if matched, False if not.
 
-        If flt is a string, it will be compiled as a filter expression.
-        If the expression is invalid, ValueError is raised.
+    If flt is a string, it will be compiled as a filter expression.
+    If the expression is invalid, ValueError is raised.
     """
     if isinstance(flt, str):
         flt = parse(flt)
@@ -640,17 +655,11 @@ match_all: TFilter = parse("~all")
 
 help = []
 for a in filter_unary:
-    help.append(
-        (f"~{a.code}", a.help)
-    )
+    help.append((f"~{a.code}", a.help))
 for b in filter_rex:
-    help.append(
-        (f"~{b.code} regex", b.help)
-    )
+    help.append((f"~{b.code} regex", b.help))
 for c in filter_int:
-    help.append(
-        (f"~{c.code} int", c.help)
-    )
+    help.append((f"~{c.code} int", c.help))
 help.sort()
 help.extend(
     [

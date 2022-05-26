@@ -1,8 +1,7 @@
 import itertools
 import json
-import typing
 from collections.abc import MutableMapping
-from typing import Any, Dict, Generator, List, TextIO, Callable
+from typing import Any, Callable, Generator, TextIO, Union, cast
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow
@@ -16,7 +15,7 @@ class URLDict(MutableMapping):
     """Data structure to store information using filters as keys."""
 
     def __init__(self):
-        self.store: Dict[flowfilter.TFilter, Any] = {}
+        self.store: dict[flowfilter.TFilter, Any] = {}
 
     def __getitem__(self, key, *, count=0):
         if count:
@@ -51,7 +50,7 @@ class URLDict(MutableMapping):
             if flowfilter.match(fltr, flow):
                 yield value
 
-    def get(self, flow: HTTPFlow, default=None, *, count=0) -> List[Any]:
+    def get(self, flow: HTTPFlow, default=None, *, count=0) -> list[Any]:
         try:
             return self.__getitem__(flow, count=count)
         except KeyError:
@@ -74,12 +73,12 @@ class URLDict(MutableMapping):
         json_obj = json.loads(json_str)
         return cls._load(json_obj, value_loader)
 
-    def _dump(self, value_dumper: Callable = f_id) -> Dict:
-        dumped: Dict[typing.Union[flowfilter.TFilter, str], Any] = {}
+    def _dump(self, value_dumper: Callable = f_id) -> dict:
+        dumped: dict[Union[flowfilter.TFilter, str], Any] = {}
         for fltr, value in self.store.items():
             if hasattr(fltr, 'pattern'):
                 # cast necessary for mypy
-                dumped[typing.cast(Any, fltr).pattern] = value_dumper(value)
+                dumped[cast(Any, fltr).pattern] = value_dumper(value)
             else:
                 dumped[str(fltr)] = value_dumper(value)
         return dumped

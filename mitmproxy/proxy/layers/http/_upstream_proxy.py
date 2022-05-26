@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple
+from typing import Optional
 
 from h11._receivebuffer import ReceiveBuffer
 
@@ -18,16 +18,9 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
     tunnel_connection: connection.Server
 
     def __init__(
-            self,
-            ctx: context.Context,
-            tunnel_conn: connection.Server,
-            send_connect: bool
+        self, ctx: context.Context, tunnel_conn: connection.Server, send_connect: bool
     ):
-        super().__init__(
-            ctx,
-            tunnel_connection=tunnel_conn,
-            conn=ctx.server
-        )
+        super().__init__(ctx, tunnel_connection=tunnel_conn, conn=ctx.server)
         self.buf = ReceiveBuffer()
         self.send_connect = send_connect
 
@@ -53,12 +46,13 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             return (yield from super().start_handshake())
         assert self.conn.address
         flow = http.HTTPFlow(self.context.client, self.tunnel_connection)
+        authority = self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
         flow.request = http.Request(
             host=self.conn.address[0],
             port=self.conn.address[1],
             method=b"CONNECT",
             scheme=b"",
-            authority=f"{self.conn.address[0]}:{self.conn.address[1]}".encode(),
+            authority=authority,
             path=b"",
             http_version=b"HTTP/1.1",
             headers=http.Headers(),
@@ -71,13 +65,17 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         raw = http1.assemble_request(flow.request)
         yield commands.SendData(self.tunnel_connection, raw)
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data
         response_head = self.buf.maybe_extract_lines()
         if response_head:
-            response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
+            response_head = [
+                bytes(x) for x in response_head
+            ]  # TODO: Make url.parse compatible with bytearrays
             try:
                 response = http1.read_response_head(response_head)
             except ValueError as e:
@@ -92,8 +90,10 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             else:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 raw_resp = b"\n".join(response_head)
-                yield commands.Log(f"{proxyaddr}: {raw_resp!r}",
-                                   level="debug")
-                return False, f"Upstream proxy {proxyaddr} refused HTTP CONNECT request: {response.status_code} {response.reason}"
+                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", level="debug")
+                return (
+                    False,
+                    f"Upstream proxy {proxyaddr} refused HTTP CONNECT request: {response.status_code} {response.reason}",
+                )
         else:
             return False, None

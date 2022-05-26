@@ -5,7 +5,6 @@ import weakref
 from abc import ABC, abstractmethod
 from typing import MutableMapping
 from typing import Optional
-from typing import Tuple
 
 import ldap3
 import passlib.apache
@@ -20,22 +19,26 @@ REALM = "mitmproxy"
 
 
 class ProxyAuth:
-    validator: Optional[Validator] = None
+    validator: Validator | None = None
 
     def __init__(self):
-        self.authenticated: MutableMapping[connection.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[
+            connection.Client, tuple[str, str]
+        ] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
         loader.add_option(
-            "proxyauth", Optional[str], None,
+            "proxyauth",
+            Optional[str],
+            None,
             """
             Require proxy authentication. Format:
             "username:pass",
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
-            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
-            """
+            or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree" for LDAP authentication.
+            """,
         )
 
     def configure(self, updated):
@@ -44,7 +47,9 @@ class ProxyAuth:
         auth = ctx.options.proxyauth
         if auth:
             if ctx.options.mode == "transparent":
-                raise exceptions.OptionsError("Proxy Authentication not supported in transparent mode.")
+                raise exceptions.OptionsError(
+                    "Proxy Authentication not supported in transparent mode."
+                )
 
             if auth == "any":
                 self.validator = AcceptAll()
@@ -120,7 +125,7 @@ class ProxyAuth:
                 f"<body><h1>{status_code} {reason}</h1></body>"
                 f"</html>"
             ),
-            headers
+            headers,
         )
 
     @property
@@ -144,13 +149,11 @@ def mkauth(username: str, password: str, scheme: str = "basic") -> str:
     """
     Craft a basic auth string
     """
-    v = binascii.b2a_base64(
-        (username + ":" + password).encode("utf8")
-    ).decode("ascii")
+    v = binascii.b2a_base64((username + ":" + password).encode("utf8")).decode("ascii")
     return scheme + " " + v
 
 
-def parse_http_basic_auth(s: str) -> Tuple[str, str, str]:
+def parse_http_basic_auth(s: str) -> tuple[str, str, str]:
     """
     Parse a basic auth header.
     Raises a ValueError if the input is invalid.
@@ -159,7 +162,9 @@ def parse_http_basic_auth(s: str) -> Tuple[str, str, str]:
     if scheme.lower() != "basic":
         raise ValueError("Unknown scheme")
     try:
-        user, password = binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        user, password = (
+            binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        )
     except binascii.Error as e:
         raise ValueError(str(e))
     return scheme, user, password
@@ -181,7 +186,7 @@ class AcceptAll(Validator):
 class SingleUser(Validator):
     def __init__(self, proxyauth: str):
         try:
-            self.username, self.password = proxyauth.split(':')
+            self.username, self.password = proxyauth.split(":")
         except ValueError:
             raise exceptions.OptionsError("Invalid single-user auth specification.")
 
@@ -207,24 +212,46 @@ class Ldap(Validator):
     dn_subtree: str
 
     def __init__(self, proxyauth: str):
-        try:
-            security, url, ldap_user, ldap_pass, self.dn_subtree = proxyauth.split(":")
-        except ValueError:
-            raise exceptions.OptionsError("Invalid ldap specification")
-        if security == "ldaps":
-            server = ldap3.Server(url, use_ssl=True)
-        elif security == "ldap":
-            server = ldap3.Server(url)
-        else:
-            raise exceptions.OptionsError("Invalid ldap specification on the first part")
-        conn = ldap3.Connection(
-            server,
+        (
+            use_ssl,
+            url,
+            port,
             ldap_user,
             ldap_pass,
-            auto_bind=True
-        )
+            self.dn_subtree,
+        ) = self.parse_spec(proxyauth)
+        server = ldap3.Server(url, port=port, use_ssl=use_ssl)
+        conn = ldap3.Connection(server, ldap_user, ldap_pass, auto_bind=True)
         self.conn = conn
         self.server = server
+
+    @staticmethod
+    def parse_spec(spec: str) -> tuple[bool, str, int | None, str, str, str]:
+        try:
+            if spec.count(":") > 4:
+                (
+                    security,
+                    url,
+                    port_str,
+                    ldap_user,
+                    ldap_pass,
+                    dn_subtree,
+                ) = spec.split(":")
+                port = int(port_str)
+            else:
+                security, url, ldap_user, ldap_pass, dn_subtree = spec.split(":")
+                port = None
+
+            if security == "ldaps":
+                use_ssl = True
+            elif security == "ldap":
+                use_ssl = False
+            else:
+                raise ValueError
+
+            return use_ssl, url, port, ldap_user, ldap_pass, dn_subtree
+        except ValueError:
+            raise exceptions.OptionsError(f"Invalid LDAP specification: {spec}")
 
     def __call__(self, username: str, password: str) -> bool:
         if not username or not password:
@@ -232,10 +259,7 @@ class Ldap(Validator):
         self.conn.search(self.dn_subtree, f"(cn={username})")
         if self.conn.response:
             c = ldap3.Connection(
-                self.server,
-                self.conn.response[0]["dn"],
-                password,
-                auto_bind=True
+                self.server, self.conn.response[0]["dn"], password, auto_bind=True
             )
             if c:
                 return True

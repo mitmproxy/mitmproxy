@@ -25,6 +25,7 @@ class TcpMessageHook(StartHook):
     A TCP connection has received a message. The most recent message
     will be flow.messages[-1]. The message is user-modifiable.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -33,6 +34,7 @@ class TcpEndHook(StartHook):
     """
     A TCP connection has ended.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -43,6 +45,7 @@ class TcpErrorHook(StartHook):
 
     Every TCP flow will receive either a tcp_error or a tcp_end event, but not both.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -56,6 +59,7 @@ class TCPLayer(layer.Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
+
     flow: Optional[tcp.TCPFlow]
 
     def __init__(self, context: Context, ignore: bool = False):
@@ -89,7 +93,9 @@ class TCPLayer(layer.Layer):
         if isinstance(event, TcpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(
-                self.context.client if event.message.from_client else self.context.server,
+                self.context.client
+                if event.message.from_client
+                else self.context.server,
                 event.message.content,
             )
 
@@ -113,9 +119,8 @@ class TCPLayer(layer.Layer):
 
         elif isinstance(event, events.ConnectionClosed):
             all_done = not (
-                    (self.context.client.state & ConnectionState.CAN_READ)
-                    or
-                    (self.context.server.state & ConnectionState.CAN_READ)
+                (self.context.client.state & ConnectionState.CAN_READ)
+                or (self.context.server.state & ConnectionState.CAN_READ)
             )
             if all_done:
                 if self.context.server.state is not ConnectionState.CLOSED:
@@ -125,6 +130,7 @@ class TCPLayer(layer.Layer):
                 self._handle_event = self.done
                 if self.flow:
                     yield TcpEndHook(self.flow)
+                    self.flow.live = False
             else:
                 yield commands.CloseConnection(send_to, half_close=True)
         else:

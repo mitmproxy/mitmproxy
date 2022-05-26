@@ -1,10 +1,10 @@
 import re
 import urllib.parse
+from collections.abc import Sequence
 from typing import AnyStr, Optional
-from typing import Sequence
-from typing import Tuple
 
 from mitmproxy.net import check
+
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
@@ -16,19 +16,19 @@ _authority_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 def parse(url):
     """
-        URL-parsing function that checks that
-            - port is an integer 0-65535
-            - host is a valid IDNA-encoded hostname with no null-bytes
-            - path is valid ASCII
+    URL-parsing function that checks that
+        - port is an integer 0-65535
+        - host is a valid IDNA-encoded hostname with no null-bytes
+        - path is valid ASCII
 
-        Args:
-            A URL (as bytes or as unicode)
+    Args:
+        A URL (as bytes or as unicode)
 
-        Returns:
-            A (scheme, host, port, path) tuple
+    Returns:
+        A (scheme, host, port, path) tuple
 
-        Raises:
-            ValueError, if the URL is not properly formatted.
+    Raises:
+        ValueError, if the URL is not properly formatted.
     """
     # FIXME: We shouldn't rely on urllib here.
 
@@ -85,10 +85,10 @@ def unparse(scheme: str, host: str, port: int, path: str = "") -> str:
     return f"{scheme}://{authority}{path}"
 
 
-def encode(s: Sequence[Tuple[str, str]], similar_to: str = None) -> str:
+def encode(s: Sequence[tuple[str, str]], similar_to: str = None) -> str:
     """
-        Takes a list of (key, value) tuples and returns a urlencoded string.
-        If similar_to is passed, the output is formatted similar to the provided urlencoded string.
+    Takes a list of (key, value) tuples and returns a urlencoded string.
+    If similar_to is passed, the output is formatted similar to the provided urlencoded string.
     """
 
     remove_trailing_equal = False
@@ -99,7 +99,7 @@ def encode(s: Sequence[Tuple[str, str]], similar_to: str = None) -> str:
 
     if encoded and remove_trailing_equal:
         encoded = encoded.replace("=&", "&")
-        if encoded[-1] == '=':
+        if encoded[-1] == "=":
             encoded = encoded[:-1]
 
     return encoded
@@ -107,9 +107,9 @@ def encode(s: Sequence[Tuple[str, str]], similar_to: str = None) -> str:
 
 def decode(s):
     """
-        Takes a urlencoded string and returns a list of surrogate-escaped (key, value) tuples.
+    Takes a urlencoded string and returns a list of surrogate-escaped (key, value) tuples.
     """
-    return urllib.parse.parse_qsl(s, keep_blank_values=True, errors='surrogateescape')
+    return urllib.parse.parse_qsl(s, keep_blank_values=True, errors="surrogateescape")
 
 
 def quote(b: str, safe: str = "/") -> str:
@@ -132,7 +132,7 @@ def unquote(s: str) -> str:
 
 def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
     """
-        Returns the host component, with a port specification if needed.
+    Returns the host component, with a port specification if needed.
     """
     if default_port(scheme) == port:
         return host
@@ -152,7 +152,7 @@ def default_port(scheme: AnyStr) -> Optional[int]:
     }.get(scheme, None)
 
 
-def parse_authority(authority: AnyStr, check: bool) -> Tuple[str, Optional[int]]:
+def parse_authority(authority: AnyStr, check: bool) -> tuple[str, Optional[int]]:
     """Extract the host and port from host header/authority information
 
     Raises:

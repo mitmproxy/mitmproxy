@@ -1,5 +1,5 @@
 import re
-import typing
+from collections.abc import Sequence
 
 from json import dumps
 
@@ -16,7 +16,7 @@ class Search:
 
     @command.command('search')
     def _search(self,
-                flows: typing.Sequence[flow.Flow],
+                flows: Sequence[flow.Flow],
                 regex: str) -> None:
         """
         Defines a command named "search" that matches
