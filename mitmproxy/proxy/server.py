@@ -354,9 +354,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         writer.write(command.data)
                     else:
                         self.close_connection(command.connection)
-                    #if writer.transport.is_closing():
-                    #    self.log(f"XXX Write to closed connection {command.connection}")
-                    #writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):
@@ -390,10 +387,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 if not writer.transport.is_closing():
                     writer.write_eof()
                 else:
-                    connection.state = ConnectionState.CLOSED;
-                #if writer.transport.is_closing():
-                #    self.log(f"XXX Eof for closed connection {connection}")
-                #writer.write_eof()
+                    connection.state = ConnectionState.CLOSED
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
