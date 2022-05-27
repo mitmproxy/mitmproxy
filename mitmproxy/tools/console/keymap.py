@@ -1,6 +1,6 @@
 import os
 from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, Callable
 
 import ruamel.yaml
 import ruamel.yaml.error
@@ -30,6 +30,7 @@ Contexts = {
     "help",
     "keybindings",
     "options",
+    "quickhelp"
 }
 
 
@@ -131,9 +132,8 @@ class Keymap:
             return self.keys[context].get(key, None)
         return None
 
-    def filter(self, context: Sequence[str]) -> Sequence[Binding]:
-        filter = lambda b: bool([c for c in b.contexts if c in context])
-        return [x for x in self.bindings if filter(x)]
+    def all(self):
+        return self.bindings
 
     def list(self, context: str) -> Sequence[Binding]:
         b = [x for x in self.bindings if context in x.contexts or context == "all"]

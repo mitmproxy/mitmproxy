@@ -364,15 +364,29 @@ class KeysDisplay(urwid.WidgetWrap):
 
         signals.context_change.connect(self.update_keys)
 
-    def update_keys(self, ctx="global", keys=None):
+    def update_keys(self, ctx=None, keys=None):
         if keys is None:
-            keys = [
-                urwid.Text(
-                    [("heading", u"{}".format(k.key)), " ",  k.long_help]
-                ) for k in list(self.master.keymap.filter(ctx))
-            ]
+            quickhelp_binds, global_binds, binds_for_ctx = (list(), list(), list())
+            for b in self.master.keymap.all():
+                if "quickhelp" in b.contexts:
+                    quickhelp_binds.append(b)
+                elif ctx is not None and ctx in b.contexts:
+                    binds_for_ctx.append(b)
+                elif "global" in b.contexts:
+                    global_binds.append(b)
+            bindings = quickhelp_binds + binds_for_ctx + global_binds
+
+            keys = list()
+            for b in bindings:
+                label = b.short_help if b.short_help else b.long_help
+                keys.append(
+                    urwid.Text(
+                        [("heading", u"{}".format(b.key)), " ", label.title()]
+                    )
+                )
 
         columns = [urwid.Pile([keys[i], keys[i+1]]) for i in range(0, len(keys) - 1, 2)]
+
         if len(keys) % 2 == 1:
             columns.append(urwid.Pile([keys[-1]]))
 
