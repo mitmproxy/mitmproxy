@@ -328,10 +328,10 @@ class HeaderWidget(urwid.WidgetWrap):
         self.master = master
         self.columns = None
         self.title_widget = title_widget
-
         self.redraw()
 
-    # TODO: send signal when options change
+        master.options.changed.connect(self.sig_update)
+
     def sig_update(self, sender, flow=None, updated=None):
         self.redraw()
 
