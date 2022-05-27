@@ -350,10 +350,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
                     assert writer
-                    if not writer.transport.is_closing():
-                        writer.write(command.data)
-                    else:
+                    if isinstance(writer, asyncio.StreamWriter) and writer.transport.is_closing():
                         self.close_connection(command.connection)
+                    else:
+                        writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):
@@ -384,10 +384,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             try:
                 writer = self.transports[connection].writer
                 assert writer
-                if not writer.transport.is_closing():
-                    writer.write_eof()
-                else:
+                if isinstance(writer, asyncio.StreamWriter) and writer.transport.is_closing():
                     connection.state = ConnectionState.CLOSED
+                else:
+                    writer.write_eof()
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
