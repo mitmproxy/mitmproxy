@@ -134,7 +134,10 @@ class Window(urwid.Frame):
     def __init__(self, master):
         self.statusbar = statusbar.StatusBar(master)
         super().__init__(
-            None, header=None, footer=urwid.AttrWrap(self.statusbar, "background")
+            None, header=None, footer=urwid.Pile([
+                urwid.AttrWrap(self.statusbar, "background"),
+                KeysDisplay(master)
+            ])
         )
         self.master = master
         self.master.view.sig_view_refresh.connect(self.view_changed)
@@ -198,6 +201,9 @@ class Window(urwid.Frame):
             )
 
         self.body = urwid.AttrWrap(w, "background")
+
+        ctx = self.focus_stack().top_widget().keyctx
+        signals.context_change.send(ctx)
 
     def flow_changed(self, sender, flow):
         if self.master.view.focus.flow:
@@ -349,3 +355,25 @@ class HeaderWidget(urwid.WidgetWrap):
             self.columns,
             "heading",
         )
+
+
+class KeysDisplay(urwid.WidgetWrap):
+    def __init__(self, master):
+        self.master = master
+        self.update_keys()
+
+        signals.context_change.connect(self.update_keys)
+
+    def update_keys(self, ctx="global", keys=None):
+        if keys is None:
+            keys = [
+                urwid.Text(
+                    [("heading", u"{}".format(k.key)), " ",  k.long_help]
+                ) for k in list(self.master.keymap.filter(ctx))
+            ]
+
+        columns = [urwid.Pile([keys[i], keys[i+1]]) for i in range(0, len(keys) - 1, 2)]
+        if len(keys) % 2 == 1:
+            columns.append(urwid.Pile([keys[-1]]))
+
+        self._w = urwid.Columns(columns, dividechars=1, min_width=25)

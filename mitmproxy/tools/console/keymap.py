@@ -131,6 +131,10 @@ class Keymap:
             return self.keys[context].get(key, None)
         return None
 
+    def filter(self, context: Sequence[str]) -> Sequence[Binding]:
+        filter = lambda b: bool([c for c in b.contexts if c in context])
+        return [x for x in self.bindings if filter(x)]
+
     def list(self, context: str) -> Sequence[Binding]:
         b = [x for x in self.bindings if context in x.contexts or context == "all"]
         single = [x for x in b if len(x.key.split()) == 1]

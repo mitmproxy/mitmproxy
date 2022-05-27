@@ -37,3 +37,6 @@ push_view_state = blinker.Signal()
 
 # Fired when the key bindings change
 keybindings_change = blinker.Signal()
+
+# Fired when context has changed
+context_change = blinker.Signal()
