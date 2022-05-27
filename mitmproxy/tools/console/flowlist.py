@@ -95,7 +95,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         self.title_widget = urwid.WidgetWrap(urwid.Text(""))
 
         signals.flow_change.connect(self.sig_update)
-        signals.flowlist_change.connect(self.sig_update)  # TODO: does this have a sender?
+        signals.flowlist_change.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
         master.view.sig_view_add.connect(self.sig_update)
 

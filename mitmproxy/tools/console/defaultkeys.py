@@ -1,6 +1,6 @@
 
 def map(km):
-    km.add("?", "console.view.help", ["quickhelp", "global"], "View help")  # TODO: common key?
+    km.add("?", "console.view.help", ["quickhelp", "global"], "View help")
     km.add("q", "console.view.pop", ["quickhelp", "commonkey", "global"], "Exit the current view", "Exit View")
     km.add(":", "console.command ", ["quickhelp", "commonkey", "global"], "Command prompt", "Command Prompt")
     km.add("O", "console.view.options", ["quickhelp", "commonkey", "global"], "View options", "Options")
