@@ -1,7 +1,7 @@
 """
 This script simply prints all received HTTP Trailers.
 
-HTTP requests and responses can container trailing headers which are sent after
+HTTP requests and responses can contain trailing headers which are sent after
 the body is fully transmitted. Such trailers need to be announced in the initial
 headers by name, so the receiving endpoint can wait and read them after the
 body.
