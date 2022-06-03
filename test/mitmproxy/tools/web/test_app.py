@@ -110,6 +110,8 @@ async def test_generate_options_js():
             return "string[]"
         if t == Optional[str]:
             return "string | undefined"
+        if t == Optional[int]:
+            return "number | undefined"
         raise RuntimeError(t)
 
     with redirect_stdout(io.StringIO()) as s:

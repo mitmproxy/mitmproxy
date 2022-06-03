@@ -26,11 +26,12 @@ def process_options(parser, opts, args):
         args.termlog_verbosity = "debug"
         args.flow_detail = 2
 
-    adict = {}
-    for n in dir(args):
-        if n in opts:
-            adict[n] = getattr(args, n)
-    opts.merge(adict)
+    adict = {
+        key: val
+        for key, val in vars(args).items()
+        if key in opts and val is not None
+    }
+    opts.update(**adict)
 
 
 T = TypeVar("T", bound=master.Master)
