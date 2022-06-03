@@ -33,6 +33,17 @@ def set_task_debug_info(
         task.client = client  # type: ignore
 
 
+def set_current_task_debug_info(
+    *,
+    name: str,
+    client: Optional[tuple] = None,
+) -> None:
+    """Set debug info for the current task."""
+    task = asyncio.current_task()
+    assert task
+    set_task_debug_info(task, name=name, client=client)
+
+
 def task_repr(task: asyncio.Task) -> str:
     """Get a task representation with debug info."""
     name = task.get_name()

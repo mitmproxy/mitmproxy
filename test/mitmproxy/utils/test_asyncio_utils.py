@@ -4,10 +4,7 @@ from mitmproxy.utils import asyncio_utils
 
 
 async def ttask():
-    asyncio_utils.set_task_debug_info(
-        asyncio.current_task(),
-        name="newname",
-    )
+    asyncio_utils.set_current_task_debug_info(name="newname")
     await asyncio.sleep(999)
 
 
