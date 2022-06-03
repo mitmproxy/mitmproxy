@@ -101,6 +101,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self._drain_lock = asyncio.Lock()
 
     async def handle_client(self) -> None:
+        asyncio_utils.set_current_task_debug_info(
+            name=f"client handler",
+            client=self.client.peername,
+        )
         watch = asyncio_utils.create_task(
             self.timeout_watchdog.watch(),
             name="timeout watchdog",
