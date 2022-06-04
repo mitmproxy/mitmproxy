@@ -138,8 +138,7 @@ class TlsConfig:
             conn_context.server.tls and ctx.options.connection_strategy == "eager"
         )
 
-    def tls_start_client(self, tls_start: tls.TlsData) -> None:
-        """Establish TLS between client and proxy."""
+    def _tls_start_client(self, tls_start: tls.TlsData, method: net_tls.Method) -> None:
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
@@ -162,6 +161,7 @@ class TlsConfig:
             extra_chain_certs = []
 
         ssl_ctx = net_tls.create_client_proxy_context(
+            method=method,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
@@ -193,6 +193,14 @@ class TlsConfig:
             )
         )
         tls_start.ssl_conn.set_accept_state()
+
+    def tls_start_client(self, tls_start: tls.TlsData) -> None:
+        """Establish TLS between client and proxy."""
+        self._tls_start_client(tls_start, net_tls.Method.TLS_SERVER_METHOD)
+
+    def dtls_start_client(self, tls_start: tls.DtlsData) -> None:
+        """Establish DTLS between client and proxy."""
+        self._tls_start_client(tls_start, net_tls.Method.DTLS_SERVER_METHOD)
 
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between proxy and server."""

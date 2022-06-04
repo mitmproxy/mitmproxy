@@ -1,27 +1,46 @@
-from mitmproxy import ctx, connection
-from mitmproxy.proxy import context, tunnel, layer, events, commands
+from dataclasses import dataclass
+
+from mitmproxy import tls
+from mitmproxy.proxy import layer, commands, events
+from mitmproxy.proxy.commands import StartHook
+from mitmproxy.proxy.layers import tls as proxy_tls
 
 
-class DTLSLayer(tunnel.TunnelLayer):
-    def __init__(self, context: context.Context):
-        super().__init__(
-            context,
-            tunnel_connection=context.server,
-            conn=context.server,
-        )
+@dataclass
+class DtlsStartClientHook(StartHook):
+    """
+    DTLS negotation between mitmproxy and a client is about to start.
 
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.Start):  # we need an upstream connection
-            if self.tunnel_connection.state is connection.ConnectionState.CLOSED:
-                yield commands.OpenConnection(self.tunnel_connection)
-        if isinstance(event, events.DataReceived):
-            ctx.log.info(f"Event: {event}")
-            if event.connection == self.context.client:
-                cmd = commands.SendData(self.tunnel_connection, event.data)
-            else:
-                cmd = commands.SendData(self.context.client, event.data)
-            ctx.log.info(f"Command: {commands.SendData(self.context.client, event.data)}")
-            yield cmd
-        else:
-            ctx.log.info(f"Other Event: {event}")
-            yield from super()._handle_event(event)
+    An addon is expected to initialize data.ssl_conn.
+    (by default, this is done by `mitmproxy.addons.tlsconfig`)
+    """
+
+    data: tls.DtlsData
+
+
+class _DTLSLayer(proxy_tls._TLSLayer):
+    def start_handshake(self) -> layer.CommandGenerator[None]:
+        yield from self.start_tls()
+        if self.tls:
+            yield from self.receive_handshake_data(b"")
+
+    def start_tls(self) -> layer.CommandGenerator[None]:
+        assert not self.tls
+
+        tls_start = tls.DtlsData(self.conn, self.context)
+        if self.conn == self.context.client:
+            yield DtlsStartClientHook(tls_start)
+
+        if not tls_start.ssl_conn:
+            yield commands.Log(
+                "No TLS context was provided, failing connection.", "error"
+            )
+            yield commands.CloseConnection(self.conn)
+            return
+        assert tls_start.ssl_conn
+        self.tls = tls_start.ssl_conn
+
+    def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
+        yield from ()
+
+

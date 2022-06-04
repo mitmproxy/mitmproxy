@@ -5,7 +5,7 @@ from typing import Iterator, Literal, Optional
 
 from OpenSSL import SSL
 
-from mitmproxy import certs, connection
+from mitmproxy import certs, connection, ctx
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
 from mitmproxy.proxy.commands import StartHook
@@ -330,7 +330,7 @@ class _TLSLayer(tunnel.TunnelLayer):
                 # already fired out `tls_established_client` hook.
                 yield commands.Log(f"TLS Error: {e}", "warn")
                 break
-
+        ctx.log.info(f"{plaintext}")
         if plaintext:
             yield from self.event_to_child(
                 events.DataReceived(self.conn, bytes(plaintext))
