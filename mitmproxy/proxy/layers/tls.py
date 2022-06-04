@@ -167,7 +167,7 @@ class TlsFailedServerHook(StartHook):
     data: TlsData
 
 
-class _TLSLayer(tunnel.TunnelLayer):
+class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
     """The OpenSSL connection object"""
 
@@ -362,7 +362,7 @@ class _TLSLayer(tunnel.TunnelLayer):
         yield from super().send_close(half_close)
 
 
-class ServerTLSLayer(_TLSLayer):
+class ServerTLSLayer(TLSLayer):
     """
     This layer establishes TLS for a single server connection.
     """
@@ -412,7 +412,7 @@ class ServerTLSLayer(_TLSLayer):
         yield from super().on_handshake_error(err)
 
 
-class ClientTLSLayer(_TLSLayer):
+class ClientTLSLayer(TLSLayer):
     """
     This layer establishes TLS on a single client connection.
 
@@ -573,7 +573,7 @@ class ClientTLSLayer(_TLSLayer):
             yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
 
 
-class MockTLSLayer(_TLSLayer):
+class MockTLSLayer(TLSLayer):
     """Mock layer to disable actual TLS and use cleartext in tests.
 
     Use like so:

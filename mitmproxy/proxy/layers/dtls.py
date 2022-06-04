@@ -30,7 +30,7 @@ class DtlsStartServerHook(StartHook):
     data: tls.DtlsData
 
 
-class _DTLSLayer(proxy_tls._TLSLayer):
+class _DTLSLayer(proxy_tls.TLSLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from self.start_tls()
         if self.tls:
