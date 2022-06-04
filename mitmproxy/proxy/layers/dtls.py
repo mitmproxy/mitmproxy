@@ -70,5 +70,14 @@ class ServerDTLSLayer(_DTLSLayer):
     def __init__(self, context: context.Context):
         super().__init__(context, context.server)
 
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.DataReceived) and event.connection == self.context.client:
+            yield from super().send_data(event.data)
+        else:
+            yield from super()._handle_event(event)
+
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
-        yield from ()
+        if isinstance(event, events.DataReceived) and event.connection == self.context.server:
+            yield commands.SendData(self.context.client, event.data)
+        else:
+            yield from ()
