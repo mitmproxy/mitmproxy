@@ -1,6 +1,6 @@
 from . import modes
 from .dns import DNSLayer
-from .dtls import _DTLSLayer
+from .dtls import ClientDTLSLayer
 from .http import HttpLayer
 from .tcp import TCPLayer
 from .udp import UDPLayer
@@ -9,7 +9,7 @@ from .websocket import WebsocketLayer
 
 __all__ = [
     "modes",
-    "_DTLSLayer",
+    "ClientDTLSLayer",
     "DNSLayer",
     "HttpLayer",
     "TCPLayer",

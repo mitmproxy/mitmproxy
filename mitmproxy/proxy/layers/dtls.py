@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from mitmproxy import tls
-from mitmproxy.proxy import layer, commands, events
+from mitmproxy.proxy import layer, commands, events, context
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.layers import tls as proxy_tls
 
@@ -19,11 +19,6 @@ class DtlsStartClientHook(StartHook):
 
 
 class _DTLSLayer(proxy_tls._TLSLayer):
-    def start_handshake(self) -> layer.CommandGenerator[None]:
-        yield from self.start_tls()
-        if self.tls:
-            yield from self.receive_handshake_data(b"")
-
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
@@ -40,7 +35,13 @@ class _DTLSLayer(proxy_tls._TLSLayer):
         assert tls_start.ssl_conn
         self.tls = tls_start.ssl_conn
 
+
+class ClientDTLSLayer(_DTLSLayer):
+    def __init__(self, context: context.Context):
+        super().__init__(context, context.client)
+
+    def start_handshake(self) -> layer.CommandGenerator[None]:
+        yield from self.start_tls()
+
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
         yield from ()
-
-
