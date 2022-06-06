@@ -6,6 +6,8 @@
   ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
 * Fix a bug where an excess empty chunk has been sent for chunked HEAD request.
   ([#5372](https://github.com/mitmproxy/mitmproxy/discussions/5372), @jixunmoe)
+* Drop pkg_resources dependency.
+  ([#5401](https://github.com/mitmproxy/mitmproxy/issues/5401), @PavelICS)
 
 ## 15 May 2022: mitmproxy 8.1.0
 
