@@ -1,12 +1,10 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
 
-from pkg_resources import parse_version
-from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, BytesIO
+from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
 import struct
 
 
-if parse_version(ks_version) < parse_version('0.7'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.7 or later is required, but you have %s" % (ks_version))
+# manually removed version check, see https://github.com/mitmproxy/mitmproxy/issues/5401
 
 class Ico(KaitaiStruct):
     """Microsoft Windows uses specific file format to store applications
