@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import Optional
 
-from mitmproxy import tls, connection
-from mitmproxy.proxy import layer, commands, events, context
+from mitmproxy import tls
+from mitmproxy.proxy import layer, commands, context
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.layers import tls as proxy_tls
 
@@ -31,11 +32,6 @@ class DtlsStartServerHook(StartHook):
 
 
 class _DTLSLayer(proxy_tls.TLSLayer):
-    def start_handshake(self) -> layer.CommandGenerator[None]:
-        yield from self.start_tls()
-        if self.tls:
-            yield from self.receive_handshake_data(b"")
-
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
@@ -59,25 +55,25 @@ class ClientDTLSLayer(_DTLSLayer):
     def __init__(self, context: context.Context):
         super().__init__(context, context.client)
 
-    def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
-        # start connection with server
-        if self.child_layer.context.server.state is connection.ConnectionState.CLOSED:
-            yield commands.OpenConnection(self.child_layer.context.server)
-        yield from super().event_to_child(event)
+    def start_handshake(self) -> layer.CommandGenerator[None]:
+        yield from ()
+
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+        if not self.tls:
+            yield from self.start_tls()
+        if not self.conn.connected:
+            return False, "connection closed early"
+
+        return (yield from super().receive_handshake_data(data))
 
 
 class ServerDTLSLayer(_DTLSLayer):
     def __init__(self, context: context.Context):
         super().__init__(context, context.server)
 
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.connection == self.context.client:
-            yield from super().send_data(event.data)
-        else:
-            yield from super()._handle_event(event)
-
-    def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.connection == self.context.server:
-            yield commands.SendData(self.context.client, event.data)
-        else:
-            yield from ()
+    def start_handshake(self) -> layer.CommandGenerator[None]:
+        yield from self.start_tls()
+        if self.tls:
+            yield from self.receive_handshake_data(b"")
