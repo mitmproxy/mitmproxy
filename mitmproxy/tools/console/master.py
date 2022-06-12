@@ -153,14 +153,7 @@ class ConsoleMaster(master.Master):
         # read-only to remind the user that this is a view function
         os.chmod(name, stat.S_IREAD)
 
-        # hm which one should get priority?
-        c = (
-            os.environ.get("MITMPROXY_EDITOR")
-            or os.environ.get("PAGER")
-            or os.environ.get("EDITOR")
-        )
-        if not c:
-            c = "less"
+        c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
 
