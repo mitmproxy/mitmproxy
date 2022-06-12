@@ -100,6 +100,11 @@ describe('onKeyDown', () => {
         store.dispatch(createKeyEvent("d"))
         expect(fetchApi).toBeCalledWith('/flows/1', {method: 'DELETE'})
 
+        store.dispatch(createKeyEvent("Delete"))
+        expect(fetchApi).toBeCalledWith('/flows/1', {method: 'DELETE'})
+
+        store.dispatch(createKeyEvent("Backspace"))
+        expect(fetchApi).toBeCalledWith('/flows/1', {method: 'DELETE'})
     })
 
     it('should handle create action', () => {
@@ -153,6 +158,8 @@ describe('onKeyDown', () => {
         store.dispatch(createKeyEvent("Tab"))
         store.dispatch(createKeyEvent("ArrowRight"))
         store.dispatch(createKeyEvent("D"))
+        store.dispatch(createKeyEvent("d"))
+        store.dispatch(createKeyEvent("Delete"))
         expect(fetchApi).not.toBeCalled()
     })
 

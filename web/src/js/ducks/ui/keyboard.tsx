@@ -73,6 +73,8 @@ export function onKeyDown(e: KeyboardEvent) {
                 break
             }
 
+            case "Backspace":
+            case "Delete":
             case "d": {
                 if (!flow) {
                     return
