@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import contextlib
-import threading
 
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
@@ -123,21 +122,25 @@ class ConsoleMaster(master.Master):
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
-        fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
-        with open(fd, "w" if text else "wb") as f:
-            f.write(data)
-        c = self.get_editor()
-        cmd = shlex.split(c)
-        cmd.append(name)
-        with self.uistopped():
-            try:
-                subprocess.call(cmd)
-            except:
-                signals.status_message.send(message="Can't start editor: %s" % c)
-            else:
-                with open(name, "r" if text else "rb") as f:
-                    data = f.read()
-        os.unlink(name)
+        try:
+            fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
+            with open(fd, "w" if text else "wb") as f:
+                f.write(data)
+            c = self.get_editor()
+            cmd = shlex.split(c)
+            cmd.append(name)
+            with self.uistopped():
+                try:
+                    subprocess.call(cmd)
+                except:
+                    signals.status_message.send(message="Can't start editor: %s" % c)
+                else:
+                    with open(name, "r" if text else "rb") as f:
+                        data = f.read()
+            os.unlink(name)
+
+        except Exception as e:
+            signals.status_message.send(message=str(e))
         return data
 
     def spawn_external_viewer(self, data, contenttype):
@@ -146,34 +149,27 @@ class ConsoleMaster(master.Master):
             ext = mimetypes.guess_extension(contenttype) or ""
         else:
             ext = ""
-        fd, name = tempfile.mkstemp(ext, "mproxy")
-        os.write(fd, data)
-        os.close(fd)
+        try:
+            fd, name = tempfile.mkstemp(ext, "mproxy")
+            os.write(fd, data)
+            os.close(fd)
 
-        # read-only to remind the user that this is a view function
-        os.chmod(name, stat.S_IREAD)
+            # read-only to remind the user that this is a view function
+            os.chmod(name, stat.S_IREAD)
 
-        # hm which one should get priority?
-        c = (
-            os.environ.get("MITMPROXY_EDITOR")
-            or os.environ.get("PAGER")
-            or os.environ.get("EDITOR")
-        )
-        if not c:
-            c = "less"
-        cmd = shlex.split(c)
-        cmd.append(name)
-
-        with self.uistopped():
-            try:
-                subprocess.call(cmd, shell=False)
-            except:
-                signals.status_message.send(
-                    message="Can't start external viewer: %s" % " ".join(c)
-                )
-        # add a small delay before deletion so that the file is not removed before being loaded by the viewer
-        t = threading.Timer(1.0, os.unlink, args=[name])
-        t.start()
+            c = self.get_editor()
+            cmd = shlex.split(c)
+            cmd.append(name)
+            with self.uistopped():
+                try:
+                    subprocess.call(cmd, shell=False)
+                except:
+                    signals.status_message.send(
+                        message="Can't start external viewer: %s" % " ".join(c)
+                    )
+            os.unlink(name)
+        except Exception as e:
+            signals.status_message.send(message=str(e))
 
     def set_palette(self, opts, updated):
         self.ui.register_palette(
