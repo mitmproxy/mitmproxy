@@ -141,7 +141,6 @@ class ConsoleMaster(master.Master):
 
         except Exception as e:
             signals.status_message.send(message=str(e))
-            
         return data
 
     def spawn_external_viewer(self, data, contenttype):
@@ -150,7 +149,6 @@ class ConsoleMaster(master.Master):
             ext = mimetypes.guess_extension(contenttype) or ""
         else:
             ext = ""
-            
         try:
             fd, name = tempfile.mkstemp(ext, "mproxy")
             os.write(fd, data)
@@ -169,9 +167,7 @@ class ConsoleMaster(master.Master):
                     signals.status_message.send(
                         message="Can't start external viewer: %s" % " ".join(c)
                     )
-                    
             os.unlink(name)
-        
         except Exception as e:
             signals.status_message.send(message=str(e))
 

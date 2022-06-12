@@ -8,7 +8,7 @@
   ([#5372](https://github.com/mitmproxy/mitmproxy/discussions/5372), @jixunmoe)
 * Drop pkg_resources dependency.
   ([#5401](https://github.com/mitmproxy/mitmproxy/issues/5401), @PavelICS)
-* Fix Crash when deleting temporary files.
+* Fix crash when deleting temporary files.
   ([#4233](https://github.com/mitmproxy/mitmproxy/issues/4233), @o4x)
 
 ## 15 May 2022: mitmproxy 8.1.0
