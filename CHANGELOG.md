@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Support using Backspace or Delete to delete selected flow in mitmweb
+  ([#5396](https://github.com/mitmproxy/mitmproxy/discussions/5396), @kevinsj)
 * Support specifying the local address for outgoing connections
   ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
 * Fix a bug where an excess empty chunk has been sent for chunked HEAD request.
