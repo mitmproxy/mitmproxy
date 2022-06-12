@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import contextlib
-import threading
 
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
@@ -164,9 +163,8 @@ class ConsoleMaster(master.Master):
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)
                 )
-        # add a small delay before deletion so that the file is not removed before being loaded by the viewer
-        t = threading.Timer(1.0, os.unlink, args=[name])
-        t.start()
+                
+        os.unlink(name)
 
     def set_palette(self, opts, updated):
         self.ui.register_palette(
