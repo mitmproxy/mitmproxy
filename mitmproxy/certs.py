@@ -284,7 +284,7 @@ class CertStoreEntry:
     cert: Cert
     privatekey: rsa.RSAPrivateKey
     chain_file: Optional[Path]
-    chain_certs: Optional[list[Cert]]
+    chain_certs: list[Cert]
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
@@ -313,7 +313,16 @@ class CertStore:
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
-        self.default_chain_certs = load_pem_x509_certificates(self.default_chain_file.read_bytes()) if self.default_chain_file else None
+        self.default_chain_certs = (
+            [
+                Cert(cert)
+                for cert in load_pem_x509_certificates(
+                    self.default_chain_file.read_bytes()
+                )
+            ]
+            if self.default_chain_file
+            else []
+        )
         self.dhparams = dhparams
         self.certs = {}
         self.expire_queue = []

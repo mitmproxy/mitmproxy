@@ -6,6 +6,8 @@ from typing import Any, Optional, TypedDict
 
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.tls import CipherSuite
+from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
@@ -205,6 +207,7 @@ class TlsConfig:
             if os.path.isfile(client_certs):
                 return client_certs
             else:
+                assert server.address
                 server_name: str = server.sni or server.address[0]
                 p = os.path.join(client_certs, f"{server_name}.pem")
                 if os.path.isfile(p):
@@ -309,9 +312,9 @@ class TlsConfig:
         server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
-        tls_start.settings.certificate = entry.cert
+        tls_start.settings.certificate = entry.cert._cert
         tls_start.settings.certificate_private_key = entry.privatekey
-        tls_start.settings.certificate_chain = entry.chain_certs
+        tls_start.settings.certificate_chain = [cert._cert for cert in entry.chain_certs]
 
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
@@ -353,8 +356,11 @@ class TlsConfig:
         if client_cert:
             config = QuicConfiguration()
             config.load_cert_chain(client_cert)
+            assert isinstance(config.certificate, x509.Certificate)
             tls_start.settings.certificate = config.certificate
-            tls_start.settings.certificate_private_key = config.private_key
+            if config.private_key:
+                assert isinstance(config.private_key, (dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey, rsa.RSAPrivateKey))
+                tls_start.settings.certificate_private_key = config.private_key
             tls_start.settings.certificate_chain = config.certificate_chain
 
         tls_start.settings.ca_path = ctx.options.ssl_verify_upstream_trusted_confdir
