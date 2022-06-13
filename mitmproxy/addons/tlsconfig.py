@@ -1,15 +1,18 @@
 import ipaddress
 import os
 from pathlib import Path
+import ssl
 from typing import Any, Optional, TypedDict
 
+from aioquic.quic.configuration import QuicConfiguration
+from aioquic.tls import CipherSuite
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
-from mitmproxy.proxy.layers import tls as proxy_tls
+from mitmproxy.proxy.layers import tls as proxy_tls, quic
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -196,6 +199,18 @@ class TlsConfig:
         )
         tls_start.ssl_conn.set_accept_state()
 
+    def _get_client_cert(self, server: connection.Server) -> Optional[str]:
+        if ctx.options.client_certs:
+            client_certs = os.path.expanduser(ctx.options.client_certs)
+            if os.path.isfile(client_certs):
+                return client_certs
+            else:
+                server_name: str = server.sni or server.address[0]
+                p = os.path.join(client_certs, f"{server_name}.pem")
+                if os.path.isfile(p):
+                    return p
+        return None
+
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
         """Establish TLS between proxy and server."""
         if tls_start.ssl_conn is not None:
@@ -240,17 +255,6 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
-        client_cert: Optional[str] = None
-        if ctx.options.client_certs:
-            client_certs = os.path.expanduser(ctx.options.client_certs)
-            if os.path.isfile(client_certs):
-                client_cert = client_certs
-            else:
-                server_name: str = server.sni or server.address[0]
-                p = os.path.join(client_certs, f"{server_name}.pem")
-                if os.path.isfile(p):
-                    client_cert = p
-
         ssl_ctx = net_tls.create_proxy_server_context(
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
@@ -258,7 +262,7 @@ class TlsConfig:
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
-            client_cert=client_cert,
+            client_cert=self._get_client_cert(server),
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
@@ -292,6 +296,69 @@ class TlsConfig:
             tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
 
         tls_start.ssl_conn.set_connect_state()
+
+    def quic_tls_start_client(self, tls_start: quic.QuicTlsData) -> None:
+        """Establish QUIC between client and proxy."""
+        if tls_start.settings is not None:
+            return  # a user addon has already provided the settings.
+        tls_start.settings = quic.QuicTlsSettings()
+
+        assert isinstance(tls_start.conn, connection.Client)
+
+        client: connection.Client = tls_start.conn
+        server: connection.Server = tls_start.context.server
+
+        entry = self.get_cert(tls_start.context)
+        tls_start.settings.certificate = entry.cert
+        tls_start.settings.certificate_private_key = entry.privatekey
+        tls_start.settings.certificate_chain = entry.chain_certs
+
+        if not client.cipher_list and ctx.options.ciphers_client:
+            client.cipher_list = ctx.options.ciphers_client.split(":")
+        if client.cipher_list:
+            tls_start.settings.cipher_suites = [
+                CipherSuite(cipher) for cipher in client.cipher_list
+            ]
+        if ctx.options.add_upstream_certs_to_client_chain:
+            tls_start.settings.certificate_chain.extend(server.certificate_list)
+
+    def quic_tls_start_server(self, tls_start: quic.QuicTlsData) -> None:
+        """Establish QUIC between proxy and server."""
+        if tls_start.settings is not None:
+            return  # a user addon has already provided the settings.
+        tls_start.settings = quic.QuicTlsSettings()
+
+        assert isinstance(tls_start.conn, connection.Server)
+
+        client: connection.Client = tls_start.context.client
+        server: connection.Server = tls_start.conn
+        assert server.address
+
+        if ctx.options.ssl_insecure:
+            tls_start.settings.verify_mode = ssl.CERT_NONE
+
+        if server.sni is None:
+            server.sni = client.sni or server.address[0]
+
+        if not server.alpn_offers:
+            server.alpn_offers = client.alpn_offers
+
+        if not server.cipher_list and ctx.options.ciphers_server:
+            server.cipher_list = ctx.options.ciphers_server.split(":")
+        tls_start.settings.cipher_suites = [
+            CipherSuite(cipher) for cipher in server.cipher_list
+        ]
+
+        client_cert = self._get_client_cert(server)
+        if client_cert:
+            config = QuicConfiguration()
+            config.load_cert_chain(client_cert)
+            tls_start.settings.certificate = config.certificate
+            tls_start.settings.certificate_private_key = config.private_key
+            tls_start.settings.certificate_chain = config.certificate_chain
+
+        tls_start.settings.ca_path = ctx.options.ssl_verify_upstream_trusted_confdir
+        tls_start.settings.ca_file = ctx.options.ssl_verify_upstream_trusted_ca
 
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with

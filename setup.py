@@ -69,6 +69,7 @@ setup(
     # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
+        "aioquic>=0.9.20",
         "asgiref>=3.2.10,<3.6",
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",

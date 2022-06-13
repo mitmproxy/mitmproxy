@@ -41,6 +41,7 @@ from ._hooks import (  # noqa
 )
 from ._http1 import Http1Client, Http1Connection, Http1Server
 from ._http2 import Http2Client, Http2Server
+from ._http3 import Http3Client, Http3Server
 from ...context import Context
 
 
@@ -821,7 +822,9 @@ class HttpLayer(layer.Layer):
         self.command_sources = {}
 
         http_conn: HttpConnection
-        if self.context.client.alpn == b"h2":
+        if self.context.client.alpn == b"h3":
+            http_conn = Http3Server(context.fork())
+        elif self.context.client.alpn == b"h2":
             http_conn = Http2Server(context.fork())
         else:
             http_conn = Http1Server(context.fork())
@@ -1060,7 +1063,9 @@ class HttpClient(layer.Layer):
         else:
             err = yield commands.OpenConnection(self.context.server)
         if not err:
-            if self.context.server.alpn == b"h2":
+            if self.context.server.alpn == b"h3":
+                self.child_layer = Http3Client(self.context)
+            elif self.context.server.alpn == b"h2":
                 self.child_layer = Http2Client(self.context)
             else:
                 self.child_layer = Http1Client(self.context)
