@@ -52,7 +52,7 @@ class QuicTlsStartClientHook(StartHook):
     """
     TLS negotation between mitmproxy and a client over QUIC is about to start.
 
-    An addon is expected to initialize at least data.certificate and data.certificate_private_key.
+    An addon is expected to initialize data.settings.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
 
@@ -64,7 +64,7 @@ class QuicTlsStartServerHook(StartHook):
     """
     TLS negotation between mitmproxy and a server over QUIC is about to start.
 
-    An addon is expected to initialize at least data.certificate and data.certificate_private_key.
+    An addon is expected to initialize data.settings.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)
     """
 
@@ -75,9 +75,9 @@ class QuicLayer(layer.Layer):
     pass
 
 
-class QuicServerLayer(layer.Layer):
+class ServerQuicLayer(QuicLayer):
     pass
 
 
-class QuicClientLayer(layer.Layer):
+class ClientQuicLayer(QuicLayer):
     pass

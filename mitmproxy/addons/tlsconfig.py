@@ -323,7 +323,7 @@ class TlsConfig:
                 CipherSuite(cipher) for cipher in client.cipher_list
             ]
         if ctx.options.add_upstream_certs_to_client_chain:
-            tls_start.settings.certificate_chain.extend(server.certificate_list)
+            tls_start.settings.certificate_chain.extend(cert._cert for cert in server.certificate_list)
 
     def quic_tls_start_server(self, tls_start: quic.QuicTlsData) -> None:
         """Establish QUIC between proxy and server."""

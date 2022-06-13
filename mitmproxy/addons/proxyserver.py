@@ -3,8 +3,15 @@ from asyncio import base_events
 import ipaddress
 import re
 import struct
-from typing import Optional
+from typing import Callable, Optional
 
+from aioquic.buffer import Buffer as QuicBuffer
+from aioquic.quic.packet import (
+    PACKET_TYPE_INITIAL,
+    QuicProtocolVersion,
+    encode_quic_version_negotiation,
+    pull_quic_header,
+)
 from mitmproxy import (
     command,
     ctx,
@@ -21,8 +28,8 @@ from mitmproxy import (
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
 from mitmproxy.net import udp
-from mitmproxy.proxy import commands, events, layers, server_hooks
-from mitmproxy.proxy import server
+from mitmproxy.proxy import commands, events, layer, layers, server, server_hooks
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.utils import asyncio_utils, human
@@ -62,6 +69,7 @@ class Proxyserver:
 
     tcp_server: Optional[base_events.Server]
     dns_server: Optional[udp.UdpServer]
+    quic_server: Optional[udp.UdpServer]
     connect_addr: Optional[Address]
     listen_port: int
     dns_reverse_addr: Optional[tuple[str, int]]
@@ -74,6 +82,7 @@ class Proxyserver:
         self._lock = asyncio.Lock()
         self.tcp_server = None
         self.dns_server = None
+        self.quic_server = None
         self.connect_addr = None
         self.dns_reverse_addr = None
         self.is_running = False
@@ -98,6 +107,14 @@ class Proxyserver:
             self.options.dns_listen_host or "127.0.0.1",
             self.options.dns_listen_port,
             transparent=self.options.dns_mode == "transparent",
+        )
+        yield "QUIC", self.quic_server, lambda x: setattr(
+            self, "quic_server", x
+        ), ctx.options.quic_server, lambda: udp.start_server(
+            self.handle_quic_datagram,
+            self.options.listen_host or "127.0.0.1",
+            self.options.listen_port,
+            transparent=self.options.mode == "transparent",
         )
 
     @property
@@ -196,6 +213,15 @@ class Proxyserver:
             transparent: transparent mode
             """,
         )
+        loader.add_option(
+            "quic_server", bool, False, """Start a QUIC server. Disabled by default."""
+        )
+        loader.add_option(
+            "quic_connection_id_length",
+            int,
+            8,
+            """The length in bytes of local QUIC connection IDs.""",
+        )
 
     async def running(self):
         self.master = ctx.master
@@ -261,6 +287,7 @@ class Proxyserver:
                 "dns_mode",
                 "dns_listen_host",
                 "dns_listen_port",
+                "quic_server",
             ]
         ):
             asyncio.create_task(self.refresh_server())
@@ -326,6 +353,35 @@ class Proxyserver:
         )
         await self.handle_connection(connection_id)
 
+    def handle_udp_connection(
+        self,
+        transport: asyncio.DatagramTransport,
+        data: bytes,
+        remote_addr: Address,
+        connection_id: tuple,
+        layer_cb: Callable[[Context], layer.Layer],
+        server_addr: Optional[Address] = None,
+        timeout: Optional[int] = None,
+    ) -> None:
+        if connection_id not in self._connections:
+            reader = udp.DatagramReader()
+            writer = udp.DatagramWriter(transport, remote_addr, reader)
+            handler = ProxyConnectionHandler(
+                self.master, reader, writer, self.options, timeout
+            )
+            handler.layer = layer_cb(handler.layer.context)
+            if server_addr is not None:
+                handler.layer.context.server.address = server_addr
+                handler.layer.context.server.transport_protocol = "udp"
+            self._connections[connection_id] = handler
+            asyncio.create_task(self.handle_connection(connection_id))
+        else:
+            handler = self._connections[connection_id]
+            client_reader = handler.transports[handler.client].reader
+            assert isinstance(client_reader, udp.DatagramReader)
+            reader = client_reader
+        reader.feed_data(data, remote_addr)
+
     def handle_dns_datagram(
         self,
         transport: asyncio.DatagramTransport,
@@ -340,28 +396,72 @@ class Proxyserver:
                 f"Invalid DNS datagram received from {human.format_address(remote_addr)}."
             )
             return
-        connection_id = ("udp", dns_id, remote_addr, local_addr)
-        if connection_id not in self._connections:
-            reader = udp.DatagramReader()
-            writer = udp.DatagramWriter(transport, remote_addr, reader)
-            handler = ProxyConnectionHandler(
-                self.master, reader, writer, self.options, 20
-            )
-            handler.layer = layers.DNSLayer(handler.layer.context)
-            handler.layer.context.server.address = (
+        self.handle_udp_connection(
+            transport=transport,
+            date=data,
+            remote_addr=remote_addr,
+            server_addr=(
                 local_addr
                 if self.options.dns_mode == "transparent"
                 else self.dns_reverse_addr
+            ),
+            connection_id=("udp", dns_id, remote_addr, local_addr),
+            layer_cb=layers.DNSLayer,
+            timeout=20,
+        )
+
+    def handle_quic_datagram(
+        self,
+        transport: asyncio.DatagramTransport,
+        data: bytes,
+        remote_addr: Address,
+        local_addr: Address,
+    ) -> None:
+        # largely taken from aioquic's own asyncio server code
+        buffer = QuicBuffer(data=data)
+        try:
+            header = pull_quic_header(
+                buffer, host_cid_length=self.options.quic_connection_id_length
             )
-            handler.layer.context.server.transport_protocol = "udp"
-            self._connections[connection_id] = handler
-            asyncio.create_task(self.handle_connection(connection_id))
-        else:
-            handler = self._connections[connection_id]
-            client_reader = handler.transports[handler.client].reader
-            assert isinstance(client_reader, udp.DatagramReader)
-            reader = client_reader
-        reader.feed_data(data, remote_addr)
+        except ValueError:
+            ctx.log.info(
+                f"Invalid QUIC datagram received from {human.format_address(remote_addr)}."
+            )
+            return
+
+        # negotiate version, support all versions known to aioquic
+        supported_versions = (
+            version.value
+            for version in QuicProtocolVersion
+            if version is not QuicProtocolVersion.NEGOTIATION
+        )
+        if header.version is not None and header.version not in supported_versions:
+            transport.sendto(
+                encode_quic_version_negotiation(
+                    source_cid=header.destination_cid,
+                    destination_cid=header.source_cid,
+                    supported_versions=supported_versions,
+                ),
+                remote_addr,
+            )
+            return
+
+        # create or resume the connection
+        connection_id = ("quic", header.destination_cid)
+        if connection_id not in self._connections:
+            if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
+                ctx.log.info(
+                    f"QUIC packet received from {human.format_address(remote_addr)} with an unknown connection id."
+                )
+                return
+        self.handle_udp_connection(
+            transport=transport,
+            date=data,
+            remote_addr=remote_addr,
+            server_addr=local_addr if self.options.mode == "transparent" else None,
+            connection_id=connection_id,
+            layer_cb=layers.ServerQuicLayer,
+        )
 
     def inject_event(self, event: events.MessageInjected):
         connection_id = (
