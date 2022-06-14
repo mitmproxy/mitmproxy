@@ -879,7 +879,9 @@ class HttpLayer(layer.Layer):
                 elif isinstance(event, events.DataReceived):
                     # The peer has sent data. This can happen with HTTP/2 servers that already send a settings frame.
                     child_layer: HttpConnection
-                    if self.context.server.alpn == b"h2":
+                    if self.context.server.alpn == b"h3":
+                        child_layer = Http3Client(self.context.fork())
+                    elif self.context.server.alpn == b"h2":
                         child_layer = Http2Client(self.context.fork())
                     else:
                         child_layer = Http1Client(self.context.fork())

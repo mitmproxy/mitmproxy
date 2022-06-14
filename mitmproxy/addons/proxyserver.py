@@ -27,7 +27,7 @@ from mitmproxy import (
 )
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
-from mitmproxy.net import udp
+from mitmproxy.net import server_spec, udp
 from mitmproxy.proxy import commands, events, layer, layers, server, server_hooks
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
@@ -359,8 +359,9 @@ class Proxyserver:
         data: bytes,
         remote_addr: Address,
         connection_id: tuple,
-        layer_cb: Callable[[Context], layer.Layer],
+        layer_factory: Callable[[Context], layer.Layer],
         server_addr: Optional[Address] = None,
+        server_sni: Optional[str] = None,
         timeout: Optional[int] = None,
     ) -> None:
         if connection_id not in self._connections:
@@ -369,10 +370,10 @@ class Proxyserver:
             handler = ProxyConnectionHandler(
                 self.master, reader, writer, self.options, timeout
             )
-            handler.layer = layer_cb(handler.layer.context)
-            if server_addr is not None:
-                handler.layer.context.server.address = server_addr
-                handler.layer.context.server.transport_protocol = "udp"
+            handler.layer = layer_factory(handler.layer.context)
+            handler.layer.context.server.transport_protocol = "udp"
+            handler.layer.context.server.address = server_addr
+            handler.layer.context.server.sni = server_sni
             self._connections[connection_id] = handler
             asyncio.create_task(self.handle_connection(connection_id))
         else:
@@ -406,7 +407,7 @@ class Proxyserver:
                 else self.dns_reverse_addr
             ),
             connection_id=("udp", dns_id, remote_addr, local_addr),
-            layer_cb=layers.DNSLayer,
+            layer_factory=layers.DNSLayer,
             timeout=20,
         )
 
@@ -446,7 +447,7 @@ class Proxyserver:
             )
             return
 
-        # create or resume the connection
+        # check if a new connection is possible
         connection_id = ("quic", header.destination_cid)
         if connection_id not in self._connections:
             if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
@@ -454,13 +455,27 @@ class Proxyserver:
                     f"QUIC packet received from {human.format_address(remote_addr)} with an unknown connection id."
                 )
                 return
+
+        # determine the server settings (similar to modes.DestinationKnown)
+        server_addr: Optional[Address] = None
+        server_sni: Optional[str] = None
+        if self.options.mode == "transparent":
+            server_addr = local_addr
+        elif self.options.mode.startswith("reverse:"):
+            spec = server_spec.parse_with_mode(self.options.mode)[1]
+            server_addr = spec.address
+            if not self.options.keep_host_header:
+                server_sni = spec.address[0]
+
+        # create or resume the connection
         self.handle_udp_connection(
             transport=transport,
             date=data,
             remote_addr=remote_addr,
-            server_addr=local_addr if self.options.mode == "transparent" else None,
+            server_addr=server_addr,
+            server_sni=server_sni,
             connection_id=connection_id,
-            layer_cb=layers.ServerQuicLayer,
+            layer_factory=layers.ClientQuicLayer,
         )
 
     def inject_event(self, event: events.MessageInjected):
