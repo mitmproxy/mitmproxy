@@ -201,7 +201,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn.set_accept_state()
 
-    def _get_client_cert(self, server: connection.Server) -> Optional[str]:
+    def get_client_cert(self, server: connection.Server) -> Optional[str]:
         if ctx.options.client_certs:
             client_certs = os.path.expanduser(ctx.options.client_certs)
             if os.path.isfile(client_certs):
@@ -265,7 +265,7 @@ class TlsConfig:
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
-            client_cert=self._get_client_cert(server),
+            client_cert=self.get_client_cert(server),
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
@@ -352,7 +352,7 @@ class TlsConfig:
             CipherSuite(cipher) for cipher in server.cipher_list
         ]
 
-        client_cert = self._get_client_cert(server)
+        client_cert = self.get_client_cert(server)
         if client_cert:
             config = QuicConfiguration()
             config.load_cert_chain(client_cert)

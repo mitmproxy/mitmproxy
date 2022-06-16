@@ -29,7 +29,6 @@ from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
 from mitmproxy.net import server_spec, udp
 from mitmproxy.proxy import commands, events, layer, layers, server, server_hooks
-from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.utils import asyncio_utils, human
@@ -359,23 +358,26 @@ class Proxyserver:
         data: bytes,
         remote_addr: Address,
         connection_id: tuple,
-        layer_factory: Callable[[Context], layer.Layer],
+        layer_factory: Callable[[ProxyConnectionHandler], layer.Layer],
         server_addr: Optional[Address] = None,
         server_sni: Optional[str] = None,
+        done_callback: Optional[Callable[[ProxyConnectionHandler]]] = None,
         timeout: Optional[int] = None,
-    ) -> None:
+    ) -> Optional[asyncio.Task[None]]:
         if connection_id not in self._connections:
             reader = udp.DatagramReader()
             writer = udp.DatagramWriter(transport, remote_addr, reader)
             handler = ProxyConnectionHandler(
                 self.master, reader, writer, self.options, timeout
             )
-            handler.layer = layer_factory(handler.layer.context)
+            handler.layer = layer_factory(handler)
             handler.layer.context.server.transport_protocol = "udp"
             handler.layer.context.server.address = server_addr
             handler.layer.context.server.sni = server_sni
             self._connections[connection_id] = handler
-            asyncio.create_task(self.handle_connection(connection_id))
+            task = asyncio.create_task(self.handle_connection(connection_id))
+            if done_callback is not None:
+                task.add_done_callback(lambda _: done_callback(handler))
         else:
             handler = self._connections[connection_id]
             client_reader = handler.transports[handler.client].reader
@@ -407,7 +409,7 @@ class Proxyserver:
                 else self.dns_reverse_addr
             ),
             connection_id=("udp", dns_id, remote_addr, local_addr),
-            layer_factory=layers.DNSLayer,
+            layer_factory=lambda handler: layers.DNSLayer(handler.layer.context),
             timeout=20,
         )
 
@@ -467,6 +469,25 @@ class Proxyserver:
             if not self.options.keep_host_header:
                 server_sni = spec.address[0]
 
+        # define the callback functions
+        connection_ids = set([connection_id])
+
+        def cleanup_connection_ids(handler: ProxyConnectionHandler) -> None:
+            for connection_id in connection_ids:
+                if connection_id in self._connections:
+                    del self._connections[connection_id]
+
+        def issue_connection_id(handler: ProxyConnectionHandler, cid: bytes) -> None:
+            connection_id = ("quic", cid)
+            assert connection_id not in self._connections
+            self._connections[connection_id] = handler
+            connection_ids.add(connection_id)
+
+        def retire_connection_id(handler: ProxyConnectionHandler, cid: bytes) -> None:
+            connection_id = ("quic", cid)
+            connection_ids.remove(connection_id)
+            del self._connections[connection_id]
+
         # create or resume the connection
         self.handle_udp_connection(
             transport=transport,
@@ -475,7 +496,12 @@ class Proxyserver:
             server_addr=server_addr,
             server_sni=server_sni,
             connection_id=connection_id,
-            layer_factory=layers.ClientQuicLayer,
+            done_callback=cleanup_connection_ids,
+            layer_factory=lambda handler: layers.ClientQuicLayer(
+                context=handler.layer.context,
+                issue_cid=lambda cid: issue_connection_id(handler, cid),
+                retire_cid=lambda cid: retire_connection_id(handler, cid),
+            ),
         )
 
     def inject_event(self, event: events.MessageInjected):
