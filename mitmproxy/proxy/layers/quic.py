@@ -61,7 +61,7 @@ class QuicTlsData(TlsData):
 
 
 @dataclass
-class QuicTlsStartClientHook(connection.StartHook):
+class QuicTlsStartClientHook(commands.StartHook):
     """
     TLS negotiation between mitmproxy and a client over QUIC is about to start.
 
@@ -73,7 +73,7 @@ class QuicTlsStartClientHook(connection.StartHook):
 
 
 @dataclass
-class QuicTlsStartServerHook(connection.StartHook):
+class QuicTlsStartServerHook(commands.StartHook):
     """
     TLS negotiation between mitmproxy and a server over QUIC is about to start.
 
@@ -84,19 +84,21 @@ class QuicTlsStartServerHook(connection.StartHook):
     data: QuicTlsData
 
 
-class QuicSecretsLogger(TextIO):
-    conn: connection.Connection
+class QuicSecretsLogger:
     logger: tls.MasterSecretLogger
 
     def __init__(
-        self, conn: connection.Connection, logger: tls.MasterSecretLogger
+        self, logger: tls.MasterSecretLogger
     ) -> None:
         super().__init__()
-        self.conn = conn
         self.logger = logger
 
     def write(self, s: str) -> int:
-        self.logger(self.conn, s.encode())
+        if s.endswith("\n"):
+            s = s[:-1]
+        data = s.encode()
+        self.logger(None, data)  # type: ignore
+        return len(data) + 1
 
     def flush(self) -> None:
         # done by the logger during write
@@ -108,7 +110,7 @@ class QuicClientHelloException(Exception):
     data: bytes
 
 
-def hook_quic_tls(quic: QuicConnection, cb: Callable[[QuicTlsContext]]) -> None:
+def hook_quic_tls(quic: QuicConnection, cb: Callable[[QuicTlsContext], None]) -> None:
     assert quic.tls is None
 
     # patch aioquic to intercept the client/server hello
@@ -142,7 +144,7 @@ def raise_on_client_hello(tls: QuicTlsContext) -> None:
     tls._server_handle_hello = server_handle_hello_replacement
 
 
-def callback_on_server_hello(tls: QuicTlsContext, cb: Callable[[ServerHello]]) -> None:
+def callback_on_server_hello(tls: QuicTlsContext, cb: Callable[[ServerHello], None]) -> None:
     orig_client_handle_hello = tls._client_handle_hello
 
     def _client_handle_hello_replacement(
@@ -185,15 +187,13 @@ class QuicLayer(layer.Layer):
     buffer: List[bytes]
     quic: Optional[QuicConnection]
     conn: connection.Connection
-    issue_cid: Callable[[bytes]]
-    retire_cid: Callable[[bytes]]
 
     def __init__(
         self,
         context: context.Context,
         conn: connection.Connection,
-        issue_cid: Callable[[bytes]],
-        retire_cid: Callable[[bytes]],
+        issue_cid: Callable[[bytes], None],
+        retire_cid: Callable[[bytes], None],
     ) -> None:
         super().__init__(context)
         self.loop = asyncio.get_event_loop()
@@ -208,7 +208,7 @@ class QuicLayer(layer.Layer):
             alpn_protocols=self.conn.alpn_offers,
             connection_id_length=self.context.options.quic_connection_id_length,
             is_client=self.conn == self.context.server,
-            secrets_log_file=QuicSecretsLogger(self.conn, tls.log_master_secret)
+            secrets_log_file=QuicSecretsLogger(tls.log_master_secret)
             if tls.log_master_secret is not None
             else None,
             server_name=self.conn.sni,
@@ -255,8 +255,8 @@ class ServerQuicLayer(QuicLayer):
     def __init__(
         self,
         context: context.Context,
-        issue_cid: Callable[[bytes]],
-        retire_cid: Callable[[bytes]],
+        issue_cid: Callable[[bytes], None],
+        retire_cid: Callable[[bytes], None],
     ) -> None:
         super().__init__(context, context.server, issue_cid, retire_cid)
 
@@ -269,8 +269,8 @@ class ClientQuicLayer(QuicLayer):
     def __init__(
         self,
         context: context.Context,
-        issue_cid: Callable[[bytes]],
-        retire_cid: Callable[[bytes]],
+        issue_cid: Callable[[bytes], None],
+        retire_cid: Callable[[bytes], None],
     ) -> None:
         super().__init__(context, context.client, issue_cid, retire_cid)
 

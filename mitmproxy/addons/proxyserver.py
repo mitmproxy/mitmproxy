@@ -3,7 +3,7 @@ from asyncio import base_events
 import ipaddress
 import re
 import struct
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic.packet import (
@@ -361,9 +361,9 @@ class Proxyserver:
         layer_factory: Callable[[ProxyConnectionHandler], layer.Layer],
         server_addr: Optional[Address] = None,
         server_sni: Optional[str] = None,
-        done_callback: Optional[Callable[[ProxyConnectionHandler]]] = None,
+        done_callback: Optional[Callable[[ProxyConnectionHandler], Any]] = None,
         timeout: Optional[int] = None,
-    ) -> Optional[asyncio.Task[None]]:
+    ) -> None:
         if connection_id not in self._connections:
             reader = udp.DatagramReader()
             writer = udp.DatagramWriter(transport, remote_addr, reader)
@@ -375,9 +375,11 @@ class Proxyserver:
             handler.layer.context.server.address = server_addr
             handler.layer.context.server.sni = server_sni
             self._connections[connection_id] = handler
-            task = asyncio.create_task(self.handle_connection(connection_id))
-            if done_callback is not None:
-                task.add_done_callback(lambda _: done_callback(handler))
+            asyncio.create_task(
+                self.handle_connection(connection_id)
+            ).add_done_callback(
+                lambda _: None if done_callback is None else done_callback(handler)
+            )
         else:
             handler = self._connections[connection_id]
             client_reader = handler.transports[handler.client].reader
@@ -401,7 +403,7 @@ class Proxyserver:
             return
         self.handle_udp_connection(
             transport=transport,
-            date=data,
+            data=data,
             remote_addr=remote_addr,
             server_addr=(
                 local_addr
@@ -420,6 +422,9 @@ class Proxyserver:
         remote_addr: Address,
         local_addr: Address,
     ) -> None:
+        def build_connection_id(cid: bytes) -> tuple:
+            return ("quic", cid, local_addr)
+
         # largely taken from aioquic's own asyncio server code
         buffer = QuicBuffer(data=data)
         try:
@@ -450,7 +455,7 @@ class Proxyserver:
             return
 
         # check if a new connection is possible
-        connection_id = ("quic", header.destination_cid)
+        connection_id = build_connection_id(header.destination_cid)
         if connection_id not in self._connections:
             if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
                 ctx.log.info(
@@ -478,20 +483,20 @@ class Proxyserver:
                     del self._connections[connection_id]
 
         def issue_connection_id(handler: ProxyConnectionHandler, cid: bytes) -> None:
-            connection_id = ("quic", cid)
+            connection_id = build_connection_id(cid)
             assert connection_id not in self._connections
             self._connections[connection_id] = handler
             connection_ids.add(connection_id)
 
         def retire_connection_id(handler: ProxyConnectionHandler, cid: bytes) -> None:
-            connection_id = ("quic", cid)
+            connection_id = build_connection_id(cid)
             connection_ids.remove(connection_id)
             del self._connections[connection_id]
 
         # create or resume the connection
         self.handle_udp_connection(
             transport=transport,
-            date=data,
+            data=data,
             remote_addr=remote_addr,
             server_addr=server_addr,
             server_sni=server_sni,

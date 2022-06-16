@@ -10,7 +10,7 @@ from typing import Any, Generic, Optional, TypeVar
 
 from mitmproxy import flow
 from mitmproxy.proxy import commands
-from mitmproxy.connection import Connection
+from mitmproxy.connection import Address, Connection
 
 
 class Event:
@@ -45,6 +45,7 @@ class DataReceived(ConnectionEvent):
     """
 
     data: bytes
+    remote_addr: Optional[Address] = None
 
     def __repr__(self):
         target = type(self.connection).__name__.lower()

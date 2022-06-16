@@ -249,9 +249,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         cancelled = None
         reader = self.transports[connection].reader
         assert reader
+        has_remote_addr = isinstance(reader, udp.DatagramReader)
         while True:
             try:
-                data = await reader.read(65535)
+                if has_remote_addr:
+                    data, remote_addr = await reader.read(65535)
+                else:
+                    data, remote_addr = await reader.read(65535), None
                 if not data:
                     raise OSError("Connection closed by peer.")
             except OSError:
@@ -260,7 +264,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-            self.server_event(events.DataReceived(connection, data))
+            self.server_event(events.DataReceived(connection, data, remote_addr))
 
             try:
                 await self.drain_writers()
@@ -353,8 +357,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
-                    assert writer
-                    writer.write(command.data)
+                    if command.remote_addr is not None:
+                        assert isinstance(writer, udp.DatagramWriter)
+                        writer.write(command.data, command.remote_addr)
+                    else:
+                        assert writer
+                        writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):

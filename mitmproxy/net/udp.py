@@ -4,7 +4,7 @@ import asyncio
 import ipaddress
 import socket
 import struct
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, Optional, Tuple, Union, cast
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -228,7 +228,7 @@ class UdpServer(DrainableDatagramProtocol):
 
 class DatagramReader:
 
-    _packets: asyncio.Queue
+    _packets: asyncio.Queue[Tuple[bytes, Address]]
     _eof: bool
 
     def __init__(self) -> None:
@@ -243,7 +243,7 @@ class DatagramReader:
             )
         else:
             try:
-                self._packets.put_nowait(data)
+                self._packets.put_nowait((data, remote_addr))
             except asyncio.QueueFull:
                 ctx.log.debug(
                     f"Dropped UDP packet from {human.format_address(remote_addr)}."
@@ -252,17 +252,17 @@ class DatagramReader:
     def feed_eof(self) -> None:
         self._eof = True
         try:
-            self._packets.put_nowait(b"")
+            self._packets.put_nowait((b"", None))  # type: ignore
         except asyncio.QueueFull:
             pass
 
-    async def read(self, n: int) -> bytes:
+    async def read(self, n: int) -> Tuple[bytes, Address]:
         assert n >= MAX_DATAGRAM_SIZE
         if self._eof:
             try:
                 return self._packets.get_nowait()
             except asyncio.QueueEmpty:
-                return b""
+                return (b"", None)  # type: ignore
         else:
             return await self._packets.get()
 
@@ -295,8 +295,8 @@ class DatagramWriter:
     def _protocol(self) -> DrainableDatagramProtocol:
         return cast(DrainableDatagramProtocol, self._transport.get_protocol())
 
-    def write(self, data: bytes) -> None:
-        self._transport.sendto(data, self._remote_addr)
+    def write(self, data: bytes, remote_addr: Optional[Address] = None) -> None:
+        self._transport.sendto(data, self._remote_addr if remote_addr is None else remote_addr)
 
     def write_eof(self) -> None:
         raise NotImplementedError("UDP does not support half-closing.")
