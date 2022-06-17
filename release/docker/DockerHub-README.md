@@ -5,11 +5,11 @@ Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SS
 ## Usage
 
 ```sh
-$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
+$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy -e PUID=1001 -e PGID=1001] -p 8080:8080 mitmproxy/mitmproxy
 [terminal user interface of mitmproxy is launched...]
 ```
 
-The *volume mount* is optional: It's to store the generated CA certificates.
+The *volume mount* is optional: It's to store the generated CA certificates. And if you specific the -v parameter to mount your local storage, you should also set the PUID and PGID envionment variable to spcific the UID and GID of the local storage.  
 
 Once started, mitmproxy listens as a HTTP proxy on `localhost:8080`:
 

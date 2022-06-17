@@ -17,6 +17,9 @@ RUN rm -rf /wheels
 
 VOLUME /home/mitmproxy/.mitmproxy
 
+ENV PUID= \
+    PGID= 
+
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
