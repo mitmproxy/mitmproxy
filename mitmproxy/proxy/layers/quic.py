@@ -3,7 +3,6 @@ import asyncio
 from dataclasses import dataclass
 from ssl import VerifyMode
 from typing import Callable, List, Literal, Optional, Tuple, Union
-from urllib.parse import non_hierarchical
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
@@ -13,7 +12,7 @@ from aioquic.tls import CipherSuite, HandshakeType
 from aioquic.quic.packet import PACKET_TYPE_INITIAL, pull_quic_header
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import connection
+from mitmproxy import certs, connection
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, layers
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
@@ -92,7 +91,7 @@ class QuicGetConnection(commands.ConnectionCommand):  # -> QuicConnection
 
 
 @dataclass(repr=False)
-class OpenGetConnectionCompleted(events.CommandCompleted):
+class QuicGetConnectionCompleted(events.CommandCompleted):
     command: QuicGetConnection
     connection: QuicConnection
 
@@ -173,7 +172,7 @@ class QuicLayer(layer.Layer):
     loop: asyncio.AbstractEventLoop
     original_destination_connection_id: Optional[bytes]
     quic: Optional[QuicConnection]
-    waiting_get_connection_commands: List[QuicGetConnection]
+    tls: Optional[QuicTlsSettings]
 
     def __init__(
         self,
@@ -188,11 +187,17 @@ class QuicLayer(layer.Layer):
         self.loop = asyncio.get_event_loop()
         self.original_destination_connection_id = None
         self.quic = None
-        self.waiting_get_connection_commands = []
+        self.tls = None
+        self._get_connection_commands: List[QuicGetConnection] = []
         self._issue_cid = issue_cid
+        self._request_wakeup_command_and_timer: Optional[
+            Tuple[commands.RequestWakeup, float]
+        ] = None
         self._retire_cid = retire_cid
 
-    def build_configuration(self, settings: QuicTlsSettings) -> QuicConfiguration:
+    def build_configuration(self) -> QuicConfiguration:
+        assert self.tls is not None
+
         return QuicConfiguration(
             alpn_protocols=self.conn.alpn_offers,
             connection_id_length=self.context.options.quic_connection_id_length,
@@ -201,13 +206,13 @@ class QuicLayer(layer.Layer):
             if tls.log_master_secret is not None
             else None,
             server_name=self.conn.sni,
-            cafile=settings.ca_file,
-            capath=settings.ca_path,
-            certificate=settings.certificate,
-            certificate_chain=settings.certificate_chain,
-            cipher_suites=settings.cipher_suites,
-            private_key=settings.certificate_private_key,
-            verify_mode=settings.verify_mode,
+            cafile=self.tls.ca_file,
+            capath=self.tls.ca_path,
+            certificate=self.tls.certificate,
+            certificate_chain=self.tls.certificate_chain,
+            cipher_suites=self.tls.cipher_suites,
+            private_key=self.tls.certificate_private_key,
+            verify_mode=self.tls.verify_mode,
         )
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -220,10 +225,10 @@ class QuicLayer(layer.Layer):
                 and command.connection is self.conn
             ):
                 if self.quic is None:
-                    self.waiting_get_connection_commands.append(command)
+                    self._get_connection_commands.append(command)
                 else:
                     yield from self.child_layer.handle_event(
-                        OpenGetConnectionCompleted(
+                        QuicGetConnectionCompleted(
                             command=command,
                             connection=self.quic,
                         )
@@ -245,7 +250,6 @@ class QuicLayer(layer.Layer):
 
     def initialize_connection(self) -> layer.CommandGenerator[None]:
         assert self.quic is None
-        self._handle_event = self.state_ready
 
         # (almost) identical to _TLSLayer.start_tls
         tls_data = QuicTlsData(self.conn, self.context)
@@ -253,33 +257,113 @@ class QuicLayer(layer.Layer):
             yield QuicTlsStartClientHook(tls_data)
         else:
             yield QuicTlsStartServerHook(tls_data)
-        if not tls_data.settings:
+        if tls_data.settings is None:
             yield from self.fail_connection(
                 "No TLS settings were provided, failing connection.", level="error"
             )
             return
         assert tls_data.settings is not None
+        self.tls = tls_data.settings
 
-        # create the connection and let the waiters know about it
+        # create the aioquic connection
         self.quic = QuicConnection(
-            configuration=self.build_configuration(tls_data.settings),
+            configuration=self.build_configuration(),
             original_destination_connection_id=self.original_destination_connection_id,
         )
         if self._issue_cid:
             self._issue_cid(self.quic.host_cid)
-        while self.waiting_get_connection_commands:
+        self._handle_event = self.state_ready
+
+        # let the waiters know about the available connection
+        while self._get_connection_commands:
             assert self.quic is not None
             assert self.child_layer is not None
             yield from self.child_layer.handle_event(
-                OpenGetConnectionCompleted(
-                    command=self.waiting_get_connection_commands.pop(),
+                QuicGetConnectionCompleted(
+                    command=self._get_connection_commands.pop(),
                     connection=self.quic,
                 )
             )
 
     def process_events(self) -> layer.CommandGenerator[None]:
         assert self.quic is not None
-        yield from ()
+        assert self.tls is not None
+
+        event = self.quic.next_event()
+        while event is not None:
+            if isinstance(event, quic_events.ConnectionIdIssued):
+                if self._issue_cid is not None:
+                    self._issue_cid(event.connection_id)
+
+            elif isinstance(event, quic_events.ConnectionIdRetired):
+                if self._retire_cid is not None:
+                    self._retire_cid(event.connection_id)
+
+            elif isinstance(event, quic_events.ConnectionTerminated):
+                # report as TLS failure if the termination happened before the handshake
+                if not self.conn.tls_established:
+                    self.conn.error = event.reason_phrase
+                    tls_data = QuicTlsData(
+                        conn=self.conn, context=self.context, settings=self.tls
+                    )
+                    if self.conn is self.context.client:
+                        yield layers.tls.TlsFailedClientHook(tls_data)
+                    else:
+                        yield layers.tls.TlsFailedServerHook(tls_data)
+
+                # always close the connection
+                yield from self.fail_connection(event.reason_phrase)
+
+            elif isinstance(event, quic_events.HandshakeCompleted):
+                # concatenate all peer certificates
+                all_certs = []
+                if self.quic.tls._peer_certificate is not None:
+                    all_certs.append(self.quic.tls._peer_certificate)
+                if self.quic.tls._peer_certificate_chain is not None:
+                    all_certs.extend(self.quic.tls._peer_certificate_chain)
+
+                # set the connection's TLS properties
+                self.conn.timestamp_tls_setup = self.loop.time()
+                self.conn.certificate_list = [
+                    certs.Cert.from_pyopenssl(x) for x in all_certs
+                ]
+                self.conn.alpn = event.alpn_protocol.encode()
+                self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
+                self.conn.tls_version = "QUIC"
+
+                # report the success to addons
+                tls_data = QuicTlsData(
+                    conn=self.conn, context=self.context, settings=self.tls
+                )
+                if self.conn is self.context.client:
+                    yield layers.tls.TlsEstablishedClientHook(tls_data)
+                else:
+                    yield layers.tls.TlsEstablishedServerHook(tls_data)
+
+            # forward the event as a QuicConnectionEvent to the child layer
+            yield from self.event_to_child(
+                QuicConnectionEvent(connection=self.conn, event=event)
+            )
+
+            # handle the next event
+            event = self.quic.next_event()
+
+        # send all queued datagrams
+        for data, addr in self.quic.datagrams_to_send(now=self.loop.time()):
+            yield commands.SendData(connection=self.conn, data=data, remote_addr=addr)
+
+        # ensure the wakeup is set and still correct
+        timer = self.quic.get_timer()
+        if timer is None:
+            self._request_wakeup_command_and_timer = None
+        else:
+            if self._request_wakeup_command_and_timer is not None:
+                _, existing_timer = self._request_wakeup_command_and_timer
+                if existing_timer == timer:
+                    return
+            command = commands.RequestWakeup(timer - self.loop.time())
+            self._request_wakeup_command_and_timer = (command, timer)
+            yield command
 
     @abstractmethod
     def start(self) -> layer.CommandGenerator[None]:
