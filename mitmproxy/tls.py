@@ -6,7 +6,7 @@ from kaitaistruct import KaitaiStream
 
 from OpenSSL import SSL
 from mitmproxy import connection
-from mitmproxy.contrib.kaitaistruct import tls_client_hello
+from mitmproxy.contrib.kaitaistruct import tls_client_hello, dtls_client_hello
 from mitmproxy.net import check
 from mitmproxy.proxy import context
 
@@ -18,12 +18,17 @@ class ClientHello:
 
     _raw_bytes: bytes
 
-    def __init__(self, raw_client_hello: bytes):
+    def __init__(self, raw_client_hello: bytes, dtls: bool=False):
         """Create a TLS ClientHello object from raw bytes."""
         self._raw_bytes = raw_client_hello
-        self._client_hello = tls_client_hello.TlsClientHello(
-            KaitaiStream(io.BytesIO(raw_client_hello))
-        )
+        if dtls:
+            self._client_hello = dtls_client_hello.DtlsClientHello(
+                KaitaiStream(io.BytesIO(raw_client_hello))
+            )
+        else:
+            self._client_hello = tls_client_hello.TlsClientHello(
+                KaitaiStream(io.BytesIO(raw_client_hello))
+            )
 
     def raw_bytes(self, wrap_in_record: bool = True) -> bytes:
         """
