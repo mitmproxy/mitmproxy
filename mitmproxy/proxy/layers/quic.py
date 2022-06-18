@@ -167,7 +167,7 @@ def pull_client_hello_and_connection_id(data: bytes) -> Tuple[ClientHello, bytes
 
 
 class QuicLayer(layer.Layer):
-    child_layer: Optional[layer.Layer]
+    child_layer: layer.Layer
     conn: connection.Connection
     loop: asyncio.AbstractEventLoop
     original_destination_connection_id: Optional[bytes]
@@ -182,7 +182,7 @@ class QuicLayer(layer.Layer):
         retire_cid: Optional[Callable[[bytes], None]] = None,
     ) -> None:
         super().__init__(context)
-        self.child_layer = None
+        self.child_layer = layer.NextLayer(context)
         self.conn = conn
         self.loop = asyncio.get_event_loop()
         self.original_destination_connection_id = None
@@ -216,10 +216,10 @@ class QuicLayer(layer.Layer):
         )
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.child_layer is not None
-
-        # answer the child layers request for the connection
+        # filter commands coming from the child layer
         for command in self.child_layer.handle_event(event):
+
+            # answer or queue requests for the aioquic connection instanc
             if (
                 isinstance(command, QuicGetConnection)
                 and command.connection is self.conn
@@ -233,6 +233,19 @@ class QuicLayer(layer.Layer):
                             connection=self.quic,
                         )
                     )
+
+            # properly close QUIC connections
+            elif (
+                isinstance(command, commands.CloseConnection)
+                and command.connection is self.conn
+            ):
+                if self.conn.connected and self.quic is not None:
+                    self.quic.close()
+                    yield from self.process_events()
+                self._handle_event = self.state_done
+                yield command
+
+            # return other commands
             else:
                 yield command
 
@@ -251,7 +264,7 @@ class QuicLayer(layer.Layer):
     def initialize_connection(self) -> layer.CommandGenerator[None]:
         assert self.quic is None
 
-        # (almost) identical to _TLSLayer.start_tls
+        # query addons to provide the necessary TLS settings
         tls_data = QuicTlsData(self.conn, self.context)
         if self.conn is self.context.client:
             yield QuicTlsStartClientHook(tls_data)
@@ -262,7 +275,6 @@ class QuicLayer(layer.Layer):
                 "No TLS settings were provided, failing connection.", level="error"
             )
             return
-        assert tls_data.settings is not None
         self.tls = tls_data.settings
 
         # create the aioquic connection
@@ -270,14 +282,13 @@ class QuicLayer(layer.Layer):
             configuration=self.build_configuration(),
             original_destination_connection_id=self.original_destination_connection_id,
         )
-        if self._issue_cid:
+        if self._issue_cid is not None:
             self._issue_cid(self.quic.host_cid)
         self._handle_event = self.state_ready
 
         # let the waiters know about the available connection
         while self._get_connection_commands:
             assert self.quic is not None
-            assert self.child_layer is not None
             yield from self.child_layer.handle_event(
                 QuicGetConnectionCompleted(
                     command=self._get_connection_commands.pop(),
@@ -289,6 +300,7 @@ class QuicLayer(layer.Layer):
         assert self.quic is not None
         assert self.tls is not None
 
+        # handle all buffered aioquic connection events
         event = self.quic.next_event()
         while event is not None:
             if isinstance(event, quic_events.ConnectionIdIssued):
@@ -340,6 +352,10 @@ class QuicLayer(layer.Layer):
                 else:
                     yield layers.tls.TlsEstablishedServerHook(tls_data)
 
+                # perform next layer decisions now
+                if isinstance(self.child_layer, layer.NextLayer):
+                    yield from self.child_layer._ask()
+
             # forward the event as a QuicConnectionEvent to the child layer
             yield from self.event_to_child(
                 QuicConnectionEvent(connection=self.conn, event=event)
@@ -374,15 +390,43 @@ class QuicLayer(layer.Layer):
 
         # start this layer and the child layer
         yield from self.start()
-        if self.child_layer is not None:
-            yield from self.child_layer.handle_event(event)
+        yield from self.child_layer.handle_event(event)
 
     def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.quic is not None
-        yield from ()
+
+        if isinstance(event, events.DataReceived):
+            # forward incoming data only to aioquic
+            if event.connection is self.conn:
+                self.quic.receive_datagram(
+                    data=event.data, addr=event.remote_addr, now=self.loop.time()
+                )
+                yield from self.process_events()
+                return
+
+        elif isinstance(event, events.ConnectionClosed):
+            if event.connection is self.conn:
+                # connection closed unexpectedly
+                yield from self.fail_connection(
+                    "Client closed UDP connection.", level="info"
+                )
+
+        elif isinstance(event, events.Wakeup):
+            # make sure we intercept wakeup events for aioquic
+            if self._request_wakeup_command_and_timer is not None:
+                command, timer = self._request_wakeup_command_and_timer
+                if event.command is command:
+                    self._request_wakeup_command_and_timer = None
+                    self.quic.handle_timer(now=max(timer, self.loop.time()))
+                    yield from self.process_events()
+                    return
+
+        # forward other events to the child layer
+        yield from self.event_to_child(event)
 
     def state_done(self, event: events.Event) -> layer.CommandGenerator[None]:
-        yield from ()
+        # when done, just forward the event
+        yield from self.child_layer.handle_event(event)
 
     _handle_event = state_start
 
