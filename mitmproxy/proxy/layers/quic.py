@@ -1,26 +1,21 @@
 import asyncio
 from dataclasses import dataclass
 from ssl import VerifyMode
-from typing import Callable, List, Optional, TextIO, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
+from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection, QuicConnectionError
-from aioquic.tls import (
-    CipherSuite,
-    Context as QuicTlsContext,
-    HandshakeType,
-    ServerHello,
-    pull_server_hello,
-)
+from aioquic.tls import CipherSuite, HandshakeType
 from aioquic.quic.packet import PACKET_TYPE_INITIAL, pull_quic_header
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
 from mitmproxy import connection
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, layers
-from mitmproxy.proxy.utils import expect
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
+from mitmproxy.utils import human
 
 
 @dataclass
@@ -84,17 +79,25 @@ class QuicTlsStartServerHook(commands.StartHook):
     data: QuicTlsData
 
 
+@dataclass
+class QuicStreamDataReceived(quic_events.StreamDataReceived, events.ConnectionEvent):
+    pass
+
+
+@dataclass
+class QuicStreamReset(quic_events.StreamReset, events.ConnectionEvent):
+    pass
+
+
 class QuicSecretsLogger:
     logger: tls.MasterSecretLogger
 
-    def __init__(
-        self, logger: tls.MasterSecretLogger
-    ) -> None:
+    def __init__(self, logger: tls.MasterSecretLogger) -> None:
         super().__init__()
         self.logger = logger
 
     def write(self, s: str) -> int:
-        if s.endswith("\n"):
+        if s[-1:] == "\n":
             s = s[:-1]
         data = s.encode()
         self.logger(None, data)  # type: ignore
@@ -106,26 +109,24 @@ class QuicSecretsLogger:
 
 
 @dataclass
-class QuicClientHelloException(Exception):
+class QuicClientHello(Exception):
     data: bytes
 
 
-def hook_quic_tls(quic: QuicConnection, cb: Callable[[QuicTlsContext], None]) -> None:
-    assert quic.tls is None
+def read_client_hello(data: bytes) -> ClientHello:
+    # ensure the first packet is indeed the initial one
+    buffer = QuicBuffer(data=data)
+    header = pull_quic_header(buffer)
+    if header.packet_type != PACKET_TYPE_INITIAL:
+        raise ValueError("Packet is not initial one.")
 
-    # patch aioquic to intercept the client/server hello
-    orig_initialize = quic._initialize
+    # patch aioquic to intercept the client hello
+    quic = QuicConnection(
+        configuration=QuicConfiguration(),
+        original_destination_connection_id=header.destination_cid,
+    )
+    _initialize = quic._initialize
 
-    def initialize_replacement(peer_cid: bytes) -> None:
-        try:
-            return orig_initialize(peer_cid)
-        finally:
-            cb(quic.tls)
-
-    quic._initialize = initialize_replacement
-
-
-def raise_on_client_hello(tls: QuicTlsContext) -> None:
     def server_handle_hello_replacement(
         input_buf: QuicBuffer,
         initial_buf: QuicBuffer,
@@ -137,42 +138,18 @@ def raise_on_client_hello(tls: QuicTlsContext) -> None:
         for b in input_buf.pull_bytes(3):
             length = (length << 8) | b
         offset = input_buf.tell()
-        raise QuicClientHelloException(
-            data=input_buf.data_slice(offset, offset + length)
-        )
+        raise QuicClientHello(data=input_buf.data_slice(offset, offset + length))
 
-    tls._server_handle_hello = server_handle_hello_replacement
+    def initialize_replacement(peer_cid: bytes) -> None:
+        try:
+            return _initialize(peer_cid)
+        finally:
+            quic.tls._server_handle_hello = server_handle_hello_replacement
 
-
-def callback_on_server_hello(tls: QuicTlsContext, cb: Callable[[ServerHello], None]) -> None:
-    orig_client_handle_hello = tls._client_handle_hello
-
-    def _client_handle_hello_replacement(
-        input_buf: QuicBuffer,
-        output_buf: QuicBuffer,
-    ) -> None:
-        offset = input_buf.tell()
-        cb(pull_server_hello(input_buf))
-        input_buf.seek(offset)
-        orig_client_handle_hello(input_buf, output_buf)
-
-    tls._client_handle_hello = _client_handle_hello_replacement
-
-
-def read_client_hello(data: bytes, connection_id_length: int) -> ClientHello:
-    buffer = QuicBuffer(data=data)
-    header = pull_quic_header(
-        buffer, host_cid_length=connection_id_length
-    )
-    assert header.packet_type == PACKET_TYPE_INITIAL
-    temp_quic = QuicConnection(
-        configuration=QuicConfiguration(connection_id_length=connection_id_length),
-        original_destination_connection_id=header.destination_cid,
-    )
-    hook_quic_tls(temp_quic, raise_on_client_hello)
+    quic._initialize = initialize_replacement
     try:
-        temp_quic.receive_datagram(data, ("0.0.0.0", 0), now=0)
-    except QuicClientHelloException as hello:
+        quic.receive_datagram(data, ("0.0.0.0", 0), now=0)
+    except QuicClientHello as hello:
         try:
             return ClientHello(hello.data)
         except EOFError as e:
@@ -184,9 +161,9 @@ def read_client_hello(data: bytes, connection_id_length: int) -> ClientHello:
 
 class QuicLayer(layer.Layer):
     loop: asyncio.AbstractEventLoop
-    buffer: List[bytes]
     quic: Optional[QuicConnection]
     conn: connection.Connection
+    original_destination_connection_id: Optional[bytes]
 
     def __init__(
         self,
@@ -207,8 +184,8 @@ class QuicLayer(layer.Layer):
         return QuicConfiguration(
             alpn_protocols=self.conn.alpn_offers,
             connection_id_length=self.context.options.quic_connection_id_length,
-            is_client=self.conn == self.context.server,
-            secrets_log_file=QuicSecretsLogger(tls.log_master_secret)
+            is_client=self.conn is self.context.server,
+            secrets_log_file=QuicSecretsLogger(tls.log_master_secret)  # type: ignore
             if tls.log_master_secret is not None
             else None,
             server_name=self.conn.sni,
@@ -221,14 +198,13 @@ class QuicLayer(layer.Layer):
             verify_mode=settings.verify_mode,
         )
 
-    def initialize_connection(
-        self, original_destination_connection_id: Union[bytes, None]
-    ) -> layer.CommandGenerator[None]:
+    def initialize_connection(self) -> layer.CommandGenerator[None]:
         assert not self.quic
+        self._handle_event = self.handle_connected
 
         # (almost) identical to _TLSLayer.start_tls
         tls_data = QuicTlsData(self.conn, self.context)
-        if self.conn == self.context.client:
+        if self.conn is self.context.client:
             yield QuicTlsStartClientHook(tls_data)
         else:
             yield QuicTlsStartServerHook(tls_data)
@@ -237,14 +213,21 @@ class QuicLayer(layer.Layer):
                 "No TLS settings were provided, failing connection.", "error"
             )
             yield commands.CloseConnection(self.conn)
+            self._handle_event = self.handle_done
             return
         assert tls_data.settings
 
         self.quic = QuicConnection(
             configuration=self.build_configuration(tls_data.settings),
-            original_destination_connection_id=original_destination_connection_id,
+            original_destination_connection_id=self.original_destination_connection_id,
         )
         self.issue_cid(self.quic.host_cid)
+
+    def process_events(self) -> layer.CommandGenerator[None]:
+        assert self.quic
+
+    def handle_done(self, _) -> layer.CommandGenerator[None]:
+        yield from ()
 
 
 class ServerQuicLayer(QuicLayer):
@@ -260,11 +243,33 @@ class ServerQuicLayer(QuicLayer):
     ) -> None:
         super().__init__(context, context.server, issue_cid, retire_cid)
 
+    def handle_start(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert isinstance(event, events.Start)
+
+        # ensure there is an UDP connection
+        if not self.conn.connected:
+            err = yield commands.OpenConnection(self.conn)
+            if err is not None:
+                yield commands.Log(
+                    f"Failed to establish connection to {human.format_address(self.conn)}: {err}"
+                )
+                self._handle_event = self.handle_done
+                return
+
+        # try to connect
+        yield from self.initialize_connection()
+        if self.quic is not None:
+            self.quic.connect(addr=self.conn.peername, now=self.loop.time())
+            yield from self.process_events()
+
 
 class ClientQuicLayer(QuicLayer):
     """
     This layer establishes QUIC on a single client connection.
     """
+
+    server_layer: Optional[ServerQuicLayer]
+    buffered_packets: Optional[List[Tuple[bytes, connection.Address, float]]]
 
     def __init__(
         self,
@@ -273,24 +278,40 @@ class ClientQuicLayer(QuicLayer):
         retire_cid: Callable[[bytes], None],
     ) -> None:
         super().__init__(context, context.client, issue_cid, retire_cid)
+        self.server_layer = None
+        self.buffered_packets = None
 
-    @expect(events.Start)
-    def handle_start(self, _: events.Event) -> layer.CommandGenerator[None]:
+    def start_client_connection(self) -> layer.CommandGenerator[None]:
+        assert self.buffered_packets is not None
+
+        yield from self.initialize_connection()
+        if self.quic is not None:
+            for data, addr, now in self.buffered_packets:
+                self.quic.receive_datagram(
+                    data=data,
+                    addr=addr,
+                    now=now,
+                )
+            yield from self.process_events()
+
+    def handle_start(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert isinstance(event, events.Start)
         self._handle_event = self.handle_client_hello
         yield from ()
 
-    @expect(events.DataReceived, events.ConnectionClosed)
     def handle_client_hello(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived):
-            assert event.connection == self.conn
+        assert isinstance(event, events.ConnectionEvent)
+        assert event.connection is self.conn
 
+        if isinstance(event, events.DataReceived):
             # extract the client hello
             try:
-                client_hello = read_client_hello(event.data, connection_id_length=self.context.options.quic_connection_id_length)
+                client_hello = read_client_hello(event.data)
             except ValueError as e:
                 yield commands.Log(
                     f"Cannot parse ClientHello: {str(e)} ({event.data.hex()})", "warn"
                 )
+                self._handle_event = self.handle_done
                 yield commands.CloseConnection(self.conn)
             else:
                 self.conn.sni = client_hello.sni
@@ -299,6 +320,7 @@ class ClientQuicLayer(QuicLayer):
                 # check with addons what we shall do
                 hook_data = ClientHelloData(self.context, client_hello)
                 yield layers.tls.TlsClienthelloHook(hook_data)
+
                 if hook_data.ignore_connection:
                     # simply relay everything (including the client hello)
                     relay_layer = layers.TCPLayer(self.context, ignore=True)
@@ -306,21 +328,63 @@ class ClientQuicLayer(QuicLayer):
                     yield from relay_layer.handle_event(events.Start())
                     yield from relay_layer.handle_event(event)
 
-                elif hook_data.establish_server_tls_first:
-                    pass
-
                 else:
-                    pass
+                    # buffer the client hello
+                    self.buffered_packets = [
+                        (event.data, event.remote_addr, self.loop.time())
+                    ]
+
+                    # contact the upstream server first if so desired
+                    if hook_data.establish_server_tls_first:
+                        self.server_layer = ServerQuicLayer(
+                            context=self.context,
+                            issue_cid=self.issue_cid,
+                            retire_cid=self.retire_cid,
+                        )
+                        self._handle_event = self.handle_wait_for_server
+                        yield from self.handle_wait_for_server(events.Start())
+                    else:
+                        yield from self.start_client_connection()
 
         elif isinstance(event, events.ConnectionClosed):
-            assert event.connection == self.conn
+            # this is odd since this layer should only be created if there is a packet
             self._handle_event = self.handle_done
 
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed)
-    def handle_done(self, _) -> layer.CommandGenerator[None]:
-        yield from ()
+    def handle_wait_for_server(
+        self, event: events.Event
+    ) -> layer.CommandGenerator[None]:
+        assert self.buffered_packets is not None
+        assert self.server_layer is not None
+
+        # filter DataReceived and ConnectionClosed relating to the client connection
+        if isinstance(event, events.ConnectionEvent):
+            if event.connection is self.context.client:
+                if isinstance(event, events.DataReceived):
+                    # still waiting for the server, buffer the data
+                    self.buffered_packets.append(
+                        (event.data, event.remote_addr, self.loop.time())
+                    )
+
+                elif isinstance(event, events.ConnectionClosed):
+                    # close the upstream connection as well and be done
+                    yield commands.CloseConnection(self.context.server)
+                    self._handle_event = self.handle_done
+
+                else:
+                    raise AssertionError(f"Unexpected event: {event}")
+
+        # forward the event and check it's results
+        yield from self.server_layer.handle_event(event)
+        if not self.context.server.connected:
+            yield commands.Log(
+                f"Unable to establish QUIC connection with server ({self.context.server.error or 'Connection closed.'}). "
+                f"Trying to establish QUIC with client anyway."
+            )
+            yield from self.start_client_connection()
+        elif self.context.server.tls_established:
+            yield from self.start_client_connection()
 
     _handle_event = handle_start
