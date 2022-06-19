@@ -502,7 +502,7 @@ class Proxyserver:
             server_sni=server_sni,
             connection_id=connection_id,
             done_callback=cleanup_connection_ids,
-            layer_factory=lambda handler: layers.ClientQuicLayer(
+            layer_factory=lambda handler: layers.QuicLayer(
                 context=handler.layer.context,
                 issue_cid=lambda cid: issue_connection_id(handler, cid),
                 retire_cid=lambda cid: retire_connection_id(handler, cid),
