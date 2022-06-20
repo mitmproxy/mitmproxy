@@ -7,7 +7,7 @@ from typing import Callable, List, Literal, Optional, Tuple, Union
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import QuicConnection, QuicConnectionError
+from aioquic.quic.connection import QuicConnection, QuicConnectionError, QuicErrorCode
 from aioquic.tls import CipherSuite, HandshakeType
 from aioquic.quic.packet import PACKET_TYPE_INITIAL, pull_quic_header
 from cryptography import x509
@@ -16,7 +16,6 @@ from mitmproxy import certs, connection
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, layers
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
-from mitmproxy.utils import human
 
 
 @dataclass
@@ -88,6 +87,11 @@ class QuicConnectionEvent(events.ConnectionEvent):
 @dataclass
 class QuicGetConnection(commands.ConnectionCommand):  # -> QuicConnection
     blocking = True
+
+
+@dataclass
+class QuicTransmit:
+    connection: QuicConnection
 
 
 @dataclass(repr=False)
@@ -228,32 +232,25 @@ class _QuicLayer(layer.Layer):
                         )
                     )
 
+            # transmit buffered data and re-arm timer
+            elif isinstance(command, QuicTransmit) and command.connection is self.quic:
+                yield from self.transmit()
+
             # properly close QUIC connections
             elif (
                 isinstance(command, commands.CloseConnection)
                 and command.connection is self.conn
             ):
+                reason = "CloseConnection command received."
                 if self.conn.connected and self.quic is not None:
-                    self.quic.close()
+                    self.quic.close(reason_phrase=reason)
                     yield from self.process_events()
-                self._handle_event = self.state_done
-                yield command
+                else:
+                    yield from self.shutdown_connection(reason, level="info")
 
             # return other commands
             else:
                 yield command
-
-    def fail_connection(
-        self,
-        reason: str,
-        level: Literal["error", "warn", "info", "alert", "debug"] = "warn",
-    ) -> layer.CommandGenerator[None]:
-        yield commands.Log(
-            message=f"Failing connection {self.conn}: {reason}", level=level
-        )
-        if self.conn.connected:
-            yield commands.CloseConnection(self.conn)
-        self._handle_event = self.state_done
 
     def initialize_connection(self) -> layer.CommandGenerator[None]:
         assert self.quic is None
@@ -265,7 +262,7 @@ class _QuicLayer(layer.Layer):
         else:
             yield QuicTlsStartServerHook(tls_data)
         if tls_data.settings is None:
-            yield from self.fail_connection(
+            yield from self.shutdown_connection(
                 "No TLS settings were provided, failing connection.", level="error"
             )
             return
@@ -318,7 +315,12 @@ class _QuicLayer(layer.Layer):
                         yield layers.tls.TlsFailedServerHook(tls_data)
 
                 # always close the connection
-                yield from self.fail_connection(event.reason_phrase)
+                yield from self.shutdown_connection(
+                    event.reason_phrase,
+                    level=(
+                        "info" if event.error_code is QuicErrorCode.NO_ERROR else "warn"
+                    ),
+                )
 
             elif isinstance(event, quic_events.HandshakeCompleted):
                 # concatenate all peer certificates
@@ -358,22 +360,20 @@ class _QuicLayer(layer.Layer):
             # handle the next event
             event = self.quic.next_event()
 
-        # send all queued datagrams
-        for data, addr in self.quic.datagrams_to_send(now=self._loop.time()):
-            yield commands.SendData(connection=self.conn, data=data, remote_addr=addr)
+        # transmit buffered data and re-arm timer
+        yield from self.transmit()
 
-        # ensure the wakeup is set and still correct
-        timer = self.quic.get_timer()
-        if timer is None:
-            self._request_wakeup_command_and_timer = None
-        else:
-            if self._request_wakeup_command_and_timer is not None:
-                _, existing_timer = self._request_wakeup_command_and_timer
-                if existing_timer == timer:
-                    return
-            command = commands.RequestWakeup(timer - self._loop.time())
-            self._request_wakeup_command_and_timer = (command, timer)
-            yield command
+    def shutdown_connection(
+        self,
+        reason: str,
+        level: Literal["error", "warn", "info", "alert", "debug"],
+    ) -> layer.CommandGenerator[None]:
+        yield commands.Log(
+            message=f"Connection {self.conn} closed: {reason}", level=level
+        )
+        if self.conn.connected:
+            yield commands.CloseConnection(self.conn)
+        self._handle_event = self.state_done
 
     @abstractmethod
     def start(self) -> layer.CommandGenerator[None]:
@@ -402,8 +402,8 @@ class _QuicLayer(layer.Layer):
         elif (
             isinstance(event, events.ConnectionClosed) and event.connection is self.conn
         ):
-            yield from self.fail_connection(
-                "Client closed UDP connection.", level="info"
+            yield from self.shutdown_connection(
+                "Peer UDP connection timed out.", level="info"
             )
 
         # intercept wakeup events for aioquic
@@ -425,6 +425,24 @@ class _QuicLayer(layer.Layer):
         # when done, just forward the event
         yield from self.child_layer.handle_event(event)
 
+    def transmit(self) -> layer.CommandGenerator[None]:
+        # send all queued datagrams
+        for data, addr in self.quic.datagrams_to_send(now=self._loop.time()):
+            yield commands.SendData(connection=self.conn, data=data, remote_addr=addr)
+
+        # ensure the wakeup is set and still correct
+        timer = self.quic.get_timer()
+        if timer is None:
+            self._request_wakeup_command_and_timer = None
+        else:
+            if self._request_wakeup_command_and_timer is not None:
+                _, existing_timer = self._request_wakeup_command_and_timer
+                if existing_timer == timer:
+                    return
+            command = commands.RequestWakeup(timer - self._loop.time())
+            self._request_wakeup_command_and_timer = (command, timer)
+            yield command
+
     _handle_event = state_start
 
 
@@ -441,8 +459,9 @@ class ServerQuicLayer(_QuicLayer):
         if not self.conn.connected:
             err = yield commands.OpenConnection(self.conn)
             if err is not None:
-                self.fail_connection(
-                    f"Failed to establish connection to {human.format_address(self.conn)}: {err}"
+                self.shutdown_connection(
+                    f"Failed to connect: {err}",
+                    level="warn",
                 )
                 return
 
@@ -503,8 +522,8 @@ class ClientQuicLayer(_QuicLayer):
         # watch for closed connections on both legs
         elif isinstance(event, events.ConnectionClosed):
             if event.connection is self.conn:
-                yield from self.fail_connection(
-                    "Client closed UDP connection before upstream server handshake completed.",
+                yield from self.shutdown_connection(
+                    "Client UDP connection timeout out before upstream server handshake completed.",
                     level="info",
                 )
             elif event.connection is self.context.server:
