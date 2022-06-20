@@ -13,7 +13,7 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from mitmproxy import http, version
+from mitmproxy import ctx, http, version
 from mitmproxy.connection import Connection
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human
@@ -29,14 +29,7 @@ from . import (
     ResponseTrailers,
     ResponseProtocolError,
 )
-from ._base import (
-    HttpConnection,
-    HttpEvent,
-    ReceiveHttp,
-    format_error,
-    get_request_headers,
-    get_response_headers,
-)
+from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData, RequestWakeup
 from ...context import Context
@@ -296,6 +289,70 @@ class Http2Connection(HttpConnection):
         yield from ()
 
 
+def normalize_h1_headers(
+    headers: list[tuple[bytes, bytes]], is_client: bool
+) -> list[tuple[bytes, bytes]]:
+    # HTTP/1 servers commonly send capitalized headers (Content-Length vs content-length),
+    # which isn't valid HTTP/2. As such we normalize.
+    headers = h2.utilities.normalize_outbound_headers(
+        headers,
+        h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
+    )
+    # make sure that this is not just an iterator but an iterable,
+    # otherwise hyper-h2 will silently drop headers.
+    headers = list(headers)
+    return headers
+
+
+def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:
+    for i in range(len(headers)):
+        if not headers[i][0].islower():
+            yield Log(
+                f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2."
+            )
+            headers[i] = (headers[i][0].lower(), headers[i][1])
+
+
+def format_h2_request_headers(
+    event: RequestHeaders,
+) -> CommandGenerator[list[tuple[bytes, bytes]]]:
+    pseudo_headers = [
+        (b":method", event.request.data.method),
+        (b":scheme", event.request.data.scheme),
+        (b":path", event.request.data.path),
+    ]
+    if event.request.authority:
+        pseudo_headers.append((b":authority", event.request.data.authority))
+
+    if event.request.is_http2 or event.request.is_http3:
+        hdrs = list(event.request.headers.fields)
+        if ctx.options.normalize_outbound_headers:
+            yield from normalize_h2_headers(hdrs)
+    else:
+        headers = event.request.headers
+        if not event.request.authority and "host" in headers:
+            headers = headers.copy()
+            pseudo_headers.append((b":authority", headers.pop(b"host")))
+        hdrs = normalize_h1_headers(list(headers.fields), True)
+
+    return pseudo_headers + hdrs
+
+
+def format_h2_response_headers(
+    event: ResponseHeaders,
+) -> CommandGenerator[list[tuple[bytes, bytes]]]:
+    headers = [
+        (b":status", b"%d" % event.response.status_code),
+        *event.response.headers.fields,
+    ]
+    if event.response.is_http2:
+        if ctx.options.normalize_outbound_headers:
+            yield from normalize_h2_headers(headers)
+    else:
+        headers = normalize_h1_headers(headers, False)
+    return headers
+
+
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
@@ -315,7 +372,7 @@ class Http2Server(Http2Connection):
             if self.is_open_for_us(event.stream_id):
                 self.h2_conn.send_headers(
                     event.stream_id,
-                    headers=(yield from get_response_headers(event)),
+                    headers=(yield from format_h2_response_headers(event)),
                     end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -460,7 +517,7 @@ class Http2Client(Http2Connection):
         elif isinstance(event, RequestHeaders):
             self.h2_conn.send_headers(
                 event.stream_id,
-                headers=(yield from get_request_headers(event)),
+                headers=(yield from format_h2_request_headers(event)),
                 end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
@@ -596,6 +653,10 @@ def parse_h2_response_headers(
 
 
 __all__ = [
+    "format_h2_request_headers",
+    "format_h2_response_headers",
+    "parse_h2_request_headers",
+    "parse_h2_response_headers",
     "Http2Client",
     "Http2Server",
 ]

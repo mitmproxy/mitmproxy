@@ -90,7 +90,7 @@ class QuicGetConnection(commands.ConnectionCommand):  # -> QuicConnection
 
 
 @dataclass
-class QuicTransmit:
+class QuicTransmit(commands.Command):
     connection: QuicConnection
 
 
@@ -426,6 +426,8 @@ class _QuicLayer(layer.Layer):
         yield from self.child_layer.handle_event(event)
 
     def transmit(self) -> layer.CommandGenerator[None]:
+        assert self.quic
+
         # send all queued datagrams
         for data, addr in self.quic.datagrams_to_send(now=self._loop.time()):
             yield commands.SendData(connection=self.conn, data=data, remote_addr=addr)
