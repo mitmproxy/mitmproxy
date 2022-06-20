@@ -286,6 +286,10 @@ class Message(serializable.Serializable):
         return self.data.http_version == b"HTTP/2.0"
 
     @property
+    def is_http3(self) -> bool:
+        return self.data.http_version == b"HTTP/3"
+
+    @property
     def headers(self) -> Headers:
         """
         The HTTP headers.

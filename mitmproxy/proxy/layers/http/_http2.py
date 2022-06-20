@@ -29,7 +29,14 @@ from . import (
     ResponseTrailers,
     ResponseProtocolError,
 )
-from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
+from ._base import (
+    HttpConnection,
+    HttpEvent,
+    ReceiveHttp,
+    format_error,
+    get_request_headers,
+    get_response_headers,
+)
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData, RequestWakeup
 from ...context import Context
@@ -289,30 +296,6 @@ class Http2Connection(HttpConnection):
         yield from ()
 
 
-def normalize_h1_headers(
-    headers: list[tuple[bytes, bytes]], is_client: bool
-) -> list[tuple[bytes, bytes]]:
-    # HTTP/1 servers commonly send capitalized headers (Content-Length vs content-length),
-    # which isn't valid HTTP/2. As such we normalize.
-    headers = h2.utilities.normalize_outbound_headers(
-        headers,
-        h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
-    )
-    # make sure that this is not just an iterator but an iterable,
-    # otherwise hyper-h2 will silently drop headers.
-    headers = list(headers)
-    return headers
-
-
-def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:
-    for i in range(len(headers)):
-        if not headers[i][0].islower():
-            yield Log(
-                f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2."
-            )
-            headers[i] = (headers[i][0].lower(), headers[i][1])
-
-
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
@@ -330,19 +313,9 @@ class Http2Server(Http2Connection):
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, ResponseHeaders):
             if self.is_open_for_us(event.stream_id):
-                headers = [
-                    (b":status", b"%d" % event.response.status_code),
-                    *event.response.headers.fields,
-                ]
-                if event.response.is_http2:
-                    if self.context.options.normalize_outbound_headers:
-                        yield from normalize_h2_headers(headers)
-                else:
-                    headers = normalize_h1_headers(headers, False)
-
                 self.h2_conn.send_headers(
                     event.stream_id,
-                    headers,
+                    headers=(yield from get_response_headers(event)),
                     end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -485,28 +458,9 @@ class Http2Client(Http2Connection):
                 yield RequestWakeup(self.context.options.http2_ping_keepalive)
             yield from super()._handle_event(event)
         elif isinstance(event, RequestHeaders):
-            pseudo_headers = [
-                (b":method", event.request.data.method),
-                (b":scheme", event.request.data.scheme),
-                (b":path", event.request.data.path),
-            ]
-            if event.request.authority:
-                pseudo_headers.append((b":authority", event.request.data.authority))
-
-            if event.request.is_http2:
-                hdrs = list(event.request.headers.fields)
-                if self.context.options.normalize_outbound_headers:
-                    yield from normalize_h2_headers(hdrs)
-            else:
-                headers = event.request.headers
-                if not event.request.authority and "host" in headers:
-                    headers = headers.copy()
-                    pseudo_headers.append((b":authority", headers.pop(b"host")))
-                hdrs = normalize_h1_headers(list(headers.fields), True)
-
             self.h2_conn.send_headers(
                 event.stream_id,
-                pseudo_headers + hdrs,
+                headers=(yield from get_request_headers(event)),
                 end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
