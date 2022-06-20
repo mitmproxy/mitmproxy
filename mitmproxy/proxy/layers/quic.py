@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from ssl import VerifyMode
 from typing import Callable, List, Literal, Optional, Tuple, Union
 
@@ -31,7 +31,7 @@ class QuicTlsSettings:
 
     certificate: Optional[x509.Certificate] = None
     """The certificate to use for the connection."""
-    certificate_chain: List[x509.Certificate] = []
+    certificate_chain: List[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
     certificate_private_key: Optional[
         Union[dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey, rsa.RSAPrivateKey]
@@ -115,7 +115,7 @@ class QuicSecretsLogger:
     def write(self, s: str) -> int:
         if s[-1:] == "\n":
             s = s[:-1]
-        data = s.encode()
+        data = s.encode("ascii")
         self.logger(None, data)  # type: ignore
         return len(data) + 1
 
@@ -138,7 +138,11 @@ def pull_client_hello_and_connection_id(data: bytes) -> Tuple[ClientHello, bytes
 
     # patch aioquic to intercept the client hello
     quic = QuicConnection(
-        configuration=QuicConfiguration(),
+        configuration=QuicConfiguration(
+            is_client=False,
+            certificate="",
+            private_key="",
+        ),
         original_destination_connection_id=header.destination_cid,
     )
     _initialize = quic._initialize
@@ -202,7 +206,7 @@ class _QuicLayer(layer.Layer):
         assert self.tls is not None
 
         return QuicConfiguration(
-            alpn_protocols=self.conn.alpn_offers,
+            alpn_protocols=[offer.decode("ascii") for offer in self.conn.alpn_offers],
             connection_id_length=self.context.options.quic_connection_id_length,
             is_client=self.conn is self.context.server,
             secrets_log_file=QuicSecretsLogger(tls.log_master_secret)  # type: ignore
@@ -329,7 +333,7 @@ class _QuicLayer(layer.Layer):
                 self.conn.certificate_list = [
                     certs.Cert.from_pyopenssl(x) for x in all_certs
                 ]
-                self.conn.alpn = event.alpn_protocol.encode()
+                self.conn.alpn = event.alpn_protocol.encode("ascii")
                 self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
                 self.conn.tls_version = "QUIC"
 
