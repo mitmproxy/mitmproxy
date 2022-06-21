@@ -2,7 +2,7 @@ from abc import abstractmethod
 import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from typing import Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
@@ -17,9 +17,10 @@ from aioquic.tls import CipherSuite, HandshakeType
 from aioquic.quic.packet import PACKET_TYPE_INITIAL, pull_quic_header
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import certs, connection
+from mitmproxy import certs, connection, flow as mitm_flow, tcp
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, layers
+from mitmproxy.proxy.layers import tcp as tcp_layer
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 
 
@@ -179,6 +180,146 @@ def pull_client_hello_and_connection_id(data: bytes) -> Tuple[ClientHello, bytes
     raise ValueError("No ClientHello returned.")
 
 
+class QuicRelayLayer(layer.Layer):
+    # for now we're (ab)using the TCPFlow until https://github.com/mitmproxy/mitmproxy/pull/5414 is resolved
+    datagram_flow: Optional[tcp.TCPFlow] = None
+    lookup_server: Dict[int, Tuple[int, tcp.TCPFlow]]
+    lookup_client: Dict[int, Tuple[int, tcp.TCPFlow]]
+    quic_server: Optional[QuicConnection] = None
+    quic_client: Optional[QuicConnection] = None
+
+    def __init__(self, context: context.Context) -> None:
+        super().__init__(context)
+        self.lookup_server = {}
+        self.lookup_client = {}
+
+    def end_flow(self, flow: tcp.TCPFlow, event: quic_events.ConnectionTerminated) -> layer.CommandGenerator[None]:
+        if event.error_code == QuicErrorCode.NO_ERROR:
+            yield tcp_layer.TcpEndHook(flow)
+        else:
+            flow.error = mitm_flow.Error(event.reason_phrase)
+            yield tcp_layer.TcpErrorHook(flow)
+        flow.live = False
+
+    def get_quic(
+        self, conn: connection.Connection
+    ) -> layer.CommandGenerator[QuicConnection]:
+        quic = yield QuicGetConnection(conn)
+        assert isinstance(quic, QuicConnection)
+        return quic
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.Start):
+            self.quic_server = yield from self.get_quic(self.context.server)
+            self.quic_client = yield from self.get_quic(self.context.client)
+
+        elif isinstance(event, QuicConnectionEvent):
+            assert self.quic_server is not None
+            assert self.quic_client is not None
+
+            quic_event = event.event
+            from_client = event.connection is self.context.client
+            lookup_in = self.lookup_client if from_client else self.lookup_server
+            lookup_out = self.lookup_server if from_client else self.lookup_client
+            # quic_in = self.quic_client if from_client else self.quic_server
+            quic_out = self.quic_server if from_client else self.quic_client
+
+            # forward close and end all flows
+            if isinstance(quic_event, quic_events.ConnectionTerminated):
+                quic_out.close(
+                    error_code=quic_event.error_code,
+                    frame_type=quic_event.frame_type,
+                    reason_phrase=quic_event.reason_phrase,
+                )
+                while lookup_in:
+                    stream_id_in = next(iter(lookup_in))
+                    stream_id_out, flow = lookup_in[stream_id_in]
+                    yield from self.end_flow(flow=flow, event=quic_event)
+                    del lookup_in[stream_id_in]
+                    del lookup_out[stream_id_out]
+
+                if self.datagram_flow is not None:
+                    yield from self.end_flow(flow=flow, event=quic_event)
+                    self.datagram_flow = None
+
+            # forward datagrams (that are not stream-bound)
+            elif isinstance(quic_event, quic_events.DatagramFrameReceived):
+                if self.datagram_flow is None:
+                    self.datagram_flow = tcp.TCPFlow(
+                        client_conn=self.context.client,
+                        server_conn=self.context.server,
+                        live=True,
+                    )
+                    yield tcp_layer.TcpStartHook(self.datagram_flow)
+                message = tcp.TCPMessage(
+                    from_client=from_client, content=quic_event.data
+                )
+                self.datagram_flow.messages.append(message)
+                yield tcp_layer.TcpMessageHook(self.datagram_flow)
+                quic_out.send_datagram_frame(data=message.content)
+
+            # forward stream data
+            elif isinstance(quic_event, quic_events.StreamDataReceived):
+                # get or create the stream on the other side (and flow)
+                stream_id_in = quic_event.stream_id
+                if stream_id_in in lookup_in:
+                    stream_id_out, flow = lookup_in[stream_id_in]
+                else:
+                    stream_id_out = quic_out.get_next_available_stream_id()
+                    flow = tcp.TCPFlow(
+                        client_conn=self.context.client,
+                        server_conn=self.context.server,
+                        live=True,
+                    )
+                    lookup_in[stream_id_in] = (stream_id_out, flow)
+                    lookup_out[stream_id_out] = (stream_id_in, flow)
+                    yield tcp_layer.TcpStartHook(flow)
+
+                # forward the message allowing addons to change it
+                message = tcp.TCPMessage(
+                    from_client=from_client, content=quic_event.data
+                )
+                flow.messages.append(message)
+                yield tcp_layer.TcpMessageHook(flow)
+                quic_out.send_stream_data(
+                    stream_id=stream_id_out,
+                    data=message.content,
+                    end_stream=quic_event.end_stream,
+                )
+
+                # end the flow and remove the lookup if the stream ended
+                if quic_event.end_stream:
+                    yield tcp_layer.TcpEndHook(flow)
+                    flow.live = False
+                    del lookup_in[stream_id_in]
+                    del lookup_out[stream_id_out]
+
+            # forward resets to peer streams
+            elif isinstance(quic_event, quic_events.StreamReset):
+                stream_id_in = quic_event.stream_id
+                if stream_id_in in lookup_in:
+                    stream_id_out, flow = lookup_in[stream_id_in]
+                    quic_out.stop_stream(
+                        stream_id=stream_id_out, error_code=quic_event.error_code
+                    )
+
+                    # try to get a name describing the reset reason
+                    try:
+                        err = QuicErrorCode(quic_event.error_code).name
+                    except ValueError:
+                        err = str(quic_event.error_code)
+
+                    # report the error to addons and delete the stream
+                    flow.error = mitm_flow.Error(str(err))
+                    yield tcp_layer.TcpErrorHook(flow)
+                    flow.live = False
+                    del lookup_in[stream_id_in]
+                    del lookup_out[stream_id_out]
+
+    def done(self, _) -> layer.CommandGenerator[None]:
+        yield from ()
+
+
 class _QuicLayer(layer.Layer):
     child_layer: layer.Layer
     conn: connection.Connection
@@ -316,7 +457,7 @@ class _QuicLayer(layer.Layer):
                 yield from self.shutdown_connection(
                     reason=event.reason_phrase or str(event.error_code),
                     level=(
-                        "info" if event.error_code is QuicErrorCode.NO_ERROR else "warn"
+                        "info" if event.error_code == QuicErrorCode.NO_ERROR else "warn"
                     ),
                 )
 

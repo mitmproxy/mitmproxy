@@ -334,7 +334,7 @@ class Http3Client(Http3Connection):
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         # translate stream IDs just like HTTP/2 client
         if isinstance(event, HttpEvent):
-            assert self.quic
+            assert self.quic is not None
             ours = self.our_stream_id.get(event.stream_id, None)
             if ours is None:
                 ours = self.quic.get_next_available_stream_id()
