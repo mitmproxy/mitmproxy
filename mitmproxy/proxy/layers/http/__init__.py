@@ -1001,7 +1001,10 @@ class HttpLayer(layer.Layer):
 
         if not can_use_context_connection:
 
-            context.server = Server(event.address, transport_protocol=context.client.transport_protocol)
+            context.server = Server(event.address)
+            if isinstance(context.layers[0], quic.QuicLayer):
+                context.server.transport_protocol = "udp"
+                stack /= quic.ServerQuicLayer(context)
 
             if event.via:
                 context.server.via = event.via
@@ -1019,10 +1022,7 @@ class HttpLayer(layer.Layer):
                     context.server.sni = self.context.client.sni or event.address[0]
                 else:
                     context.server.sni = event.address[0]
-                if context.server.transport_protocol == "udp":
-                    stack /= quic.ServerQuicLayer(context)
-                else:
-                    stack /= tls.ServerTLSLayer(context)
+                stack /= tls.ServerTLSLayer(context)
 
         stack /= HttpClient(context)
 

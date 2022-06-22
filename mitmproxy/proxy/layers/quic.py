@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
@@ -21,6 +20,7 @@ from mitmproxy import certs, connection, flow as mitm_flow, tcp
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, layers
 from mitmproxy.proxy.layers import tcp as tcp_layer
+from mitmproxy.proxy.utils import expect
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 
 
@@ -90,8 +90,14 @@ class QuicConnectionEvent(events.ConnectionEvent):
     event: quic_events.QuicEvent
 
 
-class QuicGetConnection(commands.ConnectionCommand):  # -> QuicConnection
+class QuicGetConnection(commands.ConnectionCommand):  # -> Optional[QuicConnection]
     blocking = True
+
+
+@dataclass(repr=False)
+class QuicGetConnectionCompleted(events.CommandCompleted):
+    command: QuicGetConnection
+    reply: Optional[QuicConnection]
 
 
 class QuicTransmit(commands.Command):
@@ -100,12 +106,6 @@ class QuicTransmit(commands.Command):
     def __init__(self, connection: QuicConnection) -> None:
         super().__init__()
         self.connection = connection
-
-
-@dataclass(repr=False)
-class QuicGetConnectionCompleted(events.CommandCompleted):
-    command: QuicGetConnection
-    reply: QuicConnection
 
 
 class QuicSecretsLogger:
@@ -333,7 +333,7 @@ class _QuicLayer(layer.Layer):
         self.child_layer = layer.NextLayer(context)
         self.conn = conn
         self._loop = asyncio.get_event_loop()
-        self._get_connection_commands: List[QuicGetConnection] = list()
+        self._pending_open_command: Optional[commands.OpenConnection] = None
         self._request_wakeup_command_and_timer: Optional[
             Tuple[commands.RequestWakeup, float]
         ] = None
@@ -368,21 +368,34 @@ class _QuicLayer(layer.Layer):
         # filter commands coming from the child layer
         for command in child_commands:
 
-            # answer or queue requests for the aioquic connection instance
+            # answer with the aioquic connection instance
             if (
                 isinstance(command, QuicGetConnection)
                 and command.connection is self.conn
             ):
-                if self.quic is None:
-                    self._get_connection_commands.append(command)
-                else:
-                    yield from self.event_to_child(
-                        QuicGetConnectionCompleted(command, self.quic)
-                    )
+                yield from self.event_to_child(
+                    QuicGetConnectionCompleted(command, self.quic)
+                )
 
             # transmit buffered data and re-arm timer
             elif isinstance(command, QuicTransmit) and command.connection is self.quic:
                 yield from self.transmit()
+
+            # open the QUIC connection
+            elif (
+                isinstance(command, commands.OpenConnection)
+                and command.connection is self.conn
+            ):
+                assert self._pending_open_command is None
+                self._pending_open_command = command
+                err = yield commands.OpenConnection(self.conn)
+                if err is None:
+                    yield from self.initialize_connection()
+                    if self.quic is not None:
+                        self.quic.connect(self.conn.peername, now=self._loop.time())
+                        yield from self.process_events()
+                else:
+                    yield from self.shutdown_connection(err, level="warn")
 
             # properly close QUIC connections
             elif (
@@ -425,15 +438,6 @@ class _QuicLayer(layer.Layer):
         if self.issue_connection_id_callback is not None:
             self.issue_connection_id_callback(self.quic.host_cid)
         self._handle_event = self.state_ready
-
-        # let the waiters know about the available connection
-        while self._get_connection_commands:
-            assert self.quic is not None
-            yield from self.event_to_child(
-                QuicGetConnectionCompleted(
-                    self._get_connection_commands.pop(), self.quic
-                )
-            )
 
     def process_events(self) -> layer.CommandGenerator[None]:
         assert self.quic is not None
@@ -482,6 +486,15 @@ class _QuicLayer(layer.Layer):
                 else:
                     yield layers.tls.TlsEstablishedServerHook(tls_data)
 
+                # let the child layer know
+                if self._pending_open_command is not None:
+                    yield from self.event_to_child(
+                        events.OpenConnectionCompleted(
+                            self._pending_open_command, reply=None
+                        )
+                    )
+                    self._pending_open_command = None
+
                 # perform next layer decisions now
                 if isinstance(self.child_layer, layer.NextLayer):
                     yield from self.handle_child_commands(self.child_layer._ask())
@@ -512,22 +525,28 @@ class _QuicLayer(layer.Layer):
             else:
                 yield layers.tls.TlsFailedServerHook(tls_data)
 
-        # log the reason, ensure the connection is closed and no longer handle events
+        # log the reason and ensure the connection gets closed
         yield commands.Log(f"Connection {self.conn} closed: {reason}", level=level)
         if self.conn.connected:
             yield commands.CloseConnection(self.conn)
+
+        # let the child layer know and stop handling events
+        if self._pending_open_command is not None:
+            yield from self.event_to_child(
+                events.OpenConnectionCompleted(self._pending_open_command, reason)
+            )
+            self._pending_open_command = None
         self._handle_event = self.state_done
 
-    @abstractmethod
-    def start(self) -> layer.CommandGenerator[None]:
-        yield from ()  # pragma: no cover
-
-    def state_start(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert isinstance(event, events.Start)
-
-        # start this layer and the child layer
-        yield from self.start()
-        yield from self.event_to_child(event)
+    def state_done(self, event: events.Event) -> layer.CommandGenerator[None]:
+        # when done, just forward the event to the child layer (except for obsolete wakeups)
+        if (
+            isinstance(event, events.Wakeup)
+            and event.command in self._obsolete_wakeup_commands
+        ):
+            self._obsolete_wakeup_commands.remove(event.command)
+        else:
+            yield from self.child_layer.handle_event(event)
 
     def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.quic is not None
@@ -570,7 +589,7 @@ class _QuicLayer(layer.Layer):
                 return
 
             # handle active wakeup
-            elif self._request_wakeup_command_and_timer is not None:
+            if self._request_wakeup_command_and_timer is not None:
                 command, timer = self._request_wakeup_command_and_timer
                 if event.command is command:
                     self._request_wakeup_command_and_timer = None
@@ -581,30 +600,27 @@ class _QuicLayer(layer.Layer):
         # forward other events to the child layer
         yield from self.event_to_child(event)
 
-    def state_done(self, event: events.Event) -> layer.CommandGenerator[None]:
-        # when done, just forward the event
-        yield from self.child_layer.handle_event(event)
+    def state_start(self, event: events.Event) -> layer.CommandGenerator[None]:
+        # wait for the state to change and inspect the child layer's commands
+        yield from self.event_to_child(event)
 
     def transmit(self) -> layer.CommandGenerator[None]:
-        assert self.quic
+        assert self.quic is not None
 
         # send all queued datagrams
         for data, addr in self.quic.datagrams_to_send(now=self._loop.time()):
             yield commands.SendData(self.conn, data, addr)
 
-        # ensure the wakeup is set and still correct
+        # mark an existing wakeup command as obsolete if it now longer matches the time
         timer = self.quic.get_timer()
-        if timer is None:
-            if self._request_wakeup_command_and_timer is not None:
-                command, _ = self._request_wakeup_command_and_timer
+        if self._request_wakeup_command_and_timer is not None:
+            command, existing_timer = self._request_wakeup_command_and_timer
+            if existing_timer != timer:
                 self._obsolete_wakeup_commands.add(command)
                 self._request_wakeup_command_and_timer = None
-        else:
-            if self._request_wakeup_command_and_timer is not None:
-                command, existing_timer = self._request_wakeup_command_and_timer
-                if existing_timer == timer:
-                    return
-                self._obsolete_wakeup_commands.add(command)
+
+        # request a new wakeup if necessary
+        if timer is not None and self._request_wakeup_command_and_timer is None:
             command = commands.RequestWakeup(timer - self._loop.time())
             self._request_wakeup_command_and_timer = (command, timer)
             yield command
@@ -620,20 +636,13 @@ class ServerQuicLayer(_QuicLayer):
     def __init__(self, context: context.Context) -> None:
         super().__init__(context, context.server)
 
-    def start(self) -> layer.CommandGenerator[None]:
-        # try to connect
-        yield from self.initialize_connection()
-        if self.quic is not None:
-            self.quic.connect(self.conn.peername, now=self._loop.time())
-            yield from self.process_events()
-
 
 class ClientQuicLayer(_QuicLayer):
     """
     This layer establishes QUIC on a single client connection.
     """
 
-    buffered_packets: Optional[List[Tuple[bytes, connection.Address, float]]]
+    wait_for_upstream: bool
 
     def __init__(
         self,
@@ -641,60 +650,26 @@ class ClientQuicLayer(_QuicLayer):
         wait_for_upstream: bool,
     ) -> None:
         super().__init__(context, context.client)
-        self.buffered_packets = [] if wait_for_upstream else None
+        self.wait_for_upstream = wait_for_upstream
 
-    def initialize_connection_and_flush_buffer(self) -> layer.CommandGenerator[None]:
-        assert self.buffered_packets is not None
-
-        yield from self.initialize_connection()
-        if self.quic is not None:
-            for data, addr, now in self.buffered_packets:
-                self.quic.receive_datagram(data, addr, now)
-            yield from self.process_events()
-
-    def start(self) -> layer.CommandGenerator[None]:
-        if self.buffered_packets is None:
-            yield from self.initialize_connection()
-        else:
-            self._handle_event = self.state_wait_for_upstream
-
+    @expect(events.Start)
     def state_wait_for_upstream(
         self, event: events.Event
     ) -> layer.CommandGenerator[None]:
-        assert self.buffered_packets is not None
+        self._handle_event = self.state_start
 
-        # buffer incoming packets until the upstream handshake completed
-        if isinstance(event, events.DataReceived) and event.connection is self.conn:
-            assert event.remote_addr is not None
-            self.buffered_packets.append(
-                (event.data, event.remote_addr, self._loop.time())
-            )
-            return
-
-        # watch for closed connections on both legs
-        elif isinstance(event, events.ConnectionClosed):
-            if event.connection is self.conn:
-                yield from self.shutdown_connection(
-                    "Client UDP connection timeout out before upstream server handshake completed.",
-                    level="info",
-                )
-            elif event.connection is self.context.server:
+        # open the upstream connection if possible, but always initialize the client connection
+        if self.wait_for_upstream:
+            err = yield commands.OpenConnection(self.context.server)
+            if err is not None:
                 yield commands.Log(
-                    f"Unable to establish QUIC connection with server ({self.context.server.error or 'Connection closed.'}). "
+                    f"Unable to establish QUIC connection with server ({err}). "
                     f"Trying to establish QUIC with client anyway."
                 )
-                yield from self.initialize_connection_and_flush_buffer()
+        yield from self.initialize_connection()
+        yield from self.state_start(event)
 
-        # continue if upstream completed the handshake
-        elif (
-            isinstance(event, QuicConnectionEvent)
-            and event.connection is self.context.server
-            and isinstance(event.event, quic_events.HandshakeCompleted)
-        ):
-            yield from self.initialize_connection_and_flush_buffer()
-
-        # forward other events to the child layer
-        yield from self.event_to_child(event)
+    _handle_event = state_wait_for_upstream
 
 
 class QuicLayer(layer.Layer):
@@ -721,18 +696,22 @@ class QuicLayer(layer.Layer):
         layer.retire_connection_id_callback = self._retire_cid
         return layer
 
-    def done(self, event: events.Event) -> layer.CommandGenerator[None]:
+    @expect(events.DataReceived, events.ConnectionClosed)
+    def state_done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.Start):
-            pass
+    @expect(events.Start)
+    def state_start(self, _) -> layer.CommandGenerator[None]:
+        self._handle_event = self.state_wait_for_hello
+        yield from ()
+
+    @expect(events.DataReceived, events.ConnectionClosed)
+    def state_wait_for_hello(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert isinstance(event, events.ConnectionEvent)
+        assert event.connection is self.context.client
 
         # only handle the first packet from the client
-        elif (
-            isinstance(event, events.DataReceived)
-            and event.connection is self.context.client
-        ):
+        if isinstance(event, events.DataReceived):
             # extract the client hello
             try:
                 client_hello, connection_id = pull_client_hello_and_connection_id(
@@ -743,7 +722,7 @@ class QuicLayer(layer.Layer):
                     f"Cannot parse ClientHello: {str(e)} ({event.data.hex()})"
                 )
                 yield commands.CloseConnection(self.context.client)
-                self._handle_event = self.done
+                self._handle_event = self.state_done
             else:
 
                 # copy the information
@@ -761,21 +740,11 @@ class QuicLayer(layer.Layer):
 
                 # contact the upstream server first
                 elif hook_data.establish_server_tls_first:
-                    err = yield commands.OpenConnection(self.context.server)
-                    if err is None:
-                        next_layer = ServerQuicLayer(self.context)
-                        next_layer.child_layer = self.build_client_layer(
-                            connection_id,
-                            wait_for_upstream=True,
-                        )
-                    else:
-                        yield commands.Log(
-                            f"Failed to connect to upstream first (will continue with client anyway): {err}"
-                        )
-                        next_layer = self.build_client_layer(
-                            connection_id,
-                            wait_for_upstream=False,
-                        )
+                    next_layer = ServerQuicLayer(self.context)
+                    next_layer.child_layer = self.build_client_layer(
+                        connection_id,
+                        wait_for_upstream=True,
+                    )
 
                 # perform the client handshake immediately
                 else:
@@ -790,5 +759,11 @@ class QuicLayer(layer.Layer):
                 yield from next_layer.handle_event(events.Start())
                 yield from next_layer.handle_event(event)
 
+        # stop if the connection was closed (usually we will always get one packet)
+        elif isinstance(event, events.ConnectionClosed):
+            self._handle_event = self.state_done
+
         else:
             raise AssertionError(f"Unexpected event: {event}")
+
+    _handle_event = state_start
