@@ -443,7 +443,7 @@ class _QuicLayer(layer.Layer):
         assert self.tls is not None
 
         # concatenate all peer certificates
-        all_certs = []
+        all_certs: List[x509.Certificate] = []
         if self.quic.tls._peer_certificate is not None:
             all_certs.append(self.quic.tls._peer_certificate)
         if self.quic.tls._peer_certificate_chain is not None:
@@ -451,7 +451,7 @@ class _QuicLayer(layer.Layer):
 
         # set the connection's TLS properties
         self.conn.timestamp_tls_setup = self._loop.time()
-        self.conn.certificate_list = [certs.Cert.from_pyopenssl(x) for x in all_certs]
+        self.conn.certificate_list = [certs.Cert(cert) for cert in all_certs]
         self.conn.alpn = event.alpn_protocol.encode("ascii")
         self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
         self.conn.tls_version = "QUIC"

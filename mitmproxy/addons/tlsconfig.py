@@ -322,6 +322,7 @@ class TlsConfig:
             tls_start.settings.cipher_suites = [
                 CipherSuite(cipher) for cipher in client.cipher_list
             ]
+
         if ctx.options.add_upstream_certs_to_client_chain:
             tls_start.settings.certificate_chain.extend(cert._cert for cert in server.certificate_list)
 
@@ -348,9 +349,10 @@ class TlsConfig:
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
-        tls_start.settings.cipher_suites = [
-            CipherSuite(cipher) for cipher in server.cipher_list
-        ]
+        if server.cipher_list:
+            tls_start.settings.cipher_suites = [
+                CipherSuite(cipher) for cipher in server.cipher_list
+            ]
 
         client_cert = self.get_client_cert(server)
         if client_cert:
