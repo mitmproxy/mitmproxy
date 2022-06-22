@@ -143,11 +143,7 @@ class TlsData:
     The associated pyOpenSSL `SSL.Connection` object.
     This will be set by an addon in the `tls_start_*` event hooks.
     """
-
-
-@dataclass
-class DtlsData(TlsData):
+    is_dtls: bool = False
     """
-    Event data for `dtls_start_client`, and `dtls_start_server`.
+    If set to `True`, indicates that it is a DTLS event.
     """
-    pass

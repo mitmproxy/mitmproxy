@@ -138,7 +138,8 @@ class TlsConfig:
             conn_context.server.tls and ctx.options.connection_strategy == "eager"
         )
 
-    def _tls_start_client(self, tls_start: tls.TlsData, method: net_tls.Method) -> None:
+    def tls_start_client(self, tls_start: tls.TlsData) -> None:
+        """Establish TLS or DTLS between client and proxy."""
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
@@ -161,7 +162,7 @@ class TlsConfig:
             extra_chain_certs = []
 
         ssl_ctx = net_tls.create_client_proxy_context(
-            method=method,
+            method=net_tls.Method.DTLS_SERVER_METHOD if tls_start.is_dtls else net_tls.Method.TLS_SERVER_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
@@ -194,15 +195,8 @@ class TlsConfig:
         )
         tls_start.ssl_conn.set_accept_state()
 
-    def tls_start_client(self, tls_start: tls.TlsData) -> None:
-        """Establish TLS between client and proxy."""
-        self._tls_start_client(tls_start, net_tls.Method.TLS_SERVER_METHOD)
-
-    def dtls_start_client(self, tls_start: tls.DtlsData) -> None:
-        """Establish DTLS between client and proxy."""
-        self._tls_start_client(tls_start, net_tls.Method.DTLS_SERVER_METHOD)
-
-    def _tls_start_server(self, tls_start: tls.TlsData, method: net_tls.Method) -> None:
+    def tls_start_server(self, tls_start: tls.TlsData) -> None:
+        """Establish TLS or DTLS between proxy and server."""
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
@@ -257,7 +251,7 @@ class TlsConfig:
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(
-            method=method,
+            method=net_tls.Method.DTLS_CLIENT_METHOD if tls_start.is_dtls else net_tls.Method.TLS_CLIENT_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
@@ -298,14 +292,6 @@ class TlsConfig:
             tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
 
         tls_start.ssl_conn.set_connect_state()
-
-    def tls_start_server(self, tls_start: tls.TlsData):
-        """Establish TLS between proxy and server."""
-        self._tls_start_server(tls_start, net_tls.Method.TLS_CLIENT_METHOD)
-
-    def dtls_start_server(self, dtls_start: tls.DtlsData):
-        """Establish DTLS between proxy and server."""
-        self._tls_start_server(dtls_start, net_tls.Method.DTLS_CLIENT_METHOD)
 
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
