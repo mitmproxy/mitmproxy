@@ -64,7 +64,7 @@ class Http3Connection(HttpConnection):
             self.quic = quic
             self.h3_conn = H3Connection(quic, enable_webtransport=False)
 
-        if isinstance(event, events.ConnectionClosed):
+        elif isinstance(event, events.ConnectionClosed):
             self._handle_event = self.done
 
         # send mitmproxy HTTP events over the H3 connection
@@ -165,7 +165,7 @@ class Http3Connection(HttpConnection):
                     )
                     if h3_event.stream_ended:
                         yield ReceiveHttp(
-                            self.ReceiveEndOfMessage(stream_id=event.stream_id)
+                            self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
                         )
 
                 # report headers and trailers
@@ -193,7 +193,7 @@ class Http3Connection(HttpConnection):
                             yield ReceiveHttp(receive_event)
                         if h3_event.stream_ended:
                             yield ReceiveHttp(
-                                self.ReceiveEndOfMessage(stream_id=event.stream_id)
+                                self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
                             )
 
                 # we don't support push, web transport, etc.
@@ -266,7 +266,7 @@ class Http3Server(Http3Connection):
             authority,
             path,
             headers,
-        ) = parse_h2_request_headers(event)
+        ) = parse_h2_request_headers(event.headers)
         request = http.Request(
             host=host,
             port=port,

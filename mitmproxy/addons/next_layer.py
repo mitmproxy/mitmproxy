@@ -22,7 +22,7 @@ from mitmproxy import ctx, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
-from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import modes, quic
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello
 
 LayerCls = type[layer.Layer]
@@ -117,6 +117,24 @@ class NextLayer:
     def _next_layer(
         self, context: context.Context, data_client: bytes, data_server: bytes
     ) -> Optional[layer.Layer]:
+        if isinstance(context.layers[0], quic.QuicLayer):
+            if context.client.alpn is None:
+                return None  # should never happen, as ask is called after handshake
+            if context.client.alpn == b"h3" or context.client.alpn.startswith(b"h3-"):
+                if ctx.options.mode == "regular":
+                    mode = HTTPMode.regular
+                elif ctx.options.mode == "transparent" or ctx.options.mode.startswith("reverse:"):
+                    mode = HTTPMode.transparent
+                elif ctx.options.mode.startswith("upstream:"):
+                    mode = HTTPMode.upstream
+                else:
+                    return None
+                return layers.HttpLayer(context=context, mode=mode)
+            else:
+                if context.server.address is None:
+                    return None
+                return quic.QuicRelayLayer(context)
+
         if len(context.layers) == 0:
             return self.make_top_layer(context)
 
