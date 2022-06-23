@@ -484,6 +484,7 @@ class _QuicLayer(layer.Layer):
                 isinstance(command, QuicGetConnection)
                 and command.connection is self.conn
             ):
+                assert self.quic is not None
                 yield from self.event_to_child(
                     QuicGetConnectionCompleted(command, self.quic)
                 )
@@ -641,8 +642,8 @@ class _QuicLayer(layer.Layer):
         elif (
             isinstance(event, events.ConnectionClosed) and event.connection is self.conn
         ):
-            # handle connections closed by peer, which in UDP's case is a timeout
-            reason = "Peer UDP connection timed out."
+            # handle connections closed by peer (which in UDP's case is usually a timeout)
+            reason = "Peer UDP connection closed or timed out."
 
             # there is no point in calling quic.close, as it cannot send packets anymore
             # set the new connection state and simulate a ConnectionTerminated event (if established)

@@ -60,6 +60,7 @@ class Http3Connection(HttpConnection):
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
             quic = yield QuicGetConnection(self.conn)
+            assert quic is not None
             assert isinstance(quic, QuicConnection)
             self.quic = quic
             self.h3_conn = H3Connection(quic, enable_webtransport=False)
