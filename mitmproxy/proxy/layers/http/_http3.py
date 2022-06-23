@@ -17,10 +17,12 @@ from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
+    _QuicLayer,
     QuicConnectionEvent,
-    QuicGetConnection,
+    # QuicGetConnection,
     QuicTransmit,
 )
+from mitmproxy.proxy.utils import expect
 
 from . import (
     RequestData,
@@ -59,14 +61,20 @@ class Http3Connection(HttpConnection):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            quic = yield QuicGetConnection(self.conn)
-            assert quic is not None
-            assert isinstance(quic, QuicConnection)
-            self.quic = quic
-            self.h3_conn = H3Connection(quic, enable_webtransport=False)
+            # this doesn't always work:
+            #   quic = yield QuicGetConnection(self.conn)
+            #   assert isinstance(quic, QuicConnection)
+            #   self.quic = quic
+            #
+            # temporary workaround:
+            for layer_ in self.context.layers:
+                if isinstance(layer_, _QuicLayer) and layer_.conn is self.conn:
+                    self.quic = layer_.quic
+            assert self.quic is not None
+            self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
 
         elif isinstance(event, events.ConnectionClosed):
-            self._handle_event = self.done
+            self._handle_event = self.done  # type: ignore
 
         # send mitmproxy HTTP events over the H3 connection
         elif isinstance(event, HttpEvent):
@@ -90,6 +98,9 @@ class Http3Connection(HttpConnection):
                         ),
                         end_stream=event.end_stream,
                     )
+                    if event.end_stream:
+                        # this will prevent any further headers or data from being sent
+                        self.h3_conn._stream[event.stream_id].headers_send_state = H3HeadersState.AFTER_TRAILERS
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                     self.h3_conn.send_headers(
                         stream_id=event.stream_id,
@@ -122,6 +133,7 @@ class Http3Connection(HttpConnection):
             # report abrupt stream resets
             if isinstance(event, quic_events.StreamReset):
                 if event.stream_id in self.h3_conn._stream:
+                    # try to get a name for the error from its code
                     try:
                         reason = H3ErrorCode(event.error_code).name
                     except ValueError:
@@ -129,6 +141,8 @@ class Http3Connection(HttpConnection):
                             reason = QuicErrorCode(event.error_code).name
                         except ValueError:
                             reason = str(event.error_code)
+
+                    # report the protocol error (doing the same error code mingling as H2)
                     code = (
                         status_codes.CLIENT_CLOSED_REQUEST
                         if event.error_code == H3ErrorCode.H3_REQUEST_CANCELLED
@@ -192,10 +206,12 @@ class Http3Connection(HttpConnection):
                             )
                         else:
                             yield ReceiveHttp(receive_event)
-                        if h3_event.stream_ended:
-                            yield ReceiveHttp(
-                                self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
-                            )
+
+                    # always report an EndOfMessage if the stream has ended
+                    if h3_event.stream_ended:
+                        yield ReceiveHttp(
+                            self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
+                        )
 
                 # we don't support push, web transport, etc.
                 else:
@@ -206,7 +222,8 @@ class Http3Connection(HttpConnection):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def done(self, event: events.Event) -> layer.CommandGenerator[None]:
+    @expect(events.DataReceived, HttpEvent, events.ConnectionClosed)
+    def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
     @abstractmethod
