@@ -17,7 +17,7 @@ import blinker
 import sortedcontainers
 
 import mitmproxy.flow
-from mitmproxy import command
+from mitmproxy import command, udp
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions

@@ -183,3 +183,9 @@ class Save:
 
     def dns_error(self, flow: dns.DNSFlow):
         self.save_flow(flow)
+
+    def udp_start(self, flow: udp.UDPFlow):
+        self.save_flow(flow)
+
+    def udp_error(self, flow: udp.UDPFlow):
+        self.save_flow(flow)

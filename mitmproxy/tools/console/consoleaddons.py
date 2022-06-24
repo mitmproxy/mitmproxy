@@ -2,7 +2,7 @@ import csv
 from collections.abc import Sequence
 
 import mitmproxy.types
-from mitmproxy import command, command_lexer
+from mitmproxy import command, command_lexer, udp
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns

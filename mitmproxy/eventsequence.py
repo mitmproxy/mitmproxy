@@ -1,6 +1,6 @@
 from typing import Any, Callable, Iterator
 
-from mitmproxy import dns
+from mitmproxy import dns, udp
 from mitmproxy import flow
 from mitmproxy import hooks
 from mitmproxy import http
