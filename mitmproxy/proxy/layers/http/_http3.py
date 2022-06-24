@@ -11,7 +11,6 @@ from aioquic.h3.connection import (
 from aioquic.h3 import events as h3_events
 from aioquic.quic import events as quic_events
 from aioquic.quic.connection import QuicConnection
-from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
@@ -21,6 +20,7 @@ from mitmproxy.proxy.layers.quic import (
     QuicConnectionEvent,
     # QuicGetConnection,
     QuicTransmit,
+    error_code_to_str,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -100,7 +100,9 @@ class Http3Connection(HttpConnection):
                     )
                     if event.end_stream:
                         # this will prevent any further headers or data from being sent
-                        self.h3_conn._stream[event.stream_id].headers_send_state = H3HeadersState.AFTER_TRAILERS
+                        self.h3_conn._stream[
+                            event.stream_id
+                        ].headers_send_state = H3HeadersState.AFTER_TRAILERS
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                     self.h3_conn.send_headers(
                         stream_id=event.stream_id,
@@ -111,12 +113,10 @@ class Http3Connection(HttpConnection):
                     self.h3_conn.send_data(
                         stream_id=event.stream_id, data=b"", end_stream=True
                     )
-                elif isinstance(
-                    event, (RequestProtocolError, ResponseProtocolError)
-                ):
+                elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
                     self.protocol_error(event)
                 else:
-                    raise AssertionError(f"Unexpected event: {event}")
+                    raise AssertionError(f"Unexpected event: {event!r}")
 
             except FrameUnexpected:
                 # Http2Connection also ignores HttpEvents that violate the current stream state
@@ -133,15 +133,6 @@ class Http3Connection(HttpConnection):
             # report abrupt stream resets
             if isinstance(event, quic_events.StreamReset):
                 if event.stream_id in self.h3_conn._stream:
-                    # try to get a name for the error from its code
-                    try:
-                        reason = H3ErrorCode(event.error_code).name
-                    except ValueError:
-                        try:
-                            reason = QuicErrorCode(event.error_code).name
-                        except ValueError:
-                            reason = str(event.error_code)
-
                     # report the protocol error (doing the same error code mingling as H2)
                     code = (
                         status_codes.CLIENT_CLOSED_REQUEST
@@ -151,7 +142,7 @@ class Http3Connection(HttpConnection):
                     yield ReceiveHttp(
                         self.ReceiveProtocolError(
                             stream_id=event.stream_id,
-                            message=f"stream reset by client ({reason})",
+                            message=f"stream reset by client ({error_code_to_str(event.error_code)})",
                             code=code,
                         )
                     )
@@ -215,9 +206,7 @@ class Http3Connection(HttpConnection):
 
                 # we don't support push, web transport, etc.
                 else:
-                    yield commands.Log(
-                        f"Ignored unsupported H3 event: {h3_event!r}"
-                    )
+                    yield commands.Log(f"Ignored unsupported H3 event: {h3_event!r}")
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")

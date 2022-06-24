@@ -4,6 +4,7 @@ from ssl import VerifyMode
 from typing import Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
+from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import (
@@ -130,6 +131,16 @@ class QuicSecretsLogger:
 @dataclass
 class QuicClientHello(Exception):
     data: bytes
+
+
+def error_code_to_str(error_code: int) -> str:
+    try:
+        return H3ErrorCode(error_code).name
+    except ValueError:
+        try:
+            return QuicErrorCode(error_code).name
+        except ValueError:
+            return f"unknown error (0x{error_code:x})"
 
 
 def pull_client_hello_and_connection_id(data: bytes) -> Tuple[ClientHello, bytes]:
@@ -301,14 +312,10 @@ class QuicRelayLayer(layer.Layer):
                     stream_id_out, flow = lookup_in[stream_id_in]
                     quic_out.stop_stream(stream_id_out, quic_event.error_code)
 
-                    # try to get a name describing the reset reason
-                    try:
-                        err = QuicErrorCode(quic_event.error_code).name
-                    except ValueError:
-                        err = str(quic_event.error_code)
-
                     # report the error to addons and delete the stream
-                    flow.error = mitm_flow.Error(str(err))
+                    flow.error = mitm_flow.Error(
+                        error_code_to_str(quic_event.error_code)
+                    )
                     yield tcp_layer.TcpErrorHook(flow)
                     flow.live = False
                     del lookup_in[stream_id_in]
@@ -580,9 +587,12 @@ class _QuicLayer(layer.Layer):
 
                 # shutdown and close the connection
                 yield from self.destroy_quic(
-                    event.reason_phrase or str(event.error_code),
+                    event.reason_phrase or error_code_to_str(event.error_code),
                     level=(
-                        "info" if event.error_code == QuicErrorCode.NO_ERROR else "warn"
+                        "info"
+                        if event.error_code
+                        in (QuicErrorCode.NO_ERROR, H3ErrorCode.H3_NO_ERROR)
+                        else "warn"
                     ),
                 )
                 yield commands.CloseConnection(self.conn)
