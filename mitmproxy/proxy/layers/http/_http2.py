@@ -314,6 +314,7 @@ def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator
 
 
 def format_h2_request_headers(
+    context: Context,
     event: RequestHeaders,
 ) -> CommandGenerator[list[tuple[bytes, bytes]]]:
     pseudo_headers = [
@@ -326,7 +327,7 @@ def format_h2_request_headers(
 
     if event.request.is_http2 or event.request.is_http3:
         hdrs = list(event.request.headers.fields)
-        if ctx.options.normalize_outbound_headers:
+        if context.options.normalize_outbound_headers:
             yield from normalize_h2_headers(hdrs)
     else:
         headers = event.request.headers
@@ -339,6 +340,7 @@ def format_h2_request_headers(
 
 
 def format_h2_response_headers(
+    context: Context,
     event: ResponseHeaders,
 ) -> CommandGenerator[list[tuple[bytes, bytes]]]:
     headers = [
@@ -346,7 +348,7 @@ def format_h2_response_headers(
         *event.response.headers.fields,
     ]
     if event.response.is_http2:
-        if ctx.options.normalize_outbound_headers:
+        if context.options.normalize_outbound_headers:
             yield from normalize_h2_headers(headers)
     else:
         headers = normalize_h1_headers(headers, False)
@@ -372,7 +374,7 @@ class Http2Server(Http2Connection):
             if self.is_open_for_us(event.stream_id):
                 self.h2_conn.send_headers(
                     event.stream_id,
-                    headers=(yield from format_h2_response_headers(event)),
+                    headers=(yield from format_h2_response_headers(self.context, event)),
                     end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -517,7 +519,7 @@ class Http2Client(Http2Connection):
         elif isinstance(event, RequestHeaders):
             self.h2_conn.send_headers(
                 event.stream_id,
-                headers=(yield from format_h2_request_headers(event)),
+                headers=(yield from format_h2_request_headers(self.context, event)),
                 end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS

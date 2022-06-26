@@ -10,7 +10,7 @@ from aioquic.h3.connection import (
 )
 from aioquic.h3 import events as h3_events
 from aioquic.quic import events as quic_events
-from aioquic.quic.connection import QuicConnection
+from aioquic.quic.connection import QuicConnection, stream_is_unidirectional
 
 from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
@@ -91,9 +91,9 @@ class Http3Connection(HttpConnection):
                         stream_id=event.stream_id,
                         headers=(
                             yield from (
-                                format_h2_request_headers(event)
+                                format_h2_request_headers(self.context, event)
                                 if isinstance(event, RequestHeaders)
-                                else format_h2_response_headers(event)
+                                else format_h2_response_headers(self.context, event)
                             )
                         ),
                         end_stream=event.end_stream,
@@ -133,24 +133,33 @@ class Http3Connection(HttpConnection):
             # report abrupt stream resets
             if isinstance(event, quic_events.StreamReset):
                 if event.stream_id in self.h3_conn._stream:
-                    # report the protocol error (doing the same error code mingling as H2)
-                    code = (
-                        status_codes.CLIENT_CLOSED_REQUEST
-                        if event.error_code == H3ErrorCode.H3_REQUEST_CANCELLED
-                        else self.ReceiveProtocolError.code
-                    )
-                    yield ReceiveHttp(
-                        self.ReceiveProtocolError(
-                            stream_id=event.stream_id,
-                            message=f"stream reset by client ({error_code_to_str(event.error_code)})",
-                            code=code,
+                    stream = self.h3_conn._stream[event.stream_id]
+                    if not stream.ended:
+                        # mark the receiving part of the stream as ended
+                        # (H3Connection alas doesn't handle StreamReset)
+                        stream.ended = True
+
+                        # report the protocol error (doing the same error code mingling as H2)
+                        code = (
+                            status_codes.CLIENT_CLOSED_REQUEST
+                            if event.error_code == H3ErrorCode.H3_REQUEST_CANCELLED
+                            else self.ReceiveProtocolError.code
                         )
-                    )
+                        yield ReceiveHttp(
+                            self.ReceiveProtocolError(
+                                stream_id=event.stream_id,
+                                message=f"stream reset by client ({error_code_to_str(event.error_code)})",
+                                code=code,
+                            )
+                        )
 
             # report a protocol error for all remaining open streams when a connection is terminated
             elif isinstance(event, quic_events.ConnectionTerminated):
                 for stream in self.h3_conn._stream.values():
-                    if not stream.ended:
+                    if (
+                        self.quic._stream_can_receive(stream.stream_id)
+                        and not stream.ended
+                    ):
                         yield ReceiveHttp(
                             self.ReceiveProtocolError(
                                 stream_id=stream.stream_id,
@@ -344,7 +353,9 @@ class Http3Client(Http3Connection):
             assert self.quic is not None
             ours = self.our_stream_id.get(event.stream_id, None)
             if ours is None:
-                ours = self.quic.get_next_available_stream_id()
+                ours = self.quic.get_next_available_stream_id(
+                    is_unidirectional=stream_is_unidirectional(event.stream_id)
+                )
                 self.our_stream_id[event.stream_id] = ours
                 self.their_stream_id[ours] = event.stream_id
             event.stream_id = ours
