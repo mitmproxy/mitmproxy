@@ -117,6 +117,10 @@ class NextLayer:
     def _next_layer(
         self, context: context.Context, data_client: bytes, data_server: bytes
     ) -> Optional[layer.Layer]:
+        if len(context.layers) == 0:
+            return self.make_top_layer(context)
+
+        # handle QUIC connections
         if isinstance(context.layers[0], quic.QuicLayer):
             if context.client.alpn is None:
                 return None  # should never happen, as ask is called after handshake
@@ -135,9 +139,6 @@ class NextLayer:
             if isinstance(context.layers[1], quic.ServerQuicLayer):
                 return quic.QuicRelayLayer(context)  # server layer already present
             return quic.ServerQuicLayer(context, quic.QuicRelayLayer(context))
-
-        if len(context.layers) == 0:
-            return self.make_top_layer(context)
 
         if len(data_client) < 3 and not data_server:
             return None  # not enough data yet to make a decision
