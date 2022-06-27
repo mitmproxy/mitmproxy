@@ -13,7 +13,7 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from mitmproxy import ctx, http, version
+from mitmproxy import http, version
 from mitmproxy.connection import Connection
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human

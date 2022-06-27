@@ -16,11 +16,10 @@ from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
-    _QuicLayer,
     QuicConnectionEvent,
-    # QuicGetConnection,
     QuicTransmit,
     error_code_to_str,
+    get_quic_connection,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -61,16 +60,7 @@ class Http3Connection(HttpConnection):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            # this doesn't always work:
-            #   quic = yield QuicGetConnection(self.conn)
-            #   assert isinstance(quic, QuicConnection)
-            #   self.quic = quic
-            #
-            # temporary workaround:
-            for layer_ in self.context.layers:
-                if isinstance(layer_, _QuicLayer) and layer_.conn is self.conn:
-                    self.quic = layer_.quic
-            assert self.quic is not None
+            self.quic = get_quic_connection(self.context, self.conn)
             self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
 
         elif isinstance(event, events.ConnectionClosed):
@@ -123,7 +113,7 @@ class Http3Connection(HttpConnection):
                 return
 
             # transmit buffered data and re-arm timer
-            yield QuicTransmit(self.quic)
+            yield QuicTransmit(self.conn, self.quic)
 
         # handle events from the underlying QUIC connection
         elif isinstance(event, QuicConnectionEvent):

@@ -129,11 +129,14 @@ class NextLayer:
                     mode = HTTPMode.upstream
                 else:
                     return None
-                return layers.HttpLayer(context=context, mode=mode)
+                return layers.HttpLayer(context, mode)
             else:
                 if context.server.address is None:
                     return None
-                return quic.QuicRelayLayer(context)
+                if isinstance(context.layers[1], quic.ServerQuicLayer):
+                    return quic.QuicRelayLayer(context)
+                else:
+                    return quic.ServerQuicLayer(context, quic.QuicRelayLayer(context))
 
         if len(context.layers) == 0:
             return self.make_top_layer(context)
