@@ -17,9 +17,9 @@ from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
     QuicConnectionEvent,
+    QuicStart,
     QuicTransmit,
     error_code_to_str,
-    get_quic_connection,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -60,7 +60,10 @@ class Http3Connection(HttpConnection):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            self.quic = get_quic_connection(self.context, self.conn)
+            pass
+
+        elif isinstance(event, QuicStart):
+            self.quic = event.quic
             self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
 
         elif isinstance(event, events.ConnectionClosed):
