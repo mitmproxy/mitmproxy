@@ -130,13 +130,11 @@ class NextLayer:
                 else:
                     return None
                 return layers.HttpLayer(context, mode)
-            else:
-                if context.server.address is None:
-                    return None
-                if isinstance(context.layers[1], quic.ServerQuicLayer):
-                    return quic.QuicRelayLayer(context)
-                else:
-                    return quic.ServerQuicLayer(context, quic.QuicRelayLayer(context))
+            if context.server.address is None:
+                return None  # not H3 and no predefined destination, nothing we can do
+            if isinstance(context.layers[1], quic.ServerQuicLayer):
+                return quic.QuicRelayLayer(context)  # server layer already present
+            return quic.ServerQuicLayer(context, quic.QuicRelayLayer(context))
 
         if len(context.layers) == 0:
             return self.make_top_layer(context)

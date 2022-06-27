@@ -347,7 +347,7 @@ def format_h2_response_headers(
         (b":status", b"%d" % event.response.status_code),
         *event.response.headers.fields,
     ]
-    if event.response.is_http2:
+    if event.response.is_http2 or event.response.is_http3:
         if context.options.normalize_outbound_headers:
             yield from normalize_h2_headers(headers)
     else:

@@ -189,7 +189,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
                 # This simplifies our connection management quite a bit as we can rely on
                 # the proxyserver's max-connection-per-server throttling.
-                or (self.request.is_http2 and isinstance(self, Http1Client))
+                or ((self.request.is_http2 or self.request.is_http3) and isinstance(self, Http1Client))
             )
             if connection_done:
                 yield commands.CloseConnection(self.conn)
@@ -223,7 +223,7 @@ class Http1Server(Http1Connection):
         if isinstance(event, ResponseHeaders):
             self.response = response = event.response
 
-            if response.is_http2:
+            if response.is_http2 or response.is_http3:
                 response = response.copy()
                 # Convert to an HTTP/1 response.
                 response.http_version = "HTTP/1.1"
@@ -340,7 +340,7 @@ class Http1Client(Http1Connection):
 
         if isinstance(event, RequestHeaders):
             request = event.request
-            if request.is_http2:
+            if request.is_http2 or request.is_http3:
                 # Convert to an HTTP/1 request.
                 request = (
                     request.copy()

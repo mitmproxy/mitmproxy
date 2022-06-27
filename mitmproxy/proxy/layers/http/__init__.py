@@ -220,7 +220,7 @@ class HttpStream(layer.Layer):
                     "https" if self.context.client.tls else "http"
                 )
 
-        if self.mode is HTTPMode.regular and not self.flow.request.is_http2:
+        if self.mode is HTTPMode.regular and not (self.flow.request.is_http2 or self.flow.request.is_http3):
             # Set the request target to origin-form for HTTP/1, some servers don't support absolute-form requests.
             # see https://github.com/mitmproxy/mitmproxy/issues/1759
             self.flow.request.authority = ""

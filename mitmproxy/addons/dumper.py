@@ -200,7 +200,7 @@ class Dumper:
             blink=(code_int == 418),
         )
 
-        if not flow.response.is_http2:
+        if not (flow.response.is_http2 or flow.response.is_http3):
             reason = flow.response.reason
         else:
             reason = http.status_codes.RESPONSES.get(flow.response.status_code, "")
