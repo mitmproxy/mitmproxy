@@ -58,21 +58,26 @@ class Http3Connection(HttpConnection):
     ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
     ReceiveTrailers: type[Union[RequestTrailers, ResponseTrailers]]
 
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.Start):
-            pass
+    @expect(events.Start)
+    def state_start(self, _) -> layer.CommandGenerator[None]:
+        self._handle_event = self.state_wait_for_quic
+        yield from ()
 
-        elif isinstance(event, QuicStart):
-            self.quic = event.quic
-            self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
+    @expect(QuicStart)
+    def state_wait_for_quic(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert isinstance(event, QuicStart)
+        self.quic = event.quic
+        self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
+        self._handle_event = self.state_ready
+        yield from ()
 
-        elif isinstance(event, events.ConnectionClosed):
-            self._handle_event = self.done  # type: ignore
+    @expect(HttpEvent, QuicConnectionEvent, events.ConnectionClosed)
+    def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert self.quic is not None
+        assert self.h3_conn is not None
 
         # send mitmproxy HTTP events over the H3 connection
-        elif isinstance(event, HttpEvent):
-            assert self.quic is not None
-            assert self.h3_conn is not None
+        if isinstance(event, HttpEvent):
             try:
 
                 if isinstance(event, (RequestData, ResponseData)):
@@ -120,8 +125,6 @@ class Http3Connection(HttpConnection):
 
         # handle events from the underlying QUIC connection
         elif isinstance(event, QuicConnectionEvent):
-            assert self.quic is not None
-            assert self.h3_conn is not None
 
             # report abrupt stream resets
             if isinstance(event, quic_events.StreamReset):
@@ -143,21 +146,6 @@ class Http3Connection(HttpConnection):
                                 stream_id=event.stream_id,
                                 message=f"stream reset by client ({error_code_to_str(event.error_code)})",
                                 code=code,
-                            )
-                        )
-
-            # report a protocol error for all remaining open streams when a connection is terminated
-            elif isinstance(event, quic_events.ConnectionTerminated):
-                for stream in self.h3_conn._stream.values():
-                    if (
-                        self.quic._stream_can_receive(stream.stream_id)
-                        and not stream.ended
-                    ):
-                        yield ReceiveHttp(
-                            self.ReceiveProtocolError(
-                                stream_id=stream.stream_id,
-                                message=event.reason_phrase,
-                                code=event.error_code,
                             )
                         )
 
@@ -197,6 +185,7 @@ class Http3Connection(HttpConnection):
                                 error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
                                 reason_phrase=f"Invalid HTTP/3 request headers: {e}",
                             )
+                            yield QuicTransmit(self.conn, self.quic)
                         else:
                             yield ReceiveHttp(receive_event)
 
@@ -210,11 +199,26 @@ class Http3Connection(HttpConnection):
                 else:
                     yield commands.Log(f"Ignored unsupported H3 event: {h3_event!r}")
 
+        # report a protocol error for all remaining open streams when a connection is closed
+        elif isinstance(event, events.ConnectionClosed):
+            for stream in self.h3_conn._stream.values():
+                if self.quic._stream_can_receive(stream.stream_id) and not stream.ended:
+                    close_event = self.quic._close_event
+                    assert close_event is not None
+                    yield ReceiveHttp(
+                        self.ReceiveProtocolError(
+                            stream_id=stream.stream_id,
+                            message=close_event.reason_phrase,
+                            code=close_event.error_code,
+                        )
+                    )
+            self._handle_event = self.state_done
+
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    @expect(events.DataReceived, HttpEvent, events.ConnectionClosed)
-    def done(self, _) -> layer.CommandGenerator[None]:
+    @expect(HttpEvent, QuicConnectionEvent, events.ConnectionClosed)
+    def state_done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
     @abstractmethod
@@ -228,6 +232,8 @@ class Http3Connection(HttpConnection):
         self, event: h3_events.HeadersReceived
     ) -> Union[RequestHeaders, ResponseHeaders]:
         pass  # pragma: no cover
+
+    _handle_event = state_start
 
 
 class Http3Server(Http3Connection):

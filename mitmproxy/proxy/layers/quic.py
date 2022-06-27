@@ -91,7 +91,6 @@ class QuicTlsStartServerHook(commands.StartHook):
 class QuicConnectionEvent(events.ConnectionEvent):
     """
     Connection-based event that is triggered whenever a new event from QUIC is received.
-    Established connections are guaranteed to receive a ConnectionTerminated event at the end.
 
     Note:
     'Established' means that an OpenConnection command called in a child layer returned no error.
@@ -308,11 +307,9 @@ class QuicRelayLayer(layer.Layer):
         from_client: bool,
         allow_buffering: bool,
     ) -> layer.CommandGenerator[None]:
-        # get the peer connections
-        peer_connection = self.context.server if from_client else self.context.client
+        # buffer events if the peer is not ready yet
         peer_quic = self.quic_server if from_client else self.quic_client
         if peer_quic is None:
-            # buffer events since the peer is not ready yet
             if not allow_buffering:
                 raise AssertionError(
                     f"Cannot buffer event from {'client' if from_client else 'server'}."
@@ -322,38 +319,9 @@ class QuicRelayLayer(layer.Layer):
             else:
                 self.buffer_from_server.append(event)
             return
+        peer_connection = self.context.server if from_client else self.context.client
 
-        if isinstance(event, quic_events.ConnectionTerminated):
-            # report the termination as error to all non-ended streams
-            for flow in self.streams_by_flow:
-                if flow.live:
-                    self.flow.error = mitm_flow.Error(
-                        "Connection terminated "
-                        f" (code={event.error_code}, reason={event.reason_phrase})."
-                    )
-                    yield tcp_layer.TcpErrorHook(flow)
-                    flow.live = False
-
-            # end the main flow
-            if self.flow.live:
-                if is_success_error_code(event.error_code):
-                    yield tcp_layer.TcpEndHook(flow)
-                else:
-                    self.flow.error = mitm_flow.Error(
-                        event.reason_phrase or error_code_to_str(event.error_code)
-                    )
-                    yield tcp_layer.TcpErrorHook(flow)
-                self.flow.live = False
-
-            # close the peer as well and don't handle further events
-            peer_quic.close(
-                event.error_code,
-                event.frame_type,
-                event.reason_phrase,
-            )
-            self._handle_event = self.state_done
-
-        elif isinstance(event, quic_events.DatagramFrameReceived):
+        if isinstance(event, quic_events.DatagramFrameReceived):
             # forward datagrams (that are not stream-bound)
             if not self.flow.live:
                 return
@@ -429,10 +397,56 @@ class QuicRelayLayer(layer.Layer):
                 return
         self._handle_event = self.state_ready
 
-    @expect(QuicStart, QuicConnectionEvent, tcp_layer.TcpMessageInjected)
+    @expect(
+        QuicStart,
+        QuicConnectionEvent,
+        tcp_layer.TcpMessageInjected,
+        events.ConnectionClosed,
+    )
     def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
 
-        if isinstance(event, QuicStart):
+        if isinstance(event, events.ConnectionClosed):
+            # define helper variables
+            from_client = event.connection is self.context.client
+            peer_conn = self.context.server if from_client else self.context.client
+            local_quic = self.quic_client if from_client else self.quic_server
+            peer_quic = self.quic_server if from_client else self.quic_client
+            assert local_quic is not None
+            close_event = local_quic._close_event
+            assert close_event is not None
+
+            # report the termination as error to all non-ended streams
+            for flow in self.streams_by_flow:
+                if flow.live:
+                    self.flow.error = mitm_flow.Error("Connection closed.")
+                    yield tcp_layer.TcpErrorHook(flow)
+                    flow.live = False
+
+            # end the main flow
+            if self.flow.live:
+                if is_success_error_code(close_event.error_code):
+                    yield tcp_layer.TcpEndHook(flow)
+                else:
+                    self.flow.error = mitm_flow.Error(
+                        close_event.reason_phrase
+                        or error_code_to_str(close_event.error_code)
+                    )
+                    yield tcp_layer.TcpErrorHook(flow)
+                self.flow.live = False
+
+            # close the peer as well
+            if peer_quic is not None:
+                peer_quic.close(
+                    close_event.error_code,
+                    close_event.frame_type,
+                    close_event.reason_phrase,
+                )
+                yield QuicTransmit(peer_conn, peer_quic)
+            else:
+                yield commands.CloseConnection(peer_conn)
+            self._handle_event = self.state_done
+
+        elif isinstance(event, QuicStart):
             # QUIC connection has been established, store it and flush buffered events
             if event.connection is self.context.client:
                 assert self.quic_client is None
@@ -459,16 +473,15 @@ class QuicRelayLayer(layer.Layer):
 
         elif isinstance(event, tcp_layer.TcpMessageInjected):
             # translate injected messages into QUIC events
-            flow = event.flow
-            assert isinstance(flow, tcp.TCPFlow)
-            if flow is self.flow:
+            assert isinstance(event.flow, tcp.TCPFlow)
+            if event.flow is self.flow:
                 yield from self.handle_quic_event(
                     quic_events.DatagramFrameReceived(event.message.content),
                     event.message.from_client,
                     allow_buffering=True,
                 )
-            elif flow in self.streams_by_flow:
-                stream = self.streams_by_flow[flow]
+            elif event.flow in self.streams_by_flow:
+                stream = self.streams_by_flow[event.flow]
                 yield from self.handle_quic_event(
                     quic_events.StreamDataReceived(
                         stream_id=(
@@ -754,12 +767,6 @@ class _QuicLayer(layer.Layer):
                     self.retire_connection_id_callback(event.connection_id)
 
             elif isinstance(event, quic_events.ConnectionTerminated):
-                # only forward the event if the connection has been properly initialized
-                if self.conn.tls_established:
-                    yield from self.event_to_child(
-                        QuicConnectionEvent(self.conn, event)
-                    )
-
                 # shutdown and close the connection
                 yield from self.destroy_quic(
                     event.reason_phrase or error_code_to_str(event.error_code),
@@ -767,21 +774,6 @@ class _QuicLayer(layer.Layer):
                         "info" if is_success_error_code(event.error_code) else "warn"
                     ),
                 )
-                if self.conn is self.context.client:
-                    # once the client connection is closed, all servers are terminated immediately
-                    # use this opportunity to properly shutdown QUIC connections
-                    for quic_layer in self.context.layers:
-                        if (
-                            isinstance(quic_layer, _QuicLayer)
-                            and quic_layer.conn is not self.context.client
-                            and quic_layer.quic is not None
-                        ):
-                            quic_layer.quic.close(
-                                event.error_code,
-                                event.frame_type,
-                                event.reason_phrase,
-                            )
-                            yield from quic_layer.transmit()
                 yield commands.CloseConnection(self.conn)
 
                 # we don't handle any further events, nor do/can we transmit data, so exit
@@ -840,26 +832,24 @@ class _QuicLayer(layer.Layer):
             isinstance(event, events.ConnectionClosed) and event.connection is self.conn
         ):
             # there is no point in calling quic.close, as it cannot send packets anymore
-            # set the new connection state and simulate a ConnectionTerminated event (if established)
-            close_event = self.quic._close_event
-            if close_event is None:
-                close_event = quic_events.ConnectionTerminated(
+            # just set the new connection state and ensure there is exists a close event
+            self.quic._set_state(QuicConnectionState.TERMINATED)
+            if self.quic._close_event is None:
+                self.quic._close_event = quic_events.ConnectionTerminated(
                     error_code=QuicErrorCode.APPLICATION_ERROR,
                     frame_type=None,
                     reason_phrase="Peer UDP connection closed or timed out.",
                 )
-            self.quic._set_state(QuicConnectionState.TERMINATED)
-            if self.conn.tls_established:
-                yield from self.event_to_child(
-                    QuicConnectionEvent(self.conn, close_event)
-                )
 
             # shutdown QUIC and handle the ConnectionClosed event
+            reason = self.quic._close_event.reason_phrase or error_code_to_str(
+                self.quic._close_event.error_code
+            )
             yield from self.destroy_quic(
-                close_event.reason_phrase or error_code_to_str(close_event.error_code),
+                reason,
                 level="info",
             )
-            if not (yield from self.open_connection_end(close_event.reason_phrase)):
+            if not (yield from self.open_connection_end(reason)):
                 # connection was opened before QUIC layer, report to the child layer
                 yield from self.event_to_child(event)
 
