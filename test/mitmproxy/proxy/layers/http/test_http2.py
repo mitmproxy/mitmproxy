@@ -288,6 +288,163 @@ def test_upstream_error(tctx):
     assert b"server &lt;&gt; error" in d.data
 
 
+@pytest.mark.parametrize("trailers", ["trailers", ""])
+def test_long_response(tctx: Context, trailers):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, initial)
+    )
+    frames = decode_frames(initial())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+    sff = FrameFactory()
+    assert (
+        playbook
+        # a conforming h2 server would send settings first, we disregard this for now.
+        >> DataReceived(
+            server, sff.build_headers_frame(example_response_headers).serialize()
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize()
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+        << SendData(
+            server,
+            sff.build_window_update_frame(0, 40000).serialize()
+            + sff.build_window_update_frame(1, 40000).serialize(),
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
+        )
+    )
+    if trailers:
+        (
+            playbook
+            >> DataReceived(
+                server,
+                sff.build_headers_frame(
+                    example_response_trailers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+        )
+    else:
+        (
+            playbook
+            >> DataReceived(
+                server,
+                sff.build_data_frame(
+                    b'', flags=["END_STREAM"]
+                ).serialize(),
+            )
+        )
+    (
+        playbook
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_headers_frame(example_response_headers).serialize()
+            + cff.build_data_frame(b"a" * 16384).serialize(),
+        )
+        << SendData(
+            tctx.client,
+            cff.build_data_frame(b"a" * 16384).serialize(),
+        )
+        << SendData(
+            tctx.client,
+            cff.build_data_frame(b"a" * 16384).serialize(),
+        )
+        << SendData(
+            tctx.client,
+            cff.build_data_frame(b"a" * 16383).serialize(),
+        )
+        >> DataReceived(
+            tctx.client,
+            cff.build_window_update_frame(0, 65535).serialize()
+            + cff.build_window_update_frame(1, 65535).serialize(),
+        )
+    )
+    if trailers:
+        assert (
+            playbook
+            << SendData(
+                tctx.client,
+                cff.build_data_frame(b"a" * 1).serialize(),
+            )
+            << SendData(
+                tctx.client,
+                cff.build_data_frame(b"a" * 4464).serialize()
+            )
+            << SendData(
+                tctx.client,
+                cff.build_headers_frame(
+                    example_response_trailers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+        )
+    else:
+        assert (
+            playbook
+            << SendData(
+                tctx.client,
+                cff.build_data_frame(b"a" * 1).serialize(),
+            )
+            << SendData(
+                tctx.client,
+                cff.build_data_frame(b"a" * 4464).serialize()
+            )
+            << SendData(
+                tctx.client,
+                cff.build_data_frame(
+                    b"", flags=["END_STREAM"]
+                ).serialize(),
+            )
+        )
+    assert flow().request.url == "http://example.com/"
+    assert flow().response.text == "a" * 70000
+
+
 @pytest.mark.parametrize("stream", ["stream", ""])
 @pytest.mark.parametrize("when", ["request", "response"])
 @pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])

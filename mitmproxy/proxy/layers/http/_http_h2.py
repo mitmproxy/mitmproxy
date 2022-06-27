@@ -1,5 +1,5 @@
 import collections
-from typing import Dict, NamedTuple
+from typing import Any, Dict, NamedTuple
 
 import h2.config
 import h2.connection
@@ -8,7 +8,6 @@ import h2.exceptions
 import h2.settings
 import h2.stream
 
-from mitmproxy import ctx
 
 class H2ConnectionLogger(h2.config.DummyLogger):
     def __init__(self, name: str):
@@ -35,7 +34,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
     """
 
     stream_buffers: collections.defaultdict[int, collections.deque[SendH2Data]]
-    stream_trailers: Dict[int, any]
+    stream_trailers: Dict[int, Any]
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
@@ -71,12 +70,10 @@ class BufferedH2Connection(h2.connection.H2Connection):
         else:
             available_window = self.local_flow_control_window(stream_id)
             if frame_size <= available_window:
-                ctx.log.info("BufferedH2Connection: send_data(stream_id={}, len={}, end_stream={})".format(stream_id, len(data), end_stream))
                 super().send_data(stream_id, data, end_stream)
             else:
                 if available_window:
                     can_send_now = data[:available_window]
-                    ctx.log.info("BufferedH2Connection: send_data(stream_id={}, len={}, end_stream={})".format(stream_id, len(can_send_now), end_stream))
                     super().send_data(stream_id, can_send_now, end_stream=False)
                     data = data[available_window:]
                 # We can't send right now, so we buffer.
@@ -85,15 +82,11 @@ class BufferedH2Connection(h2.connection.H2Connection):
     def send_trailers(self, stream_id, trailers):
         if self.stream_buffers.get(stream_id, None):
             # Though trailers are not subject to flow control, we need to queue them and send strictly after data frames
-            ctx.log.info("BufferedH2Connection: enqueue trailers")
             self.stream_trailers[stream_id] = trailers
-            #self.stream_buffers[stream_id].append(SendH2Trailers(trailers))
         else:
-            ctx.log.info("BufferedH2Connection: send trailers(stream_id={}, trailers={})".format(stream_id, trailers))
             self.send_headers(stream_id, trailers, end_stream=True)
 
     def end_stream(self, stream_id) -> None:
-        ctx.log.info("BufferedH2Connection: end_stream(stream_id={})".format(stream_id))
         if not self.stream_trailers.get(stream_id):
             self.send_data(stream_id, b"", end_stream=True)
 
@@ -159,14 +152,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     end_stream=False,
                 )
 
-            ctx.log.info("BufferedH2Connection: send_data(stream_id={}, len={}, end_stream={})".format(stream_id, len(chunk.data), chunk.end_stream))
             super().send_data(stream_id, data=chunk.data, end_stream=chunk.end_stream)
 
             available_window -= len(chunk.data)
             if not self.stream_buffers[stream_id]:
                 del self.stream_buffers[stream_id]
                 if self.stream_trailers.get(stream_id):
-                    ctx.log.info("BufferedH2Connection: send_trailers(stream_id={})".format(stream_id))
                     self.send_headers(stream_id, self.stream_trailers.pop(stream_id), end_stream=True)
             sent_any_data = True
 
