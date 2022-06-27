@@ -1,5 +1,5 @@
 import collections
-from typing import Any, Dict, NamedTuple
+from typing import Dict, List, NamedTuple, Tuple
 
 import h2.config
 import h2.connection
@@ -34,7 +34,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
     """
 
     stream_buffers: collections.defaultdict[int, collections.deque[SendH2Data]]
-    stream_trailers: Dict[int, Any]
+    stream_trailers: Dict[int, List[Tuple[bytes, bytes]]]
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
@@ -79,16 +79,17 @@ class BufferedH2Connection(h2.connection.H2Connection):
                 # We can't send right now, so we buffer.
                 self.stream_buffers[stream_id].append(SendH2Data(data, end_stream))
 
-    def send_trailers(self, stream_id, trailers):
+    def send_trailers(self, stream_id: int, trailers: List[Tuple[bytes, bytes]]):
         if self.stream_buffers.get(stream_id, None):
             # Though trailers are not subject to flow control, we need to queue them and send strictly after data frames
             self.stream_trailers[stream_id] = trailers
         else:
             self.send_headers(stream_id, trailers, end_stream=True)
 
-    def end_stream(self, stream_id) -> None:
-        if not self.stream_trailers.get(stream_id):
-            self.send_data(stream_id, b"", end_stream=True)
+    def end_stream(self, stream_id: int) -> None:
+        if stream_id in self.stream_trailers:
+            return  # we already have trailers queued up that will end the stream.
+        self.send_data(stream_id, b"", end_stream=True)
 
     def reset_stream(self, stream_id: int, error_code: int = 0) -> None:
         self.stream_buffers.pop(stream_id, None)
@@ -157,7 +158,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
             available_window -= len(chunk.data)
             if not self.stream_buffers[stream_id]:
                 del self.stream_buffers[stream_id]
-                if self.stream_trailers.get(stream_id):
+                if stream_id in self.stream_trailers:
                     self.send_headers(stream_id, self.stream_trailers.pop(stream_id), end_stream=True)
             sent_any_data = True
 
