@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+## 28 June 2022: mitmproxy 8.1.1
+
 * Support specifying the local address for outgoing connections
   ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
 * Fix a bug where an excess empty chunk has been sent for chunked HEAD request.
