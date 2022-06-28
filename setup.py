@@ -92,7 +92,7 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.2",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11,<0.18",
+        "zstandard>=0.18,<0.19",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -103,7 +103,7 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==5.0.1",
+            "pyinstaller==5.1",
             "pytest-asyncio>=0.17.0,<0.19",
             "pytest-cov>=2.7.1,<3.1",
             "pytest-timeout>=1.3.3,<2.2",
