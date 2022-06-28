@@ -46,6 +46,6 @@ class TermLog:
             try:
                 print(msg, file=f)
             except OSError:
-                # We cannot write logs, exit immediately.
+                # We cannot print, exit immediately.
                 # See https://github.com/mitmproxy/mitmproxy/issues/4669
-                sys.exit(exit_codes.CANNOT_WRITE_LOGS)
+                sys.exit(exit_codes.CANNOT_PRINT)
