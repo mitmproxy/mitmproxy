@@ -16,4 +16,4 @@ async def test_reader():
     with pytest.raises(AssertionError):
         await reader.read(MAX_DATAGRAM_SIZE - 1)
     assert await reader.read(65535) == (b"Second message", addr)
-    assert not await reader.read(65535)
+    assert not (await reader.read(65535))[0]
