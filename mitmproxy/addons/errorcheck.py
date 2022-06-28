@@ -2,6 +2,7 @@ import asyncio
 import sys
 
 from mitmproxy import log
+from mitmproxy.utils import exit_codes
 
 
 class ErrorCheck:
@@ -26,4 +27,4 @@ class ErrorCheck:
                 msg = "\n".join(self.has_errored)
                 print(f"Error{plural} on startup: {msg}", file=sys.stderr)
 
-            sys.exit(1)
+            sys.exit(exit_codes.STARTUP_ERROR)

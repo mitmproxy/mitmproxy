@@ -15,6 +15,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy.utils import exit_codes
 
 
 @lru_cache
@@ -109,7 +110,7 @@ class Save:
             # instead of letting traffic through unrecorded.
             # No normal logging here, that would not be triggered anymore.
             sys.stderr.write(f"Error while writing to {self.current_path}: {e}")
-            sys.exit(1)
+            sys.exit(exit_codes.CANNOT_WRITE_TO_FILE)
         else:
             self.active_flows.discard(flow)
 

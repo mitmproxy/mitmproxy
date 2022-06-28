@@ -204,7 +204,7 @@ class ConsoleMaster(master.Master):
                 file=sys.stderr,
             )
             # Experimental (04/2022): We just don't exit here and see if/how that affects users.
-            # sys.exit(1)
+            # sys.exit(exit_codes.NO_UTF_CONSOLE)
         urwid.set_encoding("utf8")
 
         signals.call_in.connect(self.sig_call_in)
