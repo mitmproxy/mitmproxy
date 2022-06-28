@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import time
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from aioquic.h3.connection import (
     H3Connection,
@@ -10,7 +10,7 @@ from aioquic.h3.connection import (
 )
 from aioquic.h3 import events as h3_events
 from aioquic.quic import events as quic_events
-from aioquic.quic.connection import QuicConnection, stream_is_unidirectional
+from aioquic.quic.connection import QuicConnection
 
 from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
@@ -307,13 +307,8 @@ class Http3Client(Http3Connection):
     ReceiveProtocolError = ResponseProtocolError
     ReceiveTrailers = ResponseTrailers
 
-    our_stream_id: Dict[int, int]
-    their_stream_id: Dict[int, int]
-
     def __init__(self, context: context.Context):
         super().__init__(context, context.server)
-        self.our_stream_id = {}
-        self.their_stream_id = {}
 
     def protocol_error(
         self, event: Union[RequestProtocolError, ResponseProtocolError]
@@ -345,23 +340,6 @@ class Http3Client(Http3Connection):
         return ResponseHeaders(
             stream_id=event.stream_id, response=response, end_stream=event.stream_ended
         )
-
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        # translate stream IDs just like HTTP/2 client
-        if isinstance(event, HttpEvent):
-            assert self.quic is not None
-            ours = self.our_stream_id.get(event.stream_id, None)
-            if ours is None:
-                ours = self.quic.get_next_available_stream_id(
-                    is_unidirectional=stream_is_unidirectional(event.stream_id)
-                )
-                self.our_stream_id[event.stream_id] = ours
-                self.their_stream_id[ours] = event.stream_id
-            event.stream_id = ours
-        for cmd in super()._handle_event(event):
-            if isinstance(cmd, ReceiveHttp):
-                cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
-            yield cmd
 
 
 __all__ = [

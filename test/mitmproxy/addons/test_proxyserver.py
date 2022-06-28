@@ -266,16 +266,16 @@ async def test_dns() -> None:
         await tctx.master.await_log("Invalid DNS datagram received", level="info")
         req = tdnsreq()
         w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        resp = dns.Message.unpack((await r.read(udp.MAX_DATAGRAM_SIZE))[0])
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps._connections) == 1
         w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        resp = dns.Message.unpack((await r.read(udp.MAX_DATAGRAM_SIZE))[0])
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps._connections) == 1
         req.id = req.id + 1
         w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        resp = dns.Message.unpack((await r.read(udp.MAX_DATAGRAM_SIZE))[0])
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps._connections) == 2
         await ps.shutdown_server()
