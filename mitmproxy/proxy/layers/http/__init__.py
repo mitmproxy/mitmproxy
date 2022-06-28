@@ -260,6 +260,7 @@ class HttpStream(layer.Layer):
             )
         ok = yield from self.make_server_connection()
         if not ok:
+            self.client_state = self.state_errored
             return
         yield SendHttp(
             RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
@@ -628,8 +629,7 @@ class HttpStream(layer.Layer):
             and self.server_state not in (self.state_done, self.state_errored)
         )
         need_error_hook = not (
-            self.client_state
-            in (self.state_wait_for_request_headers, self.state_errored)
+            self.client_state == self.state_errored
             or self.server_state in (self.state_done, self.state_errored)
         )
 
