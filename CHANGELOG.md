@@ -8,6 +8,8 @@
   ([#5372](https://github.com/mitmproxy/mitmproxy/discussions/5372), @jixunmoe)
 * Drop pkg_resources dependency.
   ([#5401](https://github.com/mitmproxy/mitmproxy/issues/5401), @PavelICS)
+* Fix huge (>65kb) http2 responses corrupted
+  ([#5428](https://github.com/mitmproxy/mitmproxy/issues/5428), @dhabensky)
 
 ## 15 May 2022: mitmproxy 8.1.0
 
