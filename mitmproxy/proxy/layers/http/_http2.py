@@ -117,9 +117,7 @@ class Http2Connection(HttpConnection):
             elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                 if self.is_open_for_us(event.stream_id):
                     trailers = [*event.trailers.fields]
-                    self.h2_conn.send_headers(
-                        event.stream_id, trailers, end_stream=True
-                    )
+                    self.h2_conn.send_trailers(event.stream_id, trailers)
             elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.end_stream(event.stream_id)
