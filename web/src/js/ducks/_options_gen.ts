@@ -17,6 +17,7 @@ export interface OptionsState {
     client_replay_concurrency: number
     command_history: boolean
     confdir: string
+    connect_addr: string | undefined
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
@@ -110,6 +111,7 @@ export const defaultState: OptionsState = {
     client_replay_concurrency: 1,
     command_history: true,
     confdir: "~/.mitmproxy",
+    connect_addr: undefined,
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
