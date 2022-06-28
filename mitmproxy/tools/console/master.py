@@ -195,7 +195,8 @@ class ConsoleMaster(master.Master):
             )
             sys.exit(1)
 
-        if os.name != "nt" and "utf" not in urwid.detected_encoding.lower():
+        detected_encoding = urwid.detected_encoding.lower()
+        if os.name != "nt" and detected_encoding and "utf" not in detected_encoding:
             print(
                 f"mitmproxy expects a UTF-8 console environment, not {urwid.detected_encoding!r}. "
                 f"Set your LANG environment variable to something like en_US.UTF-8.",
