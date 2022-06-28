@@ -26,15 +26,6 @@ def is_tls_handshake_record(d: bytes) -> bool:
     return len(d) >= 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03
 
 
-def is_dtls_handshake_record(d: bytes) -> bool:
-    """
-    Returns:
-        True, if the passed bytes start with the DTLS record magic bytes
-        False, otherwise.
-    """
-    return len(d) >= 3 and d[0] == 0x16 and d[1] == 0xfe and d[2] == 0xfd
-
-
 def handshake_record_contents(data: bytes) -> Iterator[bytes]:
     """
     Returns a generator that yields the bytes contained in each handshake record.
@@ -60,33 +51,6 @@ def handshake_record_contents(data: bytes) -> Iterator[bytes]:
         offset += record_size
 
 
-def dtls_handshake_record_contents(data: bytes) -> Iterator[bytes]:
-    """
-    Returns a generator that yields the bytes contained in each handshake record.
-    This will raise an error on the first non-handshake record, so fully exhausting this
-    generator is a bad idea.
-    """
-    offset = 0
-    while True:
-        # DTLS includes two new fields, totaling 8 bytes, between Version and Length
-        if len(data) < offset + 13:
-            return
-        record_header = data[offset : offset + 13]
-        if not is_dtls_handshake_record(record_header):
-            raise ValueError(f"Expected TLS record, got {record_header!r} instead.")
-        # Length fields starts at 11
-        record_size = struct.unpack("!H", record_header[11:])[0]
-        if record_size == 0:
-            raise ValueError("Record must not be empty.")
-        offset += 13
-
-        if len(data) < offset + record_size:
-            return
-        record_body = data[offset : offset + record_size]
-        yield record_body
-        offset += record_size
-
-
 def get_client_hello(data: bytes) -> Optional[bytes]:
     """
     Read all TLS records that contain the initial ClientHello.
@@ -102,23 +66,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def get_dtls_client_hello(data: bytes) -> Optional[bytes]:
-    """
-    Read all DTLS records that contain the initial ClientHello.
-    Returns the raw handshake packet bytes, without TLS record headers.
-    """
-    client_hello = b""
-    for d in dtls_handshake_record_contents(data):
-        client_hello += d
-        if len(client_hello) >= 13:
-            # comment about slicing: we skip the epoch and sequence number
-            client_hello_size = struct.unpack("!I", b"\x00" + client_hello[9:12])[0] + 12
-            if len(client_hello) >= client_hello_size:
-                return client_hello[:client_hello_size]
-    return None
-
-
-def parse_client_hello(data: bytes, dtls: bool=False) -> Optional[ClientHello]:
+def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -131,10 +79,10 @@ def parse_client_hello(data: bytes, dtls: bool=False) -> Optional[ClientHello]:
         - A ValueError, if the passed ClientHello is invalid
     """
     # Check if ClientHello is complete
-    client_hello = get_client_hello(data)[4:] if dtls is False else get_dtls_client_hello(data)[12:]
+    client_hello = get_client_hello(data)
     if client_hello:
         try:
-            return ClientHello(client_hello, dtls)
+            return ClientHello(client_hello[4:])
         except EOFError as e:
             raise ValueError("Invalid ClientHello") from e
     return None
