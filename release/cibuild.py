@@ -499,7 +499,7 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
             IB_CLI,
             "build",
             str(IB_DIR / "mitmproxy.xml"),
-            "windows",
+            "windows-x64",
             "--license",
             str(IB_LICENSE),
             "--setvars",
@@ -508,7 +508,7 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
         ],
         check=True,
     )
-    assert (be.dist_dir / f"mitmproxy-{be.version}-windows-installer.exe").exists()
+    assert (be.dist_dir / f"mitmproxy-{be.version}-windows-x64-installer.exe").exists()
 
 
 @click.group(chain=True)
