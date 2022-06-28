@@ -8,8 +8,11 @@
   ([#5372](https://github.com/mitmproxy/mitmproxy/discussions/5372), @jixunmoe)
 * Drop pkg_resources dependency.
   ([#5401](https://github.com/mitmproxy/mitmproxy/issues/5401), @PavelICS)
-* Fix huge (>65kb) http2 responses corrupted
+* Fix huge (>65kb) http2 responses corrupted.
   ([#5428](https://github.com/mitmproxy/mitmproxy/issues/5428), @dhabensky)
+* Remove overambitious assertions in the HTTP state machine,
+  fix some error handling.
+  ([#5383](https://github.com/mitmproxy/mitmproxy/issues/5383), @mhils)
 
 ## 15 May 2022: mitmproxy 8.1.0
 
