@@ -357,7 +357,6 @@ def build_pyinstaller(be: BuildEnviron) -> None:  # pragma: no cover
     click.echo("Building pyinstaller package...")
 
     PYINSTALLER_SPEC = be.release_dir / "specs"
-    PYINSTALLER_HOOKS = be.release_dir / "hooks"
     PYINSTALLER_TEMP = be.build_dir / "pyinstaller"
     PYINSTALLER_DIST = be.build_dir / "binaries" / be.platform_tag
 
@@ -407,8 +406,6 @@ def build_pyinstaller(be: BuildEnviron) -> None:  # pragma: no cover
                         PYINSTALLER_TEMP,
                         "--distpath",
                         PYINSTALLER_DIST,
-                        "--additional-hooks-dir",
-                        PYINSTALLER_HOOKS,
                         "--onefile",
                         "--console",
                         "--icon",

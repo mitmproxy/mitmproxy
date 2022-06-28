@@ -63,6 +63,9 @@ setup(
             "mitmproxy = mitmproxy.tools.main:mitmproxy",
             "mitmdump = mitmproxy.tools.main:mitmdump",
             "mitmweb = mitmproxy.tools.main:mitmweb",
+        ],
+        "pyinstaller40": [
+            "hook-dirs = mitmproxy.utils.pyinstaller:hook_dirs",
         ]
     },
     python_requires=">=3.9",
