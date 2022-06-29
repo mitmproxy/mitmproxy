@@ -172,10 +172,13 @@ def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
 
 def create_ca(
     organization: str,
-    cn: str,
+    common_name: str,
     key_size: int,
 ) -> tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
     now = datetime.datetime.now()
+
+    if organization != "mitmproxy":
+        f"{organization} (via mitmproxy)"
 
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -183,7 +186,7 @@ def create_ca(
     )  # type: ignore
     name = x509.Name(
         [
-            x509.NameAttribute(NameOID.COMMON_NAME, cn),
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization),
         ]
     )
@@ -348,6 +351,8 @@ class CertStore:
         cls,
         path: Union[Path, str],
         basename: str,
+        organization: str,
+        common_name: str,
         key_size: int,
         passphrase: Optional[bytes] = None,
     ) -> "CertStore":
@@ -355,7 +360,7 @@ class CertStore:
         ca_file = path / f"{basename}-ca.pem"
         dhparam_file = path / f"{basename}-dhparam.pem"
         if not ca_file.exists():
-            cls.create_store(path, basename, key_size)
+            cls.create_store(path, basename, organization, common_name, key_size)
         return cls.from_files(ca_file, dhparam_file, passphrase)
 
     @classmethod
@@ -390,16 +395,15 @@ class CertStore:
 
     @staticmethod
     def create_store(
-        path: Path, basename: str, key_size: int, organization=None, cn=None
+        path: Path, basename: str, organization: str, common_name: str, key_size: int
     ) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
-        organization = organization or basename
-        cn = cn or basename
-
         key: rsa.RSAPrivateKeyWithSerialization
         ca: x509.Certificate
-        key, ca = create_ca(organization=organization, cn=cn, key_size=key_size)
+        key, ca = create_ca(
+            organization=organization, common_name=common_name, key_size=key_size
+        )
 
         # Dump the CA plus private key.
         with CertStore.umask_secret():

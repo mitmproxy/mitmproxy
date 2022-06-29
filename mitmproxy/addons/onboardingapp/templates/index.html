@@ -10,7 +10,7 @@
     {% include 'icons/' + icon + '-brands.svg' %}
     <div class="media-body">
         <h5 class="mt-0">{{ title | safe }}</h5>
-        <a class="btn btn-sm btn-success" href="/cert/{{ filetype }}" target="_blank">🔏 Get mitmproxy-ca-cert.{{
+        <a class="btn btn-sm btn-success" href="/cert/{{ filetype }}" target="_blank">🔏 Get {{ ca_basename }}-ca-cert.{{
             filetype }}</a>
         <a class="btn btn-sm btn-info show-instructions" href="#{{ title.split(' ')[0] }}" id="{{ title.split(' ')[0] }}">📖
             Show Instructions</a>
@@ -39,7 +39,7 @@
     </ol>
     <h5>Automated Installation</h5>
     <ol>
-        <li>Run <code>certutil.exe -addstore root mitmproxy-ca-cert.cer</code>
+        <li>Run <code>certutil.exe -addstore root {{ ca_basename }}-ca-cert.cer</code>
             (<a href="https://technet.microsoft.com/en-us/library/cc732443.aspx">details</a>).
         </li>
     </ol>
@@ -47,7 +47,7 @@
     {% call entry('Linux', 'linux') %}
     <h5>Ubuntu/Debian</h5>
     <ol>
-        <li><code>mv mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt</code></li>
+        <li><code>mv {{ ca_basename }}-ca-cert.pem /usr/local/share/ca-certificates/{{ ca_basename }}.crt</code></li>
         <li><code>sudo update-ca-certificates</code></li>
     </ol>
     {% endcall %}
@@ -55,13 +55,13 @@
     <h5>Manual Installation</h5>
     <ol>
         <li>Double-click the PEM file to open the <samp>Keychain Access</samp> application.</li>
-        <li>Locate the new certificate "mitmproxy" in the list and double-click it.</li>
+        <li>Locate the new certificate "{{ ca_basename }}" in the list and double-click it.</li>
         <li>Change <samp>Secure Socket Layer (SSL)</samp> to <samp>Always Trust</samp>.</li>
         <li>Close the dialog window and enter your password if prompted.</li>
     </ol>
     <h5>Automated Installation</h5>
     <ol>
-        <li><code>sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain mitmproxy-ca-cert.pem</code></li>
+        <li><code>sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain {{ ca_basename }}-ca-cert.pem</code></li>
     </ol>
     {% endcall %}
     {% call entry('iOS <small>– please read the instructions!</small>', 'apple') %}
@@ -70,14 +70,14 @@
         <li>Use Safari to download the certificate. Other browsers may not open the proper installation prompt.</li>
         <li>Install the new Profile (<samp>Settings -> General -> VPN & Device Management</samp>).</li>
         <li><span class="text-danger"><strong>Important:</strong> Go to <samp>Settings -> General -> About -> Certificate Trust Settings</samp>.
-            Toggle <samp>mitmproxy</samp> to <samp>ON</samp>.</span></li>
+            Toggle <samp>{{ ca_basename }}</samp> to <samp>ON</samp>.</span></li>
     </ol>
     {% endcall %}
     {% call entry('Android', 'android', 'cer') %}
     <h5>Android 10+</h5>
     <ol class="mb-2">
         <li>Open the downloaded CER file.</li>
-        <li>Enter <samp>mitmproxy</samp> (or anything else) as the certificate name.</li>
+        <li>Enter <samp>{{ ca_basename }}</samp> (or anything else) as the certificate name.</li>
         <li>For credential use, select <samp>VPN and apps</samp>.</li>
         <li>Click OK.</li>
     </ol>
@@ -108,8 +108,8 @@
     {% include 'icons/certificate-solid.svg' %}
     <div class="media-body">
         <h5 class="mt-0">Other Platforms</h5>
-        <a class="btn btn-sm btn-success" href="/cert/pem" target="_blank">🔏 Get mitmproxy-ca-cert.pem</a>
-        <a class="btn btn-sm btn-success" href="/cert/p12" target="_blank">🔏 Get mitmproxy-ca-cert.p12</a>
+        <a class="btn btn-sm btn-success" href="/cert/pem" target="_blank">🔏 Get {{ ca_basename }}-ca-cert.pem</a>
+        <a class="btn btn-sm btn-success" href="/cert/p12" target="_blank">🔏 Get {{ ca_basename }}-ca-cert.p12</a>
     </div>
     </li>
 </ul>

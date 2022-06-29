@@ -6,7 +6,6 @@ from typing import Any, Optional, TypedDict
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
-from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import tls as proxy_tls
@@ -305,7 +304,9 @@ class TlsConfig:
         certstore_path = os.path.expanduser(ctx.options.confdir)
         self.certstore = certs.CertStore.from_store(
             path=certstore_path,
-            basename=CONF_BASENAME,
+            basename=ctx.options.ca_basename,
+            organization=ctx.options.ca_organization,
+            common_name=ctx.options.ca_common_name,
             key_size=ctx.options.key_size,
             passphrase=ctx.options.cert_passphrase.encode("utf8")
             if ctx.options.cert_passphrase
