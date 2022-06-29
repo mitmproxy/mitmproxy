@@ -305,7 +305,7 @@ class TlsConfig:
         # If the organization is customized, always append the default to it.
         if ctx.options.has_changed("ca_organization"):
             default_organization = ctx.options.default("ca_organization")
-            organization = f"{ctx.options.ca_organization} (via {default})"
+            organization = f"{ctx.options.ca_organization} (via {default_organization})"
         else:
             organization = ctx.options.ca_organization
 
