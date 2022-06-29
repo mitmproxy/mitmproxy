@@ -8,6 +8,9 @@ export interface OptionsState {
     block_list: string[]
     block_private: boolean
     body_size_limit: string | undefined
+    ca_basename: string
+    ca_common_name: string
+    ca_organization: string
     cert_passphrase: string | undefined
     certs: string[]
     ciphers_client: string | undefined
@@ -102,6 +105,9 @@ export const defaultState: OptionsState = {
     block_list: [],
     block_private: false,
     body_size_limit: undefined,
+    ca_basename: "mitmproxy",
+    ca_common_name: "mitmproxy",
+    ca_organization: "mitmproxy",
     cert_passphrase: undefined,
     certs: [],
     ciphers_client: undefined,

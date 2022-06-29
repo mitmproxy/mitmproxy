@@ -177,9 +177,6 @@ def create_ca(
 ) -> tuple[rsa.RSAPrivateKeyWithSerialization, x509.Certificate]:
     now = datetime.datetime.now()
 
-    if organization != "mitmproxy":
-        f"{organization} (via mitmproxy)"
-
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=key_size,
@@ -351,16 +348,16 @@ class CertStore:
         cls,
         path: Union[Path, str],
         basename: str,
-        organization: str,
-        common_name: str,
         key_size: int,
+        organization: Optional[str] = None,
+        common_name: Optional[str] = None,
         passphrase: Optional[bytes] = None,
     ) -> "CertStore":
         path = Path(path)
         ca_file = path / f"{basename}-ca.pem"
         dhparam_file = path / f"{basename}-dhparam.pem"
         if not ca_file.exists():
-            cls.create_store(path, basename, organization, common_name, key_size)
+            cls.create_store(path, basename, key_size, organization, common_name)
         return cls.from_files(ca_file, dhparam_file, passphrase)
 
     @classmethod
@@ -395,9 +392,16 @@ class CertStore:
 
     @staticmethod
     def create_store(
-        path: Path, basename: str, organization: str, common_name: str, key_size: int
+        path: Path,
+        basename: str,
+        key_size: int,
+        organization: Optional[str] = None,
+        common_name: Optional[str] = None,
     ) -> None:
         path.mkdir(parents=True, exist_ok=True)
+
+        organization = organization or basename
+        common_name = common_name or basename
 
         key: rsa.RSAPrivateKeyWithSerialization
         ca: x509.Certificate
