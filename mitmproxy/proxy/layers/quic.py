@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
-from typing import Callable, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -394,6 +394,17 @@ class QuicRelayLayer(layer.Layer):
             close_event = local_quic._close_event
             assert close_event is not None
 
+            # close the peer as well (needs to be before hooks)
+            if peer_quic is not None:
+                peer_quic.close(
+                    close_event.error_code,
+                    close_event.frame_type,
+                    close_event.reason_phrase,
+                )
+                yield QuicTransmit(peer_conn, peer_quic)
+            else:
+                yield commands.CloseConnection(peer_conn)
+
             # report the termination as error to all non-ended streams
             for flow in self.streams_by_flow:
                 if flow.live:
@@ -413,16 +424,6 @@ class QuicRelayLayer(layer.Layer):
                     yield tcp_layer.TcpErrorHook(flow)
                 self.flow.live = False
 
-            # close the peer as well
-            if peer_quic is not None:
-                peer_quic.close(
-                    close_event.error_code,
-                    close_event.frame_type,
-                    close_event.reason_phrase,
-                )
-                yield QuicTransmit(peer_conn, peer_quic)
-            else:
-                yield commands.CloseConnection(peer_conn)
             self._handle_event = self.state_done
 
         elif isinstance(event, QuicStart):
@@ -445,6 +446,7 @@ class QuicRelayLayer(layer.Layer):
                 )
 
             # flush the buffer
+            assert buffer is not None
             for quic_event in buffer:
                 yield from self.handle_quic_event(quic_event, from_client)
 
@@ -584,9 +586,7 @@ class _QuicLayer(layer.Layer):
         return True
 
     def destroy_quic(
-        self,
-        reason: str,
-        level: Literal["error", "warn", "info", "alert", "debug"],
+        self, event: quic_events.ConnectionTerminated
     ) -> layer.CommandGenerator[None]:
         # ensure QUIC has been properly shut down
         assert self.quic is not None
@@ -594,6 +594,7 @@ class _QuicLayer(layer.Layer):
         assert self.quic._state is QuicConnectionState.TERMINATED
 
         # report as TLS failure if the termination happened before the handshake
+        reason = event.reason_phrase or error_code_to_str(event.error_code)
         if not self.conn.tls_established:
             self.conn.error = reason
             tls_data = QuicTlsData(self.conn, self.context, settings=self.tls)
@@ -615,15 +616,17 @@ class _QuicLayer(layer.Layer):
 
         # record an entry in the log
         yield commands.Log(
-            f"{self.conn}: QUIC connection destroyed: {reason}", level=level
+            f"{self.conn}: QUIC connection destroyed: {reason}",
+            level="info" if is_success_error_code(event.error_code) else "warn",
         )
 
     def establish_quic(
         self, event: quic_events.HandshakeCompleted
     ) -> layer.CommandGenerator[None]:
-        # must only be called if QUIC is initialized
+        # must only be called if QUIC is initialized and not established
         assert self.quic is not None
         assert self.tls is not None
+        assert not self.conn.tls_established
 
         # concatenate all peer certificates
         all_certs: List[x509.Certificate] = []
@@ -737,12 +740,7 @@ class _QuicLayer(layer.Layer):
 
             elif isinstance(event, quic_events.ConnectionTerminated):
                 # shutdown and close the connection
-                yield from self.destroy_quic(
-                    event.reason_phrase or error_code_to_str(event.error_code),
-                    level=(
-                        "info" if is_success_error_code(event.error_code) else "warn"
-                    ),
-                )
+                yield from self.destroy_quic(event)
                 yield commands.CloseConnection(self.conn)
 
                 # we don't handle any further events, nor do/can we transmit data, so exit
@@ -803,22 +801,20 @@ class _QuicLayer(layer.Layer):
             # there is no point in calling quic.close, as it cannot send packets anymore
             # just set the new connection state and ensure there exists a close event
             self.quic._set_state(QuicConnectionState.TERMINATED)
-            if self.quic._close_event is None:
-                self.quic._close_event = quic_events.ConnectionTerminated(
+            close_event = self.quic._close_event
+            if close_event is None:
+                close_event = quic_events.ConnectionTerminated(
                     error_code=QuicErrorCode.APPLICATION_ERROR,
                     frame_type=None,
-                    reason_phrase="Peer UDP connection closed or timed out.",
+                    reason_phrase="UDP connection closed or timed out.",
                 )
+                self.quic._close_event = close_event
 
             # shutdown QUIC and handle the ConnectionClosed event
-            reason = self.quic._close_event.reason_phrase or error_code_to_str(
-                self.quic._close_event.error_code
-            )
-            yield from self.destroy_quic(
-                reason,
-                level="info",
-            )
-            if not (yield from self.open_connection_end(reason)):
+            yield from self.destroy_quic(close_event)
+            if not (
+                yield from self.open_connection_end("QUIC could not be established")
+            ):
                 # connection was opened before QUIC layer, report to the child layer
                 yield from self.event_to_child(event)
 
