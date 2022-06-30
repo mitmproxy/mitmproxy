@@ -23,6 +23,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
     entry = store.get_cert("example.com", [], None)
 
     cctx = tls.create_proxy_server_context(
+        method=tls.Method.TLS_CLIENT_METHOD,
         min_version=tls.DEFAULT_MIN_VERSION,
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
@@ -32,6 +33,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         client_cert=None,
     )
     sctx = tls.create_client_proxy_context(
+        method=tls.Method.TLS_SERVER_METHOD,
         min_version=tls.DEFAULT_MIN_VERSION,
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
