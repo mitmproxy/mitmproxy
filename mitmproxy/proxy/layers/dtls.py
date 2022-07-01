@@ -29,7 +29,7 @@ def dtls_handshake_record_contents(data: bytes) -> Iterator[bytes]:
             return
         record_header = data[offset : offset + 13]
         if not is_dtls_handshake_record(record_header):
-            raise ValueError(f"Expected TLS record, got {record_header!r} instead.")
+            raise ValueError(f"Expected DTLS record, got {record_header!r} instead.")
         # Length fields starts at 11
         record_size = struct.unpack("!H", record_header[11:])[0]
         if record_size == 0:
@@ -72,10 +72,10 @@ def parse_client_hello(data: bytes) -> Optional[tls.ClientHello]:
         - A ValueError, if the passed ClientHello is invalid
     """
     # Check if ClientHello is complete
-    client_hello = get_dtls_client_hello(data)[12:]
+    client_hello = get_dtls_client_hello(data)
     if client_hello:
         try:
-            return tls.ClientHello(client_hello, dtls=True)
+            return tls.ClientHello(client_hello[12:], dtls=True)
         except EOFError as e:
             raise ValueError("Invalid ClientHello") from e
     return None
