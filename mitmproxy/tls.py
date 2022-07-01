@@ -42,7 +42,8 @@ class ClientHello:
         A future implementation may return not just the exact ClientHello, but also the exact record(s) as seen on the
         wire.
         """
-        assert isinstance(self._client_hello, tls_client_hello.TlsClientHello), "raw_bytes is only supported for TLS ClientHello"
+        if isinstance(self._client_hello, dtls_client_hello.DtlsClientHello):
+            raise NotImplementedError
 
         if wrap_in_record:
             return (

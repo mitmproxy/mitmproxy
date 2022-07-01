@@ -197,3 +197,20 @@ def test_disk_full(tmp_path, monkeypatch, capsys):
             sa.response(f)
 
         assert "Error while writing" in capsys.readouterr().err
+
+
+def test_udp(tmp_path):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "foo")
+        tctx.configure(sa, save_stream_file=p)
+
+        tt = tflow.tudpflow()
+        sa.udp_start(tt)
+
+        tt = tflow.tudpflow()
+        sa.udp_start(tt)
+        sa.udp_error(tt)
+
+        tctx.configure(sa, save_stream_file=None)
+        assert len(rd(p)) == 3

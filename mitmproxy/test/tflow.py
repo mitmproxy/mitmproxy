@@ -300,6 +300,8 @@ def tflows() -> list[flow.Flow]:
         tudpflow(err=True),
         tdnsflow(resp=True),
         tdnsflow(err=True),
+        tudpflow(),
+        tudpflow(err=True),
     ]
 
 

@@ -835,10 +835,9 @@ def format_flow(
         total_size = 0
         for udp_message in f.messages:
             total_size += len(udp_message.content)
+        duration = None
         if f.messages:
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
-        else:
-            duration = None
         return format_udp_flow(
             render_mode=render_mode,
             focused=focused,

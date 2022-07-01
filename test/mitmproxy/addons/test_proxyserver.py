@@ -202,6 +202,17 @@ def test_options():
             tctx.configure(ps, mode=["regular", "reverse:example.com"])
         tctx.configure(ps, mode=["regular"], server=False)
 
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dtls_mode="invalid")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dtls_mode="reverse")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dtls_mode="reverse:2.2.2.2")
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, dtls_mode="reverse:9999.9999:12345")
+        tctx.configure(ps, dtls_mode="reverse:2.2.2.2:1234")
+        assert ps.dtls_reverse_addr == ("2.2.2.2", 1234)
+
 
 async def test_startup_err(monkeypatch) -> None:
     async def _raise(*_):
