@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional, Union
 
-from mitmproxy import connection
+from mitmproxy import connection, udp
 from mitmproxy import dns
 from mitmproxy import flow
 from mitmproxy import http
@@ -301,3 +301,26 @@ def tflows() -> list[flow.Flow]:
         tdnsflow(resp=True),
         tdnsflow(err=True),
     ]
+
+
+def tudpflow(
+    client_conn=True, server_conn=True, messages=True, err=None
+) -> udp.UDPFlow:
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if messages is True:
+        messages = [
+            udp.UDPMessage(True, b"hello", 946681204.2),
+            udp.UDPMessage(False, b"it's me", 946681204.5),
+        ]
+    if err is True:
+        err = terr()
+
+    f = udp.UDPFlow(client_conn, server_conn)
+    f.timestamp_created = client_conn.timestamp_start
+    f.messages = messages
+    f.error = err
+    f.live = True
+    return f
