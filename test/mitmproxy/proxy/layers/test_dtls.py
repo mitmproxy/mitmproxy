@@ -44,6 +44,7 @@ client_hello_with_extensions = bytes.fromhex(
     "7000000000010000e00000b6578616d706c652e636f6d"
 )
 
+
 def test_get_client_hello():
     single_record = bytes.fromhex("16fefd00000000000000000042") + client_hello_no_extensions
     assert dtls.get_dtls_client_hello(single_record) == client_hello_no_extensions
