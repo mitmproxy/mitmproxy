@@ -833,8 +833,8 @@ def format_flow(
         )
     elif isinstance(f, UDPFlow):
         total_size = 0
-        for message in f.messages:
-            total_size += len(message.content)
+        for udp_message in f.messages:
+            total_size += len(udp_message.content)
         if f.messages:
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:

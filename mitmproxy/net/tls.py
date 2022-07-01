@@ -18,8 +18,9 @@ from mitmproxy import certs
 class Method(Enum):
     TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
     TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
-    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD
-    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD
+    # Type-pyopenssl does not know about these DTLS constants.
+    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD   # type: ignore
+    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD   # type: ignore
 
 
 try:
