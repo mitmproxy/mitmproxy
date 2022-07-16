@@ -63,6 +63,9 @@ setup(
             "mitmproxy = mitmproxy.tools.main:mitmproxy",
             "mitmdump = mitmproxy.tools.main:mitmdump",
             "mitmweb = mitmproxy.tools.main:mitmweb",
+        ],
+        "pyinstaller40": [
+            "hook-dirs = mitmproxy.utils.pyinstaller:hook_dirs",
         ]
     },
     python_requires=">=3.9",
@@ -78,11 +81,11 @@ setup(
         "h11>=0.11,<0.14",
         "h2>=4.1,<5",
         "hyperframe>=6.0,<7",
-        "kaitaistruct>=0.7,<0.10",
+        "kaitaistruct>=0.10,<0.11",
         "ldap3>=2.8,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.14,<3.21",
+        "protobuf>=3.14,<5",
         "pyOpenSSL>=21.0,<22.1",
         "pyparsing>=2.4.2,<3.1",
         "pyperclip>=1.6.0,<1.9",
@@ -92,7 +95,7 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.2",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11,<0.18",
+        "zstandard>=0.11,<0.19",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -103,8 +106,8 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==5.0.1",
-            "pytest-asyncio>=0.17.0,<0.19",
+            "pyinstaller==5.2",
+            "pytest-asyncio>=0.17,<0.20",
             "pytest-cov>=2.7.1,<3.1",
             "pytest-timeout>=1.3.3,<2.2",
             "pytest-xdist>=2.1.0,<3",

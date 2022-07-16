@@ -1640,3 +1640,25 @@ def test_memory_usage_errored_flows(tctx):
 
     gc.collect()
     assert flows_tracked() == flow_count
+
+
+def test_drop_stream_with_paused_events(tctx):
+    """Make sure that we don't crash if we still have paused events for streams that error."""
+    tctx.options.stream_large_bodies = "1"
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(
+            tctx.client,
+            b"POST http://example.com/ HTTP/1.1\r\nHost: example.com\r\nContent-Length: 4\r\n\r\ndata",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply('Connection killed: error')
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection killed"))
+        << CloseConnection(tctx.client)
+    )
