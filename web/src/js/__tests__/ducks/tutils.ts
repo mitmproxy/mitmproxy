@@ -81,7 +81,7 @@ export const testState: RootState = {
             [tflow3.id]: tflow3,
             [tflow4.id]: tflow4,
         },
-        filter: '~u /second | ~tcp | ~dns',
+        filter: '~u /second | ~tcp | ~dns | ~udp',
         highlight: '~u /path',
         sort: {
             desc: true,
