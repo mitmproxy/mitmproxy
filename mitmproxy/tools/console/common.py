@@ -768,7 +768,7 @@ def format_flow(
             focused=focused,
             timestamp_start=f.client_conn.timestamp_start,
             marked=f.marked,
-            protocol="tcp" if isinstance(f, TCPFlow) else "udp",
+            protocol=f.type,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
             total_size=total_size,

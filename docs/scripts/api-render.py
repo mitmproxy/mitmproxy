@@ -35,6 +35,7 @@ modules = [
     "mitmproxy.proxy.server_hooks",
     "mitmproxy.tcp",
     "mitmproxy.tls",
+    "mitmproxy.udp",
     "mitmproxy.websocket",
     here / ".." / "src" / "generated" / "events.py",
 ]

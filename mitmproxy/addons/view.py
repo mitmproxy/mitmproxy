@@ -84,10 +84,8 @@ class OrderRequestMethod(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.method
-        elif isinstance(f, tcp.TCPFlow):
-            return "TCP"
-        elif isinstance(f, udp.UDPFlow):
-            return "UDP"
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
+            return f.type.upper()
         elif isinstance(f, dns.DNSFlow):
             return dns.op_codes.to_str(f.request.op_code)
         else:

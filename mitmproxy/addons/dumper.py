@@ -319,28 +319,29 @@ class Dumper:
             ret += f" (reason: {websocket.close_reason})"
         return ret
 
-    def _proto_error(self, f, name):
+    def _proto_error(self, f):
         if self.match(f):
             self.echo(
-                f"Error in {name} connection to {human.format_address(f.server_conn.address)}: {f.error}",
+                f"Error in {f.type.upper()} connection to {human.format_address(f.server_conn.address)}: {f.error}",
                 fg="red",
             )
 
     def tcp_error(self, f):
-        self._proto_error(f, "TCP")
+        self._proto_error(f)
 
     def udp_error(self, f):
-        self._proto_error(f, "UDP")
+        self._proto_error(f)
 
     def _proto_message(self, f):
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
             self.echo(
-                "{client} {direction} tcp {direction} {server}".format(
+                "{client} {direction} {type} {direction} {server}".format(
                     client=human.format_address(f.client_conn.peername),
                     server=human.format_address(f.server_conn.address),
                     direction=direction,
+                    type=f.type,
                 )
             )
             if ctx.options.flow_detail >= 3:

@@ -450,7 +450,7 @@ class ConsoleAddon:
             self.master.commands.call_strings(
                 "console.command", ["flow.set", "@focus", flow_part]
             )
-        elif flow_part == "tcp-message":
+        elif flow_part in ["tcp-message", "udp-message"]:
             message = flow.messages[-1]
             c = self.master.spawn_editor(message.content or b"")
             message.content = c.rstrip(b"\n")
