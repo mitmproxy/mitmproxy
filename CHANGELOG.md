@@ -2,6 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Add UDP layer and flow support.
+  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
+
 ## 28 June 2022: mitmproxy 8.1.1
 
 * Support specifying the local address for outgoing connections

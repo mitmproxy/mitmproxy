@@ -41,6 +41,7 @@ from . import (
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
+from ..udp import UDPMessage, UDPFlow
 from ..websocket import WebSocketMessage
 
 views: list[View] = []
@@ -89,8 +90,8 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[http.Message, TCPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow],
+    message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+    flow: Union[HTTPFlow, TCPFlow, UDPFlow],
 ):
     """
     Like get_content_view, but also handles message encoding.
@@ -138,10 +139,10 @@ def get_message_content_view(
     return description, lines, error
 
 
-def get_tcp_content_view(
+def get_proto_content_view(
     viewname: str,
     data: bytes,
-    flow: TCPFlow,
+    flow: Union[TCPFlow, UDPFlow],
 ):
     viewmode = get(viewname)
     if not viewmode:

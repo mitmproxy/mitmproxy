@@ -57,6 +57,7 @@ class Flow(stateobject.StateObject):
     See also:
      - mitmproxy.http.HTTPFlow
      - mitmproxy.tcp.TCPFlow
+     - mitmproxy.udp.UDPFlow
     """
 
     client_conn: connection.Client

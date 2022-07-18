@@ -199,6 +199,21 @@ def test_tcp():
         assert "Error in TCP" in sio.getvalue()
 
 
+def test_udp():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3, showhost=True)
+        f = tflow.tudpflow()
+        d.udp_message(f)
+        assert "it's me" in sio.getvalue()
+        sio.truncate(0)
+
+        f = tflow.tudpflow(client_conn=True, err=True)
+        d.udp_error(f)
+        assert "Error in UDP" in sio.getvalue()
+
+
 def test_dns():
     sio = io.StringIO()
     d = dumper.Dumper(sio)

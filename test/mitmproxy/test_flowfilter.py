@@ -1,3 +1,4 @@
+import abc
 import io
 import pytest
 from unittest.mock import patch
@@ -387,21 +388,17 @@ class TestMatchingDNSFlow:
         assert self.q("~u dns.google", f)
 
 
-class TestMatchingTCPFlow:
+class BaseMatchingMessageFlow(abc.ABCMeta):
+    @abc.abstractmethod
     def flow(self):
-        return tflow.ttcpflow()
+        pass
 
+    @abc.abstractmethod
     def err(self):
-        return tflow.ttcpflow(err=True)
+        pass
 
     def q(self, q, o):
         return flowfilter.parse(q)(o)
-
-    def test_tcp(self):
-        f = self.flow()
-        assert self.q("~tcp", f)
-        assert not self.q("~http", f)
-        assert not self.q("~websocket", f)
 
     def test_ferr(self):
         e = self.err()
@@ -509,6 +506,36 @@ class TestMatchingTCPFlow:
     def test_url(self):
         f = self.flow()
         assert not self.q("~u whatever", f)
+
+
+class TestMatchingTCPFlow(BaseMatchingMessageFlow):
+    def flow(self):
+        return tflow.ttcpflow()
+
+    def err(self):
+        return tflow.ttcpflow(err=True)
+
+    def test_tcp(self):
+        f = self.flow()
+        assert self.q("~tcp", f)
+        assert not self.q("~udp", f)
+        assert not self.q("~http", f)
+        assert not self.q("~websocket", f)
+
+
+class TestMatchingUDPFlow(BaseMatchingMessageFlow):
+    def flow(self):
+        return tflow.tudpflow()
+
+    def err(self):
+        return tflow.tudpflow(err=True)
+
+    def test_udp(self):
+        f = self.flow()
+        assert self.q("~udp", f)
+        assert not self.q("~tcp", f)
+        assert not self.q("~http", f)
+        assert not self.q("~websocket", f)
 
 
 class TestMatchingWebSocketFlow:

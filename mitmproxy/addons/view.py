@@ -27,6 +27,7 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.utils import human
 
 
@@ -85,6 +86,8 @@ class OrderRequestMethod(_OrderKey):
             return f.request.method
         elif isinstance(f, tcp.TCPFlow):
             return "TCP"
+        elif isinstance(f, udp.UDPFlow):
+            return "UDP"
         elif isinstance(f, dns.DNSFlow):
             return dns.op_codes.to_str(f.request.op_code)
         else:
@@ -95,7 +98,7 @@ class OrderRequestURL(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.url
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             return human.format_address(f.server_conn.address)
         elif isinstance(f, dns.DNSFlow):
             return f.request.questions[0].name if f.request.questions else ""
@@ -112,7 +115,7 @@ class OrderKeySize(_OrderKey):
             if f.response and f.response.raw_content:
                 size += len(f.response.raw_content)
             return size
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             size = 0
             for message in f.messages:
                 size += len(message.content)
@@ -590,6 +593,18 @@ class View(collections.abc.Sequence):
         self.update([f])
 
     def tcp_end(self, f):
+        self.update([f])
+
+    def udp_start(self, f):
+        self.add([f])
+
+    def udp_message(self, f):
+        self.update([f])
+
+    def udp_error(self, f):
+        self.update([f])
+
+    def udp_end(self, f):
         self.update([f])
 
     def dns_request(self, f):

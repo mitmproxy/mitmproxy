@@ -171,8 +171,9 @@ def test_cut():
         assert c.cut(tflows, ["response.reason"]) == [[""]]
         assert c.cut(tflows, ["response.header[key]"]) == [[""]]
 
-    c = cut.Cut()
-    with taddons.context():
-        tflows = [tflow.ttcpflow()]
-        assert c.cut(tflows, ["request.method"]) == [[""]]
-        assert c.cut(tflows, ["response.status"]) == [[""]]
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        c = cut.Cut()
+        with taddons.context():
+            tflows = [f]
+            assert c.cut(tflows, ["request.method"]) == [[""]]
+            assert c.cut(tflows, ["response.status"]) == [[""]]
