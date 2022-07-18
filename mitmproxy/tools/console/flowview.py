@@ -140,7 +140,7 @@ class FlowDetails(tabs.Tabs):
 
     def tab_tcp_stream(self):
         return "TCP Stream"
-   
+
     def tab_udp_stream(self):
         return "UDP Stream"
 

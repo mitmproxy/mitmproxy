@@ -56,6 +56,7 @@ def test_simple(tctx):
         >> ConnectionClosed(tctx.client)
         << udp.UdpEndHook(f)
         >> reply()
+        >> DataReceived(tctx.server, b"ignored")
         << None
     )
     assert len(f().messages) == 2
