@@ -73,7 +73,7 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "asgiref>=3.2.10,<3.6",
-        "blinker>=1.5,<1.6",
+        "blinker>=1.4,<1.6",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "cryptography>=36,<38",
