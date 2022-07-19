@@ -2,6 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Include information about lazy connection_strategy in related errors.
+  ([#5465](https://github.com/mitmproxy/mitmproxy/pull/5465), @meitinger)
+
 ## 28 June 2022: mitmproxy 8.1.1
 
 * Support specifying the local address for outgoing connections
