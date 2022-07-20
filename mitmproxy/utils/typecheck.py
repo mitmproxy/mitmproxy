@@ -3,7 +3,7 @@ from collections import abc
 
 try:
     from types import UnionType
-except ImportError:
+except ImportError:  # pragma: no cover
     UnionType = object()  # type: ignore
 
 Type = typing.Union[
