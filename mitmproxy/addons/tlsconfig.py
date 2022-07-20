@@ -6,7 +6,6 @@ from typing import Any, Optional, TypedDict
 from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
-from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import tls as proxy_tls
@@ -302,11 +301,21 @@ class TlsConfig:
         if "confdir" not in updated and "certs" not in updated:
             return
 
+        # We don't want users to easily hide the fact that mitmproxy is intercepting the connection.
+        # If the organization is customized, always append the default to it.
+        if ctx.options.has_changed("ca_organization"):
+            default_organization = ctx.options.default("ca_organization")
+            organization = f"{ctx.options.ca_organization} (via {default_organization})"
+        else:
+            organization = ctx.options.ca_organization
+
         certstore_path = os.path.expanduser(ctx.options.confdir)
         self.certstore = certs.CertStore.from_store(
             path=certstore_path,
-            basename=CONF_BASENAME,
+            basename=ctx.options.ca_basename,
             key_size=ctx.options.key_size,
+            organization=organization,
+            common_name=ctx.options.ca_common_name,
             passphrase=ctx.options.cert_passphrase.encode("utf8")
             if ctx.options.cert_passphrase
             else None,

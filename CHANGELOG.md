@@ -2,6 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Added new options `ca_basename`, `ca_organization` and `ca_common_name`
+  ([#5386](https://github.com/mitmproxy/mitmproxy/issues/5386), @Prinzhorn)
+
 ## 28 June 2022: mitmproxy 8.1.1
 
 * Support specifying the local address for outgoing connections

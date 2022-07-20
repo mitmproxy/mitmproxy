@@ -4,7 +4,6 @@ from typing import Optional
 from mitmproxy import optmanager
 
 CONF_DIR = "~/.mitmproxy"
-CONF_BASENAME = "mitmproxy"
 LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512
 KEY_SIZE = 2048
@@ -32,6 +31,24 @@ class Options(optmanager.OptManager):
             Add all certificates of the upstream server to the certificate chain
             that will be served to the proxy client, as extras.
             """,
+        )
+        self.add_option(
+            "ca_basename",
+            str,
+            "mitmproxy",
+            "Basename (prefix) of the certificate files.",
+        )
+        self.add_option(
+            "ca_organization",
+            str,
+            "mitmproxy",
+            'Organization of the generated certificate authority. Will always include "mitmproxy"',
+        )
+        self.add_option(
+            "ca_common_name",
+            str,
+            "mitmproxy",
+            "Common name of the generated certificate authority.",
         )
         self.add_option(
             "confdir",
