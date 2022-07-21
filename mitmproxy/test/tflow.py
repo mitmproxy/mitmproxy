@@ -8,6 +8,7 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy import websocket
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test.tutils import tdnsreq, tdnsresp
 from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
@@ -127,6 +128,7 @@ def tdnsflow(
     """Create a DNS flow for testing."""
     if client_conn is None:
         client_conn = tclient_conn()
+        client_conn.proxy_mode = ProxyMode.parse("dns")
         client_conn.transport_protocol = "udp"
     if server_conn is None:
         server_conn = tserver_conn()
@@ -230,6 +232,7 @@ def tclient_conn() -> connection.Client:
             certificate_list=[],
             alpn_offers=[],
             cipher_list=[],
+            proxy_mode="regular",
         )
     )
     return c

@@ -114,7 +114,7 @@ class TestSerialize:
 
 class TestFlowMaster:
     async def test_load_http_flow_reverse(self):
-        opts = options.Options(mode="reverse:https://use-this-domain")
+        opts = options.Options(mode=["reverse:https://use-this-domain"])
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(resp=True)
@@ -122,7 +122,7 @@ class TestFlowMaster:
             assert s.flows[0].request.host == "use-this-domain"
 
     async def test_all(self):
-        opts = options.Options(mode="reverse:https://use-this-domain")
+        opts = options.Options(mode=["reverse:https://use-this-domain"])
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(req=None)

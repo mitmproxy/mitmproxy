@@ -350,6 +350,12 @@ def test_movement():
         v.focus_prev()
         assert v.focus.index == 0
 
+        v.clear()
+        v.focus_next()
+        assert v.focus.index is None
+        v.focus_prev()
+        assert v.focus.index is None
+
 
 def test_duplicate():
     v = view.View()

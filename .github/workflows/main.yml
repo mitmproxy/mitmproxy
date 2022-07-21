@@ -105,7 +105,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: macos-10.15
+          - image: macos-11
             platform: macos
           - image: windows-2019
             platform: windows

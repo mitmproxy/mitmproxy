@@ -5,14 +5,22 @@ from dataclasses import dataclass
 from typing import Optional
 
 from mitmproxy import connection, platform
-from mitmproxy.net import server_spec
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
 
 class HttpProxy(layer.Layer):
+    @expect(events.Start)
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        child_layer = layer.NextLayer(self.context)
+        self._handle_event = child_layer.handle_event
+        yield from child_layer.handle_event(event)
+
+
+class HttpUpstreamProxy(layer.Layer):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         child_layer = layer.NextLayer(self.context)
@@ -47,7 +55,8 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 class ReverseProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        spec = server_spec.parse_with_mode(self.context.options.mode)[1]
+        spec = self.context.client.proxy_mode
+        assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
         if spec.scheme not in ("http", "tcp"):
