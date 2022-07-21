@@ -3,20 +3,18 @@ import sys
 
 import mitmproxy.master
 import mitmproxy.options
-from mitmproxy import addonmanager, hooks, log
+from mitmproxy import hooks, log
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy.addons import script, core
 
 
-class TestAddons(addonmanager.AddonManager):
+class LogRecorder:
     def __init__(self, master):
-        super().__init__(master)
+        self.master: RecordingMaster = master
 
-    def trigger(self, event: hooks.Hook):
-        if isinstance(event, log.AddLogHook):
-            self.master.logs.append(event.entry)
-        super().trigger(event)
+    def add_log(self, entry: log.LogEntry):
+        self.master.logs.append(entry)
 
 
 class RecordingMaster(mitmproxy.master.Master):
@@ -26,7 +24,7 @@ class RecordingMaster(mitmproxy.master.Master):
         except RuntimeError:
             loop = asyncio.new_event_loop()
         super().__init__(*args, **kwargs, event_loop=loop)
-        self.addons = TestAddons(self)
+        self.addons.add(LogRecorder(self))
         self.logs = []
 
     def dump_log(self, outf=sys.stdout):

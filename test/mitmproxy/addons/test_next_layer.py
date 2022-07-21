@@ -5,7 +5,7 @@ import pytest
 from mitmproxy import connection
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import context, layers
+from mitmproxy.proxy import context, layer, layers
 from mitmproxy.test import taddons
 
 
@@ -76,30 +76,23 @@ class TestNextLayer:
                 is False
             )
 
-    def test_make_top_layer(self):
-        nl = NextLayer()
+    def test_next_layer(self, monkeypatch):
         ctx = MagicMock()
-        with taddons.context(nl) as tctx:
-            tctx.configure(nl, mode="regular")
-            assert isinstance(nl.make_top_layer(ctx), layers.modes.HttpProxy)
+        nl_layer = layer.NextLayer(ctx)
+        monkeypatch.setattr(nl_layer, "data_client", lambda: b"\x16\x03\x03")
+        nl = NextLayer()
 
-            tctx.configure(nl, mode="transparent")
-            assert isinstance(nl.make_top_layer(ctx), layers.modes.TransparentProxy)
+        with taddons.context(nl):
+            nl.next_layer(nl_layer)
+            assert nl_layer.layer
 
-            tctx.configure(nl, mode="reverse:http://example.com")
-            assert isinstance(nl.make_top_layer(ctx), layers.modes.ReverseProxy)
-
-            tctx.configure(nl, mode="socks5")
-            assert isinstance(nl.make_top_layer(ctx), layers.modes.Socks5Proxy)
-
-    def test_next_layer(self):
+    def test_next_layer2(self):
         nl = NextLayer()
         ctx = MagicMock()
         ctx.client.alpn = None
         ctx.server.address = ("example.com", 443)
         with taddons.context(nl) as tctx:
-            ctx.layers = []
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
 
             assert nl._next_layer(ctx, b"", b"") is None
 
@@ -114,24 +107,20 @@ class TestNextLayer:
             )
             assert isinstance(ctx.layers[-1], layers.ClientTLSLayer)
 
-            ctx.layers = []
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
             assert isinstance(
                 nl._next_layer(ctx, client_hello_no_extensions, b""),
                 layers.ClientTLSLayer,
             )
 
-            ctx.layers = []
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
             assert isinstance(
                 nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
                 layers.HttpLayer,
             )
             assert ctx.layers[-1].mode == HTTPMode.regular
 
-            ctx.layers = []
-            tctx.configure(nl, mode="upstream:http://localhost:8081")
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
+            ctx.layers = [layers.modes.HttpUpstreamProxy(ctx)]
             assert isinstance(
                 nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
                 layers.HttpLayer,
@@ -144,8 +133,3 @@ class TestNextLayer:
             tctx.configure(nl, tcp_hosts=[])
             assert isinstance(nl._next_layer(ctx, b"GET /foo", b""), layers.HttpLayer)
             assert isinstance(nl._next_layer(ctx, b"", b"hello"), layers.TCPLayer)
-
-            l = MagicMock()
-            l.layer = None
-            nl.next_layer(l)
-            assert isinstance(l.layer, layers.modes.HttpProxy)

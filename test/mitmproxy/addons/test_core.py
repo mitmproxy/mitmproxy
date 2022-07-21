@@ -1,5 +1,3 @@
-from unittest import mock
-
 from mitmproxy.addons import core
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -10,9 +8,9 @@ import pytest
 def test_set():
     sa = core.Core()
     with taddons.context(loadcore=False) as tctx:
-        assert tctx.master.options.server
-        tctx.command(sa.set, "server", "false")
-        assert not tctx.master.options.server
+        assert tctx.master.options.upstream_cert
+        tctx.command(sa.set, "upstream_cert", "false")
+        assert not tctx.master.options.upstream_cert
 
         with pytest.raises(exceptions.CommandError):
             tctx.command(sa.set, "nonexistent")
@@ -167,25 +165,6 @@ def test_validation_simple():
             tctx.configure(
                 sa, add_upstream_certs_to_client_chain=True, upstream_cert=False
             )
-        with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
-            tctx.configure(sa, mode="Flibble")
-
-
-@mock.patch("mitmproxy.platform.original_addr", None)
-def test_validation_no_transparent():
-    sa = core.Core()
-    with taddons.context() as tctx:
-        with pytest.raises(Exception, match="Transparent mode not supported"):
-            tctx.configure(sa, mode="transparent")
-
-
-@mock.patch("mitmproxy.platform.original_addr")
-def test_validation_modes(m):
-    sa = core.Core()
-    with taddons.context() as tctx:
-        tctx.configure(sa, mode="reverse:http://localhost")
-        with pytest.raises(Exception, match="Invalid server specification"):
-            tctx.configure(sa, mode="reverse:")
 
 
 def test_client_certs(tdata):

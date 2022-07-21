@@ -5,7 +5,6 @@ from mitmproxy import optmanager
 
 CONF_DIR = "~/.mitmproxy"
 CONF_BASENAME = "mitmproxy"
-LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512
 KEY_SIZE = 2048
 
@@ -91,16 +90,25 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option("allow_hosts", Sequence[str], [], "Opposite of --ignore-hosts.")
-        self.add_option("listen_host", str, "", "Address to bind proxy to.")
-        self.add_option("listen_port", int, LISTEN_PORT, "Proxy service port.")
+        self.add_option("listen_host", str, "",
+                        "Address to bind proxy server(s) to (may be overridden for individual modes, see `mode`).")
+        self.add_option("listen_port", Optional[int], None,
+                        "Port to bind proxy server(s) to (may be overridden for individual modes, see `mode`). "
+                        "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.")
         self.add_option(
             "mode",
-            str,
-            "regular",
+            Sequence[str],
+            ["regular"],
             """
-            Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
-            or "upstream:SPEC". For reverse and upstream proxy modes, SPEC
+            The proxy server type(s) to spawn. Can be passed multiple times.
+
+            Mitmproxy supports "regular" (HTTP), "transparent", "socks5", "reverse:SPEC",
+            and "upstream:SPEC" proxy servers. For reverse and upstream proxy modes, SPEC
             is host specification in the form of "http[s]://host[:port]".
+
+            You may append `@listen_port` or `@listen_host:listen_port` to override `listen_host` or `listen_port` for
+            a specific proxy mode. Features such as client playback will use the first mode to determine
+            which upstream server to use.
             """,
         )
         self.add_option(

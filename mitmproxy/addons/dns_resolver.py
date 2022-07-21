@@ -2,7 +2,8 @@ import asyncio
 import ipaddress
 import socket
 from typing import Callable, Iterable, Union
-from mitmproxy import ctx, dns
+from mitmproxy import dns
+from mitmproxy.proxy import mode_specs
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -30,7 +31,7 @@ async def resolve_question_by_name(
         else:
             # NOTE might fail on Windows for IPv6 queries:
             # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
-            raise ResolveError(dns.response_codes.SERVFAIL)
+            raise ResolveError(dns.response_codes.SERVFAIL)  # pragma: no cover
     return map(
         lambda addrinfo: dns.ResourceRecord(
             name=question.name,
@@ -137,11 +138,13 @@ async def resolve_message(
 
 class DnsResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
+        proxy_mode = flow.client_conn.proxy_mode
+        assert isinstance(proxy_mode, mode_specs.DnsMode)
         should_resolve = (
             flow.live
             and not flow.response
             and not flow.error
-            and ctx.options.dns_mode == "regular"
+            and proxy_mode.resolve_local
         )
         if should_resolve:
             flow.response = await resolve_message(

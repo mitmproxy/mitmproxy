@@ -87,6 +87,8 @@ def main():
     src_files = [
         f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)
     ]
+    if len(sys.argv) > 1:
+        src_files = [f for f in src_files if sys.argv[1] in str(f)]
 
     ps = []
     for src in sorted(src_files):
