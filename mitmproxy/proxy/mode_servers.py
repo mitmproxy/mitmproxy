@@ -311,7 +311,7 @@ class DtlsInstance(ServerInstance[mode_specs.DtlsMode]):
             reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)
         reader.feed_data(data, remote_addr)
 
-    async def handle_dtls_connection(self, connection_id, handler):
+    async def handle_dtls_connection(self, connection_id, handler):  # pragma: no cover
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
 
