@@ -15,6 +15,8 @@
 * Remove overambitious assertions in the HTTP state machine,
   fix some error handling.
   ([#5383](https://github.com/mitmproxy/mitmproxy/issues/5383), @mhils)
+* Use default_factory for parser_options.
+  ([#5474](https://github.com/mitmproxy/mitmproxy/issues/5474), @rathann)
 
 ## 15 May 2022: mitmproxy 8.1.0
 
