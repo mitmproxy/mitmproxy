@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import os
-import re
 import subprocess
 from pathlib import Path
 from typing import Optional
 
 # Security: No third-party dependencies here!
+
+root = Path(__file__).absolute().parent.parent
 
 if __name__ == "__main__":
     ref = os.environ["GITHUB_REF"]
@@ -20,10 +21,10 @@ if __name__ == "__main__":
 
     # Upload binaries (be it release or snapshot)
     if tag:
-        # remove "v" prefix from version tags.
-        upload_dir = re.sub(r"^v([\d.]+)$", r"\1", tag)
+        upload_dir = tag
     else:
         upload_dir = f"branches/{branch}"
+    print(f"Uploading binaries to snapshots.mitmproxy.org/{upload_dir}...")
     subprocess.check_call(
         [
             "aws",
@@ -31,7 +32,7 @@ if __name__ == "__main__":
             "cp",
             "--acl",
             "public-read",
-            f"./release/dist/",
+            root / "release/dist",
             f"s3://snapshots.mitmproxy.org/{upload_dir}/",
             "--recursive",
         ]
@@ -39,11 +40,13 @@ if __name__ == "__main__":
 
     # Upload releases to PyPI
     if tag:
-        (whl,) = Path("release/dist/").glob("mitmproxy-*-py3-none-any.whl")
+        print(f"Uploading wheel to PyPI...")
+        (whl,) = root.glob("release/dist/mitmproxy-*-py3-none-any.whl")
         subprocess.check_call(["twine", "upload", whl])
 
     # Upload dev docs
-    if branch == "main" or branch == "actions-hardening":  # FIXME remove
+    if branch == "main":
+        print(f"Uploading dev docs...")
         subprocess.check_call(["aws", "configure", "set", "preview.cloudfront", "true"])
         subprocess.check_call(
             [
@@ -53,7 +56,7 @@ if __name__ == "__main__":
                 "--delete",
                 "--acl",
                 "public-read",
-                "docs/public",
+                root / "docs/public",
                 "s3://docs.mitmproxy.org/dev",
             ]
         )
