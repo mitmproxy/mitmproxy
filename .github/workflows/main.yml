@@ -13,6 +13,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
       - uses: TrueBrain/actions-flake8@c2deca24d388aa5aedd6478332aa9df4600b5eac # v2.1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
