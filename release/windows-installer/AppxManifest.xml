@@ -40,7 +40,7 @@
             </Extensions>
         </Application>
         <Application Id="mitmweb" Executable="mitmweb.exe" EntryPoint="Windows.FullTrustApplication" uap10:Subsystem="console" uap10:SupportsMultipleInstances="true">
-            <uap3:VisualElements DisplayName="mitmweb" Description="Mitmproxy Web UI" BackgroundColor="#333333"
+            <uap3:VisualElements DisplayName="mitmweb (web ui)" Description="Mitmproxy Web UI" BackgroundColor="#333333"
                 Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png" VisualGroup="mitmproxy"/>
             <Extensions>
                 <uap3:Extension Executable="mitmweb.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
@@ -51,7 +51,7 @@
             </Extensions>
         </Application>
         <Application Id="mitmdump" Executable="mitmdump.exe" EntryPoint="Windows.FullTrustApplication" uap10:Subsystem="console" uap10:SupportsMultipleInstances="true">
-            <uap3:VisualElements DisplayName="mitmdump" Description="Mitmdump" BackgroundColor="#333333"
+            <uap3:VisualElements DisplayName="mitmdump (headless)" Description="Mitmdump" BackgroundColor="#333333"
                 Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png" VisualGroup="mitmproxy"/>
             <Extensions>
                 <uap3:Extension Executable="mitmdump.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
