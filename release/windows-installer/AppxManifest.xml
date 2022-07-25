@@ -65,20 +65,20 @@
     <Extensions>
         <desktop2:Extension Category="windows.firewallRules">
             <desktop2:FirewallRules Executable="mitmproxy.exe">
-                <desktop2:Rule Direction="in" IPProtocol="TCP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
-                <desktop2:Rule Direction="in" IPProtocol="UDP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
             </desktop2:FirewallRules>
         </desktop2:Extension>
         <desktop2:Extension Category="windows.firewallRules">
             <desktop2:FirewallRules Executable="mitmweb.exe">
-                <desktop2:Rule Direction="in" IPProtocol="TCP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
-                <desktop2:Rule Direction="in" IPProtocol="UDP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
             </desktop2:FirewallRules>
         </desktop2:Extension>
         <desktop2:Extension Category="windows.firewallRules">
             <desktop2:FirewallRules Executable="mitmdump.exe">
-                <desktop2:Rule Direction="in" IPProtocol="TCP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
-                <desktop2:Rule Direction="in" IPProtocol="UDP" LocalPortMin="1" LocalPortMax="65535" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
             </desktop2:FirewallRules>
         </desktop2:Extension>
     </Extensions>
