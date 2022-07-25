@@ -134,10 +134,8 @@ class TlsConfig:
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
-        tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
-            ctx.options.connection_strategy == "eager"
-            or ctx.options.add_upstream_certs_to_client_chain
-            or ctx.options.upstream_cert
+        tls_clienthello.establish_server_tls_first = (
+            conn_context.server.tls and ctx.options.connection_strategy == "eager"
         )
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
