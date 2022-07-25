@@ -15,6 +15,9 @@ Examples:
 
     ProxyMode.parse("reverse:example.com@invalid-port")  # ValueError
 
+    RegularMode.parse("regular")  # ok
+    RegularMode.parse("socks5")  # ValueError
+
 """
 
 from __future__ import annotations
@@ -27,7 +30,6 @@ from typing import ClassVar, Literal, Type, TypeVar
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
 
-
 # Python 3.11: Use typing.Self
 Self = TypeVar("Self", bound="ProxyMode")
 
@@ -39,45 +41,45 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     which then does its own data validation.
     """
     full_spec: str
+    """The full proxy mode spec as entered by the user."""
     data: str
+    """The (raw) mode data, i.e. the part after the mode name."""
     custom_listen_host: str | None
+    """A custom listen host, if specified in the spec."""
     custom_listen_port: int | None
+    """A custom listen port, if specified in the spec."""
 
+    type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
+    """The unique name for this proxy mode, e.g. "regular" or "reverse"."""
+    default_port: ClassVar[int] = 8080
+    """
+    Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
+    """
     transport_protocol: ClassVar[Literal["tcp", "udp"]] = "tcp"
     """
-    The transport protocol used by this mode. Used to detect multiple servers targeting the same proto+port.
+    The transport protocol used by this mode's server.
+    This information is used by the proxyserver addon to determine if two modes want to listen on the same address.
     """
-    default_port: ClassVar[int] = 8080
-    __modes: ClassVar[dict[str, type[ProxyMode]]] = {}
+    __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        cls.type = cls.__name__.removesuffix("Mode").lower()
+        assert cls.type not in ProxyMode.__types
+        ProxyMode.__types[cls.type] = cls
+
+    def __repr__(self):
+        return f"ProxyMode.parse({self.full_spec!r})"
 
     @abstractmethod
     def __post_init__(self) -> None:
         """Validation of data happens here."""
 
-    def listen_host(self, default: str | None = None) -> str:
-        if self.custom_listen_host is not None:
-            return self.custom_listen_host
-        elif default is not None:
-            return default
-        else:
-            return ""
-
-    def listen_port(self, default: int | None = None) -> int:
-        if self.custom_listen_port is not None:
-            return self.custom_listen_port
-        elif default is not None:
-            return default
-        else:
-            return self.default_port
-
-    @classmethod
-    @property
-    def type(cls) -> str:
-        return cls.__name__.removesuffix("Mode").lower()
-
     @classmethod
     @cache
     def parse(cls: Type[Self], spec: str) -> Self:
+        """
+        Parse a proxy mode specification and return the corresponding `ProxyMode` instance.
+        """
         head, _, listen_at = spec.rpartition("@")
         if not head:
             head = listen_at
@@ -102,7 +104,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             port = None
 
         try:
-            mode_cls = ProxyMode.__modes[mode.lower()]
+            mode_cls = ProxyMode.__types[mode.lower()]
         except KeyError:
             raise ValueError(f"unknown mode")
 
@@ -116,10 +118,31 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             custom_listen_port=port
         )
 
-    def __init_subclass__(cls, **kwargs):
-        t = cls.type.lower()
-        assert t not in ProxyMode.__modes
-        ProxyMode.__modes[t] = cls
+    def listen_host(self, default: str | None = None) -> str:
+        """
+        Return the address a server for this mode should listen on. This can be either directly
+        specified in the spec or taken from a user-configured global default (`options.listen_host`).
+        By default, return an empty string to listen on all hosts.
+        """
+        if self.custom_listen_host is not None:
+            return self.custom_listen_host
+        elif default is not None:
+            return default
+        else:
+            return ""
+
+    def listen_port(self, default: int | None = None) -> int:
+        """
+        Return the port a server for this mode should listen on. This can be either directly
+        specified in the spec, taken from a user-configured global default (`options.listen_port`),
+        or from `ProxyMode.default_port`.
+        """
+        if self.custom_listen_port is not None:
+            return self.custom_listen_port
+        elif default is not None:
+            return default
+        else:
+            return self.default_port
 
     @classmethod
     def from_state(cls, state):
@@ -139,16 +162,21 @@ def _check_empty(data):
 
 
 class RegularMode(ProxyMode):
+    """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
+
     def __post_init__(self) -> None:
         _check_empty(self.data)
 
 
 class TransparentMode(ProxyMode):
+    """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
+
     def __post_init__(self) -> None:
         _check_empty(self.data)
 
 
 class UpstreamMode(ProxyMode):
+    """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
     scheme: Literal["http", "https"]
     address: tuple[str, int]
 
@@ -161,6 +189,7 @@ class UpstreamMode(ProxyMode):
 
 
 class ReverseMode(ProxyMode):
+    """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
     scheme: Literal["http", "https", "tcp", "tls"]
     address: tuple[str, int]
 
@@ -173,6 +202,7 @@ class ReverseMode(ProxyMode):
 
 
 class Socks5Mode(ProxyMode):
+    """A SOCKSv5 proxy."""
     default_port = 1080
 
     def __post_init__(self) -> None:
@@ -180,6 +210,7 @@ class Socks5Mode(ProxyMode):
 
 
 class DnsMode(ProxyMode):
+    """A DNS server or proxy."""
     default_port = 53
     transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
     scheme: Literal["dns"]  # DoH, DoQ, ...

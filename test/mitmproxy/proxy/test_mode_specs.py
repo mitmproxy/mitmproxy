@@ -12,6 +12,7 @@ def test_parse():
     assert m.data == "https://example.com/"
     assert m.custom_listen_host == "127.0.0.1"
     assert m.custom_listen_port == 443
+    assert repr(m) == "ProxyMode.parse('reverse:https://example.com/@127.0.0.1:443')"
 
     with pytest.raises(ValueError, match="unknown mode"):
         ProxyMode.parse("flibbel")
