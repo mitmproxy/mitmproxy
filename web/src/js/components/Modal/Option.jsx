@@ -110,6 +110,7 @@ export const Options = {
     "str": StringOption,
     "int": NumberOption,
     "optional str": Optional(StringOption),
+    "optional int": Optional(NumberOption),
     "sequence of str": StringSequenceOption,
 }
 
