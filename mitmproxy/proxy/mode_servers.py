@@ -129,11 +129,16 @@ class TcpServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def start(self):
         assert not self.server
-        self.server = await asyncio.start_server(
-            self.handle_tcp_connection,
-            self.mode.listen_host(ctx.options.listen_host),
-            self.mode.listen_port(ctx.options.listen_port),
-        )
+        host = self.mode.listen_host(ctx.options.listen_host)
+        port = self.mode.listen_port(ctx.options.listen_port)
+        try:
+            self.server = await asyncio.start_server(
+                self.handle_tcp_connection,
+                host,
+                port,
+            )
+        except OSError as e:
+            raise OSError(f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}")
 
         addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
         ctx.log.info(
@@ -199,12 +204,17 @@ class DnsInstance(ServerInstance[mode_specs.DnsMode]):
 
     async def start(self):
         assert not self.server
-        self.server = await udp.start_server(
-            self.handle_dns_datagram,
-            self.mode.listen_host(ctx.options.listen_host),
-            self.mode.listen_port(ctx.options.listen_port),
-            transparent=False
-        )
+        host = self.mode.listen_host(ctx.options.listen_host)
+        port = self.mode.listen_port(ctx.options.listen_port)
+        try:
+            self.server = await udp.start_server(
+                self.handle_dns_datagram,
+                host,
+                port,
+                transparent=False
+            )
+        except OSError as e:
+            raise OSError(f"DNS server failed to listen on {host or '*'}:{port} with {e}")
         addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
         ctx.log.info(
             f"DNS server listening at {' and '.join(addrs)}."

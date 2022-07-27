@@ -2,6 +2,8 @@ import asyncio
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, Mock
 
+import pytest
+
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
 from mitmproxy.test import taddons
@@ -39,6 +41,19 @@ async def test_tcp_start_stop():
         assert await tctx.master.await_log("Stopped regular proxy server.")
 
 
+async def test_tcp_start_error():
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await tctx.master.await_log("proxy listening")
+        port = inst.listen_addrs[0][1]
+        inst2 = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
+        with pytest.raises(OSError, match=f"proxy failed to listen on 127\\.0\\.0\\.1:{port}"):
+            await inst2.start()
+
+
 async def test_udp_start_stop():
     manager = MagicMock()
 
@@ -59,6 +74,19 @@ async def test_udp_start_stop():
 
         await inst.stop()
         assert await tctx.master.await_log("Stopped")
+
+
+async def test_udp_start_error():
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("dns@127.0.0.1:0", manager)
+        await inst.start()
+        assert await tctx.master.await_log("server listening")
+        port = inst.listen_addrs[0][1]
+        inst2 = ServerInstance.make(f"dns@127.0.0.1:{port}", manager)
+        with pytest.raises(OSError, match=f"server failed to listen on 127\\.0\\.0\\.1:{port}"):
+            await inst2.start()
 
 
 async def test_udp_connection_reuse(monkeypatch):
