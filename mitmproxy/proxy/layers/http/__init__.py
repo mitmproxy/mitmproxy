@@ -693,7 +693,8 @@ class HttpStream(layer.Layer):
                 self.flow.response = http.Response.make(
                     502,
                     f"Cannot connect to {human.format_address(self.context.server.address)}: {err} "
-                    f"If this error persists, consider adding `--set connection_strategy=lazy` to the command line arguments."
+                    f"If you plan to redirect requests away from this server, "
+                    f"consider setting connection_strategy to lazy to suppress early connections."
                 )
         self.child_layer = layer.NextLayer(self.context)
         yield from self.handle_connect_finish()
