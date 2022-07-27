@@ -505,7 +505,9 @@ class ClientTLSLayer(_TLSLayer):
             if err:
                 yield commands.Log(
                     f"Unable to establish TLS connection with server ({err}). "
-                    f"Trying to establish TLS with client anyway."
+                    f"Trying to establish TLS with client anyway. "
+                    f"If you plan to redirect requests away from this server, "
+                    f"consider setting `connection_strategy` to `lazy` to suppress early connections."
                 )
 
         yield from self.start_tls()
