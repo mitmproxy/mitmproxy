@@ -694,7 +694,7 @@ class HttpStream(layer.Layer):
                     502,
                     f"Cannot connect to {human.format_address(self.context.server.address)}: {err} "
                     f"If you plan to redirect requests away from this server, "
-                    f"consider setting connection_strategy to lazy to suppress early connections."
+                    f"consider setting `connection_strategy` to `lazy` to suppress early connections."
                 )
         self.child_layer = layer.NextLayer(self.context)
         yield from self.handle_connect_finish()
