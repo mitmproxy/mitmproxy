@@ -46,4 +46,12 @@ test("FlowView", async () => {
 
     fireEvent.click(screen.getByText("Error"));
     expect(asFragment()).toMatchSnapshot();
+
+    store.dispatch(flowActions.select(store.getState().flows.list[4].id));
+
+    fireEvent.click(screen.getByText("UDP Messages"));
+    expect(asFragment()).toMatchSnapshot();
+
+    fireEvent.click(screen.getByText("Error"));
+    expect(asFragment()).toMatchSnapshot();
 });

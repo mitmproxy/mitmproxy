@@ -12,13 +12,13 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy.hooks import UpdateHook
-from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layers, server
 from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy.layer import CommandGenerator
+from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
 
 
@@ -81,14 +81,14 @@ class ReplayHandler(server.ConnectionHandler):
         context = Context(client, options)
         context.server = Server((flow.request.host, flow.request.port))
         context.server.tls = flow.request.scheme == "https"
-        if options.mode.startswith("upstream:"):
-            context.server.via = flow.server_conn.via = server_spec.parse_with_mode(
-                options.mode
-            )[1]
+        if options.mode and options.mode[0].startswith("upstream:"):
+            mode = UpstreamMode.parse(options.mode[0])
+            assert isinstance(mode, UpstreamMode)  # remove once mypy supports Self.
+            context.server.via = flow.server_conn.via = (mode.scheme, mode.address)
 
         super().__init__(context)
 
-        if options.mode.startswith("upstream:"):
+        if options.mode and options.mode[0].startswith("upstream:"):
             self.layer = layers.HttpLayer(context, HTTPMode.upstream)
         else:
             self.layer = layers.HttpLayer(context, HTTPMode.transparent)

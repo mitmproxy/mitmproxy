@@ -40,7 +40,7 @@ from collections.abc import Sequence
 from typing import ClassVar, Protocol, Union
 import pyparsing as pp
 
-from mitmproxy import dns, flow, http, tcp
+from mitmproxy import dns, flow, http, tcp, udp
 
 
 def only(*types):
@@ -116,6 +116,15 @@ class FTCP(_Action):
     help = "Match TCP flows"
 
     @only(tcp.TCPFlow)
+    def __call__(self, f):
+        return True
+
+
+class FUDP(_Action):
+    code = "udp"
+    help = "Match UDP flows"
+
+    @only(udp.UDPFlow)
     def __call__(self, f):
         return True
 
@@ -276,7 +285,7 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -289,7 +298,7 @@ class FBod(_Rex):
                 for msg in f.websocket.messages:
                     if self.re.search(msg.content):
                         return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:
                 if self.re.search(msg.content):
                     return True
@@ -306,7 +315,7 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -316,7 +325,7 @@ class FBodRequest(_Rex):
                 for msg in f.websocket.messages:
                     if msg.from_client and self.re.search(msg.content):
                         return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
@@ -330,7 +339,7 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
@@ -340,7 +349,7 @@ class FBodResponse(_Rex):
                 for msg in f.websocket.messages:
                     if not msg.from_client and self.re.search(msg.content):
                         return True
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
@@ -537,6 +546,7 @@ filter_unary: Sequence[type[_Action]] = [
     FReq,
     FResp,
     FTCP,
+    FUDP,
     FDNS,
     FWebSocket,
     FAll,

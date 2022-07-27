@@ -24,7 +24,7 @@ async def test_statusbar(monkeypatch):
         server_replay_kill_extra=True,
         upstream_cert=False,
         stream_large_bodies="3m",
-        mode="transparent",
+        mode=["transparent"],
     )
 
     m.options.update(view_order="url", console_focus_follow=True)

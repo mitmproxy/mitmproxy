@@ -7,101 +7,87 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
-class TestMkauth:
-    def test_mkauth_scheme(self):
-        assert (
-            proxyauth.mkauth("username", "password")
-            == "basic dXNlcm5hbWU6cGFzc3dvcmQ=\n"
-        )
-
-    @pytest.mark.parametrize(
-        "scheme, expected",
-        [
-            ("", " dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
-            ("basic", "basic dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
-            ("foobar", "foobar dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
-        ],
-    )
-    def test_mkauth(self, scheme, expected):
-        assert proxyauth.mkauth("username", "password", scheme) == expected
+@pytest.mark.parametrize(
+    "scheme, expected",
+    [
+        ("", " dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
+        ("basic", "basic dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
+        ("foobar", "foobar dXNlcm5hbWU6cGFzc3dvcmQ=\n"),
+    ],
+)
+def test_mkauth(scheme, expected):
+    assert proxyauth.mkauth("username", "password", scheme) == expected
 
 
-class TestParseHttpBasicAuth:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            "",
-            "foo bar",
-            "basic abc",
-            "basic " + binascii.b2a_base64(b"foo").decode("ascii"),
-        ],
-    )
-    def test_parse_http_basic_auth_error(self, input):
-        with pytest.raises(ValueError):
-            proxyauth.parse_http_basic_auth(input)
+def test_parse_http_basic_auth():
+    input = proxyauth.mkauth("test", "test")
+    assert proxyauth.parse_http_basic_auth(input) == ("basic", "test", "test")
 
-    def test_parse_http_basic_auth(self):
-        input = proxyauth.mkauth("test", "test")
-        assert proxyauth.parse_http_basic_auth(input) == ("basic", "test", "test")
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        "",
+        "foo bar",
+        "basic abc",
+        "basic " + binascii.b2a_base64(b"foo").decode("ascii"),
+    ],
+)
+def test_parse_http_basic_auth_error(input):
+    with pytest.raises(ValueError):
+        proxyauth.parse_http_basic_auth(input)
+
+
+@pytest.mark.parametrize(
+    "mode, expected",
+    [
+        ("regular", True),
+        ("upstream:proxy", True),
+        ("reverse:example.com", False),
+    ],
+)
+def test_is_http_proxy(mode, expected):
+    f = tflow.tflow()
+    f.client_conn.proxy_mode = ProxyMode.parse(mode)
+    assert proxyauth.is_http_proxy(f) == expected
+
+
+@pytest.mark.parametrize(
+    "is_http_proxy, expected",
+    [
+        (True, "Proxy-Authorization"),
+        (False, "Authorization"),
+    ],
+)
+def test_http_auth_header(is_http_proxy, expected):
+    assert proxyauth.http_auth_header(is_http_proxy) == expected
+
+
+@pytest.mark.parametrize(
+    "is_http_proxy, expected_status_code, expected_header",
+    [
+        (True, 407, "Proxy-Authenticate"),
+        (False, 401, "WWW-Authenticate"),
+    ],
+)
+def test_make_auth_required_response(
+    is_http_proxy, expected_status_code, expected_header
+):
+    resp = proxyauth.make_auth_required_response(is_http_proxy)
+    assert resp.status_code == expected_status_code
+    assert expected_header in resp.headers.keys()
 
 
 class TestProxyAuth:
-    @pytest.mark.parametrize(
-        "mode, expected",
-        [
-            ("", False),
-            ("foobar", False),
-            ("regular", True),
-            ("upstream:", True),
-            ("upstream:foobar", True),
-        ],
-    )
-    def test_is_http_proxy(self, mode, expected):
-        up = proxyauth.ProxyAuth()
-        with taddons.context(up, loadcore=False) as ctx:
-            ctx.options.mode = mode
-            assert up.is_http_proxy is expected
-
-    @pytest.mark.parametrize(
-        "is_http_proxy, expected",
-        [
-            (True, "Proxy-Authorization"),
-            (False, "Authorization"),
-        ],
-    )
-    def test_which_auth_header(self, is_http_proxy, expected):
-        up = proxyauth.ProxyAuth()
-        with mock.patch(
-            "mitmproxy.addons.proxyauth.ProxyAuth.is_http_proxy", new=is_http_proxy
-        ):
-            assert up.http_auth_header == expected
-
-    @pytest.mark.parametrize(
-        "is_http_proxy, expected_status_code, expected_header",
-        [
-            (True, 407, "Proxy-Authenticate"),
-            (False, 401, "WWW-Authenticate"),
-        ],
-    )
-    def test_auth_required_response(
-        self, is_http_proxy, expected_status_code, expected_header
-    ):
-        up = proxyauth.ProxyAuth()
-        with mock.patch(
-            "mitmproxy.addons.proxyauth.ProxyAuth.is_http_proxy", new=is_http_proxy
-        ):
-            resp = up.make_auth_required_response()
-            assert resp.status_code == expected_status_code
-            assert expected_header in resp.headers.keys()
-
     def test_socks5(self):
         pa = proxyauth.ProxyAuth()
         with taddons.context(pa, loadcore=False) as ctx:
-            ctx.configure(pa, proxyauth="foo:bar", mode="regular")
+            ctx.configure(pa, proxyauth="foo:bar")
             data = modes.Socks5AuthData(tflow.tclient_conn(), "foo", "baz")
             pa.socks5_auth(data)
             assert not data.valid
@@ -112,9 +98,10 @@ class TestProxyAuth:
     def test_authenticate(self):
         up = proxyauth.ProxyAuth()
         with taddons.context(up, loadcore=False) as ctx:
-            ctx.configure(up, proxyauth="any", mode="regular")
+            ctx.configure(up, proxyauth="any")
 
             f = tflow.tflow()
+            f.client_conn.proxy_mode = ProxyMode.parse("regular")
             assert not f.response
             up.authenticate_http(f)
             assert f.response.status_code == 407
@@ -126,12 +113,13 @@ class TestProxyAuth:
             assert not f.request.headers.get("Proxy-Authorization")
 
             f = tflow.tflow()
-            ctx.configure(up, mode="reverse")
+            f.client_conn.proxy_mode = ProxyMode.parse("reverse:https://example.com")
             assert not f.response
             up.authenticate_http(f)
             assert f.response.status_code == 401
 
             f = tflow.tflow()
+            f.client_conn.proxy_mode = ProxyMode.parse("reverse:https://example.com")
             f.request.headers["Authorization"] = proxyauth.mkauth("test", "test")
             up.authenticate_http(f)
             assert not f.response
@@ -210,16 +198,10 @@ class TestProxyAuth:
             assert pa.validator("test", "test")
             assert not pa.validator("test", "foo")
 
-            with pytest.raises(
-                exceptions.OptionsError,
-                match="Proxy Authentication not supported in transparent mode.",
-            ):
-                ctx.configure(pa, proxyauth="any", mode="transparent")
-
     def test_handlers(self):
         up = proxyauth.ProxyAuth()
         with taddons.context(up) as ctx:
-            ctx.configure(up, proxyauth="any", mode="regular")
+            ctx.configure(up, proxyauth="any")
 
             f = tflow.tflow()
             assert not f.response

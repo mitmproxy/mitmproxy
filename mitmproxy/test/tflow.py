@@ -6,7 +6,9 @@ from mitmproxy import dns
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy import websocket
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test.tutils import tdnsreq, tdnsresp
 from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode
@@ -28,6 +30,29 @@ def ttcpflow(
         err = terr()
 
     f = tcp.TCPFlow(client_conn, server_conn)
+    f.timestamp_created = client_conn.timestamp_start
+    f.messages = messages
+    f.error = err
+    f.live = True
+    return f
+
+
+def tudpflow(
+    client_conn=True, server_conn=True, messages=True, err=None
+) -> udp.UDPFlow:
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    if messages is True:
+        messages = [
+            udp.UDPMessage(True, b"hello", 946681204.2),
+            udp.UDPMessage(False, b"it's me", 946681204.5),
+        ]
+    if err is True:
+        err = terr()
+
+    f = udp.UDPFlow(client_conn, server_conn)
     f.timestamp_created = client_conn.timestamp_start
     f.messages = messages
     f.error = err
@@ -103,6 +128,7 @@ def tdnsflow(
     """Create a DNS flow for testing."""
     if client_conn is None:
         client_conn = tclient_conn()
+        client_conn.proxy_mode = ProxyMode.parse("dns")
         client_conn.transport_protocol = "udp"
     if server_conn is None:
         server_conn = tserver_conn()
@@ -206,6 +232,7 @@ def tclient_conn() -> connection.Client:
             certificate_list=[],
             alpn_offers=[],
             cipher_list=[],
+            proxy_mode="regular",
         )
     )
     return c
@@ -269,6 +296,8 @@ def tflows() -> list[flow.Flow]:
         tflow(ws=True),
         ttcpflow(),
         ttcpflow(err=True),
+        tudpflow(),
+        tudpflow(err=True),
         tdnsflow(resp=True),
         tdnsflow(err=True),
     ]

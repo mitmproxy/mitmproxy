@@ -2,6 +2,7 @@ import collections
 import enum
 import time
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Optional, Union
 
 import wsproto.handshake
@@ -42,6 +43,7 @@ from ._hooks import (  # noqa
 from ._http1 import Http1Client, Http1Connection, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
+from ...mode_specs import ReverseMode, UpstreamMode
 
 
 class HTTPMode(enum.Enum):
@@ -124,7 +126,7 @@ class HttpStream(layer.Layer):
     stream_id: StreamId
     child_layer: Optional[layer.Layer] = None
 
-    @property
+    @cached_property
     def mode(self):
         i = self.context.layers.index(self)
         parent: HttpLayer = self.context.layers[i - 1]
@@ -222,7 +224,7 @@ class HttpStream(layer.Layer):
 
         # update host header in reverse proxy mode
         if (
-            self.context.options.mode.startswith("reverse:")
+            isinstance(self.context.client.proxy_mode, ReverseMode)
             and not self.context.options.keep_host_header
         ):
             assert self.context.server.address
@@ -836,9 +838,9 @@ class HttpLayer(layer.Layer):
         if isinstance(event, events.Start):
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
-                self.context.server.via = server_spec.parse_with_mode(
-                    self.context.options.mode
-                )[1]
+                proxy_mode = self.context.client.proxy_mode
+                assert isinstance(proxy_mode, UpstreamMode)
+                self.context.server.via = (proxy_mode.scheme, proxy_mode.address)
         elif isinstance(event, events.Wakeup):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
@@ -997,7 +999,6 @@ class HttpLayer(layer.Layer):
 
             if event.via:
                 context.server.via = event.via
-                assert event.via.scheme in ("http", "https")
                 # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
                 send_connect = event.tls or self.mode != HTTPMode.upstream
                 stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)

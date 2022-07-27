@@ -8,6 +8,7 @@ from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
+from mitmproxy.utils import human
 
 
 class PromptPath:
@@ -281,8 +282,8 @@ class StatusBar(urwid.WidgetWrap):
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.options.mode != "regular":
-            r.append("[%s]" % self.master.options.mode)
+        if self.master.options.mode != ["regular"]:
+            r.append(f"[{','.join(self.master.options.mode)}]")
         if self.master.options.scripts:
             r.append("[scripts:%s]" % len(self.master.options.scripts))
 
@@ -311,11 +312,12 @@ class StatusBar(urwid.WidgetWrap):
             ("heading", (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
         ]
 
-        if self.master.options.server:
-            host = self.master.options.listen_host
-            if host == "0.0.0.0" or host == "":
-                host = "*"
-            boundaddr = f"[{host}:{self.master.options.listen_port}]"
+        listen_addrs: list[str] = list(dict.fromkeys(
+            human.format_address(a)
+            for a in self.master.addons.get("proxyserver").listen_addrs()
+        ))
+        if listen_addrs:
+            boundaddr = f"[{', '.join(listen_addrs)}]"
         else:
             boundaddr = ""
         t.extend(self.get_status())

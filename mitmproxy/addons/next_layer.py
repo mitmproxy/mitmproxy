@@ -117,9 +117,7 @@ class NextLayer:
     def _next_layer(
         self, context: context.Context, data_client: bytes, data_server: bytes
     ) -> Optional[layer.Layer]:
-        if len(context.layers) == 0:
-            return self.make_top_layer(context)
-
+        assert context.layers
         if len(data_client) < 3 and not data_server:
             return None  # not enough data yet to make a decision
 
@@ -153,17 +151,21 @@ class NextLayer:
                 ret.child_layer = layers.ClientTLSLayer(context)
                 return ret
 
-        # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
+        # 3. Setup the HTTP layer for a regular HTTP proxy
         if (
             s(modes.HttpProxy)
             or
             # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
             s(modes.HttpProxy, layers.ClientTLSLayer)
         ):
-            if ctx.options.mode == "regular":
-                return layers.HttpLayer(context, HTTPMode.regular)
-            else:
-                return layers.HttpLayer(context, HTTPMode.upstream)
+            return layers.HttpLayer(context, HTTPMode.regular)
+        # 3b. ... or an upstream proxy.
+        if (
+            s(modes.HttpUpstreamProxy)
+            or
+            s(modes.HttpUpstreamProxy, layers.ClientTLSLayer)
+        ):
+            return layers.HttpLayer(context, HTTPMode.upstream)
 
         # 4. Check for --tcp
         if any(
@@ -186,19 +188,3 @@ class NextLayer:
 
         # 6. Assume HTTP by default.
         return layers.HttpLayer(context, HTTPMode.transparent)
-
-    def make_top_layer(self, context: context.Context) -> layer.Layer:
-        if ctx.options.mode == "regular" or ctx.options.mode.startswith("upstream:"):
-            return layers.modes.HttpProxy(context)
-
-        elif ctx.options.mode == "transparent":
-            return layers.modes.TransparentProxy(context)
-
-        elif ctx.options.mode.startswith("reverse:"):
-            return layers.modes.ReverseProxy(context)
-
-        elif ctx.options.mode == "socks5":
-            return layers.modes.Socks5Proxy(context)
-
-        else:  # pragma: no cover
-            raise AssertionError("Unknown mode.")

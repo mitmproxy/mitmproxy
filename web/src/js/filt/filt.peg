@@ -260,6 +260,12 @@ function tcpFilter(flow){
 }
 tcpFilter.desc = "is a TCP Flow";
 
+// ~udp
+function udpFilter(flow){
+    return flow.type === "udp";
+}
+udpFilter.desc = "is a UDP Flow";
+
 // ~tq
 function requestContentType(regex){
     regex = new RegExp(regex, "i");
@@ -374,6 +380,7 @@ Expr
   / "~src" ws+ s:StringLiteral { return source(s); }
   / "~s" { return responseFilter; }
   / "~tcp" { return tcpFilter; }
+  / "~udp" { return udpFilter; }
   / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
   / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
   / "~t" ws+ s:StringLiteral { return contentType(s); }
