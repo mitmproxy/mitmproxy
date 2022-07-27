@@ -152,13 +152,11 @@ class Flow(stateobject.StateObject):
 
     __types: dict[str, type["Flow"]] = {}
 
-    @classmethod
-    @property
-    def type(cls) -> str:
-        """The flow type, for example `http`, `tcp`, or `dns`."""
-        return cls.__name__.removesuffix("Flow").lower()
+    type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
+    """The flow type, for example `http`, `tcp`, or `dns`."""
 
     def __init_subclass__(cls, **kwargs):
+        cls.type = cls.__name__.removesuffix("Flow").lower()
         Flow.__types[cls.type] = cls
 
     def get_state(self):

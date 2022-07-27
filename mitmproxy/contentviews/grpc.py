@@ -951,7 +951,7 @@ def format_grpc(
 
 @dataclass
 class ViewConfig:
-    parser_options: ProtoParser.ParserOptions = ProtoParser.ParserOptions()
+    parser_options: ProtoParser.ParserOptions = field(default_factory=ProtoParser.ParserOptions)
     parser_rules: list[ProtoParser.ParserRule] = field(default_factory=list)
 
 

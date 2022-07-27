@@ -4,6 +4,9 @@
 
 * Add UDP layer and flow support.
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
+* Setting `connection_strategy` to `lazy` now also disables early 
+  upstream connections to fetch TLS certificate details.
+  (@mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
@@ -18,6 +21,8 @@
 * Remove overambitious assertions in the HTTP state machine,
   fix some error handling.
   ([#5383](https://github.com/mitmproxy/mitmproxy/issues/5383), @mhils)
+* Use default_factory for parser_options.
+  ([#5474](https://github.com/mitmproxy/mitmproxy/issues/5474), @rathann)
 
 ## 15 May 2022: mitmproxy 8.1.0
 
