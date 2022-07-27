@@ -131,9 +131,9 @@ def test_check():
     f.request.raw_content = None
     assert "missing content" in cp.check(f)
 
-    f = tflow.ttcpflow()
-    f.live = False
-    assert "Can only replay HTTP" in cp.check(f)
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        f.live = False
+        assert "Can only replay HTTP" in cp.check(f)
 
 
 async def test_start_stop(tdata):

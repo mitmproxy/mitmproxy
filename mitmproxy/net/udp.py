@@ -304,7 +304,7 @@ class DatagramWriter:
         self._transport.sendto(data, self._remote_addr)
 
     def write_eof(self) -> None:
-        raise NotImplementedError("UDP does not support half-closing.")
+        raise OSError("UDP does not support half-closing.")
 
     def get_extra_info(self, name: str, default: Any = None) -> Any:
         if name == "peername":

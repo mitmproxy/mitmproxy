@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import mitmproxy.types
-from mitmproxy import command, tcp
+from mitmproxy import command, tcp, udp
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -147,6 +147,16 @@ class Save:
 
     def tcp_error(self, flow: tcp.TCPFlow):
         self.tcp_end(flow)
+
+    def udp_start(self, flow: udp.UDPFlow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def udp_end(self, flow: udp.UDPFlow):
+        self.save_flow(flow)
+
+    def udp_error(self, flow: udp.UDPFlow):
+        self.udp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
         self.save_flow(flow)

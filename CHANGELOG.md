@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add UDP layer and flow support.
+  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
 * Setting `connection_strategy` to `lazy` now also disables early 
   upstream connections to fetch TLS certificate details.
   (@mhils)

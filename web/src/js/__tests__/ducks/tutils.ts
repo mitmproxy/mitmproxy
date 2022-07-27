@@ -1,20 +1,21 @@
 import thunk from 'redux-thunk'
 import configureStore, {MockStoreCreator, MockStoreEnhanced} from 'redux-mock-store'
 import {ConnectionState} from '../../ducks/connection'
-import {TDNSFlow, THTTPFlow, TTCPFlow} from './_tflow'
+import {TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow} from './_tflow'
 import {AppDispatch, RootState} from "../../ducks";
-import {DNSFlow, HTTPFlow, TCPFlow} from "../../flow";
+import {DNSFlow, HTTPFlow, TCPFlow, UDPFlow} from "../../flow";
 import {defaultState as defaultConf} from "../../ducks/conf"
 import {defaultState as defaultOptions} from "../../ducks/options"
 
 const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> = configureStore([thunk])
 
-export {THTTPFlow as TFlow, TTCPFlow}
+export {THTTPFlow as TFlow, TTCPFlow, TUDPFlow}
 
 const tflow0: HTTPFlow = THTTPFlow();
 const tflow1: HTTPFlow = THTTPFlow();
 const tflow2: TCPFlow = TTCPFlow();
 const tflow3: DNSFlow = TDNSFlow();
+const tflow4: UDPFlow = TUDPFlow();
 tflow0.modified = true
 tflow0.intercepted = true
 tflow1.id = "flow2";
@@ -78,25 +79,28 @@ export const testState: RootState = {
             [tflow1.id]: tflow1,
             [tflow2.id]: tflow2,
             [tflow3.id]: tflow3,
+            [tflow4.id]: tflow4,
         },
-        filter: '~u /second | ~tcp | ~dns',
+        filter: '~u /second | ~tcp | ~dns | ~udp',
         highlight: '~u /path',
         sort: {
             desc: true,
             column: "path"
         },
-        view: [tflow1, tflow2, tflow3],
-        list: [tflow0, tflow1, tflow2, tflow3],
+        view: [tflow1, tflow2, tflow3, tflow4],
+        list: [tflow0, tflow1, tflow2, tflow3, tflow4],
         listIndex: {
             [tflow0.id]: 0,
             [tflow1.id]: 1,
             [tflow2.id]: 2,
-            [tflow3.id]: 3
+            [tflow3.id]: 3,
+            [tflow4.id]: 4,
         },
         viewIndex: {
             [tflow1.id]: 0,
             [tflow2.id]: 1,
             [tflow3.id]: 2,
+            [tflow4.id]: 3,
         },
     },
     connection: {
