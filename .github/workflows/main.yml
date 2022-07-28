@@ -13,6 +13,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
       - uses: TrueBrain/actions-flake8@c2deca24d388aa5aedd6478332aa9df4600b5eac # v2.1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
@@ -92,7 +95,7 @@ jobs:
           # install dependencies (requires internet connectivity)
           tox -e py --notest  
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"  
+          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
@@ -113,9 +116,6 @@ jobs:
             platform: linux
     runs-on: ${{ matrix.image }}
     env:
-      CI_BUILD_WHEEL: ${{ matrix.platform == 'linux' }}
-      CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: ${{ matrix.platform == 'windows' }}
       CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v2
@@ -131,12 +131,24 @@ jobs:
           path: release/installbuilder/setup
           key: installbuilder
       - run: pip install -e .[dev]
-      - run: python release/cibuild.py build
-      # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
-      - uses: actions/upload-artifact@v2
+      - if: matrix.platform == 'linux'
+        run: python -u release/build.py standalone-binaries wheel
+      - if: matrix.platform == 'windows'
+        run: python -u release/build.py standalone-binaries installbuilder-installer msix-installer
+      - if: matrix.platform == 'macos'
+        run: python -u release/build.py standalone-binaries
+      - if: matrix.platform == 'windows'  # separate artifact because we don't want it on the snapshot server.
+        uses: actions/upload-artifact@v3
         with:
+          name: msix-installer
+          path: release/dist/*.msix
+      - uses: actions/upload-artifact@v3
+        with:
+          # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
           name: binaries.${{ matrix.platform }}
-          path: release/dist
+          path: |
+            release/dist
+            !release/dist/*.msix
 
   test-web-ui:
     runs-on: ubuntu-latest
@@ -182,7 +194,7 @@ jobs:
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: docs
           path: docs/public
@@ -190,9 +202,9 @@ jobs:
   # Separate from everything else because slow.
   build-and-deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && (
-      github.ref == 'refs/heads/main' ||
-      github.ref == 'refs/heads/dockertest' ||
-      startsWith(github.ref, 'refs/tags/')
+      github.ref == 'refs/heads/main'
+      || github.ref == 'refs/heads/citest'
+      || startsWith(github.ref, 'refs/tags/')
       )
     environment: deploy-docker
     needs:
@@ -202,7 +214,6 @@ jobs:
      - docs
     runs-on: ubuntu-latest
     env:
-      CI_BUILD_DOCKER: 1
       DOCKER_USERNAME: mitmbot
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
@@ -218,9 +229,7 @@ jobs:
           path: release/dist
       - uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # v1.2.0
       - uses: docker/setup-buildx-action@b1f1f719c7cd5364be7c82e366366da322d01f7c # v1.6.0
-      - run: pip install -e .[dev]
-      - run: python release/cibuild.py build
-      - run: python release/cibuild.py upload
+      - run: python release/build-and-deploy-docker.py
 
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
@@ -239,6 +248,10 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
+      MSFT_APP_ID: 9NWNDLQMNZD7
+      MSFT_TENANT_ID: ${{ secrets.MSFT_TENANT_ID }}
+      MSFT_CLIENT_ID: ${{ secrets.MSFT_CLIENT_ID }}
+      MSFT_CLIENT_SECRET: ${{ secrets.MSFT_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -248,13 +261,34 @@ jobs:
           python-version: '3.10'
       - run: sudo apt-get update
       - run: sudo apt-get install -y twine awscli
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
+          name: docs
+          path: docs/public
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries.windows
           path: release/dist
-      - run: mv release/dist/docs docs/public
-      # move artifacts from their subfolders into release/dist
-      - run: find release/dist -mindepth 2 -type f -exec mv {} release/dist \;
-      # and then delete the empty folders
-      - run: find release/dist -type d -empty -delete
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries.linux
+          path: release/dist
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries.macos
+          path: release/dist
+      - run: ls docs/public
       - run: ls release/dist
       - run: ./release/deploy.py
+      # We don't want the MSIX installer on the snapshot server, so we get it only now.
+      - if: github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v3
+        with:
+          name: msix-installer
+          path: release/dist/
+      - if: github.ref == 'refs/heads/citest'
+        run: ./release/deploy-microsoft-store.py release/dist/*.msix
+        env:
+          MSFT_APP_FLIGHT: 174ca570-8cae-4444-9858-c07293f1f13a
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: ./release/deploy-microsoft-store.py release/dist/*.msix
