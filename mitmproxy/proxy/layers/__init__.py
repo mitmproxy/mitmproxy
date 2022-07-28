@@ -11,7 +11,6 @@ __all__ = [
     "modes",
     "ClientDTLSLayer",
     "ServerDTLSLayer",
-    "UDPLayer",
     "DNSLayer",
     "HttpLayer",
     "TCPLayer",

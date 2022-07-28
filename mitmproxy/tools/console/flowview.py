@@ -7,7 +7,7 @@ import urwid
 
 import mitmproxy.flow
 import mitmproxy.tools.console.master
-from mitmproxy import contentviews, udp
+from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import http
