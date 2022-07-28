@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tarfile
@@ -158,7 +159,7 @@ def msix_installer():
 
     manifest = TEMP_DIR / "msix/AppxManifest.xml"
     app_version = version()
-    if app_version in ["citest", "dev"]:
+    if not re.match(r"\d+\.\d+\.\d+", app_version):
         app_version = datetime.now().strftime("%y%m.%d.%H%M").replace(".0", ".").replace(".0", ".").replace(".0", ".")
     manifest.write_text(manifest.read_text().replace("1.2.3", app_version))
 
