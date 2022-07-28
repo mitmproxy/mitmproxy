@@ -100,17 +100,3 @@ def test_dns(resp, err):
 def test_invalid():
     with pytest.raises(TypeError):
         next(eventsequence.iterate(42))
-
-
-@pytest.mark.parametrize("err", [False, True])
-def test_udp_flow(err):
-    f = tflow.tudpflow(err=err)
-    i = eventsequence.iterate(f)
-    assert isinstance(next(i), layers.udp.UdpStartHook)
-    assert isinstance(next(i), layers.udp.UdpMessageHook)
-    assert len(f.messages) == 1
-    assert isinstance(next(i), layers.udp.UdpStartHook)
-    assert isinstance(next(i), layers.udp.UdpMessageHook)
-    assert len(f.messages) == 2
-    if err:
-        assert isinstance(next(i), layers.udp.UdpErrorHook)
