@@ -54,7 +54,7 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("socks5")
     assert ProxyMode.parse("dns").resolve_local
     assert ProxyMode.parse("dns:reverse:8.8.8.8")
-    assert ProxyMode.parse("dtls:reverse:127.0.0.1:0")
+    assert ProxyMode.parse("dtls:reverse:127.0.0.1:8004")
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")
