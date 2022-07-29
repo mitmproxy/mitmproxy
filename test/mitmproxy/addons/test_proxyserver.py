@@ -290,3 +290,46 @@ def test_transparent_init(monkeypatch):
     with taddons.context(ps) as tctx:
         tctx.configure(ps, mode=["transparent"], server=False)
         assert init.called
+
+
+@asynccontextmanager
+async def udp_server(handle_conn) -> Address:
+    server = await udp.start_server(handle_conn, "127.0.0.1", 0)
+    try:
+        yield server.sockets[0].getsockname()
+    finally:
+        server.close()
+
+
+async def test_dtls(monkeypatch) -> None:
+    def server_handler(
+            transport: asyncio.DatagramTransport,
+            data: bytes,
+            remote_addr: Address,
+            _: Address,
+    ):
+        assert data == b"\x16"
+        transport.sendto(b"\x01", remote_addr)
+
+    ps = Proxyserver()
+
+    # We just want to relay the messages and skip the handshake.
+    monkeypatch.setattr(layers, "ServerTLSLayer", layers.UDPLayer)
+
+    with taddons.context(ps) as tctx:
+        state = HelperAddon()
+        tctx.master.addons.add(state)
+        async with udp_server(server_handler) as server_addr:
+            mode = f"dtls:reverse:{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            tctx.configure(ps, mode=[mode])
+            await ps.running()
+            await tctx.master.await_log("DTLS server listening at", level="info")
+            assert ps.servers
+            addr = ps.servers[mode].listen_addrs[0]
+            r, w = await udp.open_connection(*addr)
+            w.write(b"\x16")
+            assert b"\x01" == await r.read(udp.MAX_DATAGRAM_SIZE)
+            assert repr(ps) == "Proxyserver(1 active conns)"
+            assert len(ps.connections) == 1
+            tctx.configure(ps, server=False)
+            await tctx.master.await_log("Stopped DTLS proxy server.", level="info")

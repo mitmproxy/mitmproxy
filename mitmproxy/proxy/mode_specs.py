@@ -231,3 +231,20 @@ class DnsMode(ProxyMode):
     @property
     def resolve_local(self) -> bool:
         return self.data in ["", "resolve-local"]
+
+
+class DtlsMode(ProxyMode):
+    default_port = 8084
+    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
+    scheme: Literal["dtls"]  # DoH, DoQ, ...
+    address: tuple[str, int] | None = None
+
+    # noinspection PyDataclass
+    def __post_init__(self) -> None:
+        m, _, server = self.data.partition(":")
+        if m != "reverse":
+            raise ValueError("invalid dtls mode")
+        scheme, self.address = server_spec.parse(server, "dtls")
+        if scheme != "dtls":
+            raise ValueError("invalid dtls scheme")
+        self.scheme = scheme

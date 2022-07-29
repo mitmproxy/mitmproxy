@@ -45,7 +45,7 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
         scheme = m.group("scheme")
     else:
         scheme = default_scheme
-    if scheme not in ("tcp", "tls", "dns", "http", "https"):
+    if scheme not in ("tcp", "tls", "dns", "dtls", "http", "https"):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")
