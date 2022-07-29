@@ -64,8 +64,8 @@ class ClientHello:
         The [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication),
         which indicates which hostname the client wants to connect to.
         """
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 is_valid_sni_extension = (
                     extension.type == 0x00
                     and len(extension.body.server_names) == 1
@@ -82,8 +82,8 @@ class ClientHello:
         The application layer protocols offered by the client as part of the
         [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation) TLS extension.
         """
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 if extension.type == 0x10:
                     return list(x.name for x in extension.body.alpn_protocols)
         return []
@@ -92,8 +92,8 @@ class ClientHello:
     def extensions(self) -> list[tuple[int, bytes]]:
         """The raw list of extensions in the form of `(extension_type, raw_bytes)` tuples."""
         ret = []
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 body = getattr(extension, "_raw_body", extension.body)
                 ret.append((extension.type, body))
         return ret
