@@ -215,6 +215,10 @@ export const quickactions: FlowColumn = ({flow}) => {
         resume_or_replay = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.replay(flow))}>
             <i className="fa fa-fw fa-repeat text-primary"/>
         </a>;
+    } else {
+        resume_or_replay = <a href="#" className="quickaction" onClick={() => 0}>
+            <i className="fa fa-fw text-primary"/>
+        </a>;
     }
 
     return (
