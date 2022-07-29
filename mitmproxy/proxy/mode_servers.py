@@ -297,8 +297,9 @@ class DtlsInstance(ServerInstance[mode_specs.DtlsMode]):
                 ctx.master, reader, writer, ctx.options, self.mode
             )
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
-            handler.layer = layers.ServerDTLSLayer(handler.layer.context)
-            handler.layer.child_layer = layers.ClientDTLSLayer(handler.layer.context)
+            handler.layer.context.client.transport_protocol = "udp"
+            handler.layer = layers.ServerTLSLayer(handler.layer.context)
+            handler.layer.child_layer = layers.ClientTLSLayer(handler.layer.context)
             handler.layer.child_layer.child_layer = layers.UDPLayer(handler.layer.context)
             handler.layer.context.server.address = self.mode.address
             handler.layer.context.server.transport_protocol = "udp"

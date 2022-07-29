@@ -62,10 +62,10 @@ def test_get_client_hello():
 
 
 def test_parse_client_hello():
-    assert dtls.parse_client_hello(client_hello_with_extensions).sni == "example.com"
-    assert dtls.parse_client_hello(client_hello_with_extensions[:50]) is None
+    assert dtls.dtls_parse_client_hello(client_hello_with_extensions).sni == "example.com"
+    assert dtls.dtls_parse_client_hello(client_hello_with_extensions[:50]) is None
     with pytest.raises(ValueError):
-        dtls.parse_client_hello(
+        dtls.dtls_parse_client_hello(
             # Server Name Length longer than actual Server Name
             client_hello_with_extensions[:-16] + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
