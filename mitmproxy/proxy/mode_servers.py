@@ -268,3 +268,65 @@ class DnsInstance(ServerInstance[mode_specs.DnsMode]):
     def listen_addrs(self) -> tuple[Address, ...]:
         assert self.server
         return tuple(s.getsockname() for s in self.server.sockets)
+
+
+class DtlsInstance(ServerInstance[mode_specs.DtlsMode]):
+    server: udp.UdpServer | None = None
+
+    async def start(self):
+        assert not self.server
+        self.server = await udp.start_server(
+            self.handle_dtls_datagram,
+            self.mode.listen_host(ctx.options.listen_host),
+            self.mode.listen_port(ctx.options.listen_port),
+            transparent=False
+        )
+        addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
+        ctx.log.info(
+            f"DTLS server listening at {' and '.join(addrs)}."
+        )
+
+    async def stop(self):
+        assert self.server
+        self.server.close()
+        await self.server.wait_closed()
+        ctx.log.info(f"Stopped {self.mode.type} proxy server.")
+
+    def handle_dtls_datagram(
+            self,
+            transport: asyncio.DatagramTransport,
+            data: bytes,
+            remote_addr: Address,
+            local_addr: Address,
+    ):
+        connection_id = ("dtls", remote_addr, local_addr)
+        if connection_id not in self.manager.connections:
+            reader = udp.DatagramReader()
+            writer = udp.DatagramWriter(transport, remote_addr, reader)
+            handler = ProxyConnectionHandler(
+                ctx.master, reader, writer, ctx.options, self.mode
+            )
+            handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
+            handler.layer.context.client.transport_protocol = "udp"
+            handler.layer = layers.ServerTLSLayer(handler.layer.context)
+            handler.layer.child_layer = layers.ClientTLSLayer(handler.layer.context)
+            handler.layer.child_layer.child_layer = layers.UDPLayer(handler.layer.context)
+            handler.layer.context.server.address = self.mode.address
+            handler.layer.context.server.transport_protocol = "udp"
+
+            # pre-register here - we may get datagrams before the task is executed.
+            self.manager.connections[connection_id] = handler
+            asyncio.create_task(self.handle_dtls_connection(connection_id, handler))
+        else:
+            handler = self.manager.connections[connection_id]
+            reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)
+        reader.feed_data(data, remote_addr)
+
+    async def handle_dtls_connection(self, connection_id, handler):  # pragma: no cover
+        with self.manager.register_connection(connection_id, handler):
+            await handler.handle_client()
+
+    @cached_property
+    def listen_addrs(self) -> tuple[Address, ...]:
+        assert self.server
+        return tuple(s.getsockname() for s in self.server.sockets)

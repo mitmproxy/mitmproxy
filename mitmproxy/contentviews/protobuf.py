@@ -22,15 +22,24 @@ def write_buf(out, field_tag, body, indent_level):
         out.write(" " * indent_level + "}\n")
 
 
+def _parse_proto(raw: bytes) -> list[google_protobuf.GoogleProtobuf.Pair]:
+    """Parse a bytestring into protobuf pairs and make sure that all pairs have a valid wire type."""
+    buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(raw)))
+    for pair in buf.pairs:
+        if not isinstance(pair.wire_type, google_protobuf.GoogleProtobuf.Pair.WireTypes):
+            raise ValueError("Not a protobuf.")
+    return buf.pairs
+
+
 def format_pbuf(raw):
     out = io.StringIO()
     stack = []
 
     try:
-        buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(raw)))
+        pairs = _parse_proto(raw)
     except:
         return False
-    stack.extend([(pair, 0) for pair in buf.pairs[::-1]])
+    stack.extend([(pair, 0) for pair in pairs[::-1]])
 
     while len(stack):
         pair, indent_level = stack.pop()
@@ -48,8 +57,8 @@ def format_pbuf(raw):
             body = pair.value
 
         try:
-            next_buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(body)))
-            stack.extend([(pair, indent_level + 2) for pair in next_buf.pairs[::-1]])
+            pairs = _parse_proto(body)
+            stack.extend([(pair, indent_level + 2) for pair in pairs[::-1]])
             write_buf(out, pair.field_tag, None, indent_level)
         except:
             write_buf(out, pair.field_tag, body, indent_level)

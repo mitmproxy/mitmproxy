@@ -1,9 +1,5 @@
 meta:
-  id: tls_client_hello
-  xref:
-    rfc: 5246 # TLS 1.2
-    wikidata: Q206494 # TLS
-  license: MIT
+  id: dtls_client_hello
   endian: be
 
 seq:
@@ -15,6 +11,9 @@ seq:
 
   - id: session_id
     type: session_id
+
+  - id: cookie
+    type: cookie
 
   - id: cipher_suites
     type: cipher_suites
@@ -49,6 +48,14 @@ types:
         type: u1
 
       - id: sid
+        size: len
+
+  cookie:
+    seq:
+      - id: len
+        type: u1
+
+      - id: cookie
         size: len
 
   cipher_suites:

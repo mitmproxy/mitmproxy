@@ -522,7 +522,7 @@ class TestMatchingUDPFlow:
     def q(self, q, o):
         return flowfilter.parse(q)(o)
 
-    def test_tcp(self):
+    def test_udp(self):
         f = self.flow()
         assert self.q("~udp", f)
         assert not self.q("~tcp", f)

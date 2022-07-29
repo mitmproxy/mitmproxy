@@ -7,7 +7,7 @@ from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
 if getattr(kaitaistruct, 'API_VERSION', (0, 9)) < (0, 9):
     raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
 
-class TlsClientHello(KaitaiStruct):
+class DtlsClientHello(KaitaiStruct):
     def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
@@ -15,13 +15,14 @@ class TlsClientHello(KaitaiStruct):
         self._read()
 
     def _read(self):
-        self.version = TlsClientHello.Version(self._io, self, self._root)
-        self.random = TlsClientHello.Random(self._io, self, self._root)
-        self.session_id = TlsClientHello.SessionId(self._io, self, self._root)
-        self.cipher_suites = TlsClientHello.CipherSuites(self._io, self, self._root)
-        self.compression_methods = TlsClientHello.CompressionMethods(self._io, self, self._root)
+        self.version = DtlsClientHello.Version(self._io, self, self._root)
+        self.random = DtlsClientHello.Random(self._io, self, self._root)
+        self.session_id = DtlsClientHello.SessionId(self._io, self, self._root)
+        self.cookie = DtlsClientHello.Cookie(self._io, self, self._root)
+        self.cipher_suites = DtlsClientHello.CipherSuites(self._io, self, self._root)
+        self.compression_methods = DtlsClientHello.CompressionMethods(self._io, self, self._root)
         if self._io.is_eof() == False:
-            self.extensions = TlsClientHello.Extensions(self._io, self, self._root)
+            self.extensions = DtlsClientHello.Extensions(self._io, self, self._root)
 
 
     class ServerName(KaitaiStruct):
@@ -73,7 +74,7 @@ class TlsClientHello(KaitaiStruct):
             self.server_names = []
             i = 0
             while not self._io.is_eof():
-                self.server_names.append(TlsClientHello.ServerName(self._io, self, self._root))
+                self.server_names.append(DtlsClientHello.ServerName(self._io, self, self._root))
                 i += 1
 
 
@@ -117,7 +118,7 @@ class TlsClientHello(KaitaiStruct):
             self.alpn_protocols = []
             i = 0
             while not self._io.is_eof():
-                self.alpn_protocols.append(TlsClientHello.Protocol(self._io, self, self._root))
+                self.alpn_protocols.append(DtlsClientHello.Protocol(self._io, self, self._root))
                 i += 1
 
 
@@ -134,7 +135,7 @@ class TlsClientHello(KaitaiStruct):
             self.extensions = []
             i = 0
             while not self._io.is_eof():
-                self.extensions.append(TlsClientHello.Extension(self._io, self, self._root))
+                self.extensions.append(DtlsClientHello.Extension(self._io, self, self._root))
                 i += 1
 
 
@@ -149,6 +150,18 @@ class TlsClientHello(KaitaiStruct):
         def _read(self):
             self.major = self._io.read_u1()
             self.minor = self._io.read_u1()
+
+
+    class Cookie(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.len = self._io.read_u1()
+            self.cookie = self._io.read_bytes(self.len)
 
 
     class Protocol(KaitaiStruct):
@@ -177,11 +190,11 @@ class TlsClientHello(KaitaiStruct):
             if _on == 0:
                 self._raw_body = self._io.read_bytes(self.len)
                 _io__raw_body = KaitaiStream(BytesIO(self._raw_body))
-                self.body = TlsClientHello.Sni(_io__raw_body, self, self._root)
+                self.body = DtlsClientHello.Sni(_io__raw_body, self, self._root)
             elif _on == 16:
                 self._raw_body = self._io.read_bytes(self.len)
                 _io__raw_body = KaitaiStream(BytesIO(self._raw_body))
-                self.body = TlsClientHello.Alpn(_io__raw_body, self, self._root)
+                self.body = DtlsClientHello.Alpn(_io__raw_body, self, self._root)
             else:
                 self.body = self._io.read_bytes(self.len)
 
