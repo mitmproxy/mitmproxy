@@ -314,7 +314,7 @@ async def test_dtls(monkeypatch) -> None:
     ps = Proxyserver()
 
     # We just want to relay the messages and skip the handshake.
-    monkeypatch.setattr(layers, "ServerDTLSLayer", layers.UDPLayer)
+    monkeypatch.setattr(layers, "ServerTLSLayer", layers.UDPLayer)
 
     with taddons.context(ps) as tctx:
         state = HelperAddon()
