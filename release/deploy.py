@@ -32,6 +32,8 @@ if __name__ == "__main__":
             "cp",
             "--acl",
             "public-read",
+            "--exclude",
+            "*.msix",
             root / "release/dist",
             f"s3://snapshots.mitmproxy.org/{upload_dir}/",
             "--recursive",

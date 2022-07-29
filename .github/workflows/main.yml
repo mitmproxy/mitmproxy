@@ -131,24 +131,17 @@ jobs:
           path: release/installbuilder/setup
           key: installbuilder
       - run: pip install -e .[dev]
+      - run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'linux'
-        run: python -u release/build.py standalone-binaries wheel
-      - if: matrix.platform == 'windows'
-        run: python -u release/build.py standalone-binaries installbuilder-installer msix-installer
-      - if: matrix.platform == 'macos'
-        run: python -u release/build.py standalone-binaries
-      - if: matrix.platform == 'windows'  # separate artifact because we don't want it on the snapshot server.
-        uses: actions/upload-artifact@v3
-        with:
-          name: msix-installer
-          path: release/dist/*.msix
+        run: python -u release/build.py --dirty wheel
+      - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+        run: python -u release/build.py --dirty installbuilder-installer msix-installer
       - uses: actions/upload-artifact@v3
         with:
           # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
           name: binaries.${{ matrix.platform }}
           path: |
             release/dist
-            !release/dist/*.msix
 
   test-web-ui:
     runs-on: ubuntu-latest
@@ -280,12 +273,6 @@ jobs:
       - run: ls docs/public
       - run: ls release/dist
       - run: ./release/deploy.py
-      # We don't want the MSIX installer on the snapshot server, so we get it only now.
-      - if: github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')
-        uses: actions/download-artifact@v3
-        with:
-          name: msix-installer
-          path: release/dist/
       - if: github.ref == 'refs/heads/citest'
         run: ./release/deploy-microsoft-store.py release/dist/*.msix
         env:
