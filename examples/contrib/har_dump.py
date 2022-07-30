@@ -24,6 +24,19 @@ from mitmproxy import version
 from mitmproxy import ctx
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
+import re
+import sys
+
+args = sys.argv[1:]
+
+try:
+    indexOfSet = args.index('--set')
+    setparam = args[indexOfSet + 1]
+    showhost=setparam.replace("showhost=", "")
+    if showhost != "true": raise
+    showhost = True
+except:
+    showhost = False
 
 HAR: dict = {}
 
@@ -102,12 +115,17 @@ def response(flow: mitmproxy.http.HTTPFlow):
     response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
     response_body_compression = response_body_decoded_size - response_body_size
 
+    if showhost != True:
+        url = flow.request.url
+    else:
+        url = re.sub('://[^/]+/', "://" +flow.request.pretty_host+"/", flow.request.url)
+
     entry = {
         "startedDateTime": started_date_time,
         "time": full_time,
         "request": {
             "method": flow.request.method,
-            "url": flow.request.url,
+            "url": url,
             "httpVersion": flow.request.http_version,
             "cookies": format_request_cookies(flow.request.cookies.fields),
             "headers": name_value(flow.request.headers),
