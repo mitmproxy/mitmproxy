@@ -110,12 +110,12 @@ async def test_udp_connection_reuse(monkeypatch):
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
-    monkeypatch.setattr(DnsInstance, "handle_dns_connection", AsyncMock())
+    monkeypatch.setattr(DnsInstance, "handle_udp_connection", AsyncMock())
 
     with taddons.context():
         inst = cast(DnsInstance, ServerInstance.make("dns", manager))
-        inst.handle_dns_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
-        inst.handle_dns_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
+        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
+        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
         await asyncio.sleep(0)
 
         assert len(inst.manager.connections) == 1
@@ -126,12 +126,12 @@ async def test_dtls_connection_reuse(monkeypatch):
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
-    monkeypatch.setattr(DtlsInstance, "handle_dtls_connection", AsyncMock())
+    monkeypatch.setattr(DtlsInstance, "handle_udp_connection", AsyncMock())
 
     with taddons.context():
         inst = cast(DtlsInstance, ServerInstance.make("dtls:reverse:127.0.0.1:0", manager))
-        inst.handle_dtls_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
-        inst.handle_dtls_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
+        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
+        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
         await asyncio.sleep(0)
 
         assert len(inst.manager.connections) == 1
