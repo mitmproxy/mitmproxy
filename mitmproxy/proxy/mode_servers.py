@@ -118,7 +118,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
                 assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
-            raise OSError(message)
+            raise OSError(e.errno, message, e.filename) from e
 
         addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
         ctx.log.info(

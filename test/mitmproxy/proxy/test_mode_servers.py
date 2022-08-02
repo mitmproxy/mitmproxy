@@ -52,6 +52,11 @@ async def test_tcp_start_error():
         inst2 = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
         with pytest.raises(OSError, match=f"proxy failed to listen on 127\\.0\\.0\\.1:{port}"):
             await inst2.start()
+        tctx.options.listen_host = "127.0.0.1"
+        tctx.options.listen_port = port
+        inst3 = ServerInstance.make(f"regular", manager)
+        with pytest.raises(OSError):
+            await inst3.start()
 
 
 async def test_udp_start_stop():
