@@ -74,6 +74,16 @@ class DoneHook(Hook):
 
 
 @dataclass
+class StartupHook(Hook):
+    """
+    Called when mitmproxy has loaded all addons and configured all options.
+    Use this hook to perform any tasks that are required to enter the
+    running state.
+    This hook supports the `async` pattern, i.e. can return a coroutine.
+    """
+
+
+@dataclass
 class RunningHook(Hook):
     """
     Called when the proxy is completely up and running. At this point,

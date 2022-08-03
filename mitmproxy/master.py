@@ -45,7 +45,7 @@ class Master:
 
             # Handle scheduled tasks (configure()) first.
             await asyncio.sleep(0)
-            # TODO: Bind proxy server here before invoking running().
+            await self.addons.trigger_event(hooks.StartupHook())
             await self.running()
             try:
                 await self.should_exit.wait()

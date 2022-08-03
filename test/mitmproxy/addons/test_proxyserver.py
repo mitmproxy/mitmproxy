@@ -62,7 +62,8 @@ async def test_start_stop():
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert not ps.servers
-            await ps.running()
+            await ps.startup()
+            ps.running()
             await tctx.master.await_log("HTTP(S) proxy listening", level="info")
             assert ps.servers
 
@@ -114,7 +115,8 @@ async def test_inject() -> None:
         tctx.master.addons.add(state)
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-            await ps.running()
+            await ps.startup()
+            ps.running()
             await tctx.master.await_log("HTTP(S) proxy listening", level="info")
             proxy_addr = ps.servers["regular"].listen_addrs[0]
             reader, writer = await asyncio.open_connection(*proxy_addr)
@@ -160,7 +162,8 @@ async def test_warn_no_nextlayer():
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, server=False)
-        await ps.running()
+        await ps.startup()
+        ps.running()
         await tctx.master.await_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
 
 
@@ -171,7 +174,8 @@ async def test_self_connect():
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        await ps.running()
+        await ps.startup()
+        ps.running()
         await tctx.master.await_log("HTTP(S) proxy listening", level="info")
         assert ps.servers
         server.address = ("localhost", ps.servers["regular"].listen_addrs[0][1])
@@ -210,9 +214,9 @@ async def test_startup_err(monkeypatch) -> None:
     monkeypatch.setattr(asyncio, "start_server", _raise)
 
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        await ps.running()
-        await tctx.master.await_log("cannot bind", level="error")
+    with taddons.context(ps):
+        with pytest.raises(exceptions.OptionsError, match="cannot bind"):
+            await ps.startup()
 
 
 async def test_shutdown_err() -> None:
@@ -222,7 +226,8 @@ async def test_shutdown_err() -> None:
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        await ps.running()
+        await ps.startup()
+        ps.running()
         assert ps.servers
         for server in ps.servers.values():
             setattr(server, "stop", _raise)
@@ -249,7 +254,8 @@ async def test_dns() -> None:
             ps,
             mode=["dns@127.0.0.1:0"],
         )
-        await ps.running()
+        await ps.startup()
+        ps.running()
         await tctx.master.await_log("DNS server listening at", level="info")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
@@ -322,7 +328,8 @@ async def test_dtls(monkeypatch) -> None:
         async with udp_server(server_handler) as server_addr:
             mode = f"dtls:reverse:{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
-            await ps.running()
+            await ps.startup()
+            ps.running()
             await tctx.master.await_log("DTLS server listening at", level="info")
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
