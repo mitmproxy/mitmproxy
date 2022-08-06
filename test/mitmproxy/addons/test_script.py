@@ -317,7 +317,6 @@ def test_order(tdata, capsys):
         r"\('recorder', 'load', .+\n"
         r"\('recorder', 'configure', .+\n"
         r"Loading script.+shutdown.py\n"
-        r"\('recorder', 'startup', .+\n"
         r"\('recorder', 'running', .+\n"
         r"\('recorder', 'done', .+\n$",
         capsys.readouterr().out,

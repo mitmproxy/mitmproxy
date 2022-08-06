@@ -75,7 +75,6 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
         "",
         [
             addonmanager.LoadHook,
-            hooks.StartupHook,
             hooks.RunningHook,
             hooks.ConfigureHook,
             hooks.DoneHook,

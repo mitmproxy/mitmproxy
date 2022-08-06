@@ -127,12 +127,6 @@ class Proxyserver(ServerManager):
             """Set the local IP address that mitmproxy should use when connecting to upstream servers.""",
         )
 
-    async def startup(self):
-        errs = await self.setup_servers()
-        if errs:
-            errs_str = "\n".join(str(err) for err in errs)
-            raise exceptions.OptionsError(f"The following server instances failed to start:\n\n{errs_str}")
-
     def running(self):
         self.is_running = True
 
@@ -199,8 +193,8 @@ class Proxyserver(ServerManager):
             if self.is_running:
                 asyncio.create_task(self.setup_servers())
 
-    async def setup_servers(self) -> list[Exception]:
-        errs = []
+    async def setup_servers(self) -> bool:
+        all_ok = True
         async with self._lock:
             new_servers: dict[str, ServerInstance] = dict.fromkeys(ctx.options.mode)  # type: ignore
             if not ctx.options.server:
@@ -213,7 +207,7 @@ class Proxyserver(ServerManager):
             ]
             for ret in await asyncio.gather(*shutdown_tasks, return_exceptions=True):
                 if ret:
-                    errs.append(ret)
+                    all_ok = False
                     ctx.log.error(str(ret))
 
             new_instances: list[ServerInstance] = []
@@ -227,11 +221,11 @@ class Proxyserver(ServerManager):
 
             for ret in await asyncio.gather(*[m.start() for m in new_instances], return_exceptions=True):
                 if ret:
-                    errs.append(ret)
+                    all_ok = False
                     ctx.log.error(str(ret))
 
             self.servers = new_servers
-            return errs
+            return all_ok
 
     def listen_addrs(self) -> list[Address]:
         return [
