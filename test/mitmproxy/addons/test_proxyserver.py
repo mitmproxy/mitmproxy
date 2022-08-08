@@ -64,7 +64,7 @@ async def test_start_stop():
             assert not ps.servers
             assert await ps.setup_servers()
             ps.running()
-            await tctx.master.await_log("HTTP(S) proxy listening", level="info")
+            await tctx.master.await_log("HTTP(S) proxy listening at", level="info")
             assert ps.servers
 
             proxy_addr = ps.listen_addrs()[0]
@@ -79,7 +79,7 @@ async def test_start_stop():
 
             await ps.setup_servers()  # assert this can always be called without side effects
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("Stopped regular proxy server.", level="info")
+            await tctx.master.await_log("Stopped HTTP(S) proxy at", level="info")
             assert not ps.servers
             assert state.flows
             assert state.flows[0].request.path == "/hello"
@@ -275,7 +275,7 @@ async def test_dns() -> None:
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 2
         tctx.configure(ps, server=False)
-        await tctx.master.await_log("Stopped dns proxy server.", level="info")
+        await tctx.master.await_log("Stopped DNS server at", level="info")
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -337,4 +337,4 @@ async def test_dtls(monkeypatch) -> None:
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("Stopped DTLS proxy server.", level="info")
+            await tctx.master.await_log("Stopped DTLS server at", level="info")

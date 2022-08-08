@@ -139,6 +139,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def __init__(self, mode: M, manager: ServerManager):
         super().__init__(mode, manager)
         self._lock: asyncio.Lock = asyncio.Lock()
+        self._listen_addr: tuple[Address, ...] = tuple()
 
     async def start(self):
         host = self.mode.listen_host(ctx.options.listen_host)
@@ -160,14 +161,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 await self.report(state=ServerInstanceState.STOPPED, exception=sys.exc_info()[1])
                 raise
             else:
-                # make a copy within lock
-                listen_addrs = self.listen_addrs
+                listen_addrs = tuple(s.getsockname() for s in self.server.sockets)
+                self._listen_addrs = listen_addrs
                 await self.report(state=ServerInstanceState.RUNNING)
 
-        addrs = {f"{human.format_address(s)}" for s in listen_addrs}
-        ctx.log.info(
-            f"{self.log_desc} listening at {' and '.join(addrs)}."
-        )
+        ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, listen_addrs))}.")
 
     async def stop(self):
         async with self._lock:
@@ -183,9 +181,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 raise
             else:
                 self.server = None
+                listen_addrs = self._listen_addrs
+                self._listen_addrs = None
                 await self.report(state=ServerInstanceState.STOPPED)
 
-        ctx.log.info(f"Stopped {self.mode.type} proxy server.")
+        ctx.log.info(f"Stopped {self.log_desc} at {' and '.join(map(human.format_address, listen_addrs))}.")
 
     @abstractmethod
     async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
@@ -198,7 +198,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        return tuple() if self.server is None else tuple(s.getsockname() for s in self.server.sockets)
+        return self._listen_addrs
 
 
 class TcpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):

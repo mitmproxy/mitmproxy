@@ -55,7 +55,7 @@ async def test_tcp_start_stop():
         assert await tctx.master.await_log("client disconnect")
 
         await inst.stop()
-        assert await tctx.master.await_log("Stopped regular proxy server.")
+        assert await tctx.master.await_log("stopped HTTP(S) proxy")
 
 
 async def test_tcp_start_error():

@@ -68,9 +68,7 @@ class Servers:
         # signal with blinker, but support async registrations
         aws = [
             aw
-            for _, aw in self.changed.send(
-                self, added=added, updated=updated, removed=removed
-            )
+            for _, aw in self.changed.send(self, added=added, updated=updated, removed=removed)
             if aw is not None and inspect.isawaitable(aw)
         ]
         if aws:
