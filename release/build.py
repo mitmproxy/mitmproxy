@@ -89,15 +89,15 @@ def version() -> str:
 
 
 def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
-    match platform.system():
-        case "Windows":
-            return "windows"
-        case "Linux":
-            return "linux"
-        case "Darwin":
-            return "macos"
-        case _:
-            return "unknown"
+    pf = platform.system()
+    if pf == "Windows":
+        return "windows"
+    elif pf == "Linux":
+        return "linux"
+    elif pf == "Darwin":
+        return "macos"
+    else:
+        return "unknown"
 
 
 def _pyinstaller(specfile: str) -> None:

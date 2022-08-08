@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import asyncio
 import collections
+import inspect
 import ipaddress
 from contextlib import contextmanager
-from typing import Optional
+import sys
+from typing import Any, Coroutine, Iterable, Iterator, Optional
+import blinker
 
 from wsproto.frame_protocol import Opcode
 
@@ -25,8 +28,115 @@ from mitmproxy.flow import Flow
 from mitmproxy.proxy import events, mode_specs, server_hooks
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
+from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerInstanceState, ServerManager
 from mitmproxy.utils import human
+
+
+class Servers:
+    def __init__(self, manager: ServerManager):
+        self.changed = blinker.Signal()
+        self._specs: set[mode_specs.ProxyMode] = set()
+        self._instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
+        self._lock = asyncio.Lock()
+        self._manager = manager
+
+    async def notify(
+        self,
+        added: set[ServerInstance] = set(),
+        updated: set[ServerInstance] = set(),
+        removed: set[ServerInstance] = set(),
+    ) -> None:
+        async def restart(instance: ServerInstance):
+            try:
+                await instance.start()
+            except:
+                ctx.log.error(str(sys.exc_info()[1]))
+
+        # handle instance updates of orderly stopped instances that haven't been removed yet
+        if updated:
+            async with self._lock:
+                for instance in updated.intersection(self._instances.values()):
+                    if instance.state is ServerInstanceState.STOPPED and instance.exception is None:
+                        if instance.mode in self._specs:
+                            # restart the stopped instance, since its mode is still needed
+                            asyncio.create_task(restart(instance))
+                        else:
+                            # remove the stopped instance, since its mode is no longer needed
+                            del self._instances[instance.mode]
+                            removed.add(instance)
+
+        # signal with blinker, but support async registrations
+        aws = [
+            aw
+            for _, aw in self.changed.send(
+                self, added=added, updated=updated, removed=removed
+            )
+            if aw is not None and inspect.isawaitable(aw)
+        ]
+        if aws:
+            await asyncio.wait(aws)
+
+    async def setup(self, modes: Iterable[mode_specs.ProxyMode]) -> bool:
+        tasks: list[Coroutine[Any, Any, None]] = list()
+        added: set[ServerInstance] = set()
+        removed: set[ServerInstance] = set()
+        async with self._lock:
+            self._specs = set(modes) if ctx.options.server else set()
+            # go over all existing instances and remove valid ones from a copy of specs
+            missing_specs = self._specs.copy()
+            for spec, instance in self._instances.copy().items():
+                if spec in self._specs:
+                    # the instance's mode is still configured
+                    if instance.state is ServerInstanceState.STOP_PENDING:
+                        if instance.exception is None:
+                            # it's still stopping, keep waiting and don't create a new instance
+                            missing_specs.remove(spec)
+                        else:
+                            # stopping failed, remove the instance forcefully
+                            del self._instances[spec]
+                            removed.add(instance)
+                    else:
+                        # the instance is in a start(able) or running state, so don't create a new instance
+                        missing_specs.remove(spec)
+                        if instance.state is ServerInstanceState.STOPPED:
+                            # try to start the instance (again)
+                            tasks.append(instance.start())
+                else:
+                    # the instance is no longer configured
+                    if instance.state is ServerInstanceState.STOPPED:
+                        # it's stopped, so remove it immediately
+                        del self._instances[spec]
+                        removed.add(instance)
+                    else:
+                        # otherwise try to stop it (again) and remove it later
+                        tasks.append(instance.stop())
+
+            # create and start all missing modes
+            for spec in missing_specs:
+                instance = ServerInstance.make(spec, self._manager)
+                self._instances[spec] = instance
+                added.add(instance)
+                tasks.append(instance.start())
+
+        # we are out of the lock, notify listeners about the changes and wait for the tasks
+        await self.notify(added=added, removed=removed)
+        all_ok = True
+        for ret in await asyncio.gather(*tasks, return_exceptions=True):
+            if ret:
+                all_ok = False
+                ctx.log.error(str(ret))
+        return all_ok
+
+    def __len__(self) -> int:
+        return len(self._instances)
+
+    def __iter__(self) -> Iterator[ServerInstance]:
+        return iter(self._instances.values())
+
+    def __getitem__(self, mode: str | mode_specs.ProxyMode) -> ServerInstance:
+        if isinstance(mode, str):
+            mode = mode_specs.ProxyMode.parse(mode)
+        return self._instances[mode]
 
 
 class Proxyserver(ServerManager):
@@ -34,19 +144,21 @@ class Proxyserver(ServerManager):
     This addon runs the actual proxy server.
     """
     connections: dict[tuple, ProxyConnectionHandler]
-    servers: dict[str, ServerInstance]
+    servers: Servers
+
     is_running: bool
-    _lock: asyncio.Lock
     _connect_addr: Optional[Address] = None
 
     def __init__(self):
         self.connections = {}
-        self.servers = {}
+        self.servers = Servers(self)
         self.is_running = False
-        self._lock = asyncio.Lock()
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
+
+    async def update_instance(self, instance: ServerInstance):
+        await self.servers.notify(updated={instance})
 
     @contextmanager
     def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
@@ -191,46 +303,15 @@ class Proxyserver(ServerManager):
                     raise exceptions.OptionsError("Transparent mode not supported on this platform.")
 
             if self.is_running:
-                asyncio.create_task(self.setup_servers())
+                asyncio.create_task(self.servers.setup(modes))
 
     async def setup_servers(self) -> bool:
-        all_ok = True
-        async with self._lock:
-            new_servers: dict[str, ServerInstance] = dict.fromkeys(ctx.options.mode)  # type: ignore
-            if not ctx.options.server:
-                new_servers.clear()
-
-            # Shutdown modes that have been removed from the list.
-            shutdown_tasks = [
-                s.stop() for spec, s in self.servers.items()
-                if spec not in new_servers
-            ]
-            for ret in await asyncio.gather(*shutdown_tasks, return_exceptions=True):
-                if ret:
-                    all_ok = False
-                    ctx.log.error(str(ret))
-
-            new_instances: list[ServerInstance] = []
-            for spec in new_servers:
-                if existing := self.servers.get(spec, None):
-                    new_servers[spec] = existing
-                else:
-                    instance: ServerInstance = ServerInstance.make(spec, self)
-                    new_instances.append(instance)
-                    new_servers[spec] = instance
-
-            for ret in await asyncio.gather(*[m.start() for m in new_instances], return_exceptions=True):
-                if ret:
-                    all_ok = False
-                    ctx.log.error(str(ret))
-
-            self.servers = new_servers
-            return all_ok
+        return await self.servers.setup(map(mode_specs.ProxyMode.parse, ctx.options.mode))
 
     def listen_addrs(self) -> list[Address]:
         return [
             addr
-            for server in self.servers.values()
+            for server in self.servers
             for addr in server.listen_addrs
         ]
 
@@ -279,7 +360,7 @@ class Proxyserver(ServerManager):
         assert data.server.address
         connect_host, connect_port, *_ = data.server.address
 
-        for server in self.servers.values():
+        for server in self.servers:
             for listen_host, listen_port, *_ in server.listen_addrs:
                 self_connect = (
                     connect_port == listen_port

@@ -12,12 +12,13 @@ Example:
 from __future__ import annotations
 
 import asyncio
+import enum
 import errno
 import struct
+import sys
 import typing
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
-from functools import cached_property
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
 from mitmproxy import ctx, flow, log
@@ -60,9 +61,19 @@ M = TypeVar('M', bound=mode_specs.ProxyMode)
 class ServerManager(typing.Protocol):
     connections: dict[tuple, ProxyConnectionHandler]
 
+    async def update_instance(self, instance: ServerInstance):
+        ...  # pragma: no cover
+
     @contextmanager
     def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
         ...  # pragma: no cover
+
+
+class ServerInstanceState(enum.Enum):
+    STOPPED = 1
+    START_PENDING = 2
+    RUNNING = 3
+    STOP_PENDING = 4
 
 
 class ServerInstance(Generic[M], metaclass=ABCMeta):
@@ -72,6 +83,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     def __init__(self, mode: M, manager: ServerManager):
         self.mode: M = mode
         self.manager: ServerManager = manager
+        self._exception: BaseException | None = None
+        self._state: ServerInstanceState = ServerInstanceState.STOPPED
 
     def __init_subclass__(cls, **kwargs):
         """Register all subclasses so that make() finds them."""
@@ -90,6 +103,14 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             mode = mode_specs.ProxyMode.parse(mode)
         return ServerInstance.__modes[mode.type](mode, manager)
 
+    async def report(self, *, state: ServerInstanceState | None = None, exception: BaseException | None = None) -> None:
+        if state is not None and self.state is not state:
+            self._state = state
+        elif self._exception is exception:
+            return
+        self._exception = exception
+        await self.manager.update_instance(self)
+
     @abstractmethod
     async def start(self) -> None:
         pass
@@ -97,6 +118,14 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     @abstractmethod
     async def stop(self) -> None:
         pass
+
+    @property
+    def state(self) -> ServerInstanceState:
+        return self._state
+
+    @property
+    def exception(self) -> BaseException | None:
+        return self._exception
 
     @property
     @abstractmethod
@@ -107,28 +136,55 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     server: asyncio.Server | udp.UdpServer | None = None
 
+    def __init__(self, mode: M, manager: ServerManager):
+        super().__init__(mode, manager)
+        self._lock: asyncio.Lock = asyncio.Lock()
+
     async def start(self):
-        assert not self.server
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
-        try:
-            self.server = await self.listen(host, port)
-        except OSError as e:
-            message = f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}"
-            if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
-                assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
-                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
-            raise OSError(e.errno, message, e.filename) from e
+        async with self._lock:
+            if self.server is not None:
+                return
+            await self.report(state=ServerInstanceState.START_PENDING)
+            try:
+                self.server = await self.listen(host, port)
+            except OSError as e:
+                await self.report(state=ServerInstanceState.STOPPED, exception=e)
+                message = f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}"
+                if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
+                    assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
+                    message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
+                raise OSError(e.errno, message, e.filename) from e
+            except:
+                await self.report(state=ServerInstanceState.STOPPED, exception=sys.exc_info()[1])
+                raise
+            else:
+                # make a copy within lock
+                listen_addrs = self.listen_addrs
+                await self.report(state=ServerInstanceState.RUNNING)
 
-        addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
+        addrs = {f"{human.format_address(s)}" for s in listen_addrs}
         ctx.log.info(
             f"{self.log_desc} listening at {' and '.join(addrs)}."
         )
 
     async def stop(self):
-        assert self.server
-        self.server.close()
-        await self.server.wait_closed()
+        async with self._lock:
+            if self.server is None:
+                return
+            await self.report(state=ServerInstanceState.STOP_PENDING)
+            try:
+                self.server.close()
+                await self.server.wait_closed()
+            except:
+                # don't fallback to RUNNING
+                await self.report(state=ServerInstanceState.STOP_PENDING, exception=sys.exc_info()[1])
+                raise
+            else:
+                self.server = None
+                await self.report(state=ServerInstanceState.STOPPED)
+
         ctx.log.info(f"Stopped {self.mode.type} proxy server.")
 
     @abstractmethod
@@ -140,10 +196,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def log_desc(self) -> str:
         pass
 
-    @cached_property
+    @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        assert self.server
-        return tuple(s.getsockname() for s in self.server.sockets)
+        return tuple() if self.server is None else tuple(s.getsockname() for s in self.server.sockets)
 
 
 class TcpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):

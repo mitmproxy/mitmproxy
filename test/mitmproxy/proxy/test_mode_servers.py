@@ -1,16 +1,33 @@
 import asyncio
+from contextlib import contextmanager
 from typing import cast
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, DtlsInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ProxyConnectionHandler, ServerInstance, DtlsInstance, ServerManager
 from mitmproxy.test import taddons
 
 
+class DummyManager(ServerManager):
+    def __init__(self):
+        self.connections = {}
+
+    async def update_instance(self, instance: ServerInstance):
+        pass
+
+    @contextmanager
+    def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
+        self.connections[connection_id] = handler
+        try:
+            yield
+        finally:
+            del self.connections[connection_id]
+
+
 def test_make():
-    manager = Mock()
+    manager = DummyManager()
     context = MagicMock()
     assert ServerInstance.make("regular", manager)
 
@@ -22,7 +39,7 @@ def test_make():
 
 
 async def test_tcp_start_stop():
-    manager = MagicMock()
+    manager = DummyManager()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("regular@127.0.0.1:0", manager)
@@ -42,7 +59,7 @@ async def test_tcp_start_stop():
 
 
 async def test_tcp_start_error():
-    manager = MagicMock()
+    manager = DummyManager()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("regular@127.0.0.1:0", manager)
@@ -60,7 +77,7 @@ async def test_tcp_start_error():
 
 
 async def test_udp_start_stop():
-    manager = MagicMock()
+    manager = DummyManager()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
@@ -82,7 +99,7 @@ async def test_udp_start_stop():
 
 
 async def test_udp_start_error():
-    manager = MagicMock()
+    manager = DummyManager()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
@@ -95,7 +112,7 @@ async def test_udp_start_error():
 
 
 async def test_dtls_start_stop(monkeypatch):
-    manager = MagicMock()
+    manager = DummyManager()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dtls:reverse:127.0.0.1:0@127.0.0.1:0", manager)
@@ -111,7 +128,7 @@ async def test_dtls_start_stop(monkeypatch):
 
 
 async def test_udp_connection_reuse(monkeypatch):
-    manager = MagicMock()
+    manager = DummyManager()
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
@@ -127,7 +144,7 @@ async def test_udp_connection_reuse(monkeypatch):
 
 
 async def test_dtls_connection_reuse(monkeypatch):
-    manager = MagicMock()
+    manager = DummyManager()
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())

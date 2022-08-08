@@ -80,8 +80,6 @@ async def test_start_stop():
             await ps.setup_servers()  # assert this can always be called without side effects
             tctx.configure(ps, server=False)
             await tctx.master.await_log("Stopped regular proxy server.", level="info")
-            async with ps._lock:
-                pass  # wait until start/stop is finished.
             assert not ps.servers
             assert state.flows
             assert state.flows[0].request.path == "/hello"
@@ -229,7 +227,7 @@ async def test_shutdown_err() -> None:
         assert await ps.setup_servers()
         ps.running()
         assert ps.servers
-        for server in ps.servers.values():
+        for server in ps.servers:
             setattr(server, "stop", _raise)
         tctx.configure(ps, server=False)
         await tctx.master.await_log("cannot close", level="error")
