@@ -13,6 +13,7 @@ from mitmproxy.connection import Address
 from mitmproxy.net import udp
 from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.mode_servers import ServerInstance, ServerInstanceState
 from mitmproxy.test import taddons, tflow
 from mitmproxy.test.tflow import tclient_conn, tserver_conn
 from mitmproxy.test.tutils import tdnsreq
@@ -180,6 +181,40 @@ async def test_self_connect():
         ps.server_connect(server_hooks.ServerConnectionHookData(server, client))
         assert "Request destination unknown" in server.error
         tctx.configure(ps, server=False)
+
+
+async def test_restart():
+    has_notified = False
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+
+        async def notify(sender, added: set[ServerInstance], updated: set[ServerInstance], removed: set[ServerInstance]):
+            nonlocal has_notified, tctx, ps
+            assert sender is ps
+            assert not added
+            assert updated
+            assert not removed
+            if not has_notified:
+                assert updated.pop().state is ServerInstanceState.STOP_PENDING
+                assert not updated
+                tctx.configure(ps, server=True)
+                # we need to block to give servers.setup enough time to change servers._specs again
+                await asyncio.sleep(1)
+                has_notified = True
+
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        ps.running()
+        await tctx.master.await_log("HTTP(S) proxy listening", level="info")
+        tctx.master.clear()
+        assert ps.servers
+        ps.servers.changed.connect(notify)
+        tctx.configure(ps, server=False)
+        # wait a bit longer since we block in the callback
+        await tctx.master.await_log("stopped HTTP(S) proxy at", level="info", timeout=2)
+        await tctx.master.await_log("HTTP(S) proxy listening", level="info")
+        assert has_notified
 
 
 def test_options():

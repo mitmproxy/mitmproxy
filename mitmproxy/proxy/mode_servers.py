@@ -94,6 +94,9 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             assert mode.type not in ServerInstance.__modes
             ServerInstance.__modes[mode.type] = cls
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} mode={self.mode.full_spec}, state={self.state}, exception={self.exception}>"
+
     @staticmethod
     def make(
         mode: mode_specs.ProxyMode | str,

@@ -42,11 +42,14 @@ class Servers:
 
     async def notify(
         self,
-        added: set[ServerInstance] = set(),
-        updated: set[ServerInstance] = set(),
-        removed: set[ServerInstance] = set(),
+        added: set[ServerInstance] | None = None,
+        updated: set[ServerInstance] | None = None,
+        removed: set[ServerInstance] | None = None,
     ) -> None:
-        async def restart(instance: ServerInstance):
+        if not added and not updated and not removed:
+            return
+
+        async def safe_start(instance: ServerInstance):
             try:
                 await instance.start()
             except:
@@ -59,20 +62,27 @@ class Servers:
                     if instance.state is ServerInstanceState.STOPPED and instance.exception is None:
                         if instance.mode in self._specs:
                             # restart the stopped instance, since its mode is still needed
-                            asyncio.create_task(restart(instance))
+                            asyncio.create_task(safe_start(instance))
                         else:
                             # remove the stopped instance, since its mode is no longer needed
                             del self._instances[instance.mode]
+                            if removed is None:
+                                removed = set()
                             removed.add(instance)
 
         # signal with blinker, but support async registrations
-        aws = [
-            aw
-            for _, aw in self.changed.send(self, added=added, updated=updated, removed=removed)
-            if aw is not None and inspect.isawaitable(aw)
+        coroutines = [
+            ret
+            for _, ret in self.changed.send(
+                self._manager,
+                added=set() if added is None else added,
+                updated=set() if updated is None else updated,
+                removed=set() if removed is None else removed,
+            )
+            if ret is not None and inspect.iscoroutine(ret)
         ]
-        if aws:
-            await asyncio.wait(aws)
+        if coroutines:
+            await asyncio.gather(*coroutines)
 
     async def setup(self, modes: Iterable[mode_specs.ProxyMode]) -> bool:
         tasks: list[Coroutine[Any, Any, None]] = list()
