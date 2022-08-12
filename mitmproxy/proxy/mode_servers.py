@@ -1,6 +1,6 @@
 """
 This module defines "server instances", which manage
-the TCP/UDP servers spawned my mitmproxy as specified by the proxy mode.
+the TCP/UDP servers spawned by mitmproxy as specified by the proxy mode.
 
 Example:
 
