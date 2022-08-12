@@ -12,10 +12,8 @@ Example:
 from __future__ import annotations
 
 import asyncio
-import enum
 import errno
 import struct
-import sys
 import typing
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
@@ -61,19 +59,9 @@ M = TypeVar('M', bound=mode_specs.ProxyMode)
 class ServerManager(typing.Protocol):
     connections: dict[tuple, ProxyConnectionHandler]
 
-    async def update_instance(self, instance: ServerInstance):
-        ...  # pragma: no cover
-
     @contextmanager
     def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
         ...  # pragma: no cover
-
-
-class ServerInstanceState(enum.Enum):
-    STOPPED = 1
-    START_PENDING = 2
-    RUNNING = 3
-    STOP_PENDING = 4
 
 
 class ServerInstance(Generic[M], metaclass=ABCMeta):
@@ -83,8 +71,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     def __init__(self, mode: M, manager: ServerManager):
         self.mode: M = mode
         self.manager: ServerManager = manager
-        self._exception: BaseException | None = None
-        self._state: ServerInstanceState = ServerInstanceState.STOPPED
+        self.last_exception: Exception | None = None
 
     def __init_subclass__(cls, **kwargs):
         """Register all subclasses so that make() finds them."""
@@ -93,9 +80,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         if mode != M:
             assert mode.type not in ServerInstance.__modes
             ServerInstance.__modes[mode.type] = cls
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} mode={self.mode.full_spec}, state={self.state}, exception={self.exception}>"
 
     @staticmethod
     def make(
@@ -106,13 +90,10 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             mode = mode_specs.ProxyMode.parse(mode)
         return ServerInstance.__modes[mode.type](mode, manager)
 
-    async def report(self, *, state: ServerInstanceState | None = None, exception: BaseException | None = None) -> None:
-        if state is not None and self.state is not state:
-            self._state = state
-        elif self._exception is exception:
-            return
-        self._exception = exception
-        await self.manager.update_instance(self)
+    @property
+    @abstractmethod
+    def is_running(self) -> bool:
+        pass
 
     @abstractmethod
     async def start(self) -> None:
@@ -123,71 +104,55 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         pass
 
     @property
-    def state(self) -> ServerInstanceState:
-        return self._state
-
-    @property
-    def exception(self) -> BaseException | None:
-        return self._exception
-
-    @property
     @abstractmethod
     def listen_addrs(self) -> tuple[Address, ...]:
         pass
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    server: asyncio.Server | udp.UdpServer | None = None
+    _server: asyncio.Server | udp.UdpServer | None = None
+    _listen_addrs: tuple[Address, ...] = tuple()
 
-    def __init__(self, mode: M, manager: ServerManager):
-        super().__init__(mode, manager)
-        self._lock: asyncio.Lock = asyncio.Lock()
-        self._listen_addr: tuple[Address, ...] = tuple()
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
 
     async def start(self):
+        assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
-        async with self._lock:
-            if self.server is not None:
-                return
-            await self.report(state=ServerInstanceState.START_PENDING)
-            try:
-                self.server = await self.listen(host, port)
-            except OSError as e:
-                await self.report(state=ServerInstanceState.STOPPED, exception=e)
-                message = f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}"
-                if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
-                    assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
-                    message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
-                raise OSError(e.errno, message, e.filename) from e
-            except:
-                await self.report(state=ServerInstanceState.STOPPED, exception=sys.exc_info()[1])
-                raise
-            else:
-                listen_addrs = tuple(s.getsockname() for s in self.server.sockets)
-                self._listen_addrs = listen_addrs
-                await self.report(state=ServerInstanceState.RUNNING)
-
-        ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, listen_addrs))}.")
+        try:
+            self._server = await self.listen(host, port)
+            self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
+        except OSError as e:
+            self.last_exception = e
+            message = f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}"
+            if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
+                assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
+                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
+            raise OSError(e.errno, message, e.filename) from e
+        except Exception as e:
+            self.last_exception = e
+            raise
+        else:
+            self.last_exception = None
+        ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, self._listen_addrs))}.")
 
     async def stop(self):
-        async with self._lock:
-            if self.server is None:
-                return
-            await self.report(state=ServerInstanceState.STOP_PENDING)
-            try:
-                self.server.close()
-                await self.server.wait_closed()
-            except:
-                # don't fallback to RUNNING
-                await self.report(state=ServerInstanceState.STOP_PENDING, exception=sys.exc_info()[1])
-                raise
-            else:
-                self.server = None
-                listen_addrs = self._listen_addrs
-                self._listen_addrs = None
-                await self.report(state=ServerInstanceState.STOPPED)
-
+        assert self._server is not None
+        # we always reset _server and _listen_addrs and ignore failures
+        server = self._server
+        listen_addrs = self._listen_addrs
+        self._server = None
+        self._listen_addrs = tuple()
+        try:
+            server.close()
+            await server.wait_closed()
+        except Exception as e:
+            self.last_exception = e
+            raise
+        else:
+            self.last_exception = None
         ctx.log.info(f"Stopped {self.log_desc} at {' and '.join(map(human.format_address, listen_addrs))}.")
 
     @abstractmethod

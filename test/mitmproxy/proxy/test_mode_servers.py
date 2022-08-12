@@ -1,33 +1,16 @@
 import asyncio
-from contextlib import contextmanager
 from typing import cast
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ProxyConnectionHandler, ServerInstance, DtlsInstance, ServerManager
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, DtlsInstance
 from mitmproxy.test import taddons
 
 
-class DummyManager(ServerManager):
-    def __init__(self):
-        self.connections = {}
-
-    async def update_instance(self, instance: ServerInstance):
-        pass
-
-    @contextmanager
-    def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
-        self.connections[connection_id] = handler
-        try:
-            yield
-        finally:
-            del self.connections[connection_id]
-
-
 def test_make():
-    manager = DummyManager()
+    manager = Mock()
     context = MagicMock()
     assert ServerInstance.make("regular", manager)
 
@@ -38,12 +21,39 @@ def test_make():
         assert inst.log_desc
 
 
+async def test_last_exception(monkeypatch):
+    manager = MagicMock()
+    err = ValueError("something else")
+
+    async def _raise(*_):
+        nonlocal err
+        raise err
+
+    with taddons.context():
+
+        inst1 = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst1.start()
+        assert inst1.last_exception is None
+        monkeypatch.setattr(inst1._server, "wait_closed", _raise)
+        with pytest.raises(type(err), match=str(err)):
+            await inst1.stop()
+        assert inst1.last_exception is err
+
+        monkeypatch.setattr(asyncio, "start_server", _raise)
+        inst2 = ServerInstance.make("regular@127.0.0.1:0", manager)
+        assert inst2.last_exception is None
+        with pytest.raises(type(err), match=str(err)):
+            await inst2.start()
+        assert inst2.last_exception is err
+
+
 async def test_tcp_start_stop():
-    manager = DummyManager()
+    manager = MagicMock()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst.start()
+        assert inst.last_exception is None
         assert await tctx.master.await_log("proxy listening")
 
         host, port, *_ = inst.listen_addrs[0]
@@ -59,11 +69,12 @@ async def test_tcp_start_stop():
 
 
 async def test_tcp_start_error():
-    manager = DummyManager()
+    manager = MagicMock()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst.start()
+        assert inst.last_exception is None
         assert await tctx.master.await_log("proxy listening")
         port = inst.listen_addrs[0][1]
         inst2 = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
@@ -77,7 +88,7 @@ async def test_tcp_start_error():
 
 
 async def test_udp_start_stop():
-    manager = DummyManager()
+    manager = MagicMock()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
@@ -99,7 +110,7 @@ async def test_udp_start_stop():
 
 
 async def test_udp_start_error():
-    manager = DummyManager()
+    manager = MagicMock()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
@@ -112,7 +123,7 @@ async def test_udp_start_error():
 
 
 async def test_dtls_start_stop(monkeypatch):
-    manager = DummyManager()
+    manager = MagicMock()
 
     with taddons.context() as tctx:
         inst = ServerInstance.make("dtls:reverse:127.0.0.1:0@127.0.0.1:0", manager)
@@ -128,7 +139,7 @@ async def test_dtls_start_stop(monkeypatch):
 
 
 async def test_udp_connection_reuse(monkeypatch):
-    manager = DummyManager()
+    manager = MagicMock()
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
@@ -144,7 +155,7 @@ async def test_udp_connection_reuse(monkeypatch):
 
 
 async def test_dtls_connection_reuse(monkeypatch):
-    manager = DummyManager()
+    manager = MagicMock()
     manager.connections = {}
 
     monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
