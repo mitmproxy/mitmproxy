@@ -15,11 +15,9 @@ import traceback
 from typing import Union
 from typing import Optional
 
-import blinker
-
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.utils import strutils
+from mitmproxy.utils import signals, strutils
 from . import (
     auto,
     raw,
@@ -46,9 +44,9 @@ from ..websocket import WebSocketMessage
 
 views: list[View] = []
 
-on_add = blinker.Signal()
+on_add = signals.SyncSignal()
 """A new contentview has been added."""
-on_remove = blinker.Signal()
+on_remove = signals.SyncSignal()
 """A contentview has been removed."""
 
 
