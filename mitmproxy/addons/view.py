@@ -155,19 +155,19 @@ class View(collections.abc.Sequence):
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
         # a signal. All signals are called after the view has been updated.
-        self.sig_view_update = signals.Signal()
-        self.sig_view_add = signals.Signal()
-        self.sig_view_remove = signals.Signal()
+        self.sig_view_update = signals.SyncSignal()
+        self.sig_view_add = signals.SyncSignal()
+        self.sig_view_remove = signals.SyncSignal()
         # Signals that the view should be refreshed completely
-        self.sig_view_refresh = signals.Signal()
+        self.sig_view_refresh = signals.SyncSignal()
 
         # The sig_store* signals broadcast events that affect the underlying
         # store. If a flow is removed from just the view, sig_view_remove is
         # triggered. If it is removed from the store while it is also in the
         # view, both sig_store_remove and sig_view_remove are triggered.
-        self.sig_store_remove = signals.Signal()
+        self.sig_store_remove = signals.SyncSignal()
         # Signals that the store should be refreshed completely
-        self.sig_store_refresh = signals.Signal()
+        self.sig_store_refresh = signals.SyncSignal()
 
         self.focus = Focus(self)
         self.settings = Settings(self)

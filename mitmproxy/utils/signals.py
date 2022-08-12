@@ -2,7 +2,7 @@ import inspect
 from typing import Any, Callable, TypeVar
 import blinker
 
-from mitmproxy import ctx, exceptions
+from mitmproxy import exceptions
 
 
 # NOTE:
@@ -36,6 +36,7 @@ class SyncSignal(blinker.Signal):
         sent = super().send(*sender, **kwargs)
         for receiver, ret in sent:
             if ret is not None and inspect.isawaitable(ret):
+                from mitmproxy import ctx
                 ctx.log.warn(
                     f"Receiver {receiver} for {self} returned awaitable {ret}."
                 )
