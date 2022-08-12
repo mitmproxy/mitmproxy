@@ -21,7 +21,7 @@ def test_make():
         assert inst.log_desc
 
 
-async def test_last_exception(monkeypatch):
+async def test_last_exception_and_running(monkeypatch):
     manager = MagicMock()
     err = ValueError("something else")
 
@@ -34,6 +34,7 @@ async def test_last_exception(monkeypatch):
         inst1 = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst1.start()
         assert inst1.last_exception is None
+        assert inst1.is_running
         monkeypatch.setattr(inst1._server, "wait_closed", _raise)
         with pytest.raises(type(err), match=str(err)):
             await inst1.stop()
@@ -45,6 +46,7 @@ async def test_last_exception(monkeypatch):
         with pytest.raises(type(err), match=str(err)):
             await inst2.start()
         assert inst2.last_exception is err
+        assert not inst1.is_running
 
 
 async def test_tcp_start_stop():
