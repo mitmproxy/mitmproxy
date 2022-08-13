@@ -45,7 +45,10 @@ class Master:
 
             # Handle scheduled tasks (configure()) first.
             await asyncio.sleep(0)
-            # TODO: Bind proxy server here before invoking running().
+            if ps := self.addons.get("proxyserver"):
+                await ps.setup_servers()
+            if ec := self.addons.get("errorcheck"):
+                await ec.shutdown_if_errored()
             await self.running()
             try:
                 await self.should_exit.wait()

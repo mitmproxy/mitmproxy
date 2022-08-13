@@ -1,13 +1,14 @@
 import urwid
-import blinker
 import textwrap
+
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
+from mitmproxy.utils import signals as utils_signals
 
 HELP_HEIGHT = 5
 
 
-keybinding_focus_change = blinker.Signal()
+keybinding_focus_change = utils_signals.SyncSignal()
 
 
 class KeyItem(urwid.WidgetWrap):

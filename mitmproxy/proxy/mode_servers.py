@@ -17,7 +17,6 @@ import struct
 import typing
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
-from functools import cached_property
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
 from mitmproxy import ctx, flow, log
@@ -72,6 +71,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     def __init__(self, mode: M, manager: ServerManager):
         self.mode: M = mode
         self.manager: ServerManager = manager
+        self.last_exception: Exception | None = None
 
     def __init_subclass__(cls, **kwargs):
         """Register all subclasses so that make() finds them."""
@@ -90,6 +90,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             mode = mode_specs.ProxyMode.parse(mode)
         return ServerInstance.__modes[mode.type](mode, manager)
 
+    @property
+    @abstractmethod
+    def is_running(self) -> bool:
+        pass
+
     @abstractmethod
     async def start(self) -> None:
         pass
@@ -105,31 +110,50 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    server: asyncio.Server | udp.UdpServer | None = None
+    _server: asyncio.Server | udp.UdpServer | None = None
+    _listen_addrs: tuple[Address, ...] = tuple()
+
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
 
     async def start(self):
-        assert not self.server
+        assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         try:
-            self.server = await self.listen(host, port)
+            self._server = await self.listen(host, port)
+            self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
         except OSError as e:
+            self.last_exception = e
             message = f"{self.log_desc} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
                 assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
             raise OSError(e.errno, message, e.filename) from e
-
-        addrs = {f"{human.format_address(s)}" for s in self.listen_addrs}
-        ctx.log.info(
-            f"{self.log_desc} listening at {' and '.join(addrs)}."
-        )
+        except Exception as e:
+            self.last_exception = e
+            raise
+        else:
+            self.last_exception = None
+        ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, self._listen_addrs))}.")
 
     async def stop(self):
-        assert self.server
-        self.server.close()
-        await self.server.wait_closed()
-        ctx.log.info(f"Stopped {self.mode.type} proxy server.")
+        assert self._server is not None
+        # we always reset _server and _listen_addrs and ignore failures
+        server = self._server
+        listen_addrs = self._listen_addrs
+        self._server = None
+        self._listen_addrs = tuple()
+        try:
+            server.close()
+            await server.wait_closed()
+        except Exception as e:
+            self.last_exception = e
+            raise
+        else:
+            self.last_exception = None
+        ctx.log.info(f"Stopped {self.log_desc} at {' and '.join(map(human.format_address, listen_addrs))}.")
 
     @abstractmethod
     async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
@@ -140,10 +164,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def log_desc(self) -> str:
         pass
 
-    @cached_property
+    @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        assert self.server
-        return tuple(s.getsockname() for s in self.server.sockets)
+        return self._listen_addrs
 
 
 class TcpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):

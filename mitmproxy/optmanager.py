@@ -13,7 +13,7 @@ import blinker._saferef
 import ruamel.yaml
 
 from mitmproxy import exceptions
-from mitmproxy.utils import typecheck
+from mitmproxy.utils import signals, typecheck
 
 """
     The base implementation for Options.
@@ -98,8 +98,8 @@ class OptManager:
 
     def __init__(self):
         self.deferred: dict[str, Any] = {}
-        self.changed = blinker.Signal()
-        self.errored = blinker.Signal()
+        self.changed = signals.SyncSignal()
+        self.errored = signals.SyncSignal()
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
         self._options: dict[str, Any] = {}

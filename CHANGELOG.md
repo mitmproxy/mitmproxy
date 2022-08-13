@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix running hook issue and signal proxyserver updates.
+  ([#5376](https://github.com/mitmproxy/mitmproxy/issues/5376), @meitinger)
 * Include server information in bind/listen errors.
   ([#5495](https://github.com/mitmproxy/mitmproxy/pull/5495), @meitinger)
 * Include information about lazy connection_strategy in related errors.
