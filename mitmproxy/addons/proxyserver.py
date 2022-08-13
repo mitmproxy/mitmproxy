@@ -79,10 +79,12 @@ class Servers:
                     all_ok = False
                     ctx.log.error(str(ret))
 
-            # Set the new instances and notify the listeners.
+            # Set the new instances and...
             self._instances = instances
-            await self.updated.send(self._manager, old_modes=old_modes, new_modes=new_modes)
-            return all_ok
+
+        # ...notify the listeners outside the lock.
+        await self.updated.send(self._manager, old_modes=old_modes, new_modes=new_modes)
+        return all_ok
 
     def __len__(self) -> int:
         return len(self._instances)
