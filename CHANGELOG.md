@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Restrict version of transitive dependency pyasn1
+  ([#5527](https://github.com/mitmproxy/mitmproxy/pull/5527), @szemek)
 * Include server information in bind/listen errors.
   ([#5495](https://github.com/mitmproxy/mitmproxy/pull/5495), @meitinger)
 * Include information about lazy connection_strategy in related errors.
