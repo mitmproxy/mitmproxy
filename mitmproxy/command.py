@@ -237,7 +237,7 @@ class CommandManager:
             if to:
                 try:
                     to.parse(self, expected.type, part)
-                except exceptions.TypeError:
+                except ValueError:
                     valid = False
                 else:
                     valid = True
@@ -300,7 +300,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> Any:
         raise exceptions.CommandError(f"Unsupported argument type: {argtype}")
     try:
         return t.parse(manager, argtype, spec)
-    except exceptions.TypeError as e:
+    except ValueError as e:
         raise exceptions.CommandError(str(e)) from e
 
 

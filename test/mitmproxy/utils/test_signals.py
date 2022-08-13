@@ -1,7 +1,5 @@
 import asyncio
 import pytest
-from mitmproxy import exceptions
-from mitmproxy.test import taddons
 from mitmproxy.utils.signals import AsyncSignal, SyncSignal
 
 
@@ -23,16 +21,13 @@ async def test_async_connect_to_sync():
 
     signal = SyncSignal()
     signal.receiver_connected.connect(check_connected)
-    with pytest.raises(exceptions.TypeError, match="cannot be an asynchronous function"):
+    with pytest.raises(TypeError, match="cannot be an asynchronous function"):
         signal.connect(invalid)
     signal.connect(valid)
     assert is_connected
 
-    with taddons.context() as tctx:
-        signal.send(signal)
-        with pytest.raises(AssertionError):
-            await tctx.master.await_log("returned awaitable")
-        assert was_called
+    signal.send(signal)
+    assert was_called
 
 
 async def test_async_returned_in_sync():
@@ -55,9 +50,8 @@ async def test_async_returned_in_sync():
     signal.connect(delayed_invalid)
     assert is_connected
 
-    with taddons.context() as tctx:
+    with pytest.raises(RuntimeError, match="returned awaitable"):
         signal.send(signal)
-        await tctx.master.await_log("returned awaitable")
 
 
 async def test_async():
@@ -90,15 +84,12 @@ async def test_async():
     signal.connect(immediate)
     assert is_connected_async and is_connected_sync
 
-    with taddons.context() as tctx:
-        res = await signal.send(signal)
-        with pytest.raises(AssertionError):
-            await tctx.master.await_log("returned awaitable")
-        assert len(res) == 2
-        for receiver, ret in res:
-            if receiver is delayed:
-                assert ret is async_ret
-            elif receiver is immediate:
-                assert ret is sync_ret
-            else:
-                assert False
+    res = await signal.send(signal)
+    assert len(res) == 2
+    for receiver, ret in res:
+        if receiver is delayed:
+            assert ret is async_ret
+        elif receiver is immediate:
+            assert ret is sync_ret
+        else:
+            assert False

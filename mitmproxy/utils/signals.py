@@ -2,9 +2,6 @@ import inspect
 from typing import Any, Callable, TypeVar
 import blinker
 
-from mitmproxy import exceptions
-
-
 # NOTE:
 # Once we drop support for Python 3.9, we should consider something like:
 #
@@ -27,7 +24,7 @@ T = TypeVar("T", bound=Callable)
 class SyncSignal(blinker.Signal):
     def connect(self, receiver: T, sender: Any = blinker.ANY, weak: bool = True) -> T:
         if inspect.iscoroutinefunction(receiver):
-            raise exceptions.TypeError(
+            raise TypeError(
                 f"Receiver {receiver} for {self} cannot be an asynchronous function."
             )
         return super().connect(receiver, sender, weak)
@@ -36,8 +33,7 @@ class SyncSignal(blinker.Signal):
         sent = super().send(*sender, **kwargs)
         for receiver, ret in sent:
             if ret is not None and inspect.isawaitable(ret):
-                from mitmproxy import ctx
-                ctx.log.warn(
+                raise RuntimeError(
                     f"Receiver {receiver} for {self} returned awaitable {ret}."
                 )
         return sent
