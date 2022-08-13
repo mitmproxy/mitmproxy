@@ -73,15 +73,13 @@ async def test_tcp_start_stop():
 async def test_tcp_start_error():
     manager = MagicMock()
 
+    server = await asyncio.start_server(MagicMock(), host="127.0.0.1", port=0, reuse_address=False)
+    port = server.sockets[0].getsockname()[1]
+
     with taddons.context() as tctx:
-        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
-        await inst.start()
-        assert inst.last_exception is None
-        assert await tctx.master.await_log("proxy listening")
-        port = inst.listen_addrs[0][1]
-        inst2 = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
+        inst = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
         with pytest.raises(OSError, match=f"proxy failed to listen on 127\\.0\\.0\\.1:{port}"):
-            await inst2.start()
+            await inst.start()
         tctx.options.listen_host = "127.0.0.1"
         tctx.options.listen_port = port
         inst3 = ServerInstance.make(f"regular", manager)
