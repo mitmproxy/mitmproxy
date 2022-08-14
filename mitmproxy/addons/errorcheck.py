@@ -15,11 +15,9 @@ class ErrorCheck:
         if e.level == "error":
             self.has_errored.append(e.msg)
 
-    async def running(self):
+    async def shutdown_if_errored(self):
         # don't run immediately, wait for all logging tasks to finish.
-        asyncio.create_task(self._shutdown_if_errored())
-
-    async def _shutdown_if_errored(self):
+        await asyncio.sleep(0)
         if self.has_errored:
             if self.log_to_stderr:
                 plural = "s" if len(self.has_errored) > 1 else ""

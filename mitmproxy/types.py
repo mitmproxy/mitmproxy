@@ -71,7 +71,7 @@ class _BaseType:
         """
         Parse a string, given the specific type instance (to allow rich type annotations like Choice) and a string.
 
-        Raises exceptions.TypeError if the value is invalid.
+        Raises ValueError if the value is invalid.
         """
         raise NotImplementedError
 
@@ -95,7 +95,7 @@ class _BoolType(_BaseType):
         elif s == "false":
             return False
         else:
-            raise exceptions.TypeError("Booleans are 'true' or 'false', got %s" % s)
+            raise ValueError("Booleans are 'true' or 'false', got %s" % s)
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         return val in [True, False]
@@ -128,10 +128,7 @@ class _StrType(_BaseType):
         return []
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> str:
-        try:
-            return self.escape_sequences.sub(self._unescape, s)
-        except ValueError as e:
-            raise exceptions.TypeError(f"Invalid str: {e}") from e
+        return self.escape_sequences.sub(self._unescape, s)
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         return isinstance(val, str)
@@ -145,10 +142,7 @@ class _BytesType(_BaseType):
         return []
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> bytes:
-        try:
-            return strutils.escaped_str_to_bytes(s)
-        except ValueError as e:
-            raise exceptions.TypeError(str(e))
+        return strutils.escaped_str_to_bytes(s)
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         return isinstance(val, bytes)
@@ -176,10 +170,7 @@ class _IntType(_BaseType):
         return []
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> int:
-        try:
-            return int(s)
-        except ValueError as e:
-            raise exceptions.TypeError(str(e)) from e
+        return int(s)
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         return isinstance(val, int)
@@ -229,7 +220,7 @@ class _CmdType(_BaseType):
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         if s not in manager.commands:
-            raise exceptions.TypeError("Unknown command: %s" % s)
+            raise ValueError("Unknown command: %s" % s)
         return s
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
@@ -372,9 +363,9 @@ class _FlowType(_BaseFlowType):
         try:
             flows = manager.call_strings("view.flows.resolve", [s])
         except exceptions.CommandError as e:
-            raise exceptions.TypeError(str(e)) from e
+            raise ValueError(str(e)) from e
         if len(flows) != 1:
-            raise exceptions.TypeError(
+            raise ValueError(
                 "Command requires one flow, specification matched %s." % len(flows)
             )
         return flows[0]
@@ -391,7 +382,7 @@ class _FlowsType(_BaseFlowType):
         try:
             return manager.call_strings("view.flows.resolve", [s])
         except exceptions.CommandError as e:
-            raise exceptions.TypeError(str(e)) from e
+            raise ValueError(str(e)) from e
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         try:
@@ -410,12 +401,12 @@ class _DataType(_BaseType):
     def completion(
         self, manager: "CommandManager", t: type, s: str
     ) -> Sequence[str]:  # pragma: no cover
-        raise exceptions.TypeError("data cannot be passed as argument")
+        raise ValueError("data cannot be passed as argument")
 
     def parse(
         self, manager: "CommandManager", t: type, s: str
     ) -> Any:  # pragma: no cover
-        raise exceptions.TypeError("data cannot be passed as argument")
+        raise ValueError("data cannot be passed as argument")
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
         # FIXME: validate that all rows have equal length, and all columns have equal types
@@ -439,7 +430,7 @@ class _ChoiceType(_BaseType):
     def parse(self, manager: "CommandManager", t: Choice, s: str) -> str:
         opts = manager.execute(t.options_command)
         if s not in opts:
-            raise exceptions.TypeError("Invalid choice.")
+            raise ValueError("Invalid choice.")
         return s
 
     def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
@@ -462,7 +453,7 @@ class _MarkerType(_BaseType):
 
     def parse(self, manager: "CommandManager", t: Choice, s: str) -> str:
         if s not in ALL_MARKERS:
-            raise exceptions.TypeError("Invalid choice.")
+            raise ValueError("Invalid choice.")
         if s == "true":
             return ":default:"
         elif s == "false":

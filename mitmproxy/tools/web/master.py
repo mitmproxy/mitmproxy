@@ -1,3 +1,4 @@
+import errno
 import tornado.httpserver
 import tornado.ioloop
 
@@ -80,7 +81,13 @@ class WebMaster(master.Master):
 
         # Add our web app.
         http_server = tornado.httpserver.HTTPServer(self.app)
-        http_server.listen(self.options.web_port, self.options.web_host)
+        try:
+            http_server.listen(self.options.web_port, self.options.web_host)
+        except OSError as e:
+            message = f"Web server failed to listen on {self.options.web_host or '*'}:{self.options.web_port} with {e}"
+            if e.errno == errno.EADDRINUSE:
+                message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 1}`."
+            raise OSError(e.errno, message, e.filename) from e
 
         self.log.info(
             f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",

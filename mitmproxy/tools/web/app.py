@@ -25,6 +25,7 @@ from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow, TCPMessage
+from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
@@ -162,7 +163,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "close_reason": flow.websocket.close_reason,
                 "timestamp_end": flow.websocket.timestamp_end,
             }
-    elif isinstance(flow, TCPFlow):
+    elif isinstance(flow, (TCPFlow, UDPFlow)):
         f["messages_meta"] = {
             "contentLength": sum(len(x.content) for x in flow.messages),
             "count": len(flow.messages),
@@ -477,8 +478,8 @@ class FlowContentView(RequestHandler):
     def message_to_json(
         self,
         viewname: str,
-        message: Union[http.Message, TCPMessage, WebSocketMessage],
-        flow: Union[HTTPFlow, TCPFlow],
+        message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+        flow: Union[HTTPFlow, TCPFlow, UDPFlow],
         max_lines: Optional[int] = None,
     ):
         description, lines, error = contentviews.get_message_content_view(
@@ -496,7 +497,7 @@ class FlowContentView(RequestHandler):
 
     def get(self, flow_id, message, content_view):
         flow = self.flow
-        assert isinstance(flow, (HTTPFlow, TCPFlow))
+        assert isinstance(flow, (HTTPFlow, TCPFlow, UDPFlow))
 
         if self.request.arguments.get("lines"):
             max_lines = int(self.request.arguments["lines"][0])
@@ -506,7 +507,7 @@ class FlowContentView(RequestHandler):
         if message == "messages":
             if isinstance(flow, HTTPFlow) and flow.websocket:
                 messages = flow.websocket.messages
-            elif isinstance(flow, TCPFlow):
+            elif isinstance(flow, (TCPFlow, UDPFlow)):
                 messages = flow.messages
             else:
                 raise APIError(400, f"This flow has no messages.")

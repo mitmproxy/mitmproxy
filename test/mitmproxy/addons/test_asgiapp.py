@@ -54,9 +54,10 @@ async def test_asgi_full():
     with taddons.context(ps, *addons) as tctx:
         tctx.master.addons.add(next_layer.NextLayer())
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        await ps.running()
-        await tctx.master.await_log("Proxy server listening", level="info")
-        proxy_addr = ps.tcp_server.sockets[0].getsockname()[:2]
+        assert await ps.setup_servers()
+        ps.running()
+        await tctx.master.await_log("HTTP(S) proxy listening", level="info")
+        proxy_addr = ("127.0.0.1", ps.listen_addrs()[0][1])
 
         reader, writer = await asyncio.open_connection(*proxy_addr)
         req = f"GET http://testapp:80/ HTTP/1.1\r\n\r\n"

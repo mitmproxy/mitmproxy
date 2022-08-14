@@ -8,8 +8,6 @@ from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import optmanager
-from mitmproxy import platform
-from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 import mitmproxy.types
 
@@ -25,20 +23,6 @@ class Core:
             raise exceptions.OptionsError(
                 "add_upstream_certs_to_client_chain requires the upstream_cert option to be enabled."
             )
-        if "mode" in updated:
-            mode = opts.mode
-            if mode.startswith("reverse:") or mode.startswith("upstream:"):
-                try:
-                    server_spec.parse_with_mode(mode)
-                except ValueError as e:
-                    raise exceptions.OptionsError(str(e)) from e
-            elif mode == "transparent":
-                if not platform.original_addr:
-                    raise exceptions.OptionsError(
-                        "Transparent mode not supported on this platform."
-                    )
-            elif mode not in ["regular", "socks5"]:
-                raise exceptions.OptionsError("Invalid mode specification: %s" % mode)
         if "client_certs" in updated:
             if opts.client_certs:
                 client_certs = os.path.expanduser(opts.client_certs)

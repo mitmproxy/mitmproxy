@@ -14,6 +14,7 @@ from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
+from mitmproxy.udp import UDPFlow
 from mitmproxy import dns
 from mitmproxy.dns import DNSFlow
 
@@ -116,6 +117,7 @@ SCHEME_STYLES = {
     "ws": "scheme_ws",
     "wss": "scheme_wss",
     "tcp": "scheme_tcp",
+    "udp": "scheme_udp",
     "dns": "scheme_dns",
 }
 HTTP_REQUEST_METHOD_STYLES = {
@@ -604,12 +606,13 @@ def format_http_flow_table(
 
 
 @lru_cache(maxsize=800)
-def format_tcp_flow(
+def format_message_flow(
     *,
     render_mode: RenderMode,
     focused: bool,
     timestamp_start: float,
     marked: str,
+    protocol: str,
     client_address,
     server_address,
     total_size: int,
@@ -633,9 +636,9 @@ def format_tcp_flow(
             items.append(fcol("  ", "focus"))
 
     if render_mode is RenderMode.TABLE:
-        items.append(fcol("TCP  ", SCHEME_STYLES["tcp"]))
+        items.append(fcol(fixlen(protocol.upper(), 5), SCHEME_STYLES[protocol]))
     else:
-        items.append(fcol("TCP", SCHEME_STYLES["tcp"]))
+        items.append(fcol(protocol.upper(), SCHEME_STYLES[protocol]))
 
     items.append(("weight", 1.0, truncated_plain(conn, "text", "left")))
     if error_message:
@@ -752,7 +755,7 @@ def format_flow(
     else:
         error_message = None
 
-    if isinstance(f, TCPFlow):
+    if isinstance(f, (TCPFlow, UDPFlow)):
         total_size = 0
         for message in f.messages:
             total_size += len(message.content)
@@ -760,11 +763,12 @@ def format_flow(
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
-        return format_tcp_flow(
+        return format_message_flow(
             render_mode=render_mode,
             focused=focused,
             timestamp_start=f.client_conn.timestamp_start,
             marked=f.marked,
+            protocol=f.type,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
             total_size=total_size,

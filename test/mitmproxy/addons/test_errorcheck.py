@@ -13,7 +13,7 @@ def test_errorcheck(capsys, do_log):
         asyncio.get_running_loop().set_exception_handler(lambda *_: 0)
         e = ErrorCheck(do_log)
         e.add_log(log.LogEntry("fatal", "error"))
-        await e.running()
+        await e.shutdown_if_errored()
         await asyncio.sleep(0)
 
     with pytest.raises(SystemExit):
@@ -25,5 +25,5 @@ def test_errorcheck(capsys, do_log):
 
 async def test_no_error():
     e = ErrorCheck()
-    await e.running()
+    await e.shutdown_if_errored()
     await asyncio.sleep(0)

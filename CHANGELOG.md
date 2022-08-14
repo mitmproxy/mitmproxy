@@ -2,6 +2,19 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix running hook issue and signal proxyserver updates.
+  ([#5376](https://github.com/mitmproxy/mitmproxy/issues/5376), @meitinger)
+* Include server information in bind/listen errors.
+  ([#5495](https://github.com/mitmproxy/mitmproxy/pull/5495), @meitinger)
+* Include information about lazy connection_strategy in related errors.
+  ([#5465](https://github.com/mitmproxy/mitmproxy/pull/5465), @meitinger, @mhils)
+* Add UDP layer and flow support.
+  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
+* Setting `connection_strategy` to `lazy` now also disables early 
+  upstream connections to fetch TLS certificate details.
+  (@mhils)
+* DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+
 ## 28 June 2022: mitmproxy 8.1.1
 
 * Support specifying the local address for outgoing connections
@@ -15,6 +28,8 @@
 * Remove overambitious assertions in the HTTP state machine,
   fix some error handling.
   ([#5383](https://github.com/mitmproxy/mitmproxy/issues/5383), @mhils)
+* Use default_factory for parser_options.
+  ([#5474](https://github.com/mitmproxy/mitmproxy/issues/5474), @rathann)
 
 ## 15 May 2022: mitmproxy 8.1.0
 

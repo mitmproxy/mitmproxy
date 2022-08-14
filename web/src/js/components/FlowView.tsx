@@ -12,6 +12,7 @@ import {useAppDispatch, useAppSelector} from "../ducks";
 import {Flow} from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
+import UdpMessages from "./FlowView/UdpMessages";
 
 type TabProps = {
     flow: Flow
@@ -24,7 +25,8 @@ export const allTabs: { [name: string]: FunctionComponent<TabProps> & { displayN
     connection: Connection,
     timing: Timing,
     websocket: WebSocket,
-    messages: TcpMessages,
+    tcpmessages: TcpMessages,
+    udpmessages: UdpMessages,
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
 }
@@ -36,7 +38,10 @@ export function tabsForFlow(flow: Flow): string[] {
             tabs = ['request', 'response', 'websocket'].filter(k => flow[k])
             break
         case "tcp":
-            tabs = ["messages"]
+            tabs = ["tcpmessages"]
+            break
+        case "udp":
+            tabs = ["udpmessages"]
             break
         case "dns":
             tabs = ['request', 'response'].filter(k => flow[k]).map(s => "dns" + s)

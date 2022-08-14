@@ -8,8 +8,8 @@ from mitmproxy import eventsequence
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import options
-from mitmproxy.net import server_spec
 from . import ctx as mitmproxy_ctx
+from .proxy.mode_specs import ReverseMode
 
 
 class Master:
@@ -45,6 +45,10 @@ class Master:
 
             # Handle scheduled tasks (configure()) first.
             await asyncio.sleep(0)
+            if ps := self.addons.get("proxyserver"):
+                await ps.setup_servers()
+            if ec := self.addons.get("errorcheck"):
+                await ec.shutdown_if_errored()
             await self.running()
             try:
                 await self.should_exit.wait()
@@ -90,14 +94,14 @@ class Master:
         Loads a flow
         """
 
-        if isinstance(f, http.HTTPFlow):
-            if self.options.mode.startswith("reverse:"):
-                # When we load flows in reverse proxy mode, we adjust the target host to
-                # the reverse proxy destination for all flows we load. This makes it very
-                # easy to replay saved flows against a different host.
-                _, upstream_spec = server_spec.parse_with_mode(self.options.mode)
-                f.request.host, f.request.port = upstream_spec.address
-                f.request.scheme = upstream_spec.scheme
+        if isinstance(f, http.HTTPFlow) and len(self.options.mode) == 1 and self.options.mode[0].startswith("reverse:"):
+            # When we load flows in reverse proxy mode, we adjust the target host to
+            # the reverse proxy destination for all flows we load. This makes it very
+            # easy to replay saved flows against a different host.
+            # We may change this in the future so that clientplayback always replays to the first mode.
+            mode = ReverseMode.parse(self.options.mode[0])
+            f.request.host, f.request.port, *_ = mode.address
+            f.request.scheme = mode.scheme
 
         for e in eventsequence.iterate(f):
             await self.addons.handle_lifecycle(e)

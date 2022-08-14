@@ -1,4 +1,3 @@
-from unittest import mock
 from mitmproxy import log
 from mitmproxy.addons import eventstore
 
@@ -7,29 +6,38 @@ def test_simple():
     store = eventstore.EventStore()
     assert not store.data
 
-    sig_add = mock.Mock(spec=lambda: 42)
-    sig_refresh = mock.Mock(spec=lambda: 42)
+    sig_add_called = False
+    sig_refresh_called = False
+
+    def sig_add(event_store, entry):
+        nonlocal sig_add_called
+        sig_add_called = True
+
+    def sig_refresh(event_store):
+        nonlocal sig_refresh_called
+        sig_refresh_called = True
+
     store.sig_add.connect(sig_add)
     store.sig_refresh.connect(sig_refresh)
 
-    assert not sig_add.called
-    assert not sig_refresh.called
+    assert not sig_add_called
+    assert not sig_refresh_called
 
     # test .log()
     store.add_log(log.LogEntry("test", "info"))
     assert store.data
 
-    assert sig_add.called
-    assert not sig_refresh.called
+    assert sig_add_called
+    assert not sig_refresh_called
 
     # test .clear()
-    sig_add.reset_mock()
+    sig_add_called = False
 
     store.clear()
     assert not store.data
 
-    assert not sig_add.called
-    assert sig_refresh.called
+    assert not sig_add_called
+    assert sig_refresh_called
 
 
 def test_max_size():

@@ -8,6 +8,7 @@ import pytest
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver, proxyserver
 from mitmproxy.connection import Address
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons, tflow, tutils
 
 
@@ -17,13 +18,13 @@ async def test_simple(monkeypatch):
     )
 
     dr = dns_resolver.DnsResolver()
-    with taddons.context(dr, proxyserver.Proxyserver()) as tctx:
+    with taddons.context(dr, proxyserver.Proxyserver()):
         f = tflow.tdnsflow()
         await dr.dns_request(f)
         assert f.response
 
-        tctx.options.dns_mode = "reverse:8.8.8.8"
         f = tflow.tdnsflow()
+        f.client_conn.proxy_mode = ProxyMode.parse("dns:reverse:8.8.8.8")
         await dr.dns_request(f)
         assert not f.response
 

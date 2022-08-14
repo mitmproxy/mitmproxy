@@ -76,8 +76,13 @@ class TransparentSocket(socket.socket):
     ) -> tuple[bytes, tuple[SockAddress, SockAddress]]:
         """Same as recvfrom, but always returns source and destination addresses."""
 
+        # (unavailable on Windows, hence the type checking exclusion)
+        space = socket.CMSG_SPACE(1024)  # type: ignore
+
         data, ancdata, _, client_addr = self._recvmsg(
-            bufsize, socket.CMSG_SPACE(1024), flags
+            bufsize,
+            space,
+            flags
         )
         for cmsg_level, cmsg_type, cmsg_data in ancdata:
             if (
@@ -87,7 +92,7 @@ class TransparentSocket(socket.socket):
                 server_addr = TransparentSocket._unpack_addr(cmsg_data)
                 break
         else:
-            raise OSError("recvmsg did not return th original destination address")
+            raise OSError("recvmsg did not return the original destination address")
         return data, (client_addr, server_addr)
 
 
@@ -299,7 +304,7 @@ class DatagramWriter:
         self._transport.sendto(data, self._remote_addr if remote_addr is None else remote_addr)
 
     def write_eof(self) -> None:
-        raise NotImplementedError("UDP does not support half-closing.")
+        raise OSError("UDP does not support half-closing.")
 
     def get_extra_info(self, name: str, default: Any = None) -> Any:
         if name == "peername":

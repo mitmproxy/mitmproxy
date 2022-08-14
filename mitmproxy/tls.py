@@ -6,7 +6,7 @@ from kaitaistruct import KaitaiStream
 
 from OpenSSL import SSL
 from mitmproxy import connection
-from mitmproxy.contrib.kaitaistruct import tls_client_hello
+from mitmproxy.contrib.kaitaistruct import tls_client_hello, dtls_client_hello
 from mitmproxy.net import check
 from mitmproxy.proxy import context
 
@@ -18,12 +18,17 @@ class ClientHello:
 
     _raw_bytes: bytes
 
-    def __init__(self, raw_client_hello: bytes):
+    def __init__(self, raw_client_hello: bytes, dtls: bool=False):
         """Create a TLS ClientHello object from raw bytes."""
         self._raw_bytes = raw_client_hello
-        self._client_hello = tls_client_hello.TlsClientHello(
-            KaitaiStream(io.BytesIO(raw_client_hello))
-        )
+        if dtls:
+            self._client_hello = dtls_client_hello.DtlsClientHello(
+                KaitaiStream(io.BytesIO(raw_client_hello))
+            )
+        else:
+            self._client_hello = tls_client_hello.TlsClientHello(
+                KaitaiStream(io.BytesIO(raw_client_hello))
+            )
 
     def raw_bytes(self, wrap_in_record: bool = True) -> bytes:
         """
@@ -37,6 +42,9 @@ class ClientHello:
         A future implementation may return not just the exact ClientHello, but also the exact record(s) as seen on the
         wire.
         """
+        if isinstance(self._client_hello, dtls_client_hello.DtlsClientHello):
+            raise NotImplementedError
+
         if wrap_in_record:
             return (
                 # record layer
@@ -64,8 +72,8 @@ class ClientHello:
         The [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication),
         which indicates which hostname the client wants to connect to.
         """
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 is_valid_sni_extension = (
                     extension.type == 0x00
                     and len(extension.body.server_names) == 1
@@ -82,8 +90,8 @@ class ClientHello:
         The application layer protocols offered by the client as part of the
         [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation) TLS extension.
         """
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 if extension.type == 0x10:
                     return list(x.name for x in extension.body.alpn_protocols)
         return []
@@ -92,8 +100,8 @@ class ClientHello:
     def extensions(self) -> list[tuple[int, bytes]]:
         """The raw list of extensions in the form of `(extension_type, raw_bytes)` tuples."""
         ret = []
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
+        if ext := getattr(self._client_hello, "extensions", None):
+            for extension in ext.extensions:
                 body = getattr(extension, "_raw_body", extension.body)
                 ret.append((extension.type, body))
         return ret
@@ -137,4 +145,8 @@ class TlsData:
     """
     The associated pyOpenSSL `SSL.Connection` object.
     This will be set by an addon in the `tls_start_*` event hooks.
+    """
+    is_dtls: bool = False
+    """
+    If set to `True`, indicates that it is a DTLS event.
     """

@@ -12,6 +12,7 @@ from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import layoutwidget
@@ -87,7 +88,12 @@ class FlowDetails(tabs.Tabs):
                     ]
             elif isinstance(f, tcp.TCPFlow):
                 self.tabs = [
-                    (self.tab_tcp_stream, self.view_tcp_stream),
+                    (self.tab_tcp_stream, self.view_message_stream),
+                    (self.tab_details, self.view_details),
+                ]
+            elif isinstance(f, udp.UDPFlow):
+                self.tabs = [
+                    (self.tab_udp_stream, self.view_message_stream),
                     (self.tab_details, self.view_details),
                 ]
             elif isinstance(f, dns.DNSFlow):
@@ -134,6 +140,9 @@ class FlowDetails(tabs.Tabs):
 
     def tab_tcp_stream(self):
         return "TCP Stream"
+
+    def tab_udp_stream(self):
+        return "UDP Stream"
 
     def tab_websocket_messages(self):
         return "WebSocket Messages"
@@ -235,9 +244,9 @@ class FlowDetails(tabs.Tabs):
 
         return searchable.Searchable(widget_lines)
 
-    def view_tcp_stream(self) -> urwid.Widget:
+    def view_message_stream(self) -> urwid.Widget:
         flow = self.flow
-        assert isinstance(flow, tcp.TCPFlow)
+        assert isinstance(flow, (tcp.TCPFlow, udp.UDPFlow))
 
         if not flow.messages:
             return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
@@ -259,7 +268,7 @@ class FlowDetails(tabs.Tabs):
 
         from_client = flow.messages[0].from_client
         for m in messages:
-            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m, flow)
+            _, lines, _ = contentviews.get_proto_content_view(viewmode, m, flow)
 
             for line in lines:
                 if from_client:
