@@ -39,8 +39,11 @@ def test_sync_signal() -> None:
 
 
 def test_signal_weakref() -> None:
-    m1 = lambda: print(42)
-    m2 = lambda: print(43)
+    def m1():
+        pass
+
+    def m2():
+        pass
 
     s = SyncSignal(lambda: None)
     s.connect(m1)
