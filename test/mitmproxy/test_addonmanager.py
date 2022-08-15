@@ -112,6 +112,8 @@ async def test_lifecycle():
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
+    assert str(a)
+
     with pytest.raises(exceptions.AddonManagerError):
         a.add(TAddon("one"))
     with pytest.raises(exceptions.AddonManagerError):

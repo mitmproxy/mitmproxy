@@ -233,8 +233,12 @@ def test_rollback():
 
 
 def test_simple():
-    assert repr(TO())
-    assert "one" in TO()
+    o = TO()
+    assert repr(o)
+    assert "one" in o
+
+    with pytest.raises(Exception, match="No such option"):
+        assert o.unknown
 
 
 def test_items():
