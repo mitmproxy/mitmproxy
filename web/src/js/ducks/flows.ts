@@ -13,6 +13,7 @@ export const SET_FILTER = 'FLOWS_SET_FILTER'
 export const SET_SORT = 'FLOWS_SET_SORT'
 export const SET_HIGHLIGHT = 'FLOWS_SET_HIGHLIGHT'
 export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
+export const REQUEST_ACTION_FILTERED = 'FLOWS_REQUEST_ACTION_FILTERED'
 
 interface FlowSortFn extends store.SortFn<Flow> {
 }
@@ -99,6 +100,14 @@ export default function reducer(state: FlowsState = defaultState, action): Flows
                 ...state,
                 selected: action.flowIds
             }
+
+        case REQUEST_ACTION:
+        case REQUEST_ACTION_FILTERED:
+            let args = action.type == REQUEST_ACTION_FILTERED ? ('?filter=' + state.filter) : ''
+            if (process.env.NODE_ENV !== 'test') {
+                window.location.href = '/flows/dump' + args
+            }
+            return state
 
         default:
             return state
@@ -206,13 +215,6 @@ export function uploadContent(flow: Flow, file, type) {
 
 export function clear() {
     return dispatch => fetchApi('/clear', {method: 'POST'})
-}
-
-export function download() {
-    if (process.env.NODE_ENV !== 'test') {
-        window.location.href = '/flows/dump';
-    }
-    return {type: REQUEST_ACTION}
 }
 
 export function upload(file) {

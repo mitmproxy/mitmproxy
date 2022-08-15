@@ -4,6 +4,7 @@ import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider, MenuItem} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
 import HideInStatic from "../common/HideInStatic";
+import {REQUEST_ACTION, REQUEST_ACTION_FILTERED} from "../../ducks/flows";
 
 
 export default React.memo(function FileMenu() {
@@ -24,8 +25,11 @@ export default React.memo(function FileMenu() {
                     }}
                 />
             </li>
-            <MenuItem onClick={() => dispatch(flowsActions.download())}>
-                <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save...
+            <MenuItem onClick={() => dispatch({type: REQUEST_ACTION})}>
+                <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save
+            </MenuItem>
+            <MenuItem onClick={() => dispatch({type: REQUEST_ACTION_FILTERED})}>
+                <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save filtered
             </MenuItem>
             <MenuItem onClick={() => confirm('Delete all flows?') && dispatch(flowsActions.clear())}>
                 <i className="fa fa-fw fa-trash"/>&nbsp;Clear All
