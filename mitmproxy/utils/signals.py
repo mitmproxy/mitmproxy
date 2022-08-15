@@ -11,8 +11,8 @@ from __future__ import annotations
 import asyncio
 import inspect
 import weakref
-from collections.abc import Callable
-from typing import Any, Generic, TypeVar, cast, Awaitable
+from collections.abc import Callable, Awaitable
+from typing import Any, Generic, TypeVar, cast
 
 try:
     from typing import ParamSpec

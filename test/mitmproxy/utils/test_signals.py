@@ -39,8 +39,8 @@ def test_sync_signal() -> None:
 
 
 def test_signal_weakref() -> None:
-    m1 = mock.Mock()
-    m2 = mock.Mock()
+    m1 = lambda: print(42)
+    m2 = lambda: print(43)
 
     s = SyncSignal(lambda: None)
     s.connect(m1)
