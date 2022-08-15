@@ -9,8 +9,8 @@ from mitmproxy.utils import signals
 class EventStore:
     def __init__(self, size=10000):
         self.data: collections.deque[LogEntry] = collections.deque(maxlen=size)
-        self.sig_add = signals.SyncSignal()
-        self.sig_refresh = signals.SyncSignal()
+        self.sig_add = signals.SyncSignal(lambda entry: None)
+        self.sig_refresh = signals.SyncSignal(lambda: None)
 
     @property
     def size(self) -> Optional[int]:
@@ -18,7 +18,7 @@ class EventStore:
 
     def add_log(self, entry: LogEntry) -> None:
         self.data.append(entry)
-        self.sig_add.send(self, entry=entry)
+        self.sig_add.send(entry)
 
     @command.command("eventstore.clear")
     def clear(self) -> None:
@@ -26,4 +26,4 @@ class EventStore:
         Clear the event log.
         """
         self.data.clear()
-        self.sig_refresh.send(self)
+        self.sig_refresh.send()

@@ -120,7 +120,7 @@ async def test_lifecycle():
     f = tflow.tflow()
     await a.handle_lifecycle(HttpRequestHook(f))
 
-    a._configure_all(o, o.keys())
+    a._configure_all(o.keys())
 
 
 def test_defaults():

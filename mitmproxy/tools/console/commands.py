@@ -8,7 +8,7 @@ from mitmproxy.utils import signals as utils_signals
 
 HELP_HEIGHT = 5
 
-command_focus_change = utils_signals.SyncSignal()
+command_focus_change = utils_signals.SyncSignal(lambda text: None)
 
 
 class CommandItem(urwid.WidgetWrap):
@@ -63,7 +63,7 @@ class CommandListWalker(urwid.ListWalker):
     def get_focus(self):
         return self.focus_obj, self.index
 
-    def set_focus(self, index):
+    def set_focus(self, index: int) -> None:
         cmd = self.cmds[index]
         self.index = index
         self.focus_obj = self._get(self.index)
@@ -88,7 +88,7 @@ class CommandsList(urwid.ListBox):
         self.walker = CommandListWalker(master)
         super().__init__(self.walker)
 
-    def keypress(self, size, key):
+    def keypress(self, size: int, key: str):
         if key == "m_select":
             foc, idx = self.get_focus()
             signals.status_prompt_command.send(partial=foc.cmd.name + " ")

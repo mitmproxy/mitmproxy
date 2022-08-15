@@ -96,7 +96,7 @@ class Keymap:
             b = Binding(key=key, command=command, contexts=contexts, help=help)
             self.bindings.append(b)
             self.bind(b)
-        signals.keybindings_change.send(self)
+        signals.keybindings_change.send()
 
     def remove(self, key: str, contexts: Sequence[str]) -> None:
         """
@@ -111,7 +111,7 @@ class Keymap:
                 if b.contexts:
                     self.bindings.append(b)
                     self.bind(b)
-        signals.keybindings_change.send(self)
+        signals.keybindings_change.send()
 
     def bind(self, binding: Binding) -> None:
         for c in binding.contexts:

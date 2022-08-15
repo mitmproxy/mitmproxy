@@ -27,7 +27,7 @@ def fcol(s, width, attr):
     return ("fixed", width, urwid.Text((attr, s)))
 
 
-option_focus_change = utils_signals.SyncSignal()
+option_focus_change = utils_signals.SyncSignal(lambda text: None)
 
 
 class OptionItem(urwid.WidgetWrap):

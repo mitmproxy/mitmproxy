@@ -1,15 +1,13 @@
 import contextlib
 import copy
-from collections.abc import Sequence
+import weakref
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-import functools
 import os
 import pprint
 import textwrap
 from typing import Any, Optional, TextIO, Union
 
-import blinker
-import blinker._saferef
 import ruamel.yaml
 
 from mitmproxy import exceptions
@@ -83,11 +81,19 @@ class _UnconvertedStrings:
     val: list[str]
 
 
+def _sig_changed(updated: set[str]) -> None:
+    ...
+
+
+def _sig_errored(exc: Exception) -> None:
+    ...
+
+
 class OptManager:
     """
     OptManager is the base class from which Options objects are derived.
 
-    .changed is a blinker Signal that triggers whenever options are
+    .changed is a Signal that triggers whenever options are
     updated. If any handler in the chain raises an exceptions.OptionsError
     exception, all changes are rolled back, the exception is suppressed,
     and the .errored signal is notified.
@@ -98,11 +104,13 @@ class OptManager:
 
     def __init__(self):
         self.deferred: dict[str, Any] = {}
-        self.changed = signals.SyncSignal()
-        self.errored = signals.SyncSignal()
+        self.changed = signals.SyncSignal(_sig_changed)
+        self.errored = signals.SyncSignal(_sig_errored)
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
         self._options: dict[str, Any] = {}
+        self._subscriptions: list[tuple[weakref.ref[Callable], set[str]]] = []
+        self.changed.connect(self._notify_subscribers)
 
     def add_option(
         self,
@@ -113,7 +121,7 @@ class OptManager:
         choices: Optional[Sequence[str]] = None,
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
-        self.changed.send(self, updated={name})
+        self.changed.send(updated={name})
 
     @contextlib.contextmanager
     def rollback(self, updated, reraise=False):
@@ -122,10 +130,10 @@ class OptManager:
             yield
         except exceptions.OptionsError as e:
             # Notify error handlers
-            self.errored.send(self, exc=e)
+            self.errored.send(exc=e)
             # Rollback
             self.__dict__["_options"] = old
-            self.changed.send(self, updated=updated)
+            self.changed.send(updated=updated)
             if reraise:
                 raise e
 
@@ -141,23 +149,24 @@ class OptManager:
             if i not in self._options:
                 raise exceptions.OptionsError("No such option: %s" % i)
 
-        # We reuse blinker's safe reference functionality to cope with weakrefs
-        # to bound methods.
-        func = blinker._saferef.safe_ref(func)
+        self._subscriptions.append(
+            (signals.make_weak_ref(func), set(opts))
+        )
 
-        @functools.wraps(func)
-        def _call(options, updated):
-            if updated.intersection(set(opts)):
-                f = func()
-                if f:
-                    f(options, updated)
-                else:
-                    self.changed.disconnect(_call)
+    def _notify_subscribers(self, updated) -> None:
+        cleanup = False
+        for (ref, opts) in self._subscriptions:
+            callback = ref()
+            if callback is not None:
+                if opts & updated:
+                    callback(self, updated)
+            else:
+                cleanup = True
 
-        # Our wrapper function goes out of scope immediately, so we have to set
-        # weakrefs to false. This means we need to keep our own weakref, and
-        # clean up the hook when it's gone.
-        self.changed.connect(_call, weak=False)
+        if cleanup:
+            self.__dict__["_subscriptions"] = [
+                (ref, opts) for (ref, opts) in self._subscriptions if ref() is not None
+            ]
 
     def __eq__(self, other):
         if isinstance(other, OptManager):
@@ -202,7 +211,7 @@ class OptManager:
         """
         for o in self._options.values():
             o.reset()
-        self.changed.send(self, updated=set(self._options.keys()))
+        self.changed.send(updated=set(self._options.keys()))
 
     def update_known(self, **kwargs):
         """
@@ -220,7 +229,7 @@ class OptManager:
             with self.rollback(updated, reraise=True):
                 for k, v in known.items():
                     self._options[k].set(v)
-                self.changed.send(self, updated=updated)
+                self.changed.send(updated=updated)
         return unknown
 
     def update_defer(self, **kwargs):
@@ -482,14 +491,15 @@ def dump_defaults(opts, out: TextIO):
     return ruamel.yaml.YAML().dump(s, out)
 
 
-def dump_dicts(opts, keys: list[str] = None):
+def dump_dicts(opts, keys: Iterable[str] | None = None) -> dict:
     """
     Dumps the options into a list of dict object.
 
     Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
     """
     options_dict = {}
-    keys = keys if keys else opts.keys()
+    if keys is None:
+        keys = opts.keys()
     for k in sorted(keys):
         o = opts._options[k]
         t = typecheck.typespec_to_str(o.typespec)

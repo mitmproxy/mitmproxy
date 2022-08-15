@@ -3,6 +3,7 @@ import tornado.httpserver
 import tornado.ioloop
 
 from mitmproxy import addons
+from mitmproxy import flow
 from mitmproxy import log
 from mitmproxy import master
 from mitmproxy import optmanager
@@ -44,32 +45,32 @@ class WebMaster(master.Master):
         )
         self.app = app.Application(self, self.options.web_debug)
 
-    def _sig_view_add(self, view, flow):
+    def _sig_view_add(self, flow: flow.Flow) -> None:
         app.ClientConnection.broadcast(
             resource="flows", cmd="add", data=app.flow_to_json(flow)
         )
 
-    def _sig_view_update(self, view, flow):
+    def _sig_view_update(self, flow: flow.Flow) -> None:
         app.ClientConnection.broadcast(
             resource="flows", cmd="update", data=app.flow_to_json(flow)
         )
 
-    def _sig_view_remove(self, view, flow, index):
+    def _sig_view_remove(self, flow: flow.Flow, index: int) -> None:
         app.ClientConnection.broadcast(resource="flows", cmd="remove", data=flow.id)
 
-    def _sig_view_refresh(self, view):
+    def _sig_view_refresh(self) -> None:
         app.ClientConnection.broadcast(resource="flows", cmd="reset")
 
-    def _sig_events_add(self, event_store, entry: log.LogEntry):
+    def _sig_events_add(self, entry: log.LogEntry) -> None:
         app.ClientConnection.broadcast(
             resource="events", cmd="add", data=app.logentry_to_json(entry)
         )
 
-    def _sig_events_refresh(self, event_store):
+    def _sig_events_refresh(self) -> None:
         app.ClientConnection.broadcast(resource="events", cmd="reset")
 
-    def _sig_options_update(self, options, updated):
-        options_dict = optmanager.dump_dicts(options, updated)
+    def _sig_options_update(self, updated: set[str]) -> None:
+        options_dict = optmanager.dump_dicts(self.options, updated)
         app.ClientConnection.broadcast(
             resource="options", cmd="update", data=options_dict
         )

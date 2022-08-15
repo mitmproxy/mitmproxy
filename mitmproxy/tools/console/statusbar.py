@@ -15,7 +15,7 @@ class PromptPath:
     def __init__(self, callback, args):
         self.callback, self.args = callback, args
 
-    def __call__(self, pth):
+    def __call__(self, pth: str):
         if not pth:
             return
         pth = os.path.expanduser(pth)
@@ -47,7 +47,7 @@ class ActionBar(urwid.WidgetWrap):
 
         self.onekey = False
 
-    def sig_message(self, sender, message, expire=1):
+    def sig_message(self, message: str, expire: int = 1) -> None:
         if self.prompting:
             return
         cols, _ = self.master.ui.get_cols_rows()
@@ -95,15 +95,15 @@ class ActionBar(urwid.WidgetWrap):
 
         return [(disp_attr, first_line), ("warn", prompt)]
 
-    def sig_prompt(self, sender, prompt, text, callback, args=()):
-        signals.focus.send(self, section="footer")
+    def sig_prompt(self, prompt, text, callback, args=()):
+        signals.focus.send(section="footer")
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
 
     def sig_prompt_command(
-        self, sender, partial: str = "", cursor: Optional[int] = None
+        self, partial: str = "", cursor: Optional[int] = None
     ):
-        signals.focus.send(self, section="footer")
+        signals.focus.send(section="footer")
         self._w = commander.CommandEdit(
             self.master,
             partial,
@@ -118,12 +118,12 @@ class ActionBar(urwid.WidgetWrap):
         execute = commandexecutor.CommandExecutor(self.master)
         execute(txt)
 
-    def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
+    def sig_prompt_onekey(self, prompt, keys, callback, args=()) -> None:
         """
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
         """
-        signals.focus.send(self, section="footer")
+        signals.focus.send(section="footer")
         prompt = [prompt, " ("]
         mkup = []
         for i, e in enumerate(keys):
@@ -161,13 +161,13 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Text("")
         self.prompting = None
 
-    def prompt_done(self):
+    def prompt_done(self) -> None:
         self.prompting = None
         self.onekey = False
         signals.status_message.send(message="")
-        signals.focus.send(self, section="body")
+        signals.focus.send(section="body")
 
-    def prompt_execute(self, txt):
+    def prompt_execute(self, txt) -> None:
         p = self.prompting
         self.prompt_done()
         msg = p(txt)
@@ -186,17 +186,16 @@ class StatusBar(urwid.WidgetWrap):
         super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.flow_change.connect(self.sig_update)
         signals.update_settings.connect(self.sig_update)
-        signals.flowlist_change.connect(self.sig_update)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
         master.view.sig_view_add.connect(self.sig_update)
         self.refresh()
 
-    def refresh(self):
+    def refresh(self) -> None:
         self.redraw()
         signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
 
-    def sig_update(self, sender, flow=None, updated=None):
+    def sig_update(self, flow=None, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
