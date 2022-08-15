@@ -7,11 +7,12 @@ This is similar to the Blinker library (https://pypi.org/project/blinker/), with
   - supports type hints
   - supports async receivers.
 """
+from __future__ import annotations
 import asyncio
 import inspect
 import weakref
-from collections.abc import Awaitable, Callable
-from typing import Any, Generic, TypeVar, cast
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar, cast, Awaitable
 
 try:
     from typing import ParamSpec
