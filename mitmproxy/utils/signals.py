@@ -40,14 +40,19 @@ class _SignalMixin:
     def __init__(self):
         self.receivers: list[weakref.ref[Callable]] = []
 
-    def _connect(self, receiver: Callable) -> None:
+    def connect(self, receiver: Callable) -> None:
+        """
+        Register a signal receiver.
+
+        The signal will only hold a weak reference to the receiver function.
+        """
         receiver = make_weak_ref(receiver)
         self.receivers.append(receiver)
 
-    def _disconnect(self, receiver: Callable) -> None:
+    def disconnect(self, receiver: Callable) -> None:
         self.receivers = [r for r in self.receivers if r() != receiver]
 
-    def _notify(self, *args, **kwargs):
+    def notify(self, *args, **kwargs):
         cleanup = False
         for ref in self.receivers:
             r = ref()
@@ -62,27 +67,27 @@ class _SignalMixin:
 class _SyncSignal(Generic[P], _SignalMixin):
     def connect(self, receiver: Callable[P, None]) -> None:
         assert not asyncio.iscoroutinefunction(receiver)
-        self._connect(receiver)
+        super().connect(receiver)
 
     def disconnect(self, receiver: Callable[P, None]) -> None:
-        self._disconnect(receiver)
+        super().disconnect(receiver)
 
     def send(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        for ret in self._notify(*args, **kwargs):
+        for ret in super().notify(*args, **kwargs):
             assert ret is None or not inspect.isawaitable(ret)
 
 
 class _AsyncSignal(Generic[P], _SignalMixin):
     def connect(self, receiver: Callable[P, Awaitable[None] | None]) -> None:
-        self._connect(receiver)
+        super().connect(receiver)
 
     def disconnect(self, receiver: Callable[P, Awaitable[None] | None]) -> None:
-        self._disconnect(receiver)
+        super().disconnect(receiver)
 
     async def send(self, *args: P.args, **kwargs: P.kwargs) -> None:
         await asyncio.gather(*[
             aws
-            for aws in self._notify(*args, **kwargs)
+            for aws in super().notify(*args, **kwargs)
             if aws is not None and inspect.isawaitable(aws)
         ])
 

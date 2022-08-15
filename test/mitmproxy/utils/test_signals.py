@@ -38,6 +38,18 @@ def test_sync_signal() -> None:
         s.send(42)
 
 
+def test_signal_weakref() -> None:
+    m1 = mock.Mock()
+    m2 = mock.Mock()
+
+    s = SyncSignal(lambda: None)
+    s.connect(m1)
+    s.connect(m2)
+    del m2
+    s.send()
+    assert len(s.receivers) == 1
+
+
 def test_sync_signal_async_receiver() -> None:
     s = SyncSignal(lambda: None)
 
