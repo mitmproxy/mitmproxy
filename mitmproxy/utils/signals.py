@@ -16,7 +16,7 @@ from typing import Any, Generic, TypeVar, cast
 
 try:
     from typing import ParamSpec
-except ImportError:
+except ImportError:  # pragma: no cover
     # Python 3.9
     from typing_extensions import ParamSpec
 
