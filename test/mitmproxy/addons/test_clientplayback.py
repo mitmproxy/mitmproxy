@@ -52,7 +52,7 @@ async def test_playback(mode, concurrency):
             flow = tflow.tflow(live=False)
             flow.request.content = b"data"
             if mode == "upstream":
-                tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+                tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
                 flow.request.authority = f"{addr[0]}:{addr[1]}"
                 flow.request.host, flow.request.port = "address", 22
             else:
@@ -86,7 +86,7 @@ async def test_playback_https_upstream():
             flow = tflow.tflow(live=False)
             flow.request.scheme = b"https"
             flow.request.content = b"data"
-            tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+            tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
@@ -131,9 +131,9 @@ def test_check():
     f.request.raw_content = None
     assert "missing content" in cp.check(f)
 
-    f = tflow.ttcpflow()
-    f.live = False
-    assert "Can only replay HTTP" in cp.check(f)
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        f.live = False
+        assert "Can only replay HTTP" in cp.check(f)
 
 
 async def test_start_stop(tdata):

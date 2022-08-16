@@ -13,6 +13,7 @@ from mitmproxy import connection, ctx
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.net.http import status_codes
+from mitmproxy.proxy import mode_specs
 from mitmproxy.proxy.layers import modes
 
 REALM = "mitmproxy"
@@ -42,27 +43,21 @@ class ProxyAuth:
         )
 
     def configure(self, updated):
-        if "proxyauth" not in updated:
-            return
-        auth = ctx.options.proxyauth
-        if auth:
-            if ctx.options.mode == "transparent":
-                raise exceptions.OptionsError(
-                    "Proxy Authentication not supported in transparent mode."
-                )
-
-            if auth == "any":
-                self.validator = AcceptAll()
-            elif auth.startswith("@"):
-                self.validator = Htpasswd(auth)
-            elif ctx.options.proxyauth.startswith("ldap"):
-                self.validator = Ldap(auth)
-            elif ":" in ctx.options.proxyauth:
-                self.validator = SingleUser(auth)
+        if "proxyauth" in updated:
+            auth = ctx.options.proxyauth
+            if auth:
+                if auth == "any":
+                    self.validator = AcceptAll()
+                elif auth.startswith("@"):
+                    self.validator = Htpasswd(auth)
+                elif ctx.options.proxyauth.startswith("ldap"):
+                    self.validator = Ldap(auth)
+                elif ":" in ctx.options.proxyauth:
+                    self.validator = SingleUser(auth)
+                else:
+                    raise exceptions.OptionsError("Invalid proxyauth specification.")
             else:
-                raise exceptions.OptionsError("Invalid proxyauth specification.")
-        else:
-            self.validator = None
+                self.validator = None
 
     def socks5_auth(self, data: modes.Socks5AuthData) -> None:
         if self.validator and self.validator(data.username, data.password):
@@ -93,8 +88,11 @@ class ProxyAuth:
         username = None
         password = None
         is_valid = False
+
+        is_proxy = is_http_proxy(f)
+        auth_header = http_auth_header(is_proxy)
         try:
-            auth_value = f.request.headers.get(self.http_auth_header, "")
+            auth_value = f.request.headers.get(auth_header, "")
             scheme, username, password = parse_http_basic_auth(auth_value)
             is_valid = self.validator(username, password)
         except Exception:
@@ -102,47 +100,48 @@ class ProxyAuth:
 
         if is_valid:
             f.metadata["proxyauth"] = (username, password)
-            del f.request.headers[self.http_auth_header]
+            del f.request.headers[auth_header]
             return True
         else:
-            f.response = self.make_auth_required_response()
+            f.response = make_auth_required_response(is_proxy)
             return False
 
-    def make_auth_required_response(self) -> http.Response:
-        if self.is_http_proxy:
-            status_code = status_codes.PROXY_AUTH_REQUIRED
-            headers = {"Proxy-Authenticate": f'Basic realm="{REALM}"'}
-        else:
-            status_code = status_codes.UNAUTHORIZED
-            headers = {"WWW-Authenticate": f'Basic realm="{REALM}"'}
 
-        reason = http.status_codes.RESPONSES[status_code]
-        return http.Response.make(
-            status_code,
-            (
-                f"<html>"
-                f"<head><title>{status_code} {reason}</title></head>"
-                f"<body><h1>{status_code} {reason}</h1></body>"
-                f"</html>"
-            ),
-            headers,
-        )
+def make_auth_required_response(is_proxy: bool) -> http.Response:
+    if is_proxy:
+        status_code = status_codes.PROXY_AUTH_REQUIRED
+        headers = {"Proxy-Authenticate": f'Basic realm="{REALM}"'}
+    else:
+        status_code = status_codes.UNAUTHORIZED
+        headers = {"WWW-Authenticate": f'Basic realm="{REALM}"'}
 
-    @property
-    def http_auth_header(self) -> str:
-        if self.is_http_proxy:
-            return "Proxy-Authorization"
-        else:
-            return "Authorization"
+    reason = http.status_codes.RESPONSES[status_code]
+    return http.Response.make(
+        status_code,
+        (
+            f"<html>"
+            f"<head><title>{status_code} {reason}</title></head>"
+            f"<body><h1>{status_code} {reason}</h1></body>"
+            f"</html>"
+        ),
+        headers,
+    )
 
-    @property
-    def is_http_proxy(self) -> bool:
-        """
-        Returns:
-            - True, if authentication is done as if mitmproxy is a proxy
-            - False, if authentication is done as if mitmproxy is an HTTP server
-        """
-        return ctx.options.mode == "regular" or ctx.options.mode.startswith("upstream:")
+
+def http_auth_header(is_proxy: bool) -> str:
+    if is_proxy:
+        return "Proxy-Authorization"
+    else:
+        return "Authorization"
+
+
+def is_http_proxy(f: http.HTTPFlow) -> bool:
+    """
+    Returns:
+        - True, if authentication is done as if mitmproxy is a proxy
+        - False, if authentication is done as if mitmproxy is an HTTP server
+    """
+    return isinstance(f.client_conn.proxy_mode, (mode_specs.RegularMode, mode_specs.UpstreamMode))
 
 
 def mkauth(username: str, password: str, scheme: str = "basic") -> str:

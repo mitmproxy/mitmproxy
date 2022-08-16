@@ -17,13 +17,10 @@ export interface OptionsState {
     client_replay_concurrency: number
     command_history: boolean
     confdir: string
+    connect_addr: string | undefined
     connection_strategy: string
     console_focus_follow: boolean
     content_view_lines_cutoff: number
-    dns_listen_host: string
-    dns_listen_port: number
-    dns_mode: string
-    dns_server: boolean
     export_preserve_original_ip: boolean
     http2: boolean
     http2_ping_keepalive: number
@@ -33,10 +30,10 @@ export interface OptionsState {
     keep_host_header: boolean
     key_size: number
     listen_host: string
-    listen_port: number
+    listen_port: number | undefined
     map_local: string[]
     map_remote: string[]
-    mode: string
+    mode: string[]
     modify_body: string[]
     modify_headers: string[]
     normalize_outbound_headers: boolean
@@ -110,13 +107,10 @@ export const defaultState: OptionsState = {
     client_replay_concurrency: 1,
     command_history: true,
     confdir: "~/.mitmproxy",
+    connect_addr: undefined,
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
-    dns_listen_host: "",
-    dns_listen_port: 53,
-    dns_mode: "regular",
-    dns_server: false,
     export_preserve_original_ip: false,
     http2: true,
     http2_ping_keepalive: 58,
@@ -126,10 +120,10 @@ export const defaultState: OptionsState = {
     keep_host_header: false,
     key_size: 2048,
     listen_host: "",
-    listen_port: 8080,
+    listen_port: undefined,
     map_local: [],
     map_remote: [],
-    mode: "regular",
+    mode: ["regular"],
     modify_body: [],
     modify_headers: [],
     normalize_outbound_headers: true,

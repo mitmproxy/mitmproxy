@@ -185,14 +185,14 @@ class TestScriptLoader:
         with taddons.context(loadcore=False) as tctx:
             tctx.master.addons.add(sc)
             sc.running()
-            assert len(tctx.master.addons) == 1
+            assert len(tctx.master.addons) == 2
             tctx.master.options.update(
                 scripts=[tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")]
             )
-            assert len(tctx.master.addons) == 1
+            assert len(tctx.master.addons) == 2
             assert len(sc.addons) == 1
             tctx.master.options.update(scripts=[])
-            assert len(tctx.master.addons) == 1
+            assert len(tctx.master.addons) == 2
             assert len(sc.addons) == 0
 
     def test_dupes(self):

@@ -13,7 +13,6 @@ import re
 from collections.abc import Iterator, MutableMapping, Sequence
 from typing import Any, Optional
 
-import blinker
 import sortedcontainers
 
 import mitmproxy.flow
@@ -27,7 +26,8 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
-from mitmproxy.utils import human
+from mitmproxy import udp
+from mitmproxy.utils import human, signals
 
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -83,8 +83,8 @@ class OrderRequestMethod(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.method
-        elif isinstance(f, tcp.TCPFlow):
-            return "TCP"
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
+            return f.type.upper()
         elif isinstance(f, dns.DNSFlow):
             return dns.op_codes.to_str(f.request.op_code)
         else:
@@ -95,7 +95,7 @@ class OrderRequestURL(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.url
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             return human.format_address(f.server_conn.address)
         elif isinstance(f, dns.DNSFlow):
             return f.request.questions[0].name if f.request.questions else ""
@@ -112,7 +112,7 @@ class OrderKeySize(_OrderKey):
             if f.response and f.response.raw_content:
                 size += len(f.response.raw_content)
             return size
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             size = 0
             for message in f.messages:
                 size += len(message.content)
@@ -155,19 +155,19 @@ class View(collections.abc.Sequence):
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
         # a signal. All signals are called after the view has been updated.
-        self.sig_view_update = blinker.Signal()
-        self.sig_view_add = blinker.Signal()
-        self.sig_view_remove = blinker.Signal()
+        self.sig_view_update = signals.SyncSignal()
+        self.sig_view_add = signals.SyncSignal()
+        self.sig_view_remove = signals.SyncSignal()
         # Signals that the view should be refreshed completely
-        self.sig_view_refresh = blinker.Signal()
+        self.sig_view_refresh = signals.SyncSignal()
 
         # The sig_store* signals broadcast events that affect the underlying
         # store. If a flow is removed from just the view, sig_view_remove is
         # triggered. If it is removed from the store while it is also in the
         # view, both sig_store_remove and sig_view_remove are triggered.
-        self.sig_store_remove = blinker.Signal()
+        self.sig_store_remove = signals.SyncSignal()
         # Signals that the store should be refreshed completely
-        self.sig_store_refresh = blinker.Signal()
+        self.sig_store_refresh = signals.SyncSignal()
 
         self.focus = Focus(self)
         self.settings = Settings(self)
@@ -592,6 +592,18 @@ class View(collections.abc.Sequence):
     def tcp_end(self, f):
         self.update([f])
 
+    def udp_start(self, f):
+        self.add([f])
+
+    def udp_message(self, f):
+        self.update([f])
+
+    def udp_error(self, f):
+        self.update([f])
+
+    def udp_end(self, f):
+        self.update([f])
+
     def dns_request(self, f):
         self.add([f])
 
@@ -638,7 +650,7 @@ class Focus:
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow: Optional[mitmproxy.flow.Flow] = None
-        self.sig_change = blinker.Signal()
+        self.sig_change = signals.SyncSignal()
         if len(self.view):
             self.flow = self.view[0]
         v.sig_view_add.connect(self._sig_view_add)

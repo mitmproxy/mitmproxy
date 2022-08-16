@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 
 import urwid
-import blinker
 import textwrap
 import pprint
 from typing import Optional
@@ -11,6 +10,7 @@ from mitmproxy import optmanager
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
+from mitmproxy.utils import signals as utils_signals
 
 HELP_HEIGHT = 5
 
@@ -27,7 +27,7 @@ def fcol(s, width, attr):
     return ("fixed", width, urwid.Text((attr, s)))
 
 
-option_focus_change = blinker.Signal()
+option_focus_change = utils_signals.SyncSignal()
 
 
 class OptionItem(urwid.WidgetWrap):

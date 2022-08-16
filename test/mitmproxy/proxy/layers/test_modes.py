@@ -23,6 +23,7 @@ from mitmproxy.proxy.layers.tls import (
     TlsStartClientHook,
     TlsStartServerHook,
 )
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
 from test.mitmproxy.proxy.layers.test_tls import (
     reply_tls_start_client,
@@ -44,15 +45,15 @@ def test_upstream_https(tctx):
         Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
         copy.deepcopy(tctx.options),
     )
-    tctx1.options.mode = "upstream:https://example.mitmproxy.org:8081"
+    tctx1.client.proxy_mode = ProxyMode.parse("upstream:https://example.mitmproxy.org:8081")
     tctx2 = Context(
         Client(("client", 4321), ("127.0.0.1", 8080), 1605699329),
         copy.deepcopy(tctx.options),
     )
-    assert tctx2.options.mode == "regular"
+    assert tctx2.client.proxy_mode == ProxyMode.parse("regular")
     del tctx
 
-    proxy1 = Playbook(modes.HttpProxy(tctx1), hooks=False)
+    proxy1 = Playbook(modes.HttpUpstreamProxy(tctx1), hooks=False)
     proxy2 = Playbook(modes.HttpProxy(tctx2), hooks=False)
 
     upstream = Placeholder(Server)
@@ -124,7 +125,7 @@ def test_reverse_proxy(tctx, keep_host_header):
     - make sure that we include non-standard ports in the host header (#4280)
     """
     server = Placeholder(Server)
-    tctx.options.mode = "reverse:http://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:http://localhost:8000")
     tctx.options.connection_strategy = "lazy"
     tctx.options.keep_host_header = keep_host_header
     assert (
@@ -165,7 +166,7 @@ def test_reverse_proxy_tcp_over_tls(
 
     flow = Placeholder(TCPFlow)
     data = Placeholder(bytes)
-    tctx.options.mode = "reverse:https://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:https://localhost:8000")
     tctx.options.connection_strategy = connection_strategy
     playbook = Playbook(modes.ReverseProxy(tctx))
     if connection_strategy == "eager":
@@ -273,7 +274,7 @@ def test_reverse_eager_connect_failure(tctx: Context):
     reverse proxying.
     """
 
-    tctx.options.mode = "reverse:https://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:https://localhost:8000")
     tctx.options.connection_strategy = "eager"
     playbook = Playbook(modes.ReverseProxy(tctx))
     assert (

@@ -4,7 +4,6 @@ import pytest
 
 from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.http import HTTPFlow, Response
-from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
@@ -12,6 +11,7 @@ from mitmproxy.proxy.layers import TCPLayer, http, tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from test.mitmproxy.proxy.tutils import (
     BytesMatching,
@@ -729,7 +729,7 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
     server = Placeholder(Server)
     server2 = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    tctx.options.mode = "upstream:http://proxy:8080"
+    tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.upstream), hooks=False)
 
     if scheme == "http":
@@ -782,7 +782,7 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         flow().request.host = domain + b".test"
         flow().request.host_header = domain
     elif redirect == "change-proxy":
-        flow().server_conn.via = ServerSpec("http", address=("other-proxy", 1234))
+        flow().server_conn.via = ("http", ("other-proxy", 1234))
     playbook >> reply()
 
     if redirect:
@@ -829,10 +829,10 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
 
     if redirect == "change-proxy":
         assert (
-            server2().address == flow().server_conn.via.address == ("other-proxy", 1234)
+            server2().address == flow().server_conn.via[1] == ("other-proxy", 1234)
         )
     else:
-        assert server2().address == flow().server_conn.via.address == ("proxy", 8080)
+        assert server2().address == flow().server_conn.via[1] == ("proxy", 8080)
 
     playbook >> ConnectionClosed(tctx.client)
     playbook << CloseConnection(tctx.client)
@@ -848,10 +848,10 @@ def test_http_proxy_tcp(tctx, mode, close_first):
     tctx.options.connection_strategy = "lazy"
 
     if mode == "upstream":
-        tctx.options.mode = "upstream:http://proxy:8080"
+        tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
         toplayer = http.HttpLayer(tctx, HTTPMode.upstream)
     else:
-        tctx.options.mode = "regular"
+        tctx.client.proxy_mode = ProxyMode.parse("regular")
         toplayer = http.HttpLayer(tctx, HTTPMode.regular)
 
     playbook = Playbook(toplayer, hooks=False)
@@ -1640,3 +1640,25 @@ def test_memory_usage_errored_flows(tctx):
 
     gc.collect()
     assert flows_tracked() == flow_count
+
+
+def test_drop_stream_with_paused_events(tctx):
+    """Make sure that we don't crash if we still have paused events for streams that error."""
+    tctx.options.stream_large_bodies = "1"
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(
+            tctx.client,
+            b"POST http://example.com/ HTTP/1.1\r\nHost: example.com\r\nContent-Length: 4\r\n\r\ndata",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply('Connection killed: error')
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection killed"))
+        << CloseConnection(tctx.client)
+    )

@@ -134,14 +134,12 @@ class TlsConfig:
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
-        tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
-            ctx.options.connection_strategy == "eager"
-            or ctx.options.add_upstream_certs_to_client_chain
-            or ctx.options.upstream_cert
+        tls_clienthello.establish_server_tls_first = (
+            conn_context.server.tls and ctx.options.connection_strategy == "eager"
         )
 
     def tls_start_client(self, tls_start: tls.TlsData) -> None:
-        """Establish TLS between client and proxy."""
+        """Establish TLS or DTLS between client and proxy."""
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
@@ -164,6 +162,7 @@ class TlsConfig:
             extra_chain_certs = []
 
         ssl_ctx = net_tls.create_client_proxy_context(
+            method=net_tls.Method.DTLS_SERVER_METHOD if tls_start.is_dtls else net_tls.Method.TLS_SERVER_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
@@ -197,7 +196,7 @@ class TlsConfig:
         tls_start.ssl_conn.set_accept_state()
 
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
-        """Establish TLS between proxy and server."""
+        """Establish TLS or DTLS between proxy and server."""
         if tls_start.ssl_conn is not None:
             return  # a user addon has already provided the pyOpenSSL context.
 
@@ -252,6 +251,7 @@ class TlsConfig:
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(
+            method=net_tls.Method.DTLS_CLIENT_METHOD if tls_start.is_dtls else net_tls.Method.TLS_CLIENT_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),

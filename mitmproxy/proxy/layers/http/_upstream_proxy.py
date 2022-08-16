@@ -26,16 +26,16 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
 
     @classmethod
     def make(cls, ctx: context.Context, send_connect: bool) -> tunnel.LayerStack:
-        spec = ctx.server.via
-        assert spec
-        assert spec.scheme in ("http", "https")
+        assert ctx.server.via
+        scheme, address = ctx.server.via
+        assert scheme in ("http", "https")
 
-        http_proxy = connection.Server(spec.address)
+        http_proxy = connection.Server(address)
 
         stack = tunnel.LayerStack()
-        if spec.scheme == "https":
+        if scheme == "https":
             http_proxy.alpn_offers = tls.HTTP1_ALPNS
-            http_proxy.sni = spec.address[0]
+            http_proxy.sni = address[0]
             stack /= tls.ServerTLSLayer(ctx, http_proxy)
         stack /= cls(ctx, http_proxy, send_connect)
 

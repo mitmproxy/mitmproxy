@@ -1,17 +1,16 @@
 import collections
 from typing import Optional
 
-import blinker
-
 from mitmproxy import command
 from mitmproxy.log import LogEntry
+from mitmproxy.utils import signals
 
 
 class EventStore:
     def __init__(self, size=10000):
         self.data: collections.deque[LogEntry] = collections.deque(maxlen=size)
-        self.sig_add = blinker.Signal()
-        self.sig_refresh = blinker.Signal()
+        self.sig_add = signals.SyncSignal()
+        self.sig_refresh = signals.SyncSignal()
 
     @property
     def size(self) -> Optional[int]:

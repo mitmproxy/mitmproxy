@@ -131,7 +131,7 @@ async def test_mixed_async_sync():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
-        assert len(a) == 0
+        assert len(a) == 1
         a1 = TAddon("sync")
         a2 = AsyncTAddon("async")
         a.add(a1)
@@ -177,15 +177,16 @@ async def test_simple():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
-        assert len(a) == 0
+        assert len(a) == 1
         a.add(TAddon("one"))
         assert a.get("one")
         assert not a.get("two")
-        assert len(a) == 1
+        assert len(a) == 2
         a.clear()
         assert len(a) == 0
         assert not a.chain
 
+    with taddons.context(loadcore=False) as tctx:
         a.add(TAddon("one"))
 
         a.trigger("nonexistent")

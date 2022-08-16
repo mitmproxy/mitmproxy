@@ -53,6 +53,11 @@ def tcp_flow():
     return tflow.ttcpflow()
 
 
+@pytest.fixture
+def udp_flow():
+    return tflow.tudpflow()
+
+
 @pytest.fixture(scope="module")
 def export_curl():
     e = export.Export()
@@ -87,6 +92,10 @@ class TestExportCurlCommand:
     def test_tcp(self, export_curl, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export_curl(tcp_flow)
+
+    def test_udp(self, export_curl, udp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export_curl(udp_flow)
 
     def test_escape_single_quotes_in_body(self, export_curl):
         request = tflow.tflow(
@@ -153,6 +162,10 @@ class TestExportHttpieCommand:
         with pytest.raises(exceptions.CommandError):
             export.httpie_command(tcp_flow)
 
+    def test_udp(self, udp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export.httpie_command(udp_flow)
+
     def test_escape_single_quotes_in_body(self):
         request = tflow.tflow(
             req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
@@ -197,6 +210,13 @@ class TestRaw:
         ):
             export.raw(tcp_flow)
 
+    def test_udp(self, udp_flow):
+        with pytest.raises(
+            exceptions.CommandError,
+            match="Can't export flow with no request or response",
+        ):
+            export.raw(udp_flow)
+
 
 class TestRawRequest:
     def test_get(self, get_request):
@@ -212,6 +232,10 @@ class TestRawRequest:
         with pytest.raises(exceptions.CommandError):
             export.raw_request(tcp_flow)
 
+    def test_udp(self, udp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export.raw_request(udp_flow)
+
 
 class TestRawResponse:
     def test_get(self, get_response):
@@ -225,6 +249,10 @@ class TestRawResponse:
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export.raw_response(tcp_flow)
+
+    def test_udp(self, udp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export.raw_response(udp_flow)
 
 
 def qr(f):

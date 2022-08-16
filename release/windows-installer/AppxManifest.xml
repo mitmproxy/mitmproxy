@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+    xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+    xmlns:desktop2="http://schemas.microsoft.com/appx/manifest/desktop/windows10/2"
+>
+    <!--
+    <Identity Name="8637MaximilianHils.mitmproxy" ProcessorArchitecture="x64" Publisher="CN=E4E2D0A5-1FD2-42BF-B9FD-3BCA3E1C1249, OID.2.25.311729368913984317654407730594956997722=1" Version="1.2.3.0" />
+    Then from an admin shell:
+    Add-AppPackage -Path .\release\dist\mitmproxy-dev-installer.msix -AllowUnsigned
+    -->
+    <Identity Name="8637MaximilianHils.mitmproxy" ProcessorArchitecture="x64" Publisher="CN=E4E2D0A5-1FD2-42BF-B9FD-3BCA3E1C1249" Version="1.2.3.0" />
+    <Properties>
+        <DisplayName>mitmproxy</DisplayName>
+        <PublisherDisplayName>mitmproxy.org</PublisherDisplayName>
+        <Description>mitmproxy is a free and open source interactive HTTPS proxy.</Description>
+        <Logo>Assets\logo.150x150.png</Logo>
+    </Properties>
+    <Resources>
+        <Resource Language="en-us" />
+    </Resources>
+    <Dependencies>
+        <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22622.436" />
+    </Dependencies>
+    <Capabilities>
+        <rescap:Capability Name="runFullTrust" />
+    </Capabilities>
+    <Applications>
+        <Application Id="mitmproxy" Executable="mitmproxy.exe" EntryPoint="Windows.FullTrustApplication" uap10:Subsystem="console" uap10:SupportsMultipleInstances="true">
+            <uap3:VisualElements DisplayName="mitmproxy (console ui)" Description="Mitmproxy Console UI" BackgroundColor="#333333"
+                Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png" VisualGroup="mitmproxy"/>
+            <Extensions>
+                <uap3:Extension Executable="mitmproxy.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
+                    <uap3:AppExecutionAlias>
+                        <desktop:ExecutionAlias Alias="mitmproxy.exe" />
+                    </uap3:AppExecutionAlias>
+                </uap3:Extension>
+            </Extensions>
+        </Application>
+        <Application Id="mitmweb" Executable="mitmweb.exe" EntryPoint="Windows.FullTrustApplication" uap10:Subsystem="console" uap10:SupportsMultipleInstances="true">
+            <uap3:VisualElements DisplayName="mitmweb (web ui)" Description="Mitmproxy Web UI" BackgroundColor="#333333"
+                Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png" VisualGroup="mitmproxy"/>
+            <Extensions>
+                <uap3:Extension Executable="mitmweb.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
+                    <uap3:AppExecutionAlias>
+                        <desktop:ExecutionAlias Alias="mitmweb.exe" />
+                    </uap3:AppExecutionAlias>
+                </uap3:Extension>
+            </Extensions>
+        </Application>
+        <Application Id="mitmdump" Executable="mitmdump.exe" EntryPoint="Windows.FullTrustApplication" uap10:Subsystem="console" uap10:SupportsMultipleInstances="true">
+            <uap3:VisualElements DisplayName="mitmdump (headless)" Description="Mitmdump" BackgroundColor="#333333"
+                Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png" VisualGroup="mitmproxy"/>
+            <Extensions>
+                <uap3:Extension Executable="mitmdump.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
+                    <uap3:AppExecutionAlias>
+                        <desktop:ExecutionAlias Alias="mitmdump.exe" />
+                    </uap3:AppExecutionAlias>
+                </uap3:Extension>
+            </Extensions>
+        </Application>
+    </Applications>
+    <Extensions>
+        <desktop2:Extension Category="windows.firewallRules">
+            <desktop2:FirewallRules Executable="mitmproxy.exe">
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
+            </desktop2:FirewallRules>
+        </desktop2:Extension>
+        <desktop2:Extension Category="windows.firewallRules">
+            <desktop2:FirewallRules Executable="mitmweb.exe">
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
+            </desktop2:FirewallRules>
+        </desktop2:Extension>
+        <desktop2:Extension Category="windows.firewallRules">
+            <desktop2:FirewallRules Executable="mitmdump.exe">
+                <desktop2:Rule Direction="in" IPProtocol="TCP" Profile="all"/>
+                <desktop2:Rule Direction="in" IPProtocol="UDP" Profile="all"/>
+            </desktop2:FirewallRules>
+        </desktop2:Extension>
+    </Extensions>
+    </Package>

@@ -15,11 +15,9 @@ import traceback
 from typing import Union
 from typing import Optional
 
-import blinker
-
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.utils import strutils
+from mitmproxy.utils import signals, strutils
 from . import (
     auto,
     raw,
@@ -41,13 +39,14 @@ from . import (
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
+from ..udp import UDPMessage, UDPFlow
 from ..websocket import WebSocketMessage
 
 views: list[View] = []
 
-on_add = blinker.Signal()
+on_add = signals.SyncSignal()
 """A new contentview has been added."""
-on_remove = blinker.Signal()
+on_remove = signals.SyncSignal()
 """A contentview has been removed."""
 
 
@@ -89,8 +88,8 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[http.Message, TCPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow],
+    message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+    flow: Union[HTTPFlow, TCPFlow, UDPFlow],
 ):
     """
     Like get_content_view, but also handles message encoding.
@@ -138,10 +137,10 @@ def get_message_content_view(
     return description, lines, error
 
 
-def get_tcp_content_view(
+def get_proto_content_view(
     viewname: str,
     data: bytes,
-    flow: TCPFlow,
+    flow: Union[TCPFlow, UDPFlow],
 ):
     viewmode = get(viewname)
     if not viewmode:
