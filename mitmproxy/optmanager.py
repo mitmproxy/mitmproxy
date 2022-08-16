@@ -82,12 +82,12 @@ class _UnconvertedStrings:
     val: list[str]
 
 
-def _sig_changed(updated: set[str]) -> None:
-    ...
+def _sig_changed_spec(updated: set[str]) -> None:  # pragma: no cover
+    ...  # expected function signature for OptManager.changed receivers.
 
 
-def _sig_errored(exc: Exception) -> None:
-    ...
+def _sig_errored_spec(exc: Exception) -> None:  # pragma: no cover
+    ...  # expected function signature for OptManager.errored receivers.
 
 
 class OptManager:
@@ -105,13 +105,13 @@ class OptManager:
 
     def __init__(self):
         self.deferred: dict[str, Any] = {}
-        self.changed = signals.SyncSignal(_sig_changed)
-        self.errored = signals.SyncSignal(_sig_errored)
+        self.changed = signals.SyncSignal(_sig_changed_spec)
+        self.changed.connect(self._notify_subscribers)
+        self.errored = signals.SyncSignal(_sig_errored_spec)
+        self._subscriptions: list[tuple[weakref.ref[Callable], set[str]]] = []
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
         self._options: dict[str, Any] = {}
-        self._subscriptions: list[tuple[weakref.ref[Callable], set[str]]] = []
-        self.changed.connect(self._notify_subscribers)
 
     def add_option(
         self,
