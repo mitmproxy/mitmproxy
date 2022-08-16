@@ -31,8 +31,10 @@ from mitmproxy.utils import human, signals
 
 class Servers:
     def __init__(self, manager: ServerManager):
-        self.updating = signals.AsyncSignal(doc="Notified before any instances are started or stopped.")
-        self.updated = signals.AsyncSignal(doc="Notified after all instances have been configured.")
+        self.updating = signals.AsyncSignal(lambda old_modes, new_modes: None)
+        """"Notified before any instances are started or stopped"""
+        self.updated = signals.AsyncSignal(lambda old_modes, new_modes: None)
+        """"Notified after all instances have been configured."""
         self._instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
         self._lock = asyncio.Lock()
         self._manager = manager
@@ -50,7 +52,7 @@ class Servers:
             new_modes = set(modes)
             if not ctx.options.server:
                 new_modes.clear()
-            await self.updating.send(self._manager, old_modes=old_modes, new_modes=new_modes)
+            await self.updating.send(old_modes=old_modes, new_modes=new_modes)
 
             # Shutdown modes that have been removed from the list.
             stop_tasks = [
@@ -83,7 +85,7 @@ class Servers:
             self._instances = instances
 
         # ...notify the listeners outside the lock.
-        await self.updated.send(self._manager, old_modes=old_modes, new_modes=new_modes)
+        await self.updated.send(old_modes=old_modes, new_modes=new_modes)
         return all_ok
 
     def __len__(self) -> int:

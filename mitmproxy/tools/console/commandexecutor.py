@@ -12,7 +12,7 @@ class CommandExecutor:
     def __init__(self, master):
         self.master = master
 
-    def __call__(self, cmd):
+    def __call__(self, cmd: str) -> None:
         if cmd.strip():
             try:
                 ret = self.master.commands.execute(cmd)

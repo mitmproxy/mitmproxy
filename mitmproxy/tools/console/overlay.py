@@ -124,14 +124,14 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         choice = self.walker.choice_by_shortcut(key)
         if choice:
             self.callback(choice)
-            signals.pop_view_state.send(self)
+            signals.pop_view_state.send()
             return
         if key == "m_select":
             self.callback(self.choices[self.walker.index])
-            signals.pop_view_state.send(self)
+            signals.pop_view_state.send()
             return
         elif key in ["q", "esc"]:
-            signals.pop_view_state.send(self)
+            signals.pop_view_state.send()
             return
 
         binding = self.master.keymap.get("global", key)

@@ -8,7 +8,7 @@ from mitmproxy.utils import signals as utils_signals
 HELP_HEIGHT = 5
 
 
-keybinding_focus_change = utils_signals.SyncSignal()
+keybinding_focus_change = utils_signals.SyncSignal(lambda text: None)
 
 
 class KeyItem(urwid.WidgetWrap):
@@ -47,7 +47,7 @@ class KeyListWalker(urwid.ListWalker):
         self.set_focus(0)
         signals.keybindings_change.connect(self.sig_modified)
 
-    def sig_modified(self, sender):
+    def sig_modified(self):
         self.bindings = list(self.master.keymap.list("all"))
         self.set_focus(min(self.index, len(self.bindings) - 1))
         self._modified()

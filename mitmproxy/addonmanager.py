@@ -128,7 +128,7 @@ class AddonManager:
         self.master = master
         master.options.changed.connect(self._configure_all)
 
-    def _configure_all(self, options, updated):
+    def _configure_all(self, updated):
         self.trigger(hooks.ConfigureHook(updated))
 
     def clear(self):

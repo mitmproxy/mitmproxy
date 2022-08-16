@@ -9,11 +9,11 @@ def test_simple():
     sig_add_called = False
     sig_refresh_called = False
 
-    def sig_add(event_store, entry):
+    def sig_add(entry):
         nonlocal sig_add_called
         sig_add_called = True
 
-    def sig_refresh(event_store):
+    def sig_refresh():
         nonlocal sig_refresh_called
         sig_refresh_called = True
 

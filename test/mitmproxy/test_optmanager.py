@@ -100,8 +100,8 @@ def test_options():
 
     rec = []
 
-    def sub(opts, updated):
-        rec.append(copy.copy(opts))
+    def sub(updated):
+        rec.append(copy.copy(o))
 
     o.changed.connect(sub)
 
@@ -159,7 +159,7 @@ def test_subscribe():
     else:
         raise AssertionError
 
-    assert len(o.changed.receivers) == 0
+    assert len(o._subscriptions) == 0
 
     o.subscribe(r, ["two"])
     o.one = 2
@@ -170,7 +170,7 @@ def test_subscribe():
     assert len(o.changed.receivers) == 1
     del r
     o.two = 4
-    assert len(o.changed.receivers) == 0
+    assert len(o._subscriptions) == 0
 
     class binder:
         def __init__(self):
@@ -193,18 +193,18 @@ def test_rollback():
 
     rec = []
 
-    def sub(opts, updated):
-        rec.append(copy.copy(opts))
+    def sub(updated):
+        rec.append(copy.copy(o))
 
     recerr = []
 
-    def errsub(opts, **kwargs):
+    def errsub(**kwargs):
         recerr.append(kwargs)
 
-    def err(opts, updated):
-        if opts.one == 10:
+    def err(updated):
+        if o.one == 10:
             raise exceptions.OptionsError()
-        if opts.bool is True:
+        if o.bool is True:
             raise exceptions.OptionsError()
 
     o.changed.connect(sub)
@@ -233,8 +233,12 @@ def test_rollback():
 
 
 def test_simple():
-    assert repr(TO())
-    assert "one" in TO()
+    o = TO()
+    assert repr(o)
+    assert "one" in o
+
+    with pytest.raises(Exception, match="No such option"):
+        assert o.unknown
 
 
 def test_items():

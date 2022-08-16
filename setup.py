@@ -73,7 +73,6 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "asgiref>=3.2.10,<3.6",
-        "blinker>=1.4,<1.6",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "cryptography>=36,<38",
@@ -96,6 +95,7 @@ setup(
         "wsproto>=1.0,<1.2",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.19",
+        "typing-extensions>=4.3,<4.4; python_version<'3.10'",
     ],
     extras_require={
         ':sys_platform == "win32"': [

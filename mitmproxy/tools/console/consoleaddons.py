@@ -325,7 +325,7 @@ class ConsoleAddon:
         Pop a view off the console stack. At the top level, this prompts the
         user to exit mitmproxy.
         """
-        signals.pop_view_state.send(self)
+        signals.pop_view_state.send()
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
@@ -647,8 +647,8 @@ class ConsoleAddon:
     def running(self):
         self.started = True
 
-    def update(self, flows):
+    def update(self, flows) -> None:
         if not flows:
-            signals.update_settings.send(self)
+            signals.update_settings.send()
         for f in flows:
-            signals.flow_change.send(self, flow=f)
+            signals.flow_change.send(flow=f)

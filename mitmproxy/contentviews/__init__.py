@@ -44,9 +44,14 @@ from ..websocket import WebSocketMessage
 
 views: list[View] = []
 
-on_add = signals.SyncSignal()
+
+def _update(view: View) -> None:
+    ...
+
+
+on_add = signals.SyncSignal(_update)
 """A new contentview has been added."""
-on_remove = signals.SyncSignal()
+on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
 

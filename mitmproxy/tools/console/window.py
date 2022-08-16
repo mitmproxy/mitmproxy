@@ -2,6 +2,7 @@ import os
 import re
 
 import urwid
+from mitmproxy import flow
 from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import eventlog
@@ -146,17 +147,15 @@ class Window(urwid.Frame):
         signals.focus.connect(self.sig_focus)
         signals.flow_change.connect(self.flow_changed)
         signals.pop_view_state.connect(self.pop)
-        signals.push_view_state.connect(self.push)
 
-        self.master.options.subscribe(self.configure, ["console_layout"])
-        self.master.options.subscribe(self.configure, ["console_layout_headers"])
+        self.master.options.subscribe(self.configure, ["console_layout", "console_layout_headers"])
         self.pane = 0
         self.stacks = [WindowStack(master, "flowlist"), WindowStack(master, "eventlog")]
 
     def focus_stack(self):
         return self.stacks[self.pane]
 
-    def configure(self, otions, updated):
+    def configure(self, updated):
         self.refresh()
 
     def refresh(self):
@@ -191,7 +190,7 @@ class Window(urwid.Frame):
 
         self.body = urwid.AttrWrap(w, "background")
 
-    def flow_changed(self, sender, flow):
+    def flow_changed(self, flow: flow.Flow) -> None:
         if self.master.view.focus.flow:
             if flow.id == self.master.view.focus.flow.id:
                 self.focus_changed()
@@ -227,7 +226,7 @@ class Window(urwid.Frame):
         self.view_changed()
         self.focus_changed()
 
-    def pop(self, *args, **kwargs):
+    def pop(self) -> None:
         """
         Pop a window from the currently focused stack. If there is only one
         window on the stack, this prompts for exit.
@@ -270,7 +269,7 @@ class Window(urwid.Frame):
             if t.keyctx == keyctx:
                 return t
 
-    def sig_focus(self, sender, section):
+    def sig_focus(self, section):
         self.focus_position = section
 
     def switch(self):
