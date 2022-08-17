@@ -1,95 +1,77 @@
-import asyncio
+from unittest import mock
+
 import pytest
 from mitmproxy.utils.signals import AsyncSignal, SyncSignal
 
 
-async def test_async_connect_to_sync():
-    is_connected = False
-    was_called = False
+def test_sync_signal() -> None:
+    m = mock.Mock()
 
-    def valid(sender):
-        nonlocal was_called
-        was_called = True
+    s = SyncSignal(lambda event: None)
+    s.connect(m)
+    s.send("foo")
 
-    async def invalid(sender):
-        assert False
+    assert m.call_args_list == [mock.call("foo")]
 
-    def check_connected(signal, receiver, sender, weak):
-        nonlocal is_connected
-        assert receiver is valid
-        is_connected = True
+    class Foo:
+        called = None
 
-    signal = SyncSignal()
-    signal.receiver_connected.connect(check_connected)
-    with pytest.raises(TypeError, match="cannot be an asynchronous function"):
-        signal.connect(invalid)
-    signal.connect(valid)
-    assert is_connected
+        def bound(self, event):
+            self.called = event
 
-    signal.send(signal)
-    assert was_called
+    f = Foo()
+    s.connect(f.bound)
+    s.send(event="bar")
+    assert f.called == "bar"
+    assert m.call_args_list == [mock.call("foo"), mock.call(event="bar")]
 
+    s.disconnect(m)
+    s.send("baz")
+    assert f.called == "baz"
+    assert m.call_count == 2
 
-async def test_async_returned_in_sync():
-    is_connected = False
+    def err(event):
+        raise RuntimeError
 
-    def delayed_invalid(sender):
-        async def invalid():
-            await asyncio.sleep(1)
-            return True
-
-        return invalid()
-
-    def check_connected(signal, receiver, sender, weak):
-        nonlocal is_connected
-        assert receiver is delayed_invalid
-        is_connected = True
-
-    signal = SyncSignal()
-    signal.receiver_connected.connect(check_connected)
-    signal.connect(delayed_invalid)
-    assert is_connected
-
-    with pytest.raises(RuntimeError, match="returned awaitable"):
-        signal.send(signal)
+    s.connect(err)
+    with pytest.raises(RuntimeError):
+        s.send(42)
 
 
-async def test_async():
-    is_connected_sync = False
-    is_connected_async = False
-    async_ret = object()
-    sync_ret = object()
+def test_signal_weakref() -> None:
+    def m1():
+        pass
 
-    async def delayed(sender):
-        nonlocal async_ret
-        await asyncio.sleep(1)
-        return async_ret
+    def m2():
+        pass
 
-    async def immediate(sender):
-        nonlocal sync_ret
-        return sync_ret
+    s = SyncSignal(lambda: None)
+    s.connect(m1)
+    s.connect(m2)
+    del m2
+    s.send()
+    assert len(s.receivers) == 1
 
-    def check_connected(signal, receiver, sender, weak):
-        nonlocal is_connected_sync, is_connected_async
-        if receiver is delayed:
-            is_connected_async = True
-        elif receiver is immediate:
-            is_connected_sync = True
-        else:
-            assert False
 
-    signal = AsyncSignal()
-    signal.receiver_connected.connect(check_connected)
-    signal.connect(delayed)
-    signal.connect(immediate)
-    assert is_connected_async and is_connected_sync
+def test_sync_signal_async_receiver() -> None:
+    s = SyncSignal(lambda: None)
 
-    res = await signal.send(signal)
-    assert len(res) == 2
-    for receiver, ret in res:
-        if receiver is delayed:
-            assert ret is async_ret
-        elif receiver is immediate:
-            assert ret is sync_ret
-        else:
-            assert False
+    with pytest.raises(AssertionError):
+        s.connect(mock.AsyncMock())
+
+
+async def test_async_signal() -> None:
+    s = AsyncSignal(lambda event: None)
+    m1 = mock.AsyncMock()
+    m2 = mock.Mock()
+
+    s.connect(m1)
+    s.connect(m2)
+    await s.send("foo")
+    assert m1.call_args_list == m2.call_args_list == [mock.call("foo")]
+
+    s.disconnect(m2)
+
+    await s.send("bar")
+    assert m1.call_count == 2
+    assert m2.call_count == 1

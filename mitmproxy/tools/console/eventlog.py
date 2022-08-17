@@ -42,7 +42,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             self.set_focus(0)
         return super().keypress(size, key)
 
-    def add_event(self, event_store, entry: log.LogEntry):
+    def add_event(self, entry: log.LogEntry):
         if log.log_tier(self.master.options.console_eventlog_verbosity) < log.log_tier(
             entry.level
         ):
@@ -56,7 +56,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def refresh_events(self, *_):
+    def refresh_events(self, *_) -> None:
         self.walker.clear()
         for event in self.master.events.data:
-            self.add_event(None, event)
+            self.add_event(event)

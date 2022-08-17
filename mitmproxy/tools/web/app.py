@@ -615,6 +615,13 @@ class Conf(RequestHandler):
         self.set_header("content-type", "application/javascript")
 
 
+class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
+    CONTENT_TYPES = {
+        "application/octet-stream",
+        *tornado.web.GZipContentEncoding.CONTENT_TYPES
+    }
+
+
 class Application(tornado.web.Application):
     master: "mitmproxy.tools.web.master.WebMaster"
 
@@ -630,6 +637,7 @@ class Application(tornado.web.Application):
             cookie_secret=os.urandom(256),
             debug=debug,
             autoreload=False,
+            transforms=[GZipContentAndFlowFiles],
         )
 
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])

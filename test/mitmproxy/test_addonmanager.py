@@ -112,6 +112,8 @@ async def test_lifecycle():
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
+    assert str(a)
+
     with pytest.raises(exceptions.AddonManagerError):
         a.add(TAddon("one"))
     with pytest.raises(exceptions.AddonManagerError):
@@ -120,7 +122,7 @@ async def test_lifecycle():
     f = tflow.tflow()
     await a.handle_lifecycle(HttpRequestHook(f))
 
-    a._configure_all(o, o.keys())
+    a._configure_all(o.keys())
 
 
 def test_defaults():
