@@ -3,12 +3,11 @@ Server specs are used to describe an upstream proxy or server.
 """
 import re
 from functools import cache
-from typing import Literal
 
 from mitmproxy.net import check
 
 ServerSpec = tuple[
-    Literal["http", "https", "tcp", "tls", "dns"],
+    str,
     tuple[str, int]
 ]
 
@@ -45,8 +44,6 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
         scheme = m.group("scheme")
     else:
         scheme = default_scheme
-    if scheme not in ("tcp", "tls", "dns", "dtls", "http", "https"):
-        raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")
     # IPv6 brackets
@@ -69,4 +66,4 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
     if not check.is_valid_port(port):
         raise ValueError(f"Invalid port: {port}")
 
-    return scheme, (host, port)  # type: ignore
+    return scheme, (host, port)

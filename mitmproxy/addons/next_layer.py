@@ -22,7 +22,7 @@ from mitmproxy import ctx, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
-from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import modes, quic
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello
 
 LayerCls = type[layer.Layer]
@@ -118,6 +118,28 @@ class NextLayer:
         self, context: context.Context, data_client: bytes, data_server: bytes
     ) -> Optional[layer.Layer]:
         assert context.layers
+
+        # handle QUIC connections
+        first_layer = context.layers[0]
+        if isinstance(first_layer, quic.QuicLayer):
+            if context.client.alpn is None:
+                return None  # should never happen, as ask is called after handshake
+            if context.client.alpn == b"h3" or context.client.alpn.startswith(b"h3-"):
+                if first_layer.instance.mode.mode == "regular":
+                    mode = HTTPMode.regular
+                elif first_layer.instance.mode.mode == "reverse":
+                    mode = HTTPMode.transparent
+                elif first_layer.instance.mode.mode == "upstream":
+                    mode = HTTPMode.upstream
+                else:
+                    return None
+                return layers.HttpLayer(context, mode)
+            if context.server.address is None:
+                return None  # not H3 and no predefined destination, nothing we can do
+            if isinstance(context.layers[1], quic.ServerQuicLayer):
+                return quic.QuicRelayLayer(context)  # server layer already present
+            return quic.ServerQuicLayer(context, quic.QuicRelayLayer(context))
+
         if len(data_client) < 3 and not data_server:
             return None  # not enough data yet to make a decision
 

@@ -185,7 +185,7 @@ class UpstreamMode(ProxyMode):
         scheme, self.address = server_spec.parse(self.data, default_scheme="http")
         if scheme != "http" and scheme != "https":
             raise ValueError("invalid upstream proxy scheme")
-        self.scheme = scheme
+        self.scheme = scheme  # type: ignore
 
 
 class ReverseMode(ProxyMode):
@@ -198,7 +198,7 @@ class ReverseMode(ProxyMode):
         scheme, self.address = server_spec.parse(self.data, default_scheme="https")
         if scheme != "http" and scheme != "https" and scheme != "tcp" and scheme != "tls":
             raise ValueError("invalid reverse proxy scheme")
-        self.scheme = scheme
+        self.scheme = scheme  # type: ignore
 
 
 class Socks5Mode(ProxyMode):
@@ -226,7 +226,7 @@ class DnsMode(ProxyMode):
         scheme, self.address = server_spec.parse(server, "dns")
         if scheme != "dns":
             raise ValueError("invalid dns scheme")
-        self.scheme = scheme
+        self.scheme = scheme  # type: ignore
 
     @property
     def resolve_local(self) -> bool:
@@ -247,4 +247,44 @@ class DtlsMode(ProxyMode):
         scheme, self.address = server_spec.parse(server, "dtls")
         if scheme != "dtls":
             raise ValueError("invalid dtls scheme")
-        self.scheme = scheme
+        self.scheme = scheme  # type: ignore
+
+
+class QuicMode(ProxyMode):
+    """
+    QUIC modes:
+     - regular[:version] (default)
+     - upstream:[version://]host:port
+     - reverse:[version://]host:port
+
+    Versions: Use the given HTTP version to connect to upstream.
+     - h1
+     - h2
+     - h3 (default)
+
+    Example:
+      --mode quic:upstream:h2://192.168.1.1:8080@443
+      Listens on port 443 for incoming H3 connections and forwards
+      request to upstream proxy 192.168.1.1 on port 8080 using H2.
+    """
+
+    default_port = 8085
+    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
+    scheme: Literal["h1", "h2", "h3"] = "h3"
+    mode: Literal["regular", "reverse", "upstream"] = "regular"
+    address: tuple[str, int] | None = None
+
+    # noinspection PyDataclass
+    def __post_init__(self) -> None:
+        if self.data:
+            mode, _, additional = self.data.partition(":")
+            if mode == "reverse" or mode == "upstream":
+                scheme, self.address = server_spec.parse(additional, default_mode="h3")
+            elif mode == "regular":
+                scheme = additional
+            else:
+                raise ValueError(f"Invalid QUIC mode: {mode}")
+            if scheme != "h3" and scheme != "h2" and scheme != "h1":
+                raise ValueError(f"Invalid QUIC scheme: {scheme}")
+            self.mode = mode  # type: ignore
+            self.scheme = scheme  # type: ignore

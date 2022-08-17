@@ -1,7 +1,7 @@
+from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -21,7 +21,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
 from mitmproxy import certs, connection, flow as mitm_flow, tcp
 from mitmproxy.net import tls
-from mitmproxy.proxy import commands, context, events, layer, layers
+from mitmproxy.proxy import commands, context, events, layer, layers, mode_servers
 from mitmproxy.proxy.layers import tcp as tcp_layer
 from mitmproxy.proxy.utils import expect
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
@@ -33,21 +33,21 @@ class QuicTlsSettings:
     Settings necessary to establish QUIC's TLS context.
     """
 
-    certificate: Optional[x509.Certificate] = None
+    certificate: x509.Certificate | None = None
     """The certificate to use for the connection."""
-    certificate_chain: List[x509.Certificate] = field(default_factory=list)
+    certificate_chain: list[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
-    certificate_private_key: Optional[
-        Union[dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey, rsa.RSAPrivateKey]
-    ] = None
+    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = (
+        None
+    )
     """The certificate's private key."""
-    cipher_suites: Optional[List[CipherSuite]] = None
+    cipher_suites: list[CipherSuite] | None = None
     """An optional list of allowed/advertised cipher suites."""
-    ca_path: Optional[str] = None
+    ca_path: str | None = None
     """An optional path to a directory that contains the necessary information to verify the peer certificate."""
-    ca_file: Optional[str] = None
+    ca_file: str | None = None
     """An optional path to a PEM file that will be used to verify the peer certificate."""
-    verify_mode: Optional[VerifyMode] = None
+    verify_mode: VerifyMode | None = None
     """An optional flag that specifies how/if the peer's certificate should be validated."""
 
 
@@ -57,7 +57,7 @@ class QuicTlsData(TlsData):
     Event data for `quic_tls_start_client` and `quic_tls_start_server` event hooks.
     """
 
-    settings: Optional[QuicTlsSettings] = None
+    settings: QuicTlsSettings | None = None
     """
     The associated `QuicTlsSettings` object.
     This will be set by an addon in the `quic_tls_start_*` event hooks.
@@ -169,7 +169,7 @@ class QuicClientHello(Exception):
     data: bytes
 
 
-def pull_client_hello_and_connection_id(data: bytes) -> Tuple[ClientHello, bytes]:
+def pull_client_hello_and_connection_id(data: bytes) -> tuple[ClientHello, bytes]:
     """Helper function that parses a client hello packet."""
 
     # ensure the first packet is indeed the initial one
@@ -256,13 +256,13 @@ class QuicRelayLayer(layer.Layer):
 
     # NOTE: for now we're (ab)using the TCPFlow until https://github.com/mitmproxy/mitmproxy/pull/5414 is resolved
 
-    buffer_from_client: Optional[List[quic_events.QuicEvent]]
-    buffer_from_server: Optional[List[quic_events.QuicEvent]]
+    buffer_from_client: list[quic_events.QuicEvent] | None
+    buffer_from_server: list[quic_events.QuicEvent] | None
     flow: tcp.TCPFlow  # used for datagrams and to signal general connection issues
-    quic_client: Optional[QuicConnection] = None
-    quic_server: Optional[QuicConnection] = None
-    streams_by_flow: Dict[tcp.TCPFlow, QuicRelayStream]
-    streams_by_id: Dict[int, QuicRelayStream]
+    quic_client: QuicConnection | None = None
+    quic_server: QuicConnection | None = None
+    streams_by_flow: dict[tcp.TCPFlow, QuicRelayStream]
+    streams_by_id: dict[int, QuicRelayStream]
 
     def __init__(self, context: context.Context) -> None:
         super().__init__(context)
@@ -498,11 +498,9 @@ class QuicRelayLayer(layer.Layer):
 class _QuicLayer(layer.Layer):
     child_layer: layer.Layer
     conn: connection.Connection
-    issue_connection_id_callback: Optional[Callable[[bytes], None]] = None
-    original_destination_connection_id: Optional[bytes] = None
-    quic: Optional[QuicConnection] = None
-    retire_connection_id_callback: Optional[Callable[[bytes], None]] = None
-    tls: Optional[QuicTlsSettings] = None
+    original_destination_connection_id: bytes | None = None
+    quic: QuicConnection | None = None
+    tls: QuicTlsSettings | None = None
 
     def __init__(
         self,
@@ -513,11 +511,11 @@ class _QuicLayer(layer.Layer):
         self.child_layer = layer.NextLayer(context)
         self.conn = conn
         self._loop = asyncio.get_event_loop()
-        self._pending_open_command: Optional[commands.OpenConnection] = None
-        self._request_wakeup_command_and_timer: Optional[
-            Tuple[commands.RequestWakeup, float]
-        ] = None
-        self._obsolete_wakeup_commands: Set[commands.RequestWakeup] = set()
+        self._pending_open_command: commands.OpenConnection | None = None
+        self._request_wakeup_command_and_timer: tuple[
+            commands.RequestWakeup, float
+        ] | None = None
+        self._obsolete_wakeup_commands: set[commands.RequestWakeup] = set()
         self.conn.tls = True
 
     def build_configuration(self) -> QuicConfiguration:
@@ -578,8 +576,7 @@ class _QuicLayer(layer.Layer):
         self._handle_event = self.state_has_quic
 
         # issue the host connection ID right away
-        if self.issue_connection_id_callback is not None:
-            self.issue_connection_id_callback(self.quic.host_cid)
+        self.issue_connection_id(self.quic.host_cid)
 
         # record an entry in the log
         yield commands.Log(f"{self.conn}: QUIC connection created.", level="info")
@@ -629,7 +626,7 @@ class _QuicLayer(layer.Layer):
         assert not self.conn.tls_established
 
         # concatenate all peer certificates
-        all_certs: List[x509.Certificate] = []
+        all_certs: list[x509.Certificate] = []
         if self.quic.tls._peer_certificate is not None:
             all_certs.append(self.quic.tls._peer_certificate)
         if self.quic.tls._peer_certificate_chain is not None:
@@ -690,6 +687,9 @@ class _QuicLayer(layer.Layer):
                 # return other commands
                 yield command
 
+    def issue_connection_id(self, connection_id: bytes) -> None:
+        pass
+
     def open_connection_begin(
         self, command: commands.OpenConnection
     ) -> layer.CommandGenerator[None]:
@@ -714,7 +714,7 @@ class _QuicLayer(layer.Layer):
             self._pending_open_command = None
             yield from self.event_to_child(events.OpenConnectionCompleted(command, err))
 
-    def open_connection_end(self, reply: Optional[str]) -> layer.CommandGenerator[bool]:
+    def open_connection_end(self, reply: str | None) -> layer.CommandGenerator[bool]:
         if self._pending_open_command is None:
             return False
 
@@ -731,12 +731,10 @@ class _QuicLayer(layer.Layer):
         event = self.quic.next_event()
         while event is not None:
             if isinstance(event, quic_events.ConnectionIdIssued):
-                if self.issue_connection_id_callback is not None:
-                    self.issue_connection_id_callback(event.connection_id)
+                self.issue_connection_id(event.connection_id)
 
             elif isinstance(event, quic_events.ConnectionIdRetired):
-                if self.retire_connection_id_callback is not None:
-                    self.retire_connection_id_callback(event.connection_id)
+                self.retire_connection_id(event.connection_id)
 
             elif isinstance(event, quic_events.ConnectionTerminated):
                 # shutdown and close the connection
@@ -780,6 +778,9 @@ class _QuicLayer(layer.Layer):
 
         # transmit buffered data and re-arm timer
         yield from self.transmit()
+
+    def retire_connection_id(self, connection_id: bytes) -> None:
+        pass
 
     def start(self) -> layer.CommandGenerator[None]:
         yield from self.event_to_child(events.Start())
@@ -901,7 +902,7 @@ class ServerQuicLayer(_QuicLayer):
     """
 
     def __init__(
-        self, context: context.Context, child_layer: Optional[layer.Layer] = None
+        self, context: context.Context, child_layer: layer.Layer | None = None
     ) -> None:
         super().__init__(context, context.server)
         if child_layer is not None:
@@ -913,15 +914,38 @@ class ClientQuicLayer(_QuicLayer):
     This layer establishes QUIC on a single client connection.
     """
 
+    parent_layer: QuicLayer
     wait_for_upstream: bool
 
     def __init__(
         self,
-        context: context.Context,
+        parent_layer: QuicLayer,
+        connection_id: bytes,
         wait_for_upstream: bool,
     ) -> None:
-        super().__init__(context, context.client)
+        super().__init__(parent_layer.context, parent_layer.context.client)
+        self.original_destination_connection_id = connection_id
+        self.parent_layer = parent_layer
         self.wait_for_upstream = wait_for_upstream
+        self._handler = parent_layer.instance.manager.connections[
+            parent_layer.fully_qualify_connection_id(connection_id)
+        ]
+        parent_layer.connection_ids.add(connection_id)
+
+    def issue_connection_id(self, connection_id: bytes) -> None:
+        # add the connection id to the manager connections
+        fqcid = self.parent_layer.fully_qualify_connection_id(connection_id)
+        if fqcid not in self.parent_layer.instance.manager.connections:
+            self.parent_layer.instance.manager.connections[fqcid] = self._handler
+            self.parent_layer.connection_ids.add(connection_id)
+
+    def retire_connection_id(self, connection_id: bytes) -> None:
+        # remove the connection id from the manager connections
+        if connection_id in self.parent_layer.connection_ids:
+            del self.parent_layer.instance.manager.connections[
+                self.parent_layer.fully_qualify_connection_id(connection_id)
+            ]
+            self.parent_layer.connection_ids.remove(connection_id)
 
     def start(self) -> layer.CommandGenerator[None]:
         yield from super().start()
@@ -951,26 +975,24 @@ class QuicLayer(layer.Layer):
     Entry layer for QUIC proxy server.
     """
 
+    instance: mode_servers.QuicInstance
+    connection_ids: set[bytes]
+
     def __init__(
         self,
         context: context.Context,
-        issue_cid: Callable[[bytes], None],
-        retire_cid: Callable[[bytes], None],
+        instance: mode_servers.QuicInstance,
     ) -> None:
         super().__init__(context)
-        self._issue_cid = issue_cid
-        self._retire_cid = retire_cid
+        self.instance = instance
+        self.connection_ids = set()
         self.context.client.tls = True
         self.context.server.tls = True
 
-    def build_client_layer(
-        self, connection_id: bytes, wait_for_upstream: bool
-    ) -> ClientQuicLayer:
-        layer = ClientQuicLayer(self.context, wait_for_upstream)
-        layer.original_destination_connection_id = connection_id
-        layer.issue_connection_id_callback = self._issue_cid
-        layer.retire_connection_id_callback = self._retire_cid
-        return layer
+    def fully_qualify_connection_id(self, connection_id: bytes) -> tuple:
+        return self.instance.fully_qualify_connection_id(
+            connection_id, self.context.client.sockname
+        )
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def state_done(self, _) -> layer.CommandGenerator[None]:
@@ -1017,16 +1039,14 @@ class QuicLayer(layer.Layer):
                 # contact the upstream server first
                 elif hook_data.establish_server_tls_first:
                     next_layer = ServerQuicLayer(self.context)
-                    next_layer.child_layer = self.build_client_layer(
-                        connection_id,
-                        wait_for_upstream=True,
+                    next_layer.child_layer = ClientQuicLayer(
+                        self, connection_id, wait_for_upstream=True
                     )
 
                 # perform the client handshake immediately
                 else:
-                    next_layer = self.build_client_layer(
-                        connection_id,
-                        wait_for_upstream=False,
+                    next_layer = ClientQuicLayer(
+                        self, connection_id, wait_for_upstream=False
                     )
 
                 # replace this layer and start the next one

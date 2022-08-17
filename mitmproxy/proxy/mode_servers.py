@@ -19,6 +19,14 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
+from aioquic.buffer import Buffer as QuicBuffer
+from aioquic.quic.packet import (
+    PACKET_TYPE_INITIAL,
+    QuicProtocolVersion,
+    encode_quic_version_negotiation,
+    pull_quic_header,
+)
+
 from mitmproxy import ctx, flow, log
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
@@ -340,3 +348,77 @@ class DtlsInstance(UdpServerInstance[mode_specs.DtlsMode]):
         local_addr: Address,
     ) -> tuple | None:
         return ("dtls", remote_addr, local_addr)
+
+
+class QuicInstance(UdpServerInstance[mode_specs.QuicMode]):
+
+    def fully_qualify_connection_id(self, connection_id: bytes, local_addr: Address) -> tuple:
+        return ("quic", connection_id, local_addr)
+
+    def make_connection_id(
+        self,
+        transport: asyncio.DatagramTransport,
+        data: bytes,
+        remote_addr: Address,
+        local_addr: Address,
+    ) -> tuple | None:
+        # largely taken from aioquic's own asyncio server code
+        buffer = QuicBuffer(data=data)
+        try:
+            header = pull_quic_header(
+                buffer, host_cid_length=ctx.options.quic_connection_id_length
+            )
+        except ValueError:
+            ctx.log.info(
+                f"Invalid QUIC datagram received from {human.format_address(remote_addr)}."
+            )
+            return None
+
+        # negotiate version, support all versions known to aioquic
+        supported_versions = (
+            version.value
+            for version in QuicProtocolVersion
+            if version is not QuicProtocolVersion.NEGOTIATION
+        )
+        if header.version is not None and header.version not in supported_versions:
+            transport.sendto(
+                encode_quic_version_negotiation(
+                    source_cid=header.destination_cid,
+                    destination_cid=header.source_cid,
+                    supported_versions=supported_versions,
+                ),
+                remote_addr,
+            )
+            return None
+
+        # check if a new connection is possible
+        connection_id = self.fully_qualify_connection_id(header.destination_cid, local_addr)
+        if connection_id not in self.manager.connections:
+            if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
+                ctx.log.info(
+                    f"QUIC packet received from {human.format_address(remote_addr)} with an unknown connection id."
+                )
+                return None
+        return connection_id
+
+    def make_top_layer(self, context: Context) -> Layer:
+        # determine the server settings
+        if self.mode.mode == "reverse":
+            assert self.mode.address is not None
+            context.server.address = self.mode.address
+            if not ctx.options.keep_host_header:
+                context.server.sni = self.mode.address[0]
+        context.server.transport_protocol = "udp"
+        return layers.QuicLayer(context, self)
+
+    async def handle_udp_connection(self, connection_id: tuple, handler: ProxyConnectionHandler) -> None:
+        layer = cast(layers.QuicLayer, handler.layer)
+        try:
+            return await super().handle_udp_connection(connection_id, handler)
+        finally:
+            # clear up all additional connection ids
+            for cid in layer.connection_ids:
+                fqcid = layer.fully_qualify_connection_id(cid)
+                if fqcid in self.manager.connections:
+                    assert self.manager.connections[fqcid] is handler
+                    del self.manager.connections[fqcid]
