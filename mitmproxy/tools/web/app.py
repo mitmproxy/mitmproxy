@@ -1,11 +1,9 @@
 import asyncio
-import contextlib
 import hashlib
 import json
 import logging
 import os.path
 import re
-import gzip
 from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
@@ -310,19 +308,18 @@ class DumpFlows(RequestHandler):
     def get(self):
         self.set_header("Content-Disposition", "attachment; filename=flows")
         self.set_header("Content-Type", "application/octet-stream")
-        self.set_header("Content-Encoding", "gzip")
 
-        match = lambda _: True  # noqa: E731
-        with contextlib.suppress(KeyError, IndexError):  # skip if ["filter"] or [0] fails
+        try:
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
-            print("FILTER", self.request.arguments["filter"])
+        except (KeyError, IndexError, ValueError):  # Key+Index: ["filter"][0], Value: parsing problem
+            match = bool  # returns always true
 
         with BytesIO() as bio:
             fw = io.FlowWriter(bio)
             for f in self.view:
                 if match(f):
                     fw.add(f)
-            self.write(gzip.compress(bio.getvalue()))
+            self.write(bio.getvalue())
 
     def post(self):
         self.view.clear()

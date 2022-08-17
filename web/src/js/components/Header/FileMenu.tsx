@@ -4,11 +4,11 @@ import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider, MenuItem} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
 import HideInStatic from "../common/HideInStatic";
-import {REQUEST_ACTION, REQUEST_ACTION_FILTERED} from "../../ducks/flows";
+import {useAppSelector} from "../../ducks";
 
 
 export default React.memo(function FileMenu() {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch(), filter = useAppSelector(state => state.flows.filter);
     return (
         <Dropdown className="pull-left special" text="File" options={{"placement": "bottom-start"}}>
             <li>
@@ -25,10 +25,10 @@ export default React.memo(function FileMenu() {
                     }}
                 />
             </li>
-            <MenuItem onClick={() => dispatch({type: REQUEST_ACTION})}>
+            <MenuItem onClick={() => location.replace('/flows/dump')}>
                 <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save
             </MenuItem>
-            <MenuItem onClick={() => dispatch({type: REQUEST_ACTION_FILTERED})}>
+            <MenuItem onClick={() => location.replace('/flows/dump?filter=' + filter)}>
                 <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save filtered
             </MenuItem>
             <MenuItem onClick={() => confirm('Delete all flows?') && dispatch(flowsActions.clear())}>
