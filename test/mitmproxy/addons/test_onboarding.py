@@ -14,14 +14,14 @@ class TestApp:
     def addons(self):
         return [onboarding.Onboarding()]
 
-    async def test_basic(self, client):
+    def test_basic(self, client):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob)
             assert client.get("/").status_code == 200
 
     @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
-    async def test_cert(self, client, ext, tdata):
+    def test_cert(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
@@ -30,7 +30,7 @@ class TestApp:
             assert resp.data
 
     @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
-    async def test_head(self, client, ext, tdata):
+    def test_head(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
