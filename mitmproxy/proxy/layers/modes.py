@@ -4,10 +4,10 @@ from abc import ABCMeta
 from dataclasses import dataclass
 from typing import Optional
 
-from mitmproxy import connection, platform
+from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import quic, tls
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
@@ -59,10 +59,26 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme not in ("http", "tcp"):
+        if spec.scheme not in ("http", ""):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
-            self.child_layer = tls.ServerTLSLayer(self.context)
+
+            # ensure proper upstream protocol and layer
+            if spec.scheme == "tls":
+                self.context.server.transport_protocol = "tcp"
+                self.child_layer = tls.ServerTLSLayer(self.context)
+            elif spec.scheme == "dtls":
+                self.context.server.transport_protocol = "udp"
+                self.child_layer = tls.ServerTLSLayer(self.context)
+            elif spec.scheme == "quic":
+                self.context.server.transport_protocol = "udp"
+                self.child_layer = quic.QuicLayer(self.context)
+            else:
+                self.child_layer = (
+                    tls.ServerTLSLayer(self.context)
+                    if self.context.server.transport_protocol == "tcp" else
+                    quic.QuicLayer(self.context)
+                )
         else:
             self.child_layer = layer.NextLayer(self.context)
 
@@ -74,12 +90,8 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert platform.original_addr is not None
-        socket = yield commands.GetSocket(self.context.client)
-        try:
-            self.context.server.address = platform.original_addr(socket)
-        except Exception as e:
-            yield commands.Log(f"Transparent mode failure: {e!r}")
+        if self.context.server.address is None:
+            yield commands.Log("Transparent proxy layer has no server address.")
 
         self.child_layer = layer.NextLayer(self.context)
 

@@ -122,8 +122,7 @@ class NextLayer:
         # handle QUIC connections
         first_layer = context.layers[0]
         if isinstance(first_layer, quic.QuicLayer):
-            if context.client.alpn is None:
-                return None  # should never happen, as ask is called after handshake
+            assert context.client.alpn is not None  # ask is called after handshake
             if context.client.alpn == b"h3" or context.client.alpn.startswith(b"h3-"):
                 if first_layer.instance.mode.mode == "regular":
                     mode = HTTPMode.regular

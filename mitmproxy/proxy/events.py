@@ -3,14 +3,13 @@ When IO actions occur at the proxy server, they are passed down to layers as eve
 Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
-import socket
 import warnings
 from dataclasses import dataclass, is_dataclass
 from typing import Any, Generic, Optional, TypeVar
 
 from mitmproxy import flow
 from mitmproxy.proxy import commands
-from mitmproxy.connection import Address, Connection
+from mitmproxy.connection import Connection
 
 
 class Event:
@@ -45,7 +44,6 @@ class DataReceived(ConnectionEvent):
     """
 
     data: bytes
-    remote_addr: Optional[Address] = None
 
     def __repr__(self):
         target = type(self.connection).__name__.lower()
@@ -111,12 +109,6 @@ class OpenConnectionCompleted(CommandCompleted):
 class HookCompleted(CommandCompleted):
     command: commands.StartHook
     reply: None = None
-
-
-@dataclass(repr=False)
-class GetSocketCompleted(CommandCompleted):
-    command: commands.GetSocket
-    reply: socket.socket
 
 
 T = TypeVar("T")

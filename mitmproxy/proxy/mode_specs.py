@@ -60,6 +60,12 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     The transport protocol used by this mode's server.
     This information is used by the proxyserver addon to determine if two modes want to listen on the same address.
     """
+    supports_udp: ClassVar[bool] = False
+    """
+    Indicates that this mode can be used with UDP as well.
+    This flag must only be set if `transport_protocol` == "tcp" and
+    the corresponding `ServerInstance` inherits from `TcpServerInstance`.
+    """
     __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
 
     def __init_subclass__(cls, **kwargs):
@@ -163,6 +169,7 @@ def _check_empty(data):
 
 class RegularMode(ProxyMode):
     """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
+    supports_udp = True
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -170,6 +177,7 @@ class RegularMode(ProxyMode):
 
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
+    supports_udp = True
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -177,6 +185,7 @@ class TransparentMode(ProxyMode):
 
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
+    supports_udp = True
     scheme: Literal["http", "https"]
     address: tuple[str, int]
 
@@ -185,20 +194,27 @@ class UpstreamMode(ProxyMode):
         scheme, self.address = server_spec.parse(self.data, default_scheme="http")
         if scheme != "http" and scheme != "https":
             raise ValueError("invalid upstream proxy scheme")
-        self.scheme = scheme  # type: ignore
+        self.scheme = scheme
 
 
 class ReverseMode(ProxyMode):
     """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
-    scheme: Literal["http", "https", "tcp", "tls"]
+    supports_udp = True
+    scheme: Literal["", "http", "https", "tls", "dtls", "quic"]
     address: tuple[str, int]
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
-        scheme, self.address = server_spec.parse(self.data, default_scheme="https")
-        if scheme != "http" and scheme != "https" and scheme != "tcp" and scheme != "tls":
+        scheme, self.address = server_spec.parse(self.data)
+        if (
+            scheme != "" and scheme != "tcp" and
+            scheme != "http" and scheme != "https" and
+            scheme != "tls" and scheme != "dtls" and
+            scheme != "quic"
+        ):
             raise ValueError("invalid reverse proxy scheme")
-        self.scheme = scheme  # type: ignore
+        # turn legacy TCP scheme into the agnostic scheme
+        self.scheme = "" if scheme == "tcp" else scheme
 
 
 class Socks5Mode(ProxyMode):
@@ -212,7 +228,7 @@ class Socks5Mode(ProxyMode):
 class DnsMode(ProxyMode):
     """A DNS server or proxy."""
     default_port = 53
-    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
+    transport_protocol = "udp"
     scheme: Literal["dns"]  # DoH, DoQ, ...
     address: tuple[str, int] | None = None
 
@@ -226,65 +242,20 @@ class DnsMode(ProxyMode):
         scheme, self.address = server_spec.parse(server, "dns")
         if scheme != "dns":
             raise ValueError("invalid dns scheme")
-        self.scheme = scheme  # type: ignore
+        self.scheme = scheme
 
     @property
     def resolve_local(self) -> bool:
         return self.data in ["", "resolve-local"]
 
 
-class DtlsMode(ProxyMode):
-    default_port = 8084
-    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
-    scheme: Literal["dtls"]  # DoH, DoQ, ...
-    address: tuple[str, int] | None = None
+class UdpMode(ProxyMode):
+    default_port = 8080
+    transport_protocol = "udp"
+    inner_mode: ProxyMode
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
-        m, _, server = self.data.partition(":")
-        if m != "reverse":
-            raise ValueError("invalid dtls mode")
-        scheme, self.address = server_spec.parse(server, "dtls")
-        if scheme != "dtls":
-            raise ValueError("invalid dtls scheme")
-        self.scheme = scheme  # type: ignore
-
-
-class QuicMode(ProxyMode):
-    """
-    QUIC modes:
-     - regular[:version] (default)
-     - upstream:[version://]host:port
-     - reverse:[version://]host:port
-
-    Versions: Use the given HTTP version to connect to upstream.
-     - h1
-     - h2
-     - h3 (default)
-
-    Example:
-      --mode quic:upstream:h2://192.168.1.1:8080@443
-      Listens on port 443 for incoming H3 connections and forwards
-      request to upstream proxy 192.168.1.1 on port 8080 using H2.
-    """
-
-    default_port = 8085
-    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "udp"
-    scheme: Literal["h1", "h2", "h3"] = "h3"
-    mode: Literal["regular", "reverse", "upstream"] = "regular"
-    address: tuple[str, int] | None = None
-
-    # noinspection PyDataclass
-    def __post_init__(self) -> None:
-        if self.data:
-            mode, _, additional = self.data.partition(":")
-            if mode == "reverse" or mode == "upstream":
-                scheme, self.address = server_spec.parse(additional, default_mode="h3")
-            elif mode == "regular":
-                scheme = additional
-            else:
-                raise ValueError(f"Invalid QUIC mode: {mode}")
-            if scheme != "h3" and scheme != "h2" and scheme != "h1":
-                raise ValueError(f"Invalid QUIC scheme: {scheme}")
-            self.mode = mode  # type: ignore
-            self.scheme = scheme  # type: ignore
+        self.inner_mode = ProxyMode.parse(self.data)
+        if not self.inner_mode.supports_udp:
+            raise ValueError(f"{self.inner_mode} doesn't support UDP")

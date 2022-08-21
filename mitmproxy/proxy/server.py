@@ -82,7 +82,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
-    layer: layer.Layer
+    layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
@@ -249,13 +249,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         cancelled = None
         reader = self.transports[connection].reader
         assert reader
-        has_remote_addr = isinstance(reader, udp.DatagramReader)
         while True:
             try:
-                if has_remote_addr:
-                    data, remote_addr = await reader.read(65535)
-                else:
-                    data, remote_addr = await reader.read(65535), None
+                data = await reader.read(65535)
                 if not data:
                     raise OSError("Connection closed by peer.")
             except OSError:
@@ -264,7 +260,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-            self.server_event(events.DataReceived(connection, data, remote_addr))
+            self.server_event(events.DataReceived(connection, data))
 
             try:
                 await self.drain_writers()
@@ -357,19 +353,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
-                    if command.remote_addr is not None:
-                        assert isinstance(writer, udp.DatagramWriter)
-                        writer.write(command.data, command.remote_addr)
-                    else:
-                        assert writer
-                        writer.write(command.data)
+                    assert writer
+                    writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
-                elif isinstance(command, commands.GetSocket):
-                    writer = self.transports[command.connection].writer
-                    assert writer
-                    socket = writer.get_extra_info("socket")
-                    self.server_event(events.GetSocketCompleted(command, socket))
                 elif isinstance(command, commands.StartHook):
                     asyncio_utils.create_task(
                         self.hook_task(command),

@@ -6,10 +6,10 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
-from typing import Literal, Optional, Union, TYPE_CHECKING
+from typing import Literal, Union, TYPE_CHECKING
 
 import mitmproxy.hooks
-from mitmproxy.connection import Address, Connection, Server
+from mitmproxy.connection import Connection, Server
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
@@ -67,12 +67,10 @@ class SendData(ConnectionCommand):
     """
 
     data: bytes
-    remote_addr: Optional[Address]
 
-    def __init__(self, connection: Connection, data: bytes, remote_addr: Optional[Address] = None):
+    def __init__(self, connection: Connection, data: bytes):
         super().__init__(connection)
         self.data = data
-        self.remote_addr = remote_addr
 
     def __repr__(self):
         target = str(self.connection).split("(", 1)[0].lower()
@@ -119,15 +117,6 @@ class StartHook(Command, mitmproxy.hooks.Hook):
         if cls is StartHook:
             raise TypeError("StartHook may not be instantiated directly.")
         return super().__new__(cls, *args, **kwargs)
-
-
-class GetSocket(ConnectionCommand):
-    """
-    Get the underlying socket.
-    This should really never be used, but is required to implement transparent mode.
-    """
-
-    blocking = True
 
 
 class Log(Command):

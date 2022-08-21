@@ -19,15 +19,7 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
-from aioquic.buffer import Buffer as QuicBuffer
-from aioquic.quic.packet import (
-    PACKET_TYPE_INITIAL,
-    QuicProtocolVersion,
-    encode_quic_version_negotiation,
-    pull_quic_header,
-)
-
-from mitmproxy import ctx, flow, log
+from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import udp
@@ -173,6 +165,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         pass
 
     @property
+    def is_transparent(self) -> bool:
+        return False
+
+    @property
     def listen_addrs(self) -> tuple[Address, ...]:
         return self._listen_addrs
 
@@ -196,6 +192,13 @@ class TcpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
+        if self.is_transparent:
+            assert platform.original_addr is not None
+            socket = writer.get_extra_info("socket")
+            try:
+                handler.layer.context.server.address = platform.original_addr(socket)
+            except Exception as e:
+                ctx.log.error(f"Transparent mode failure: {e!r}")
         handler.layer = self.make_top_layer(handler.layer.context)
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
@@ -224,6 +227,7 @@ class UpstreamInstance(TcpServerInstance[mode_specs.UpstreamMode]):
 
 class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
     log_desc = "Transparent proxy"
+    is_transparent = True
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
@@ -254,7 +258,6 @@ class UdpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
     @abstractmethod
     def make_connection_id(
         self,
-        transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
         local_addr: Address,
@@ -266,7 +269,7 @@ class UdpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
             self.handle_udp_datagram,
             host,
             port,
-            transparent=False
+            transparent=self.transparent
         )
 
     def handle_udp_datagram(
@@ -285,7 +288,11 @@ class UdpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
             handler = ProxyConnectionHandler(
                 ctx.master, reader, writer, ctx.options, self.mode
             )
+            handler.client.transport_protocol = "udp"
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
+            if self.is_transparent:
+                handler.layer.context.server.address = local_addr
+            handler.layer.context.server.transport_protocol = "udp"
             handler.layer = self.make_top_layer(handler.layer.context)
 
             # pre-register here - we may get datagrams before the task is executed.
@@ -304,15 +311,15 @@ class UdpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
 class DnsInstance(UdpServerInstance[mode_specs.DnsMode]):
     log_desc = "DNS server"
 
+    def is_transparent(self) -> bool:
+        return self.mode.data == "transparent"
+
     def make_top_layer(self, context: Context) -> Layer:
-        layer = layers.DNSLayer(context)
-        layer.context.server.address = (self.mode.data or "resolve-local", 53)
-        layer.context.server.transport_protocol = "udp"
-        return layer
+        context.server.address = (self.mode.data or "resolve-local", 53)
+        return layers.DNSLayer(context)
 
     def make_connection_id(
         self,
-        transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
         local_addr: Address,
@@ -328,97 +335,26 @@ class DnsInstance(UdpServerInstance[mode_specs.DnsMode]):
             return ("udp", dns_id, remote_addr, local_addr)
 
 
-class DtlsInstance(UdpServerInstance[mode_specs.DtlsMode]):
-    log_desc = "DTLS server"
+class UdpInstance(UdpServerInstance[mode_specs.UdpMode]):
+    """Wrapper for a TcpServerInstance that also supports UDP."""
+
+    def __init__(self, mode: mode_specs.UdpMode, manager: ServerManager):
+        super().__init__(mode.inner_mode, manager)
+        self.inner_server = cast(TcpServerInstance, ServerInstance.make(mode.inner_mode))
+
+    def is_transparent(self) -> bool:
+        return self.inner_server.is_transparent
+
+    def log_desc(self) -> str:
+        return f"{self.inner_server.log_desc} (UDP)"
 
     def make_top_layer(self, context: Context) -> Layer:
-        context.client.transport_protocol = "udp"
-        layer = layers.ServerTLSLayer(context)
-        layer.child_layer = layers.ClientTLSLayer(layer.context)
-        layer.child_layer.child_layer = layers.UDPLayer(layer.context)
-        layer.context.server.address = self.mode.address
-        layer.context.server.transport_protocol = "udp"
-        return layer
+        return self.inner_server.make_top_layer(context)
 
     def make_connection_id(
         self,
-        transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
         local_addr: Address,
     ) -> tuple | None:
-        return ("dtls", remote_addr, local_addr)
-
-
-class QuicInstance(UdpServerInstance[mode_specs.QuicMode]):
-
-    def fully_qualify_connection_id(self, connection_id: bytes, local_addr: Address) -> tuple:
-        return ("quic", connection_id, local_addr)
-
-    def make_connection_id(
-        self,
-        transport: asyncio.DatagramTransport,
-        data: bytes,
-        remote_addr: Address,
-        local_addr: Address,
-    ) -> tuple | None:
-        # largely taken from aioquic's own asyncio server code
-        buffer = QuicBuffer(data=data)
-        try:
-            header = pull_quic_header(
-                buffer, host_cid_length=ctx.options.quic_connection_id_length
-            )
-        except ValueError:
-            ctx.log.info(
-                f"Invalid QUIC datagram received from {human.format_address(remote_addr)}."
-            )
-            return None
-
-        # negotiate version, support all versions known to aioquic
-        supported_versions = (
-            version.value
-            for version in QuicProtocolVersion
-            if version is not QuicProtocolVersion.NEGOTIATION
-        )
-        if header.version is not None and header.version not in supported_versions:
-            transport.sendto(
-                encode_quic_version_negotiation(
-                    source_cid=header.destination_cid,
-                    destination_cid=header.source_cid,
-                    supported_versions=supported_versions,
-                ),
-                remote_addr,
-            )
-            return None
-
-        # check if a new connection is possible
-        connection_id = self.fully_qualify_connection_id(header.destination_cid, local_addr)
-        if connection_id not in self.manager.connections:
-            if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
-                ctx.log.info(
-                    f"QUIC packet received from {human.format_address(remote_addr)} with an unknown connection id."
-                )
-                return None
-        return connection_id
-
-    def make_top_layer(self, context: Context) -> Layer:
-        # determine the server settings
-        if self.mode.mode == "reverse":
-            assert self.mode.address is not None
-            context.server.address = self.mode.address
-            if not ctx.options.keep_host_header:
-                context.server.sni = self.mode.address[0]
-        context.server.transport_protocol = "udp"
-        return layers.QuicLayer(context, self)
-
-    async def handle_udp_connection(self, connection_id: tuple, handler: ProxyConnectionHandler) -> None:
-        layer = cast(layers.QuicLayer, handler.layer)
-        try:
-            return await super().handle_udp_connection(connection_id, handler)
-        finally:
-            # clear up all additional connection ids
-            for cid in layer.connection_ids:
-                fqcid = layer.fully_qualify_connection_id(cid)
-                if fqcid in self.manager.connections:
-                    assert self.manager.connections[fqcid] is handler
-                    del self.manager.connections[fqcid]
+        return ("udp", remote_addr, local_addr)
