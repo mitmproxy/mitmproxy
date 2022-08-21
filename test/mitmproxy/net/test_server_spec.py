@@ -24,6 +24,9 @@ def test_parse_err():
     with pytest.raises(ValueError, match="Invalid server specification"):
         server_spec.parse(":", "https")
 
+    with pytest.raises(ValueError, match="Invalid server scheme"):
+        server_spec.parse("ftp://example.com", "https")
+
     with pytest.raises(ValueError, match="Invalid hostname"):
         server_spec.parse("$$$", "https")
 

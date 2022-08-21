@@ -269,7 +269,7 @@ class UdpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
             self.handle_udp_datagram,
             host,
             port,
-            transparent=self.transparent
+            transparent=self.is_transparent
         )
 
     def handle_udp_datagram(
