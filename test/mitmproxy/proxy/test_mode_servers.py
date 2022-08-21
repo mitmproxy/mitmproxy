@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
+from mitmproxy import platform
+from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, DtlsInstance
 from mitmproxy.test import taddons
@@ -68,6 +70,38 @@ async def test_tcp_start_stop():
 
         await inst.stop()
         assert await tctx.master.await_log("stopped HTTP(S) proxy")
+
+
+@pytest.mark.parametrize("failure", [True, False])
+async def test_transparent(failure, monkeypatch):
+    manager = MagicMock()
+
+    if failure:
+        monkeypatch.setattr(platform, "original_addr", None)
+    else:
+        monkeypatch.setattr(platform, "original_addr", lambda s: ("address", 42))
+
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.connection_strategy = "lazy"
+        inst = ServerInstance.make("transparent@127.0.0.1:0", manager)
+        await inst.start()
+        await tctx.master.await_log("proxy listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        reader, writer = await asyncio.open_connection(host, port)
+
+        if failure:
+            assert await tctx.master.await_log("Transparent mode failure")
+            writer.close()
+            await writer.wait_closed()
+        else:
+            assert await tctx.master.await_log("client connect")
+            writer.close()
+            await writer.wait_closed()
+            assert await tctx.master.await_log("client disconnect")
+
+        await inst.stop()
+        assert await tctx.master.await_log("stopped transparent proxy")
 
 
 async def test_tcp_start_error():
