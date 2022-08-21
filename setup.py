@@ -77,7 +77,7 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "cryptography>=36,<38",
-        "flask>=1.1.1,<2.2",
+        "flask>=1.1.1,<2.3",
         "h11>=0.11,<0.14",
         "h2>=4.1,<5",
         "hyperframe>=6.0,<7",
@@ -107,7 +107,7 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==5.2",
+            "pyinstaller==5.3",
             "pytest-asyncio>=0.17,<0.20",
             "pytest-cov>=2.7.1,<3.1",
             "pytest-timeout>=1.3.3,<2.2",
