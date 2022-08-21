@@ -7,7 +7,6 @@ from mitmproxy.addons.proxyauth import ProxyAuth
 from mitmproxy.connection import Client, Server
 from mitmproxy.proxy.commands import (
     CloseConnection,
-    GetSocket,
     Log,
     OpenConnection,
     SendData,
@@ -218,16 +217,12 @@ def test_reverse_proxy_tcp_over_tls(
 
 
 @pytest.mark.parametrize("connection_strategy", ["eager", "lazy"])
-def test_transparent_tcp(tctx: Context, monkeypatch, connection_strategy):
-    monkeypatch.setattr(platform, "original_addr", lambda sock: ("address", 22))
-
+def test_transparent_tcp(tctx: Context, connection_strategy):
     flow = Placeholder(TCPFlow)
     tctx.options.connection_strategy = connection_strategy
+    tctx.server.address = ("address", 22)
 
-    sock = object()
     playbook = Playbook(modes.TransparentProxy(tctx))
-    playbook << GetSocket(tctx.client)
-    playbook >> reply(sock)
     if connection_strategy == "lazy":
         assert playbook
     else:
@@ -250,23 +245,6 @@ def test_transparent_tcp(tctx: Context, monkeypatch, connection_strategy):
     assert tctx.server.address == ("address", 22)
 
 
-def test_transparent_failure(tctx: Context, monkeypatch):
-    """Test that we recover from a transparent mode resolve error."""
-
-    def raise_err(sock):
-        raise RuntimeError("platform-specific error")
-
-    monkeypatch.setattr(platform, "original_addr", raise_err)
-    assert (
-        Playbook(modes.TransparentProxy(tctx), logs=True)
-        << GetSocket(tctx.client)
-        >> reply(object())
-        << Log(
-            "Transparent mode failure: RuntimeError('platform-specific error')", "info"
-        )
-    )
-
-
 def test_reverse_eager_connect_failure(tctx: Context):
     """
     Test
@@ -286,15 +264,13 @@ def test_reverse_eager_connect_failure(tctx: Context):
     )
 
 
-def test_transparent_eager_connect_failure(tctx: Context, monkeypatch):
-    """Test that we recover from a transparent mode resolve error."""
+def test_transparent_eager_connect_failure(tctx: Context):
+    """Test that we recover from a transparent mode connect error."""
     tctx.options.connection_strategy = "eager"
-    monkeypatch.setattr(platform, "original_addr", lambda sock: ("address", 22))
+    tctx.server.address = ("address", 22)
 
     assert (
         Playbook(modes.TransparentProxy(tctx), logs=True)
-        << GetSocket(tctx.client)
-        >> reply(object())
         << OpenConnection(tctx.server)
         >> reply("something something")
         << CloseConnection(tctx.client)

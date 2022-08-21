@@ -4,7 +4,7 @@ from abc import ABCMeta
 from dataclasses import dataclass
 from typing import Optional
 
-from mitmproxy import connection, platform
+from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.layers import tls
@@ -74,15 +74,8 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert platform.original_addr is not None
-        socket = yield commands.GetSocket(self.context.client)
-        try:
-            self.context.server.address = platform.original_addr(socket)
-        except Exception as e:
-            yield commands.Log(f"Transparent mode failure: {e!r}")
-
+        assert self.context.server.address
         self.child_layer = layer.NextLayer(self.context)
-
         err = yield from self.finish_start()
         if err:
             yield commands.CloseConnection(self.context.client)

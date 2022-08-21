@@ -119,15 +119,6 @@ class StartHook(Command, mitmproxy.hooks.Hook):
         return super().__new__(cls, *args, **kwargs)
 
 
-class GetSocket(ConnectionCommand):
-    """
-    Get the underlying socket.
-    This should really never be used, but is required to implement transparent mode.
-    """
-
-    blocking = True
-
-
 class Log(Command):
     message: str
     level: str

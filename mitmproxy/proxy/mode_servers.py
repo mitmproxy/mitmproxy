@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
-from mitmproxy import ctx, flow, log
+from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import udp
@@ -37,6 +37,18 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
         self.master = master
         super().__init__(r, w, options, mode)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
+
+    async def handle_client(self) -> None:
+        if self.client.proxy_mode.type == "transparent":
+            writer = self.transports[self.client].writer
+            assert writer
+            socket = writer.get_extra_info("socket")
+            try:
+                self.layer.context.server.address = platform.original_addr(socket)
+            except Exception as e:
+                self.log(f"Transparent mode failure: {e!r}")
+                return
+        return await super().handle_client()
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():

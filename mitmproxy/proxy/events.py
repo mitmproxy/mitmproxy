@@ -3,7 +3,6 @@ When IO actions occur at the proxy server, they are passed down to layers as eve
 Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
-import socket
 import warnings
 from dataclasses import dataclass, is_dataclass
 from typing import Any, Generic, Optional, TypeVar
@@ -110,12 +109,6 @@ class OpenConnectionCompleted(CommandCompleted):
 class HookCompleted(CommandCompleted):
     command: commands.StartHook
     reply: None = None
-
-
-@dataclass(repr=False)
-class GetSocketCompleted(CommandCompleted):
-    command: commands.GetSocket
-    reply: socket.socket
 
 
 T = TypeVar("T")
