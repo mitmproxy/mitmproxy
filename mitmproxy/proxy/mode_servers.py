@@ -12,6 +12,8 @@ Example:
 from __future__ import annotations
 
 import asyncio
+import os
+
 import errno
 import socket
 import struct
@@ -24,6 +26,7 @@ from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import udp
+from mitmproxy.platform import windows_new
 from mitmproxy.proxy import commands, layers, mode_specs, server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -32,11 +35,11 @@ from mitmproxy.utils import asyncio_utils, human
 
 class ProxyConnectionHandler(server.LiveConnectionHandler):
     master: Master
+    log_prefix: str = ""
 
     def __init__(self, master, r, w, options, mode):
         self.master = master
         super().__init__(r, w, options, mode)
-        self.log_prefix = f"{human.format_address(self.client.peername)}: "
 
     async def handle_client(self) -> None:
         if self.client.proxy_mode.type == "transparent":
@@ -49,6 +52,14 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
             except Exception as e:
                 self.log(f"Transparent mode failure: {e!r}")
                 return
+        elif self.client.proxy_mode.type == "os":
+            try:
+                self.client.peername, self.layer.context.server.address = await windows_new.os_proxy.resolve(self.client.peername)
+            except Exception as e:
+                self.log(f"OS mode failure: {e!r}")
+                return
+
+        self.log_prefix = f"{human.format_address(self.client.peername)}: "
         return await super().handle_client()
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
@@ -363,3 +374,55 @@ class DtlsInstance(UdpServerInstance[mode_specs.DtlsMode]):
         local_addr: Address,
     ) -> tuple | None:
         return ("dtls", remote_addr, local_addr)
+
+
+class OsInstance(TcpServerInstance[mode_specs.OsMode]):
+    log_desc = "OS proxy"
+
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.TransparentProxy(context)
+
+    async def start(self) -> None:
+        if os.name != "nt":
+            raise NotImplementedError("OS proxy mode is only available on Windows at the moment, patches welcome.")
+
+        await super().start()
+
+        # ghetto udp transparent mode
+        host = self.mode.listen_host(ctx.options.listen_host) or "0.0.0.0"
+        port = self.listen_addrs[0][1]
+        await udp.start_server(
+            self.handle_udp_datagram,
+            host,
+            port,
+            transparent=False
+        )
+
+        await windows_new.os_proxy.start(self.listen_addrs[0][1])
+
+    def handle_udp_datagram(
+        self,
+        transport: asyncio.DatagramTransport,
+        data: bytes,
+        remote_addr: Address,
+        local_addr: Address,
+    ) -> None:
+        # don't judge me
+        async def handle():
+            src, dst = await windows_new.os_proxy.resolve(remote_addr)
+            (r, w) = await udp.open_connection(*dst)
+            w.write(data)
+
+            while True:
+                try:
+                    resp = await asyncio.wait_for(r.read(65535), 60)
+                except Exception:
+                    w.close()
+                else:
+                    transport.sendto(resp, remote_addr)
+
+        asyncio.create_task(handle())
+
+    async def stop(self) -> None:
+        await windows_new.os_proxy.stop()
+        await super().stop()

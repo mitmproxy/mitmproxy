@@ -175,6 +175,15 @@ class TransparentMode(ProxyMode):
         _check_empty(self.data)
 
 
+class OsMode(ProxyMode):
+    """Transparently capture all traffic from the current device."""
+
+    default_port = 0
+
+    def __post_init__(self) -> None:
+        _check_empty(self.data)
+
+
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
     scheme: Literal["http", "https"]
