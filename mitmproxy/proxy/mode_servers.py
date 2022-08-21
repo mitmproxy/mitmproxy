@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
-from mitmproxy import ctx, flow, log
+from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import udp
@@ -37,6 +37,19 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
         self.master = master
         super().__init__(r, w, options, mode)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
+
+    async def handle_client(self) -> None:
+        if self.client.proxy_mode.type == "transparent":
+            writer = self.transports[self.client].writer
+            assert writer
+            socket = writer.get_extra_info("socket")
+            try:
+                assert platform.original_addr
+                self.layer.context.server.address = platform.original_addr(socket)
+            except Exception as e:
+                self.log(f"Transparent mode failure: {e!r}")
+                return
+        return await super().handle_client()
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
@@ -225,7 +238,7 @@ class UpstreamInstance(TcpServerInstance[mode_specs.UpstreamMode]):
 
 
 class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
-    log_desc = "Transparent proxy"
+    log_desc = "transparent proxy"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
@@ -234,7 +247,7 @@ class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
 class ReverseInstance(TcpServerInstance[mode_specs.ReverseMode]):
     @property
     def log_desc(self) -> str:
-        return f"Reverse proxy to {self.mode.data}"
+        return f"reverse proxy to {self.mode.data}"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.ReverseProxy(context)

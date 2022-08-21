@@ -357,11 +357,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
-                elif isinstance(command, commands.GetSocket):
-                    writer = self.transports[command.connection].writer
-                    assert writer
-                    socket = writer.get_extra_info("socket")
-                    self.server_event(events.GetSocketCompleted(command, socket))
                 elif isinstance(command, commands.StartHook):
                     asyncio_utils.create_task(
                         self.hook_task(command),
