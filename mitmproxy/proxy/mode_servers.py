@@ -38,19 +38,6 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
         super().__init__(r, w, options, mode)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
 
-    async def handle_client(self) -> None:
-        if self.client.proxy_mode.type == "transparent":
-            writer = self.transports[self.client].writer
-            assert writer
-            socket = writer.get_extra_info("socket")
-            try:
-                assert platform.original_addr
-                self.layer.context.server.address = platform.original_addr(socket)
-            except Exception as e:
-                self.log(f"Transparent mode failure: {e!r}")
-                return
-        return await super().handle_client()
-
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
             # We currently only support single-argument hooks.
@@ -216,9 +203,9 @@ class TcpServerInstance(AsyncioServerInstance[M], metaclass=ABCMeta):
             ctx.master, reader, writer, ctx.options, self.mode
         )
         if self.is_transparent:
-            assert platform.original_addr is not None
             socket = writer.get_extra_info("socket")
             try:
+                assert platform.original_addr is not None
                 handler.layer.context.server.address = platform.original_addr(socket)
             except Exception as e:
                 ctx.log.error(f"Transparent mode failure: {e!r}")
