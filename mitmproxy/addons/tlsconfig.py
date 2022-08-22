@@ -259,8 +259,8 @@ class TlsConfig:
 
         ssl_ctx = net_tls.create_proxy_server_context(
             method=net_tls.Method.DTLS_CLIENT_METHOD if tls_start.is_dtls else net_tls.Method.TLS_CLIENT_METHOD,
-            min_version=net_tls.Version[ctx.options.tls_version_client_min],
-            max_version=net_tls.Version[ctx.options.tls_version_client_max],
+            min_version=net_tls.Version[ctx.options.tls_version_server_min],
+            max_version=net_tls.Version[ctx.options.tls_version_server_max],
             cipher_list=tuple(cipher_list),
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,

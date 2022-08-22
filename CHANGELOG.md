@@ -13,6 +13,8 @@
 * Setting `connection_strategy` to `lazy` now also disables early 
   upstream connections to fetch TLS certificate details.
   (@mhils)
+* Fix `tls_version_server_min` and `tls_version_server_max` options.
+  ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
 * DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
 
 ## 28 June 2022: mitmproxy 8.1.1
