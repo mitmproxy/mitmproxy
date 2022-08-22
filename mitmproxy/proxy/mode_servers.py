@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import errno
+import socket
 import struct
 import typing
 from abc import ABCMeta, abstractmethod
@@ -36,6 +37,19 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
         self.master = master
         super().__init__(r, w, options, mode)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
+
+    async def handle_client(self) -> None:
+        if self.client.proxy_mode.type == "transparent":
+            writer = self.transports[self.client].writer
+            assert writer
+            socket = writer.get_extra_info("socket")
+            try:
+                assert platform.original_addr
+                self.layer.context.server.address = platform.original_addr(socket)
+            except Exception as e:
+                self.log(f"Transparent mode failure: {e!r}")
+                return
+        return await super().handle_client()
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
@@ -117,11 +131,20 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def is_running(self) -> bool:
         return self._server is not None
 
-    async def start(self):
+    async def start(self) -> None:
         assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         try:
+            # workaround for https://github.com/python/cpython/issues/89856:
+            # We want both IPv4 and IPv6 sockets to bind to the same port.
+            if port == 0:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind((host, 0))
+                port = s.getsockname()[1]
+                s.close()
+                # there is a slight race condition here where the port is reused by another application between the
+                # close above and the listen below. We ignore this until it we have an actual bug report for it.
             self._server = await self.listen(host, port)
             self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
         except OSError as e:
@@ -138,7 +161,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             self.last_exception = None
         ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, self._listen_addrs))}.")
 
-    async def stop(self):
+    async def stop(self) -> None:
         assert self._server is not None
         # we always reset _server and _listen_addrs and ignore failures
         server = self._server
@@ -226,7 +249,7 @@ class UpstreamInstance(TcpServerInstance[mode_specs.UpstreamMode]):
 
 
 class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
-    log_desc = "Transparent proxy"
+    log_desc = "transparent proxy"
     is_transparent = True
 
     def make_top_layer(self, context: Context) -> Layer:
@@ -236,7 +259,7 @@ class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
 class ReverseInstance(TcpServerInstance[mode_specs.ReverseMode]):
     @property
     def log_desc(self) -> str:
-        return f"Reverse proxy to {self.mode.data}"
+        return f"reverse proxy to {self.mode.data}"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.ReverseProxy(context)

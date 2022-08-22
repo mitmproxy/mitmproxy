@@ -90,11 +90,9 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if self.context.server.address is None:
-            yield commands.Log("Transparent proxy layer has no server address.")
+        assert self.context.server.address
 
         self.child_layer = layer.NextLayer(self.context)
-
         err = yield from self.finish_start()
         if err:
             yield commands.CloseConnection(self.context.client)
