@@ -39,7 +39,7 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
-# The following 3 variables are for uncluding in the magisk module
+# The following 3 variables are for including in the magisk module
 MODULE_PROP_TEXT = """id=mitmproxycert
 name=MITMProxy cert
 version=v1
