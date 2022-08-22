@@ -39,6 +39,68 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
+# The following 3 variables are for uncluding in the magisk module
+MODULE_PROP_TEXT = """id=mitmproxycert
+name=MITMProxy cert
+version=v1
+versionCode=1
+author=mitmproxy
+description=Adds the mitmproxy certificate to the system store
+template=3"""
+
+CONFIG_SH_TEXT = """
+MODID=mitmproxycert
+AUTOMOUNT=true
+PROPFILE=false
+POSTFSDATA=false
+LATESTARTSERVICE=false
+
+print_modname() {
+  ui_print "*******************************"
+  ui_print "    MITMProxy cert installer   "
+  ui_print "*******************************"
+}
+
+REPLACE="
+"
+
+set_permissions() {
+  set_perm_recursive  $MODPATH  0  0  0755  0644
+}
+"""
+
+UPDATE_BINARY_TEXT = """
+#!/sbin/sh
+
+#################
+# Initialization
+#################
+
+umask 022
+
+# echo before loading util_functions
+ui_print() { echo "$1"; }
+
+require_new_magisk() {
+  ui_print "*******************************"
+  ui_print " Please install Magisk v20.4+! "
+  ui_print "*******************************"
+  exit 1
+}
+
+OUTFD=$2
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+. /data/adb/magisk/util_functions.sh
+[ $MAGISK_VER_CODE -lt 20400 ] && require_new_magisk
+
+install_module
+exit 0
+"""
+
+
 class Cert(serializable.Serializable):
     """Representation of a (TLS) certificate."""
 
@@ -388,6 +450,32 @@ class CertStore:
         finally:
             os.umask(original_umask)
 
+    # Mimics the -subject_hash_old option of openssl used for android certificate names
+    @staticmethod
+    def subject_hash_old(ca : x509.Certificate):
+        import hashlib
+        full_hash = hashlib.md5(ca.subject.public_bytes(serialization.Encoding.DER)).digest()
+        sho = (full_hash[0] | (full_hash[1] << 8) | (full_hash[2] << 16) | full_hash[3] << 24)
+        return hex(sho)[2:]
+
+    # Makes a zip file that can be loaded by Magisk
+    @staticmethod
+    def write_magisk_module(ca : x509.Certificate, path : Path):
+        from zipfile import ZipFile
+        # Android certs are stored as DER files
+        der_cert = ca.public_bytes(serialization.Encoding.DER)
+        with ZipFile(path, "w") as zipp:
+            # Main cert file, name is always the old subject hash with a '.0' added
+            zipp.writestr(f"system/etc/security/cacerts/{CertStore.subject_hash_old(ca)}.0", der_cert)
+            zipp.writestr("module.prop", MODULE_PROP_TEXT)
+            zipp.writestr("config.sh", CONFIG_SH_TEXT)
+            zipp.writestr("META-INF/com/google/android/updater-script", "#MAGISK")
+            zipp.writestr("META-INF/com/google/android/update-binary", UPDATE_BINARY_TEXT)
+            zipp.writestr("common/file_contexts_image", "/magisk(/.*)? u:object_r:system_file:s0")
+            zipp.writestr("common/post-fs-data.sh", "MODDIR=${0%/*}")
+            zipp.writestr("common/service.sh", "MODDIR=${0%/*}")
+            zipp.writestr("common/system.prop", "")
+
     @staticmethod
     def create_store(
         path: Path, basename: str, key_size: int, organization=None, cn=None
@@ -429,6 +517,8 @@ class CertStore:
         (path / f"{basename}-ca-cert.pem").write_bytes(pem_cert)
         # Create a .cer file with the same contents for Android
         (path / f"{basename}-ca-cert.cer").write_bytes(pem_cert)
+        # Create a Magisk module for easy modification of the /system partition
+        CertStore.write_magisk_module(ca, (path / f"{basename}-ca-cert.zip"))
 
         # Dump the certificate in PKCS12 format for Windows devices
         (path / f"{basename}-ca-cert.p12").write_bytes(

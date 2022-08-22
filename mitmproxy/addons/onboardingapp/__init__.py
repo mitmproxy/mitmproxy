@@ -29,6 +29,11 @@ def cer():
     return read_cert("cer", "application/x-x509-ca-cert")
 
 
+@app.route("/cert/magisk")
+def magisk():
+    return read_cert("zip", "application/zip")
+
+
 def read_cert(ext, content_type):
     filename = CONF_BASENAME + f"-ca-cert.{ext}"
     p = os.path.join(app.config["CONFDIR"], filename)
@@ -38,5 +43,5 @@ def read_cert(ext, content_type):
 
     return cert, {
         "Content-Type": content_type,
-        "Content-Disposition": f"inline; filename={filename}",
+        "Content-Disposition": f"attachment; filename={filename}",
     }
