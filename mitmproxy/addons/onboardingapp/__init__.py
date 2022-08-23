@@ -47,8 +47,6 @@ def magisk():
         "Content-Disposition": f"attachment; filename={filename}",
     }
 
-    return read_cert("zip", "application/zip")
-
 
 def read_cert(ext, content_type):
     filename = CONF_BASENAME + f"-ca-cert.{ext}"
