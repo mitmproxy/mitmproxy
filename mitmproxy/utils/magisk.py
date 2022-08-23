@@ -1,5 +1,5 @@
 from zipfile import ZipFile
-import hashlib    
+import hashlib
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 
@@ -69,6 +69,7 @@ install_module
 exit 0
 """
 
+
 def get_ca_from_files() -> x509.Certificate:
     # Borrowed from tlsconfig
     certstore_path = os.path.expanduser(ctx.options.confdir)
@@ -81,7 +82,6 @@ def get_ca_from_files() -> x509.Certificate:
         else None,
     )
     return certstore.default_ca._cert
-    
 
 
 def subject_hash_old(ca : x509.Certificate) -> str:

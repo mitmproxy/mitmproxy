@@ -38,7 +38,7 @@ def magisk():
 
     if not os.path.exists(p):
         write_magisk_module(p)
-    
+
     with open(p, "rb") as f:
         cert = f.read()
 
