@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template
 
 from mitmproxy.options import CONF_BASENAME, CONF_DIR
+from mitmproxy.utils.magisk import write_magisk_module
 
 app = Flask(__name__)
 # will be overridden in the addon, setting this here so that the Flask app can be run standalone.
@@ -29,6 +30,24 @@ def cer():
     return read_cert("cer", "application/x-x509-ca-cert")
 
 
+@app.route("/cert/magisk")
+def magisk():
+    filename = CONF_BASENAME + f"-magisk-module.zip"
+    p = os.path.join(app.config["CONFDIR"], filename)
+    p = os.path.expanduser(p)
+
+    if not os.path.exists(p):
+        write_magisk_module(p)
+
+    with open(p, "rb") as f:
+        cert = f.read()
+
+    return cert, {
+        "Content-Type": "application/zip",
+        "Content-Disposition": f"attachment; filename={filename}",
+    }
+
+
 def read_cert(ext, content_type):
     filename = CONF_BASENAME + f"-ca-cert.{ext}"
     p = os.path.join(app.config["CONFDIR"], filename)
@@ -38,5 +57,5 @@ def read_cert(ext, content_type):
 
     return cert, {
         "Content-Type": content_type,
-        "Content-Disposition": f"inline; filename={filename}",
+        "Content-Disposition": f"attachment; filename={filename}",
     }
