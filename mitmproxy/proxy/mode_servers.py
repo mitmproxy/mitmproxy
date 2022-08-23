@@ -125,14 +125,20 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         try:
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
+            # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
+            # so we try to cover the 99% case and then give up and fall back to what asyncio does.
             if port == 0:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind((host, 0))
-                port = s.getsockname()[1]
-                s.close()
-                # there is a slight race condition here where the port is reused by another application between the
-                # close above and the listen below. We ignore this until it we have an actual bug report for it.
-            self._server = await self.listen(host, port)
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.bind(("", 0))
+                    fixed_port = s.getsockname()[1]
+                    s.close()
+                    self._server = await self.listen(host, fixed_port)
+                except Exception as e:
+                    ctx.log.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
+                    self._server = await self.listen(host, port)
+            else:
+                self._server = await self.listen(host, port)
             self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
         except OSError as e:
             self.last_exception = e
@@ -146,7 +152,8 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             raise
         else:
             self.last_exception = None
-        ctx.log.info(f"{self.log_desc} listening at {' and '.join(map(human.format_address, self._listen_addrs))}.")
+        addrs = " and ".join({human.format_address(a) for a in self._listen_addrs})
+        ctx.log.info(f"{self.log_desc} listening at {addrs}.")
 
     async def stop(self) -> None:
         assert self._server is not None

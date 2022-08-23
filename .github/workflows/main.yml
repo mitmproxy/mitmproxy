@@ -112,7 +112,7 @@ jobs:
             platform: macos
           - image: windows-2019
             platform: windows
-          - image: ubuntu-18.04  # Old Ubuntu version for old glibc
+          - image: ubuntu-20.04  # Oldest avalible version so we get oldest glibc possible.
             platform: linux
     runs-on: ${{ matrix.image }}
     env:
