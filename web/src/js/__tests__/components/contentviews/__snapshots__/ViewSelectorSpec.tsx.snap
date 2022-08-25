@@ -61,6 +61,97 @@ exports[`ViewSelector 2`] = `
         raw
       </a>
     </li>
+    <li>
+      <a
+        href="#"
+      >
+        hex
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        graphql
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        json
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        xml/html
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        wbxml
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        javascript
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        css
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        url-encoded
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        multipart form
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        image
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        protocol buffer
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        msgpack
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
+        grpc/protocol buffer
+      </a>
+    </li>
   </ul>
 </DocumentFragment>
 `;

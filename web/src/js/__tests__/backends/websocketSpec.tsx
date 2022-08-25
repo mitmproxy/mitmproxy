@@ -10,6 +10,7 @@ test("websocket backend", async () => {
     // @ts-ignore
     jest.spyOn(global, 'WebSocket').mockImplementation(() => ({addEventListener: () => 0}));
 
+    fetchMock.mockOnceIf("./state", "{}");
     fetchMock.mockOnceIf("./flows", "[]");
     fetchMock.mockOnceIf("./events", "[]");
     fetchMock.mockOnceIf("./options", "{}");
@@ -20,6 +21,7 @@ test("websocket backend", async () => {
 
     await waitFor(() => expect(store.getActions()).toEqual([
         connectionActions.startFetching(),
+        {type: "STATE_RECEIVE", cmd: "receive", data: {}, resource: "state"},
         {type: "FLOWS_RECEIVE", cmd: "receive", data: [], resource: "flows"},
         {type: "EVENTS_RECEIVE", cmd: "receive", data: [], resource: "events"},
         {type: "OPTIONS_RECEIVE", cmd: "receive", data: {}, resource: "options"},
