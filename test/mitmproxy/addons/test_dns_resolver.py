@@ -8,7 +8,7 @@ import pytest
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver, proxyserver
 from mitmproxy.connection import Address
-from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.test import taddons, tflow, tutils
 
 

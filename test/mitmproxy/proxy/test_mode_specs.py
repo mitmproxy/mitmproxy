@@ -1,6 +1,7 @@
 import pytest
 
-from mitmproxy.proxy.mode_specs import ProxyMode, Socks5Mode
+from mitmproxy.proxy.mode import ProxyMode
+from mitmproxy.proxy.mode_specs import Socks5Mode
 
 
 def test_parse():

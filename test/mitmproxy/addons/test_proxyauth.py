@@ -7,7 +7,7 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.proxy.layers import modes
-from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 

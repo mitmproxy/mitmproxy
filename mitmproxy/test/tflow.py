@@ -8,7 +8,7 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy import websocket
-from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.test.tutils import tdnsreq, tdnsresp
 from mitmproxy.test.tutils import treq, tresp
 from wsproto.frame_protocol import Opcode

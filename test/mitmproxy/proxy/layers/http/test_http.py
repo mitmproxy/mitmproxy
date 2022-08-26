@@ -11,7 +11,7 @@ from mitmproxy.proxy.layers import TCPLayer, http, tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
-from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from test.mitmproxy.proxy.tutils import (
     BytesMatching,

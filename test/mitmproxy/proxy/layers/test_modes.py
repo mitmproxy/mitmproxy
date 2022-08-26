@@ -21,7 +21,7 @@ from mitmproxy.proxy.layers.tls import (
     TlsStartClientHook,
     TlsStartServerHook,
 )
-from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.tcp import TCPFlow
 from test.mitmproxy.proxy.layers.test_tls import (
     reply_tls_start_client,
