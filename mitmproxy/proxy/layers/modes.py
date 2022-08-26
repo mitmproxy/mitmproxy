@@ -57,7 +57,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 class ReverseProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        spec = cast(ReverseMode, self.context.client.proxy_mode)
+        spec = cast("ReverseMode", self.context.client.proxy_mode)
         self.context.server.address = spec.address
 
         if spec.scheme == "https" or spec.scheme == "tls" or spec.scheme == "dtls":

@@ -246,6 +246,7 @@ class AsyncioServerInstance(ServerInstance[A]):
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
             handler.layer = self.mode.layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
+            handler.layer.context.server.transport_protocol = "udp"
 
             # pre-register here - we may get datagrams before the task is executed.
             self.manager.connections[connection_id] = handler
