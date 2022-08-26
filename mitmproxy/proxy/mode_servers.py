@@ -123,22 +123,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         try:
-            # workaround for https://github.com/python/cpython/issues/89856:
-            # We want both IPv4 and IPv6 sockets to bind to the same port.
-            # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
-            # so we try to cover the 99% case and then give up and fall back to what asyncio does.
-            if port == 0:
-                try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.bind(("", 0))
-                    fixed_port = s.getsockname()[1]
-                    s.close()
-                    self._server = await self.listen(host, fixed_port)
-                except Exception as e:
-                    ctx.log.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
-                    self._server = await self.listen(host, port)
-            else:
-                self._server = await self.listen(host, port)
+            self._server = await self.listen(host, port)
             self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
         except OSError as e:
             self.last_exception = e
@@ -170,50 +155,70 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             raise
         else:
             self.last_exception = None
-        ctx.log.info(f"Stopped {self.log_desc} at {' and '.join(map(human.format_address, listen_addrs))}.")
+        addrs = " and ".join({human.format_address(a) for a in listen_addrs})
+        ctx.log.info(f"Stopped {self.log_desc} at {addrs}.")
 
     @abstractmethod
-    async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
+    def make_top_layer(self, context: Context) -> Layer:
         pass
+
+    def make_connection_id(
+        self,
+        data: bytes | None,
+        remote_addr: Address,
+        local_addr: Address,
+    ) -> tuple | None:
+        return (self.mode.transport_protocol, remote_addr, local_addr)
 
     @property
     @abstractmethod
     def log_desc(self) -> str:
         pass
 
+    async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
+        if self.mode.transport_protocol == "tcp":
+            # workaround for https://github.com/python/cpython/issues/89856:
+            # We want both IPv4 and IPv6 sockets to bind to the same port.
+            # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
+            # so we try to cover the 99% case and then give up and fall back to what asyncio does.
+            if port == 0:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.bind(("", 0))
+                    fixed_port = s.getsockname()[1]
+                    s.close()
+                    return await asyncio.start_server(self.handle_tcp_connection, host, fixed_port)
+                except Exception as e:
+                    ctx.log.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
+            return await asyncio.start_server(self.handle_tcp_connection, host, port)
+        elif self.mode.transport_protocol == "udp":
+            # create_datagram_endpoint only creates one socket, so the workaround above doesn't apply
+            # NOTE once we do dual servers, we should consider creating sockets manually to ensure
+            # both TCP and UDP listen to the same IPs and same ports
+            return await udp.start_server(
+                self.handle_udp_datagram,
+                host,
+                port,
+            )
+        else:
+            raise AssertionError(self.mode.transport_protocol)
+
     @property
     def listen_addrs(self) -> tuple[Address, ...]:
         return self._listen_addrs
-
-
-class ServerMixin(metaclass=ABCMeta):
-    manager: ServerManager
-    mode: mode_specs.ProxyMode
-
-    @abstractmethod
-    def make_top_layer(self, context: Context) -> Layer:
-        pass
-
-
-class TcpServerMixin(ServerMixin, metaclass=ABCMeta):
-
-    async def listen_tcp(self, host: str, port: int) -> asyncio.Server:
-        return await asyncio.start_server(
-            self.handle_tcp_connection,
-            host,
-            port,
-        )
 
     async def handle_tcp_connection(
         self,
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ) -> None:
-        connection_id = (
-            "tcp",
+        connection_id = self.make_connection_id(
+            None,
             writer.get_extra_info("peername"),
             writer.get_extra_info("sockname"),
         )
+        if connection_id is None:
+            return
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
@@ -228,24 +233,6 @@ class TcpServerMixin(ServerMixin, metaclass=ABCMeta):
         handler.layer = self.make_top_layer(handler.layer.context)
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
-
-
-class UdpServerMixin(ServerMixin, metaclass=ABCMeta):
-
-    def make_connection_id(
-        self,
-        data: bytes,
-        remote_addr: Address,
-        local_addr: Address,
-    ) -> tuple | None:
-        return ("udp", remote_addr, local_addr)
-
-    async def listen_udp(self, host: str, port: int) -> udp.UdpServer:
-        return await udp.start_server(
-            self.handle_udp_datagram,
-            host,
-            port,
-        )
 
     def handle_udp_datagram(
         self,
@@ -280,50 +267,28 @@ class UdpServerMixin(ServerMixin, metaclass=ABCMeta):
             await handler.handle_client()
 
 
-class TcpServerInstance(AsyncioServerInstance[M], TcpServerMixin, metaclass=ABCMeta):
-    async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
-        assert self.mode.transport_protocol == "tcp"
-        return await self.listen_tcp(host, port)
-
-
-class UdpServerInstance(AsyncioServerInstance[M], UdpServerMixin, metaclass=ABCMeta):
-    async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
-        assert self.mode.transport_protocol == "udp"
-        return await self.listen_udp(host, port)
-
-
-class DualProtocolInstance(AsyncioServerInstance[M], TcpServerMixin, UdpServerMixin, metaclass=ABCMeta):
-    async def listen(self, host: str, port: int) -> udp.UdpServer:
-        if self.mode.transport_protocol == "tcp":
-            return await self.listen_tcp(host, port)
-        elif self.mode.transport_protocol == "udp":
-            return await self.listen_udp(host, port)
-        else:
-            raise AssertionError(self.mode.transport_protocol)
-
-
-class RegularInstance(TcpServerInstance[mode_specs.RegularMode]):
+class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):
     log_desc = "HTTP(S) proxy"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.HttpProxy(context)
 
 
-class UpstreamInstance(TcpServerInstance[mode_specs.UpstreamMode]):
+class UpstreamInstance(AsyncioServerInstance[mode_specs.UpstreamMode]):
     log_desc = "HTTP(S) proxy (upstream mode)"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.HttpUpstreamProxy(context)
 
 
-class TransparentInstance(TcpServerInstance[mode_specs.TransparentMode]):
+class TransparentInstance(AsyncioServerInstance[mode_specs.TransparentMode]):
     log_desc = "transparent proxy"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
 
 
-class ReverseInstance(DualProtocolInstance[mode_specs.ReverseMode]):
+class ReverseInstance(AsyncioServerInstance[mode_specs.ReverseMode]):
     @property
     def log_desc(self) -> str:
         return f"reverse proxy to {self.mode.data}"
@@ -332,14 +297,14 @@ class ReverseInstance(DualProtocolInstance[mode_specs.ReverseMode]):
         return layers.modes.ReverseProxy(context)
 
 
-class Socks5Instance(TcpServerInstance[mode_specs.Socks5Mode]):
+class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
     log_desc = "SOCKS v5 proxy"
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.Socks5Proxy(context)
 
 
-class DnsInstance(UdpServerInstance[mode_specs.DnsMode]):
+class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     log_desc = "DNS server"
 
     def make_top_layer(self, context: Context) -> Layer:
@@ -347,10 +312,11 @@ class DnsInstance(UdpServerInstance[mode_specs.DnsMode]):
 
     def make_connection_id(
         self,
-        data: bytes,
+        data: bytes | None,
         remote_addr: Address,
         local_addr: Address,
     ) -> tuple | None:
+        assert data is not None
         try:
             dns_id = struct.unpack_from("!H", data, 0)
         except struct.error:

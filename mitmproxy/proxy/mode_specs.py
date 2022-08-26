@@ -34,6 +34,10 @@ from mitmproxy.net import server_spec
 Self = TypeVar("Self", bound="ProxyMode")
 
 
+TCP: Literal['tcp', 'udp'] = "tcp"
+UDP: Literal['tcp', 'udp'] = "udp"
+
+
 @dataclass(frozen=True)  # type: ignore
 class ProxyMode(Serializable, metaclass=ABCMeta):
     """
@@ -163,7 +167,7 @@ def _check_empty(data):
 
 class RegularMode(ProxyMode):
     """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
-    transport_protocol = "tcp"
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -171,7 +175,7 @@ class RegularMode(ProxyMode):
 
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
-    transport_protocol = "tcp"
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -179,9 +183,9 @@ class TransparentMode(ProxyMode):
 
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
-    transport_protocol = "tcp"
     scheme: Literal["http", "https"]
     address: tuple[str, int]
+    transport_protocol = TCP
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
@@ -195,24 +199,19 @@ class ReverseMode(ProxyMode):
     """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
     scheme: Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns"]
     address: tuple[str, int]
-    transport_protocol = "tcp"
+    transport_protocol = TCP
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
-        scheme, self.address = server_spec.parse(self.data, default_scheme="https")
-        if scheme == "http" or scheme == "https" or scheme == "tls" or scheme == "tcp":
-            self.transport_protocol = "tcp"
-        elif scheme == "dns" or scheme == "dtls" or scheme == "udp":
-            self.transport_protocol = "udp"
-        else:
-            raise ValueError("invalid reverse proxy scheme")
-        self.scheme = scheme
+        self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
+        if self.scheme in ("dns", "dtls", "udp"):
+            self.transport_protocol = UDP
 
 
 class Socks5Mode(ProxyMode):
     """A SOCKSv5 proxy."""
     default_port = 1080
-    transport_protocol = "tcp"
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -221,7 +220,7 @@ class Socks5Mode(ProxyMode):
 class DnsMode(ProxyMode):
     """A DNS server."""
     default_port = 53
-    transport_protocol = "udp"
+    transport_protocol = UDP
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:

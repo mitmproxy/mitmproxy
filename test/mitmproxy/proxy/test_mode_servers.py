@@ -7,7 +7,7 @@ import pytest
 from mitmproxy import platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, DtlsInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
 from mitmproxy.test import taddons
 
 
@@ -121,6 +121,34 @@ async def test_tcp_start_error():
             await inst3.start()
 
 
+async def test_invalid_protocol(monkeypatch):
+    manager = MagicMock()
+
+    with taddons.context():
+        inst = ServerInstance.make(f"regular@127.0.0.1:0", manager)
+        monkeypatch.setattr(inst.mode, "transport_protocol", "invalid_proto")
+        with pytest.raises(AssertionError, match=f"invalid_proto"):
+            await inst.start()
+
+
+async def test_tcp_reject(monkeypatch):
+    manager = MagicMock()
+    manager.connections = {}
+
+    with taddons.context() as tctx:
+        def client_id(data, remote_addr, local_addr):
+            nonlocal tctx
+            tctx.master.log.info("ignored connection")
+            return None
+
+        inst = ServerInstance.make(f"regular@127.0.0.1:0", manager)
+        await inst.start()
+        monkeypatch.setattr(inst, "make_connection_id", client_id)
+        [reader, writer] = await asyncio.open_connection(*inst.listen_addrs[0])
+        await tctx.master.await_log("ignored connection")
+        assert not manager.connections
+
+
 async def test_udp_start_stop():
     manager = MagicMock()
 
@@ -156,22 +184,6 @@ async def test_udp_start_error():
             await inst2.start()
 
 
-async def test_dtls_start_stop(monkeypatch):
-    manager = MagicMock()
-
-    with taddons.context() as tctx:
-        inst = ServerInstance.make("reverse:dtls://127.0.0.1:0@127.0.0.1:0", manager)
-        await inst.start()
-        assert await tctx.master.await_log("server listening")
-
-        host, port, *_ = inst.listen_addrs[0]
-        reader, writer = await udp.open_connection(host, port)
-
-        writer.close()
-        await inst.stop()
-        assert await tctx.master.await_log("stopped")
-
-
 async def test_udp_connection_reuse(monkeypatch):
     manager = MagicMock()
     manager.connections = {}
@@ -181,22 +193,6 @@ async def test_udp_connection_reuse(monkeypatch):
 
     with taddons.context():
         inst = cast(DnsInstance, ServerInstance.make("dns", manager))
-        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
-        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
-        await asyncio.sleep(0)
-
-        assert len(inst.manager.connections) == 1
-
-
-async def test_dtls_connection_reuse(monkeypatch):
-    manager = MagicMock()
-    manager.connections = {}
-
-    monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
-    monkeypatch.setattr(DtlsInstance, "handle_udp_connection", AsyncMock())
-
-    with taddons.context():
-        inst = cast(DtlsInstance, ServerInstance.make("dtls:reverse:127.0.0.1:0", manager))
         inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
         inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
         await asyncio.sleep(0)
