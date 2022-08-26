@@ -82,7 +82,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
-    layer: layer.Layer
+    layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:

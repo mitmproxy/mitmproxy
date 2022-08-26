@@ -160,7 +160,7 @@ async def test_dtls_start_stop(monkeypatch):
     manager = MagicMock()
 
     with taddons.context() as tctx:
-        inst = ServerInstance.make("dtls:reverse:127.0.0.1:0@127.0.0.1:0", manager)
+        inst = ServerInstance.make("reverse:dtls://127.0.0.1:0@127.0.0.1:0", manager)
         await inst.start()
         assert await tctx.master.await_log("server listening")
 
@@ -169,7 +169,7 @@ async def test_dtls_start_stop(monkeypatch):
 
         writer.close()
         await inst.stop()
-        assert await tctx.master.await_log("Stopped")
+        assert await tctx.master.await_log("stopped")
 
 
 async def test_udp_connection_reuse(monkeypatch):

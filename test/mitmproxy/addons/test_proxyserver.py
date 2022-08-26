@@ -327,11 +327,11 @@ async def test_dtls(monkeypatch) -> None:
         state = HelperAddon()
         tctx.master.addons.add(state)
         async with udp_server(server_handler) as server_addr:
-            mode = f"dtls:reverse:{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            mode = f"reverse:dtls://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
-            await tctx.master.await_log("DTLS server listening at", level="info")
+            await tctx.master.await_log(f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening", level="info")
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             r, w = await udp.open_connection(*addr)
@@ -340,4 +340,4 @@ async def test_dtls(monkeypatch) -> None:
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("Stopped DTLS server at", level="info")
+            await tctx.master.await_log("stopped reverse proxy to dtls", level="info")
