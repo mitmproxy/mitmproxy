@@ -54,7 +54,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
     def connection_lost(self, exc: Exception | None) -> None:
         self._closed.set()
         if exc:
-            ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")
+            ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")  # pragma: nocover
 
     def pause_writing(self) -> None:
         self._paused = self._paused + 1
@@ -71,7 +71,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._can_write.wait()
 
     def error_received(self, exc: Exception) -> None:
-        ctx.log.warn(f"Send/receive on {self!r} failed: {exc!r}")
+        ctx.log.warn(f"Send/receive on {self!r} failed: {exc!r}")  # pragma: nocover
 
     async def wait_closed(self) -> None:
         await self._closed.wait()
@@ -150,7 +150,7 @@ class DatagramReader:
         else:
             try:
                 return await self._packets.get()
-            except RuntimeError:
+            except RuntimeError:  # pragma: nocover
                 # event loop got closed
                 return b""
 
