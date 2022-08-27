@@ -46,8 +46,7 @@ class WebMaster(master.Master):
         )
         self.app = app.Application(self, self.options.web_debug)
         self.proxyserver: Proxyserver = self.addons.get("proxyserver")
-        self.proxyserver.servers.updating.connect(self._sig_servers_update)
-        self.proxyserver.servers.updated.connect(self._sig_servers_update)
+        self.proxyserver.servers.changed.connect(self._sig_servers_changed)
 
     def _sig_view_add(self, flow: flow.Flow) -> None:
         app.ClientConnection.broadcast(
@@ -79,7 +78,7 @@ class WebMaster(master.Master):
             resource="options", cmd="update", data=options_dict
         )
 
-    def _sig_servers_update(self) -> None:
+    def _sig_servers_changed(self) -> None:
         app.ClientConnection.broadcast(
             resource="state",
             cmd="update",

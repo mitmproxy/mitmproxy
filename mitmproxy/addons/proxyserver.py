@@ -7,7 +7,7 @@ import asyncio
 import collections
 import ipaddress
 from contextlib import contextmanager
-from typing import Iterable, Iterator, Optional, cast
+from typing import Iterable, Iterator, Optional
 
 from wsproto.frame_protocol import Opcode
 
@@ -31,10 +31,7 @@ from mitmproxy.utils import human, signals
 
 class Servers:
     def __init__(self, manager: ServerManager):
-        self.updating = signals.AsyncSignal(lambda: None)
-        """"Notified before any instances are started or stopped"""
-        self.updated = signals.AsyncSignal(lambda: None)
-        """"Notified after all instances have been configured."""
+        self.changed = signals.AsyncSignal(lambda: None)
         self._instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
         self._lock = asyncio.Lock()
         self._manager = manager
@@ -47,42 +44,40 @@ class Servers:
         all_ok = True
 
         async with self._lock:
-            # Notify listeners about the pending update.
-            new_instances = dict.fromkeys(modes)
-            if not ctx.options.server:
-                new_instances.clear()
-            await self.updating.send()
+            new_instances: dict[mode_specs.ProxyMode, ServerInstance] = {}
+
+            start_tasks = []
+            if ctx.options.server:
+                # Create missing modes and keep existing ones.
+                for spec in modes:
+                    if spec in self._instances:
+                        instance = self._instances[spec]
+                    else:
+                        instance = ServerInstance.make(spec, self._manager)
+                        start_tasks.append(instance.start())
+                    new_instances[spec] = instance
 
             # Shutdown modes that have been removed from the list.
             stop_tasks = [
                 s.stop() for spec, s in self._instances.items()
                 if spec not in new_instances
             ]
+
+            self._instances = new_instances
+            # Notify listeners about the new not-yet-started servers.
+            await self.changed.send()
+
+            # We first need to free ports before starting new servers.
             for ret in await asyncio.gather(*stop_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
                     ctx.log.error(str(ret))
-
-            # Create missing modes and keep existing ones.
-            start_tasks = []
-            for spec in new_instances:
-                if spec in self._instances:
-                    instance = self._instances[spec]
-                else:
-                    instance = ServerInstance.make(spec, self._manager)
-                    start_tasks.append(instance.start())
-                new_instances[spec] = instance
-
             for ret in await asyncio.gather(*start_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
                     ctx.log.error(str(ret))
 
-            # Set the new instances and...
-            self._instances = cast(dict[mode_specs.ProxyMode, ServerInstance], new_instances)
-
-        # ...notify the listeners outside the lock.
-        await self.updated.send()
+        await self.changed.send()
         return all_ok
 
     def __len__(self) -> int:

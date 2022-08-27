@@ -477,6 +477,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         data = json.loads(resp.body)
         data.update(available=True)
+        data["contentViews"] = ["Auto", "Raw"]
+        data["version"] = "1.2.3"
 
         # language=TypeScript
         content = (

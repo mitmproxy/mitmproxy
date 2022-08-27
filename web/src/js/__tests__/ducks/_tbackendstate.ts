@@ -5,20 +5,7 @@ export function TBackendState(): Required<BackendState> {
         "available": true,
         "contentViews": [
             "Auto",
-            "Raw",
-            "Hex",
-            "GraphQL",
-            "JSON",
-            "XML/HTML",
-            "WBXML",
-            "JavaScript",
-            "CSS",
-            "URL-encoded",
-            "Multipart Form",
-            "Image",
-            "Protocol Buffer",
-            "MsgPack",
-            "gRPC/Protocol Buffer"
+            "Raw"
         ],
         "servers": [
             {
@@ -55,6 +42,6 @@ export function TBackendState(): Required<BackendState> {
                 "type": "socks5"
             }
         ],
-        "version": "9.0.0.dev"
+        "version": "1.2.3"
     }
 }

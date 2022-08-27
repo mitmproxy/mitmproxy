@@ -52,7 +52,7 @@ test("websocket backend", async () => {
         connectionActions.connectionEstablished(),
     ]))
     store.clearActions()
-    expect(fetchMock.mock.calls).toHaveLength(4);
+    expect(fetchMock.mock.calls).toHaveLength(5);
 
     console.error = jest.fn();
     backend.onClose(new CloseEvent("Connection closed"));

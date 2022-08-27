@@ -4,7 +4,7 @@ import json
 import logging
 import os.path
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar, Optional, Union
@@ -22,10 +22,8 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
-from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
-from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils.emoji import emoji

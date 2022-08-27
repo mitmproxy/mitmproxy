@@ -21,6 +21,7 @@ def test_make():
         assert inst
         assert inst.make_top_layer(context)
         assert inst.log_desc
+        assert inst.to_json()
 
 
 async def test_last_exception_and_running(monkeypatch):
