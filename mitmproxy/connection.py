@@ -251,7 +251,7 @@ class Client(Connection):
         )
         self.alpn_offers = state["alpn_offers"]
         self.cipher_list = state["cipher_list"]
-        self.proxy_mode = mode_specs.ProxyMode.parse("regular").ProxyMode.from_state(state["proxy_mode"])
+        self.proxy_mode = mode_specs.ProxyMode.from_state(state["proxy_mode"])
 
     @property
     def address(self):  # pragma: no cover
