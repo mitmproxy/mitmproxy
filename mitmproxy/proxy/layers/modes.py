@@ -2,7 +2,7 @@ import socket
 import struct
 from abc import ABCMeta
 from dataclasses import dataclass
-from typing import cast, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast, Optional
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
@@ -11,7 +11,7 @@ from mitmproxy.proxy.layers import dns, tls
 from mitmproxy.proxy.utils import expect
 
 if TYPE_CHECKING:
-    from mitmproxy.proxy.mode_specs import ReverseMode
+    from mitmproxy.proxy import mode_specs
 
 
 class HttpProxy(layer.Layer):
@@ -57,7 +57,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 class ReverseProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        spec = cast("ReverseMode", self.context.client.proxy_mode)
+        spec = cast("mode_specs.ReverseMode", self.context.client.proxy_mode)
         self.context.server.address = spec.address
 
         if spec.scheme == "https" or spec.scheme == "tls" or spec.scheme == "dtls":

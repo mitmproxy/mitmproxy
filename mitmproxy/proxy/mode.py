@@ -25,7 +25,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import cache
-from typing import ClassVar, Literal, Type, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Literal, Type, TypeVar
 
 from mitmproxy.coretypes.serializable import Serializable
 

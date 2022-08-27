@@ -149,6 +149,13 @@ class Options(optmanager.OptManager):
             "TCP connections are enabled by default. ",
         )
         self.add_option(
+            "rawudp",
+            bool,
+            True,
+            "Enable/disable raw UDP connections. "
+            "UDP connections are enabled by default. ",
+        )
+        self.add_option(
             "ssl_insecure",
             bool,
             False,
@@ -175,6 +182,16 @@ class Options(optmanager.OptManager):
             [],
             """
             Generic TCP SSL proxy mode for all hosts that match the pattern.
+            Similar to --ignore-hosts, but SSL connections are intercepted.
+            The communication contents are printed to the log in verbose mode.
+            """,
+        )
+        self.add_option(
+            "udp_hosts",
+            Sequence[str],
+            [],
+            """
+            Generic UDP SSL proxy mode for all hosts that match the pattern.
             Similar to --ignore-hosts, but SSL connections are intercepted.
             The communication contents are printed to the log in verbose mode.
             """,

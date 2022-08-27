@@ -77,7 +77,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         """Register all subclasses so that make() finds them."""
         # extract mode from Generic[Mode].
         mode = get_args(cls.__orig_bases__[0])[0]
-        if mode != M and mode != A:
+        if not isinstance(mode, TypeVar):
+            assert issubclass(mode, ProxyMode)
             assert mode.type not in ServerInstance.__modes
             ServerInstance.__modes[mode.type] = cls
 
@@ -95,11 +96,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 raise
             inst_class = AsyncioServerInstance
         return inst_class(mode, manager)
-
-    @property
-    @abstractmethod
-    def description(self) -> str:
-        pass
 
     @property
     @abstractmethod
@@ -128,10 +124,6 @@ class AsyncioServerInstance(ServerInstance[A]):
     def is_running(self) -> bool:
         return self._server is not None
 
-    @property
-    def description(self) -> str:
-        return self.mode.description
-
     async def start(self) -> None:
         assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
@@ -141,7 +133,7 @@ class AsyncioServerInstance(ServerInstance[A]):
             self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
         except OSError as e:
             self.last_exception = e
-            message = f"{self.description} failed to listen on {host or '*'}:{port} with {e}"
+            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
                 assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
@@ -152,7 +144,7 @@ class AsyncioServerInstance(ServerInstance[A]):
         else:
             self.last_exception = None
         addrs = " and ".join({human.format_address(a) for a in self._listen_addrs})
-        ctx.log.info(f"{self.description} listening at {addrs}.")
+        ctx.log.info(f"{self.mode.description} listening at {addrs}.")
 
     async def stop(self) -> None:
         assert self._server is not None
@@ -170,7 +162,7 @@ class AsyncioServerInstance(ServerInstance[A]):
         else:
             self.last_exception = None
         addrs = " and ".join({human.format_address(a) for a in listen_addrs})
-        ctx.log.info(f"Stopped {self.description} at {addrs}.")
+        ctx.log.info(f"Stopped {self.mode.description} at {addrs}.")
 
     async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
         if self.mode.transport_protocol == "tcp":
