@@ -23,8 +23,9 @@ from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import udp
-from mitmproxy.proxy import commands, mode_specs, server
-from mitmproxy.proxy.mode import ProxyMode, AsyncioProxyMode
+from mitmproxy.proxy import commands, layers, mode_specs, server
+from mitmproxy.proxy.context import Context
+from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import asyncio_utils, human
 
 
@@ -52,8 +53,7 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
         )
 
 
-M = TypeVar('M', bound=ProxyMode)
-A = TypeVar('A', bound=AsyncioProxyMode)
+M = TypeVar('M', bound=mode_specs.ProxyMode)
 
 
 class ServerManager(typing.Protocol):
@@ -78,24 +78,18 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         # extract mode from Generic[Mode].
         mode = get_args(cls.__orig_bases__[0])[0]
         if not isinstance(mode, TypeVar):
-            assert issubclass(mode, ProxyMode)
+            assert issubclass(mode, mode_specs.ProxyMode)
             assert mode.type not in ServerInstance.__modes
             ServerInstance.__modes[mode.type] = cls
 
     @staticmethod
     def make(
-        mode: ProxyMode | str,
+        mode: mode_specs.ProxyMode | str,
         manager: ServerManager,
     ) -> ServerInstance:
         if isinstance(mode, str):
-            mode = ProxyMode.parse(mode)
-        try:
-            inst_class = ServerInstance.__modes[mode.type]
-        except KeyError:
-            if not isinstance(mode, AsyncioProxyMode):
-                raise
-            inst_class = AsyncioServerInstance
-        return inst_class(mode, manager)
+            mode = mode_specs.ProxyMode.parse(mode)
+        return ServerInstance.__modes[mode.type](mode, manager)
 
     @property
     @abstractmethod
@@ -116,9 +110,13 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         pass
 
 
-class AsyncioServerInstance(ServerInstance[A]):
+class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     _server: asyncio.Server | udp.UdpServer | None = None
     _listen_addrs: tuple[Address, ...] = tuple()
+
+    @abstractmethod
+    def make_top_layer(self, context: Context) -> Layer:
+        pass
 
     @property
     def is_running(self) -> bool:
@@ -209,7 +207,7 @@ class AsyncioServerInstance(ServerInstance[A]):
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
-        handler.layer = self.mode.layer(handler.layer.context)
+        handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
             socket = writer.get_extra_info("socket")
             try:
@@ -236,7 +234,7 @@ class AsyncioServerInstance(ServerInstance[A]):
                 ctx.master, reader, writer, ctx.options, self.mode
             )
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
-            handler.layer = self.mode.layer(handler.layer.context)
+            handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
 
@@ -251,3 +249,35 @@ class AsyncioServerInstance(ServerInstance[A]):
     async def handle_udp_connection(self, connection_id: tuple, handler: ProxyConnectionHandler) -> None:
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
+
+
+class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.HttpProxy(context)
+
+
+class UpstreamInstance(AsyncioServerInstance[mode_specs.UpstreamMode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.HttpUpstreamProxy(context)
+
+
+class TransparentInstance(AsyncioServerInstance[mode_specs.TransparentMode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.TransparentProxy(context)
+
+
+class ReverseInstance(AsyncioServerInstance[mode_specs.ReverseMode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.ReverseProxy(context)
+
+
+class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.Socks5Proxy(context)
+
+
+class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
+    log_desc = "DNS server"
+
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.DNSLayer(context)

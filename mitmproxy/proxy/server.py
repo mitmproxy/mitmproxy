@@ -20,7 +20,7 @@ from OpenSSL import SSL
 from mitmproxy import http, options as moptions, tls
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import commands, events, layer, layers, mode, server_hooks
+from mitmproxy.proxy import commands, events, layer, layers, mode_specs, server_hooks
 from mitmproxy.connection import Address, Client, Connection, ConnectionState
 from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
@@ -401,7 +401,7 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
         options: moptions.Options,
-        mode: mode.ProxyMode,
+        mode: mode_specs.ProxyMode,
     ) -> None:
         client = Client(
             writer.get_extra_info("peername"),
@@ -513,7 +513,7 @@ if __name__ == "__main__":  # pragma: no cover
             reader,
             writer,
             opts,
-            mode.ProxyMode.parse("reverse:http://127.0.0.1:3000/"),
+            mode_specs.ProxyMode.parse("reverse:http://127.0.0.1:3000/"),
             {
                 "next_layer": next_layer,
                 "request": request,

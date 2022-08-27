@@ -22,12 +22,10 @@ from mitmproxy import (
 )
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
-from mitmproxy.proxy import events, server_hooks
+from mitmproxy.proxy import events, mode_specs, server_hooks
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.proxy.mode import ProxyMode
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
-from mitmproxy.proxy.mode_specs import TransparentMode
 from mitmproxy.utils import human, signals
 
 
@@ -37,7 +35,7 @@ class Servers:
         """"Notified before any instances are started or stopped"""
         self.updated = signals.AsyncSignal(lambda old_modes, new_modes: None)
         """"Notified after all instances have been configured."""
-        self._instances: dict[ProxyMode, ServerInstance] = dict()
+        self._instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
         self._lock = asyncio.Lock()
         self._manager = manager
 
@@ -45,7 +43,7 @@ class Servers:
     def is_updating(self) -> bool:
         return self._lock.locked()
 
-    async def update(self, modes: Iterable[ProxyMode]) -> bool:
+    async def update(self, modes: Iterable[mode_specs.ProxyMode]) -> bool:
         all_ok = True
 
         async with self._lock:
@@ -67,7 +65,7 @@ class Servers:
                     ctx.log.error(str(ret))
 
             # Create missing modes and keep existing ones.
-            instances: dict[ProxyMode, ServerInstance] = dict()
+            instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
             for spec in new_modes:
                 if not (instance := self._instances.get(spec, None)):
                     instance = ServerInstance.make(spec, self._manager)
@@ -96,9 +94,9 @@ class Servers:
     def __iter__(self) -> Iterator[ServerInstance]:
         return iter(self._instances.values())
 
-    def __getitem__(self, mode: str | ProxyMode) -> ServerInstance:
+    def __getitem__(self, mode: str | mode_specs.ProxyMode) -> ServerInstance:
         if isinstance(mode, str):
-            mode = ProxyMode.parse(mode)
+            mode = mode_specs.ProxyMode.parse(mode)
         return self._instances[mode]
 
 
@@ -231,11 +229,11 @@ class Proxyserver(ServerManager):
                 )
         if "mode" in updated or "server" in updated:
             # Make sure that all modes are syntactically valid...
-            modes: list[ProxyMode] = []
+            modes: list[mode_specs.ProxyMode] = []
             for mode in ctx.options.mode:
                 try:
                     modes.append(
-                        ProxyMode.parse(mode)
+                        mode_specs.ProxyMode.parse(mode)
                     )
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Invalid proxy mode specification: {mode} ({e})")
@@ -256,7 +254,7 @@ class Proxyserver(ServerManager):
 
             if ctx.options.mode and not ctx.master.addons.get("nextlayer"):
                 ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
-            if any(isinstance(m, TransparentMode) for m in modes):
+            if any(isinstance(m, mode_specs.TransparentMode) for m in modes):
                 if platform.original_addr:
                     platform.init_transparent_mode()
                 else:
@@ -266,7 +264,7 @@ class Proxyserver(ServerManager):
                 asyncio.create_task(self.servers.update(modes))
 
     async def setup_servers(self) -> bool:
-        return await self.servers.update(map(ProxyMode.parse, ctx.options.mode))
+        return await self.servers.update(map(mode_specs.ProxyMode.parse, ctx.options.mode))
 
     def listen_addrs(self) -> list[Address]:
         return [

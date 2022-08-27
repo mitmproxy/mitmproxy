@@ -7,7 +7,7 @@ from typing import Literal, Optional
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
-from mitmproxy.proxy import mode
+from mitmproxy.proxy import mode_specs
 from mitmproxy.net import server_spec
 from mitmproxy.utils import human
 
@@ -159,7 +159,7 @@ class Client(Connection):
     The certificate used by mitmproxy to establish TLS with the client.
     """
 
-    proxy_mode: mode.ProxyMode
+    proxy_mode: mode_specs.ProxyMode
     """The proxy server type this client has been connecting to."""
 
     timestamp_start: float
@@ -172,7 +172,7 @@ class Client(Connection):
         timestamp_start: float,
         *,
         transport_protocol: TransportProtocol = "tcp",
-        proxy_mode: Optional[mode.ProxyMode] = None,
+        proxy_mode: mode_specs.ProxyMode = mode_specs.ProxyMode.parse("regular"),
     ):
         self.id = str(uuid.uuid4())
         self.peername = peername
@@ -180,7 +180,7 @@ class Client(Connection):
         self.timestamp_start = timestamp_start
         self.state = ConnectionState.OPEN
         self.transport_protocol = transport_protocol
-        self.proxy_mode = proxy_mode or mode.ProxyMode.parse("regular")
+        self.proxy_mode = proxy_mode
 
     def __str__(self):
         if self.alpn:
@@ -251,7 +251,7 @@ class Client(Connection):
         )
         self.alpn_offers = state["alpn_offers"]
         self.cipher_list = state["cipher_list"]
-        self.proxy_mode = mode.ProxyMode.from_state(state["proxy_mode"])
+        self.proxy_mode = mode_specs.ProxyMode.parse("regular").ProxyMode.from_state(state["proxy_mode"])
 
     @property
     def address(self):  # pragma: no cover
