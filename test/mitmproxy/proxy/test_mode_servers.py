@@ -20,7 +20,7 @@ def test_make():
         inst = ServerInstance.make(mode, manager)
         assert inst
         assert inst.make_top_layer(context)
-        assert inst.log_desc
+        assert inst.mode.description
 
 
 async def test_last_exception_and_running(monkeypatch):
@@ -131,24 +131,6 @@ async def test_invalid_protocol(monkeypatch):
             await inst.start()
 
 
-async def test_tcp_reject(monkeypatch):
-    manager = MagicMock()
-    manager.connections = {}
-
-    with taddons.context() as tctx:
-        def client_id(data, remote_addr, local_addr):
-            nonlocal tctx
-            tctx.master.log.info("ignored connection")
-            return None
-
-        inst = ServerInstance.make(f"regular@127.0.0.1:0", manager)
-        await inst.start()
-        monkeypatch.setattr(inst, "make_connection_id", client_id)
-        [reader, writer] = await asyncio.open_connection(*inst.listen_addrs[0])
-        await tctx.master.await_log("ignored connection")
-        assert not manager.connections
-
-
 async def test_udp_start_stop():
     manager = MagicMock()
 
@@ -159,8 +141,6 @@ async def test_udp_start_stop():
 
         host, port, *_ = inst.listen_addrs[0]
         reader, writer = await udp.open_connection(host, port)
-        writer.write(b"\x00")
-        assert await tctx.master.await_log("Invalid DNS datagram received")
 
         writer.write(b"\x00\x00\x01")
         assert await tctx.master.await_log("sent an invalid message")

@@ -68,7 +68,7 @@ class ReverseProxy(DestinationKnown):
         elif spec.scheme == "dns":
             self.child_layer = dns.DNSLayer(self.context)
         else:
-            raise AssertionError(self.context.client.transport_protocol)
+            raise AssertionError(self.context.client.transport_protocol)  # pragma: nocover
 
         err = yield from self.finish_start()
         if err:

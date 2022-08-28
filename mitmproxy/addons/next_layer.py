@@ -72,7 +72,9 @@ class NextLayer:
         self,
         server_address: Optional[connection.Address],
         data_client: bytes,
-        client_hello_parser: Callable[[bytes], Optional[ClientHello]]
+        *,
+        is_tls: Callable[[bytes], bool] = is_tls_record_magic,
+        client_hello: Callable[[bytes], Optional[ClientHello]] = parse_client_hello
     ) -> Optional[bool]:
         """
         Returns:
@@ -86,9 +88,9 @@ class NextLayer:
         hostnames: list[str] = []
         if server_address is not None:
             hostnames.append(server_address[0])
-        if is_tls_record_magic(data_client):
+        if is_tls(data_client):
             try:
-                ch = client_hello_parser(data_client)
+                ch = client_hello(data_client)
                 if ch is None:  # not complete yet
                     return None
                 sni = ch.sni
@@ -167,7 +169,7 @@ class NextLayer:
                 return None  # not enough data yet to make a decision
 
             # 1. check for --ignore/--allow
-            ignore = self.ignore_connection(context.server.address, data_client, parse_client_hello)
+            ignore = self.ignore_connection(context.server.address, data_client)
             if ignore is True:
                 return layers.TCPLayer(context, ignore=True)
             if ignore is None:
@@ -213,13 +215,22 @@ class NextLayer:
 
         elif context.client.transport_protocol == "udp":
             # unlike TCP, we make a decision immediately
+            try:
+                dtls_client_hello = dtls_parse_client_hello(data_client)
+            except ValueError:
+                dtls_client_hello = None
 
             # 1. check for --ignore/--allow
-            if self.ignore_connection(context.server.address, data_client, dtls_parse_client_hello):
+            if self.ignore_connection(
+                context.server.address,
+                data_client,
+                is_tls=lambda _: dtls_client_hello is not None,
+                client_hello=lambda _: dtls_client_hello
+            ):
                 return layers.UDPLayer(context, ignore=True)
 
             # 2. Check for DTLS
-            if is_tls_record_magic(data_client):
+            if dtls_client_hello is not None:
                 return self.setup_tls_layer(context)
 
             # 3. (skipped for now, until we support HTTP/3)

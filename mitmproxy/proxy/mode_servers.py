@@ -277,7 +277,5 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 
 
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
-    log_desc = "DNS server"
-
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)

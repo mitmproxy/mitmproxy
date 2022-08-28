@@ -12,6 +12,7 @@ from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.connection import Address
 from mitmproxy.net import udp
 from mitmproxy.proxy import layers, server_hooks
+from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons, tflow
 from mitmproxy.test.tflow import tclient_conn, tserver_conn
@@ -262,7 +263,7 @@ async def test_dns() -> None:
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
         r, w = await udp.open_connection(*dns_addr)
         w.write(b"\x00")
-        await tctx.master.await_log("Invalid DNS datagram received", level="info")
+        await tctx.master.await_log("sent an invalid message", level="info")
         req = tdnsreq()
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
@@ -276,7 +277,10 @@ async def test_dns() -> None:
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
-        assert len(ps.connections) == 2
+        assert len(ps.connections) == 1
+        dns_layer = ps.connections[("udp", w.get_extra_info("sockname"), dns_addr)].layer
+        assert isinstance(dns_layer, layers.DNSLayer)
+        assert len(dns_layer.flows) == 2
         tctx.configure(ps, server=False)
         await tctx.master.await_log("Stopped DNS server at", level="info")
 
@@ -321,7 +325,7 @@ async def test_dtls(monkeypatch) -> None:
     ps = Proxyserver()
 
     # We just want to relay the messages and skip the handshake.
-    monkeypatch.setattr(layers, "ServerTLSLayer", layers.UDPLayer)
+    monkeypatch.setattr(tls, "ServerTLSLayer", layers.UDPLayer)
 
     with taddons.context(ps) as tctx:
         state = HelperAddon()
