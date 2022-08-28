@@ -109,6 +109,16 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     def listen_addrs(self) -> tuple[Address, ...]:
         pass
 
+    def to_json(self) -> dict:
+        return {
+            "type": self.mode.type,
+            "description": self.mode.description,
+            "full_spec": self.mode.full_spec,
+            "is_running": self.is_running,
+            "last_exception": str(self.last_exception) if self.last_exception else None,
+            "listen_addrs": self.listen_addrs,
+        }
+
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     _server: asyncio.Server | udp.UdpServer | None = None

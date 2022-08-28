@@ -4,8 +4,8 @@ import {ConnectionState} from '../../ducks/connection'
 import {TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow} from './_tflow'
 import {AppDispatch, RootState} from "../../ducks";
 import {DNSFlow, HTTPFlow, TCPFlow, UDPFlow} from "../../flow";
-import {defaultState as defaultConf} from "../../ducks/conf"
 import {defaultState as defaultOptions} from "../../ducks/options"
+import {TBackendState} from "./_tbackendstate"
 
 const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> = configureStore([thunk])
 
@@ -22,7 +22,7 @@ tflow1.id = "flow2";
 tflow1.request.path = "/second";
 
 export const testState: RootState = {
-    conf: defaultConf,
+    backendState: TBackendState(),
     options_meta: {
         anticache: {
             "type": "bool",
