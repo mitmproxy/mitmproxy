@@ -183,8 +183,8 @@ There are various use-cases:
     `--mode reverse:dtls://example.com:1234` to use UDP and DTLS respectively instead.  
     Incoming client connections can either use (D)TLS themselves or raw TCP/UDP.
     In case you want to inspect raw traffic only for some hosts and HTTP for
-    others, have a look at the [tcp_hosts]({{< relref "concept-options" >}}#tcp_hosts)
-    and [udp_hosts]({{< relref "concept-options" >}}#udp_hosts) options.
+    others, have a look at the [tcp_hosts]({{< relref "concepts-options" >}}#tcp_hosts)
+    and [udp_hosts]({{< relref "concepts-options" >}}#udp_hosts) options.
 - Say you want to capture DNS traffic to Google's Public DNS server? Then you
     can spawn a reverse instance with `--mode reverse:dns://8.8.8.8`. In case
     you want to resolve queries locally (ie. using the resolve capabilities
