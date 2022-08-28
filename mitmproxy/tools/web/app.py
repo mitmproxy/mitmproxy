@@ -600,19 +600,17 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
+                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
-class Conf(RequestHandler):
+class State(RequestHandler):
     def get(self):
-        conf = {
-            "static": False,
+        self.write({
             "version": version.VERSION,
             "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
-        }
-        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
-        self.set_header("content-type", "application/javascript")
+            "servers": [s.to_json() for s in self.master.proxyserver.servers]
+        })
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
@@ -673,6 +671,6 @@ class Application(tornado.web.Application):
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
-                (r"/conf\.js", Conf),
+                (r"/state(?:\.json)?", State),
             ],
         )

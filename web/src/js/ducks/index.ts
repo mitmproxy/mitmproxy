@@ -15,7 +15,7 @@ import options from './options'
 import commandBar from "./commandBar";
 import thunk, {ThunkAction, ThunkDispatch, ThunkMiddleware} from "redux-thunk";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
-import conf from "./conf";
+import backendState from "./backendState";
 import options_meta from "./options_meta";
 
 
@@ -30,7 +30,7 @@ export const rootReducer = combineReducers({
     ui,
     options,
     options_meta,
-    conf,
+    backendState,
 });
 export type RootState = ReturnType<typeof rootReducer>
 
