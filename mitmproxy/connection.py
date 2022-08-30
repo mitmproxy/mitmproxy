@@ -6,8 +6,8 @@ from enum import Flag
 from typing import Literal, Optional
 
 from mitmproxy import certs
-from mitmproxy.proxy import mode_specs
 from mitmproxy.coretypes import serializable
+from mitmproxy.proxy import mode_specs
 from mitmproxy.net import server_spec
 from mitmproxy.utils import human
 
