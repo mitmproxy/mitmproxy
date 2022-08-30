@@ -8,7 +8,7 @@ from typing import Literal
 from mitmproxy.net import check
 
 ServerSpec = tuple[
-    Literal["", "http", "https", "tcp", "tls", "dtls", "quic", "dns"],
+    Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns"],
     tuple[str, int]
 ]
 
@@ -45,7 +45,7 @@ def parse(server_spec: str, default_scheme: str = "") -> ServerSpec:
         scheme = m.group("scheme")
     else:
         scheme = default_scheme
-    if scheme not in ("", "http", "https", "tcp", "tls", "dtls", "quic", "dns"):
+    if scheme not in ("http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns"):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")

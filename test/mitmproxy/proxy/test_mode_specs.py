@@ -52,9 +52,9 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("upstream:https://proxy")
     assert ProxyMode.parse("reverse:https://host@443")
     assert ProxyMode.parse("socks5")
-    assert ProxyMode.parse("dns").resolve_local
-    assert ProxyMode.parse("dns:reverse:8.8.8.8")
-    assert ProxyMode.parse("dtls:reverse:127.0.0.1:8004")
+    assert ProxyMode.parse("dns")
+    assert ProxyMode.parse("reverse:dns://8.8.8.8")
+    assert ProxyMode.parse("reverse:dtls://127.0.0.1:8004")
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")
@@ -65,26 +65,8 @@ def test_parse_specific_modes():
     with pytest.raises(ValueError, match="invalid upstream proxy scheme"):
         ProxyMode.parse("upstream:dns://example.com")
 
-    with pytest.raises(ValueError, match="invalid reverse proxy scheme"):
-        ProxyMode.parse("reverse:dns://example.com")
-
-    with pytest.raises(ValueError, match="invalid dns mode"):
+    with pytest.raises(ValueError, match="takes no arguments"):
         ProxyMode.parse("dns:invalid")
 
-    with pytest.raises(ValueError, match="invalid dns scheme"):
-        ProxyMode.parse("dns:reverse:https://example.com")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls")
-
     with pytest.raises(ValueError, match="Port specification missing."):
-        ProxyMode.parse("dtls:reverse:127.0.0.1")
-
-    with pytest.raises(ValueError, match="invalid dtls scheme"):
-        ProxyMode.parse("dtls:reverse:https://example.com")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls:invalid")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls@127.0.0.1:0")
+        ProxyMode.parse("reverse:dtls://127.0.0.1")

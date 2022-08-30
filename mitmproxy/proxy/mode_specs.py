@@ -55,17 +55,6 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     """
     Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
     """
-    transport_protocol: ClassVar[Literal["tcp", "udp"]] = "tcp"
-    """
-    The transport protocol used by this mode's server.
-    This information is used by the proxyserver addon to determine if two modes want to listen on the same address.
-    """
-    supports_udp: ClassVar[bool] = False
-    """
-    Indicates that this mode can be used with UDP as well.
-    This flag must only be set if `transport_protocol` == "tcp" and
-    the corresponding `ServerInstance` inherits from `TcpServerInstance`.
-    """
     __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
 
     def __init_subclass__(cls, **kwargs):
@@ -79,6 +68,16 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     @abstractmethod
     def __post_init__(self) -> None:
         """Validation of data happens here."""
+
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        """The mode description that will be used in server logs and UI."""
+
+    @property
+    @abstractmethod
+    def transport_protocol(self) -> Literal["tcp", "udp"]:
+        """The transport protocol used by this mode's server."""
 
     @classmethod
     @cache
@@ -162,6 +161,10 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise RuntimeError("Proxy modes are frozen.")
 
 
+TCP: Literal['tcp', 'udp'] = "tcp"
+UDP: Literal['tcp', 'udp'] = "udp"
+
+
 def _check_empty(data):
     if data:
         raise ValueError("mode takes no arguments")
@@ -169,7 +172,8 @@ def _check_empty(data):
 
 class RegularMode(ProxyMode):
     """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
-    supports_udp = True
+    description = "HTTP(S) proxy"
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -177,7 +181,8 @@ class RegularMode(ProxyMode):
 
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
-    supports_udp = True
+    description = "transparent proxy"
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
@@ -185,7 +190,8 @@ class TransparentMode(ProxyMode):
 
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
-    supports_udp = True
+    description = "HTTP(S) proxy (upstream mode)"
+    transport_protocol = TCP
     scheme: Literal["http", "https"]
     address: tuple[str, int]
 
@@ -199,63 +205,34 @@ class UpstreamMode(ProxyMode):
 
 class ReverseMode(ProxyMode):
     """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
-    supports_udp = True
-    scheme: Literal["", "http", "https", "tls", "dtls", "quic"]
+    description = "reverse proxy"
+    transport_protocol = TCP
+    scheme: Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns"]
     address: tuple[str, int]
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
-        scheme, self.address = server_spec.parse(self.data)
-        if (
-            scheme != "" and scheme != "tcp" and
-            scheme != "http" and scheme != "https" and
-            scheme != "tls" and scheme != "dtls" and
-            scheme != "quic"
-        ):
-            raise ValueError("invalid reverse proxy scheme")
-        # turn legacy TCP scheme into the agnostic scheme
-        self.scheme = "" if scheme == "tcp" else scheme
+        self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
+        if self.scheme in ("dns", "dtls", "udp"):
+            self.transport_protocol = UDP
+        self.description = f"{self.description} to {self.data}"
 
 
 class Socks5Mode(ProxyMode):
     """A SOCKSv5 proxy."""
+    description = "SOCKS v5 proxy"
     default_port = 1080
+    transport_protocol = TCP
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
 
 
 class DnsMode(ProxyMode):
-    """A DNS server or proxy."""
+    """A DNS server."""
+    description = "DNS server"
     default_port = 53
-    transport_protocol = "udp"
-    scheme: Literal["dns"]  # DoH, DoQ, ...
-    address: tuple[str, int] | None = None
+    transport_protocol = UDP
 
-    # noinspection PyDataclass
     def __post_init__(self) -> None:
-        if self.data in ["", "resolve-local", "transparent"]:
-            return
-        m, _, server = self.data.partition(":")
-        if m != "reverse":
-            raise ValueError("invalid dns mode")
-        scheme, self.address = server_spec.parse(server, "dns")
-        if scheme != "dns":
-            raise ValueError("invalid dns scheme")
-        self.scheme = scheme
-
-    @property
-    def resolve_local(self) -> bool:
-        return self.data in ["", "resolve-local"]
-
-
-class UdpMode(ProxyMode):
-    default_port = 8080
-    transport_protocol = "udp"
-    inner_mode: ProxyMode
-
-    # noinspection PyDataclass
-    def __post_init__(self) -> None:
-        self.inner_mode = ProxyMode.parse(self.data)
-        if not self.inner_mode.supports_udp:
-            raise ValueError(f"{self.inner_mode} doesn't support UDP")
+        _check_empty(self.data)

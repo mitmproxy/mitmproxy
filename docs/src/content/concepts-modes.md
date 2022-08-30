@@ -12,6 +12,7 @@ menu:
 - [Reverse Proxy](#reverse-proxy)
 - [Upstream Proxy](#upstream-proxy)
 - [SOCKS Proxy](#socks-proxy)
+- [DNS Server](#dns-server)
 
 Now, which one should you pick? Use this flow chart:
 
@@ -149,6 +150,10 @@ like a normal HTTP server:
 
 {{< figure src="/schematics/proxy-modes-reverse.png" >}}
 
+Locally, reverse mode instances will listen on port 8080 by default. To specify a different port, append "`@`" followed by the number to the mode.
+For example, to listen on port 8081 for HTTP proxy request use
+`--mode reverse:https://example.com@8081`.
+
 There are various use-cases:
 
 - Say you have an internal API running at <http://example.local/>. You could now
@@ -172,6 +177,19 @@ There are various use-cases:
     point it to the compression proxy and let the compression proxy point to a
     SSL-initiating mitmproxy (`--mode reverse:https://...`), which then points to the real
     server. As you see, it's a fairly flexible thing.
+- Want to know what goes on over (D)TLS (without HTTP)? With mitmproxy's raw
+    traffic support you can. Use `--mode reverse:tls://example.com:1234` to
+    spawn a TCP instance that connects to `example.com:1234` using TLS, and
+    `--mode reverse:dtls://example.com:1234` to use UDP and DTLS respectively instead.  
+    Incoming client connections can either use (D)TLS themselves or raw TCP/UDP.
+    In case you want to inspect raw traffic only for some hosts and HTTP for
+    others, have a look at the [tcp_hosts]({{< relref "concepts-options" >}}#tcp_hosts)
+    and [udp_hosts]({{< relref "concepts-options" >}}#udp_hosts) options.
+- Say you want to capture DNS traffic to Google's Public DNS server? Then you
+    can spawn a reverse instance with `--mode reverse:dns://8.8.8.8`. In case
+    you want to resolve queries locally (ie. using the resolve capabilities
+    provided and configured by your operating system), use [DNS Server](#dns-server)
+    mode instead.
 
 ### Host Header
 
@@ -228,3 +246,21 @@ mitmdump --mode socks5
 In this mode, mitmproxy acts as a SOCKS5 proxy.
 This is similar to the regular proxy mode, but using SOCKS5 instead of HTTP for connection establishment
 with the proxy.
+
+
+## DNS Server
+
+```shell
+mitmdump --mode dns
+```
+
+This mode will listen for incoming DNS queries and use the resolve
+capabilities of your operation system to return an answer.
+By default port 53 will be used. To specify a different port, say 5353,
+use `--mode dns@5353`.
+
+Since the lookup API is limited to turning host names into IP addresses
+and vice-versa, only A, AAAA, PTR and CNAME queries are supported.
+You can, however, use reverse mode to specify an upstream server and
+unlock all query types. For example, to use Google's Public DNS server
+specify `--mode reverse:dns://8.8.8.8@53`.

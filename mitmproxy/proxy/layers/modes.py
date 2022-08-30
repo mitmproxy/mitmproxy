@@ -7,7 +7,7 @@ from typing import Optional
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import quic, tls
+from mitmproxy.proxy.layers import dns, quic, tls
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
@@ -59,28 +59,16 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme not in ("http", ""):
+        if spec.scheme == "https" or spec.scheme == "tls" or spec.scheme == "dtls":
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
-
-            # ensure proper upstream protocol and layer
-            if spec.scheme == "tls":
-                self.context.server.transport_protocol = "tcp"
-                self.child_layer = tls.ServerTLSLayer(self.context)
-            elif spec.scheme == "dtls":
-                self.context.server.transport_protocol = "udp"
-                self.child_layer = tls.ServerTLSLayer(self.context)
-            elif spec.scheme == "quic":
-                self.context.server.transport_protocol = "udp"
-                self.child_layer = quic.QuicLayer(self.context)
-            else:
-                self.child_layer = (
-                    tls.ServerTLSLayer(self.context)
-                    if self.context.server.transport_protocol == "tcp" else
-                    quic.QuicLayer(self.context)
-                )
-        else:
+            self.child_layer = tls.ServerTLSLayer(self.context)
+        elif spec.scheme == "http" or spec.scheme == "tcp" or spec.scheme == "udp":
             self.child_layer = layer.NextLayer(self.context)
+        elif spec.scheme == "dns":
+            self.child_layer = dns.DNSLayer(self.context)
+        else:
+            raise AssertionError(self.context.client.transport_protocol)  # pragma: no cover
 
         err = yield from self.finish_start()
         if err:

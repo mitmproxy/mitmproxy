@@ -1,3 +1,4 @@
+from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 @pytest.fixture
@@ -32,6 +34,15 @@ client_hello_with_extensions = bytes.fromhex(
     "78616d706c652e636f6d0017000000230000000d00120010060106030501050304010403020102030005000501"
     "00000000001200000010000e000c02683208687474702f312e3175500000000b00020100000a00080006001d00"
     "170018"
+)
+
+
+dtls_client_hello_with_extensions = bytes.fromhex(
+    "16fefd00000000000000000085"    # record layer
+    "010000790000000000000079"      # handshake layer
+    "fefd62bf0e0bf809df43e7669197be831919878b1a72c07a584d3c0a8ca6665878010000000cc02bc02fc00ac014c02cc0"
+    "3001000043000d0010000e0403050306030401050106010807ff01000100000a00080006001d00170018000b00020100001"
+    "7000000000010000e00000b6578616d706c652e636f6d"
 )
 
 
@@ -78,6 +89,7 @@ class TestNextLayer:
 
     def test_next_layer(self, monkeypatch):
         ctx = MagicMock()
+        ctx.client.transport_protocol = "tcp"
         nl_layer = layer.NextLayer(ctx)
         monkeypatch.setattr(nl_layer, "data_client", lambda: b"\x16\x03\x03")
         nl = NextLayer()
@@ -91,6 +103,7 @@ class TestNextLayer:
         ctx = MagicMock()
         ctx.client.alpn = None
         ctx.server.address = ("example.com", 443)
+        ctx.client.transport_protocol = "tcp"
         with taddons.context(nl) as tctx:
             ctx.layers = [layers.modes.HttpProxy(ctx)]
 
@@ -133,3 +146,54 @@ class TestNextLayer:
             tctx.configure(nl, tcp_hosts=[])
             assert isinstance(nl._next_layer(ctx, b"GET /foo", b""), layers.HttpLayer)
             assert isinstance(nl._next_layer(ctx, b"", b"hello"), layers.TCPLayer)
+
+    def test_next_layer_udp(self):
+        def is_ignored_udp(layer: Optional[layer.Layer]):
+            return isinstance(layer, layers.UDPLayer) and layer.flow is None
+
+        def is_intercepted_udp(layer: Optional[layer.Layer]):
+            return isinstance(layer, layers.UDPLayer) and layer.flow is not None
+
+        nl = NextLayer()
+        ctx = MagicMock()
+        ctx.client.alpn = None
+        ctx.server.address = ("example.com", 443)
+        ctx.client.transport_protocol = "udp"
+        with taddons.context(nl) as tctx:
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            tctx.configure(nl, rawudp=False)
+            assert is_ignored_udp(nl._next_layer(ctx, b"", b""))
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            tctx.configure(nl, rawudp=True)
+            assert is_intercepted_udp(nl._next_layer(ctx, b"", b""))
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            ctx.server.address = ("nomatch.com", 443)
+            tctx.configure(nl, ignore_hosts=["example.com"])
+            assert is_intercepted_udp(nl._next_layer(ctx, dtls_client_hello_with_extensions[:50], b""))
+            assert is_ignored_udp(nl._next_layer(ctx, dtls_client_hello_with_extensions, b""))
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            ctx.server.address = ("example.com", 443)
+            assert is_ignored_udp(nl._next_layer(ctx, dtls_client_hello_with_extensions[:50], b""))
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            tctx.configure(nl, ignore_hosts=[])
+            assert isinstance(nl._next_layer(ctx, dtls_client_hello_with_extensions, b""), layers.ClientTLSLayer)
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            tctx.configure(nl, udp_hosts=["example.com"])
+            assert isinstance(nl._next_layer(ctx, tflow.tdnsreq().packed, b""), layers.UDPLayer)
+
+            ctx.layers = [layers.modes.HttpProxy(ctx)]
+            tctx.configure(nl, udp_hosts=[])
+            assert isinstance(nl._next_layer(ctx, tflow.tdnsreq().packed, b""), layers.DNSLayer)
+
+    def test_next_layer_invalid_proto(self):
+        nl = NextLayer()
+        ctx = MagicMock()
+        ctx.client.transport_protocol = "invalid"
+        with taddons.context(nl):
+            with pytest.raises(AssertionError):
+                nl._next_layer(ctx, b"", b"")

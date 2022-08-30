@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add UDP NextLayer detection, update proxy mode syntax.
+  ([#5556])(https://github.com/mitmproxy/mitmproxy/issues/5556), @meitinger)
 * Fix running hook issue and signal proxyserver updates.
   ([#5376](https://github.com/mitmproxy/mitmproxy/issues/5376), @meitinger)
 * Include server information in bind/listen errors.

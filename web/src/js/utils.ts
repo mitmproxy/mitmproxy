@@ -47,6 +47,16 @@ export var formatTimeStamp = function (
     return ts;
 };
 
+
+export function formatAddress(address: [string, number]): string {
+    if(address[0].includes(":")) {
+        return `[${address[0]}]:${address[1]}`
+    } else {
+        return `${address[0]}:${address[1]}`
+    }
+}
+
+
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
