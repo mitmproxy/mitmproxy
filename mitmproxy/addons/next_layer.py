@@ -28,6 +28,8 @@ from mitmproxy.proxy.layers.tls import HTTP_ALPNS, dtls_parse_client_hello, pars
 from mitmproxy.tls import ClientHello
 
 LayerCls = type[layer.Layer]
+ClientSecurityLayerCls = Union[type[layers.ClientTLSLayer], type[layers.ClientQuicLayer]]
+ServerSecurityLayerCls = Union[type[layers.ServerTLSLayer], type[layers.ClientQuicLayer]]
 
 
 def stack_match(
@@ -121,8 +123,8 @@ class NextLayer:
     def setup_tls_layer(
         self,
         context: context.Context,
-        client_layer_cls: LayerCls = layers.ClientTLSLayer,
-        server_layer_cls: LayerCls = layers.ServerTLSLayer,
+        client_layer_cls: ClientSecurityLayerCls = layers.ClientTLSLayer,
+        server_layer_cls: ServerSecurityLayerCls = layers.ServerTLSLayer,
     ) -> layer.Layer:
         def s(*layers):
             return stack_match(context, layers)
@@ -135,8 +137,7 @@ class NextLayer:
             s(modes.HttpProxy)
             or s(modes.HttpUpstreamProxy)
             or s(modes.ReverseProxy)
-            or s(modes.ReverseProxy, layers.ServerQuicLayer)
-            or s(modes.ReverseProxy, layers.ServerTLSLayer)
+            or s(modes.ReverseProxy, server_layer_cls)
         ):
             return client_layer_cls(context)
         else:
@@ -152,6 +153,28 @@ class NextLayer:
             or (context.client.sni and rex.search(context.client.sni))
             for rex in hosts
         )
+
+    def detect_udp_tls(self, data_client: bytes) -> Optional[tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls]]:
+        if len(data_client) == 0:
+            return None
+
+        # first try DTLS (the parser may return None)
+        try:
+            client_hello = dtls_parse_client_hello(data_client)
+            if client_hello is not None:
+                return (client_hello, layers.ClientTLSLayer, layers.ServerTLSLayer)
+        except ValueError:
+            pass
+
+        # next try QUIC
+        try:
+            client_hello, _ = layers.quic.pull_client_hello_and_connection_id(data_client)
+            return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer) 
+        except ValueError:
+            pass
+
+        # that's all we currently have to offer
+        return None
 
     def next_layer(self, nextlayer: layer.NextLayer):
         if nextlayer.layer is None:
@@ -221,36 +244,22 @@ class NextLayer:
 
         elif context.client.transport_protocol == "udp":
             # unlike TCP, we make a decision immediately
-            try:
-                client_hello = dtls_parse_client_hello(data_client)
-                if client_hello is None:
-                    raise ValueError()
-            except ValueError:
-                try:
-                    client_hello, _ = layers.quic.pull_client_hello_and_connection_id(data_client)
-                except ValueError:
-                    client_hello = None
-                    client_layer_cls = None
-                    server_layer_cls = None
-                else:
-                    client_layer_cls = layers.ClientQuicLayer
-                    server_layer_cls = layers.ServerQuicLayer
-            else:
-                client_layer_cls = layers.ClientTLSLayer
-                server_layer_cls = layers.ServerTLSLayer
+            tls = self.detect_udp_tls(data_client)
+            is_quic = isinstance(context.layers[-1], layers.ClientQuicLayer)
+            raw_layer_cls = layers.QuicStreamLayer if is_quic else layers.UDPLayer
 
             # 1. check for --ignore/--allow
             if self.ignore_connection(
                 context.server.address,
                 data_client,
-                is_tls=lambda _: client_hello is not None,
-                client_hello=lambda _: client_hello
+                is_tls=lambda _: tls is not None,
+                client_hello=lambda _: None if tls is None else tls[0]
             ):
                 return layers.UDPLayer(context, ignore=True)
 
             # 2. Check for DTLS/QUIC
-            if client_hello is not None:
-                return self.setup_tls_layer(context, client_layer_cls, server_layer_cls)
+            if tls is not None:
+                return self.setup_tls_layer(context, *tls[1:2])
 
             # 3. Setup the HTTP layer for a regular HTTP proxy
             if s(modes.HttpProxy, layers.ClientQuicLayer):
@@ -261,21 +270,17 @@ class NextLayer:
 
             # 4. Check for --udp
             if self.is_destination_in_hosts(context, self.udp_hosts):
-                return layers.UDPLayer(context)
+                return raw_layer_cls(context)
 
-            # 5. Check for raw tcp mode.
+            # 5. Check for HTTP mode, but only on QUIC.
+            if (
+                is_quic
+                and context.client.alpn
+                and (context.client.alpn == b"h3" or context.client.alpn.startswith(b"h3-"))
+            ):
+                return layers.HttpLayer(context, HTTPMode.transparent)
 
-            very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
-            probably_no_http = not very_likely_http and (
-                not data_client[
-                    :3
-                ].isalpha()  # the first three bytes should be the HTTP verb, so A-Za-z is expected.
-                or data_server  # a server greeting would be uncharacteristic.
-            )
-            if ctx.options.rawtcp and probably_no_http:
-                return layers.TCPLayer(context)
-
-            # 5. Check for DNS
+            # 6. Check for DNS
             try:
                 dns.Message.unpack(data_client)
             except struct.error:
@@ -283,8 +288,8 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 6. Use raw udp mode or ignore the connection.
-            return layers.UDPLayer(context, ignore=not ctx.options.rawudp)
+            # 7. Use raw mode or ignore the connection.
+            return raw_layer_cls(context, ignore=not ctx.options.rawudp)
 
         else:
             raise AssertionError(context.client.transport_protocol)

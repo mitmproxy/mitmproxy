@@ -201,10 +201,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             raise AssertionError(self.mode.transport_protocol)
 
     @property
-    def is_transparent(self) -> bool:
-        return False
-
-    @property
     def listen_addrs(self) -> tuple[Address, ...]:
         return self._listen_addrs
 
@@ -221,13 +217,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
-        if self.is_transparent:
-            socket = writer.get_extra_info("socket")
-            try:
-                assert platform.original_addr is not None
-                handler.layer.context.server.address = platform.original_addr(socket)
-            except Exception as e:
-                ctx.log.error(f"Transparent mode failure: {e!r}")
         handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
             socket = writer.get_extra_info("socket")
@@ -254,11 +243,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             handler = ProxyConnectionHandler(
                 ctx.master, reader, writer, ctx.options, self.mode
             )
-            handler.client.transport_protocol = "udp"
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
-            if self.is_transparent:
-                handler.layer.context.server.address = local_addr
-            handler.layer.context.server.transport_protocol = "udp"
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
