@@ -45,6 +45,9 @@ def test_listen_addr():
     assert ProxyMode.parse("regular").listen_host(default="127.0.0.3") == "127.0.0.3"
     assert ProxyMode.parse("regular@127.0.0.2:8080").listen_host(default="127.0.0.3") == "127.0.0.2"
 
+    assert ProxyMode.parse("reverse:https://1.2.3.4").listen_port() == 8080
+    assert ProxyMode.parse("reverse:dns://8.8.8.8").listen_port() == 53
+
 
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
