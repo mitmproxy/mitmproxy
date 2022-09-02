@@ -26,7 +26,7 @@ server_spec_re = re.compile(
 
 
 @cache
-def parse(server_spec: str, default_scheme: str = "") -> ServerSpec:
+def parse(server_spec: str, default_scheme: str) -> ServerSpec:
     """
     Parses a server mode specification, e.g.:
 

@@ -169,7 +169,7 @@ class NextLayer:
         # next try QUIC
         try:
             client_hello, _ = layers.quic.pull_client_hello_and_connection_id(data_client)
-            return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer) 
+            return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer)
         except ValueError:
             pass
 
@@ -255,7 +255,7 @@ class NextLayer:
                 is_tls=lambda _: tls is not None,
                 client_hello=lambda _: None if tls is None else tls[0]
             ):
-                return layers.UDPLayer(context, ignore=True)
+                return raw_layer_cls(context, ignore=True)
 
             # 2. Check for DTLS/QUIC
             if tls is not None:

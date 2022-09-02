@@ -289,3 +289,8 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
+
+
+class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.HttpProxy(context)
