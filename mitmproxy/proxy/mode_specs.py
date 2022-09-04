@@ -245,3 +245,59 @@ class DnsMode(ProxyMode):
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
+
+
+class WireGuardMode(ProxyMode):
+    """Proxy Server based on WireGuard"""
+    description = "WireGuard server"
+    default_port = 51820
+    transport_protocol = UDP
+    custom_listen_port: int | None = None
+
+    wireguard_cfg_gen: bool | None = None
+    wireguard_cfg_path: str | None = None
+    wireguard_peer_num: int | None = None
+
+    # noinspection PyDataclass
+    def __post_init__(self) -> None:
+        # use default settings
+        if self.data in [""]:
+            return
+
+        settings = self.data.split(",")
+        for setting in settings:
+            # handle empty strings after trailing commas
+            if not setting:
+                break
+
+            # handle settings with and without default values
+            if "=" not in setting:
+                key, value = setting, None
+            else:
+                key, value = setting.split("=", 1)
+
+            if key not in {"generate", "load", "peers"}:
+                raise ValueError(f"invalid wireguard mode spec (unexpected {key!r} setting)")
+
+            if key == "generate":
+                # generate new configuration files
+                if self.wireguard_cfg_gen is False:
+                    raise ValueError("invalid wireguard mode spec (cannot set both 'load' and 'generate')")
+                self.wireguard_cfg_gen = True
+                self.wireguard_cfg_path = value
+
+            if key == "load":
+                # load existing configuration file
+                if self.wireguard_cfg_gen is True:
+                    raise ValueError("invalid wireguard mode spec (cannot set both 'load' and 'generate')")
+                self.wireguard_cfg_gen = False
+                self.wireguard_cfg_path = value
+
+            if key == "peers":
+                # generate configuration for specified number of peers
+                if self.wireguard_cfg_gen is False:
+                    raise ValueError(f"invalid wireguard mode spec (unexpected {setting!r} setting)")
+                try:
+                    self.wireguard_peer_num = int(value) if value is not None else None
+                except ValueError:
+                    raise ValueError(f"invalid wireguard mode spec (invalid peer number {value!r})")
