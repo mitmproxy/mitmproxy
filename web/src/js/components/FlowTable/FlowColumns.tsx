@@ -223,7 +223,7 @@ export const quickactions: FlowColumn = ({flow}) => {
                 {resume_or_replay}
             </div>
         </td>
-    );
+    )
 }
 
 quickactions.headerName = ''
