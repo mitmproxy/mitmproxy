@@ -206,7 +206,7 @@ export const quickactions: FlowColumn = ({flow}) => {
     const dispatch = useDispatch()
     let [open, setOpen] = useState(false)
 
-    let resume_or_replay: ReactElement | null = null;
+    let resume_or_replay: ReactElement = <></>;
     if (flow.intercepted) {
         resume_or_replay = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.resume(flow))}>
             <i className="fa fa-fw fa-play text-success"/>
@@ -218,8 +218,10 @@ export const quickactions: FlowColumn = ({flow}) => {
     }
 
     return (
-        <td className={classnames("col-quickactions", { hover: open })} onClick={() => 0} >
-            {resume_or_replay ? <div>{resume_or_replay}</div> : <></>}
+        <td className={classnames("col-quickactions", { hover: open })} onClick={() => 0}>
+            <div>
+                {resume_or_replay}
+            </div>
         </td>
     );
 }
