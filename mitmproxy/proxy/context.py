@@ -26,7 +26,7 @@ class Context:
     """
     Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
     """
-    handler: Optional[ConnectionHandler]
+    handler: Optional["ConnectionHandler"]
     """
     The `ConnectionHandler` responsible for this context.
     """
@@ -39,7 +39,7 @@ class Context:
         self,
         client: connection.Client,
         options: Options,
-        handler: Optional[ConnectionHandler] = None,
+        handler: Optional["ConnectionHandler"] = None,
     ) -> None:
         self.client = client
         self.options = options

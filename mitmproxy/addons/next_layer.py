@@ -24,6 +24,7 @@ from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
 from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers.quic import quic_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, dtls_parse_client_hello, parse_client_hello
 from mitmproxy.tls import ClientHello
 
@@ -168,7 +169,7 @@ class NextLayer:
 
         # next try QUIC
         try:
-            client_hello, _ = layers.quic.pull_client_hello_and_connection_id(data_client)
+            client_hello = quic_parse_client_hello(data_client)
             return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer)
         except ValueError:
             pass
