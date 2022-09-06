@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import wsproto.handshake
 from mitmproxy import flow, http
-from mitmproxy.connection import Connection, Server
+from mitmproxy.connection import Connection, Server, TransportProtocol
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.net.http.http1 import expected_http_body_size
@@ -78,6 +78,7 @@ class GetHttpConnection(HttpCommand):
     address: tuple[str, int]
     tls: bool
     via: Optional[server_spec.ServerSpec]
+    transport_protocol: TransportProtocol = "tcp"
 
     def __hash__(self):
         return id(self)
@@ -88,6 +89,7 @@ class GetHttpConnection(HttpCommand):
             and self.address == connection.address
             and self.tls == connection.tls
             and self.via == connection.via
+            and self.transport_protocol == connection.transport_protocol
         )
 
 
@@ -666,6 +668,7 @@ class HttpStream(layer.Layer):
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https",
             self.flow.server_conn.via,
+            self.flow.server_conn.transport_protocol,
         )
         if err:
             yield from self.handle_protocol_error(
@@ -1005,10 +1008,7 @@ class HttpLayer(layer.Layer):
 
         if not can_use_context_connection:
 
-            context.server = Server(event.address)
-            if isinstance(context.layers[0], quic.QuicLayer):
-                context.server.transport_protocol = "udp"
-                stack /= quic.ServerQuicLayer(context)
+            context.server = Server(event.address, transport_protocol=event.transport_protocol)
 
             if event.via:
                 context.server.via = event.via
@@ -1025,7 +1025,12 @@ class HttpLayer(layer.Layer):
                     context.server.sni = self.context.client.sni or event.address[0]
                 else:
                     context.server.sni = event.address[0]
-                stack /= tls.ServerTLSLayer(context)
+                if context.server.transport_protocol == "tcp":
+                    stack /= tls.ServerTLSLayer(context)
+                elif context.server.transport_protocol == "udp":
+                    stack /= quic.ServerQuicLayer(context)
+                else:
+                    raise AssertionError(context.server.transport_protocol)  # pragma: no cover
 
         stack /= HttpClient(context)
 

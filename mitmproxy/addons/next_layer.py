@@ -30,7 +30,7 @@ from mitmproxy.tls import ClientHello
 
 LayerCls = type[layer.Layer]
 ClientSecurityLayerCls = Union[type[layers.ClientTLSLayer], type[layers.ClientQuicLayer]]
-ServerSecurityLayerCls = Union[type[layers.ServerTLSLayer], type[layers.ClientQuicLayer]]
+ServerSecurityLayerCls = Union[type[layers.ServerTLSLayer], type[layers.ServerQuicLayer]]
 
 
 def stack_match(
