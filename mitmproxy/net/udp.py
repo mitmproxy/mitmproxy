@@ -3,6 +3,9 @@ from __future__ import annotations
 import asyncio
 import socket
 from typing import Any, Callable, Optional, Union, cast
+
+import mitmproxy_wireguard as wg
+
 from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
@@ -77,11 +80,33 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._closed.wait()
 
 
+class WireGuardDatagramTransport(asyncio.DatagramTransport):  # pragma: no cover
+    def __init__(self, server: wg.Server, local_addr: Address, remote_addr: Address):
+        self._server = server
+        self._local_addr: Address = local_addr
+        self._remote_addr: Address = remote_addr
+        self._protocol: DrainableDatagramProtocol | None = None
+        super().__init__()
+
+    def sendto(self, data, addr=None):
+        self._server.send_datagram(data, self._local_addr, addr or self._remote_addr)
+
+    def set_protocol(self, protocol):
+        assert isinstance(protocol, DrainableDatagramProtocol)
+        self._protocol = cast(DrainableDatagramProtocol, protocol)
+
+    def get_protocol(self):
+        return self._protocol
+
+
+DatagramTransport = Union[asyncio.DatagramTransport, WireGuardDatagramTransport]
+
+
 class UdpServer(DrainableDatagramProtocol):
     """UDP server similar to base_events.Server"""
 
     # _datagram_received_cb: DatagramReceivedCallback
-    _transport: asyncio.DatagramTransport | None
+    _transport: DatagramTransport | None
     _local_addr: Address | None
 
     def __init__(
@@ -96,7 +121,8 @@ class UdpServer(DrainableDatagramProtocol):
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         if self._transport is None:
-            self._transport = cast(asyncio.DatagramTransport, transport)
+            self._transport = cast(DatagramTransport, transport)
+            self._transport.set_protocol(self)
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
 
@@ -157,14 +183,14 @@ class DatagramReader:
 
 class DatagramWriter:
 
-    _transport: asyncio.DatagramTransport
+    _transport: DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None
     _closed: asyncio.Event | None
 
     def __init__(
         self,
-        transport: asyncio.DatagramTransport,
+        transport: DatagramTransport,
         remote_addr: Address,
         reader: DatagramReader | None = None,
     ) -> None:

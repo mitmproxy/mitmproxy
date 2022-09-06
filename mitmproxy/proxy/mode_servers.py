@@ -13,11 +13,14 @@ from __future__ import annotations
 
 import asyncio
 import errno
+import os
 import socket
 import typing
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import ClassVar, Generic, TypeVar, cast, get_args
+
+import mitmproxy_wireguard as wg
 
 from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
@@ -243,6 +246,127 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             handler = ProxyConnectionHandler(
                 ctx.master, reader, writer, ctx.options, self.mode
             )
+            handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
+            handler.layer = self.make_top_layer(handler.layer.context)
+            handler.layer.context.client.transport_protocol = "udp"
+            handler.layer.context.server.transport_protocol = "udp"
+
+            # pre-register here - we may get datagrams before the task is executed.
+            self.manager.connections[connection_id] = handler
+            asyncio.create_task(self.handle_udp_connection(connection_id, handler))
+        else:
+            handler = self.manager.connections[connection_id]
+            reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)
+        reader.feed_data(data, remote_addr)
+
+    async def handle_udp_connection(self, connection_id: tuple, handler: ProxyConnectionHandler) -> None:
+        with self.manager.register_connection(connection_id, handler):
+            await handler.handle_client()
+
+
+class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):  # pragma: no cover
+    _server: wg.Server | None = None
+    _listen_addrs: tuple[Address, ...] = tuple()
+    _wireguard_cfg: wg.Configuration | None = None
+
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.TransparentProxy(context)
+
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
+
+    async def start(self) -> None:
+        assert self._server is None
+        host = self.mode.listen_host(ctx.options.listen_host)
+        port = self.mode.listen_port(ctx.options.listen_port)
+
+        if self.mode.wireguard_cfg_path is not None:
+            conf_path = os.path.abspath(os.path.expanduser(self.mode.wireguard_cfg_path))
+        else:
+            conf_path = os.path.abspath(os.path.expanduser("~/.mitmproxy/mitmproxy_wireguard.json"))
+
+        peer_num = self.mode.wireguard_peer_num or 1
+
+        if self.mode.wireguard_cfg_gen is True:
+            # unconditionally generate new configuration files
+            self._wireguard_cfg = wg.Configuration.generate(port, peer_num)
+            with open(conf_path, "w") as file:
+                file.write(self._wireguard_cfg.to_json())
+
+        elif self.mode.wireguard_cfg_gen is False:
+            if os.path.exists(conf_path):
+                # attempt to load configuration files if they exist
+                with open(conf_path) as file:
+                    self._wireguard_cfg = wg.Configuration.from_json(file.read())
+            else:
+                # otherwise raise an error
+                raise FileNotFoundError("No WireGuard configuration present at the specified path.")
+
+        else:  # None
+            if os.path.exists(conf_path):
+                # attempt to load configuration files if they exist
+                with open(conf_path) as file:
+                    self._wireguard_cfg = wg.Configuration.from_json(file.read())
+            else:
+                # otherwise generate new configuration files with default settings
+                self._wireguard_cfg = wg.Configuration.generate(port, peer_num)
+                with open(conf_path, "w") as file:
+                    file.write(self._wireguard_cfg.to_json())
+
+        try:
+            self._server = await wg.start_server(
+                host, self._wireguard_cfg, self.handle_tcp_connection, self.handle_udp_datagram
+            )
+            self._listen_addrs = (self._server.getsockname(), )
+        except Exception as e:
+            self.last_exception = e
+            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
+            raise OSError(message) from e
+        else:
+            self.last_exception = None
+
+        addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
+        ctx.log.info(f"{self.mode.description} listening at {addrs}.")
+
+    async def stop(self) -> None:
+        assert self._server is not None
+        server = self._server
+        self._server = None
+        try:
+            server.close()
+            await server.wait_closed()
+        except Exception as e:
+            self.last_exception = e
+            raise
+        else:
+            self.last_exception = None
+
+        addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
+        ctx.log.info(f"Stopped {self.mode.description} at {addrs}.")
+
+    @property
+    def listen_addrs(self) -> tuple[Address, ...]:
+        return self._listen_addrs
+
+    async def handle_tcp_connection(self, stream: wg.TcpStream) -> None:
+        connection_id = ("tcp", stream.get_extra_info("peername"), stream.get_extra_info("sockname"))
+        handler = ProxyConnectionHandler(ctx.master, stream, stream, ctx.options, self.mode)
+        handler.layer = self.make_top_layer(handler.layer.context)
+
+        original_dst = stream.get_extra_info("original_dst")
+        handler.layer.context.server.address = original_dst
+
+        with self.manager.register_connection(connection_id, handler):
+            await handler.handle_client()
+
+    def handle_udp_datagram(self, data: bytes, remote_addr: Address, local_addr: Address) -> None:
+        transport = udp.WireGuardDatagramTransport(self._server, local_addr, remote_addr)
+        connection_id = ("udp", remote_addr, local_addr)
+        if connection_id not in self.manager.connections:
+            reader = udp.DatagramReader()
+            writer = udp.DatagramWriter(transport, remote_addr, reader)
+            handler = ProxyConnectionHandler(ctx.master, reader, writer, ctx.options, self.mode)
             handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
