@@ -966,6 +966,9 @@ class ViewGrpcProtobuf(base.View):
     ]
     __content_types_grpc = [
         "application/grpc",
+        # seems specific to chromium infra tooling
+        # https://chromium.googlesource.com/infra/luci/luci-go/+/refs/heads/main/grpc/prpc/
+        "application/prpc",
     ]
 
     # first value serves as default algorithm for compressed messages, if 'grpc-encoding' header is missing

@@ -796,4 +796,5 @@ def test_render_priority():
     assert v.render_priority(b"data", content_type="application/x-protobuffer")
     assert v.render_priority(b"data", content_type="application/grpc-proto")
     assert v.render_priority(b"data", content_type="application/grpc")
+    assert v.render_priority(b"data", content_type="application/prpc")
     assert not v.render_priority(b"data", content_type="text/plain")
