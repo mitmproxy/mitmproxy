@@ -174,6 +174,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
 
+        # Use pyOpenSSL API once it has shipped: https://github.com/pyca/pyopenssl/pull/1121
         ok = SSL._lib.SSL_use_certificate(tls_start.ssl_conn._ssl, entry.cert.to_pyopenssl()._x509)  # type: ignore
         SSL._openssl_assert(ok == 1)  # type: ignore
         ok = SSL._lib.SSL_use_PrivateKey(tls_start.ssl_conn._ssl, crypto.PKey.from_cryptography_key(entry.privatekey)._pkey)  # type: ignore
