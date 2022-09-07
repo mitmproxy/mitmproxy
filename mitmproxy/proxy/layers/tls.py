@@ -657,7 +657,7 @@ class ClientTLSLayer(TLSLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
+            yield commands.Log(f"{self.debug}[tls] Swallowing {event} as handshake failed.", "debug")
 
 
 class MockTLSLayer(TLSLayer):

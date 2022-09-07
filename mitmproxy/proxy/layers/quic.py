@@ -11,6 +11,7 @@ from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import (
     QuicConnection,
     QuicConnectionError,
+    QuicConnectionState,
     QuicErrorCode,
     stream_is_client_initiated,
     stream_is_unidirectional,
@@ -610,8 +611,9 @@ class QuicLayer(tunnel.TunnelLayer):
         ):
             assert self.quic
             timer = self._wakeup_commands.pop(event.command)
-            self.quic.handle_timer(now=max(timer, self._loop.time()))
-            event = events.DataReceived(self.tunnel_connection, b"")
+            if self.quic._state is not QuicConnectionState.TERMINATED:
+                self.quic.handle_timer(now=max(timer, self._loop.time()))
+                event = events.DataReceived(self.tunnel_connection, b"")
         yield from super()._handle_event(event)
 
     def add_route(self, context: context.Context) -> None:
@@ -753,7 +755,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 # log the result and report the success to addons
                 if self.debug:
                     yield commands.Log(
-                        f"{self.debug}[quic] established: {self.conn}", "debug"
+                        f"{self.debug}[quic] tls established: {self.conn}", "debug"
                     )
                 if self.conn is self.context.client:
                     yield TlsEstablishedClientHook(QuicTlsData(self.conn, self.context, settings=self.tls))
@@ -800,7 +802,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
-                        f"{self.debug}[quic] terminated {self.conn} (reason={reason})", level="debug"
+                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", level="debug"
                     )
                 yield commands.CloseConnection(self.conn)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit
@@ -886,7 +888,9 @@ class ClientQuicLayer(QuicLayer):
     """Mapping of (sockname, cid) tuples to QUIC client layers."""
 
     server_layer: ServerQuicLayer | None
+    """The server layer sitting on top of this layer, or `None`."""
     is_top_level: bool
+    """Indicated whether this layer is receiving UDP packets directly."""
 
     def __init__(self, context: context.Context) -> None:
         # same as ClientTLSLayer, we might be nested in some other transport
@@ -956,7 +960,7 @@ class ClientQuicLayer(QuicLayer):
         )
         if header.version is not None and header.version not in supported_versions:
             yield commands.SendData(
-                self.conn,
+                self.tunnel_connection,
                 encode_quic_version_negotiation(
                     source_cid=header.destination_cid,
                     destination_cid=header.source_cid,
@@ -1045,4 +1049,4 @@ class ClientQuicLayer(QuicLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
+            yield commands.Log(f"{self.debug}[quic] Swallowing {event} as handshake failed.", "debug")

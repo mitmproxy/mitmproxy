@@ -321,7 +321,7 @@ class CertStore:
                 )
             ]
             if self.default_chain_file
-            else []
+            else [default_ca]
         )
         self.dhparams = dhparams
         self.certs = {}
