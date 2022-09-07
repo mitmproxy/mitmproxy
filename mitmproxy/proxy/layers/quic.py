@@ -5,7 +5,7 @@ from ssl import VerifyMode
 from typing import TYPE_CHECKING, ClassVar
 
 from aioquic.buffer import Buffer as QuicBuffer
-from aioquic.h3.connection import ErrorCode as H3ErrorCode
+from aioquic.h3.connection import H3_ALPN, ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import (
@@ -656,12 +656,18 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # build the aioquic connection
         configuration = QuicConfiguration(
-            alpn_protocols=[offer.decode("ascii") for offer in self.conn.alpn_offers],
+            alpn_protocols=(
+                [offer.decode("ascii") for offer in self.conn.alpn_offers]
+                if self.conn.alpn_offers else
+                H3_ALPN
+            ),
             connection_id_length=self.context.options.quic_connection_id_length,
             is_client=self.conn is self.context.server,
-            secrets_log_file=QuicSecretsLogger(tls.log_master_secret)  # type: ignore
-            if tls.log_master_secret is not None
-            else None,
+            secrets_log_file=(
+                QuicSecretsLogger(tls.log_master_secret)  # type: ignore
+                if tls.log_master_secret is not None
+                else None
+            ),
             server_name=self.conn.sni,
             cafile=tls_data.settings.ca_file,
             capath=tls_data.settings.ca_path,
@@ -915,6 +921,8 @@ class ClientQuicLayer(QuicLayer):
         yield from super().retire_connection_id(connection_id)
 
     def replace_layer(self, initial_data: bytes, replacement_layer: layer.Layer) -> layer.CommandGenerator[tuple[bool, str | None]]:
+        """Replaces the QUIC layer(s) with another layer."""
+
         # we need to replace the server layer as well, if there is one
         layer_to_replace = self if self.server_layer is None else self.server_layer
         layer_to_replace.handle_event = replacement_layer.handle_event  # type: ignore
@@ -993,7 +1001,8 @@ class ClientQuicLayer(QuicLayer):
         # replace the QUIC layer with an UDP layer if requested
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
-                ("ignore-conn", 0), ("ignore-conn", 0), self._loop.time()
+                ("ignore-conn", 0), ("ignore-conn", 0), self._loop.time(),
+                transport_protocol="udp", proxy_mode=self.context.client.proxy_mode
             )
             if self.server_layer is not None:
                 self.server_layer.conn = self.server_layer.tunnel_connection = connection.Server(

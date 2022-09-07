@@ -11,6 +11,7 @@ from aioquic.h3.connection import (
 from aioquic.h3 import events as h3_events
 from aioquic.quic import events as quic_events
 from aioquic.quic.connection import QuicConnection, stream_is_client_initiated
+from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
@@ -168,9 +169,10 @@ class Http3Connection(HttpConnection):
             for h3_event in self.h3_conn.handle_event(event.event):
 
                 # report received data
-                if isinstance(
-                    h3_event, h3_events.DataReceived
-                ) and stream_is_client_initiated(h3_event.stream_id):
+                if (
+                    isinstance(h3_event, h3_events.DataReceived)
+                    and stream_is_client_initiated(h3_event.stream_id)
+                ):
                     yield ReceiveHttp(
                         self.postprocess_outgoing_event(
                             self.ReceiveData(
@@ -186,13 +188,11 @@ class Http3Connection(HttpConnection):
                         )
 
                 # report headers and trailers
-                elif isinstance(
-                    h3_event, h3_events.HeadersReceived
-                ) and stream_is_client_initiated(h3_event.stream_id):
-                    if (
-                        self.h3_conn._stream[h3_event.stream_id].headers_recv_state
-                        is H3HeadersState.AFTER_TRAILERS
-                    ):
+                elif (
+                    isinstance(h3_event, h3_events.HeadersReceived)
+                    and stream_is_client_initiated(h3_event.stream_id)
+                ):
+                    if self.h3_conn._stream[h3_event.stream_id].headers_recv_state is H3HeadersState.AFTER_TRAILERS:
                         yield ReceiveHttp(
                             self.postprocess_outgoing_event(
                                 self.ReceiveTrailers(
@@ -226,20 +226,34 @@ class Http3Connection(HttpConnection):
 
                 # we don't support push, web transport, etc.
                 else:
-                    yield commands.Log(f"Ignored unsupported H3 event: {h3_event!r}")
+                    yield commands.Log(
+                        f"Ignored unsupported H3 event: {h3_event!r}",
+                        level=(
+                            "info"
+                            if stream_is_client_initiated(h3_event.stream_id) else
+                            "debug"
+                        )
+                    )
 
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, events.ConnectionClosed):
             for stream in self.h3_conn._stream.values():
                 if stream_is_client_initiated(stream.stream_id) and not stream.ended:
                     close_event = self.quic._close_event
-                    assert close_event is not None
                     yield ReceiveHttp(
                         self.postprocess_outgoing_event(
                             self.ReceiveProtocolError(
                                 stream_id=stream.stream_id,
-                                message=close_event.reason_phrase,
-                                code=close_event.error_code,
+                                message=(
+                                    "Connection closed."
+                                    if close_event is None else
+                                    close_event.reason_phrase
+                                ),
+                                code=(
+                                    QuicErrorCode.APPLICATION_ERROR
+                                    if close_event is None else
+                                    close_event.error_code
+                                ),
                             )
                         )
                     )
@@ -274,9 +288,7 @@ class Http3Server(Http3Connection):
     def __init__(self, context: context.Context):
         super().__init__(context, context.client)
 
-    def parse_headers(
-        self, event: h3_events.HeadersReceived
-    ) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(self, event: h3_events.HeadersReceived) -> Union[RequestHeaders, ResponseHeaders]:
         # same as HTTP/2
         (
             host,
@@ -301,13 +313,9 @@ class Http3Server(Http3Connection):
             timestamp_start=time.time(),
             timestamp_end=None,
         )
-        return RequestHeaders(
-            stream_id=event.stream_id, request=request, end_stream=event.stream_ended
-        )
+        return RequestHeaders(stream_id=event.stream_id, request=request, end_stream=event.stream_ended)
 
-    def send_protocol_error(
-        self, event: Union[RequestProtocolError, ResponseProtocolError]
-    ) -> None:
+    def send_protocol_error(self, event: Union[RequestProtocolError, ResponseProtocolError]) -> None:
         assert self.h3_conn is not None
         assert isinstance(event, ResponseProtocolError)
 
@@ -341,9 +349,7 @@ class Http3Client(Http3Connection):
         self._event_to_quic: Dict[int, int] = {}
         self._quic_to_event: Dict[int, int] = {}
 
-    def parse_headers(
-        self, event: h3_events.HeadersReceived
-    ) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(self, event: h3_events.HeadersReceived) -> Union[RequestHeaders, ResponseHeaders]:
         # same as HTTP/2
         status_code, headers = parse_h2_response_headers(event.headers)
         response = http.Response(
@@ -356,9 +362,7 @@ class Http3Client(Http3Connection):
             timestamp_start=time.time(),
             timestamp_end=None,
         )
-        return ResponseHeaders(
-            stream_id=event.stream_id, response=response, end_stream=event.stream_ended
-        )
+        return ResponseHeaders(stream_id=event.stream_id, response=response, end_stream=event.stream_ended)
 
     def postprocess_outgoing_event(self, event: HttpEvent) -> HttpEvent:
         event.stream_id = self._quic_to_event[event.stream_id]
@@ -378,9 +382,7 @@ class Http3Client(Http3Connection):
             event.stream_id = stream_id
         return event
 
-    def send_protocol_error(
-        self, event: Union[RequestProtocolError, ResponseProtocolError]
-    ) -> None:
+    def send_protocol_error(self, event: Union[RequestProtocolError, ResponseProtocolError]) -> None:
         assert isinstance(event, RequestProtocolError)
         assert self.quic is not None
 
