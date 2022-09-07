@@ -260,7 +260,8 @@ class NextLayer:
 
             # 2. Check for DTLS/QUIC
             if tls is not None:
-                return self.setup_tls_layer(context, *tls[1:2])
+                _, client_layer_cls, server_layer_cls = tls
+                return self.setup_tls_layer(context, client_layer_cls, server_layer_cls)
 
             # 3. Setup the HTTP layer for a regular HTTP proxy
             if s(modes.HttpProxy, layers.ClientQuicLayer):

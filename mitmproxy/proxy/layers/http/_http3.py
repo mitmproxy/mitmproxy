@@ -132,7 +132,7 @@ class Http3Connection(HttpConnection):
 
             else:
                 # transmit buffered data and re-arm timer
-                yield QuicTransmit(self.conn, self.quic)
+                yield QuicTransmit(self.conn)
 
         # handle events from the underlying QUIC connection
         elif isinstance(event, QuicConnectionEvent):
@@ -210,7 +210,7 @@ class Http3Connection(HttpConnection):
                                 error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
                                 reason_phrase=f"Invalid HTTP/3 request headers: {e}",
                             )
-                            yield QuicTransmit(self.conn, self.quic)
+                            yield QuicTransmit(self.conn)
                         else:
                             yield ReceiveHttp(
                                 self.postprocess_outgoing_event(receive_event)
