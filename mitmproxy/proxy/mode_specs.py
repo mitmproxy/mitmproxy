@@ -71,11 +71,11 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         """The mode description that will be used in server logs and UI."""
 
     @property
-    @abstractmethod
     def default_port(self) -> int:
         """
         Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
         """
+        return 8080
 
     @property
     @abstractmethod
@@ -176,7 +176,6 @@ def _check_empty(data):
 class RegularMode(ProxyMode):
     """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
     description = "HTTP(S) proxy"
-    default_port = 8080
     transport_protocol = TCP
 
     def __post_init__(self) -> None:
@@ -186,7 +185,6 @@ class RegularMode(ProxyMode):
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
     description = "transparent proxy"
-    default_port = 8080
     transport_protocol = TCP
 
     def __post_init__(self) -> None:
@@ -196,7 +194,6 @@ class TransparentMode(ProxyMode):
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
     description = "HTTP(S) proxy (upstream mode)"
-    default_port = 8080
     transport_protocol = TCP
     scheme: Literal["http", "https"]
     address: tuple[str, int]
@@ -212,7 +209,6 @@ class UpstreamMode(ProxyMode):
 class ReverseMode(ProxyMode):
     """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
     description = "reverse proxy"
-    default_port = 8080
     transport_protocol = TCP
     scheme: Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns"]
     address: tuple[str, int]
@@ -222,9 +218,13 @@ class ReverseMode(ProxyMode):
         self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
         if self.scheme in ("dns", "dtls", "udp"):
             self.transport_protocol = UDP
-        if self.scheme == "dns":
-            self.default_port = 53
         self.description = f"{self.description} to {self.data}"
+
+    @property
+    def default_port(self) -> int:
+        if self.scheme == "dns":
+            return 53
+        return super().default_port
 
 
 class Socks5Mode(ProxyMode):
