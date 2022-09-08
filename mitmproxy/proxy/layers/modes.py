@@ -59,10 +59,7 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if (
-            spec.scheme == "https" or spec.scheme == "http3"
-            or spec.scheme == "quic" or spec.scheme == "tls" or spec.scheme == "dtls"
-        ):
+        if spec.scheme in ("https", "http3", "quic", "tls", "dtls"):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
             if (spec.scheme == "http3" or spec.scheme == "quic"):
