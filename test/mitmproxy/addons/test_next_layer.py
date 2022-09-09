@@ -161,11 +161,6 @@ class TestNextLayer:
         ctx.client.transport_protocol = "udp"
         with taddons.context(nl) as tctx:
             ctx.layers = [layers.modes.HttpProxy(ctx)]
-            tctx.configure(nl, rawudp=False)
-            assert is_ignored_udp(nl._next_layer(ctx, b"", b""))
-
-            ctx.layers = [layers.modes.HttpProxy(ctx)]
-            tctx.configure(nl, rawudp=True)
             assert is_intercepted_udp(nl._next_layer(ctx, b"", b""))
 
             ctx.layers = [layers.modes.HttpProxy(ctx)]

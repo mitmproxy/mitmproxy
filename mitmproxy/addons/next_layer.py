@@ -290,8 +290,8 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 7. Use raw mode or ignore the connection.
-            return raw_layer_cls(context, ignore=not ctx.options.rawudp)
+            # 7. Use raw mode.
+            return raw_layer_cls(context)
 
         else:
             raise AssertionError(context.client.transport_protocol)
