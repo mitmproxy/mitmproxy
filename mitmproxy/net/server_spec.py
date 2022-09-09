@@ -62,6 +62,8 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
             port = {
                 "http": 80,
                 "https": 443,
+                "quic": 443,
+                "http3": 443,
                 "dns": 53,
             }[scheme]
         except KeyError:

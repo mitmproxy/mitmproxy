@@ -17,10 +17,10 @@ from mitmproxy import http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
-    QuicConnectionEvent,
-    QuicLayer,
+    ClientQuicLayer, QuicStreamDataReceived,
+    QuicStreamReset,
     QuicTransmit,
-    error_code_to_str,
+    ServerQuicLayer, error_code_to_str,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -50,6 +50,15 @@ from ._http2 import (
 )
 
 
+class MockQuic:
+    """
+    aioquic intermingles QUIC and HTTP/3. This is something we don't want to do because that makes testing much harder.
+    Instead, we mock our QUIC connection object here and then take out the wire data to be sent.
+    """
+    pass
+    # TODO add mock for QuicConnection.
+
+
 class Http3Connection(HttpConnection):
     quic: Optional[QuicConnection] = None
     h3_conn: Optional[H3Connection] = None
@@ -77,11 +86,11 @@ class Http3Connection(HttpConnection):
     ) -> None:
         pass  # pragma: no cover
 
-    @expect(HttpEvent, QuicConnectionEvent, events.ConnectionClosed)
+    @expect(HttpEvent, QuicStreamDataReceived, QuicStreamReset, events.ConnectionClosed)
     def state_done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
-    @expect(HttpEvent, QuicConnectionEvent, events.ConnectionClosed)
+    @expect(HttpEvent, QuicStreamDataReceived, QuicStreamReset, events.ConnectionClosed)
     def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.quic is not None
         assert self.h3_conn is not None
@@ -135,13 +144,9 @@ class Http3Connection(HttpConnection):
                 # transmit buffered data and re-arm timer
                 yield QuicTransmit(self.conn)
 
-        # handle events from the underlying QUIC connection
-        elif isinstance(event, QuicConnectionEvent):
-
-            # report abrupt stream resets
+        elif isinstance(event, QuicStreamReset):
             if (
-                isinstance(event, quic_events.StreamReset)
-                and stream_is_client_initiated(event.stream_id)
+                stream_is_client_initiated(event.stream_id)
                 and event.stream_id in self.h3_conn._stream
                 and not self.h3_conn._stream[event.stream_id].ended
             ):
@@ -165,8 +170,12 @@ class Http3Connection(HttpConnection):
                     )
                 )
 
-            # forward QUIC events to the H3 connection
-            for h3_event in self.h3_conn.handle_event(event.event):
+        elif isinstance(event, QuicStreamDataReceived):
+            yield commands.Log(f"recvd data: {event=}")
+            # and convert back...
+            e = quic_events.StreamDataReceived(data=event.data, end_stream=event.end_stream, stream_id=event.stream_id)
+            for h3_event in self.h3_conn.handle_event(e):
+                yield commands.Log(f"{h3_event=}")
 
                 # report received data
                 if (
@@ -269,12 +278,15 @@ class Http3Connection(HttpConnection):
         # aioquic does not separate QUIC and HTTP/3, poke through the layer stack to get a reference to the QUIC
         # connection object.
         for x in reversed(self.context.layers):
-            if isinstance(x, QuicLayer):
+            if isinstance(x, ClientQuicLayer if isinstance(self, Http3Server) else ServerQuicLayer):
                 self.quic = x.quic
                 self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
                 break
         else:
             raise AssertionError
+
+        # self.quic = MockQuic()
+        # self.h3_conn = H3Connection(self.quic)
 
         self._handle_event = self.state_ready
         yield from ()

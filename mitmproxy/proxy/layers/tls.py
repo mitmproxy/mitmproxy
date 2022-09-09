@@ -430,17 +430,17 @@ class TLSLayer(tunnel.TunnelLayer):
         else:
             yield from super().receive_close()
 
-    def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
+    def send_data(self, command: commands.SendData) -> layer.CommandGenerator[None]:
         try:
-            self.tls.sendall(data)
+            self.tls.sendall(command.data)
         except (SSL.ZeroReturnError, SSL.SysCallError):
             # The other peer may still be trying to send data over, which we discard here.
             pass
         yield from self.tls_interact()
 
-    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
+    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
         # We should probably shutdown the TLS connection properly here.
-        yield from super().send_close(half_close)
+        yield from super().send_close(command)
 
 
 class ServerTLSLayer(TLSLayer):
