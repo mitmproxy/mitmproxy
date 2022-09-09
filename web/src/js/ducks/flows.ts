@@ -202,6 +202,12 @@ export function uploadContent(flow: Flow, file, type) {
     return dispatch => fetchApi(`/flows/${flow.id}/${type}/content.data`, {method: 'POST', body})
 }
 
+export function uploadQuery(flow: Flow, file) {
+    const body = new FormData()
+    file = new window.Blob([file], {type: 'plain/text'})
+    body.append('file', file)
+    return dispatch => fetchApi(`/flows/${flow.id}/request/query.data`, {method: 'POST', body})
+}
 
 export function clear() {
     return dispatch => fetchApi('/clear', {method: 'POST'})

@@ -24,6 +24,7 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
+from mitmproxy.net.http import url
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils.emoji import emoji
@@ -403,6 +404,8 @@ class FlowHandler(RequestHandler):
                                 request.trailers.add(*trailer)
                         elif k == "content":
                             request.text = v
+                        elif k == "query":
+                            request.query = [tuple(i) for i in v]
                         else:
                             raise APIError(400, f"Unknown update request.{k}: {v}")
 
@@ -483,6 +486,21 @@ class FlowContent(RequestHandler):
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("X-Frame-Options", "DENY")
         self.write(message.get_content(strict=False))
+
+
+class FlowQuery(RequestHandler):
+    def post(self, flow_id):
+        self.flow.backup()
+        message = getattr(self.flow, 'request')
+        message.query = url.decode(b"&".join(self.filecontents.strip().splitlines()))
+        self.view.update([self.flow])
+
+    def get(self, flow_id):
+        message = getattr(self.flow, 'request')
+        self.set_header("Content-Type", "application/text")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("X-Frame-Options", "DENY")
+        self.write("\n".join("=".join(field) for field in message.query.fields))
 
 
 class FlowContentView(RequestHandler):
@@ -673,6 +691,10 @@ class Application(tornado.web.Application):
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data",
                     FlowContent,
+                ),
+                (
+                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/request/query.data",
+                    FlowQuery,
                 ),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"

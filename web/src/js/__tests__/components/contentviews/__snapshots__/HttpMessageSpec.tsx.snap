@@ -126,7 +126,11 @@ exports[`HttpMessage 2`] = `
     </div>
     <div
       class="codeeditor"
-    />
+    >
+      <div>
+        {"lines":[[["text","rawdata"]],[["text","rawdata"]],[["text","rawdata"]],[["text","rawdata"]],[["text","rawdata"]]],"description":"Raw"}
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -219,6 +223,189 @@ exports[`HttpMessage 3`] = `
           class="text"
         >
           rawdata
+        </span>
+      </div>
+    </pre>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage 4`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Loading...
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage edit query string 1`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        [Editing]
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-check text-success"
+        />
+         Done
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-times text-danger"
+        />
+         Cancel
+      </button>
+    </div>
+    <div
+      class="codeeditor"
+    >
+      <div>
+        foo=1
+bar=2
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage edit query string 2`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Query
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           auto 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
+    </div>
+    <pre>
+      <div>
+        <span
+          class="header"
+        >
+          foo
+        </span>
+        <span
+          class="text"
+        >
+          1
+        </span>
+      </div>
+      <div>
+        <span
+          class="header"
+        >
+          bar
+        </span>
+        <span
+          class="text"
+        >
+          2
         </span>
       </div>
     </pre>

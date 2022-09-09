@@ -306,6 +306,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         upd = {
             "request": {
                 "trailers": [("foo", "baz")],
+                "query": [("foo", "2")]
             },
             "response": {
                 "trailers": [("foo", "baz")],
@@ -313,6 +314,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
         assert self.put_json("/flows/42", upd).code == 200
         assert f.request.trailers["foo"] == "baz"
+        assert f.request.query["foo"] == "2"
 
         f.revert()
 
@@ -421,6 +423,41 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         )
         f = self.view.get_by_id("42")
         assert f.request.content == b"such multipart. very wow."
+        assert f.modified()
+        f.revert()
+
+    def test_flow_query(self):
+        f = self.view.get_by_id("42")
+        f.backup()
+
+        f.request.query = (("foo", "1"), ("bar", "2"))
+
+        r = self.fetch("/flows/42/request/query.data")
+
+        assert r.code == 200
+        assert r.body == b"foo=1\nbar=2"
+
+        f.revert()
+
+    def test_flow_update_query(self):
+        assert (
+            self.fetch("/flows/42/request/query.data", method="POST", body="foo=1&bar=2").code
+            == 200
+        )
+        f = self.view.get_by_id("42")
+        assert f.request.query["foo"] == "1"
+        assert f.request.query["bar"] == "2"
+        assert f.modified()
+        f.revert()
+
+    def test_flow_update_query_with_multiple_lines(self):
+        assert (
+            self.fetch("/flows/42/request/query.data", method="POST", body="foo=1\nbar=2").code
+            == 200
+        )
+        f = self.view.get_by_id("42")
+        assert f.request.query["foo"] == "1"
+        assert f.request.query["bar"] == "2"
         assert f.modified()
         f.revert()
 

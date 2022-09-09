@@ -66,6 +66,10 @@ export class MessageUtils {
         const lineStr = lines ? `?lines=${lines}` : "";
         return `./flows/${flow.id}/${part}/` + (view ? `content/${encodeURIComponent(view)}.json${lineStr}` : 'content.data');
     }
+
+    static getQueryURL(flow: Flow): string {
+        return `./flows/${flow.id}/request/query.data`;
+    }
 }
 
 export class RequestUtils extends MessageUtils {
