@@ -1,7 +1,6 @@
 import {useEffect, useState} from "react"
 import {fetchApi} from "../../utils";
 
-export const SHOW_MAX_LINES = 80;
 
 export type ContentViewData = {
     lines: [style: string, text: string][][],
