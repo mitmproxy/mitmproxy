@@ -84,18 +84,18 @@ class QuicTlsSettings:
 @dataclass
 class QuicTlsData(TlsData):
     """
-    Event data for `quic_tls_start_client` and `quic_tls_start_server` event hooks.
+    Event data for `quic_start_client` and `quic_start_server` event hooks.
     """
 
     settings: QuicTlsSettings | None = None
     """
     The associated `QuicTlsSettings` object.
-    This will be set by an addon in the `quic_tls_start_*` event hooks.
+    This will be set by an addon in the `quic_start_*` event hooks.
     """
 
 
 @dataclass
-class QuicTlsStartClientHook(commands.StartHook):
+class QuicStartClientHook(commands.StartHook):
     """
     TLS negotiation between mitmproxy and a client over QUIC is about to start.
 
@@ -107,7 +107,7 @@ class QuicTlsStartClientHook(commands.StartHook):
 
 
 @dataclass
-class QuicTlsStartServerHook(commands.StartHook):
+class QuicStartServerHook(commands.StartHook):
     """
     TLS negotiation between mitmproxy and a server over QUIC is about to start.
 
@@ -600,7 +600,7 @@ class QuicLayer(tunnel.TunnelLayer):
         super().__init__(context, tunnel_connection=conn, conn=conn)
         self._loop = asyncio.get_event_loop()
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
-        self._routes: dict[connection.Address, "ConnectionHandler" | None] = dict()
+        self._routes: dict[connection.Address, ConnectionHandler | None] = dict()
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -648,9 +648,9 @@ class QuicLayer(tunnel.TunnelLayer):
         # query addons to provide the necessary TLS settings
         tls_data = QuicTlsData(self.conn, self.context)
         if self.conn is self.context.client:
-            yield QuicTlsStartClientHook(tls_data)
+            yield QuicStartClientHook(tls_data)
         else:
-            yield QuicTlsStartServerHook(tls_data)
+            yield QuicStartServerHook(tls_data)
         if tls_data.settings is None:
             yield commands.Log(f"No QUIC context was provided, failing connection.", level="error")
             yield commands.CloseConnection(self.conn)
@@ -728,8 +728,7 @@ class QuicLayer(tunnel.TunnelLayer):
             self.quic.receive_datagram(data, self.conn.peername, now=self._loop.time())
 
         # handle pre-handshake events
-        event = self.quic.next_event()
-        while event is not None:
+        while event := self.quic.next_event():
             if isinstance(event, quic_events.ConnectionIdIssued):
                 yield from self.issue_connection_id(event.connection_id)
             elif isinstance(event, quic_events.ConnectionIdRetired):
@@ -770,7 +769,6 @@ class QuicLayer(tunnel.TunnelLayer):
                 pass
             else:
                 raise AssertionError(f"Unexpected event: {event!r}")
-            event = self.quic.next_event()
 
         # transmit buffered data and re-arm timer
         yield from self.tls_interact()
@@ -792,8 +790,7 @@ class QuicLayer(tunnel.TunnelLayer):
             self.quic.receive_datagram(data, self.conn.peername, now=self._loop.time())
 
         # handle post-handshake events
-        event = self.quic.next_event()
-        while event is not None:
+        while event := self.quic.next_event():
             if isinstance(event, quic_events.ConnectionIdIssued):
                 yield from self.issue_connection_id(event.connection_id)
             elif isinstance(event, quic_events.ConnectionIdRetired):
@@ -816,7 +813,6 @@ class QuicLayer(tunnel.TunnelLayer):
                 yield from self.event_to_child(QuicConnectionEvent(self.conn, event))
             else:
                 raise AssertionError(f"Unexpected event: {event!r}")
-            event = self.quic.next_event()
 
         # transmit buffered data and re-arm timer
         yield from self.tls_interact()
