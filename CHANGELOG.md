@@ -14,13 +14,21 @@
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
 * Setting `connection_strategy` to `lazy` now also disables early 
   upstream connections to fetch TLS certificate details.
-  (@mhils)
+  ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix `tls_version_server_min` and `tls_version_server_max` options.
   ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
-* DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
-* Added Magisk module generation for Android onboarding (@jorants).
-* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. (@jorants)
-* Render application/prpc content as gRPC/Protocol Buffers (@selfisekai)
+* DTLS support. 
+  ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Added Magisk module generation for Android onboarding 
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. 
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
+* Render application/prpc content as gRPC/Protocol Buffers
+  ([#5568](https://github.com/mitmproxy/mitmproxy/pull/5568), @selfisekai)
+* Mitmweb now supports `content_view_lines_cutoff`.
+  ([#5548](https://github.com/mitmproxy/mitmproxy/pull/5548), @sanlengjingvv)
+* Fix a mitmweb crash when scrolling down the flow list.
+  ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
