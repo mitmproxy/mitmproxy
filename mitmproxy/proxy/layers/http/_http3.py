@@ -18,7 +18,7 @@ from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
     QuicConnectionEvent,
-    QuicStart,
+    QuicLayer,
     QuicTransmit,
     error_code_to_str,
 )
@@ -265,14 +265,17 @@ class Http3Connection(HttpConnection):
     @expect(events.Start)
     def state_start(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert isinstance(event, events.Start)
-        self._handle_event = self.state_wait_for_quic
-        yield from ()
 
-    @expect(QuicStart)
-    def state_wait_for_quic(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert isinstance(event, QuicStart)
-        self.quic = event.quic
-        self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
+        # aioquic does not separate QUIC and HTTP/3, poke through the layer stack to get a reference to the QUIC
+        # connection object.
+        for x in reversed(self.context.layers):
+            if isinstance(x, QuicLayer):
+                self.quic = x.quic
+                self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
+                break
+        else:
+            raise AssertionError
+
         self._handle_event = self.state_ready
         yield from ()
 
