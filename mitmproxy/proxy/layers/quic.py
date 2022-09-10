@@ -2,7 +2,8 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
-from typing import TYPE_CHECKING, ClassVar
+import time
+from typing import TYPE_CHECKING, ClassVar, Literal, Union
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import H3_ALPN, ErrorCode as H3ErrorCode
@@ -29,7 +30,7 @@ from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
 from mitmproxy import certs, connection, flow as mitm_flow, tcp, udp
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, tunnel
-from mitmproxy.proxy.layer import CommandGenerator
+from mitmproxy.proxy.layer import CommandGenerator, NextLayer
 from mitmproxy.proxy.layers.tcp import (
     TCPLayer, TcpEndHook,
     TcpErrorHook,
@@ -124,6 +125,12 @@ class QuicTransmit(commands.SendData):
     aioquic does not separate HTTP/3 and QUIC: H3Connection requires a QuicConnection instance to interact with.
     This unfortunately breaks our abstractions. As a workaround, all "SendData" commands for HTTP/3 connections
     do not carry the actual data to be sent, but just serve to notify the QUIC layer instead.
+
+
+    Suggestion: Introduce Send/Receive commands/events for H3 as well.
+    Introduce QuicUseH3Connection command, which will activate a H3 connection that lives in QuicLayer.
+    QuicLayer will then send H3 events and act on H3 commands.
+    Also no more rummaging around the context for QuicLayer to get the QuicConnection.
     """
 
     def __init__(self, connection: connection.Connection) -> None:
@@ -174,6 +181,18 @@ class CloseQuicStream(commands.CloseConnection):
     def __init__(self, connection: connection.Connection, stream_id: int):
         super().__init__(connection)
         self.stream_id = stream_id
+
+
+class OpenQuicStream(commands.OpenConnection):
+    connection: connection.Connection
+    blocking = True
+
+
+@dataclass(repr=False)
+class OpenQuicStreamCompleted(commands.CommandCompleted):
+    command: commands.OpenQuicStream
+    reply: int | str
+    """stream_id or error message"""
 
 
 class QuicSecretsLogger:
@@ -272,47 +291,45 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
     raise ValueError("No ClientHello returned.")
 
 
-class QuicStream:
-    flow: tcp.TCPFlow | None
+class QuicStreamLayer(layer.Layer):
+    """
+    Layer for QUIC streams.
+    Serves as a marker for NextLayer decision and to keep track of the connection states.
+    """
+
     stream_id: int
+    child_layer: layer.Layer
 
-    def __init__(self, context: context.Context, stream_id: int, ignore: bool) -> None:
-        if ignore:
-            self.flow = None
-        else:
-            self.flow = tcp.TCPFlow(context.client, context.server, live=True)
+    def __init__(self, context: context.Context, stream_id: int) -> None:
+        # we shouldn't reuse the client or server from the
+        # QUIC connection as we have different states here
+        context.client = connection.Client(
+            peername=context.client.peername,
+            sockname=context.client.sockname,
+            timestamp_start=time.time(),
+            transport_protocol=context.client.transport_protocol,  # would prefer TCP here, but will conflict with inject
+            proxy_mode=context.client.proxy_mode,
+        )
+
+        # if the server gets set in the layer again, we'll treat it as QUIC-to-somewhere-else
+        context.server = connection.Server(
+            address=context.server.address,
+            transport_protocol=context.server.transport_protocol,
+        )
+        super().__init__(context)
         self.stream_id = stream_id
-        is_unidirectional = stream_is_unidirectional(stream_id)
-        from_client = stream_is_client_initiated(stream_id)
-        self._ended_client = is_unidirectional and not from_client
-        self._ended_server = is_unidirectional and from_client
+        self.child_layer = NextLayer(context)
+        if stream_is_unidirectional(stream_id) and stream_is_client_initiated(stream_id):
+            context.client.state = connection.ConnectionState.CAN_READ
 
-    def has_ended(self, client: bool) -> bool:
-        return self._ended_client if client else self._ended_server
+    # TODO: track state of client and server stream
 
-    def mark_ended(self, client: bool, err: str | None = None) -> layer.CommandGenerator[None]:
-        # ensure we actually change the ended state
-        if client:
-            assert not self._ended_client
-            self._ended_client = True
-        else:
-            assert not self._ended_server
-            self._ended_server = True
 
-        # we're done if the stream is ignored
-        if self.flow is None:
-            return
+class QuicDatagramLayer(layer.Layer):
+    child_layer: layer.Layer
 
-        # set and report the first error
-        if err is not None and self.flow.error is None:
-            self.flow.error = mitm_flow.Error(err)
-            yield TcpErrorHook(self.flow)
 
-        # report error-free endings and always clear the live flag
-        if self._ended_client and self._ended_server:
-            if self.flow.error is None:
-                yield TcpEndHook(self.flow)
-            self.flow.live = False
+StreamId = Union[int, Literal["udp"]]
 
 
 class RawQuicLayer(layer.Layer):
@@ -320,26 +337,39 @@ class RawQuicLayer(layer.Layer):
     This layer is responsible for demultiplexing QUIC streams into an individual layer stack per stream.
     """
     ignore: bool
-    substacks: dict[int, layer.Layer]
-    command_sources: dict[commands.Command, int | "udp"]
+    streams: dict[StreamId, layer.Layer]
+    """All stream layers indexed by the stream ID used in the client connection."""
+    server_stream_id_to_client_stream_id: dict[StreamId, StreamId]
+    """We don't have a 1:1 mapping of stream ids, so keep track of it."""
+    client_to_stream_id: dict[connection.Client, StreamId]
+    """Each stream has it's own `Client` instance, which we use as index here."""
+    server_to_stream_id: dict[connection.Server, StreamId]
+    """Each stream has it's own `Server` instance, which we use as index here."""
+    command_sources: dict[commands.Command, StreamId]
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
         self.ignore = ignore
-        self.substacks = {}
+        self.streams = {}
+        self.server_stream_id_to_client_stream_id = {}
+        self.client_to_stream_id = {}
+        self.server_to_stream_id = {}
         self.command_sources = {}
         super().__init__(context)
 
-    def get_or_create_stack(self, stream_id: int | "udp") -> CommandGenerator[layer.Layer]:
-        if stream_id not in self.substacks:
-            # v2: self.substacks[stream_id] = layer.NextLayer(self.context.fork())
-            if stream_id == "udp":
-                self.substacks[stream_id] = UDPLayer(self.context, ignore=self.ignore)
-            else:
-                self.substacks[stream_id] = TCPLayer(self.context, ignore=self.ignore)
-
+    def get_or_create_stream(self, stream_id: StreamId) -> CommandGenerator[layer.Layer]:
+        layer = self.streams.get(stream_id, None)
+        if layer is None:
+            layer = (
+                QuicDatagramLayer(self.context.fork())
+                if stream_id == "udp" else
+                QuicStreamLayer(self.context.fork())
+            )
+            self.streams[stream_id] = layer
+            self.client_to_stream_id[layer.context.client] = stream_id
+            self.server_to_stream_id[layer.context.server] = stream_id
             yield from self.event_to_child(stream_id, events.Start())
 
-        return self.substacks[stream_id]
+        return layer
 
     def _handle_event(self, e: events.Event) -> CommandGenerator[None]:
         if isinstance(e, events.Start):
@@ -356,31 +386,58 @@ class RawQuicLayer(layer.Layer):
         elif isinstance(e, QuicStreamReset):
             yield from self.event_to_child(e.stream_id, events.ConnectionClosed(e.connection))
         elif isinstance(e, events.MessageInjected):
-            raise NotImplementedError("Unimplemented: Message injection")
+            yield from self.event_to_child(self.stream_client_to_stream_id[e.flow.client_conn], e)
         elif isinstance(e, events.ConnectionClosed):
-            for stream_id in self.substacks:
+            for stream_id in self.streams:
                 yield from self.event_to_child(stream_id, e)
         else:
             raise AssertionError(f"Unexpected event: {e}")
 
-    def event_to_child(self, stream_id: int | "udp", event: events.Event) -> CommandGenerator[None]:
-        stack = yield from self.get_or_create_stack(stream_id)
-        for command in stack.handle_event(event):
+    def event_to_child(self, stream_id: StreamId, event: events.Event) -> CommandGenerator[None]:
+        stream = yield from self.get_or_create_stream(stream_id)
+        for command in stream.handle_event(event):
             if command.blocking or isinstance(command, commands.RequestWakeup):
                 self.command_sources[command] = stream_id
 
-            if isinstance(command, commands.SendData):
-                if stream_id == "udp":
-                    yield SendQuicDatagram(command.connection, command.data)
+            if isinstance(command, commands.ConnectionCommand):
+
+                if command.connection in self.client_to_stream_id:
+                    conn = self.context.client
+                elif command.connection in self.server_to_stream_id:
+                    conn = self.context.server
                 else:
-                    yield SendQuicStreamData(command.connection, stream_id, command.data)
-            elif isinstance(command, commands.CloseConnection):
-                if stream_id == "udp":
-                    pass
+                    # not ours, don't intercept
+                    yield command
+                    return
+
+                if isinstance(command, commands.SendData):
+                    if stream_id == "udp":
+                        yield SendQuicDatagram(conn, command.data)
+                    else:
+                        yield SendQuicStreamData(conn, stream_id, command.data)
+                elif isinstance(command, commands.CloseConnection):
+                    if stream_id == "udp":
+                        pass
+                    else:
+                        yield CloseQuicStream(conn, stream_id)
+                elif isinstance(command, commands.OpenConnection):
+                    assert conn is not self.context.client
+                    stream_id = self.server_to_stream_id[command.connection]
+                    if err := command.connection.error:
+                        yield from self.event_to_child(stream_id, events.OpenConnectionCompleted(command, f"Connection killed: {err}"))
+                        return
+                    stream_id_or_err = yield OpenQuicStream(conn)
+                    if isinstance(stream_id_or_err, str):
+                        yield from self.event_to_child(stream_id, events.OpenConnectionCompleted(command, stream_id_or_err))
+                        return
+                    self.server_stream_id_to_client_stream_id[stream_id_or_err] = stream_id
+                    self.streams[stream_id].context.server.set_state(connection.ConnectionState.OPEN)
+                    yield from self.event_to_child(stream_id, events.OpenConnectionCompleted(command, None))
+
                 else:
-                    yield CloseQuicStream(command.connection, stream_id)
-            elif isinstance(command, commands.OpenConnection):
-                raise NotImplementedError("Unimplemented: QUIC server change")
+                    command.connection = conn
+                    yield command
+
             else:
                 yield command
 
