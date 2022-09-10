@@ -300,7 +300,7 @@ class TlsConfig:
 
         tls_start.ssl_conn.set_connect_state()
 
-    def quic_tls_start_client(self, tls_start: quic.QuicTlsData) -> None:
+    def quic_start_client(self, tls_start: quic.QuicTlsData) -> None:
         """Establish QUIC between client and proxy."""
         if tls_start.settings is not None:
             return  # a user addon has already provided the settings.
@@ -326,7 +326,7 @@ class TlsConfig:
         if ctx.options.add_upstream_certs_to_client_chain:
             tls_start.settings.certificate_chain.extend(cert._cert for cert in server.certificate_list)
 
-    def quic_tls_start_server(self, tls_start: quic.QuicTlsData) -> None:
+    def quic_start_server(self, tls_start: quic.QuicTlsData) -> None:
         """Establish QUIC between proxy and server."""
         if tls_start.settings is not None:
             return  # a user addon has already provided the settings.

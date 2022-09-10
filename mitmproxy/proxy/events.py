@@ -47,7 +47,7 @@ class DataReceived(ConnectionEvent):
 
     def __repr__(self):
         target = type(self.connection).__name__.lower()
-        return f"DataReceived({target}, {self.data})"
+        return f"{self.__class__.__name__}({target}, {self.data})"
 
 
 class ConnectionClosed(ConnectionEvent):

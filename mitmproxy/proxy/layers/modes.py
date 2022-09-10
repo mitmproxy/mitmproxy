@@ -7,7 +7,7 @@ from typing import Optional
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import dns, quic, tls
+from mitmproxy.proxy.layers import dns, quic, tls, udp
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
@@ -62,11 +62,13 @@ class ReverseProxy(DestinationKnown):
         if spec.scheme in ("https", "http3", "quic", "tls", "dtls"):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
-            if (spec.scheme == "http3" or spec.scheme == "quic"):
+            if spec.scheme == "http3" or spec.scheme == "quic":
                 self.child_layer = quic.ServerQuicLayer(self.context)
             else:
                 self.child_layer = tls.ServerTLSLayer(self.context)
-        elif spec.scheme == "http" or spec.scheme == "tcp" or spec.scheme == "udp":
+        elif spec.scheme == "udp":
+            self.child_layer = udp.UDPLayer(self.context)
+        elif spec.scheme == "http" or spec.scheme == "tcp":
             self.child_layer = layer.NextLayer(self.context)
         elif spec.scheme == "dns":
             self.child_layer = dns.DNSLayer(self.context)

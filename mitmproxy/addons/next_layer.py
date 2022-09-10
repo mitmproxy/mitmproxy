@@ -171,7 +171,7 @@ class NextLayer:
         try:
             client_hello = quic_parse_client_hello(data_client)
             return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         # that's all we currently have to offer
@@ -247,7 +247,7 @@ class NextLayer:
             # unlike TCP, we make a decision immediately
             tls = self.detect_udp_tls(data_client)
             is_quic = isinstance(context.layers[-1], layers.ClientQuicLayer)
-            raw_layer_cls = layers.QuicStreamLayer if is_quic else layers.UDPLayer
+            raw_layer_cls = layers.RawQuicLayer if is_quic else layers.UDPLayer
 
             # 1. check for --ignore/--allow
             if self.ignore_connection(
@@ -290,8 +290,8 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 7. Use raw mode or ignore the connection.
-            return raw_layer_cls(context, ignore=not ctx.options.rawudp)
+            # 7. Use raw mode.
+            return raw_layer_cls(context)
 
         else:
             raise AssertionError(context.client.transport_protocol)
