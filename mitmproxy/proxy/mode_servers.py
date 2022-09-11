@@ -17,7 +17,6 @@ import textwrap
 from pathlib import Path
 
 import errno
-import os
 import socket
 import typing
 from abc import ABCMeta, abstractmethod
@@ -338,8 +337,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
             ------------------------------------------------------------
-            """
-        ).strip()
+            """).strip()
 
     def to_json(self) -> dict:
         return {
