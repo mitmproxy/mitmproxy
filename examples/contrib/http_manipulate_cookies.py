@@ -16,6 +16,7 @@ Note:
 """
 import json
 from mitmproxy import http
+from typing import Union
 
 
 PATH_TO_COOKIES = "./cookies.json"  # insert your path to the cookie file here
@@ -27,7 +28,7 @@ FILTER_COOKIES = {
 
 
 # -- Helper functions --
-def load_json_cookies() -> list[dict[str, str]]:
+def load_json_cookies() -> list[dict[str, Union[str, None]]]:
     """
     Load a particular json file containing a list of cookies.
     """
@@ -38,24 +39,21 @@ def load_json_cookies() -> list[dict[str, str]]:
 # NOTE: or just hardcode the cookies as [{"name": "", "value": ""}]
 
 
-def stringify_cookies(cookies: list[dict]) -> str:
+def stringify_cookies(cookies: list[dict[str, Union[str, None]]]) -> str:
     """
     Creates a cookie string from a list of cookie dicts.
     """
-    return ";".join([f"{c['name']}={c['value']}" for c in cookies])
+    return "; ".join([f"{c['name']}={c['value']}" if c.get("value", None) is not None else f"{c['name']}" for c in cookies])
 
 
-def parse_cookies(cookie_string: str) -> list[dict[str, str]]:
+def parse_cookies(cookie_string: str) -> list[dict[str, Union[str, None]]]:
     """
     Parses a cookie string into a list of cookie dicts.
     """
-    cookies = []
-    for c in cookie_string.split(";"):
-        c = c.strip()
-        if c:
-            k, v = c.split("=", 1)
-            cookies.append({"name": k, "value": v})
-    return cookies
+    return [
+        {"name": g[0], "value": g[1]} if len(g) == 2 else {"name": g[0], "value": None}
+        for g in [k.split("=", 1) for k in [c.strip() for c in cookie_string.split(";")] if k]
+    ]
 
 
 # -- Main interception functionality --
@@ -77,14 +75,19 @@ def request(flow: http.HTTPFlow) -> None:
 
 def response(flow: http.HTTPFlow) -> None:
     """Remove a specific cookie from every response."""
-    set_cookies_str = flow.response.headers.get("set-cookie", "")
-    # NOTE: use safe attribute access (.get), in some cases there might not be a set-cookie header
+    set_cookies_str = flow.response.headers.get_all("set-cookie")
+    # NOTE: According to docs, for use with the "Set-Cookie" and "Cookie" headers, either use `Response.cookies` or see `Headers.get_all`.
+    set_cookies_str_modified: list[str] = []
 
     if set_cookies_str:
-        resp_cookies = parse_cookies(set_cookies_str)
+        for cookie in set_cookies_str:
+            resp_cookies = parse_cookies(cookie)
 
-        # remove the cookie we want to remove
-        resp_cookies = [c for c in resp_cookies if c["name"] not in FILTER_COOKIES]
+            # remove the cookie we want to remove
+            resp_cookies = [c for c in resp_cookies if c["name"] not in FILTER_COOKIES]
+
+            # append the modified cookies to the list that will change the requested cookies
+            set_cookies_str_modified.append(stringify_cookies(resp_cookies))
 
         # modify the request with the combined cookies
-        flow.response.headers["set-cookie"] = stringify_cookies(resp_cookies)
+        flow.response.headers.set_all("set-cookie", set_cookies_str_modified)
