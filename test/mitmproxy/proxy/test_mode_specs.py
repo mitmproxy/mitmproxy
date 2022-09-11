@@ -59,6 +59,7 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("reverse:dns://8.8.8.8")
     assert ProxyMode.parse("reverse:dtls://127.0.0.1:8004")
     assert ProxyMode.parse("wireguard")
+    assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
     assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
 
     with pytest.raises(ValueError, match="invalid port"):
@@ -75,25 +76,3 @@ def test_parse_specific_modes():
 
     with pytest.raises(ValueError, match="Port specification missing."):
         ProxyMode.parse("reverse:dtls://127.0.0.1")
-
-
-def test_parse_wireguard_mode():
-    assert WireGuardMode.parse("wireguard:load,")
-    assert WireGuardMode.parse("wireguard:generate,peers=2").wireguard_peer_num == 2
-    assert WireGuardMode.parse("wireguard:load=~/.mitmproxy/wg.json").wireguard_cfg_path == "~/.mitmproxy/wg.json"
-
-    mode = WireGuardMode.parse("wireguard:generate,peers=2@51821")
-    assert mode.listen_port() == 51821
-    assert mode.wireguard_cfg_gen is True
-    assert mode.wireguard_peer_num == 2
-
-    with pytest.raises(ValueError, match="cannot set both 'load' and 'generate'"):
-        WireGuardMode.parse("wireguard:load,generate")
-    with pytest.raises(ValueError, match="cannot set both 'load' and 'generate'"):
-        WireGuardMode.parse("wireguard:generate,load")
-    with pytest.raises(ValueError, match=f"unexpected 'peers=2' setting"):
-        WireGuardMode.parse("wireguard:load,peers=2")
-    with pytest.raises(ValueError, match="unexpected 'foobar' setting"):
-        WireGuardMode.parse("wireguard:foobar")
-    with pytest.raises(ValueError, match=f"invalid peer number 'foo'"):
-        WireGuardMode.parse("wireguard:generate,peers=foo")

@@ -253,6 +253,5 @@ class WireGuardMode(ProxyMode):
     default_port = 51820
     transport_protocol = UDP
 
-    # noinspection PyDataclass
     def __post_init__(self) -> None:
         pass
