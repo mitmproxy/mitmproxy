@@ -190,12 +190,6 @@ class Proxyserver(ServerManager):
             None,
             """Set the local IP address that mitmproxy should use when connecting to upstream servers.""",
         )
-        loader.add_option(
-            "quic_connection_id_length",
-            int,
-            8,
-            """The length in bytes of local QUIC connection IDs.""",
-        )
 
     def running(self):
         self.is_running = True

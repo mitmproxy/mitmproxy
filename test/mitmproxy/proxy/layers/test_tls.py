@@ -637,7 +637,7 @@ class TestClientTLS:
             >> events.DataReceived(Server(None), b"data on other stream")
             << commands.Log(">> DataReceived(server, b'data on other stream')", "debug")
             << commands.Log(
-                "Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
+                "[tls] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
                 "debug",
             )
         )
