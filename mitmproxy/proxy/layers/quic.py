@@ -315,20 +315,23 @@ class QuicStreamLayer(layer.Layer):
     Serves as a marker for NextLayer and keeps track of the connection states.
     """
 
+    client: connection.Client
     client_stream_id: int
+    server: connection.Server
     server_stream_id: int | None
     child_layer: layer.Layer
 
     def __init__(self, context: context.Context, ignore: bool, client_stream_id: int, server_stream_id: int | None) -> None:
-        # We mustn't reuse the client or server from the QUIC connection as we have different states here.
-        context.client = connection.Client(
+        # We mustn't reuse client or server from the QUIC connection as we have different states here.
+        # Also, we store the original values to detect if the context has changed.
+        self.client = context.client = connection.Client(
             peername=context.client.peername,
             sockname=context.client.sockname,
             timestamp_start=time.time(),
             transport_protocol=context.client.transport_protocol,
             proxy_mode=context.client.proxy_mode,
         )
-        context.server = connection.Server(
+        self.server = context.server = connection.Server(
             address=context.server.address,
             transport_protocol=context.server.transport_protocol,
         )
@@ -431,20 +434,17 @@ class RawQuicLayer(layer.Layer):
 
                 # create, register and start the layer
                 stream_layer = QuicStreamLayer(self.context, self.ignore, client_stream_id, server_stream_id)
-                stream_layer.context.client.state = get_stream_connection_state(client_stream_id, is_client=False)
+                stream_layer.client.state = get_stream_connection_state(client_stream_id, is_client=False)
                 self.client_stream_ids[client_stream_id] = stream_layer
                 if server_stream_id is not None:
-                    stream_layer.context.server.state = get_stream_connection_state(server_stream_id, is_client=True)
+                    stream_layer.server.state = get_stream_connection_state(server_stream_id, is_client=True)
                     self.server_stream_ids[server_stream_id] = stream_layer
-                self.connections[stream_layer.context.client] = stream_layer
-                self.connections[stream_layer.context.server] = stream_layer
+                self.connections[stream_layer.client] = stream_layer
+                self.connections[stream_layer.server] = stream_layer
                 yield from self.event_to_child(stream_layer, events.Start())
 
-            # get the target connection and ensure it is managed
-            conn = stream_layer.context.client if from_client else stream_layer.context.server
-            assert conn in self.connections
-
             # forward the data and close events
+            conn = stream_layer.client if from_client else stream_layer.server
             if isinstance(event, QuicStreamDataReceived):
                 yield from self.event_to_child(stream_layer, events.DataReceived(conn, event.data))
                 if event.end_stream:
@@ -464,14 +464,16 @@ class RawQuicLayer(layer.Layer):
                 or event.connection is self.context.server
             )
         ):
-            # always for to the datagram layer
+            from_client = event.connection is self.context.client
+
+            # always forward to the datagram layer
             yield from self.event_to_child(self.datagram_layer, event)
 
             # forward to either the client or server connection of stream layers
             for conn, child_layer in self.connections.items():
                 if (
                     isinstance(child_layer, QuicStreamLayer)
-                    and (conn is child_layer.context.client) == (event.connection is self.context.client)
+                    and ((conn is child_layer.client) if from_client else (conn is child_layer.server))
                 ):
                     conn.state &= ~connection.ConnectionState.CAN_WRITE
                     yield from self.close_stream_layer(child_layer, conn)
@@ -498,21 +500,25 @@ class RawQuicLayer(layer.Layer):
             if (
                 isinstance(child_layer, QuicStreamLayer)
                 and isinstance(command, commands.ConnectionCommand)
-                and command.connection in self.connections
+                and (
+                    command.connection is child_layer.client
+                    or command.connection is child_layer.server
+                )
             ):
                 # get the target connection and stream ID
-                from_client = command.connection is child_layer.context.client
+                from_client = command.connection is child_layer.client
                 conn = self.context.client if from_client else self.context.server
                 stream_id = child_layer.client_stream_id if from_client else child_layer.server_stream_id
-                assert stream_id is not None
 
                 # write data and check CloseConnection wasn't called before
                 if isinstance(command, commands.SendData):
+                    assert stream_id is not None
                     assert conn.state & connection.ConnectionState.CAN_WRITE
                     yield SendQuicStreamData(conn, stream_id, command.data)
 
                 # send a FIN and optionally also a STOP frame
                 elif isinstance(command, commands.CloseConnection):
+                    assert stream_id is not None
                     if conn.state & connection.ConnectionState.CAN_WRITE:
                         conn.state &= ~connection.ConnectionState.CAN_WRITE
                         yield SendQuicStreamData(conn, stream_id, b"", end_stream=True)
@@ -523,11 +529,12 @@ class RawQuicLayer(layer.Layer):
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):
                     assert not from_client
-                    assert child_layer.server_stream_id is None
-                    child_layer.context.server.timestamp_start = time.time()
-                    child_layer.server_stream_id = cast(int, (yield OpenQuicStream(conn)))
-                    child_layer.context.server.state = connection.ConnectionState.OPEN
-                    self.server_stream_ids[child_layer.server_stream_id] = child_layer
+                    assert stream_id is None
+                    child_layer.server.timestamp_start = time.time()
+                    stream_id = cast(int, (yield OpenQuicStream(conn)))
+                    child_layer.server_stream_id = stream_id
+                    child_layer.server.state = get_stream_connection_state(stream_id, is_client=True)
+                    self.server_stream_ids[stream_id] = child_layer
                     yield from self.event_to_child(child_layer, events.OpenConnectionCompleted(command, None))
 
                 else:
@@ -537,6 +544,8 @@ class RawQuicLayer(layer.Layer):
             else:
                 if command.blocking or isinstance(command, commands.RequestWakeup):
                     self.command_sources[command] = child_layer
+                if isinstance(command, commands.OpenConnection):
+                    self.connections[command.connection] = child_layer
                 yield command
 
 
