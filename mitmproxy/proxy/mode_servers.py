@@ -12,6 +12,10 @@ Example:
 from __future__ import annotations
 
 import asyncio
+import json
+import textwrap
+from pathlib import Path
+
 import errno
 import os
 import socket
@@ -25,7 +29,7 @@ import mitmproxy_wireguard as wg
 from mitmproxy import ctx, flow, log, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
-from mitmproxy.net import udp
+from mitmproxy.net import local_ip, udp
 from mitmproxy.proxy import commands, layers, mode_specs, server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -269,6 +273,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     _listen_addrs: tuple[Address, ...] = tuple()
     _wireguard_cfg: wg.Configuration | None = None
 
+    client_key: str | None
+    mitmproxy_key: str | None
+
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
 
@@ -281,42 +288,29 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
 
-        if self.mode.wireguard_cfg_path is not None:
-            conf_path = os.path.abspath(os.path.expanduser(self.mode.wireguard_cfg_path))
+        if self.mode.data:
+            conf = Path(self.mode.data).expanduser()
         else:
-            conf_path = os.path.abspath(os.path.expanduser("~/.mitmproxy/mitmproxy_wireguard.json"))
-
-        peer_num = self.mode.wireguard_peer_num or 1
-
-        if self.mode.wireguard_cfg_gen is True:
-            # unconditionally generate new configuration files
-            self._wireguard_cfg = wg.Configuration.generate(port, peer_num)
-            with open(conf_path, "w") as file:
-                file.write(self._wireguard_cfg.to_json())
-
-        elif self.mode.wireguard_cfg_gen is False:
-            if os.path.exists(conf_path):
-                # attempt to load configuration files if they exist
-                with open(conf_path) as file:
-                    self._wireguard_cfg = wg.Configuration.from_json(file.read())
-            else:
-                # otherwise raise an error
-                raise FileNotFoundError("No WireGuard configuration present at the specified path.")
-
-        else:  # None
-            if os.path.exists(conf_path):
-                # attempt to load configuration files if they exist
-                with open(conf_path) as file:
-                    self._wireguard_cfg = wg.Configuration.from_json(file.read())
-            else:
-                # otherwise generate new configuration files with default settings
-                self._wireguard_cfg = wg.Configuration.generate(port, peer_num)
-                with open(conf_path, "w") as file:
-                    file.write(self._wireguard_cfg.to_json())
+            conf = Path(ctx.options.confdir).expanduser() / "wireguard.conf"
 
         try:
+            if not conf.exists():
+                conf.write_text(json.dumps({
+                    "client_key": wg.genkey(),
+                    "mitmproxy_key": wg.genkey(),
+                }, indent=4))
+
+            c = json.loads(conf.read_text())
+            self.client_key = c["client_key"]
+            self.mitmproxy_key = c["mitmproxy_key"]
+
             self._server = await wg.start_server(
-                host, self._wireguard_cfg, self.handle_tcp_connection, self.handle_udp_datagram
+                host,
+                port,
+                self.mitmproxy_key,
+                [wg.pubkey(self.client_key)],
+                self.handle_tcp_connection,
+                self.handle_udp_datagram,
             )
             self._listen_addrs = (self._server.getsockname(), )
         except Exception as e:
@@ -328,6 +322,30 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
         ctx.log.info(f"{self.mode.description} listening at {addrs}.")
+        ctx.log.info(self.client_conf())
+
+    def client_conf(self) -> str:
+        host = local_ip.get_local_ip() or local_ip.get_local_ip6()
+        port = self.mode.listen_port(ctx.options.listen_port)
+        return textwrap.dedent(f"""
+            ------------------------------------------------------------
+            [Interface]
+            PrivateKey = {self.client_key}
+            Address = 10.0.0.1/32
+
+            [Peer]
+            PublicKey = {wg.pubkey(self.mitmproxy_key)}
+            AllowedIPs = 0.0.0.0/0
+            Endpoint = {host}:{port}
+            ------------------------------------------------------------
+            """
+        ).strip()
+
+    def to_json(self) -> dict:
+        return {
+            "wireguard_conf": self.client_conf(),
+            **super().to_json()
+        }
 
     async def stop(self) -> None:
         assert self._server is not None
