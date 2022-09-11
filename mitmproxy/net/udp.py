@@ -80,7 +80,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._closed.wait()
 
 
-class WireGuardDatagramTransport(asyncio.DatagramTransport):  # pragma: no cover
+class WireGuardDatagramTransport(asyncio.DatagramTransport):
     def __init__(self, server: wg.Server, local_addr: Address, remote_addr: Address):
         self._server = server
         self._local_addr: Address = local_addr

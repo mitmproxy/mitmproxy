@@ -264,7 +264,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             await handler.handle_client()
 
 
-class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):  # pragma: no cover
+class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     _server: wg.Server | None = None
     _listen_addrs: tuple[Address, ...] = tuple()
     _wireguard_cfg: wg.Configuration | None = None
