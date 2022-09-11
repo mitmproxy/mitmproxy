@@ -45,8 +45,8 @@ class TTunnelLayer(tunnel.TunnelLayer):
         else:
             return False, "handshake error"
 
-    def send_data(self, command: SendData) -> layer.CommandGenerator[None]:
-        yield SendData(self.tunnel_connection, b"tunneled-" + command.data)
+    def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
+        yield SendData(self.tunnel_connection, b"tunneled-" + data)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
         yield from self.event_to_child(

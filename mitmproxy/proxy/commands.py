@@ -74,7 +74,7 @@ class SendData(ConnectionCommand):
 
     def __repr__(self):
         target = str(self.connection).split("(", 1)[0].lower()
-        return f"{self.__class__.__name__}({target}, {self.data})"
+        return f"SendData({target}, {self.data})"
 
 
 class OpenConnection(ConnectionCommand):
