@@ -82,7 +82,7 @@ setup(
         "hyperframe>=6.0,<7",
         "kaitaistruct>=0.10,<0.11",
         "ldap3>=2.8,<2.10",
-        "mitmproxy_wireguard==0.1.0a11",
+        "mitmproxy_wireguard==0.1.1",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<5",
