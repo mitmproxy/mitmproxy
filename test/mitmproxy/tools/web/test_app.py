@@ -208,7 +208,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert b"" == resp.body
 
     def test_flows_dump_filter_error(self):
-        resp = self.fetch("/flows/dump?filter=!")
+        resp = self.fetch("/flows/dump?filter=[")
         assert resp.code == 400
 
     def test_clear(self):

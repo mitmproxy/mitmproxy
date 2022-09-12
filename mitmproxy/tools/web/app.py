@@ -312,7 +312,7 @@ class DumpFlows(RequestHandler):
         try:
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except ValueError:  # thrown py flowfilter.parse if filter is invalid
-            raise APIError(400, f"Invalid filter argument")
+            raise APIError(400, f"Invalid filter argument / regex")
         except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
             match = bool  # returns always true
 
