@@ -29,6 +29,8 @@
   ([#5548](https://github.com/mitmproxy/mitmproxy/pull/5548), @sanlengjingvv)
 * Fix a mitmweb crash when scrolling down the flow list.
   ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
+* Add HTTP/3 binary frame content view.
+  ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
