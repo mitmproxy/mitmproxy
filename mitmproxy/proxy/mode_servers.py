@@ -12,15 +12,15 @@ Example:
 from __future__ import annotations
 
 import asyncio
-import json
-import textwrap
-from pathlib import Path
-
 import errno
+import json
 import socket
+import textwrap
 import typing
+
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
+from pathlib import Path
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
 import mitmproxy_wireguard as wg
@@ -270,10 +270,27 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     _server: wg.Server | None = None
     _listen_addrs: tuple[Address, ...] = tuple()
-    _wireguard_cfg: wg.Configuration | None = None
 
-    client_key: str | None
-    mitmproxy_key: str | None
+    server_key: str
+    client_key: str
+
+    def __init__(self, mode: mode_specs.WireGuardMode, manager: ServerManager):
+        super().__init__(mode, manager)
+
+        if self.mode.data:
+            conf_path = Path(self.mode.data).expanduser()
+        else:
+            conf_path = Path(ctx.options.confdir).expanduser() / "wireguard.conf"
+
+        if not conf_path.exists():
+            conf_path.write_text(json.dumps({
+                "server_key": wg.genkey(),
+                "client_key": wg.genkey(),
+            }, indent=4))
+
+        c = json.loads(conf_path.read_text())
+        self.server_key = c["server_key"]
+        self.client_key = c["client_key"]
 
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
@@ -287,26 +304,11 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
 
-        if self.mode.data:
-            conf = Path(self.mode.data).expanduser()
-        else:
-            conf = Path(ctx.options.confdir).expanduser() / "wireguard.conf"
-
         try:
-            if not conf.exists():
-                conf.write_text(json.dumps({
-                    "client_key": wg.genkey(),
-                    "mitmproxy_key": wg.genkey(),
-                }, indent=4))
-
-            c = json.loads(conf.read_text())
-            self.client_key = c["client_key"]
-            self.mitmproxy_key = c["mitmproxy_key"]
-
             self._server = await wg.start_server(
                 host,
                 port,
-                self.mitmproxy_key,
+                self.server_key,
                 [wg.pubkey(self.client_key)],
                 self.handle_tcp_connection,
                 self.handle_udp_datagram,
@@ -333,7 +335,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             Address = 10.0.0.1/32
 
             [Peer]
-            PublicKey = {wg.pubkey(self.mitmproxy_key)}
+            PublicKey = {wg.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
             ------------------------------------------------------------
