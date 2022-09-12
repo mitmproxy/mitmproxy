@@ -19,7 +19,6 @@ from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
     ClientQuicLayer, QuicStreamDataReceived,
     QuicStreamReset,
-    QuicTransmit,
     ServerQuicLayer, error_code_to_str,
 )
 from mitmproxy.proxy.utils import expect

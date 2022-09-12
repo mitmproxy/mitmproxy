@@ -384,6 +384,7 @@ class RawQuicLayer(layer.Layer):
             context.server: self.datagram_layer,
         }
         self.command_sources = {}
+        self.ignore = ignore
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         # we treat the datagram-layer as child layer, so forward Start
@@ -765,7 +766,7 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(event, quic_events.DatagramFrameReceived):
                 yield from self.event_to_child(events.DataReceived(self.conn, event.data))
             elif isinstance(event, quic_events.StreamDataReceived):
-                yield from self.event_to_child(QuicStreamDataReceived(self.conn, event.data, event.stream_id, event.end_stream))
+                yield from self.event_to_child(QuicStreamDataReceived(self.conn, data=event.data, stream_id=event.stream_id, end_stream=event.end_stream))
             elif isinstance(event, quic_events.StreamReset):
                 yield from self.event_to_child(QuicStreamReset(self.conn, event.stream_id, event.error_code))
             elif isinstance(event, (
