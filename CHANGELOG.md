@@ -18,6 +18,7 @@
 * DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
 * Added Magisk module generation for Android onboarding (@jorants).
 * Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. (@jorants)
+* "Save filtered" button in mitmweb. ([#5531](https://github.com/mitmproxy/mitmproxy/pull/5531), @rnbwdsh, @mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
