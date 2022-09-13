@@ -59,7 +59,6 @@ def test_sslkeylogfile(tdata, monkeypatch):
     read, write = client, server
     while True:
         try:
-            print(read)
             read.do_handshake()
         except SSL.WantReadError:
             write.bio_write(read.bio_read(2 ** 16))
