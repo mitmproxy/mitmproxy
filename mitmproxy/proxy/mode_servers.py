@@ -274,24 +274,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     server_key: str
     client_key: str
 
-    def __init__(self, mode: mode_specs.WireGuardMode, manager: ServerManager):
-        super().__init__(mode, manager)
-
-        if self.mode.data:
-            conf_path = Path(self.mode.data).expanduser()
-        else:
-            conf_path = Path(ctx.options.confdir).expanduser() / "wireguard.conf"
-
-        if not conf_path.exists():
-            conf_path.write_text(json.dumps({
-                "server_key": wg.genkey(),
-                "client_key": wg.genkey(),
-            }, indent=4))
-
-        c = json.loads(conf_path.read_text())
-        self.server_key = c["server_key"]
-        self.client_key = c["client_key"]
-
     def make_top_layer(self, context: Context) -> Layer:
         return layers.modes.TransparentProxy(context)
 
@@ -304,12 +286,31 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
 
+        if self.mode.data:
+            conf_path = Path(self.mode.data).expanduser()
+        else:
+            conf_path = Path(ctx.options.confdir).expanduser() / "wireguard.conf"
+
         try:
+            if not conf_path.exists():
+                conf_path.write_text(json.dumps({
+                    "server_key": wg.genkey(),
+                    "client_key": wg.genkey(),
+                }, indent=4))
+
+            c = json.loads(conf_path.read_text())
+            self.server_key = c["server_key"]
+            self.client_key = c["client_key"]
+
+            # error early on invalid keys
+            p = wg.pubkey(self.client_key)
+            _ = wg.pubkey(self.server_key)
+
             self._server = await wg.start_server(
                 host,
                 port,
                 self.server_key,
-                [wg.pubkey(self.client_key)],
+                [p],
                 self.handle_tcp_connection,
                 self.handle_udp_datagram,
             )
@@ -325,7 +326,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         ctx.log.info(f"{self.mode.description} listening at {addrs}.")
         ctx.log.info(self.client_conf())
 
-    def client_conf(self) -> str:
+    def client_conf(self) -> str | None:
+        if not self._listen_addrs:
+            return None
         host = local_ip.get_local_ip() or local_ip.get_local_ip6()
         port = self.mode.listen_port(ctx.options.listen_port)
         return textwrap.dedent(f"""
