@@ -82,7 +82,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
 
 class WireGuardDatagramTransport(asyncio.DatagramTransport):
     def __init__(self, server: wg.Server, local_addr: Address, remote_addr: Address):
-        self._server = server
+        self._server: wg.Server = server
         self._local_addr: Address = local_addr
         self._remote_addr: Address = remote_addr
         self._protocol: DrainableDatagramProtocol | None = None
@@ -91,12 +91,17 @@ class WireGuardDatagramTransport(asyncio.DatagramTransport):
     def sendto(self, data, addr=None):
         self._server.send_datagram(data, self._local_addr, addr or self._remote_addr)
 
-    def set_protocol(self, protocol):
-        assert isinstance(protocol, DrainableDatagramProtocol)
-        self._protocol = cast(DrainableDatagramProtocol, protocol)
+    def get_extra_info(self, name: str, default: Any = None) -> Any:
+        if name == "sockname":
+            return self._server.getsockname()
+        else:
+            raise NotImplementedError
 
     def get_protocol(self):
-        return self._protocol
+        return self
+
+    async def drain(self) -> None:
+        pass
 
 
 DatagramTransport = Union[asyncio.DatagramTransport, WireGuardDatagramTransport]
@@ -201,7 +206,7 @@ class DatagramWriter:
         self._transport = transport
         self._remote_addr = remote_addr
         proto = transport.get_protocol()
-        assert isinstance(proto, DrainableDatagramProtocol)
+        assert isinstance(proto, (DrainableDatagramProtocol, WireGuardDatagramTransport))
         self._reader = reader
         self._closed = asyncio.Event() if reader is not None else None
 

@@ -392,6 +392,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
+            handler.layer.context.server.address = local_addr
 
             # pre-register here - we may get datagrams before the task is executed.
             self.manager.connections[connection_id] = handler
