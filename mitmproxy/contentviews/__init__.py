@@ -35,6 +35,7 @@ from . import (
     msgpack,
     graphql,
     grpc,
+    mqtt,
 )
 
 try:
@@ -254,6 +255,7 @@ add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
+add(mqtt.ViewMQTT())
 if http3 is not None:
     add(http3.ViewHttp3())
 
