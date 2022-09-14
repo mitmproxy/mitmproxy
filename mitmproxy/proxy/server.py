@@ -129,7 +129,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
-            if e := handler.exception():
+            if not handler.cancelled() and (e := handler.exception()):
                 self.log(f"mitmproxy has crashed!\n{traceback.format_exception(e)}", level="error")
 
         watch.cancel()
