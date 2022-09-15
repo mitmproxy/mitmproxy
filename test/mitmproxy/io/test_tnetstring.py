@@ -87,7 +87,8 @@ class Test_Format(unittest.TestCase):
             self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
 
     def test_roundtrip_big_integer(self):
-        i1 = math.factorial(30000)
+        # Recent Python versions do not like ints above 4300 digits, https://github.com/python/cpython/issues/95778
+        i1 = math.factorial(1557)
         s = tnetstring.dumps(i1)
         i2 = tnetstring.loads(s)
         self.assertEqual(i1, i2)
