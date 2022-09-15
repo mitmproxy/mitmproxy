@@ -1,10 +1,9 @@
-from hypothesis import given
-from hypothesis.strategies import binary
-
 from mitmproxy.contentviews import mqtt
 from . import full_eval
 
-@given(binary())
-def test_view_mqtt_doesnt_crash(data):
+def test_view_mqtt_pingreq():
     v = full_eval(mqtt.ViewMQTT())
-    v(data)
+    data = b"\xC0\x00" # PINGREQ
+    content_type, output = v(data)
+    assert content_type == "MQTT"
+    assert output == [[('text', '[PINGREQ]')]]
