@@ -1,12 +1,7 @@
-import json
-from typing import Any, Optional
+from typing import Optional
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import parse_json, PARSE_ERROR
-
 from mitmproxy.utils import strutils
-from mitmproxy import ctx
-from mitmproxy import tcp
 
 import struct
 
