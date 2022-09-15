@@ -25,18 +25,23 @@ def _test_view_mqtt_unsupported(data, type):
 
 
 def test_view_mqtt_CONNECT():
-    data = b"""\x10\xba\x01\x00\x04MQTT\x04\x06\x00\x1e\x00\x1156:6F:5E:6A:01:05\x00-xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out\x00l{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}"""
+    data = b"""\x10\xba\x01\x00\x04MQTT\x04\x06\x00\x1e\x00\x1156:6F:5E:6A:01:05\x00-""" \
+        b"""xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out""" \
+        b"""\x00l{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}"""
     expected_texts = ["[CONNECT]", "",
                       "Client Id: 56:6F:5E:6A:01:05",
                       "Will Topic: xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out",
-                      """Will Message: {"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}""",
+                      """Will Message: {"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","""
+                      """"messageId":"disconnected","type":"event"}}""",
                       "User Name: None", "Password: None"]
     _test_view_mqtt_multiline(data, expected_texts)
 
 
 def test_view_mqtt_PUBLISH():
-    data = b"""\x32\x9a\x01\x00\x2dxxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out\x00\x04{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"connected","type":"event"}}"""
-    expected_text = """[PUBLISH] '{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"connected","type":"event"}}' to topic 'xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out'"""
+    data = b"""\x32\x9a\x01\x00\x2dxxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out\x00\x04""" \
+        b"""{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"connected","type":"event"}}"""
+    expected_text = """[PUBLISH] '{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05",""" \
+        """"messageId":"connected","type":"event"}}' to topic 'xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out'"""
     _test_view_mqtt(data, expected_text)
 
 
