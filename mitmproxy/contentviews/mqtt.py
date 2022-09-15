@@ -11,6 +11,8 @@ from mitmproxy import tcp
 import struct
 
 # from https://github.com/nikitastupin/mitmproxy-mqtt-script
+
+
 class MQTTControlPacket:
     # Packet types
     (
@@ -261,7 +263,7 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get('Password', b'None'))}
         offset = len(self._packet) - self.remaining_length
         self.packet_identifier = self._packet[offset : offset + 2]
 
- 
+
 class ViewMQTT(base.View):
     name = "MQTT"
 
