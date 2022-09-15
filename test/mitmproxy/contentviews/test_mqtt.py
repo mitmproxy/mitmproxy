@@ -62,4 +62,3 @@ def test_view_mqtt__UNSUBSCRIBE():
 def test_view_mqtt_PING():
     _test_view_mqtt(b"\xC0\x00", '[PINGREQ]')
     _test_view_mqtt(b"\xD0\x00", '[PINGRESP]')
-
