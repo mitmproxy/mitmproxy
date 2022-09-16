@@ -1,13 +1,18 @@
 import asyncio
+import pathlib
+import platform as pyplatform
+import subprocess
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
+import mitmproxy_wireguard as wg
 
 from mitmproxy import platform
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.connection import Address
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, WireGuardServerInstance
 from mitmproxy.test import taddons
 
 
@@ -103,6 +108,52 @@ async def test_transparent(failure, monkeypatch):
 
         await inst.stop()
         assert await tctx.master.await_log("stopped transparent proxy")
+
+
+async def test_wireguard(monkeypatch):
+    manager = MagicMock()
+
+    async def echo_tcp(stream: wg.TcpStream):
+        data = await stream.read(1000)
+        stream.write(data)
+        await stream.drain()
+        stream.close()
+
+    def echo_udp(self: WireGuardServerInstance, data: bytes, src_addr: Address, dst_addr: Address):
+        self._server.send_datagram(data, dst_addr, src_addr)
+
+    monkeypatch.setattr(WireGuardServerInstance, "handle_tcp_connection", echo_tcp)
+    monkeypatch.setattr(WireGuardServerInstance, "handle_udp_datagram", echo_udp)
+
+    # all CI targets are x86_64
+    if system := pyplatform.system() == "Linux":
+        test_client_name = "linux-x86_64"
+    elif system == "Darwin":
+        test_client_name = "macos-x86_64"
+    elif system == "Windows":
+        test_client_name = "windows-x86_64.exe"
+    else:
+        return
+
+    test_client_path = pathlib.Path(".") / "test" / "wg-test-client" / test_client_name
+
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.connection_strategy = "lazy"
+        inst = ServerInstance.make("wireguard:test/wg-test-client/test.conf", manager)
+
+        await inst.start()
+        await tctx.master.await_log("WireGuard server listening")
+
+        _, port = inst.listen_addrs[0]
+        ret = subprocess.run([test_client_path, str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        try:
+            ret.check_returncode()
+        except subprocess.CalledProcessError:
+            raise
+        finally:
+            await inst.stop()
+            assert await tctx.master.await_log("Stopped WireGuard server")
 
 
 async def test_tcp_start_error():
