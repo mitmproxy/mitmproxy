@@ -85,7 +85,7 @@ class DNSLayer(layer.Layer):
             try:
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
-                yield commands.Log(f"{event.connection} sent an invalid message: {e}")
+                self.log(f"{event.connection} sent an invalid message: {e}")
             else:
                 try:
                     flow = self.flows[msg.id]

@@ -284,7 +284,7 @@ class Http1Server(Http1Connection):
                             RequestProtocolError(self.stream_id, str(e), 400)
                         )
                     else:
-                        yield commands.Log(
+                        self.log(
                             f"{human.format_address(self.conn.peername)}: {e}"
                         )
                     self.state = self.done
@@ -302,7 +302,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             buf = bytes(self.buf)
             if buf.strip():
-                yield commands.Log(
+                self.log(
                     f"Client closed connection before completing request headers: {buf!r}"
                 )
             yield commands.CloseConnection(self.conn)
@@ -381,7 +381,7 @@ class Http1Client(Http1Connection):
         if isinstance(event, events.DataReceived):
             if not self.request:
                 # we just received some data for an unknown request.
-                yield commands.Log(f"Unexpected data from server: {bytes(self.buf)!r}")
+                self.log(f"Unexpected data from server: {bytes(self.buf)!r}")
                 yield commands.CloseConnection(self.conn)
                 return
             assert self.stream_id

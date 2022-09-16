@@ -134,7 +134,7 @@ class Socks5Proxy(DestinationKnown):
                 + b"\x00\x01\x00\x00\x00\x00\x00\x00",
             )
         yield commands.CloseConnection(self.context.client)
-        yield commands.Log(message)
+        self.log(message)
         self._handle_event = self.done
 
     @expect(events.Start, events.DataReceived, events.ConnectionClosed)
@@ -146,7 +146,7 @@ class Socks5Proxy(DestinationKnown):
             yield from self.state()
         elif isinstance(event, events.ConnectionClosed):
             if self.buf:
-                yield commands.Log(
+                self.log(
                     f"Client closed connection before completing SOCKS5 handshake: {self.buf!r}"
                 )
             yield commands.CloseConnection(event.connection)

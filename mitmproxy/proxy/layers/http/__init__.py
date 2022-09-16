@@ -1,5 +1,7 @@
 import collections
 import enum
+import logging
+
 import time
 from dataclasses import dataclass
 from functools import cached_property
@@ -268,7 +270,7 @@ class HttpStream(layer.Layer):
             RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
             self.context.server,
         )
-        yield commands.Log(f"Streaming request to {self.flow.request.host}.")
+        self.log(f"Streaming request to {self.flow.request.host}.")
         self.client_state = self.state_stream_request_body
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
@@ -388,7 +390,7 @@ class HttpStream(layer.Layer):
             ResponseHeaders(self.stream_id, self.flow.response, end_stream=False),
             self.context.client,
         )
-        yield commands.Log(f"Streaming response from {self.flow.request.host}.")
+        self.log(f"Streaming response from {self.flow.request.host}.")
         self.server_state = self.state_stream_response_body
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
@@ -490,16 +492,16 @@ class HttpStream(layer.Layer):
             elif self.context.options.rawtcp:
                 self.child_layer = tcp.TCPLayer(self.context)
             else:
-                yield commands.Log(
+                self.log(
                     f"Sent HTTP 101 response, but no protocol is enabled to upgrade to.",
-                    "warn",
+                    logging.WARNING,
                 )
                 yield commands.CloseConnection(self.context.client)
                 self.client_state = self.server_state = self.state_errored
                 return
             if self.debug:
-                yield commands.Log(
-                    f"{self.debug}[http] upgrading to {self.child_layer}", "debug"
+                self.log(
+                    f"{self.debug}[http] upgrading to {self.child_layer}", logging.DEBUG
                 )
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
