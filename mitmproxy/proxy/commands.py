@@ -6,7 +6,6 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
-import warnings
 from typing import Literal, Union, TYPE_CHECKING
 
 import mitmproxy.hooks
@@ -31,7 +30,7 @@ class Command:
     Example:
 
         reply = yield Hook("requestheaders", flow)  # blocking command
-        yield RequestWakeup(1000)            # non-blocking
+        yield Log("hello world", "info")            # non-blocking
     """
 
     def __repr__(self):
@@ -129,10 +128,6 @@ class Log(Command):
         message: str,
         level: Literal["error", "warn", "info", "alert", "debug"] = "info",
     ):
-        warnings.warn(
-            "The Log command is deprecated. Use Layer.log instead.",
-            DeprecationWarning, stacklevel=2
-        )
         self.message = message
         self.level = level
 

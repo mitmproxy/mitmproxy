@@ -2,7 +2,6 @@
 Base class for protocol layers.
 """
 import collections
-import logging
 import textwrap
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -68,8 +67,6 @@ class Layer:
     Different amounts of whitespace for different layers work well.
     """
 
-    logger = logging.getLogger(__name__)
-
     def __init__(self, context: Context) -> None:
         self.context = context
         self.context.layers.append(self)
@@ -79,12 +76,6 @@ class Layer:
         show_debug_output = getattr(context.options, "proxy_debug", False)
         if show_debug_output:  # pragma: no cover
             self.debug = "  " * len(context.layers)
-
-    def __init_subclass__(cls, **kwargs):
-        cls.logger = logging.getLogger(cls.__module__)
-
-    def log(self, message: str, level: int = logging.INFO) -> None:
-        self.logger.log(msg=message, level=level, extra={"client": self.context.client.peername})
 
     def __repr__(self):
         statefun = getattr(self, "state", self._handle_event)
@@ -96,7 +87,7 @@ class Layer:
             state = f"state: {state}"
         return f"{type(self).__name__}({state})"
 
-    def __debug(self, message) -> None:
+    def __debug(self, message):
         """yield a Log command indicating what message is passing through this layer."""
         if len(message) > 512:
             message = message[:512] + "…"
@@ -106,7 +97,7 @@ class Layer:
                 message = message[:256] + "…"
         else:
             Layer.__last_debug_message = message
-        self.log(textwrap.indent(message, self.debug), level=logging.DEBUG)
+        return commands.Log(textwrap.indent(message, self.debug), "debug")
 
     @property
     def stack_pos(self) -> str:
@@ -131,7 +122,7 @@ class Layer:
                 and event.command is self._paused.command
             )
             if self.debug is not None:
-                self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
+                yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
             if pause_finished:
                 assert isinstance(event, events.CommandCompleted)
                 yield from self.__continue(event)
@@ -139,7 +130,7 @@ class Layer:
                 self._paused_event_queue.append(event)
         else:
             if self.debug is not None:
-                self.__debug(f">> {event}")
+                yield self.__debug(f">> {event}")
             command_generator = self._handle_event(event)
             send = None
 
@@ -155,7 +146,8 @@ class Layer:
 
             while True:
                 if self.debug is not None:
-                    self.__debug(f"<< {command}")
+                    if not isinstance(command, commands.Log):
+                        yield self.__debug(f"<< {command}")
                 if command.blocking is True:
                     # We only want this layer to block, the outer layers should not block.
                     # For example, take an HTTP/2 connection: If we intercept one particular request,
@@ -193,7 +185,8 @@ class Layer:
 
         while True:
             if self.debug is not None:
-                self.__debug(f"<< {command}")
+                if not isinstance(command, commands.Log):
+                    yield self.__debug(f"<< {command}")
             if command.blocking is True:
                 # We only want this layer to block, the outer layers should not block.
                 # For example, take an HTTP/2 connection: If we intercept one particular request,
@@ -228,7 +221,7 @@ class Layer:
         while not self._paused and self._paused_event_queue:
             ev = self._paused_event_queue.popleft()
             if self.debug is not None:
-                self.__debug(f"!> {ev}")
+                yield self.__debug(f"!> {ev}")
             command_generator = self._handle_event(ev)
             yield from self.__process(command_generator)
 
@@ -291,7 +284,7 @@ class NextLayer(Layer):
         # Has an addon decided on the next layer yet?
         if self.layer:
             if self.debug:
-                self.log(f"{self.debug}[nextlayer] {self.layer!r}", logging.DEBUG)
+                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", "debug")
             for e in self.events:
                 yield from self.layer.handle_event(e)
             self.events.clear()

@@ -1,5 +1,3 @@
-import logging
-
 import time
 from dataclasses import dataclass
 from typing import Iterator
@@ -115,7 +113,7 @@ class WebsocketLayer(layer.Layer):
                     server_deflate.finalize(ext)
                     server_extensions.append(server_deflate)
                 else:
-                    self.log(
+                    yield commands.Log(
                         f"Ignoring unknown WebSocket extension {ext_name!r}."
                     )
 
@@ -193,10 +191,9 @@ class WebsocketLayer(layer.Layer):
                     src_ws.frame_buf.append(b"")
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
-                self.log(
+                yield commands.Log(
                     f"Received WebSocket {ws_event.__class__.__name__.lower()} from {from_str} "
-                    f"(payload: {bytes(ws_event.payload)!r})",
-                    logging.DEBUG,
+                    f"(payload: {bytes(ws_event.payload)!r})"
                 )
                 yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):

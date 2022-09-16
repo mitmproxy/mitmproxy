@@ -1,5 +1,3 @@
-import logging
-
 import time
 from typing import Optional
 
@@ -82,7 +80,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
                 response = http1.read_response_head(response_head)
             except ValueError as e:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
-                self.log(f"{proxyaddr}: {e}")
+                yield commands.Log(f"{proxyaddr}: {e}")
                 return False, f"Error connecting to {proxyaddr}: {e}"
             if 200 <= response.status_code < 300:
                 if self.buf:
@@ -92,7 +90,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             else:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 raw_resp = b"\n".join(response_head)
-                self.log(f"{proxyaddr}: {raw_resp!r}", logging.DEBUG)
+                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", level="debug")
                 return (
                     False,
                     f"Upstream proxy {proxyaddr} refused HTTP CONNECT request: {response.status_code} {response.reason}",

@@ -1,8 +1,6 @@
 import collections
-import logging
-
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from enum import Enum
 from typing import ClassVar, Optional, Union
 
@@ -33,7 +31,7 @@ from . import (
 )
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
-from ...commands import CloseConnection, SendData, RequestWakeup
+from ...commands import CloseConnection, Log, SendData, RequestWakeup
 from ...context import Context
 from ...events import ConnectionClosed, DataReceived, Event, Start, Wakeup
 from ...layer import CommandGenerator
@@ -172,11 +170,11 @@ class Http2Connection(HttpConnection):
                 events = [e]
 
             for h2_event in events:
-                if self.debug is not None:
-                    self.log(f"{self.debug}[h2] {h2_event}", logging.DEBUG)
+                if self.debug:
+                    yield Log(f"{self.debug}[h2] {h2_event}", "debug")
                 if (yield from self.handle_h2_event(h2_event)):
-                    if self.debug is not None:
-                        self.log(f"{self.debug}[h2] done", logging.DEBUG)
+                    if self.debug:
+                        yield Log(f"{self.debug}[h2] done", "debug")
                     return
 
             data_to_send = self.h2_conn.data_to_send()
@@ -255,13 +253,14 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, h2.events.PingAckReceived):
             pass
         elif isinstance(event, h2.events.PushedStreamReceived):
-            self.log(
+            yield Log(
                 "Received HTTP/2 push promise, even though we signalled no support.",
+                "error",
             )
         elif isinstance(event, h2.events.UnknownFrameReceived):
             # https://http2.github.io/http2-spec/#rfc.section.4.1
             # Implementations MUST ignore and discard any frame that has a type that is unknown.
-            self.log(f"Ignoring unknown HTTP/2 frame type: {event.frame.type}")
+            yield Log(f"Ignoring unknown HTTP/2 frame type: {event.frame.type}")
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
         return False
@@ -271,7 +270,7 @@ class Http2Connection(HttpConnection):
         message: str,
         error_code: int = h2.errors.ErrorCodes.PROTOCOL_ERROR,
     ) -> CommandGenerator[None]:
-        self.log(f"{human.format_address(self.conn.peername)}: {message}")
+        yield Log(f"{human.format_address(self.conn.peername)}: {message}")
         self.h2_conn.close_connection(error_code, message.encode())
         yield SendData(self.conn, self.h2_conn.data_to_send())
         yield from self.close_connection(message)
@@ -303,10 +302,12 @@ def normalize_h1_headers(
     return headers
 
 
-def normalize_h2_headers(headers: list[tuple[bytes, bytes]], log_fn: Callable[[str],None]) -> None:
+def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:
     for i in range(len(headers)):
         if not headers[i][0].islower():
-            log_fn(f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2.")
+            yield Log(
+                f"Lowercased {repr(headers[i][0]).lstrip('b')} header as uppercase is not allowed with HTTP/2."
+            )
             headers[i] = (headers[i][0].lower(), headers[i][1])
 
 
@@ -333,7 +334,7 @@ class Http2Server(Http2Connection):
                 ]
                 if event.response.is_http2:
                     if self.context.options.normalize_outbound_headers:
-                        normalize_h2_headers(headers, self.log)
+                        yield from normalize_h2_headers(headers)
                 else:
                     headers = normalize_h1_headers(headers, False)
 
@@ -465,9 +466,9 @@ class Http2Client(Http2Connection):
                 self.h2_conn.ping(b"0" * 8)
                 data = self.h2_conn.data_to_send()
                 if data is not None:
-                    self.log(
+                    yield Log(
                         f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}",
-                        logging.DEBUG,
+                        "debug",
                     )
                     yield SendData(self.conn, data)
             time_until_next_ping = self.context.options.http2_ping_keepalive - (
@@ -493,7 +494,7 @@ class Http2Client(Http2Connection):
             if event.request.is_http2:
                 hdrs = list(event.request.headers.fields)
                 if self.context.options.normalize_outbound_headers:
-                    normalize_h2_headers(hdrs, self.log)
+                    yield from normalize_h2_headers(hdrs)
             else:
                 headers = event.request.headers
                 if not event.request.authority and "host" in headers:
@@ -555,7 +556,7 @@ class Http2Client(Http2Connection):
                 reason = status_codes.RESPONSES.get(status, "")
             except (KeyError, ValueError):
                 reason = ""
-            self.log(f"Swallowing HTTP/2 informational response: {status} {reason}")
+            yield Log(f"Swallowing HTTP/2 informational response: {status} {reason}")
             return False
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(
