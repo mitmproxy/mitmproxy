@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import urllib
 from collections.abc import Hashable, Sequence
 from typing import Any, Optional
@@ -228,7 +229,7 @@ class ServerPlayback:
                 f.response = response
                 f.is_replay = "response"
             elif ctx.options.server_replay_kill_extra:
-                ctx.log.warn(
+                logging.warning(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url
                     )

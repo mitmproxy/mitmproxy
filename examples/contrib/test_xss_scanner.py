@@ -294,22 +294,6 @@ class TestXSSScanner():
         assert sqli_info is None
 
     @pytest.fixture(scope='function')
-    def logger(self, monkeypatch):
-        class Logger():
-            def __init__(self):
-                self.args = []
-
-            def info(self, str):
-                self.args.append(str)
-
-            def error(self, str):
-                self.args.append(str)
-
-        logger = Logger()
-        monkeypatch.setattr("mitmproxy.ctx.log", logger)
-        yield logger
-
-    @pytest.fixture(scope='function')
     def get_request_vuln(self, monkeypatch):
         monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
 

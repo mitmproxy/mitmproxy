@@ -1,3 +1,4 @@
+import logging
 import os.path
 import sys
 from collections.abc import Sequence
@@ -15,6 +16,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy.log import ALERT
 
 
 @lru_cache
@@ -136,7 +138,7 @@ class Save:
                     stream.add(i)
         except OSError as e:
             raise exceptions.CommandError(e) from e
-        ctx.log.alert(f"Saved {len(flows)} flows.")
+        logging.log(ALERT, f"Saved {len(flows)} flows.")
 
     def tcp_start(self, flow: tcp.TCPFlow):
         if self.stream:

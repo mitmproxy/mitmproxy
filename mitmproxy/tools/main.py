@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 import os
 import signal
 import sys
@@ -49,6 +50,8 @@ def run(
     """
 
     async def main() -> T:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("tornado").setLevel(logging.WARNING)
         debug.register_info_dumpers()
 
         opts = options.Options()
@@ -85,7 +88,7 @@ def run(
                 sys.exit(0)
             if extra:
                 if args.filter_args:
-                    master.log.info(
+                    logging.info(
                         f"Only processing flows that match \"{' & '.join(args.filter_args)}\""
                     )
                 opts.update(**extra(args))

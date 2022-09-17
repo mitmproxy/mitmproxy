@@ -1,8 +1,10 @@
-from mitmproxy import log
+import asyncio
+import logging
+
 from mitmproxy.addons import eventstore
 
 
-def test_simple():
+async def test_simple():
     store = eventstore.EventStore()
     assert not store.data
 
@@ -24,7 +26,8 @@ def test_simple():
     assert not sig_refresh_called
 
     # test .log()
-    store.add_log(log.LogEntry("test", "info"))
+    logging.error("test")
+    await asyncio.sleep(0)
     assert store.data
 
     assert sig_add_called
@@ -38,18 +41,22 @@ def test_simple():
 
     assert not sig_add_called
     assert sig_refresh_called
+    store.done()
 
 
-def test_max_size():
+async def test_max_size():
     store = eventstore.EventStore(3)
     assert store.size == 3
-    store.add_log(log.LogEntry("foo", "info"))
-    store.add_log(log.LogEntry("bar", "info"))
-    store.add_log(log.LogEntry("baz", "info"))
+    logging.warning("foo")
+    logging.warning("bar")
+    logging.warning("baz")
+    await asyncio.sleep(0)
     assert len(store.data) == 3
-    assert ["foo", "bar", "baz"] == [x.msg for x in store.data]
+    assert "baz" in store.data[-1].msg
 
     # overflow
-    store.add_log(log.LogEntry("boo", "info"))
+    logging.warning("boo")
+    await asyncio.sleep(0)
     assert len(store.data) == 3
-    assert ["bar", "baz", "boo"] == [x.msg for x in store.data]
+    assert "boo" in store.data[-1].msg
+    store.done()

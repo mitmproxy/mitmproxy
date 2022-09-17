@@ -1,5 +1,7 @@
 import asyncio
 import cProfile
+import logging
+
 from mitmproxy import ctx
 
 
@@ -22,7 +24,7 @@ class Benchmark:
         self.resps += 1
 
     async def procs(self):
-        ctx.log.error("starting benchmark")
+        logging.error("starting benchmark")
         backend = await asyncio.create_subprocess_exec("devd", "-q", "-p", "10001", ".")
         traf = await asyncio.create_subprocess_exec(
             "wrk",
@@ -34,8 +36,8 @@ class Benchmark:
         stdout, _ = await traf.communicate()
         with open(ctx.options.benchmark_save_path + ".bench", mode="wb") as f:
             f.write(stdout)
-        ctx.log.error(f"Proxy saw {self.reqs} requests, {self.resps} responses")
-        ctx.log.error(stdout.decode("ascii"))
+        logging.error(f"Proxy saw {self.reqs} requests, {self.resps} responses")
+        logging.error(stdout.decode("ascii"))
         backend.kill()
         ctx.master.shutdown()
 

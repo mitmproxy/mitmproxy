@@ -9,6 +9,8 @@ The very high level overview is as follows:
 import abc
 import asyncio
 import collections
+import logging
+
 import time
 import traceback
 from collections.abc import Awaitable, Callable, MutableMapping
@@ -26,6 +28,9 @@ from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
+
+
+logger = logging.getLogger(__name__)
 
 
 class TimeoutWatchdog:
@@ -138,14 +143,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         await self.handle_hook(server_hooks.ClientDisconnectedHook(self.client))
 
         if self.transports:
-            self.log("closing transports...", "debug")
+            self.log("closing transports...", logging.DEBUG)
             for io in self.transports.values():
                 if io.handler:
                     io.handler.cancel("client disconnected")
             await asyncio.wait(
                 [x.handler for x in self.transports.values() if x.handler]
             )
-            self.log("transports closed!", "debug")
+            self.log("transports closed!", logging.DEBUG)
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
@@ -321,8 +326,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def handle_hook(self, hook: commands.StartHook) -> None:
         pass
 
-    def log(self, message: str, level: str = "info") -> None:
-        print(message)
+    def log(self, message: str, level: int = logging.INFO) -> None:
+        logger.log(
+            level,
+            message,
+            extra={"client": self.client.peername}
+        )
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
@@ -368,7 +377,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     raise RuntimeError(f"Unexpected command: {command}")
         except Exception:
-            self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
+            self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", logging.ERROR)
 
     def close_connection(
         self, connection: Connection, half_close: bool = False
@@ -376,7 +385,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if half_close:
             if not connection.state & ConnectionState.CAN_WRITE:
                 return
-            self.log(f"half-closing {connection}", "debug")
+            self.log(f"half-closing {connection}", logging.DEBUG)
             try:
                 writer = self.transports[connection].writer
                 assert writer
@@ -428,10 +437,6 @@ class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
     async def handle_hook(self, hook: commands.StartHook) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](*hook.args())
-
-    def log(self, message: str, level: str = "info"):
-        if "Hook" not in message:
-            pass  # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":  # pragma: no cover

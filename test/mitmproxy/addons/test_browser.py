@@ -4,29 +4,29 @@ from mitmproxy.addons import browser
 from mitmproxy.test import taddons
 
 
-async def test_browser():
-    with mock.patch("subprocess.Popen") as po, mock.patch("shutil.which") as which:
+def test_browser(caplog):
+    caplog.set_level("INFO")
+    with mock.patch("subprocess.Popen") as po, mock.patch("shutil.which") as which, taddons.context():
         which.return_value = "chrome"
         b = browser.Browser()
-        with taddons.context() as tctx:
-            b.start()
-            assert po.called
+        b.start()
+        assert po.called
 
-            b.start()
-            await tctx.master.await_log("Starting additional browser")
-            assert len(b.browser) == 2
-            b.done()
-            assert not b.browser
+        b.start()
+        assert "Starting additional browser" in caplog.text
+        assert len(b.browser) == 2
+        b.done()
+        assert not b.browser
 
 
-async def test_no_browser():
+async def test_no_browser(caplog):
+    caplog.set_level("INFO")
     with mock.patch("shutil.which") as which:
         which.return_value = False
 
         b = browser.Browser()
-        with taddons.context() as tctx:
-            b.start()
-            await tctx.master.await_log("platform is not supported")
+        b.start()
+        assert "platform is not supported" in caplog.text
 
 
 async def test_get_browser_cmd_executable():

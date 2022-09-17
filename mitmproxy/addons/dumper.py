@@ -1,3 +1,5 @@
+import logging
+
 import itertools
 import shutil
 import sys
@@ -114,7 +116,7 @@ class Dumper:
             ctx.options.dumper_default_contentview, message, flow
         )
         if error:
-            ctx.log.debug(error)
+            logging.debug(error)
 
         if ctx.options.flow_detail == 3:
             lines_to_echo = itertools.islice(lines, 70)

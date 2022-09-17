@@ -1,4 +1,5 @@
-from mitmproxy import ctx
+import logging
+
 from mitmproxy import hooks
 
 
@@ -13,10 +14,9 @@ class Recorder:
 
             def prox(*args, **kwargs):
                 lg = (self.name, attr, args, kwargs)
-                if attr != "add_log":
-                    ctx.log.info(str(lg))
-                    self.call_log.append(lg)
-                    ctx.log.debug(f"{self.name} {attr}")
+                logging.info(str(lg))
+                self.call_log.append(lg)
+                logging.debug(f"{self.name} {attr}")
 
             return prox
         raise AttributeError

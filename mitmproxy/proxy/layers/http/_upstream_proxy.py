@@ -1,3 +1,5 @@
+from logging import DEBUG
+
 import time
 from typing import Optional
 
@@ -90,7 +92,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             else:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 raw_resp = b"\n".join(response_head)
-                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", level="debug")
+                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", DEBUG)
                 return (
                     False,
                     f"Upstream proxy {proxyaddr} refused HTTP CONNECT request: {response.status_code} {response.reason}",

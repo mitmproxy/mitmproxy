@@ -36,7 +36,7 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     imports.discard("builtins")
     if types:
         print(f"from typing import {', '.join(sorted(types))}")
-    print("from mitmproxy import ctx")
+    print("import logging")
     for imp in sorted(imports):
         print(f"import {imp}")
     print()
@@ -58,10 +58,10 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
         print(textwrap.indent(f'"""\n{doc}\n"""', "        "))
         if params:
             print(
-                f'        ctx.log(f"{hook.name}: {" ".join("{" + p.name + "=}" for p in params)}")'
+                f'        logging.info(f"{hook.name}: {" ".join("{" + p.name + "=}" for p in params)}")'
             )
         else:
-            print(f'        ctx.log("{hook.name}")')
+            print(f'        logging.info("{hook.name}")')
     print("")
 
 

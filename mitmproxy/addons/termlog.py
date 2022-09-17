@@ -1,44 +1,56 @@
+import asyncio
+import logging
+from typing import IO
+
 import sys
-from typing import IO, Optional
 
-from mitmproxy import ctx
-from mitmproxy import log
-from mitmproxy.contrib import click as miniclick
+from mitmproxy import ctx, log
 from mitmproxy.utils import vt_codes
-
-LOG_COLORS = {"error": "red", "warn": "yellow", "alert": "magenta"}
 
 
 class TermLog:
     def __init__(
         self,
-        out: Optional[IO[str]] = None,
-        err: Optional[IO[str]] = None,
+        out: IO[str] | None = None
     ):
-        self.out_file: IO[str] = out or sys.stdout
-        self.out_has_vt_codes = vt_codes.ensure_supported(self.out_file)
-        self.err_file: IO[str] = err or sys.stderr
-        self.err_has_vt_codes = vt_codes.ensure_supported(self.err_file)
+        self.logger = TermLogHandler(out)
+        self.logger.install()
 
     def load(self, loader):
         loader.add_option(
-            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogTierOrder
+            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogLevels
         )
+        self.logger.setLevel(logging.INFO)
 
-    def add_log(self, e: log.LogEntry):
-        if log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier(e.level):
-            if e.level == "error":
-                f = self.err_file
-                has_vt_codes = self.err_has_vt_codes
-            else:
-                f = self.out_file
-                has_vt_codes = self.out_has_vt_codes
+    def configure(self, updated):
+        if "termlog_verbosity" in updated:
+            self.logger.setLevel(ctx.options.termlog_verbosity.upper())
 
-            msg = e.msg
-            if has_vt_codes:
-                msg = miniclick.style(
-                    e.msg,
-                    fg=LOG_COLORS.get(e.level),
-                    dim=(e.level == "debug"),
-                )
-            print(msg, file=f)
+    def done(self):
+        t = self._teardown()
+        try:
+            # try to delay teardown a bit.
+            asyncio.create_task(t)
+        except RuntimeError:
+            # no event loop, we're in a test.
+            asyncio.run(t)
+
+    async def _teardown(self):
+        self.logger.uninstall()
+
+
+class TermLogHandler(log.MitmLogHandler):
+    def __init__(
+        self,
+        out: IO[str] | None = None
+    ):
+        super().__init__()
+        self.file: IO[str] = out or sys.stdout
+        self.has_vt_codes = vt_codes.ensure_supported(self.file)
+        self.formatter = log.MitmFormatter(self.has_vt_codes)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        print(
+            self.format(record),
+            file=self.file
+        )

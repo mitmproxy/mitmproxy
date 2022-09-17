@@ -295,17 +295,16 @@ def test_export(tmp_path) -> None:
         (FileNotFoundError, "No such file or directory"),
     ],
 )
-async def test_export_open(exception, log_message, tmpdir):
+async def test_export_open(exception, log_message, tmpdir, caplog):
     f = str(tmpdir.join("path"))
     e = export.Export()
-    with taddons.context() as tctx:
-        with mock.patch("mitmproxy.addons.export.open") as m:
-            m.side_effect = exception(log_message)
-            e.file("raw_request", tflow.tflow(resp=True), f)
-            await tctx.master.await_log(log_message, level="error")
+    with mock.patch("mitmproxy.addons.export.open") as m:
+        m.side_effect = exception(log_message)
+        e.file("raw_request", tflow.tflow(resp=True), f)
+        assert log_message in caplog.text
 
 
-async def test_clip(tmpdir):
+async def test_clip(tmpdir, caplog):
     e = export.Export()
     with taddons.context() as tctx:
         tctx.configure(e)
@@ -335,4 +334,4 @@ async def test_clip(tmpdir):
             )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw_request", tflow.tflow(resp=True))
-            await tctx.master.await_log(log_message, level="error")
+            assert log_message in caplog.text

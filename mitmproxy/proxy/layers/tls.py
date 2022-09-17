@@ -1,7 +1,9 @@
 import struct
+from logging import DEBUG, ERROR, INFO, WARNING
+
 import time
 from dataclasses import dataclass
-from typing import Iterator, Literal, Optional
+from typing import Iterator, Optional
 
 from OpenSSL import SSL
 
@@ -275,7 +277,7 @@ class TLSLayer(tunnel.TunnelLayer):
             yield TlsStartServerHook(tls_start)
         if not tls_start.ssl_conn:
             yield commands.Log(
-                f"No {self.proto_name} context was provided, failing connection.", "error"
+                f"No {self.proto_name} context was provided, failing connection.", ERROR
             )
             yield commands.CloseConnection(self.conn)
             return
@@ -368,7 +370,7 @@ class TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[tls] tls established: {self.conn}", "debug"
+                    f"{self.debug}[tls] tls established: {self.conn}", DEBUG
                 )
             if self.conn == self.context.client:
                 yield TlsEstablishedClientHook(
@@ -410,7 +412,7 @@ class TLSLayer(tunnel.TunnelLayer):
                 # which upon mistrusting a certificate still completes the handshake
                 # and then sends an alert in the next packet. At this point we have unfortunately
                 # already fired out `tls_established_client` hook.
-                yield commands.Log(f"TLS Error: {e}", "warn")
+                yield commands.Log(f"TLS Error: {e}", WARNING)
                 break
         if plaintext:
             yield from self.event_to_child(
@@ -420,7 +422,7 @@ class TLSLayer(tunnel.TunnelLayer):
             self.conn.state &= ~connection.ConnectionState.CAN_READ
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[tls] close_notify {self.conn}", level="debug"
+                    f"{self.debug}[tls] close_notify {self.conn}", DEBUG
                 )
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
@@ -489,7 +491,7 @@ class ServerTLSLayer(TLSLayer):
             yield from super().event_to_child(event)
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
-        yield commands.Log(f"Server TLS handshake failed. {err}", level="warn")
+        yield commands.Log(f"Server TLS handshake failed. {err}", level=WARNING)
         yield from super().on_handshake_error(err)
 
 
@@ -620,7 +622,7 @@ class ClientTLSLayer(TLSLayer):
             dest = self.conn.sni
         else:
             dest = human.format_address(self.context.server.address)
-        level: Literal["warn", "info"] = "warn"
+        level: int = WARNING
         if err.startswith("Cannot parse ClientHello"):
             pass
         elif (
@@ -645,7 +647,7 @@ class ClientTLSLayer(TLSLayer):
                 f"The client disconnected during the handshake. If this happens consistently for {dest}, "
                 f"this may indicate that the client does not trust the proxy's certificate."
             )
-            level = "info"
+            level = INFO
         elif err == "connection closed early":
             pass
         else:
@@ -657,7 +659,7 @@ class ClientTLSLayer(TLSLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
+            yield commands.Log(f"Swallowing {event} as handshake failed.", DEBUG)
 
 
 class MockTLSLayer(TLSLayer):

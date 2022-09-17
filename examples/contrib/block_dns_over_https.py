@@ -4,8 +4,7 @@ This module is for blocking DNS over HTTPS requests.
 It loads a blocklist of IPs and hostnames that are known to serve DNS over HTTPS requests.
 It also uses headers, query params, and paths to detect DoH (and block it)
 """
-
-from mitmproxy import ctx
+import logging
 
 # known DoH providers' hostnames and IP addresses to block
 default_blocklist: dict = {
@@ -147,7 +146,7 @@ def _request_has_doh_looking_path(flow):
     :return: True if path looks like it's DoH, otherwise False
     """
     doh_paths = [
-        '/dns-query',       # used in example in RFC 8484 (see https://tools.ietf.org/html/rfc8484#section-4.1.1)
+        '/dns-query',  # used in example in RFC 8484 (see https://tools.ietf.org/html/rfc8484#section-4.1.1)
     ]
     path = flow.request.path.split('?')[0]
     return path in doh_paths
@@ -180,6 +179,6 @@ def request(flow):
     for check in doh_request_detection_checks:
         is_doh = check(flow)
         if is_doh:
-            ctx.log.warn("[DoH Detection] DNS over HTTPS request detected via method \"%s\"" % check.__name__)
+            logging.warning("[DoH Detection] DNS over HTTPS request detected via method \"%s\"" % check.__name__)
             flow.kill()
             break

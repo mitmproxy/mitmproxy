@@ -360,11 +360,9 @@ class TestTlsConfig:
             assert self.do_handshake(tssl_client, tssl_server)
             assert tssl_server.obj.getpeercert()
 
-    async def test_ca_expired(self, monkeypatch):
+    async def test_ca_expired(self, monkeypatch, caplog):
         monkeypatch.setattr(certs.Cert, "has_expired", lambda self: True)
         ta = tlsconfig.TlsConfig()
-        with taddons.context(ta) as tctx:
+        with taddons.context(ta):
             ta.configure(["confdir"])
-            await tctx.master.await_log(
-                "The mitmproxy certificate authority has expired", "warn"
-            )
+            assert "The mitmproxy certificate authority has expired" in caplog.text

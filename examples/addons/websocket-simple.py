@@ -1,6 +1,8 @@
 """Process individual messages from a WebSocket connection."""
+import logging
 import re
-from mitmproxy import ctx, http
+
+from mitmproxy import http
 
 
 def websocket_message(flow: http.HTTPFlow):
@@ -10,9 +12,9 @@ def websocket_message(flow: http.HTTPFlow):
 
     # was the message sent from the client or server?
     if message.from_client:
-        ctx.log.info(f"Client sent a message: {message.content!r}")
+        logging.info(f"Client sent a message: {message.content!r}")
     else:
-        ctx.log.info(f"Server sent a message: {message.content!r}")
+        logging.info(f"Server sent a message: {message.content!r}")
 
     # manipulate the message content
     message.content = re.sub(rb"^Hello", b"HAPPY", message.content)

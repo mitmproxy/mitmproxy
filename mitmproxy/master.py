@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import traceback
 from typing import Optional
 
@@ -10,6 +11,8 @@ from mitmproxy import log
 from mitmproxy import options
 from . import ctx as mitmproxy_ctx
 from .proxy.mode_specs import ReverseMode
+
+logger = logging.getLogger(__name__)
 
 
 class Master:
@@ -43,12 +46,13 @@ class Master:
         try:
             self.should_exit.clear()
 
-            # Handle scheduled tasks (configure()) first.
-            await asyncio.sleep(0)
+            if ec := self.addons.get("errorcheck"):
+                await ec.shutdown_if_errored()
             if ps := self.addons.get("proxyserver"):
                 await ps.setup_servers()
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
+                ec.finish()
             await self.running()
             try:
                 await self.should_exit.wait()
@@ -75,7 +79,7 @@ class Master:
         try:
             exc: Exception = context["exception"]
         except KeyError:
-            self.log.error(
+            logger.error(
                 f"Unhandled asyncio error: {context}"
                 "\nPlease lodge a bug report at:"
                 + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
@@ -83,7 +87,7 @@ class Master:
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
-            self.log.error(
+            logger.error(
                 "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
                 + "\nPlease lodge a bug report at:"
                 + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"

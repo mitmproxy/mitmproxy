@@ -1,3 +1,5 @@
+from logging import DEBUG
+
 import pytest
 
 from mitmproxy.proxy import commands, events, layer
@@ -42,29 +44,29 @@ class TestLayer:
 
             def state_bar(self, event: events.Event) -> layer.CommandGenerator[None]:
                 assert isinstance(event, events.DataReceived)
-                yield commands.Log("baz", "info")
+                yield commands.Log("baz")
 
         tlayer = TLayer(tctx)
         assert (
             tutils.Playbook(tlayer, hooks=True, logs=True)
-            << commands.Log(" >> Start({})", "debug")
+            << commands.Log(" >> Start({})", DEBUG)
             << commands.Log(
                 " << OpenConnection({'connection': Server({'id': '…rverid', 'address': None, "
                 "'state': <ConnectionState.CLOSED: 0>, 'transport_protocol': 'tcp'})})",
-                "debug",
+                DEBUG,
             )
             << commands.OpenConnection(tctx.server)
             >> events.DataReceived(tctx.client, b"foo")
-            << commands.Log(" >! DataReceived(client, b'foo')", "debug")
+            << commands.Log(" >! DataReceived(client, b'foo')", DEBUG)
             >> tutils.reply(None, to=-3)
             << commands.Log(
                 " >> Reply(OpenConnection({'connection': Server("
                 "{'id': '…rverid', 'address': None, 'state': <ConnectionState.OPEN: 3>, "
                 "'transport_protocol': 'tcp', 'timestamp_start': 1624544785})}), None)",
-                "debug",
+                DEBUG,
             )
-            << commands.Log(" !> DataReceived(client, b'foo')", "debug")
-            << commands.Log("baz", "info")
+            << commands.Log(" !> DataReceived(client, b'foo')", DEBUG)
+            << commands.Log("baz")
         )
         assert repr(tlayer) == "TLayer(state: bar)"
 
