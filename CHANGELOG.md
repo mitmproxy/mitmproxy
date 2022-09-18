@@ -35,6 +35,8 @@
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
 * Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Add MQTT content view.
+  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
