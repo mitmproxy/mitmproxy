@@ -156,6 +156,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             except Exception as e:
                 logger.error(f"Transparent mode failure: {e!r}")
                 return
+        elif isinstance(self.mode, mode_specs.WireGuardMode):
+            handler.layer.context.server.address = writer.get_extra_info("original_dst")
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
 
@@ -177,6 +179,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
+            if isinstance(self.mode, mode_specs.WireGuardMode):
+                handler.layer.context.server.address = local_addr
 
             # pre-register here - we may get datagrams before the task is executed.
             self.manager.connections[connection_id] = handler
@@ -330,8 +334,14 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             self.last_exception = None
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
-        logger.info(f"{self.mode.description} listening at {addrs}.")
-        logger.info(self.client_conf())
+        conf = self.client_conf()
+        assert conf
+        logger.info(
+            f"{self.mode.description} listening at {addrs}.\n"
+            + "------------------------------------------------------------\n"
+            + conf
+            + "\n------------------------------------------------------------"
+        )
 
     def client_conf(self) -> str | None:
         if not self._server:
@@ -339,7 +349,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         host = local_ip.get_local_ip() or local_ip.get_local_ip6()
         port = self.mode.listen_port(ctx.options.listen_port)
         return textwrap.dedent(f"""
-            ------------------------------------------------------------
             [Interface]
             PrivateKey = {self.client_key}
             Address = 10.0.0.1/32
@@ -348,7 +357,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             PublicKey = {wg.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
-            ------------------------------------------------------------
             """).strip()
 
     def to_json(self) -> dict:
