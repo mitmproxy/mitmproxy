@@ -1,18 +1,17 @@
 import asyncio
 import pathlib
-import platform as pyplatform
+import platform
 import subprocess
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
-import mitmproxy_wireguard as wg
 
-from mitmproxy import platform
+import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.connection import Address
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, WireGuardServerInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
+from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
 
 
@@ -38,7 +37,6 @@ async def test_last_exception_and_running(monkeypatch):
         raise err
 
     with taddons.context():
-
         inst1 = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst1.start()
         assert inst1.last_exception is None
@@ -85,9 +83,9 @@ async def test_transparent(failure, monkeypatch, caplog_async):
     manager = MagicMock()
 
     if failure:
-        monkeypatch.setattr(platform, "original_addr", None)
+        monkeypatch.setattr(mitmproxy.platform, "original_addr", None)
     else:
-        monkeypatch.setattr(platform, "original_addr", lambda s: ("address", 42))
+        monkeypatch.setattr(mitmproxy.platform, "original_addr", lambda s: ("address", 42))
 
     with taddons.context(Proxyserver()) as tctx:
         tctx.options.connection_strategy = "lazy"
@@ -112,41 +110,39 @@ async def test_transparent(failure, monkeypatch, caplog_async):
         assert await caplog_async.await_log("Stopped transparent proxy")
 
 
-async def test_wireguard(monkeypatch):
-    manager = MagicMock()
+async def test_wireguard(tdata, monkeypatch, caplog):
+    caplog.set_level("DEBUG")
 
-    async def echo_tcp(stream: wg.TcpStream):
-        data = await stream.read(1000)
-        stream.write(data.upper())
-        await stream.drain()
-        stream.close()
+    async def handle_client(self: ConnectionHandler):
+        t = self.transports[self.client]
+        data = await t.reader.read(65535)
+        t.writer.write(data.upper())
+        await t.writer.drain()
+        t.writer.close()
 
-    def echo_udp(self: WireGuardServerInstance, data: bytes, src_addr: Address, dst_addr: Address):
-        self._server.send_datagram(data.upper(), dst_addr, src_addr)
+    monkeypatch.setattr(ConnectionHandler, "handle_client", handle_client)
 
-    monkeypatch.setattr(WireGuardServerInstance, "handle_tcp_connection", echo_tcp)
-    monkeypatch.setattr(WireGuardServerInstance, "handle_udp_datagram", echo_udp)
-
-    # all CI targets are x86_64
-    if system := pyplatform.system() == "Linux":
+    system = platform.system()
+    if system == "Linux":
         test_client_name = "linux-x86_64"
     elif system == "Darwin":
         test_client_name = "macos-x86_64"
     elif system == "Windows":
         test_client_name = "windows-x86_64.exe"
     else:
-        return
+        return pytest.skip("Unsupported platform for wg-test-client.")
 
-    test_client_path = pathlib.Path(".") / "test" / "wg-test-client" / test_client_name
+    test_client_path = tdata.path(f"wg-test-client/{test_client_name}")
+    test_conf = tdata.path(f"wg-test-client/test.conf")
 
-    with taddons.context(Proxyserver()) as tctx:
-        tctx.options.connection_strategy = "lazy"
-        inst = ServerInstance.make("wireguard:test/wg-test-client/test.conf", manager)
+    with taddons.context(Proxyserver()):
+        inst = ServerInstance.make(f"wireguard:{test_conf}", MagicMock())
 
         await inst.start()
-        await tctx.master.await_log("WireGuard server listening")
+        assert "WireGuard server listening" in caplog.text
 
         _, port = inst.listen_addrs[0]
+
         proc = await asyncio.create_subprocess_exec(
             test_client_path,
             str(port),
@@ -160,16 +156,10 @@ async def test_wireguard(monkeypatch):
         except AssertionError:
             print(stdout)
             print(stderr)
+            raise
 
-            raise subprocess.CalledProcessError(
-                proc.returncode,
-                [test_client_path, str(port)],
-                output=stdout,
-                stderr=stderr,
-            )
-        finally:
-            await inst.stop()
-            assert await tctx.master.await_log("Stopped WireGuard server")
+        await inst.stop()
+        assert "Stopped WireGuard server" in caplog.text
 
 
 async def test_tcp_start_error():

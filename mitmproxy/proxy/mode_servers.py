@@ -317,8 +317,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             self.last_exception = None
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
-        ctx.log.info(f"{self.mode.description} listening at {addrs}.")
-        ctx.log.info(self.client_conf())
+        logger.info(f"{self.mode.description} listening at {addrs}.")
+        logger.info(self.client_conf())
 
     def client_conf(self) -> str | None:
         if not self._listen_addrs:
@@ -358,7 +358,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             self.last_exception = None
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
-        ctx.log.info(f"Stopped {self.mode.description} at {addrs}.")
+        logger.info(f"Stopped {self.mode.description} at {addrs}.")
 
     @property
     def listen_addrs(self) -> tuple[Address, ...]:
