@@ -18,7 +18,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional, Union
 
+import mitmproxy_wireguard as wg
 from OpenSSL import SSL
+
 from mitmproxy import http, options as moptions, tls
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
@@ -78,8 +80,8 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: Optional[asyncio.Task] = None
-    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader]] = None
-    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
+    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader, wg.TcpStream]] = None
+    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter, wg.TcpStream]] = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -132,6 +134,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
+            if not handler.cancelled() and (e := handler.exception()):
+                self.log(f"mitmproxy has crashed!\n{traceback.format_exception(e)}", logging.ERROR)
 
         watch.cancel()
         while self.wakeup_timer:
@@ -407,8 +411,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: asyncio.StreamReader,
-        writer: asyncio.StreamWriter,
+        reader: Union[asyncio.StreamReader, wg.TcpStream],
+        writer: Union[asyncio.StreamWriter, wg.TcpStream],
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:

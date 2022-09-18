@@ -4,7 +4,9 @@ import asyncio
 import logging
 import socket
 from typing import Any, Callable, Optional, Union, cast
+
 from mitmproxy.connection import Address
+from mitmproxy.net import udp_wireguard
 from mitmproxy.utils import human
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,6 @@ SockAddress = Union[tuple[str, int], tuple[str, int, int, int]]
 
 
 class DrainableDatagramProtocol(asyncio.DatagramProtocol):
-
     _loop: asyncio.AbstractEventLoop
     _closed: asyncio.Event
     _paused: int
@@ -98,6 +99,7 @@ class UdpServer(DrainableDatagramProtocol):
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         if self._transport is None:
             self._transport = cast(asyncio.DatagramTransport, transport)
+            self._transport.set_protocol(self)
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
 
@@ -112,7 +114,6 @@ class UdpServer(DrainableDatagramProtocol):
 
 
 class DatagramReader:
-
     _packets: asyncio.Queue
     _eof: bool
 
@@ -157,7 +158,6 @@ class DatagramReader:
 
 
 class DatagramWriter:
-
     _transport: asyncio.DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None
@@ -175,14 +175,12 @@ class DatagramWriter:
         """
         self._transport = transport
         self._remote_addr = remote_addr
-        proto = transport.get_protocol()
-        assert isinstance(proto, DrainableDatagramProtocol)
         self._reader = reader
         self._closed = asyncio.Event() if reader is not None else None
 
     @property
-    def _protocol(self) -> DrainableDatagramProtocol:
-        return cast(DrainableDatagramProtocol, self._transport.get_protocol())
+    def _protocol(self) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
+        return self._transport.get_protocol()  # type: ignore
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)

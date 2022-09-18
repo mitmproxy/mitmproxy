@@ -1,13 +1,15 @@
 import asyncio
+import platform
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from mitmproxy import platform
+import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, WireGuardServerInstance
+from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
 
 
@@ -23,6 +25,9 @@ def test_make():
         assert inst.mode.description
         assert inst.to_json()
 
+    with pytest.raises(ValueError, match="is not a spec for a WireGuardServerInstance server."):
+        WireGuardServerInstance.make("regular", manager)
+
 
 async def test_last_exception_and_running(monkeypatch):
     manager = MagicMock()
@@ -33,7 +38,6 @@ async def test_last_exception_and_running(monkeypatch):
         raise err
 
     with taddons.context():
-
         inst1 = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst1.start()
         assert inst1.last_exception is None
@@ -80,9 +84,9 @@ async def test_transparent(failure, monkeypatch, caplog_async):
     manager = MagicMock()
 
     if failure:
-        monkeypatch.setattr(platform, "original_addr", None)
+        monkeypatch.setattr(mitmproxy.platform, "original_addr", None)
     else:
-        monkeypatch.setattr(platform, "original_addr", lambda s: ("address", 42))
+        monkeypatch.setattr(mitmproxy.platform, "original_addr", lambda s: ("address", 42))
 
     with taddons.context(Proxyserver()) as tctx:
         tctx.options.connection_strategy = "lazy"
@@ -105,6 +109,91 @@ async def test_transparent(failure, monkeypatch, caplog_async):
 
         await inst.stop()
         assert await caplog_async.await_log("Stopped transparent proxy")
+
+
+async def test_wireguard(tdata, monkeypatch, caplog):
+    caplog.set_level("DEBUG")
+
+    async def handle_client(self: ConnectionHandler):
+        t = self.transports[self.client]
+        data = await t.reader.read(65535)
+        t.writer.write(data.upper())
+        await t.writer.drain()
+        t.writer.close()
+
+    monkeypatch.setattr(ConnectionHandler, "handle_client", handle_client)
+
+    system = platform.system()
+    if system == "Linux":
+        test_client_name = "linux-x86_64"
+    elif system == "Darwin":
+        test_client_name = "macos-x86_64"
+    elif system == "Windows":
+        test_client_name = "windows-x86_64.exe"
+    else:
+        return pytest.skip("Unsupported platform for wg-test-client.")
+
+    test_client_path = tdata.path(f"wg-test-client/{test_client_name}")
+    test_conf = tdata.path(f"wg-test-client/test.conf")
+
+    with taddons.context(Proxyserver()):
+        inst = WireGuardServerInstance.make(f"wireguard:{test_conf}@0", MagicMock())
+
+        await inst.start()
+        assert "WireGuard server listening" in caplog.text
+
+        _, port = inst.listen_addrs[0]
+
+        assert inst.is_running
+        proc = await asyncio.create_subprocess_exec(
+            test_client_path,
+            str(port),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+
+        try:
+            assert proc.returncode == 0
+        except AssertionError:
+            print(stdout)
+            print(stderr)
+            raise
+
+        await inst.stop()
+        assert "Stopped WireGuard server" in caplog.text
+
+
+async def test_wireguard_generate_conf(tmp_path):
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make(f"wireguard@0", MagicMock())
+        assert not inst.client_conf()  # should not error.
+
+        await inst.start()
+
+        assert (tmp_path / "wireguard.conf").exists()
+        assert inst.client_conf()
+        assert inst.to_json()["wireguard_conf"]
+        k = inst.server_key
+
+        inst2 = WireGuardServerInstance.make(f"wireguard@0", MagicMock())
+        await inst2.start()
+        assert k == inst2.server_key
+
+        await inst.stop()
+        await inst2.stop()
+
+
+async def test_wireguard_invalid_conf(tmp_path):
+    with taddons.context(Proxyserver()):
+        # directory instead of filename
+        inst = WireGuardServerInstance.make(f"wireguard:{tmp_path}", MagicMock())
+
+        with pytest.raises(OSError):
+            await inst.start()
+
+        assert "Invalid configuration file" in repr(inst.last_exception)
 
 
 async def test_tcp_start_error():

@@ -37,6 +37,8 @@
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
 * Add MQTT content view.
   ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
+* Add WireGuard mode to enable userspace transparent proxying via WireGuard.
+  ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1
 

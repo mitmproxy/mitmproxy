@@ -245,3 +245,13 @@ class DnsMode(ProxyMode):
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
+
+
+class WireGuardMode(ProxyMode):
+    """Proxy Server based on WireGuard"""
+    description = "WireGuard server"
+    default_port = 51820
+    transport_protocol = UDP
+
+    def __post_init__(self) -> None:
+        pass
