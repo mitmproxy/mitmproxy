@@ -1,4 +1,6 @@
 import collections
+from logging import DEBUG, ERROR
+
 import time
 from collections.abc import Sequence
 from enum import Enum
@@ -171,10 +173,10 @@ class Http2Connection(HttpConnection):
 
             for h2_event in events:
                 if self.debug:
-                    yield Log(f"{self.debug}[h2] {h2_event}", "debug")
+                    yield Log(f"{self.debug}[h2] {h2_event}", DEBUG)
                 if (yield from self.handle_h2_event(h2_event)):
                     if self.debug:
-                        yield Log(f"{self.debug}[h2] done", "debug")
+                        yield Log(f"{self.debug}[h2] done", DEBUG)
                     return
 
             data_to_send = self.h2_conn.data_to_send()
@@ -255,7 +257,7 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, h2.events.PushedStreamReceived):
             yield Log(
                 "Received HTTP/2 push promise, even though we signalled no support.",
-                "error",
+                ERROR,
             )
         elif isinstance(event, h2.events.UnknownFrameReceived):
             # https://http2.github.io/http2-spec/#rfc.section.4.1
@@ -468,7 +470,7 @@ class Http2Client(Http2Connection):
                 if data is not None:
                     yield Log(
                         f"Send HTTP/2 keep-alive PING to {human.format_address(self.conn.peername)}",
-                        "debug",
+                        DEBUG,
                     )
                     yield SendData(self.conn, data)
             time_until_next_ping = self.context.options.http2_ping_keepalive - (

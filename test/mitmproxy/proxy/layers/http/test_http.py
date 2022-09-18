@@ -1,3 +1,5 @@
+from logging import WARNING
+
 import gc
 
 import pytest
@@ -1348,7 +1350,7 @@ def test_upgrade(tctx, proto):
             playbook
             << Log(
                 "Sent HTTP 101 response, but no protocol is enabled to upgrade to.",
-                "warn",
+                WARNING,
             )
             << CloseConnection(tctx.client)
         )

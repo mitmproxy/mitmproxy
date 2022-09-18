@@ -1,13 +1,10 @@
 import pytest
 
-from mitmproxy import options
-from mitmproxy.tools.console import statusbar, master
+from mitmproxy.tools.console import statusbar
 
 
-async def test_statusbar(monkeypatch):
-    o = options.Options()
-    m = master.ConsoleMaster(o)
-    m.options.update(
+async def test_statusbar(console, monkeypatch):
+    console.options.update(
         modify_headers=[":~q:foo:bar"],
         modify_body=[":~q:foo:bar"],
         ignore_hosts=["example.com", "example.org"],
@@ -26,13 +23,12 @@ async def test_statusbar(monkeypatch):
         stream_large_bodies="3m",
         mode=["transparent"],
     )
-
-    m.options.update(view_order="url", console_focus_follow=True)
-    monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
-    monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
+    console.options.update(view_order="url", console_focus_follow=True)
+    monkeypatch.setattr(console.addons.get("clientplayback"), "count", lambda: 42)
+    monkeypatch.setattr(console.addons.get("serverplayback"), "count", lambda: 42)
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
-    bar = statusbar.StatusBar(m)  # this already causes a redraw
+    bar = statusbar.StatusBar(console)  # this already causes a redraw
     assert bar.ib._w
 
 

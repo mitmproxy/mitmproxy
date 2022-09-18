@@ -1,3 +1,5 @@
+import logging
+
 import math
 import sys
 from functools import lru_cache
@@ -327,7 +329,7 @@ class FlowDetails(tabs.Tabs):
             viewmode, message, self.flow
         )
         if error:
-            self.master.log.debug(error)
+            logging.debug(error)
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.Request):
             description = "No request content"

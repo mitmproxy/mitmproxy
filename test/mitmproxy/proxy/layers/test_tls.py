@@ -1,4 +1,6 @@
 import ssl
+from logging import DEBUG, WARNING
+
 import time
 from typing import Optional
 
@@ -364,7 +366,7 @@ class TestServerTLS:
             << commands.Log(
                 # different casing in OpenSSL < 3.0
                 StrMatching("Server TLS handshake failed. Certificate verify failed: [Hh]ostname mismatch"),
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -396,7 +398,7 @@ class TestServerTLS:
             >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
             << commands.Log(
                 "Server TLS handshake failed. The remote server does not speak TLS.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -436,7 +438,7 @@ class TestServerTLS:
             << commands.Log(
                 "Server TLS handshake failed. The remote server and mitmproxy cannot agree on a TLS version"
                 " to use. You may need to adjust mitmproxy's tls_version_server_min option.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -621,7 +623,7 @@ class TestClientTLS:
             >> events.DataReceived(tctx.client, invalid)
             << commands.Log(
                 f"Client TLS handshake failed. Cannot parse ClientHello: {invalid.hex()}",
-                level="warn",
+                level=WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -635,10 +637,10 @@ class TestClientTLS:
         assert (
             playbook
             >> events.DataReceived(Server(None), b"data on other stream")
-            << commands.Log(">> DataReceived(server, b'data on other stream')", "debug")
+            << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
             << commands.Log(
                 "Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
-                "debug",
+                DEBUG,
             )
         )
 
@@ -670,7 +672,7 @@ class TestClientTLS:
             << commands.Log(
                 "Client TLS handshake failed. The client does not trust the proxy's certificate "
                 "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -733,8 +735,7 @@ class TestClientTLS:
             << commands.Log(
                 "Client TLS handshake failed. The client disconnected during the handshake. "
                 "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
-                "client does not trust the proxy's certificate.",
-                "info",
+                "client does not trust the proxy's certificate."
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -760,7 +761,7 @@ class TestClientTLS:
             << commands.Log(
                 "Client TLS handshake failed. Client and mitmproxy cannot agree on a TLS version to "
                 "use. You may need to adjust mitmproxy's tls_version_client_min option.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()

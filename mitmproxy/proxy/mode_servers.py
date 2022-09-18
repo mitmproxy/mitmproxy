@@ -12,27 +12,29 @@ Example:
 from __future__ import annotations
 
 import asyncio
-import errno
 import json
+import logging
 import socket
 import textwrap
 import typing
-
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
 from typing import ClassVar, Generic, TypeVar, cast, get_args
 
+import errno
 import mitmproxy_wireguard as wg
 
-from mitmproxy import ctx, flow, log, platform
+from mitmproxy import ctx, flow, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import local_ip, udp
 from mitmproxy.proxy import commands, layers, mode_specs, server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
-from mitmproxy.utils import asyncio_utils, human
+from mitmproxy.utils import human
+
+logger = logging.getLogger(__name__)
 
 
 class ProxyConnectionHandler(server.LiveConnectionHandler):
@@ -51,13 +53,6 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
             if isinstance(data, flow.Flow):
                 await data.wait_for_resume()  # pragma: no cover
 
-    def log(self, message: str, level: str = "info") -> None:
-        x = log.LogEntry(self.log_prefix + message, level)
-        asyncio_utils.create_task(
-            self.master.addons.handle_lifecycle(log.AddLogHook(x)),
-            name="ProxyConnectionHandler.log",
-        )
-
 
 M = TypeVar('M', bound=mode_specs.ProxyMode)
 
@@ -71,7 +66,6 @@ class ServerManager(typing.Protocol):
 
 
 class ServerInstance(Generic[M], metaclass=ABCMeta):
-
     __modes: ClassVar[dict[str, type[ServerInstance]]] = {}
 
     def __init__(self, mode: M, manager: ServerManager):
@@ -158,7 +152,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         else:
             self.last_exception = None
         addrs = " and ".join({human.format_address(a) for a in self._listen_addrs})
-        ctx.log.info(f"{self.mode.description} listening at {addrs}.")
+        logger.info(f"{self.mode.description} listening at {addrs}.")
 
     async def stop(self) -> None:
         assert self._server is not None
@@ -176,7 +170,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         else:
             self.last_exception = None
         addrs = " and ".join({human.format_address(a) for a in listen_addrs})
-        ctx.log.info(f"Stopped {self.mode.description} at {addrs}.")
+        logger.info(f"Stopped {self.mode.description} at {addrs}.")
 
     async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
         if self.mode.transport_protocol == "tcp":
@@ -192,7 +186,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     s.close()
                     return await asyncio.start_server(self.handle_tcp_connection, host, fixed_port)
                 except Exception as e:
-                    ctx.log.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
+                    logger.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
             return await asyncio.start_server(self.handle_tcp_connection, host, port)
         elif self.mode.transport_protocol == "udp":
             # create_datagram_endpoint only creates one socket, so the workaround above doesn't apply
@@ -230,7 +224,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 assert platform.original_addr
                 handler.layer.context.server.address = platform.original_addr(socket)
             except Exception as e:
-                ctx.log.error(f"Transparent mode failure: {e!r}")
+                logger.error(f"Transparent mode failure: {e!r}")
                 return
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
@@ -314,7 +308,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
                 self.handle_tcp_connection,
                 self.handle_udp_datagram,
             )
-            self._listen_addrs = (self._server.getsockname(), )
+            self._listen_addrs = (self._server.getsockname(),)
         except Exception as e:
             self.last_exception = e
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"

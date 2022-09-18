@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import socket
 from typing import Any, Callable, Optional, Union, cast
 
 import mitmproxy_wireguard as wg
 
-from mitmproxy import ctx
 from mitmproxy.connection import Address
 from mitmproxy.utils import human
 
+logger = logging.getLogger(__name__)
 
 MAX_DATAGRAM_SIZE = 65535 - 20
 
@@ -29,7 +30,6 @@ SockAddress = Union[tuple[str, int], tuple[str, int, int, int]]
 
 
 class DrainableDatagramProtocol(asyncio.DatagramProtocol):
-
     _loop: asyncio.AbstractEventLoop
     _closed: asyncio.Event
     _paused: int
@@ -57,7 +57,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
     def connection_lost(self, exc: Exception | None) -> None:
         self._closed.set()
         if exc:
-            ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")  # pragma: no cover
+            logger.warning(f"Connection lost on {self!r}: {exc!r}")  # pragma: no cover
 
     def pause_writing(self) -> None:
         self._paused = self._paused + 1
@@ -74,7 +74,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._can_write.wait()
 
     def error_received(self, exc: Exception) -> None:
-        ctx.log.warn(f"Send/receive on {self!r} failed: {exc!r}")  # pragma: no cover
+        logger.warning(f"Send/receive on {self!r} failed: {exc!r}")  # pragma: no cover
 
     async def wait_closed(self) -> None:
         await self._closed.wait()
@@ -142,7 +142,6 @@ class UdpServer(DrainableDatagramProtocol):
 
 
 class DatagramReader:
-
     _packets: asyncio.Queue
     _eof: bool
 
@@ -153,14 +152,14 @@ class DatagramReader:
     def feed_data(self, data: bytes, remote_addr: Address) -> None:
         assert len(data) <= MAX_DATAGRAM_SIZE
         if self._eof:
-            ctx.log.info(
+            logger.info(
                 f"Received UDP packet from {human.format_address(remote_addr)} after EOF."
             )
         else:
             try:
                 self._packets.put_nowait(data)
             except asyncio.QueueFull:
-                ctx.log.debug(
+                logger.debug(
                     f"Dropped UDP packet from {human.format_address(remote_addr)}."
                 )
 
@@ -187,7 +186,6 @@ class DatagramReader:
 
 
 class DatagramWriter:
-
     _transport: DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None

@@ -24,7 +24,7 @@ class TestCommandHistory:
         with open(history_file) as f:
             assert f.read() == "cmd3\ncmd4\n"
 
-    async def test_done_writing_failed(self):
+    async def test_done_writing_failed(self, caplog):
         ch = command_history.CommandHistory()
         ch.VACUUM_SIZE = 1
         with taddons.context(ch) as tctx:
@@ -33,7 +33,7 @@ class TestCommandHistory:
             ch.history.append("cmd3")
             tctx.options.confdir = "/non/existent/path/foobar1234/"
             ch.done()
-            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
+            assert "Failed writing to" in caplog.text
 
     def test_add_command(self):
         ch = command_history.CommandHistory()
@@ -45,12 +45,12 @@ class TestCommandHistory:
             ch.add_command("")
             assert ch.history == ["cmd1", "cmd2"]
 
-    async def test_add_command_failed(self):
+    async def test_add_command_failed(self, caplog):
         ch = command_history.CommandHistory()
         with taddons.context(ch) as tctx:
             tctx.options.confdir = "/non/existent/path/foobar1234/"
             ch.add_command("cmd1")
-            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
+            assert "Failed writing to" in caplog.text
 
     def test_get_next_and_prev(self, tmpdir):
         ch = command_history.CommandHistory()
@@ -152,7 +152,7 @@ class TestCommandHistory:
 
             ch.clear_history()
 
-    async def test_clear_failed(self, monkeypatch):
+    async def test_clear_failed(self, monkeypatch, caplog):
         ch = command_history.CommandHistory()
 
         with taddons.context(ch) as tctx:
@@ -163,7 +163,7 @@ class TestCommandHistory:
                 with patch.object(Path, "unlink") as mock_unlink:
                     mock_unlink.side_effect = IOError()
                     ch.clear_history()
-            await tctx.master.await_log(f"Failed deleting {ch.history_file}")
+            assert "Failed deleting" in caplog.text
 
     def test_filter(self, tmpdir):
         ch = command_history.CommandHistory()

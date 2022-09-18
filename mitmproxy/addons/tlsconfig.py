@@ -1,4 +1,5 @@
 import ipaddress
+import logging
 import os
 from pathlib import Path
 from typing import Any, Optional, TypedDict
@@ -316,7 +317,7 @@ class TlsConfig:
             else None,
         )
         if self.certstore.default_ca.has_expired():
-            ctx.log.warn(
+            logging.warning(
                 "The mitmproxy certificate authority has expired!\n"
                 "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
                 "The CA will be regenerated automatically after restarting mitmproxy.\n"

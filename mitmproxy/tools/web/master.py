@@ -1,3 +1,5 @@
+import logging
+
 import errno
 import tornado.httpserver
 import tornado.ioloop
@@ -15,6 +17,8 @@ from mitmproxy.addons import view
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.contrib.tornado import patch_tornado
 from mitmproxy.tools.web import app, webaddons, static_viewer
+
+logger = logging.getLogger(__name__)
 
 
 class WebMaster(master.Master):
@@ -100,7 +104,7 @@ class WebMaster(master.Master):
                 message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 1}`."
             raise OSError(e.errno, message, e.filename) from e
 
-        self.log.info(
+        logger.info(
             f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",
         )
 

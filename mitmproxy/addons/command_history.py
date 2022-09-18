@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 from collections.abc import Sequence
@@ -40,11 +41,11 @@ class CommandHistory:
     def done(self):
         if ctx.options.command_history and len(self.history) >= self.VACUUM_SIZE:
             # vacuum history so that it doesn't grow indefinitely.
-            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2 :]) + "\n"
+            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2:]) + "\n"
             try:
                 self.history_file.write_text(history_str)
             except Exception as e:
-                ctx.log.alert(f"Failed writing to {self.history_file}: {e}")
+                logging.warning(f"Failed writing to {self.history_file}: {e}")
 
     @command.command("commands.history.add")
     def add_command(self, command: str) -> None:
@@ -57,7 +58,7 @@ class CommandHistory:
                 with self.history_file.open("a") as f:
                     f.write(f"{command}\n")
             except Exception as e:
-                ctx.log.alert(f"Failed writing to {self.history_file}: {e}")
+                logging.warning(f"Failed writing to {self.history_file}: {e}")
 
         self.set_filter("")
 
@@ -72,7 +73,7 @@ class CommandHistory:
             try:
                 self.history_file.unlink()
             except Exception as e:
-                ctx.log.alert(f"Failed deleting {self.history_file}: {e}")
+                logging.warning(f"Failed deleting {self.history_file}: {e}")
         self.history = []
         self.set_filter("")
 

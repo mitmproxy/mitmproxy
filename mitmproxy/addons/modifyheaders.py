@@ -1,3 +1,4 @@
+import logging
 import re
 from collections.abc import Sequence
 from pathlib import Path
@@ -106,7 +107,7 @@ class ModifyHeaders:
                 try:
                     replacement = spec.read_replacement()
                 except OSError as e:
-                    ctx.log.warn(f"Could not read replacement file: {e}")
+                    logging.warning(f"Could not read replacement file: {e}")
                     continue
                 else:
                     if replacement:

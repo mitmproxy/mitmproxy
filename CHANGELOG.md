@@ -29,6 +29,14 @@
   ([#5548](https://github.com/mitmproxy/mitmproxy/pull/5548), @sanlengjingvv)
 * Fix a mitmweb crash when scrolling down the flow list.
   ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
+* Add HTTP/3 binary frame content view.
+  ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
+* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Add MQTT content view.
+  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
