@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from queue import Queue
 import time
 from typing import Dict, Optional, Union
 
@@ -6,20 +7,26 @@ from aioquic.h3.connection import (
     H3Connection,
     ErrorCode as H3ErrorCode,
     FrameUnexpected as H3FrameUnexpected,
+    Headers as H3Headers,
     HeadersState as H3HeadersState,
 )
 from aioquic.h3 import events as h3_events
 from aioquic.quic import events as quic_events
-from aioquic.quic.connection import QuicConnection, stream_is_client_initiated
+from aioquic.quic.connection import stream_is_client_initiated, stream_is_unidirectional
 from aioquic.quic.packet import QuicErrorCode
 
-from mitmproxy import http, version
+from mitmproxy import connection, http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
-    ClientQuicLayer, QuicStreamDataReceived,
+    OpenQuicStream,
+    QuicStreamDataReceived,
     QuicStreamReset,
-    ServerQuicLayer, error_code_to_str,
+    ResetQuicStream,
+    SendQuicStreamData,
+    error_code_to_str,
+    get_connection_error,
+    set_connection_error,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -54,13 +61,62 @@ class MockQuic:
     aioquic intermingles QUIC and HTTP/3. This is something we don't want to do because that makes testing much harder.
     Instead, we mock our QUIC connection object here and then take out the wire data to be sent.
     """
-    pass
-    # TODO add mock for QuicConnection.
+
+    def __init__(self, conn: connection.Connection) -> None:
+        self.conn = conn
+        self.pending_commands: Queue[commands.Command] = Queue()
+        self.available_stream_ids: Queue[int] = Queue()
+
+    def close(
+        self,
+        error_code: int = QuicErrorCode.NO_ERROR,
+        frame_type: Optional[int] = None,
+        reason_phrase: str = "",
+    ) -> None:
+        set_connection_error(self.conn, quic_events.ConnectionTerminated(
+            error_code=error_code,
+            frame_type=frame_type,
+            reason_phrase=reason_phrase,
+        ))
+        self.pending_commands.put(commands.CloseConnection(self.conn))
+
+    def get_next_available_stream_id(self, is_unidirectional=False) -> int:
+        stream_id = self.available_stream_ids.get()
+        assert is_unidirectional == stream_is_unidirectional(stream_id)
+        return stream_id
+
+    def send_stream_data(
+        self, stream_id: int, data: bytes, end_stream: bool = False
+    ) -> None:
+        self.pending_commands.put(SendQuicStreamData(self.conn, stream_id, data, end_stream))
+
+
+class LayeredH3Connection(H3Connection):
+    def __init__(self, connection: connection.Connection) -> None:
+        self._quic = MockQuic(connection)
+        super().__init__(quic=self._quic, enable_webtransport=False)
+
+    def start(self) -> layer.CommandGenerator[None]:
+        # we need three unidirectional streams for `_init_connection`
+        for _ in range(1, 3):
+            self._quic.available_stream_ids.put((yield OpenQuicStream(self._quic.conn, is_unidirectional=False)))
+
+    def create_webtransport_stream(self, session_id: int, is_unidirectional: bool = False) -> int:
+        raise NotImplementedError()  # pragma: no cover
+
+    def send_datagram(self, flow_id: int, data: bytes) -> None:
+        raise NotImplementedError()  # pragma: no cover
+
+    def send_push_promise(self, stream_id: int, headers: H3Headers) -> int:
+        raise NotImplementedError()  # pragma: no cover
+
+    def transmit(self) -> layer.CommandGenerator[None]:
+        while self._quic.pending_commands:
+            yield self._quic.pending_commands.get()
 
 
 class Http3Connection(HttpConnection):
-    quic: Optional[QuicConnection] = None
-    h3_conn: Optional[H3Connection] = None
+    h3_conn: Optional[LayeredH3Connection] = None
 
     ReceiveData: type[Union[RequestData, ResponseData]]
     ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
@@ -76,7 +132,8 @@ class Http3Connection(HttpConnection):
     def postprocess_outgoing_event(self, event: HttpEvent) -> HttpEvent:
         return event
 
-    def preprocess_incoming_event(self, event: HttpEvent) -> HttpEvent:
+    def preprocess_incoming_event(self, event: HttpEvent) -> layer.CommandGenerator[HttpEvent]:
+        yield from ()
         return event
 
     @abstractmethod
@@ -91,12 +148,11 @@ class Http3Connection(HttpConnection):
 
     @expect(HttpEvent, QuicStreamDataReceived, QuicStreamReset, events.ConnectionClosed)
     def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.quic is not None
         assert self.h3_conn is not None
 
         # send mitmproxy HTTP events over the H3 connection
         if isinstance(event, HttpEvent):
-            event = self.preprocess_incoming_event(event)
+            event = yield from self.preprocess_incoming_event(event)
             try:
 
                 if isinstance(event, (RequestData, ResponseData)):
@@ -141,7 +197,7 @@ class Http3Connection(HttpConnection):
 
             else:
                 # transmit buffered data and re-arm timer
-                yield QuicTransmit(self.conn)
+                yield from self.h3_conn.transmit()
 
         elif isinstance(event, QuicStreamReset):
             if (
@@ -214,11 +270,12 @@ class Http3Connection(HttpConnection):
                             receive_event = self.parse_headers(h3_event)
                         except ValueError as e:
                             # this will result in a ConnectionClosed event
-                            self.quic.close(
+                            set_connection_error(self.conn, quic_events.ConnectionTerminated(
                                 error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
+                                frame_type=None,
                                 reason_phrase=f"Invalid HTTP/3 request headers: {e}",
-                            )
-                            yield QuicTransmit(self.conn)
+                            ))
+                            yield commands.CloseConnection(self.conn)
                         else:
                             yield ReceiveHttp(
                                 self.postprocess_outgoing_event(receive_event)
@@ -247,7 +304,7 @@ class Http3Connection(HttpConnection):
         elif isinstance(event, events.ConnectionClosed):
             for stream in self.h3_conn._stream.values():
                 if stream_is_client_initiated(stream.stream_id) and not stream.ended:
-                    close_event = self.quic._close_event
+                    close_event = get_connection_error(self.conn)
                     yield ReceiveHttp(
                         self.postprocess_outgoing_event(
                             self.ReceiveProtocolError(
@@ -272,23 +329,11 @@ class Http3Connection(HttpConnection):
 
     @expect(events.Start)
     def state_start(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert isinstance(event, events.Start)
+        assert self.h3_conn is None
 
-        # aioquic does not separate QUIC and HTTP/3, poke through the layer stack to get a reference to the QUIC
-        # connection object.
-        for x in reversed(self.context.layers):
-            if isinstance(x, ClientQuicLayer if isinstance(self, Http3Server) else ServerQuicLayer):
-                self.quic = x.quic
-                self.h3_conn = H3Connection(self.quic, enable_webtransport=False)
-                break
-        else:
-            raise AssertionError
-
-        # self.quic = MockQuic()
-        # self.h3_conn = H3Connection(self.quic)
-
+        self.h3_conn = LayeredH3Connection(self.conn)
         self._handle_event = self.state_ready
-        yield from ()
+        yield from self.h3_conn.start()
 
     _handle_event = state_start
 
@@ -382,15 +427,14 @@ class Http3Client(Http3Connection):
         event.stream_id = self._quic_to_event[event.stream_id]
         return event
 
-    def preprocess_incoming_event(self, event: HttpEvent) -> HttpEvent:
+    def preprocess_incoming_event(self, event: HttpEvent) -> layer.CommandGenerator[HttpEvent]:
         if event.stream_id in self._event_to_quic:
             event.stream_id = self._event_to_quic[event.stream_id]
         else:
             # QUIC and HTTP/3 would actually allow for direct stream ID mapping, but since we want
             # to support H2<->H3, we need to translate IDs.
             # NOTE: We always create bidirectional streams, as we can't safely infer unidirectionality.
-            assert self.quic is not None
-            stream_id = self.quic.get_next_available_stream_id()
+            stream_id = yield OpenQuicStream(self.conn)
             self._event_to_quic[event.stream_id] = stream_id
             self._quic_to_event[stream_id] = event.stream_id
             event.stream_id = stream_id
@@ -398,13 +442,16 @@ class Http3Client(Http3Connection):
 
     def send_protocol_error(self, event: Union[RequestProtocolError, ResponseProtocolError]) -> None:
         assert isinstance(event, RequestProtocolError)
-        assert self.quic is not None
 
         # same as HTTP/2
         code = event.code
         if code != H3ErrorCode.H3_REQUEST_CANCELLED:
             code = H3ErrorCode.H3_INTERNAL_ERROR
-        self.quic.reset_stream(stream_id=event.stream_id, error_code=code)
+        yield ResetQuicStream(
+            connection=self.conn,
+            stream_id=event.stream_id,
+            error_code=code,
+        )
 
 
 __all__ = [

@@ -120,10 +120,6 @@ class QuicStreamDataReceived(QuicStreamEvent):
     end_stream: bool
     """Whether the STREAM frame had the FIN bit set."""
 
-    def __repr__(self):
-        target = type(self.connection).__name__.lower()
-        return f"{self.__class__.__name__}({target}, {self.stream_id}, {self.data}, {self.end_stream})"
-
 
 @dataclass
 class QuicStreamReset(QuicStreamEvent):
@@ -232,6 +228,16 @@ def error_code_to_str(error_code: int) -> str:
             return f"unknown error (0x{error_code:x})"
 
 
+def get_connection_error(conn: connection.Connection) -> quic_events.ConnectionTerminated | None:
+    """Returns the QUIC close event that is associated with the given connection."""
+
+    close_event = getattr(conn, "quic_error", None)
+    if close_event is None:
+        return None
+    assert isinstance(close_event, quic_events.ConnectionTerminated)
+    return close_event
+
+
 def is_success_error_code(error_code: int) -> bool:
     """Returns whether the given error code actually indicates no error."""
 
@@ -248,6 +254,12 @@ def get_stream_connection_state(stream_id: int, is_client: bool) -> connection.C
         else:
             state &= ~connection.ConnectionState.CAN_WRITE
     return state
+
+
+def set_connection_error(conn: connection.Connection, close_event: quic_events.ConnectionTerminated) -> None:
+    """Stores the given close event for the given connection."""
+
+    setattr(conn, "quic_error", close_event)
 
 
 @dataclass
@@ -357,8 +369,8 @@ class RawQuicLayer(layer.Layer):
     """Indicates whether traffic should be routed as-is."""
     datagram_layer: layer.Layer
     """
-    The layer handling datagrams over QUIC. It's like a child_layer, but with a forked context.
-    Instead of having a datagram equivalent for all stream classes, we use traditional `SendData` and `DataReceived`.
+    The layer that is handling datagrams over QUIC. It's like a child_layer, but with a forked context.
+    Instead of having a datagram-equivalent for all `QuicStream*` classes, we use `SendData` and `DataReceived` instead.
     There is also no need for another `NextLayer` marker, as a missing `QuicStreamLayer` implies UDP,
     and the connection state is the same as the one of the underlying QUIC connection.
     """
@@ -369,9 +381,11 @@ class RawQuicLayer(layer.Layer):
     connections: dict[connection.Connection, layer.Layer]
     """Maps connections to layers."""
     command_sources: dict[commands.Command, layer.Layer]
+    """Keeps track of blocking commands and wakeup requests."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
         super().__init__(context)
+        self.ignore = ignore
         self.datagram_layer = (
             UDPLayer(self.context.fork(), ignore=True)
             if ignore else
@@ -384,18 +398,17 @@ class RawQuicLayer(layer.Layer):
             context.server: self.datagram_layer,
         }
         self.command_sources = {}
-        self.ignore = ignore
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        # we treat the datagram-layer as child layer, so forward Start
+        # we treat the datagram layer as child layer, so forward Start
         if isinstance(event, events.Start):
             yield from self.event_to_child(self.datagram_layer, event)
 
-        # properly forward stored completion events
+        # properly forward completion events based on their command
         elif isinstance(event, events.CommandCompleted):
             yield from self.event_to_child(self.command_sources.pop(event.command), event)
 
-        # route injection messages based on the flow's connections (prefer client, fallback to server)
+        # route injected messages based on their connections (prefer client, fallback to server)
         elif isinstance(event, events.MessageInjected):
             if event.flow.client_conn in self.connections:
                 yield from self.event_to_child(self.connections[event.flow.client_conn], event)
@@ -444,7 +457,7 @@ class RawQuicLayer(layer.Layer):
                 self.connections[stream_layer.server] = stream_layer
                 yield from self.event_to_child(stream_layer, events.Start())
 
-            # forward the data and close events
+            # forward data and close events
             conn = stream_layer.client if from_client else stream_layer.server
             if isinstance(event, QuicStreamDataReceived):
                 yield from self.event_to_child(stream_layer, events.DataReceived(conn, event.data))
@@ -507,9 +520,9 @@ class RawQuicLayer(layer.Layer):
                 )
             ):
                 # get the target connection and stream ID
-                from_client = command.connection is child_layer.client
-                conn = self.context.client if from_client else self.context.server
-                stream_id = child_layer.client_stream_id if from_client else child_layer.server_stream_id
+                to_client = command.connection is child_layer.client
+                conn = self.context.client if to_client else self.context.server
+                stream_id = child_layer.client_stream_id if to_client else child_layer.server_stream_id
 
                 # write data and check CloseConnection wasn't called before
                 if isinstance(command, commands.SendData):
@@ -529,7 +542,7 @@ class RawQuicLayer(layer.Layer):
 
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):
-                    assert not from_client
+                    assert not to_client
                     assert stream_id is None
                     child_layer.server.timestamp_start = time.time()
                     stream_id = cast(int, (yield OpenQuicStream(conn)))
@@ -756,6 +769,7 @@ class QuicLayer(tunnel.TunnelLayer):
         # handle post-handshake events
         while event := self.quic.next_event():
             if isinstance(event, quic_events.ConnectionTerminated):
+                set_connection_error(self.conn, event)
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
@@ -766,7 +780,7 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(event, quic_events.DatagramFrameReceived):
                 yield from self.event_to_child(events.DataReceived(self.conn, event.data))
             elif isinstance(event, quic_events.StreamDataReceived):
-                yield from self.event_to_child(QuicStreamDataReceived(self.conn, data=event.data, stream_id=event.stream_id, end_stream=event.end_stream))
+                yield from self.event_to_child(QuicStreamDataReceived(self.conn, event.stream_id, event.data, event.end_stream))
             elif isinstance(event, quic_events.StreamReset):
                 yield from self.event_to_child(QuicStreamReset(self.conn, event.stream_id, event.error_code))
             elif isinstance(event, (
@@ -795,7 +809,11 @@ class QuicLayer(tunnel.TunnelLayer):
     def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
         # properly close the QUIC connection
         if self.quic is not None:
-            self.quic.close()
+            close_event = get_connection_error(self.conn)
+            if close_event is None:
+                self.quic.close()
+            else:
+                self.quic.close(close_event.error_code, close_event.frame_type, close_event.reason_phrase)
             yield from self.tls_interact()
         yield from super().send_close(half_close)
 
