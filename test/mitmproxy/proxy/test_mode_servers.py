@@ -1,7 +1,5 @@
 import asyncio
-import pathlib
 import platform
-import subprocess
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, Mock
 
