@@ -334,10 +334,12 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             self.last_exception = None
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
+        conf = self.client_conf()
+        assert conf
         logger.info(
             f"{self.mode.description} listening at {addrs}.\n"
             + "------------------------------------------------------------\n"
-            + self.client_conf()
+            + conf
             + "\n------------------------------------------------------------"
         )
 

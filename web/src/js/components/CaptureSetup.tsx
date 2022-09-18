@@ -1,13 +1,15 @@
 import * as React from "react";
+import {useEffect, useRef} from "react";
 import {useAppSelector} from "../ducks";
 import {ServerInfo} from "../ducks/backendState";
 import {formatAddress} from "../utils";
+import QRCode from 'qrcode';
 
 export default function CaptureSetup() {
     const servers = useAppSelector(state => state.backendState.servers);
 
     let configure_action_text;
-    if(servers.length === 0) {
+    if (servers.length === 0) {
         configure_action_text = "";
     } else if (servers.length === 1) {
         configure_action_text = "Configure your client to use the following proxy server:";
@@ -35,7 +37,22 @@ export default function CaptureSetup() {
     </div>
 }
 
-export function ServerDescription({description, listen_addrs, last_exception, is_running, full_spec}: ServerInfo) {
+export function ServerDescription(
+    {
+        description,
+        listen_addrs,
+        last_exception,
+        is_running,
+        full_spec,
+        wireguard_conf,
+    }: ServerInfo
+) {
+    const qrCode = useRef(null);
+    useEffect(() => {
+        if (wireguard_conf && qrCode.current)
+            QRCode.toCanvas(qrCode.current, wireguard_conf, {margin: 0, scale: 3});
+    }, [wireguard_conf]);
+
     let listen_str;
     const all_same_port = listen_addrs.length === 1 || (listen_addrs.length === 2 && listen_addrs[0][1] === listen_addrs[1][1]);
     const unbound = listen_addrs.every(addr => ["::", "0.0.0.0"].includes(addr[0]));
@@ -55,6 +72,17 @@ export function ServerDescription({description, listen_addrs, last_exception, is
     } else {
         icon = "fa-check text-success"
         desc = `${description} listening at ${listen_str}.`
+
+        if (wireguard_conf) {
+            desc = <>
+                {desc}
+                <div className="wireguard-config">
+                    <pre>{wireguard_conf}</pre>
+                    <canvas ref={qrCode}/>
+                </div>
+            </>;
+        }
+
     }
     return <><i className={`fa fa-li ${icon}`}/>{desc}</>;
 }
