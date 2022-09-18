@@ -52,6 +52,7 @@ def run(
     async def main() -> T:
         logging.getLogger().setLevel(logging.DEBUG)
         logging.getLogger("tornado").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
         debug.register_info_dumpers()
 
         opts = options.Options()

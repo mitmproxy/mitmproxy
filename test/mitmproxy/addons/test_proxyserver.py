@@ -48,7 +48,7 @@ async def tcp_server(handle_conn) -> Address:
 
 
 async def test_start_stop(caplog_async):
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
 
     async def server_handler(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
@@ -218,7 +218,7 @@ async def test_startup_err(monkeypatch, caplog) -> None:
 
 
 async def test_shutdown_err(caplog_async) -> None:
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
 
     async def _raise(*_):
         raise OSError("cannot close")
@@ -248,7 +248,7 @@ class DummyResolver:
 
 
 async def test_dns(caplog_async) -> None:
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
     ps = Proxyserver()
     with taddons.context(ps, DummyResolver()) as tctx:
         tctx.configure(
@@ -313,7 +313,7 @@ async def udp_server(handle_conn) -> Address:
 
 
 async def test_dtls(monkeypatch, caplog_async) -> None:
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
 
     def server_handler(
             transport: asyncio.DatagramTransport,

@@ -64,7 +64,7 @@ class TestScript:
         assert '"' not in s.fullpath
 
     async def test_simple(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("DEBUG")
+        caplog_async.set_level("DEBUG")
         sc = script.Script(
             tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py"),
             True,
@@ -84,21 +84,28 @@ class TestScript:
         sc.done()
 
     async def test_reload(self, tmp_path, caplog_async):
-        caplog_async.caplog.set_level("INFO")
+        caplog_async.set_level("INFO")
         with taddons.context() as tctx:
             f = tmp_path / "foo.py"
             f.write_text("\n")
             sc = script.Script(str(f), True)
             tctx.configure(sc)
             await caplog_async.await_log("Loading")
+            caplog_async.clear()
 
-            caplog_async.caplog.clear()
-            f.write_text("\n\n")
-            await caplog_async.await_log("Loading")
+            for i in range(20):
+                # Some filesystems only have second-level granularity,
+                # so just writing once again is not good enough.
+                f.write_text("\n")
+                if "Loading" in caplog_async.caplog.text:
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise AssertionError("No reload seen")
             sc.done()
 
     async def test_exception(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("INFO")
+        caplog_async.set_level("INFO")
         with taddons.context() as tctx:
             sc = script.Script(
                 tdata.path("mitmproxy/data/addonscripts/error.py"),
@@ -127,7 +134,7 @@ class TestScript:
             sc.done()
 
     async def test_addon(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("INFO")
+        caplog_async.set_level("INFO")
         with taddons.context() as tctx:
             sc = script.Script(tdata.path("mitmproxy/data/addonscripts/addon.py"), True)
             tctx.master.addons.add(sc)
@@ -161,7 +168,7 @@ class TestCutTraceback:
 
 class TestScriptLoader:
     async def test_script_run(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("DEBUG")
+        caplog_async.set_level("DEBUG")
         rp = tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
         sc = script.ScriptLoader()
         with taddons.context(sc):
@@ -204,7 +211,7 @@ class TestScriptLoader:
                 tctx.configure(sc, scripts=["one", "one"])
 
     async def test_script_deletion(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("INFO")
+        caplog_async.set_level("INFO")
         tdir = tdata.path("mitmproxy/data/addonscripts/")
         with open(tdir + "/dummy.py", "w") as f:
             f.write("\n")
@@ -237,7 +244,7 @@ class TestScriptLoader:
             assert "NoneType" in caplog.text
 
     async def test_order(self, tdata, caplog_async):
-        caplog_async.caplog.set_level("DEBUG")
+        caplog_async.set_level("DEBUG")
         rec = tdata.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
         sc.is_running = True
@@ -264,7 +271,7 @@ class TestScriptLoader:
                 "c running",
             ]
 
-            caplog_async.caplog.clear()
+            caplog_async.clear()
             tctx.configure(
                 sc,
                 scripts=[
@@ -282,7 +289,7 @@ class TestScriptLoader:
                 "b configure",
             ]
 
-            caplog_async.caplog.clear()
+            caplog_async.clear()
             tctx.configure(
                 sc,
                 scripts=[

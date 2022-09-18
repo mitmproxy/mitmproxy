@@ -26,7 +26,10 @@ class Master:
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
-        self.log = log.Log(self)
+
+        self.log = log.Log(self)  # deprecated, do not use.
+        self._legacy_log_events = log.LegacyLogEvents(self)
+        self._legacy_log_events.install()
 
         # We expect an active event loop here already because some addons
         # may want to spawn tasks during the initial configuration phase,
@@ -34,10 +37,10 @@ class Master:
         self.event_loop = event_loop or asyncio.get_running_loop()
         try:
             self.should_exit = asyncio.Event()
-        except RuntimeError:
+        except RuntimeError:  # python 3.9 and below
             self.should_exit = asyncio.Event(loop=self.event_loop)
         mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = self.log
+        mitmproxy_ctx.log = self.log  # deprecated, do not use.
         mitmproxy_ctx.options = self.options
 
     async def run(self) -> None:
@@ -74,6 +77,7 @@ class Master:
 
     async def done(self) -> None:
         await self.addons.trigger_event(hooks.DoneHook())
+        self._legacy_log_events.uninstall()
 
     def _asyncio_exception_handler(self, loop, context):
         try:

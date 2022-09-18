@@ -163,23 +163,18 @@ class AddonManager:
         """
         api_changes = {
             # mitmproxy 6 -> mitmproxy 7
-            "clientconnect": "client_connected",
-            "clientdisconnect": "client_disconnected",
-            "serverconnect": "server_connect and server_connected",
-            "serverdisconnect": "server_disconnected",
+            "clientconnect": f"The clientconnect event has been removed, use client_connected instead",
+            "clientdisconnect": f"The clientdisconnect event has been removed, use client_disconnected instead",
+            "serverconnect": "The serverconnect event has been removed, use server_connect and server_connected instead",
+            "serverdisconnect": f"The serverdisconnect event has been removed, use server_disconnected instead",
             # mitmproxy 8 -> mitmproxy 9
-            "add_log": None,
+            "add_log": "The add_log event has been deprecated, use Python's builtin logging module instead",
         }
         for a in traverse([addon]):
-            for old, new in api_changes.items():
+            for old, msg in api_changes.items():
                 if hasattr(a, old):
-                    if new:
-                        msg = f"The {old} event has been removed, use {new} instead. "
-                    else:
-                        msg = f"The {old} event has been removed. "
                     logger.warning(
-                        f"{msg}"
-                        f"For more details, see https://docs.mitmproxy.org/dev/addons-api-changelog/."
+                        f"{msg}. For more details, see https://docs.mitmproxy.org/dev/addons-api-changelog/."
                     )
             name = _get_name(a)
             if name in self.lookup:

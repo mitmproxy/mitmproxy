@@ -28,7 +28,7 @@ logging.info("hello world")
 ```
 
 
-Accordingly, the `add_log` event has been removed. Developers who rely on log entries need to register their own 
+Accordingly, the `add_log` event has been deprecated. Developers who rely on log entries should register their own 
 `logging.Handler` instead. An example for this can be found in the `EventStore` addon.
 
 ## mitmproxy 7.0

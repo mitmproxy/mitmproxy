@@ -31,9 +31,9 @@
   ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
 * Add HTTP/3 binary frame content view.
   ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
-* Remove `add_log` event hook. Users should use the builtin `logging` module instead.
+* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
-* Deprecated `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1

@@ -57,7 +57,7 @@ async def test_client_server():
 
 
 async def test_reader(caplog_async):
-    caplog_async.caplog.set_level("DEBUG")
+    caplog_async.set_level("DEBUG")
     reader = DatagramReader()
     addr = ("8.8.8.8", 53)
     reader.feed_data(b"First message", addr)

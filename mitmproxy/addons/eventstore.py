@@ -38,15 +38,6 @@ class EventStore:
         self.sig_refresh.send()
 
 
-LOGGING_LEVELS_TO_LOGENTRY = {
-    logging.ERROR: "error",
-    logging.WARNING: "warn",
-    logging.INFO: "info",
-    log.ALERT: "alert",
-    logging.DEBUG: "debug",
-}
-
-
 class CallbackLogger(log.MitmLogHandler):
     def __init__(
         self,
@@ -60,6 +51,6 @@ class CallbackLogger(log.MitmLogHandler):
     def emit(self, record: logging.LogRecord) -> None:
         entry = LogEntry(
             msg=self.format(record),
-            level=LOGGING_LEVELS_TO_LOGENTRY.get(record.levelno, "error"),
+            level=log.LOGGING_LEVELS_TO_LOGENTRY.get(record.levelno, "error"),
         )
         self.event_loop.call_soon_threadsafe(self.callback, entry)

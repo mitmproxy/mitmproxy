@@ -73,7 +73,7 @@ class TestReadFile:
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows(io.BytesIO(b"qibble"))
 
-            caplog_async.caplog.clear()
+            caplog_async.clear()
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows(corrupt_data)
             await caplog_async.await_log("file corrupted")

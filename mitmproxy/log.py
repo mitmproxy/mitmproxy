@@ -1,7 +1,10 @@
+from __future__ import annotations
 import logging
 import os
 import warnings
+from dataclasses import dataclass
 
+from mitmproxy import hooks, master
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import human
 
@@ -178,6 +181,50 @@ class Log:
             stacklevel=2,
         )
         logging.getLogger().log(level=logging.getLevelName(level.upper()), msg=text)
+
+
+LOGGING_LEVELS_TO_LOGENTRY = {
+    logging.ERROR: "error",
+    logging.WARNING: "warn",
+    logging.INFO: "info",
+    ALERT: "alert",
+    logging.DEBUG: "debug",
+}
+
+
+class LegacyLogEvents(MitmLogHandler):
+    """Emit deprecated `add_log` events from stdlib logging."""
+    def __init__(
+        self,
+        master: master.Master,
+    ):
+        super().__init__()
+        self.master = master
+        self.formatter = MitmFormatter(colorize=False)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        entry = LogEntry(
+            msg=self.format(record),
+            level=LOGGING_LEVELS_TO_LOGENTRY.get(record.levelno, "error"),
+        )
+        self.master.event_loop.call_soon_threadsafe(
+            self.master.addons.trigger,
+            AddLogHook(entry),
+        )
+
+
+@dataclass
+class AddLogHook(hooks.Hook):
+    """
+    **Deprecated:** Starting with mitmproxy 9, users should use the standard Python logging module instead, for example
+    by calling `logging.getLogger().addHandler()`.
+
+    Called whenever a new log entry is created through the mitmproxy
+    context. Be careful not to log from this event, which will cause an
+    infinite loop!
+    """
+
+    entry: LogEntry
 
 
 def log_tier(level):

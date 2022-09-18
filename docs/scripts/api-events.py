@@ -13,7 +13,7 @@ known = set()
 
 def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     all_params = [
-        list(inspect.signature(hook.__init__).parameters.values())[1:] for hook in hooks
+        list(inspect.signature(hook.__init__, eval_str=True).parameters.values())[1:] for hook in hooks
     ]
 
     # slightly overengineered, but this was fun to write.  ¯\_(ツ)_/¯

@@ -61,9 +61,6 @@ class AOldAPI:
     def clientconnect(self):
         pass
 
-    def add_log(self):
-        pass
-
 
 def test_command():
     with taddons.context() as tctx:

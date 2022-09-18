@@ -53,7 +53,7 @@ async def test_last_exception_and_running(monkeypatch):
 
 
 async def test_tcp_start_stop(caplog_async):
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
     manager = MagicMock()
 
     with taddons.context():
@@ -76,7 +76,7 @@ async def test_tcp_start_stop(caplog_async):
 
 @pytest.mark.parametrize("failure", [True, False])
 async def test_transparent(failure, monkeypatch, caplog_async):
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
     manager = MagicMock()
 
     if failure:
@@ -135,7 +135,7 @@ async def test_invalid_protocol(monkeypatch):
 
 
 async def test_udp_start_stop(caplog_async):
-    caplog_async.caplog.set_level("INFO")
+    caplog_async.set_level("INFO")
     manager = MagicMock()
     manager.connections = {}
 
