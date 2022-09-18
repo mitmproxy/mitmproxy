@@ -3,6 +3,8 @@
 """
 import functools
 import inspect
+import logging
+
 import sys
 import textwrap
 import types
@@ -177,7 +179,7 @@ class CommandManager:
                         try:
                             self.add(o.command_name, o)
                         except exceptions.CommandError as e:
-                            self.master.log.warn(
+                            logging.warning(
                                 f"Could not load command {o.command_name}: {e}"
                             )
 

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import traceback
 from typing import Optional
 
@@ -10,6 +11,8 @@ from mitmproxy import log
 from mitmproxy import options
 from . import ctx as mitmproxy_ctx
 from .proxy.mode_specs import ReverseMode
+
+logger = logging.getLogger(__name__)
 
 
 class Master:
@@ -23,7 +26,10 @@ class Master:
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
-        self.log = log.Log(self)
+
+        self.log = log.Log(self)  # deprecated, do not use.
+        self._legacy_log_events = log.LegacyLogEvents(self)
+        self._legacy_log_events.install()
 
         # We expect an active event loop here already because some addons
         # may want to spawn tasks during the initial configuration phase,
@@ -31,10 +37,10 @@ class Master:
         self.event_loop = event_loop or asyncio.get_running_loop()
         try:
             self.should_exit = asyncio.Event()
-        except RuntimeError:
+        except RuntimeError:  # python 3.9 and below
             self.should_exit = asyncio.Event(loop=self.event_loop)
         mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = self.log
+        mitmproxy_ctx.log = self.log  # deprecated, do not use.
         mitmproxy_ctx.options = self.options
 
     async def run(self) -> None:
@@ -43,12 +49,13 @@ class Master:
         try:
             self.should_exit.clear()
 
-            # Handle scheduled tasks (configure()) first.
-            await asyncio.sleep(0)
+            if ec := self.addons.get("errorcheck"):
+                await ec.shutdown_if_errored()
             if ps := self.addons.get("proxyserver"):
                 await ps.setup_servers()
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
+                ec.finish()
             await self.running()
             try:
                 await self.should_exit.wait()
@@ -70,12 +77,13 @@ class Master:
 
     async def done(self) -> None:
         await self.addons.trigger_event(hooks.DoneHook())
+        self._legacy_log_events.uninstall()
 
     def _asyncio_exception_handler(self, loop, context):
         try:
             exc: Exception = context["exception"]
         except KeyError:
-            self.log.error(
+            logger.error(
                 f"Unhandled asyncio error: {context}"
                 "\nPlease lodge a bug report at:"
                 + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
@@ -83,7 +91,7 @@ class Master:
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
-            self.log.error(
+            logger.error(
                 "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
                 + "\nPlease lodge a bug report at:"
                 + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"

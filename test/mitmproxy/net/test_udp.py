@@ -3,7 +3,6 @@ from typing import Optional
 import pytest
 from mitmproxy.connection import Address
 from mitmproxy.net.udp import MAX_DATAGRAM_SIZE, DatagramReader, DatagramWriter, open_connection, start_server
-from mitmproxy.test import taddons
 
 
 async def test_client_server():
@@ -57,26 +56,26 @@ async def test_client_server():
     await server.wait_closed()
 
 
-async def test_reader():
-    with taddons.context() as tctx:
-        reader = DatagramReader()
-        addr = ("8.8.8.8", 53)
-        reader.feed_data(b"First message", addr)
-        with pytest.raises(AssertionError):
-            reader.feed_data(bytearray(MAX_DATAGRAM_SIZE + 1), addr)
-        reader.feed_data(b"Second message", addr)
-        reader.feed_eof()
-        reader.feed_data(b"too late", ("1.2.3.4", 5))
-        await tctx.master.await_log("Received UDP packet from 1.2.3.4:5 after EOF")
-        assert await reader.read(65535) == b"First message"
-        with pytest.raises(AssertionError):
-            await reader.read(MAX_DATAGRAM_SIZE - 1)
-        assert await reader.read(65535) == b"Second message"
-        assert not await reader.read(65535)
-        assert not await reader.read(65535)
-        full_reader = DatagramReader()
-        for i in range(0, 42):
-            full_reader.feed_data(bytes([i]), addr)
-        full_reader.feed_data(b"too much", ("1.2.3.4", 5))
-        await tctx.master.await_log("Dropped UDP packet from 1.2.3.4:5")
-        full_reader.feed_eof()
+async def test_reader(caplog_async):
+    caplog_async.set_level("DEBUG")
+    reader = DatagramReader()
+    addr = ("8.8.8.8", 53)
+    reader.feed_data(b"First message", addr)
+    with pytest.raises(AssertionError):
+        reader.feed_data(bytearray(MAX_DATAGRAM_SIZE + 1), addr)
+    reader.feed_data(b"Second message", addr)
+    reader.feed_eof()
+    reader.feed_data(b"too late", ("1.2.3.4", 5))
+    await caplog_async.await_log("Received UDP packet from 1.2.3.4:5 after EOF")
+    assert await reader.read(65535) == b"First message"
+    with pytest.raises(AssertionError):
+        await reader.read(MAX_DATAGRAM_SIZE - 1)
+    assert await reader.read(65535) == b"Second message"
+    assert not await reader.read(65535)
+    assert not await reader.read(65535)
+    full_reader = DatagramReader()
+    for i in range(0, 42):
+        full_reader.feed_data(bytes([i]), addr)
+    full_reader.feed_data(b"too much", ("1.2.3.4", 5))
+    await caplog_async.await_log("Dropped UDP packet from 1.2.3.4:5")
+    full_reader.feed_eof()

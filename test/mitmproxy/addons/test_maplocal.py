@@ -169,7 +169,8 @@ class TestMapLocal:
             ml.request(f)
             assert f.response.content == b"foofoobar"
 
-    async def test_nonexistent_files(self, tmpdir, monkeypatch):
+    async def test_nonexistent_files(self, tmpdir, monkeypatch, caplog):
+        caplog.set_level("INFO")
         ml = MapLocal()
 
         with taddons.context(ml) as tctx:
@@ -178,7 +179,7 @@ class TestMapLocal:
             f.request.url = b"https://example.org/css/nonexistent"
             ml.request(f)
             assert f.response.status_code == 404
-            await tctx.master.await_log("None of the local file candidates exist")
+            assert "None of the local file candidates exist" in caplog.text
 
             tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
@@ -188,7 +189,7 @@ class TestMapLocal:
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
             ml.request(f)
-            await tctx.master.await_log("could not read file")
+            assert "Could not read" in caplog.text
 
     def test_is_killed(self, tmpdir):
         ml = MapLocal()

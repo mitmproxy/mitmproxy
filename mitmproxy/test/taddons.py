@@ -1,57 +1,11 @@
 import asyncio
-import sys
 
 import mitmproxy.master
 import mitmproxy.options
-from mitmproxy import hooks, log
+from mitmproxy import hooks
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy.addons import script, core
-
-
-class LogRecorder:
-    def __init__(self, master):
-        self.master: RecordingMaster = master
-
-    def add_log(self, entry: log.LogEntry):
-        self.master.logs.append(entry)
-
-
-class RecordingMaster(mitmproxy.master.Master):
-    def __init__(self, *args, **kwargs):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-        super().__init__(*args, **kwargs, event_loop=loop)
-        self.addons.add(LogRecorder(self))
-        self.logs = []
-
-    def dump_log(self, outf=sys.stdout):
-        for i in self.logs:
-            print(f"{i.level}: {i.msg}", file=outf)
-
-    def has_log(self, txt, level=None):
-        for i in self.logs:
-            if level and i.level != level:
-                continue
-            if txt.lower() in i.msg.lower():
-                return True
-        return False
-
-    async def await_log(self, txt, level=None, timeout=1):
-        # start with a sleep(0), which lets all other coroutines advance.
-        # often this is enough to not sleep at all.
-        await asyncio.sleep(0)
-        for i in range(int(timeout / 0.01)):
-            if self.has_log(txt, level):
-                return True
-            else:
-                await asyncio.sleep(0.01)
-        raise AssertionError(f"Did not find log entry {txt!r} in {self.logs}.")
-
-    def clear(self):
-        self.logs = []
 
 
 class context:
@@ -62,8 +16,13 @@ class context:
     """
 
     def __init__(self, *addons, options=None, loadcore=True):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+
         options = options or mitmproxy.options.Options()
-        self.master = RecordingMaster(options)
+        self.master = mitmproxy.master.Master(options, event_loop=loop)
         self.options = self.master.options
 
         if loadcore:

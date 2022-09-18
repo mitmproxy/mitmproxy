@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import importlib.util
 import importlib.machinery
@@ -16,6 +17,8 @@ from mitmproxy import eventsequence
 from mitmproxy import ctx
 import mitmproxy.types as mtypes
 from mitmproxy.utils import asyncio_utils
+
+logger = logging.getLogger(__name__)
 
 
 def load_script(path: str) -> Optional[types.ModuleType]:
@@ -61,7 +64,7 @@ def script_error_handler(path, exc, msg="", tb=False):
         log_msg = (
             log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
         )
-    ctx.log.error(log_msg)
+    logger.error(log_msg)
 
 
 ReloadInterval = 1
@@ -103,7 +106,7 @@ class Script:
         return [self.ns] if self.ns else []
 
     def loadscript(self):
-        ctx.log.info("Loading script %s" % self.path)
+        logger.info("Loading script %s" % self.path)
         if self.ns:
             ctx.master.addons.remove(self.ns)
         self.ns = None
@@ -128,7 +131,7 @@ class Script:
             try:
                 mtime = os.stat(self.fullpath).st_mtime
             except FileNotFoundError:
-                ctx.log.info("Removing script %s" % self.path)
+                logger.info("Removing script %s" % self.path)
                 scripts = list(ctx.options.scripts)
                 scripts.remove(self.path)
                 ctx.options.update(scripts=scripts)
@@ -162,7 +165,7 @@ class ScriptLoader:
         simulated. Note that the load event is not invoked.
         """
         if not os.path.isfile(path):
-            ctx.log.error("No such script: %s" % path)
+            logger.error("No such script: %s" % path)
             return
         mod = load_script(path)
         if mod:
@@ -184,7 +187,7 @@ class ScriptLoader:
 
             for a in self.addons[:]:
                 if a.path not in ctx.options.scripts:
-                    ctx.log.info("Un-loading script: %s" % a.path)
+                    logger.info("Un-loading script: %s" % a.path)
                     ctx.master.addons.remove(a)
                     self.addons.remove(a)
 

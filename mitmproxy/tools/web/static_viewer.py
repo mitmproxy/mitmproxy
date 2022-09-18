@@ -1,4 +1,5 @@
 import json
+import logging
 import os.path
 import pathlib
 import shutil
@@ -69,11 +70,8 @@ def save_flows_content(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
             else:
                 description, lines = "No content.", []
             if time.time() - t > 0.1:
-                ctx.log(
-                    "Slow content view: {} took {}s".format(
-                        description.strip(), round(time.time() - t, 1)
-                    ),
-                    "info",
+                logging.info(
+                    f"Slow content view: {description.strip()} took {round(time.time() - t, 1)}s",
                 )
             with open(
                 str(message_path / "content" / "Auto.json"), "w"

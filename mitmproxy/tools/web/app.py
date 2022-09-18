@@ -486,7 +486,7 @@ class FlowContentView(RequestHandler):
             viewname, message, flow
         )
         if error:
-            self.master.log.error(error)
+            logging.error(error)
         if max_lines:
             lines = islice(lines, max_lines)
 

@@ -1,3 +1,4 @@
+import logging
 import re
 from collections.abc import Sequence
 
@@ -50,7 +51,7 @@ class ModifyBody:
                 try:
                     replacement = spec.read_replacement()
                 except OSError as e:
-                    ctx.log.warn(f"Could not read replacement file: {e}")
+                    logging.warning(f"Could not read replacement file: {e}")
                     continue
                 if flow.response:
                     flow.response.content = re.sub(

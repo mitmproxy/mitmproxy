@@ -1,5 +1,7 @@
 import collections
 import enum
+from logging import DEBUG, WARNING
+
 import time
 from dataclasses import dataclass
 from functools import cached_property
@@ -492,14 +494,14 @@ class HttpStream(layer.Layer):
             else:
                 yield commands.Log(
                     f"Sent HTTP 101 response, but no protocol is enabled to upgrade to.",
-                    "warn",
+                    WARNING,
                 )
                 yield commands.CloseConnection(self.context.client)
                 self.client_state = self.server_state = self.state_errored
                 return
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[http] upgrading to {self.child_layer}", "debug"
+                    f"{self.debug}[http] upgrading to {self.child_layer}", DEBUG
                 )
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough

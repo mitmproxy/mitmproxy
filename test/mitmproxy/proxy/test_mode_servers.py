@@ -52,29 +52,31 @@ async def test_last_exception_and_running(monkeypatch):
         assert not inst1.is_running
 
 
-async def test_tcp_start_stop():
+async def test_tcp_start_stop(caplog_async):
+    caplog_async.set_level("INFO")
     manager = MagicMock()
 
-    with taddons.context() as tctx:
+    with taddons.context():
         inst = ServerInstance.make("regular@127.0.0.1:0", manager)
         await inst.start()
         assert inst.last_exception is None
-        assert await tctx.master.await_log("proxy listening")
+        assert await caplog_async.await_log("proxy listening")
 
         host, port, *_ = inst.listen_addrs[0]
         reader, writer = await asyncio.open_connection(host, port)
-        assert await tctx.master.await_log("client connect")
+        assert await caplog_async.await_log("client connect")
 
         writer.close()
         await writer.wait_closed()
-        assert await tctx.master.await_log("client disconnect")
+        assert await caplog_async.await_log("client disconnect")
 
         await inst.stop()
-        assert await tctx.master.await_log("stopped HTTP(S) proxy")
+        assert await caplog_async.await_log("Stopped HTTP(S) proxy")
 
 
 @pytest.mark.parametrize("failure", [True, False])
-async def test_transparent(failure, monkeypatch):
+async def test_transparent(failure, monkeypatch, caplog_async):
+    caplog_async.set_level("INFO")
     manager = MagicMock()
 
     if failure:
@@ -86,23 +88,23 @@ async def test_transparent(failure, monkeypatch):
         tctx.options.connection_strategy = "lazy"
         inst = ServerInstance.make("transparent@127.0.0.1:0", manager)
         await inst.start()
-        await tctx.master.await_log("proxy listening")
+        await caplog_async.await_log("proxy listening")
 
         host, port, *_ = inst.listen_addrs[0]
         reader, writer = await asyncio.open_connection(host, port)
 
         if failure:
-            assert await tctx.master.await_log("Transparent mode failure")
+            assert await caplog_async.await_log("Transparent mode failure")
             writer.close()
             await writer.wait_closed()
         else:
-            assert await tctx.master.await_log("client connect")
+            assert await caplog_async.await_log("client connect")
             writer.close()
             await writer.wait_closed()
-            assert await tctx.master.await_log("client disconnect")
+            assert await caplog_async.await_log("client disconnect")
 
         await inst.stop()
-        assert await tctx.master.await_log("stopped transparent proxy")
+        assert await caplog_async.await_log("Stopped transparent proxy")
 
 
 async def test_tcp_start_error():
@@ -132,37 +134,39 @@ async def test_invalid_protocol(monkeypatch):
             await inst.start()
 
 
-async def test_udp_start_stop():
+async def test_udp_start_stop(caplog_async):
+    caplog_async.set_level("INFO")
     manager = MagicMock()
+    manager.connections = {}
 
-    with taddons.context() as tctx:
+    with taddons.context():
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
         await inst.start()
-        assert await tctx.master.await_log("server listening")
+        assert await caplog_async.await_log("server listening")
 
         host, port, *_ = inst.listen_addrs[0]
         reader, writer = await udp.open_connection(host, port)
 
         writer.write(b"\x00\x00\x01")
-        assert await tctx.master.await_log("sent an invalid message")
+        assert await caplog_async.await_log("sent an invalid message")
 
         writer.close()
 
         await inst.stop()
-        assert await tctx.master.await_log("Stopped")
+        assert await caplog_async.await_log("Stopped")
 
 
 async def test_udp_start_error():
     manager = MagicMock()
 
-    with taddons.context() as tctx:
+    with taddons.context():
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
         await inst.start()
-        assert await tctx.master.await_log("server listening")
         port = inst.listen_addrs[0][1]
         inst2 = ServerInstance.make(f"dns@127.0.0.1:{port}", manager)
         with pytest.raises(OSError, match=f"server failed to listen on 127\\.0\\.0\\.1:{port}"):
             await inst2.start()
+        await inst.stop()
 
 
 async def test_udp_connection_reuse(monkeypatch):

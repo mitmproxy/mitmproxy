@@ -249,24 +249,22 @@ def test_orders():
         assert v.order_options()
 
 
-async def test_load(tmpdir):
+async def test_load(tmpdir, caplog):
     path = str(tmpdir.join("path"))
     v = view.View()
-    with taddons.context() as tctx:
-        tctx.master.addons.add(v)
-        tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
-        v.load_file(path)
-        assert len(v) == 2
-        v.load_file(path)
-        assert len(v) == 4
-        try:
-            v.load_file("nonexistent_file_path")
-        except OSError:
-            assert False
-        with open(path, "wb") as f:
-            f.write(b"invalidflows")
-        v.load_file(path)
-        await tctx.master.await_log("Invalid data format.")
+    tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
+    v.load_file(path)
+    assert len(v) == 2
+    v.load_file(path)
+    assert len(v) == 4
+    try:
+        v.load_file("nonexistent_file_path")
+    except OSError:
+        assert False
+    with open(path, "wb") as f:
+        f.write(b"invalidflows")
+    v.load_file(path)
+    assert "Invalid data format." in caplog.text
 
 
 def test_resolve():

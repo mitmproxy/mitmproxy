@@ -127,7 +127,7 @@ class TestModifyHeadersFile:
             mh.request(f)
             assert f.request.headers["one"] == "two"
 
-    async def test_nonexistent(self, tmpdir):
+    async def test_nonexistent(self, tmpdir, caplog):
         mh = ModifyHeaders()
         with taddons.context(mh) as tctx:
             with pytest.raises(
@@ -142,4 +142,4 @@ class TestModifyHeadersFile:
             f = tflow.tflow()
             f.request.content = b"foo"
             mh.request(f)
-            await tctx.master.await_log("could not read")
+            assert "Could not read" in caplog.text

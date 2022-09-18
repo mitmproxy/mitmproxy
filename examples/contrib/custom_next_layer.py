@@ -8,6 +8,8 @@ Example usage:
     - mitmdump -s custom_next_layer.py
     - curl -x localhost:8080 -k https://example.com
 """
+import logging
+
 from mitmproxy import ctx
 from mitmproxy.proxy import layer, layers
 
@@ -19,7 +21,7 @@ def running():
 
 
 def next_layer(nextlayer: layer.NextLayer):
-    ctx.log(
+    logging.info(
         f"{nextlayer.context=}\n"
         f"{nextlayer.data_client()[:70]=}\n"
         f"{nextlayer.data_server()[:70]=}\n"

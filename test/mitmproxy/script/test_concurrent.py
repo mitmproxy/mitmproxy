@@ -28,9 +28,9 @@ class TestConcurrent:
             else:
                 assert 0.5 <= end - start < 1
 
-    async def test_concurrent_err(self, tdata):
+    def test_concurrent_err(self, tdata, caplog):
         with taddons.context() as tctx:
             tctx.script(
                 tdata.path("mitmproxy/data/addonscripts/concurrent_decorator_err.py")
             )
-            await tctx.master.await_log("decorator not supported")
+            assert "decorator not supported" in caplog.text

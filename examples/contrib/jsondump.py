@@ -30,10 +30,12 @@ Configuration:
         dump_destination: "/user/rastley/output.log"
         EOF
 """
-from threading import Lock, Thread
-from queue import Queue
 import base64
 import json
+import logging
+from queue import Queue
+from threading import Lock, Thread
+
 import requests
 
 from mitmproxy import ctx
@@ -48,6 +50,7 @@ class JSONDumper:
     for out-of-the-box Elasticsearch support, and then either writes
     the result to a file or sends it to a URL.
     """
+
     def __init__(self):
         self.outfile = None
         self.transformations = None
@@ -88,7 +91,7 @@ class JSONDumper:
             ('client_conn', 'address'),
         ),
         'ws_messages': (
-            ('messages', ),
+            ('messages',),
         ),
         'headers': (
             ('request', 'headers'),
@@ -207,15 +210,15 @@ class JSONDumper:
         if ctx.options.dump_destination.startswith('http'):
             self.outfile = None
             self.url = ctx.options.dump_destination
-            ctx.log.info('Sending all data frames to %s' % self.url)
+            logging.info('Sending all data frames to %s' % self.url)
             if ctx.options.dump_username and ctx.options.dump_password:
                 self.auth = (ctx.options.dump_username, ctx.options.dump_password)
-                ctx.log.info('HTTP Basic auth enabled.')
+                logging.info('HTTP Basic auth enabled.')
         else:
             self.outfile = open(ctx.options.dump_destination, 'a')
             self.url = None
             self.lock = Lock()
-            ctx.log.info('Writing all data frames to %s' % ctx.options.dump_destination)
+            logging.info('Writing all data frames to %s' % ctx.options.dump_destination)
 
         self._init_transformations()
 

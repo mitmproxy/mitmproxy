@@ -18,16 +18,16 @@ for associating a file with its corresponding flow in the stream saved with
 This addon is not compatible with addons that use the same mechanism to
 capture streamed data, http-stream-modify.py for instance.
 """
+import logging
+import os
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from mitmproxy import ctx
-from datetime import datetime
-from pathlib import Path
-import os
 
 
 class StreamSaver:
-
     TAG = "save_streamed_data: "
 
     def __init__(self, flow, direction):
@@ -58,7 +58,8 @@ class StreamSaver:
             return data
 
         if not self.fh:
-            self.path = datetime.fromtimestamp(self.flow.request.timestamp_start).strftime(ctx.options.save_streamed_data)
+            self.path = datetime.fromtimestamp(self.flow.request.timestamp_start).strftime(
+                ctx.options.save_streamed_data)
             self.path = self.path.replace('%+T', str(self.flow.request.timestamp_start))
             self.path = self.path.replace('%+I', str(self.flow.client_conn.id))
             self.path = self.path.replace('%+D', self.direction)
@@ -70,18 +71,18 @@ class StreamSaver:
                 if not parent.exists():
                     parent.mkdir(parents=True, exist_ok=True)
             except OSError:
-                ctx.log.error(f"{self.TAG}Failed to create directory: {parent}")
+                logging.error(f"{self.TAG}Failed to create directory: {parent}")
 
             try:
                 self.fh = open(self.path, "wb", buffering=0)
             except OSError:
-                ctx.log.error(f"{self.TAG}Failed to open for writing: {self.path}")
+                logging.error(f"{self.TAG}Failed to open for writing: {self.path}")
 
         if self.fh:
             try:
                 self.fh.write(data)
             except OSError:
-                ctx.log.error(f"{self.TAG}Failed to write to: {self.path}")
+                logging.error(f"{self.TAG}Failed to write to: {self.path}")
 
         return data
 
