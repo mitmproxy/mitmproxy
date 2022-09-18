@@ -141,6 +141,7 @@ async def test_wireguard(tdata, monkeypatch, caplog):
 
         _, port = inst.listen_addrs[0]
 
+        assert inst.is_running
         proc = await asyncio.create_subprocess_exec(
             test_client_path,
             str(port),
