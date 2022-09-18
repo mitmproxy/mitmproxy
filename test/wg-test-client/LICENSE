@@ -83,7 +83,7 @@ zeroize v1.5.7: Apache-2.0 OR MIT
 
 --------------------------------------------------------------------------------
 
-This list of third-party crates and their licenses was collected for v0.1.5 of
+This list of third-party crates and their licenses was collected for v0.1.6 of
 the test client by running this command:
 
 $ cargo tree --prefix none --edges no-build,no-dev,no-proc-macro --format "{p}: {l}" --no-dedupe  | sort -u
