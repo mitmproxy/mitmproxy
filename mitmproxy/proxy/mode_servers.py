@@ -66,6 +66,10 @@ class ServerManager(typing.Protocol):
         ...  # pragma: no cover
 
 
+# Python 3.11: Use typing.Self
+Self = TypeVar("Self", bound="ServerInstance")
+
+
 class ServerInstance(Generic[M], metaclass=ABCMeta):
     __modes: ClassVar[dict[str, type[ServerInstance]]] = {}
 
@@ -83,14 +87,20 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             assert mode.type not in ServerInstance.__modes
             ServerInstance.__modes[mode.type] = cls
 
-    @staticmethod
+    @classmethod
     def make(
+        cls: typing.Type[Self],
         mode: mode_specs.ProxyMode | str,
         manager: ServerManager,
-    ) -> ServerInstance:
+    ) -> Self:
         if isinstance(mode, str):
             mode = mode_specs.ProxyMode.parse(mode)
-        return ServerInstance.__modes[mode.type](mode, manager)
+        inst = ServerInstance.__modes[mode.type](mode, manager)
+
+        if not isinstance(inst, cls):
+            raise ValueError(f"{mode!r} is not a spec for a {cls.__name__} server.")
+
+        return inst
 
     @property
     @abstractmethod
