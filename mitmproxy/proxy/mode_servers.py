@@ -29,6 +29,7 @@ from mitmproxy import ctx, flow, platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import local_ip, udp
+from mitmproxy.net.udp_wireguard import WireGuardDatagramTransport
 from mitmproxy.proxy import commands, layers, mode_specs, server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -376,7 +377,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             await handler.handle_client()
 
     def handle_udp_datagram(self, data: bytes, remote_addr: Address, local_addr: Address) -> None:
-        transport = udp.WireGuardDatagramTransport(self._server, local_addr, remote_addr)
+        transport = WireGuardDatagramTransport(self._server, local_addr, remote_addr)
         connection_id = ("udp", remote_addr, local_addr)
         if connection_id not in self.manager.connections:
             reader = udp.DatagramReader()

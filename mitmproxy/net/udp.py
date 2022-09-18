@@ -5,9 +5,8 @@ import logging
 import socket
 from typing import Any, Callable, Optional, Union, cast
 
-import mitmproxy_wireguard as wg
-
 from mitmproxy.connection import Address
+from mitmproxy.net import udp_wireguard
 from mitmproxy.utils import human
 
 logger = logging.getLogger(__name__)
@@ -80,38 +79,11 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._closed.wait()
 
 
-class WireGuardDatagramTransport(asyncio.DatagramTransport):
-    def __init__(self, server: wg.Server, local_addr: Address, remote_addr: Address):
-        self._server: wg.Server = server
-        self._local_addr: Address = local_addr
-        self._remote_addr: Address = remote_addr
-        self._protocol: DrainableDatagramProtocol | None = None
-        super().__init__()
-
-    def sendto(self, data, addr=None):
-        self._server.send_datagram(data, self._local_addr, addr or self._remote_addr)
-
-    def get_extra_info(self, name: str, default: Any = None) -> Any:
-        if name == "sockname":
-            return self._server.getsockname()
-        else:
-            raise NotImplementedError
-
-    def get_protocol(self):
-        return self
-
-    async def drain(self) -> None:
-        pass
-
-
-DatagramTransport = Union[asyncio.DatagramTransport, WireGuardDatagramTransport]
-
-
 class UdpServer(DrainableDatagramProtocol):
     """UDP server similar to base_events.Server"""
 
     # _datagram_received_cb: DatagramReceivedCallback
-    _transport: DatagramTransport | None
+    _transport: asyncio.DatagramTransport | None
     _local_addr: Address | None
 
     def __init__(
@@ -126,7 +98,7 @@ class UdpServer(DrainableDatagramProtocol):
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         if self._transport is None:
-            self._transport = cast(DatagramTransport, transport)
+            self._transport = cast(asyncio.DatagramTransport, transport)
             self._transport.set_protocol(self)
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
@@ -186,14 +158,14 @@ class DatagramReader:
 
 
 class DatagramWriter:
-    _transport: DatagramTransport
+    _transport: asyncio.DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None
     _closed: asyncio.Event | None
 
     def __init__(
         self,
-        transport: DatagramTransport,
+        transport: asyncio.DatagramTransport,
         remote_addr: Address,
         reader: DatagramReader | None = None,
     ) -> None:
@@ -203,14 +175,12 @@ class DatagramWriter:
         """
         self._transport = transport
         self._remote_addr = remote_addr
-        proto = transport.get_protocol()
-        assert isinstance(proto, (DrainableDatagramProtocol, WireGuardDatagramTransport))
         self._reader = reader
         self._closed = asyncio.Event() if reader is not None else None
 
     @property
-    def _protocol(self) -> DrainableDatagramProtocol:
-        return cast(DrainableDatagramProtocol, self._transport.get_protocol())
+    def _protocol(self) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
+        return self._transport.get_protocol()  # type: ignore
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)
