@@ -43,7 +43,7 @@ cipher v0.4.3: MIT OR Apache-2.0
 cpufeatures v0.2.5: MIT OR Apache-2.0
 crypto-common v0.1.6: MIT OR Apache-2.0
 curve25519-dalek v3.2.0: BSD-3-Clause
-digest v0.10.3: MIT OR Apache-2.0
+digest v0.10.5: MIT OR Apache-2.0
 digest v0.9.0: MIT OR Apache-2.0
 generic-array v0.14.6: MIT
 getrandom v0.1.16: MIT OR Apache-2.0
@@ -65,7 +65,7 @@ parking_lot v0.12.1: MIT OR Apache-2.0
 pin-project-lite v0.2.9: Apache-2.0 OR MIT
 poly1305 v0.8.0: Apache-2.0 OR MIT
 rand_core v0.5.1: MIT OR Apache-2.0
-rand_core v0.6.3: MIT OR Apache-2.0
+rand_core v0.6.4: MIT OR Apache-2.0
 ring v0.16.20:
 scopeguard v1.1.0: MIT/Apache-2.0
 smallvec v1.9.0: MIT OR Apache-2.0
@@ -83,7 +83,7 @@ zeroize v1.5.7: Apache-2.0 OR MIT
 
 --------------------------------------------------------------------------------
 
-This list of third-party crates and their licenses was collected for v0.1.4 of
+This list of third-party crates and their licenses was collected for v0.1.5 of
 the test client by running this command:
 
 $ cargo tree --prefix none --edges no-build,no-dev,no-proc-macro --format "{p}: {l}" --no-dedupe  | sort -u

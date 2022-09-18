@@ -115,12 +115,12 @@ async def test_wireguard(monkeypatch):
 
     async def echo_tcp(stream: wg.TcpStream):
         data = await stream.read(1000)
-        stream.write(data)
+        stream.write(data.upper())
         await stream.drain()
         stream.close()
 
     def echo_udp(self: WireGuardServerInstance, data: bytes, src_addr: Address, dst_addr: Address):
-        self._server.send_datagram(data, dst_addr, src_addr)
+        self._server.send_datagram(data.upper(), dst_addr, src_addr)
 
     monkeypatch.setattr(WireGuardServerInstance, "handle_tcp_connection", echo_tcp)
     monkeypatch.setattr(WireGuardServerInstance, "handle_udp_datagram", echo_udp)
@@ -145,12 +145,26 @@ async def test_wireguard(monkeypatch):
         await tctx.master.await_log("WireGuard server listening")
 
         _, port = inst.listen_addrs[0]
-        ret = subprocess.run([test_client_path, str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = await asyncio.create_subprocess_exec(
+            test_client_path,
+            str(port),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
 
         try:
-            ret.check_returncode()
-        except subprocess.CalledProcessError:
-            raise
+            assert proc.returncode == 0
+        except AssertionError:
+            print(stdout)
+            print(stderr)
+
+            raise subprocess.CalledProcessError(
+                proc.returncode,
+                [test_client_path, str(port)],
+                output=stdout,
+                stderr=stderr,
+            )
         finally:
             await inst.stop()
             assert await tctx.master.await_log("Stopped WireGuard server")
