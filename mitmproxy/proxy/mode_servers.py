@@ -303,10 +303,12 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
                     "client_key": wg.genkey(),
                 }, indent=4))
 
-            c = json.loads(conf_path.read_text())
-            self.server_key = c["server_key"]
-            self.client_key = c["client_key"]
-
+            try:
+                c = json.loads(conf_path.read_text())
+                self.server_key = c["server_key"]
+                self.client_key = c["client_key"]
+            except Exception as e:
+                raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
             # error early on invalid keys
             p = wg.pubkey(self.client_key)
             _ = wg.pubkey(self.server_key)
@@ -332,7 +334,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         logger.info(self.client_conf())
 
     def client_conf(self) -> str | None:
-        if not self._listen_addrs:
+        if not self._server:
             return None
         host = local_ip.get_local_ip() or local_ip.get_local_ip6()
         port = self.mode.listen_port(ctx.options.listen_port)
@@ -357,16 +359,10 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
 
     async def stop(self) -> None:
         assert self._server is not None
-        server = self._server
+        self._server.close()
+        await self._server.wait_closed()
         self._server = None
-        try:
-            server.close()
-            await server.wait_closed()
-        except Exception as e:
-            self.last_exception = e
-            raise
-        else:
-            self.last_exception = None
+        self.last_exception = None
 
         addrs = " and ".join({human.format_address(a) for a in self.listen_addrs})
         logger.info(f"Stopped {self.mode.description} at {addrs}.")

@@ -8,7 +8,7 @@ import pytest
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance
+from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
 
@@ -24,6 +24,9 @@ def test_make():
         assert inst.make_top_layer(context)
         assert inst.mode.description
         assert inst.to_json()
+
+    with pytest.raises(ValueError, match="is not a spec for a WireGuardServerInstance server."):
+        WireGuardServerInstance.make("regular", manager)
 
 
 async def test_last_exception_and_running(monkeypatch):
@@ -134,7 +137,7 @@ async def test_wireguard(tdata, monkeypatch, caplog):
     test_conf = tdata.path(f"wg-test-client/test.conf")
 
     with taddons.context(Proxyserver()):
-        inst = ServerInstance.make(f"wireguard:{test_conf}", MagicMock())
+        inst = WireGuardServerInstance.make(f"wireguard:{test_conf}@0", MagicMock())
 
         await inst.start()
         assert "WireGuard server listening" in caplog.text
@@ -159,6 +162,38 @@ async def test_wireguard(tdata, monkeypatch, caplog):
 
         await inst.stop()
         assert "Stopped WireGuard server" in caplog.text
+
+
+async def test_wireguard_generate_conf(tmp_path):
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make(f"wireguard@0", MagicMock())
+        assert not inst.client_conf()  # should not error.
+
+        await inst.start()
+
+        assert (tmp_path / "wireguard.conf").exists()
+        assert inst.client_conf()
+        assert inst.to_json()["wireguard_conf"]
+        k = inst.server_key
+
+        inst2 = WireGuardServerInstance.make(f"wireguard@0", MagicMock())
+        await inst2.start()
+        assert k == inst2.server_key
+
+        await inst.stop()
+        await inst2.stop()
+
+
+async def test_wireguard_invalid_conf(tmp_path):
+    with taddons.context(Proxyserver()):
+        # directory instead of filename
+        inst = WireGuardServerInstance.make(f"wireguard:{tmp_path}", MagicMock())
+
+        with pytest.raises(OSError):
+            await inst.start()
+
+        assert "Invalid configuration file" in repr(inst.last_exception)
 
 
 async def test_tcp_start_error():
