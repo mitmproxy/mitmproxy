@@ -270,7 +270,7 @@ class Proxyserver(ServerManager):
 
     def inject_event(self, event: events.MessageInjected):
         connection_id = (
-            "tcp",
+            event.flow.client_conn.transport_protocol,
             event.flow.client_conn.peername,
             event.flow.client_conn.sockname,
         )

@@ -139,11 +139,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         reader: asyncio.StreamReader | wg.TcpStream,
         writer: asyncio.StreamWriter | wg.TcpStream,
     ) -> None:
-        connection_id = (
-            "tcp",
-            writer.get_extra_info("peername"),
-            writer.get_extra_info("sockname"),
-        )
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
@@ -152,12 +147,23 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             socket = writer.get_extra_info("socket")
             try:
                 assert platform.original_addr
-                handler.layer.context.server.address = platform.original_addr(socket)
+                original_dst = platform.original_addr(socket)
             except Exception as e:
                 logger.error(f"Transparent mode failure: {e!r}")
                 return
+            else:
+                handler.layer.context.client.sockname = original_dst
+                handler.layer.context.server.address = original_dst
         elif isinstance(self.mode, mode_specs.WireGuardMode):
-            handler.layer.context.server.address = writer.get_extra_info("original_dst")
+            original_dst = writer.get_extra_info("original_dst")
+            handler.layer.context.client.sockname = original_dst
+            handler.layer.context.server.address = original_dst
+
+        connection_id = (
+            handler.layer.context.client.transport_protocol,
+            handler.layer.context.client.peername,
+            handler.layer.context.client.sockname,
+        )
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
 
