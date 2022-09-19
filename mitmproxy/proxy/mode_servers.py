@@ -352,6 +352,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             [Interface]
             PrivateKey = {self.client_key}
             Address = 10.0.0.1/32
+            DNS = 10.0.0.53
 
             [Peer]
             PublicKey = {wg.pubkey(self.server_key)}
