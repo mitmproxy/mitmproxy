@@ -51,7 +51,7 @@ class MitmFormatter(logging.Formatter):
             message = miniclick.style(
                 message,
                 fg=LOG_COLORS.get(record.levelno),
-                dim=(record.levelno <= logging.DEBUG)
+                # dim=(record.levelno <= logging.DEBUG)
             )
         if client := getattr(record, "client", None):
             client = human.format_address(client)

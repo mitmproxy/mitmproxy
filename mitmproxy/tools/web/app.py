@@ -290,7 +290,8 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
         for conn in cls.connections:
             try:
-                conn.write_message(message)
+                if not conn.ws_connection.is_closing():
+                    conn.write_message(message)
             except Exception:  # pragma: no cover
                 logging.error("Error sending message", exc_info=True)
 

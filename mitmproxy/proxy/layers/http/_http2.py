@@ -70,8 +70,8 @@ class Http2Connection(HttpConnection):
         super().__init__(context, conn)
         if self.debug:
             self.h2_conf.logger = H2ConnectionLogger(
-                f"{human.format_address(self.context.client.peername)}: "
-                f"{self.__class__.__name__}"
+                self.context.client.peername,
+                self.__class__.__name__
             )
         self.h2_conf.validate_inbound_headers = (
             self.context.options.validate_inbound_headers

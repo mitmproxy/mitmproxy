@@ -53,6 +53,7 @@ def run(
         logging.getLogger().setLevel(logging.DEBUG)
         logging.getLogger("tornado").setLevel(logging.WARNING)
         logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("hpack").setLevel(logging.WARNING)
         debug.register_info_dumpers()
 
         opts = options.Options()

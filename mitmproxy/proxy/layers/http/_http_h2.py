@@ -1,4 +1,5 @@
 import collections
+import logging
 from typing import Dict, List, NamedTuple, Tuple
 
 import h2.config
@@ -9,16 +10,29 @@ import h2.settings
 import h2.stream
 
 
+logger = logging.getLogger(__name__)
+
+
 class H2ConnectionLogger(h2.config.DummyLogger):
-    def __init__(self, name: str):
+    def __init__(self, peername: tuple, conn_type: str):
         super().__init__()
-        self.name = name
+        self.peername = peername
+        self.conn_type = conn_type
 
     def debug(self, fmtstr, *args):
-        print(f"{self.name} h2 (debug): {fmtstr % args}")
+        logger.debug(
+            f"{self.conn_type} {fmtstr}",
+            *args,
+            extra={"client": self.peername}
+        )
 
     def trace(self, fmtstr, *args):
-        print(f"{self.name} h2 (trace): {fmtstr % args}")
+        logger.log(
+            logging.DEBUG - 1,
+            f"{self.conn_type} {fmtstr}",
+            *args,
+            extra={"client": self.peername}
+        )
 
 
 class SendH2Data(NamedTuple):
