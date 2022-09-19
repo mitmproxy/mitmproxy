@@ -53,5 +53,5 @@ async def test_styling(monkeypatch) -> None:
         tctx.configure(t)
         logging.warning("hello")
 
-    assert "\x1b[33m\x1b[22mhello\x1b[0m" in f.getvalue()
+    assert "\x1b[33mhello\x1b[0m" in f.getvalue()
     t.done()
