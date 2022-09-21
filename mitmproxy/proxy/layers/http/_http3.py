@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from queue import Queue
 import time
-from typing import Dict, Optional, Union
+from typing import Dict, Iterable, Optional, Union
 
 from aioquic.h3.connection import (
     H3Connection,
@@ -19,8 +19,8 @@ from mitmproxy import connection, http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
-    OpenQuicStream,
     QuicStreamDataReceived,
+    QuicStreamEvent,
     QuicStreamReset,
     ResetQuicStream,
     SendQuicStreamData,
@@ -62,10 +62,11 @@ class MockQuic:
     Instead, we mock our QUIC connection object here and then take out the wire data to be sent.
     """
 
-    def __init__(self, conn: connection.Connection) -> None:
+    def __init__(self, conn: connection.Connection, is_client: bool) -> None:
         self.conn = conn
         self.pending_commands: Queue[commands.Command] = Queue()
-        self.available_stream_ids: Queue[int] = Queue()
+        self._next_stream_id: list[int, int, int, int] = [0, 1, 2, 3]
+        self._is_client = is_client
 
     def close(
         self,
@@ -80,48 +81,133 @@ class MockQuic:
         ))
         self.pending_commands.put(commands.CloseConnection(self.conn))
 
-    def get_next_available_stream_id(self, is_unidirectional=False) -> int:
-        stream_id = self.available_stream_ids.get()
-        assert is_unidirectional == stream_is_unidirectional(stream_id)
+    def get_next_available_stream_id(self, is_unidirectional: bool = False) -> int:
+        index = (int(is_unidirectional) << 1) | int(not self._is_client)
+        stream_id = self._next_stream_id[index]
+        self._next_stream_id[index] = stream_id + 4
         return stream_id
+
+    def reset_stream(self, stream_id: int, error_code: int) -> None:
+        self.pending_commands.put(ResetQuicStream(self.conn, stream_id, error_code))
+
+    def send_datagram_frame(self, data: bytes) -> None:
+        self.pending_commands.put(commands.SendData(self.conn, data))
 
     def send_stream_data(
         self, stream_id: int, data: bytes, end_stream: bool = False
     ) -> None:
         self.pending_commands.put(SendQuicStreamData(self.conn, stream_id, data, end_stream))
 
+    def stream_can_receive(self, stream_id: int) -> bool:
+        return (
+            stream_is_client_initiated(stream_id) != self._is_client
+            or not stream_is_unidirectional(stream_id)
+        )
+
 
 class LayeredH3Connection(H3Connection):
-    def __init__(self, connection: connection.Connection) -> None:
-        self._quic = MockQuic(connection)
-        super().__init__(quic=self._quic, enable_webtransport=False)
+    def __init__(self, quic: MockQuic, enable_webtransport: bool = False) -> None:
+        self._quic = quic
+        super().__init__(quic, enable_webtransport)
 
-    def start(self) -> layer.CommandGenerator[None]:
-        # we need three unidirectional streams for `_init_connection`
-        for _ in range(1, 3):
-            self._quic.available_stream_ids.put((yield OpenQuicStream(self._quic.conn, is_unidirectional=False)))
+    def _after_send(self, stream_id: int, end_stream: bool) -> None:
+        # if the stream ended, `QuicConnection` has an assert that no further data is being sent
+        # to catch this more early on, we set the header state on the `H3Stream`
+        if end_stream:
+            self._stream[stream_id].headers_send_state = H3HeadersState.AFTER_TRAILERS
 
-    def create_webtransport_stream(self, session_id: int, is_unidirectional: bool = False) -> int:
-        raise NotImplementedError()  # pragma: no cover
+    def end_stream(self, stream_id: int) -> None:
+        """Ends the given stream."""
 
-    def send_datagram(self, flow_id: int, data: bytes) -> None:
-        raise NotImplementedError()  # pragma: no cover
+        self.send_data(stream_id, data=b"", end_stream=True)
 
-    def send_push_promise(self, stream_id: int, headers: H3Headers) -> int:
-        raise NotImplementedError()  # pragma: no cover
+    def get_next_available_stream_id(self, is_unidirectional: bool = False):
+        """Reserves and returns the next available stream ID."""
+
+        return self._quic.get_next_available_stream_id(is_unidirectional)
+
+    def has_ended(self, stream_id: int) -> bool:
+        """Indicates whether the given stream has been closed by the peer."""
+
+        if not self._quic.stream_can_receive(stream_id):
+            return True
+        try:
+            return self._stream[stream_id].ended
+        except KeyError:
+            return False
+
+    def has_sent_headers(self, stream_id: int) -> bool:
+        """Indicates whether headers have been sent over the given stream."""
+
+        try:
+            return self._stream[stream_id].headers_send_state != H3HeadersState.INITIAL
+        except KeyError:
+            return False
+
+    @property
+    def open_stream_ids(self) -> Iterable[int]:
+        """Return all streams, that have not been closed by the peer yet."""
+
+        for stream in self._stream.values():
+            if self._quic.stream_can_receive(stream.stream_id) and not stream.ended:
+                yield stream.stream_id
+
+    def reset_stream(self, stream_id: int, error_code: int) -> None:
+        """Resets a stream that hasn't been ended locally yet."""
+
+        # we don't allow reset after FIN
+        stream = self._get_or_create_stream(stream_id)
+        if stream.headers_send_state == H3HeadersState.AFTER_TRAILERS:
+            raise H3FrameUnexpected("reset not allowed in this state")
+
+        # set the header state and queue a reset event
+        stream.headers_send_state = H3HeadersState.AFTER_TRAILERS
+        self._quic.reset_stream(stream_id, error_code)
+
+    def send_data(self, stream_id: int, data: bytes, end_stream: bool = False) -> None:
+        """Sends data over the given stream."""
+
+        super().send_data(stream_id, data, end_stream)
+        self._after_send(stream_id, end_stream)
+
+    def send_headers(self, stream_id: int, headers: H3Headers, end_stream: bool = False) -> None:
+        """Sends headers over the given stream."""
+
+        # ensure we haven't sent something before
+        stream = self._get_or_create_stream(stream_id)
+        if stream.headers_send_state != H3HeadersState.INITIAL:
+            raise H3FrameUnexpected("initial HEADERS frame is not allowed in this state")
+        super().send_headers(stream_id, headers, end_stream)
+        self._after_send(stream_id, end_stream)
+
+    def send_trailers(self, stream_id: int, trailers: H3Headers) -> None:
+        """Sends trailers over the given stream."""
+
+        # ensure we got some headers first
+        stream = self._get_or_create_stream(stream_id)
+        if stream.headers_send_state != H3HeadersState.AFTER_HEADERS:
+            raise H3FrameUnexpected("trailing HEADERS frame is not allowed in this state")
+        super().send_headers(stream_id, trailers, end_stream=True)
+        self._after_send(stream_id, end_stream=True)
 
     def transmit(self) -> layer.CommandGenerator[None]:
+        """Yields all pending commands for the upper QUIC layer."""
+
         while self._quic.pending_commands:
             yield self._quic.pending_commands.get()
 
 
 class Http3Connection(HttpConnection):
-    h3_conn: Optional[LayeredH3Connection] = None
+    h3_conn: LayeredH3Connection
 
     ReceiveData: type[Union[RequestData, ResponseData]]
     ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
     ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
     ReceiveTrailers: type[Union[RequestTrailers, ResponseTrailers]]
+
+    def __init__(self, context: context.Context, conn: connection.Connection):
+        super().__init__(context, conn)
+        self.h3_conn = LayeredH3Connection(MockQuic(self.conn, self.conn is self.context.client))
 
     @abstractmethod
     def parse_headers(
@@ -129,74 +215,62 @@ class Http3Connection(HttpConnection):
     ) -> Union[RequestHeaders, ResponseHeaders]:
         pass  # pragma: no cover
 
-    def postprocess_outgoing_event(self, event: HttpEvent) -> HttpEvent:
-        return event
-
-    def preprocess_incoming_event(self, event: HttpEvent) -> layer.CommandGenerator[HttpEvent]:
-        yield from ()
-        return event
-
-    @abstractmethod
-    def send_protocol_error(
-        self, event: Union[RequestProtocolError, ResponseProtocolError]
-    ) -> None:
-        pass  # pragma: no cover
-
-    @expect(HttpEvent, QuicStreamDataReceived, QuicStreamReset, events.ConnectionClosed)
-    def state_done(self, _) -> layer.CommandGenerator[None]:
-        yield from ()
-
-    @expect(HttpEvent, QuicStreamDataReceived, QuicStreamReset, events.ConnectionClosed)
-    def state_ready(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.h3_conn is not None
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.Start):
+            pass
 
         # send mitmproxy HTTP events over the H3 connection
         if isinstance(event, HttpEvent):
-            event = yield from self.preprocess_incoming_event(event)
             try:
-
                 if isinstance(event, (RequestData, ResponseData)):
-                    self.h3_conn.send_data(
-                        stream_id=event.stream_id, data=event.data, end_stream=False
-                    )
+                    self.h3_conn.send_data(event.stream_id, event.data)
                 elif isinstance(event, (RequestHeaders, ResponseHeaders)):
-                    self.h3_conn.send_headers(
-                        stream_id=event.stream_id,
-                        headers=(
-                            yield from (
-                                format_h2_request_headers(self.context, event)
-                                if isinstance(event, RequestHeaders)
-                                else format_h2_response_headers(self.context, event)
-                            )
-                        ),
-                        end_stream=event.end_stream,
+                    headers = yield from (
+                        format_h2_request_headers(self.context, event)
+                        if isinstance(event, RequestHeaders)
+                        else format_h2_response_headers(self.context, event)
                     )
-                    if event.end_stream:
-                        # this will prevent any further headers or data from being sent
-                        self.h3_conn._stream[
-                            event.stream_id
-                        ].headers_send_state = H3HeadersState.AFTER_TRAILERS
+                    self.h3_conn.send_headers(event.stream_id, headers, end_stream=event.end_stream)
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
-                    self.h3_conn.send_headers(
-                        stream_id=event.stream_id,
-                        headers=[*event.trailers.fields],
-                        end_stream=True,
-                    )
+                    trailers = [*event.trailers.fields]
+                    self.h3_conn.send_trailers(event.stream_id, trailers)
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
-                    self.h3_conn.send_data(
-                        stream_id=event.stream_id, data=b"", end_stream=True
-                    )
+                    self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
-                    self.send_protocol_error(event)
+                    if not self.h3_conn.has_ended(event.stream_id):
+                        code = {
+                            status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED,
+                        }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR)
+                        send_error_message = (
+                            isinstance(event, ResponseProtocolError)
+                            and not self.h3_conn.has_sent_headers(event.stream_id)
+                            and event.code != status_codes.NO_RESPONSE
+                        )
+                        if send_error_message:
+                            self.h3_conn.send_headers(
+                                event.stream_id,
+                                [
+                                    (b":status", b"%d" % event.code),
+                                    (b"server", version.MITMPROXY.encode()),
+                                    (b"content-type", b"text/html"),
+                                ],
+                            )
+                            self.h3_conn.send_data(
+                                event.stream_id,
+                                format_error(event.code, event.message),
+                                end_stream=True,
+                            )
+                        else:
+                            self.h3_conn.reset_stream(event.stream_id, code)
                 else:
                     raise AssertionError(f"Unexpected event: {event!r}")
 
-            except H3FrameUnexpected:
+            except H3FrameUnexpected as e:
                 # Http2Connection also ignores HttpEvents that violate the current stream state
-                pass
+                yield from commands.Log(f"Received {event!r} unexpectedly: {e}")
 
             else:
-                # transmit buffered data and re-arm timer
+                # transmit buffered data
                 yield from self.h3_conn.transmit()
 
         elif isinstance(event, QuicStreamReset):
@@ -207,7 +281,7 @@ class Http3Connection(HttpConnection):
             ):
                 # mark the receiving part of the stream as ended
                 # (H3Connection alas doesn't handle StreamReset)
-                self.h3_conn._stream[event.stream_id] = True
+                self.h3_conn._stream[event.stream_id].ended = True
 
                 # report the protocol error (doing the same error code mingling as H2)
                 code = (
@@ -216,12 +290,10 @@ class Http3Connection(HttpConnection):
                     else self.ReceiveProtocolError.code
                 )
                 yield ReceiveHttp(
-                    self.postprocess_outgoing_event(
-                        self.ReceiveProtocolError(
-                            stream_id=event.stream_id,
-                            message=f"stream reset by client ({error_code_to_str(event.error_code)})",
-                            code=code,
-                        )
+                    self.ReceiveProtocolError(
+                        stream_id=event.stream_id,
+                        message=f"stream reset by client ({error_code_to_str(event.error_code)})",
+                        code=code,
                     )
                 )
 
@@ -237,19 +309,9 @@ class Http3Connection(HttpConnection):
                     isinstance(h3_event, h3_events.DataReceived)
                     and stream_is_client_initiated(h3_event.stream_id)
                 ):
-                    yield ReceiveHttp(
-                        self.postprocess_outgoing_event(
-                            self.ReceiveData(
-                                stream_id=h3_event.stream_id, data=h3_event.data
-                            )
-                        )
-                    )
+                    yield ReceiveHttp(self.ReceiveData(h3_event.stream_id, h3_event.data))
                     if h3_event.stream_ended:
-                        yield ReceiveHttp(
-                            self.postprocess_outgoing_event(
-                                self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
-                            )
-                        )
+                        yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
 
                 # report headers and trailers
                 elif (
@@ -257,14 +319,8 @@ class Http3Connection(HttpConnection):
                     and stream_is_client_initiated(h3_event.stream_id)
                 ):
                     if self.h3_conn._stream[h3_event.stream_id].headers_recv_state is H3HeadersState.AFTER_TRAILERS:
-                        yield ReceiveHttp(
-                            self.postprocess_outgoing_event(
-                                self.ReceiveTrailers(
-                                    stream_id=h3_event.stream_id,
-                                    trailers=http.Headers(h3_event.headers),
-                                )
-                            )
-                        )
+                        trailers = http.Headers(h3_event.headers)
+                        yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, trailers))
                     else:
                         try:
                             receive_event = self.parse_headers(h3_event)
@@ -277,17 +333,11 @@ class Http3Connection(HttpConnection):
                             ))
                             yield commands.CloseConnection(self.conn)
                         else:
-                            yield ReceiveHttp(
-                                self.postprocess_outgoing_event(receive_event)
-                            )
+                            yield ReceiveHttp(receive_event)
 
                     # always report an EndOfMessage if the stream has ended
                     if h3_event.stream_ended:
-                        yield ReceiveHttp(
-                            self.postprocess_outgoing_event(
-                                self.ReceiveEndOfMessage(stream_id=h3_event.stream_id)
-                            )
-                        )
+                        yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
 
                 # we don't support push, web transport, etc.
                 else:
@@ -302,40 +352,22 @@ class Http3Connection(HttpConnection):
 
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, events.ConnectionClosed):
-            for stream in self.h3_conn._stream.values():
-                if stream_is_client_initiated(stream.stream_id) and not stream.ended:
-                    close_event = get_connection_error(self.conn)
-                    yield ReceiveHttp(
-                        self.postprocess_outgoing_event(
-                            self.ReceiveProtocolError(
-                                stream_id=stream.stream_id,
-                                message=(
-                                    "Connection closed."
-                                    if close_event is None else
-                                    close_event.reason_phrase
-                                ),
-                                code=(
-                                    QuicErrorCode.APPLICATION_ERROR
-                                    if close_event is None else
-                                    close_event.error_code
-                                ),
-                            )
-                        )
-                    )
-            self._handle_event = self.state_done
+            close_event = get_connection_error(self.conn)
+            msg = (
+                "peer closed connection"
+                if close_event is None else
+                close_event.reason_phrase or error_code_to_str(close_event.error_code)
+            )
+            for stream_id in self.h3_conn.open_stream_ids:
+                yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
+            self._handle_event = self.done
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    @expect(events.Start)
-    def state_start(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.h3_conn is None
-
-        self.h3_conn = LayeredH3Connection(self.conn)
-        self._handle_event = self.state_ready
-        yield from self.h3_conn.start()
-
-    _handle_event = state_start
+    @expect(QuicStreamEvent, HttpEvent, events.ConnectionClosed)
+    def done(self, _) -> layer.CommandGenerator[None]:
+        yield from ()
 
 
 class Http3Server(Http3Connection):
@@ -372,29 +404,7 @@ class Http3Server(Http3Connection):
             timestamp_start=time.time(),
             timestamp_end=None,
         )
-        return RequestHeaders(stream_id=event.stream_id, request=request, end_stream=event.stream_ended)
-
-    def send_protocol_error(self, event: Union[RequestProtocolError, ResponseProtocolError]) -> None:
-        assert self.h3_conn is not None
-        assert isinstance(event, ResponseProtocolError)
-
-        # same as HTTP/2
-        code = event.code
-        if code != status_codes.CLIENT_CLOSED_REQUEST:
-            code = status_codes.INTERNAL_SERVER_ERROR
-        self.h3_conn.send_headers(
-            stream_id=event.stream_id,
-            headers=[
-                (b":status", b"%d" % code),
-                (b"server", version.MITMPROXY.encode()),
-                (b"content-type", b"text/html"),
-            ],
-        )
-        self.h3_conn.send_data(
-            stream_id=event.stream_id,
-            data=format_error(code, event.message),
-            end_stream=True,
-        )
+        return RequestHeaders(event.stream_id, request, end_stream=event.stream_ended)
 
 
 class Http3Client(Http3Connection):
@@ -405,8 +415,25 @@ class Http3Client(Http3Connection):
 
     def __init__(self, context: context.Context):
         super().__init__(context, context.server)
-        self._event_to_quic: Dict[int, int] = {}
-        self._quic_to_event: Dict[int, int] = {}
+        self.our_stream_id: Dict[int, int] = {}
+        self.their_stream_id: Dict[int, int] = {}
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        # QUIC and HTTP/3 would actually allow for direct stream ID mapping, but since we want
+        # to support H2<->H3, we need to translate IDs.
+        # NOTE: We always create bidirectional streams, as we can't safely infer unidirectionality.
+        if isinstance(event, HttpEvent):
+            ours = self.our_stream_id.get(event.stream_id, None)
+            if ours is None:
+                ours = self.h3_conn.get_next_available_stream_id()
+                self.our_stream_id[event.stream_id] = ours
+                self.their_stream_id[ours] = event.stream_id
+            event.stream_id = ours
+
+        for cmd in super()._handle_event(event):
+            if isinstance(cmd, ReceiveHttp):
+                cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
+            yield cmd
 
     def parse_headers(self, event: h3_events.HeadersReceived) -> Union[RequestHeaders, ResponseHeaders]:
         # same as HTTP/2
@@ -421,37 +448,7 @@ class Http3Client(Http3Connection):
             timestamp_start=time.time(),
             timestamp_end=None,
         )
-        return ResponseHeaders(stream_id=event.stream_id, response=response, end_stream=event.stream_ended)
-
-    def postprocess_outgoing_event(self, event: HttpEvent) -> HttpEvent:
-        event.stream_id = self._quic_to_event[event.stream_id]
-        return event
-
-    def preprocess_incoming_event(self, event: HttpEvent) -> layer.CommandGenerator[HttpEvent]:
-        if event.stream_id in self._event_to_quic:
-            event.stream_id = self._event_to_quic[event.stream_id]
-        else:
-            # QUIC and HTTP/3 would actually allow for direct stream ID mapping, but since we want
-            # to support H2<->H3, we need to translate IDs.
-            # NOTE: We always create bidirectional streams, as we can't safely infer unidirectionality.
-            stream_id = yield OpenQuicStream(self.conn)
-            self._event_to_quic[event.stream_id] = stream_id
-            self._quic_to_event[stream_id] = event.stream_id
-            event.stream_id = stream_id
-        return event
-
-    def send_protocol_error(self, event: Union[RequestProtocolError, ResponseProtocolError]) -> None:
-        assert isinstance(event, RequestProtocolError)
-
-        # same as HTTP/2
-        code = event.code
-        if code != H3ErrorCode.H3_REQUEST_CANCELLED:
-            code = H3ErrorCode.H3_INTERNAL_ERROR
-        yield ResetQuicStream(
-            connection=self.conn,
-            stream_id=event.stream_id,
-            error_code=code,
-        )
+        return ResponseHeaders(event.stream_id, response, event.stream_ended)
 
 
 __all__ = [
