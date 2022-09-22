@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from queue import Queue
 from typing import Iterable, Optional
 
 from aioquic.h3.connection import (
@@ -68,7 +67,7 @@ class MockQuic:
 
     def __init__(self, conn: connection.Connection, is_client: bool) -> None:
         self.conn = conn
-        self.pending_commands: Queue[commands.Command] = Queue()
+        self.pending_commands: list[commands.Command] = []
         self._next_stream_id: list[int] = [0, 1, 2, 3]
         self._is_client = is_client
 
@@ -92,7 +91,7 @@ class MockQuic:
             frame_type=frame_type,
             reason_phrase=reason_phrase,
         ))
-        self.pending_commands.put(commands.CloseConnection(self.conn))
+        self.pending_commands.append(commands.CloseConnection(self.conn))
 
     def get_next_available_stream_id(self, is_unidirectional: bool = False) -> int:
         # since we always reserve the ID, we have to "find" the next ID like `QuicConnection` does
@@ -102,10 +101,10 @@ class MockQuic:
         return stream_id
 
     def reset_stream(self, stream_id: int, error_code: int) -> None:
-        self.pending_commands.put(ResetQuicStream(self.conn, stream_id, error_code))
+        self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
 
     def send_stream_data(self, stream_id: int, data: bytes, end_stream: bool = False) -> None:
-        self.pending_commands.put(SendQuicStreamData(self.conn, stream_id, data, end_stream))
+        self.pending_commands.append(SendQuicStreamData(self.conn, stream_id, data, end_stream))
 
 
 class LayeredH3Connection(H3Connection):
@@ -254,7 +253,7 @@ class LayeredH3Connection(H3Connection):
         """Yields all pending commands for the upper QUIC layer."""
 
         while self._mock.pending_commands:
-            yield self._mock.pending_commands.get()
+            yield self._mock.pending_commands.pop(0)
 
 
 __all__ = [
