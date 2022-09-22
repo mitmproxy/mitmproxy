@@ -175,12 +175,8 @@ class DatagramWriter:
         """
         self._transport = transport
         self._remote_addr = remote_addr
-        if reader is not None:
-            self._reader = reader
-            self._closed = asyncio.Event()
-        else:
-            self._reader = None
-            self._closed = None
+        self._reader = reader
+        self._closed = asyncio.Event() if reader is not None else None
 
     @property
     def _protocol(self) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
@@ -203,14 +199,8 @@ class DatagramWriter:
             self._transport.close()
         else:
             self._closed.set()
-            assert self._reader
+        if self._reader is not None:
             self._reader.feed_eof()
-
-    def is_closing(self) -> bool:
-        if self._closed is None:
-            return self._transport.is_closing()
-        else:
-            return self._closed.is_set()
 
     async def wait_closed(self) -> None:
         if self._closed is None:

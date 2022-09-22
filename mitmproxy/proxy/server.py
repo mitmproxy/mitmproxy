@@ -367,8 +367,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
                     assert writer
-                    if not writer.is_closing():
-                        writer.write(command.data)
+                    writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.StartHook):
@@ -394,8 +393,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             try:
                 writer = self.transports[connection].writer
                 assert writer
-                if not writer.is_closing():
-                    writer.write_eof()
+                writer.write_eof()
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
