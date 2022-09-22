@@ -314,7 +314,7 @@ class Dumper:
 
     def format_websocket_error(self, websocket: WebSocketData) -> str:
         try:
-            ret = CloseReason(websocket.close_code).name
+            ret = CloseReason(websocket.close_code).name  # type: ignore
         except ValueError:
             ret = f"UNKNOWN_ERROR={websocket.close_code}"
         if websocket.close_reason:

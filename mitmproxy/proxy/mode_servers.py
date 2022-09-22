@@ -144,10 +144,10 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         )
         handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
-            socket = writer.get_extra_info("socket")
+            s = cast(socket.socket, writer.get_extra_info("socket"))
             try:
                 assert platform.original_addr
-                original_dst = platform.original_addr(socket)
+                original_dst = platform.original_addr(s)
             except Exception as e:
                 logger.error(f"Transparent mode failure: {e!r}")
                 return
@@ -390,6 +390,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         await self.handle_tcp_connection(stream, stream)
 
     def wg_handle_udp_datagram(self, data: bytes, remote_addr: Address, local_addr: Address) -> None:
+        assert self._server is not None
         transport = WireGuardDatagramTransport(self._server, local_addr, remote_addr)
         self.handle_udp_datagram(
             transport,

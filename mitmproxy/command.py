@@ -5,6 +5,7 @@ import functools
 import inspect
 import logging
 
+import pyparsing
 import sys
 import textwrap
 import types
@@ -194,7 +195,7 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: list[str] = command_lexer.expr.parseString(cmdstr, parseAll=True)
+        parts: pyparsing.ParseResults = command_lexer.expr.parseString(cmdstr, parseAll=True)
 
         parsed: list[ParseResult] = []
         next_params: list[CommandParameter] = [
