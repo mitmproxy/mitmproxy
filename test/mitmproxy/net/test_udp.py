@@ -45,11 +45,16 @@ async def test_client_server():
     server.resume_writing()
     await server.drain()
 
+    assert not client_writer.is_closing()
+    assert not server_writer.is_closing()
+
     assert await client_reader.read(MAX_DATAGRAM_SIZE) == b"msg4"
     client_writer.close()
+    assert client_writer.is_closing()
     await client_writer.wait_closed()
 
     server_writer.close()
+    assert server_writer.is_closing()
     await server_writer.wait_closed()
 
     server.close()
