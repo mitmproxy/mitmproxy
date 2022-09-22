@@ -39,6 +39,9 @@
   ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
 * Add WireGuard mode to enable userspace transparent proxying via WireGuard.
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
+* Fix mitmweb not properly opening a browser and being stuck on some Linux.
+  ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
+
 
 ## 28 June 2022: mitmproxy 8.1.1
 
