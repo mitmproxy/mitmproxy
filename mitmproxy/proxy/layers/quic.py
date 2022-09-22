@@ -461,7 +461,11 @@ class RawQuicLayer(layer.Layer):
                 or event.connection is self.context.server
             )
         ):
+            # copy the connection error
             from_client = event.connection is self.context.client
+            close_event = get_connection_error(event.connection)
+            if close_event is not None:
+                set_connection_error(self.context.server if from_client else self.context.client, close_event)
 
             # always forward to the datagram layer
             yield from self.event_to_child(self.datagram_layer, event)
@@ -482,20 +486,11 @@ class RawQuicLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def close_stream_layer(
-        self,
-        stream_layer: QuicStreamLayer,
-        conn: connection.Connection,
-        force: bool = False,
-    ) -> layer.CommandGenerator[None]:
+    def close_stream_layer(self, stream_layer: QuicStreamLayer, conn: connection.Connection) -> layer.CommandGenerator[None]:
         """Closes the incoming part of a connection."""
 
         if conn.state & connection.ConnectionState.CAN_READ:
             conn.state &= ~connection.ConnectionState.CAN_READ
-            if force:
-                stream_id = stream_layer.client_stream_id if conn is stream_layer.client else stream_layer.server_stream_id
-                if stream_id is not None:
-                    yield StopQuicStream(conn, stream_id, QuicErrorCode.NO_ERROR)
             yield from self.event_to_child(stream_layer, events.ConnectionClosed(conn))
 
     def event_to_child(self, child_layer: layer.Layer, event: events.Event) -> layer.CommandGenerator[None]:
@@ -529,14 +524,22 @@ class RawQuicLayer(layer.Layer):
                         conn.state &= ~connection.ConnectionState.CAN_WRITE
                         yield SendQuicStreamData(conn, stream_id, b"", end_stream=True)
                     if not command.half_close:
-                        yield from self.close_stream_layer(child_layer, conn, force=True)
+                        if (
+                            stream_is_client_initiated(stream_id) == to_client
+                            or not stream_is_unidirectional(stream_id)
+                        ):
+                            yield StopQuicStream(conn, stream_id, QuicErrorCode.NO_ERROR)
+                        yield from self.close_stream_layer(child_layer, conn)
 
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):
                     assert not to_client
                     assert stream_id is None
                     child_layer.server.timestamp_start = time.time()
-                    stream_id = self.get_next_available_stream_id(is_client=True)
+                    stream_id = self.get_next_available_stream_id(
+                        is_client=True,
+                        is_unidirectional=stream_is_unidirectional(child_layer.client_stream_id)
+                    )
                     child_layer.server_stream_id = stream_id
                     child_layer.server.state = get_stream_connection_state(stream_id, is_client=True)
                     self.server_stream_ids[stream_id] = child_layer
@@ -598,7 +601,9 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
-                self.quic.stop_stream(command.stream_id, command.error_code)
+                # the stream might have already been closed, check before stopping
+                if command.stream_id in self.quic._streams:
+                    self.quic.stop_stream(command.stream_id, command.error_code)
             else:
                 raise AssertionError(f"Unexpected stream command: {command!r}")
             yield from self.tls_interact()
