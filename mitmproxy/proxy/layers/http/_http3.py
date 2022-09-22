@@ -42,7 +42,7 @@ from ._http2 import (
     parse_h2_request_headers,
     parse_h2_response_headers,
 )
-from._http_h3 import LayeredH3Connection, StreamReset, TrailersReceived
+from ._http_h3 import LayeredH3Connection, StreamReset, TrailersReceived
 
 
 class Http3Connection(HttpConnection):
@@ -55,14 +55,14 @@ class Http3Connection(HttpConnection):
 
     def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(context, conn)
-        self.h3_conn = LayeredH3Connection(self.conn, is_client=self.conn is self.context.client)
+        self.h3_conn = LayeredH3Connection(self.conn, is_client=self.conn is self.context.server)
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
             pass
 
         # send mitmproxy HTTP events over the H3 connection
-        if isinstance(event, HttpEvent):
+        elif isinstance(event, HttpEvent):
             try:
                 if isinstance(event, (RequestData, ResponseData)):
                     self.h3_conn.send_data(event.stream_id, event.data)
@@ -74,8 +74,7 @@ class Http3Connection(HttpConnection):
                     )
                     self.h3_conn.send_headers(event.stream_id, headers, end_stream=event.end_stream)
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
-                    trailers = [*event.trailers.fields]
-                    self.h3_conn.send_trailers(event.stream_id, trailers)
+                    self.h3_conn.send_trailers(event.stream_id, [*event.trailers.fields])
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                     self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
@@ -109,7 +108,7 @@ class Http3Connection(HttpConnection):
 
             except H3FrameUnexpected as e:
                 # Http2Connection also ignores HttpEvents that violate the current stream state
-                yield from commands.Log(f"Received {event!r} unexpectedly: {e}")
+                yield commands.Log(f"Received {event!r} unexpectedly: {e}")
 
             else:
                 # transmit buffered data
@@ -148,8 +147,7 @@ class Http3Connection(HttpConnection):
                         if h3_event.stream_ended:
                             yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 elif isinstance(h3_event, TrailersReceived) and h3_event.push_id is None:
-                    trailers = http.Headers(h3_event.trailers)
-                    yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, trailers))
+                    yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, http.Headers(h3_event.trailers)))
                 else:
                     # we don't support push, web transport, etc.
                     yield commands.Log(f"Ignored unsupported H3 event: {h3_event!r}")
@@ -164,7 +162,7 @@ class Http3Connection(HttpConnection):
             )
             for stream_id in self.h3_conn.open_stream_ids:
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
-            self._handle_event = self.done
+            self._handle_event = self.done  # type: ignore
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")

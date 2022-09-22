@@ -11,9 +11,9 @@ from aioquic.h3.connection import (
     HeadersState,
 )
 from aioquic.h3.events import HeadersReceived
-from aioquic.quic import events as quic_events
 from aioquic.quic.connection import stream_is_client_initiated, stream_is_unidirectional
-from aioquic.quic.events import StreamDataReceived
+from aioquic.quic.configuration import QuicConfiguration
+from aioquic.quic.events import ConnectionTerminated, StreamDataReceived
 from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
@@ -68,10 +68,14 @@ class MockQuic:
 
     def __init__(self, conn: connection.Connection, is_client: bool) -> None:
         self.conn = conn
-        self.configuration = type("Object", (), {"_is_client": is_client})
         self.pending_commands: Queue[commands.Command] = Queue()
-        self._next_stream_id: list[int, int, int, int] = [0, 1, 2, 3]
+        self._next_stream_id: list[int] = [0, 1, 2, 3]
         self._is_client = is_client
+
+        # the following fields are accessed by H3Connection
+        self.configuration = QuicConfiguration(is_client=is_client)
+        self._quic_logger = None
+        self._remote_max_datagram_frame_size = 0
 
     def close(
         self,
@@ -83,7 +87,7 @@ class MockQuic:
         # we note the error on the connection and yield a CloseConnection
         # this will then call `QuicConnection.close` with the proper values
         # once the `Http3Connection` receives `ConnectionClosed`, it will send out `*ProtocolError`
-        set_connection_error(self.conn, quic_events.ConnectionTerminated(
+        set_connection_error(self.conn, ConnectionTerminated(
             error_code=error_code,
             frame_type=frame_type,
             reason_phrase=reason_phrase,
@@ -140,11 +144,7 @@ class LayeredH3Connection(H3Connection):
                 isinstance(event, HeadersReceived)
                 and self._stream[event.stream_id].headers_recv_state == HeadersState.AFTER_TRAILERS
             ):
-                events[index] = TrailersReceived(
-                    trailer=event.headers,
-                    stream_id=event.stream_id,
-                    push_id=event.push_id,
-                )
+                events[index] = TrailersReceived(event.headers, event.stream_id, event.push_id)
         return events
 
     def close_connection(self, error_code: int = QuicErrorCode.NO_ERROR, reason_phrase: str = "") -> None:
@@ -172,19 +172,11 @@ class LayeredH3Connection(H3Connection):
         elif isinstance(event, QuicStreamReset):
             stream = self._get_or_create_stream(event.stream_id)
             stream.ended = True
-            return [StreamReset(
-                stream_id=event.stream_id,
-                error_code=event.error_code,
-                push_id=stream.push_id,
-            )]
+            return [StreamReset(event.stream_id, event.error_code, stream.push_id)]
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
-            return super().handle_event(StreamDataReceived(
-                stream_id=event.stream_id,
-                data=event.data,
-                end_stream=event.end_stream,
-            ))
+            return super().handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
 
         # should never happen
         else:

@@ -3,7 +3,7 @@ import asyncio
 from dataclasses import dataclass, field
 from ssl import VerifyMode
 import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import H3_ALPN, ErrorCode as H3ErrorCode
@@ -176,27 +176,6 @@ class StopQuicStream(QuicStreamCommand):
         self.error_code = error_code
 
 
-class OpenQuicStream(commands.ConnectionCommand):
-    """Command that allocates and returns the next available stream ID."""
-
-    is_unidirectional: bool
-    """Whether the stream should be unidirectional."""
-    blocking = True
-
-    def __init__(self, connection: connection.Connection, is_unidirectional: bool = False):
-        super().__init__(connection)
-        self.is_unidirectional = is_unidirectional
-
-
-@dataclass(repr=False)
-class OpenQuicStreamCompleted(events.CommandCompleted):
-    """Emitted when `OpenQuicStream` has been finished."""
-
-    command: OpenQuicStream
-    reply: int
-    """The stream ID for the next stream created by this endpoint."""
-
-
 class QuicSecretsLogger:
     logger: tls.MasterSecretLogger
 
@@ -340,12 +319,12 @@ class QuicStreamLayer(layer.Layer):
             peername=context.client.peername,
             sockname=context.client.sockname,
             timestamp_start=time.time(),
-            transport_protocol=context.client.transport_protocol,
+            transport_protocol="tcp",
             proxy_mode=context.client.proxy_mode,
         )
         self.server = context.server = connection.Server(
             address=context.server.address,
-            transport_protocol=context.server.transport_protocol,
+            transport_protocol="tcp",
         )
         super().__init__(context)
         self.client_stream_id = client_stream_id
@@ -382,6 +361,8 @@ class RawQuicLayer(layer.Layer):
     """Maps connections to layers."""
     command_sources: dict[commands.Command, layer.Layer]
     """Keeps track of blocking commands and wakeup requests."""
+    next_stream_id: list[int]
+    """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
         super().__init__(context)
@@ -398,6 +379,7 @@ class RawQuicLayer(layer.Layer):
             context.server: self.datagram_layer,
         }
         self.command_sources = {}
+        self.next_stream_id = [0, 1, 2, 3]
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         # we treat the datagram layer as child layer, so forward Start
@@ -440,17 +422,18 @@ class RawQuicLayer(layer.Layer):
                     client_stream_id = event.stream_id
                     server_stream_id = None
                 else:
-                    client_stream_id = cast(int, (yield OpenQuicStream(
-                        connection=self.context.client,
+                    client_stream_id = self.get_next_available_stream_id(
+                        is_client=False,
                         is_unidirectional=stream_is_unidirectional(event.stream_id),
-                    )))
+                    )
                     server_stream_id = event.stream_id
 
                 # create, register and start the layer
-                stream_layer = QuicStreamLayer(self.context, self.ignore, client_stream_id, server_stream_id)
+                stream_layer = QuicStreamLayer(self.context.fork(), self.ignore, client_stream_id, server_stream_id)
                 stream_layer.client.state = get_stream_connection_state(client_stream_id, is_client=False)
                 self.client_stream_ids[client_stream_id] = stream_layer
                 if server_stream_id is not None:
+                    stream_layer.server.timestamp_start = time.time()
                     stream_layer.server.state = get_stream_connection_state(server_stream_id, is_client=True)
                     self.server_stream_ids[server_stream_id] = stream_layer
                 self.connections[stream_layer.client] = stream_layer
@@ -499,11 +482,20 @@ class RawQuicLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def close_stream_layer(self, stream_layer: QuicStreamLayer, conn: connection.Connection) -> layer.CommandGenerator[None]:
+    def close_stream_layer(
+        self,
+        stream_layer: QuicStreamLayer,
+        conn: connection.Connection,
+        force: bool = False,
+    ) -> layer.CommandGenerator[None]:
         """Closes the incoming part of a connection."""
 
         if conn.state & connection.ConnectionState.CAN_READ:
             conn.state &= ~connection.ConnectionState.CAN_READ
+            if force:
+                stream_id = stream_layer.client_stream_id if conn is stream_layer.client else stream_layer.server_stream_id
+                if stream_id is not None:
+                    yield StopQuicStream(conn, stream_id, QuicErrorCode.NO_ERROR)
             yield from self.event_to_child(stream_layer, events.ConnectionClosed(conn))
 
     def event_to_child(self, child_layer: layer.Layer, event: events.Event) -> layer.CommandGenerator[None]:
@@ -537,15 +529,14 @@ class RawQuicLayer(layer.Layer):
                         conn.state &= ~connection.ConnectionState.CAN_WRITE
                         yield SendQuicStreamData(conn, stream_id, b"", end_stream=True)
                     if not command.half_close:
-                        yield StopQuicStream(conn, stream_id, QuicErrorCode.NO_ERROR)
-                        yield from self.close_stream_layer(child_layer, conn)
+                        yield from self.close_stream_layer(child_layer, conn, force=True)
 
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):
                     assert not to_client
                     assert stream_id is None
                     child_layer.server.timestamp_start = time.time()
-                    stream_id = cast(int, (yield OpenQuicStream(conn)))
+                    stream_id = self.get_next_available_stream_id(is_client=True)
                     child_layer.server_stream_id = stream_id
                     child_layer.server.state = get_stream_connection_state(stream_id, is_client=True)
                     self.server_stream_ids[stream_id] = child_layer
@@ -561,6 +552,12 @@ class RawQuicLayer(layer.Layer):
                 if isinstance(command, commands.OpenConnection):
                     self.connections[command.connection] = child_layer
                 yield command
+
+    def get_next_available_stream_id(self, is_client: bool, is_unidirectional: bool = False) -> int:
+        index = (int(is_unidirectional) << 1) | int(not is_client)
+        stream_id = self.next_stream_id[index]
+        self.next_stream_id[index] = stream_id + 4
+        return stream_id
 
 
 class QuicLayer(tunnel.TunnelLayer):
@@ -592,39 +589,19 @@ class QuicLayer(tunnel.TunnelLayer):
         """Turns stream commands into aioquic connection invocations."""
 
         if (
-            isinstance(command, SendQuicStreamData)
+            isinstance(command, QuicStreamCommand)
             and command.connection is self.conn
         ):
             assert self.quic
-            self.quic.send_stream_data(command.stream_id, command.data, command.end_stream)
+            if isinstance(command, SendQuicStreamData):
+                self.quic.send_stream_data(command.stream_id, command.data, command.end_stream)
+            elif isinstance(command, ResetQuicStream):
+                self.quic.reset_stream(command.stream_id, command.error_code)
+            elif isinstance(command, StopQuicStream):
+                self.quic.stop_stream(command.stream_id, command.error_code)
+            else:
+                raise AssertionError(f"Unexpected stream command: {command!r}")
             yield from self.tls_interact()
-
-        elif (
-            isinstance(command, ResetQuicStream)
-            and command.connection is self.conn
-        ):
-            assert self.quic
-            self.quic.reset_stream(command.stream_id, command.error_code)
-            yield from self.tls_interact()
-
-        elif (
-            isinstance(command, StopQuicStream)
-            and command.connection is self.conn
-        ):
-            assert self.quic
-            self.quic.stop_stream(command.stream_id, command.error_code)
-            yield from self.tls_interact()
-
-        elif (
-            isinstance(command, OpenQuicStream)
-            and command.connection is self.conn
-        ):
-            assert self.quic
-            stream_id = self.quic.get_next_available_stream_id(command.is_unidirectional)
-            # the next operation is a no-op, but will allocate the stream ID
-            self.quic.send_stream_data(stream_id, data=b"", end_stream=False)
-            self.event_to_child(OpenQuicStreamCompleted(command, stream_id))
-
         else:
             yield from super()._handle_command(command)
 

@@ -884,8 +884,9 @@ class HttpLayer(layer.Layer):
                 if isinstance(event, events.ConnectionClosed):
                     # The peer has closed it - let's close it too!
                     yield commands.CloseConnection(event.connection)
-                elif isinstance(event, events.DataReceived):
-                    # The peer has sent data. This can happen with HTTP/2 servers that already send a settings frame.
+                else:
+                    # The peer has sent data or another connection activity occurred.
+                    # This can happen with HTTP/2 servers that already send a settings frame.
                     child_layer: HttpConnection
                     if is_h3_alpn(self.context.server.alpn):
                         child_layer = Http3Client(self.context.fork())
@@ -896,8 +897,6 @@ class HttpLayer(layer.Layer):
                     self.connections[self.context.server] = child_layer
                     yield from self.event_to_child(child_layer, events.Start())
                     yield from self.event_to_child(child_layer, event)
-                else:
-                    raise AssertionError(f"Unexpected event: {event}")
             else:
                 handler = self.connections[event.connection]
                 yield from self.event_to_child(handler, event)

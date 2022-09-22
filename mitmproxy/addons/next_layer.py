@@ -245,6 +245,8 @@ class NextLayer:
 
         elif context.client.transport_protocol == "udp":
             # unlike TCP, we make a decision immediately
+            if isinstance(context.layers[-1], layers.ServerQuicLayer):
+                return layers.ClientQuicLayer(context)
             tls = self.detect_udp_tls(data_client)
             is_quic = isinstance(context.layers[-1], layers.ClientQuicLayer)
             raw_layer_cls = layers.RawQuicLayer if is_quic else layers.UDPLayer
