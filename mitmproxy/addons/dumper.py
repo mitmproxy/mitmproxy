@@ -362,8 +362,8 @@ class Dumper:
 
         desc = f"DNS {opcode} ({type})"
         desc_color = {
-            "DNS QUERY (A)": "green",
-            "DNS QUERY (AAAA)": "magenta",
+            "A": "green",
+            "AAAA": "magenta",
         }.get(type, "red")
         desc = self.style(desc, fg=desc_color)
 
