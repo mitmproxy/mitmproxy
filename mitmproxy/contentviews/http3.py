@@ -1,13 +1,14 @@
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from typing import Optional
 
 from aioquic.h3.connection import Setting, parse_settings
 
 from mitmproxy import flow, tcp
 from . import base
 from .hex import ViewHex
-from ..proxy.layers.http import is_h3_alpn  # type: ignore
+from ..proxy.layers.http import is_h3_alpn
 
 from aioquic.buffer import Buffer, BufferReadError
 import pylsqpack
@@ -72,8 +73,8 @@ class ViewHttp3(base.View):
     def __call__(
         self,
         data,
-        flow: flow.Flow | None = None,
-        tcp_message: tcp.TCPMessage | None = None,
+        flow: Optional[flow.Flow] = None,
+        tcp_message: Optional[tcp.TCPMessage] = None,
         **metadata
     ):
         assert isinstance(flow, tcp.TCPFlow)
@@ -124,7 +125,7 @@ class ViewHttp3(base.View):
     def render_priority(
         self,
         data: bytes,
-        flow: flow.Flow | None = None,
+        flow: Optional[flow.Flow] = None,
         **metadata
     ) -> float:
         return 2 * float(bool(flow and is_h3_alpn(flow.client_conn.alpn))) * float(isinstance(flow, tcp.TCPFlow))

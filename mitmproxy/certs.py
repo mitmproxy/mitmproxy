@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NewType, Optional, Union
 
-from aioquic.tls import load_pem_x509_certificates
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
@@ -315,10 +314,9 @@ class CertStore:
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
             [
-                Cert(cert)
-                for cert in load_pem_x509_certificates(
-                    self.default_chain_file.read_bytes()
-                )
+                Cert.from_pem(cert)
+                for cert in re.split(rb"(?<=-----END CERTIFICATE-----\n)", self.default_chain_file.read_bytes())
+                if cert
             ]
             if self.default_chain_file
             else [default_ca]

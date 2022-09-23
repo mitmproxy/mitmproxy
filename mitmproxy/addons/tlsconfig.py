@@ -325,7 +325,7 @@ class TlsConfig:
             client.cipher_list = ctx.options.ciphers_client.split(":")
         if client.cipher_list:
             tls_start.settings.cipher_suites = [
-                CipherSuite(cipher) for cipher in client.cipher_list
+                CipherSuite[cipher] for cipher in client.cipher_list
             ]
 
         if ctx.options.add_upstream_certs_to_client_chain:
@@ -356,13 +356,13 @@ class TlsConfig:
             server.cipher_list = ctx.options.ciphers_server.split(":")
         if server.cipher_list:
             tls_start.settings.cipher_suites = [
-                CipherSuite(cipher) for cipher in server.cipher_list
+                CipherSuite[cipher] for cipher in server.cipher_list
             ]
 
         client_cert = self.get_client_cert(server)
         if client_cert:
             config = QuicConfiguration()
-            config.load_cert_chain(client_cert)
+            config.load_cert_chain(Path(client_cert))
             assert isinstance(config.certificate, x509.Certificate)
             tls_start.settings.certificate = config.certificate
             if config.private_key:

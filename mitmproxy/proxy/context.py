@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from mitmproxy import connection
 from mitmproxy.options import Options
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
-    from mitmproxy.proxy.server import ConnectionHandler
 
 
 class Context:
@@ -26,10 +25,6 @@ class Context:
     """
     Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
     """
-    handler: Optional["ConnectionHandler"]
-    """
-    The `ConnectionHandler` responsible for this context.
-    """
     layers: list["mitmproxy.proxy.layer.Layer"]
     """
     The protocol layer stack.
@@ -39,18 +34,16 @@ class Context:
         self,
         client: connection.Client,
         options: Options,
-        handler: Optional["ConnectionHandler"] = None,
     ) -> None:
         self.client = client
         self.options = options
-        self.handler = handler
         self.server = connection.Server(
             None, transport_protocol=client.transport_protocol
         )
         self.layers = []
 
     def fork(self) -> "Context":
-        ret = Context(self.client, self.options, self.handler)
+        ret = Context(self.client, self.options)
         ret.server = self.server
         ret.layers = self.layers.copy()
         return ret

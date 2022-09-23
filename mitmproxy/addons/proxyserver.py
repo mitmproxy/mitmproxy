@@ -310,13 +310,13 @@ class Proxyserver(ServerManager):
     @command.command("inject.udp")
     def inject_udp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, udp.UDPFlow):
-            ctx.log.warn("Cannot inject UDP messages into non-UDP flows.")
+            logger.warning("Cannot inject UDP messages into non-UDP flows.")
 
         event = UdpMessageInjected(flow, udp.UDPMessage(not to_client, message))
         try:
             self.inject_event(event)
         except ValueError as e:
-            ctx.log.warn(str(e))
+            logger.warning(str(e))
 
     def server_connect(self, data: server_hooks.ServerConnectionHookData):
         if data.server.sockname is None:

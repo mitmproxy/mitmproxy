@@ -424,7 +424,7 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
             time.time(),
             proxy_mode=mode,
         )
-        context = Context(client, options, self)
+        context = Context(client, options)
         super().__init__(context)
         self.transports[client] = ConnectionIO(
             handler=None, reader=reader, writer=writer

@@ -80,8 +80,8 @@ class Http3Connection(HttpConnection):
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
                     if not self.h3_conn.has_ended(event.stream_id):
                         code = {
-                            status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED,
-                        }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR)
+                            status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED.value,
+                        }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR.value)
                         send_error_message = (
                             isinstance(event, ResponseProtocolError)
                             and not self.h3_conn.has_sent_headers(event.stream_id)
@@ -116,11 +116,11 @@ class Http3Connection(HttpConnection):
 
         # forward stream messages from the QUIC layer to the H3 connection
         elif isinstance(event, QuicStreamEvent):
-            for h3_event in self.h3_conn.handle_event(event):
+            for h3_event in self.h3_conn.handle_stream_event(event):
                 if isinstance(h3_event, StreamReset) and h3_event.push_id is None:
                     err_str = error_code_to_str(h3_event.error_code)
                     err_code = {
-                        H3ErrorCode.H3_REQUEST_CANCELLED: status_codes.CLIENT_CLOSED_REQUEST,
+                        H3ErrorCode.H3_REQUEST_CANCELLED.value: status_codes.CLIENT_CLOSED_REQUEST,
                     }.get(h3_event.error_code, self.ReceiveProtocolError.code)
                     yield ReceiveHttp(
                         self.ReceiveProtocolError(

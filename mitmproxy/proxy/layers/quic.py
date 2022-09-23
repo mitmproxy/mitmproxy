@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
+from logging import DEBUG, ERROR, WARNING
 from ssl import VerifyMode
 import time
 from typing import TYPE_CHECKING
@@ -285,9 +286,9 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
         try:
             return _initialize(peer_cid)
         finally:
-            quic.tls._server_handle_hello = server_handle_hello_replacement
+            quic.tls._server_handle_hello = server_handle_hello_replacement  # type: ignore
 
-    quic._initialize = initialize_replacement
+    quic._initialize = initialize_replacement  # type: ignore
     try:
         quic.receive_datagram(data, ("0.0.0.0", 0), now=0)
     except QuicClientHello as hello:
@@ -448,7 +449,9 @@ class RawQuicLayer(layer.Layer):
                     yield from self.close_stream_layer(stream_layer, conn)
             elif isinstance(event, QuicStreamReset):
                 if self.debug is not None:
-                    yield commands.Log(f"{self.debug}[quic] stream_reset (stream_id={event.stream_id}, error_code={event.error_code})")
+                    yield commands.Log(
+                        f"{self.debug}[quic] stream_reset (stream_id={event.stream_id}, error_code={event.error_code})", DEBUG
+                    )
                 yield from self.close_stream_layer(stream_layer, conn)
             else:
                 raise AssertionError(f"Unexpected stream event: {event!r}")
@@ -624,7 +627,7 @@ class QuicLayer(tunnel.TunnelLayer):
         else:
             yield QuicStartServerHook(tls_data)
         if tls_data.settings is None:
-            yield commands.Log(f"No QUIC context was provided, failing connection.", level="error")
+            yield commands.Log(f"No QUIC context was provided, failing connection.", ERROR)
             yield commands.CloseConnection(self.conn)
             return
 
@@ -702,15 +705,17 @@ class QuicLayer(tunnel.TunnelLayer):
 
                 # set the connection's TLS properties
                 self.conn.timestamp_tls_setup = self._loop.time()
-                self.conn.alpn = event.alpn_protocol.encode("ascii")
+                if event.alpn_protocol:
+                    self.conn.alpn = event.alpn_protocol.encode("ascii")
                 self.conn.certificate_list = [certs.Cert(cert) for cert in all_certs]
+                assert self.quic.tls.key_schedule
                 self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
                 self.conn.tls_version = "QUIC"
 
                 # log the result and report the success to addons
                 if self.debug:
                     yield commands.Log(
-                        f"{self.debug}[quic] tls established: {self.conn}", "debug"
+                        f"{self.debug}[quic] tls established: {self.conn}", DEBUG
                     )
                 if self.conn is self.context.client:
                     yield TlsEstablishedClientHook(QuicTlsData(self.conn, self.context, settings=self.tls))
@@ -755,7 +760,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
-                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", level="debug"
+                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", DEBUG
                     )
                 yield commands.CloseConnection(self.conn)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit
@@ -835,7 +840,7 @@ class ServerQuicLayer(QuicLayer):
             yield from super().event_to_child(event)
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
-        yield commands.Log(f"Server QUIC handshake failed. {err}", level="warn")
+        yield commands.Log(f"Server QUIC handshake failed. {err}", level=WARNING)
         yield from super().on_handshake_error(err)
 
 
@@ -879,11 +884,11 @@ class ClientQuicLayer(QuicLayer):
             return False, f"Cannot parse QUIC header: {e} ({data.hex()})"
 
         # negotiate version, support all versions known to aioquic
-        supported_versions = (
+        supported_versions = [
             version.value
             for version in QuicProtocolVersion
             if version is not QuicProtocolVersion.NEGOTIATION
-        )
+        ]
         if header.version is not None and header.version not in supported_versions:
             yield commands.SendData(
                 self.tunnel_connection,
@@ -962,10 +967,10 @@ class ClientQuicLayer(QuicLayer):
         return err
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
-        yield commands.Log(f"Client QUIC handshake failed. {err}", level="warn")
+        yield commands.Log(f"Client QUIC handshake failed. {err}", level=WARNING)
         yield from super().on_handshake_error(err)
         self.event_to_child = self.errored  # type: ignore
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"{self.debug}[quic] Swallowing {event} as handshake failed.", "debug")
+            yield commands.Log(f"{self.debug}[quic] Swallowing {event} as handshake failed.", DEBUG)

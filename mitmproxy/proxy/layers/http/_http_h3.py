@@ -170,7 +170,7 @@ class LayeredH3Connection(H3Connection):
 
         return self._mock.get_reserved_stream_ids(is_unidirectional)
 
-    def handle_event(self, event: QuicStreamEvent) -> list[H3Event]:
+    def handle_stream_event(self, event: QuicStreamEvent) -> list[H3Event]:
         # don't do anything if we're done
         if self._is_done:
             return []
@@ -183,7 +183,7 @@ class LayeredH3Connection(H3Connection):
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
-            return super().handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
+            return self.handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
 
         # should never happen
         else:
