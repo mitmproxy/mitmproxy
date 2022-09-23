@@ -1,8 +1,9 @@
 import base64
-import binascii
+import logging
 import socket
 from typing import Any, Optional
 
+import binascii
 from ntlm_auth import gss_channel_bindings, ntlm
 
 from mitmproxy import addonmanager, http
@@ -25,7 +26,7 @@ class NTLMUpstreamAuth:
     """
 
     def load(self, loader: addonmanager.Loader) -> None:
-        ctx.log.info("NTLMUpstreamAuth loader")
+        logging.info("NTLMUpstreamAuth loader")
         loader.add_option(
             name="upstream_ntlm_auth",
             typespec=Optional[str],
@@ -60,7 +61,7 @@ class NTLMUpstreamAuth:
             Valid values are 0-5 (Default: 3)
             """
         )
-        ctx.log.debug("AddOn: NTLM Upstream Authentication - Loaded")
+        logging.debug("AddOn: NTLM Upstream Authentication - Loaded")
 
     def running(self):
         def extract_flow_from_context(context: Context) -> http.HTTPFlow:
@@ -73,7 +74,7 @@ class NTLMUpstreamAuth:
         def build_connect_flow(context: Context, connect_header: tuple) -> http.HTTPFlow:
             flow = extract_flow_from_context(context)
             if not flow:
-                ctx.log.error("failed to build connect flow")
+                logging.error("failed to build connect flow")
                 raise
             flow.request.content = b""  # we should send empty content for handshake
             header_name, header_value = connect_header
@@ -96,7 +97,7 @@ class NTLMUpstreamAuth:
                     try:
                         token = challenge_message.split(': ')[1]
                     except IndexError:
-                        ctx.log.error("Failed to extract challenge_message")
+                        logging.error("Failed to extract challenge_message")
                         raise
                     return token
 
@@ -130,7 +131,7 @@ class NTLMUpstreamAuth:
         HttpUpstreamProxy.receive_handshake_data = patched_receive_handshake_data
 
     def done(self):
-        ctx.log.info('close ntlm session')
+        logging.info('close ntlm session')
 
 
 addons = [
@@ -149,8 +150,7 @@ class CustomNTLMContext:
         ntlm_compatibility: int = ctx.options.upstream_ntlm_compatibility
         username, password = tuple(auth.split(":"))
         workstation = socket.gethostname().upper()
-        ctx.log.debug(f'\nntlm context with the details: "{domain}\\{username}", *****')
-        self.ctx_log = ctx.log
+        logging.debug(f'\nntlm context with the details: "{domain}\\{username}", *****')
         self.preferred_type = preferred_type
         self.ntlm_context = ntlm.NtlmContext(
             username=username,
@@ -165,7 +165,7 @@ class CustomNTLMContext:
         negotiate_message_base_64_in_bytes = base64.b64encode(negotiate_message)
         negotiate_message_base_64_ascii = negotiate_message_base_64_in_bytes.decode("ascii")
         negotiate_message_base_64_final = f'{self.preferred_type} {negotiate_message_base_64_ascii}'
-        self.ctx_log.debug(
+        logging.debug(
             f'{self.preferred_type} Authentication, negotiate message: {negotiate_message_base_64_final}'
         )
         return negotiate_message_base_64_final
@@ -175,12 +175,12 @@ class CustomNTLMContext:
         try:
             challenge_message_ascii_bytes = base64.b64decode(challenge_message, validate=True)
         except binascii.Error as err:
-            self.ctx_log.debug(f'{self.preferred_type} Authentication fail with error {err.__str__()}')
+            logging.debug(f'{self.preferred_type} Authentication fail with error {err.__str__()}')
             return False
         authenticate_message = self.ntlm_context.step(challenge_message_ascii_bytes)
         negotiate_message_base_64 = '{} {}'.format(self.preferred_type,
                                                    base64.b64encode(authenticate_message).decode('ascii'))
-        self.ctx_log.debug(
+        logging.debug(
             f'{self.preferred_type} Authentication, response to challenge message: {negotiate_message_base_64}'
         )
         return negotiate_message_base_64

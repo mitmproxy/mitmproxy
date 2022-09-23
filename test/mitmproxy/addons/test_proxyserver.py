@@ -47,7 +47,9 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-async def test_start_stop():
+async def test_start_stop(caplog_async):
+    caplog_async.set_level("INFO")
+
     async def server_handler(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ):
@@ -65,7 +67,7 @@ async def test_start_stop():
             assert not ps.servers
             assert await ps.setup_servers()
             ps.running()
-            await tctx.master.await_log("HTTP(S) proxy listening at", level="info")
+            await caplog_async.await_log("HTTP(S) proxy listening at")
             assert ps.servers
 
             proxy_addr = ps.listen_addrs()[0]
@@ -80,7 +82,7 @@ async def test_start_stop():
 
             await ps.setup_servers()  # assert this can always be called without side effects
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("Stopped HTTP(S) proxy at", level="info")
+            await caplog_async.await_log("Stopped HTTP(S) proxy at")
             if ps.servers.is_updating:
                 async with ps.servers._lock:
                     pass  # wait until start/stop is finished.
@@ -119,7 +121,6 @@ async def test_inject() -> None:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert await ps.setup_servers()
             ps.running()
-            await tctx.master.await_log("HTTP(S) proxy listening", level="info")
             proxy_addr = ps.servers["regular"].listen_addrs[0]
             reader, writer = await asyncio.open_connection(*proxy_addr)
 
@@ -138,25 +139,20 @@ async def test_inject() -> None:
             assert await reader.read(1) == b"c"
 
 
-async def test_inject_fail() -> None:
+async def test_inject_fail(caplog) -> None:
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        ps.inject_websocket(tflow.tflow(), True, b"test")
-        await tctx.master.await_log(
-            "Cannot inject WebSocket messages into non-WebSocket flows.", level="warn"
-        )
-        ps.inject_tcp(tflow.tflow(), True, b"test")
-        await tctx.master.await_log(
-            "Cannot inject TCP messages into non-TCP flows.", level="warn"
-        )
+    ps.inject_websocket(tflow.tflow(), True, b"test")
+    assert "Cannot inject WebSocket messages into non-WebSocket flows." in caplog.text
+    ps.inject_tcp(tflow.tflow(), True, b"test")
+    assert "Cannot inject TCP messages into non-TCP flows." in caplog.text
 
-        ps.inject_websocket(tflow.twebsocketflow(), True, b"test")
-        await tctx.master.await_log("Flow is not from a live connection.", level="warn")
-        ps.inject_websocket(tflow.ttcpflow(), True, b"test")
-        await tctx.master.await_log("Flow is not from a live connection.", level="warn")
+    ps.inject_websocket(tflow.twebsocketflow(), True, b"test")
+    assert "Flow is not from a live connection." in caplog.text
+    ps.inject_websocket(tflow.ttcpflow(), True, b"test")
+    assert "Cannot inject WebSocket messages into non-WebSocket flows" in caplog.text
 
 
-async def test_warn_no_nextlayer():
+async def test_warn_no_nextlayer(caplog):
     """
     Test that we log an error if the proxy server is started without NextLayer addon.
     That is a mean trap to fall into when writing end-to-end tests.
@@ -166,7 +162,7 @@ async def test_warn_no_nextlayer():
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, server=False)
         assert await ps.setup_servers()
         ps.running()
-        await tctx.master.await_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
+        assert "Warning: Running proxyserver without nextlayer addon!" in caplog.text
 
 
 async def test_self_connect():
@@ -178,12 +174,12 @@ async def test_self_connect():
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         assert await ps.setup_servers()
         ps.running()
-        await tctx.master.await_log("HTTP(S) proxy listening", level="info")
         assert ps.servers
         server.address = ("localhost", ps.servers["regular"].listen_addrs[0][1])
         ps.server_connect(server_hooks.ServerConnectionHookData(server, client))
         assert "Request destination unknown" in server.error
         tctx.configure(ps, server=False)
+        assert await ps.setup_servers()
 
 
 def test_options():
@@ -209,19 +205,21 @@ def test_options():
         tctx.configure(ps, mode=["regular"], server=False)
 
 
-async def test_startup_err(monkeypatch) -> None:
+async def test_startup_err(monkeypatch, caplog) -> None:
     async def _raise(*_):
         raise OSError("cannot bind")
 
     monkeypatch.setattr(asyncio, "start_server", _raise)
 
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
+    with taddons.context(ps):
         assert not await ps.setup_servers()
-        await tctx.master.await_log("cannot bind", level="error")
+        assert "cannot bind" in caplog.text
 
 
-async def test_shutdown_err() -> None:
+async def test_shutdown_err(caplog_async) -> None:
+    caplog_async.set_level("INFO")
+
     async def _raise(*_):
         raise OSError("cannot close")
 
@@ -234,7 +232,7 @@ async def test_shutdown_err() -> None:
         for server in ps.servers:
             setattr(server, "stop", _raise)
         tctx.configure(ps, server=False)
-        await tctx.master.await_log("cannot close", level="error")
+        await caplog_async.await_log("cannot close")
 
 
 class DummyResolver:
@@ -249,7 +247,8 @@ class DummyResolver:
         raise e
 
 
-async def test_dns() -> None:
+async def test_dns(caplog_async) -> None:
+    caplog_async.set_level("INFO")
     ps = Proxyserver()
     with taddons.context(ps, DummyResolver()) as tctx:
         tctx.configure(
@@ -258,12 +257,10 @@ async def test_dns() -> None:
         )
         assert await ps.setup_servers()
         ps.running()
-        await tctx.master.await_log("DNS server listening at", level="info")
+        await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
         r, w = await udp.open_connection(*dns_addr)
-        w.write(b"\x00")
-        await tctx.master.await_log("sent an invalid message", level="info")
         req = tdnsreq()
         w.write(req.packed)
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
@@ -281,8 +278,11 @@ async def test_dns() -> None:
         dns_layer = ps.connections[("udp", w.get_extra_info("sockname"), dns_addr)].layer
         assert isinstance(dns_layer, layers.DNSLayer)
         assert len(dns_layer.flows) == 2
+
+        w.write(b"\x00")
+        await caplog_async.await_log("sent an invalid message")
         tctx.configure(ps, server=False)
-        await tctx.master.await_log("Stopped DNS server at", level="info")
+        await caplog_async.await_log("Stopped DNS server at")
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -312,7 +312,9 @@ async def udp_server(handle_conn) -> Address:
         server.close()
 
 
-async def test_dtls(monkeypatch) -> None:
+async def test_dtls(monkeypatch, caplog_async) -> None:
+    caplog_async.set_level("INFO")
+
     def server_handler(
             transport: asyncio.DatagramTransport,
             data: bytes,
@@ -335,7 +337,7 @@ async def test_dtls(monkeypatch) -> None:
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
-            await tctx.master.await_log(f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening", level="info")
+            await caplog_async.await_log(f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening")
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             r, w = await udp.open_connection(*addr)
@@ -344,4 +346,4 @@ async def test_dtls(monkeypatch) -> None:
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
-            await tctx.master.await_log("stopped reverse proxy to dtls", level="info")
+            await caplog_async.await_log("Stopped reverse proxy to dtls")

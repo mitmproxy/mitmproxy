@@ -150,7 +150,9 @@ like a normal HTTP server:
 
 {{< figure src="/schematics/proxy-modes-reverse.png" >}}
 
-Locally, reverse mode instances will listen on port 8080 by default. To specify a different port, append "`@`" followed by the number to the mode.
+Locally, reverse mode instances will listen on the same port as their regular
+equivalent, which is 8080 by default (except for DNS, which uses port 53).
+To specify a different port, append "`@`" followed by the number to the mode.
 For example, to listen on port 8081 for HTTP proxy request use
 `--mode reverse:https://example.com@8081`.
 

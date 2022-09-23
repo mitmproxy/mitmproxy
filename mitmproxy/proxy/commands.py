@@ -6,7 +6,9 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
-from typing import Literal, Union, TYPE_CHECKING
+import logging
+import warnings
+from typing import Union, TYPE_CHECKING
 
 import mitmproxy.hooks
 from mitmproxy.connection import Connection, Server
@@ -120,16 +122,31 @@ class StartHook(Command, mitmproxy.hooks.Hook):
 
 
 class Log(Command):
+    """
+    Log a message.
+
+    Layers could technically call `logging.log` directly, but the use of a command allows us to
+    write more expressive playbook tests. Put differently, by using commands we can assert that
+    a specific log message is a direct consequence of a particular I/O event.
+    This could also be implemented with some more playbook magic in the future,
+    but for now we keep the current approach as the fully sans-io one.
+    """
     message: str
-    level: str
+    level: int
 
     def __init__(
         self,
         message: str,
-        level: Literal["error", "warn", "info", "alert", "debug"] = "info",
+        level: int = logging.INFO,
     ):
+        if isinstance(level, str):  # pragma: no cover
+            warnings.warn(
+                "commands.Log() now expects an integer log level, not a string.",
+                DeprecationWarning, stacklevel=2
+            )
+            level = getattr(logging, level.upper())
         self.message = message
         self.level = level
 
     def __repr__(self):
-        return f"Log({self.message!r}, {self.level!r})"
+        return f"Log({self.message!r}, {logging.getLevelName(self.level).lower()})"

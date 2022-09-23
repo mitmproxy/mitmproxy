@@ -45,6 +45,9 @@ def test_listen_addr():
     assert ProxyMode.parse("regular").listen_host(default="127.0.0.3") == "127.0.0.3"
     assert ProxyMode.parse("regular@127.0.0.2:8080").listen_host(default="127.0.0.3") == "127.0.0.2"
 
+    assert ProxyMode.parse("reverse:https://1.2.3.4").listen_port() == 8080
+    assert ProxyMode.parse("reverse:dns://8.8.8.8").listen_port() == 53
+
 
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
@@ -55,6 +58,9 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("dns")
     assert ProxyMode.parse("reverse:dns://8.8.8.8")
     assert ProxyMode.parse("reverse:dtls://127.0.0.1:8004")
+    assert ProxyMode.parse("wireguard")
+    assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
+    assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")

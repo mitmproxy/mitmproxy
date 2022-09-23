@@ -1,8 +1,8 @@
+import logging
 from collections.abc import Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import ctx
 
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -17,7 +17,7 @@ class CommandExecutor:
             try:
                 ret = self.master.commands.execute(cmd)
             except exceptions.CommandError as e:
-                ctx.log.error(str(e))
+                logging.error(str(e))
             else:
                 if ret is not None:
                     if type(ret) == Sequence[flow.Flow]:

@@ -41,8 +41,7 @@ def test_save_flows(tmpdir):
     )
 
 
-@mock.patch("mitmproxy.ctx.log")
-def test_save_flows_content(ctx, tmpdir):
+def test_save_flows_content(tmpdir):
     flows = [tflow.tflow(resp=False), tflow.tflow(resp=True)]
     with mock.patch("time.time", mock.Mock(side_effect=[1, 2, 2] * 4)):
         static_viewer.save_flows_content(tmpdir, flows)

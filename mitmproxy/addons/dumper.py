@@ -1,3 +1,5 @@
+import logging
+
 import itertools
 import shutil
 import sys
@@ -114,7 +116,7 @@ class Dumper:
             ctx.options.dumper_default_contentview, message, flow
         )
         if error:
-            ctx.log.debug(error)
+            logging.debug(error)
 
         if ctx.options.flow_detail == 3:
             lines_to_echo = itertools.islice(lines, 70)
@@ -312,7 +314,7 @@ class Dumper:
 
     def format_websocket_error(self, websocket: WebSocketData) -> str:
         try:
-            ret = CloseReason(websocket.close_code).name
+            ret = CloseReason(websocket.close_code).name  # type: ignore
         except ValueError:
             ret = f"UNKNOWN_ERROR={websocket.close_code}"
         if websocket.close_reason:
@@ -360,8 +362,8 @@ class Dumper:
 
         desc = f"DNS {opcode} ({type})"
         desc_color = {
-            "DNS QUERY (A)": "green",
-            "DNS QUERY (AAAA)": "magenta",
+            "A": "green",
+            "AAAA": "magenta",
         }.get(type, "red")
         desc = self.style(desc, fg=desc_color)
 

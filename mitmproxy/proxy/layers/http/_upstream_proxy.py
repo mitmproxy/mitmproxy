@@ -1,3 +1,5 @@
+from logging import DEBUG
+
 import time
 from typing import Optional
 
@@ -73,11 +75,10 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         self.buf += data
         response_head = self.buf.maybe_extract_lines()
         if response_head:
-            response_head = [
-                bytes(x) for x in response_head
-            ]  # TODO: Make url.parse compatible with bytearrays
             try:
-                response = http1.read_response_head(response_head)
+                response = http1.read_response_head([
+                    bytes(x) for x in response_head
+                ])
             except ValueError as e:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 yield commands.Log(f"{proxyaddr}: {e}")
@@ -90,7 +91,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             else:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 raw_resp = b"\n".join(response_head)
-                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", level="debug")
+                yield commands.Log(f"{proxyaddr}: {raw_resp!r}", DEBUG)
                 return (
                     False,
                     f"Upstream proxy {proxyaddr} refused HTTP CONNECT request: {response.status_code} {response.reason}",

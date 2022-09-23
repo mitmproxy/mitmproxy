@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import socket
 from typing import Any, Callable, Optional, Union, cast
-from mitmproxy import ctx
+
 from mitmproxy.connection import Address
+from mitmproxy.net import udp_wireguard
 from mitmproxy.utils import human
 
+logger = logging.getLogger(__name__)
 
 MAX_DATAGRAM_SIZE = 65535 - 20
 
@@ -26,7 +29,6 @@ SockAddress = Union[tuple[str, int], tuple[str, int, int, int]]
 
 
 class DrainableDatagramProtocol(asyncio.DatagramProtocol):
-
     _loop: asyncio.AbstractEventLoop
     _closed: asyncio.Event
     _paused: int
@@ -54,7 +56,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
     def connection_lost(self, exc: Exception | None) -> None:
         self._closed.set()
         if exc:
-            ctx.log.warn(f"Connection lost on {self!r}: {exc!r}")  # pragma: no cover
+            logger.warning(f"Connection lost on {self!r}: {exc!r}")  # pragma: no cover
 
     def pause_writing(self) -> None:
         self._paused = self._paused + 1
@@ -71,7 +73,7 @@ class DrainableDatagramProtocol(asyncio.DatagramProtocol):
         await self._can_write.wait()
 
     def error_received(self, exc: Exception) -> None:
-        ctx.log.warn(f"Send/receive on {self!r} failed: {exc!r}")  # pragma: no cover
+        logger.warning(f"Send/receive on {self!r} failed: {exc!r}")  # pragma: no cover
 
     async def wait_closed(self) -> None:
         await self._closed.wait()
@@ -97,6 +99,7 @@ class UdpServer(DrainableDatagramProtocol):
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         if self._transport is None:
             self._transport = cast(asyncio.DatagramTransport, transport)
+            self._transport.set_protocol(self)
             self._local_addr = transport.get_extra_info("sockname")
             super().connection_made(transport)
 
@@ -111,7 +114,6 @@ class UdpServer(DrainableDatagramProtocol):
 
 
 class DatagramReader:
-
     _packets: asyncio.Queue[bytes]
     _eof: bool
 
@@ -122,14 +124,14 @@ class DatagramReader:
     def feed_data(self, data: bytes, remote_addr: Address) -> None:
         assert len(data) <= MAX_DATAGRAM_SIZE
         if self._eof:
-            ctx.log.info(
+            logger.info(
                 f"Received UDP packet from {human.format_address(remote_addr)} after EOF."
             )
         else:
             try:
                 self._packets.put_nowait(data)
             except asyncio.QueueFull:
-                ctx.log.debug(
+                logger.debug(
                     f"Dropped UDP packet from {human.format_address(remote_addr)}."
                 )
 
@@ -156,7 +158,6 @@ class DatagramReader:
 
 
 class DatagramWriter:
-
     _transport: asyncio.DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None
@@ -174,14 +175,16 @@ class DatagramWriter:
         """
         self._transport = transport
         self._remote_addr = remote_addr
-        proto = transport.get_protocol()
-        assert isinstance(proto, DrainableDatagramProtocol)
-        self._reader = reader
-        self._closed = asyncio.Event() if reader is not None else None
+        if reader is not None:
+            self._reader = reader
+            self._closed = asyncio.Event()
+        else:
+            self._reader = None
+            self._closed = None
 
     @property
-    def _protocol(self) -> DrainableDatagramProtocol:
-        return cast(DrainableDatagramProtocol, self._transport.get_protocol())
+    def _protocol(self) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
+        return self._transport.get_protocol()  # type: ignore
 
     def write(self, data: bytes) -> None:
         self._transport.sendto(data, self._remote_addr)
@@ -200,8 +203,14 @@ class DatagramWriter:
             self._transport.close()
         else:
             self._closed.set()
-        if self._reader is not None:
+            assert self._reader
             self._reader.feed_eof()
+
+    def is_closing(self) -> bool:
+        if self._closed is None:
+            return self._transport.is_closing()
+        else:
+            return self._closed.is_set()
 
     async def wait_closed(self) -> None:
         if self._closed is None:

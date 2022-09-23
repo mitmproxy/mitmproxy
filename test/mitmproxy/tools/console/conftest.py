@@ -44,4 +44,5 @@ async def console(monkeypatch) -> ConsoleTestMaster:  # noqa
     opts.server = False
     opts.console_mouse = False
     await m.running()
-    return m
+    yield m
+    await m.done()

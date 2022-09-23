@@ -219,9 +219,7 @@ export const quickactions: FlowColumn = ({flow}) => {
 
     return (
         <td className={classnames("col-quickactions", {hover: open})} onClick={() => 0}>
-            <div>
-                {resume_or_replay}
-            </div>
+            {resume_or_replay ? <div>{resume_or_replay}</div> : <></>}
         </td>
     )
 }

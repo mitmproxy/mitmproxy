@@ -43,6 +43,7 @@ export interface OptionsState {
     proxy_debug: boolean
     proxyauth: string | undefined
     rawtcp: boolean
+    rawudp: boolean
     readfile_filter: string | undefined
     rfile: string | undefined
     save_stream_file: string | undefined
@@ -72,6 +73,7 @@ export interface OptionsState {
     tls_version_client_min: string
     tls_version_server_max: string
     tls_version_server_min: string
+    udp_hosts: string[]
     upstream_auth: string | undefined
     upstream_cert: boolean
     validate_inbound_headers: boolean
@@ -133,6 +135,7 @@ export const defaultState: OptionsState = {
     proxy_debug: false,
     proxyauth: undefined,
     rawtcp: true,
+    rawudp: true,
     readfile_filter: undefined,
     rfile: undefined,
     save_stream_file: undefined,
@@ -162,6 +165,7 @@ export const defaultState: OptionsState = {
     tls_version_client_min: "TLS1_2",
     tls_version_server_max: "UNBOUNDED",
     tls_version_server_min: "TLS1_2",
+    udp_hosts: [],
     upstream_auth: undefined,
     upstream_cert: true,
     validate_inbound_headers: true,

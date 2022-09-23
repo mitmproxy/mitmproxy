@@ -3,20 +3,19 @@ import * as React from 'react';
 import HttpMessage, {ViewImage} from '../../../components/contentviews/HttpMessage'
 import {fireEvent, render, screen, waitFor} from "../../test-utils"
 import fetchMock, {enableFetchMocks} from "jest-fetch-mock";
-import {SHOW_MAX_LINES} from "../../../components/contentviews/useContent";
 
 jest.mock("../../../contrib/CodeMirror")
 
 enableFetchMocks();
 
 test("HttpMessage", async () => {
-    const lines = Array(SHOW_MAX_LINES).fill([["text", "data"]]).concat(
-        Array(SHOW_MAX_LINES).fill([["text", "additional"]])
+    const lines = Array(512).fill([["text", "data"]]).concat(
+        Array(512).fill([["text", "additional"]])
     );
 
     fetchMock.mockResponses(
         JSON.stringify({
-            lines: lines.slice(0, SHOW_MAX_LINES + 1),
+            lines: lines.slice(0, 512 + 1),
             description: "Auto"
         }), JSON.stringify({
             lines,

@@ -1,3 +1,4 @@
+import logging
 import webbrowser
 from collections.abc import Sequence
 
@@ -22,7 +23,7 @@ class WebAddon:
             web_url = f"http://{ctx.options.web_host}:{ctx.options.web_port}/"
             success = open_browser(web_url)
             if not success:
-                ctx.log.info(
+                logging.info(
                     f"No web browser found. Please open a browser and point it to {web_url}",
                 )
 
@@ -42,6 +43,7 @@ def open_browser(url: str) -> bool:
         "windows-default",
         "macosx",
         "wslview %s",
+        "gio",
         "x-www-browser %s",
         "gnome-open %s",
         "xdg-open",

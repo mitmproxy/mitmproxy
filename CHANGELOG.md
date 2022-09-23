@@ -14,13 +14,31 @@
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
 * Setting `connection_strategy` to `lazy` now also disables early 
   upstream connections to fetch TLS certificate details.
-  (@mhils)
+  ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix `tls_version_server_min` and `tls_version_server_max` options.
   ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
-* DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
-* Added Magisk module generation for Android onboarding (@jorants).
-* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. (@jorants)
-* Render application/prpc content as gRPC/Protocol Buffers (@selfisekai)
+* DTLS support. 
+  ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Added Magisk module generation for Android onboarding 
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. 
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
+* Render application/prpc content as gRPC/Protocol Buffers
+  ([#5568](https://github.com/mitmproxy/mitmproxy/pull/5568), @selfisekai)
+* Mitmweb now supports `content_view_lines_cutoff`.
+  ([#5548](https://github.com/mitmproxy/mitmproxy/pull/5548), @sanlengjingvv)
+* Fix a mitmweb crash when scrolling down the flow list.
+  ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
+* Add HTTP/3 binary frame content view.
+  ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
+* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Add MQTT content view.
+  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
+* Add WireGuard mode to enable userspace transparent proxying via WireGuard.
+  ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
@@ -85,6 +103,8 @@
   ([#5339](https://github.com/mitmproxy/mitmproxy/issues/5339), @mhils)
 * Fix handling of multiple Cookie headers when proxying HTTP/2 to HTTP/1
   ([#5337](https://github.com/mitmproxy/mitmproxy/issues/5337), @rinsuki)
+* Improve http_manipulate_cookies.py example.
+  ([#5578](https://github.com/mitmproxy/mitmproxy/issues/5578), @insilications)
 
 ## 19 March 2022: mitmproxy 8.0.0
 

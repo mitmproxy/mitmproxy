@@ -37,6 +37,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
         if (
             self.context.options.connection_strategy == "eager"
             and self.context.server.address
+            and self.context.server.transport_protocol == "tcp"
         ):
             err = yield commands.OpenConnection(self.context.server)
             if err:

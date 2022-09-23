@@ -1,3 +1,4 @@
+import logging
 import shutil
 import subprocess
 import tempfile
@@ -5,6 +6,7 @@ from typing import Optional
 
 from mitmproxy import command
 from mitmproxy import ctx
+from mitmproxy.log import ALERT
 
 
 def get_chrome_executable() -> Optional[str]:
@@ -68,11 +70,11 @@ class Browser:
         running proxy.
         """
         if len(self.browser) > 0:
-            ctx.log.alert("Starting additional browser")
+            logging.log(ALERT, "Starting additional browser")
 
         cmd = get_browser_cmd()
         if not cmd:
-            ctx.log.alert("Your platform is not supported yet - please submit a patch.")
+            logging.log(ALERT, "Your platform is not supported yet - please submit a patch.")
             return
 
         tdir = tempfile.TemporaryDirectory()

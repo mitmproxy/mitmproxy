@@ -14,7 +14,7 @@ import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
-from mitmproxy import certs, options, optmanager
+from mitmproxy import certs, log, options, optmanager
 from mitmproxy.http import Headers
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.test import tflow
@@ -149,6 +149,7 @@ async def test_generate_options_js():
     (
         Path(__file__).parent / "../../../../web/src/js/ducks/_options_gen.ts"
     ).write_bytes(s.getvalue().encode())
+    await m.done()
 
 
 @pytest.mark.usefixtures("no_tornado_logging", "tdata")
@@ -168,7 +169,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f2.id = "43"
         m.view.add([f, f2])
         m.view.add([tflow.tflow(err=True)])
-        m.log.info("test log")
+        m.events._add_log(log.LogEntry("test log", "info"))
+        m.events.done()
         si1 = ServerInstance.make("regular", m.proxyserver)
         si1._listen_addrs = [("127.0.0.1", 8080), ("::1", 8080)]
         si1._server = True  # spoof is_running

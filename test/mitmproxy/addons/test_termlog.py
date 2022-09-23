@@ -1,30 +1,57 @@
+import asyncio
 import io
+import logging
 
-from mitmproxy import log
+import pytest
+
 from mitmproxy.addons import termlog
 from mitmproxy.test import taddons
+from mitmproxy.utils import vt_codes
+
+
+@pytest.fixture(autouse=True)
+def ensure_cleanup():
+    yield
+    assert not any(
+        isinstance(x, termlog.TermLogHandler)
+        for x in logging.root.handlers
+    )
+
+
+async def test_delayed_teardown():
+    t = termlog.TermLog()
+    t.done()
+    assert t.logger in logging.root.handlers
+    await asyncio.sleep(0)
+    assert t.logger not in logging.root.handlers
 
 
 def test_output(capsys):
+    logging.getLogger().setLevel(logging.DEBUG)
     t = termlog.TermLog()
     with taddons.context(t) as tctx:
         tctx.options.termlog_verbosity = "info"
         tctx.configure(t)
-        t.add_log(log.LogEntry("one", "info"))
-        t.add_log(log.LogEntry("two", "debug"))
-        t.add_log(log.LogEntry("three", "warn"))
-        t.add_log(log.LogEntry("four", "error"))
+        logging.info("one")
+        logging.debug("two")
+        logging.warning("three")
+        logging.error("four")
     out, err = capsys.readouterr()
-    assert out.strip().splitlines() == ["one", "three"]
-    assert err.strip().splitlines() == ["four"]
+    assert "one" in out
+    assert "two" not in out
+    assert "three" in out
+    assert "four" in out
+    t.done()
 
 
-def test_styling(monkeypatch) -> None:
+async def test_styling(monkeypatch) -> None:
+    monkeypatch.setattr(vt_codes, "ensure_supported", lambda _: True)
+
     f = io.StringIO()
     t = termlog.TermLog(out=f)
-    t.out_has_vt_codes = True
     with taddons.context(t) as tctx:
         tctx.configure(t)
-        t.add_log(log.LogEntry("hello world", "info"))
+        logging.warning("hello")
 
-    assert f.getvalue() == "\x1b[22mhello world\x1b[0m\n"
+    assert "\x1b[33mhello\x1b[0m" in f.getvalue()
+    t.done()

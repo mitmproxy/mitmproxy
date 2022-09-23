@@ -155,7 +155,7 @@ class Window(urwid.Frame):
     def focus_stack(self):
         return self.stacks[self.pane]
 
-    def configure(self, updated):
+    def configure(self, options, updated):
         self.refresh()
 
     def refresh(self):

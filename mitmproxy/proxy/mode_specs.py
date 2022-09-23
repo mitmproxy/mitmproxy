@@ -51,10 +51,6 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
     """The unique name for this proxy mode, e.g. "regular" or "reverse"."""
-    default_port: ClassVar[int] = 8080
-    """
-    Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
-    """
     __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
 
     def __init_subclass__(cls, **kwargs):
@@ -73,6 +69,13 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     @abstractmethod
     def description(self) -> str:
         """The mode description that will be used in server logs and UI."""
+
+    @property
+    def default_port(self) -> int:
+        """
+        Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
+        """
+        return 8080
 
     @property
     @abstractmethod
@@ -219,6 +222,12 @@ class ReverseMode(ProxyMode):
             self.transport_protocol = UDP
         self.description = f"{self.description} to {self.data}"
 
+    @property
+    def default_port(self) -> int:
+        if self.scheme == "dns":
+            return 53
+        return super().default_port
+
 
 class Socks5Mode(ProxyMode):
     """A SOCKSv5 proxy."""
@@ -250,3 +259,13 @@ class Http3Mode(ProxyMode):
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
+
+
+class WireGuardMode(ProxyMode):
+    """Proxy Server based on WireGuard"""
+    description = "WireGuard server"
+    default_port = 51820
+    transport_protocol = UDP
+
+    def __post_init__(self) -> None:
+        pass

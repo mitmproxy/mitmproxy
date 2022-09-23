@@ -1,3 +1,4 @@
+import logging
 import shlex
 from collections.abc import Callable, Sequence
 from typing import Any, Union
@@ -185,7 +186,7 @@ class Export:
                 else:
                     fp.write(v.encode("utf-8"))
         except OSError as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     @command.command("export.clip")
     def clip(self, format: str, f: flow.Flow) -> None:
@@ -195,7 +196,7 @@ class Export:
         try:
             pyperclip.copy(self.export_str(format, f))
         except pyperclip.PyperclipException as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     @command.command("export")
     def export_str(self, format: str, f: flow.Flow) -> str:

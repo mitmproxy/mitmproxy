@@ -1,3 +1,4 @@
+import logging
 import os
 from collections.abc import Sequence
 from typing import Optional
@@ -183,7 +184,7 @@ class KeymapConfig:
             try:
                 self.load_path(ctx.master.keymap, p)
             except KeyBindingError as e:
-                ctx.log.error(e)
+                logging.error(e)
 
     def load_path(self, km, p):
         if os.path.exists(p) and os.path.isfile(p):

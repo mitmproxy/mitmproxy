@@ -13,6 +13,7 @@ export interface ServerInfo {
     last_exception: string | null
     listen_addrs: [string, number][]
     type: string
+    wireguard_conf?: string
 }
 
 export interface BackendState {

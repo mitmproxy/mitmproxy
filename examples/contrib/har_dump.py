@@ -8,22 +8,21 @@ filename endwith '.zhar' will be compressed:
 mitmdump -s ./har_dump.py --set hardump=./dump.zhar
 """
 
-
-import json
 import base64
-import zlib
+import json
+import logging
 import os
-
 from datetime import datetime
 from datetime import timezone
 
-import mitmproxy
+import zlib
 
+import mitmproxy
 from mitmproxy import connection
-from mitmproxy import version
 from mitmproxy import ctx
-from mitmproxy.utils import strutils
+from mitmproxy import version
 from mitmproxy.net.http import cookies
+from mitmproxy.utils import strutils
 
 HAR: dict = {}
 
@@ -166,7 +165,7 @@ def done():
         json_dump: str = json.dumps(HAR, indent=2)
 
         if ctx.options.hardump == '-':
-            mitmproxy.ctx.log(json_dump)
+            print(json_dump)
         else:
             raw: bytes = json_dump.encode()
             if ctx.options.hardump.endswith('.zhar'):
@@ -175,7 +174,7 @@ def done():
             with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
                 f.write(raw)
 
-            mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+            logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
 def format_cookies(cookie_list):

@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import collections
 import ipaddress
+import logging
 from contextlib import contextmanager
 from typing import Iterable, Iterator, Optional
 
@@ -29,6 +30,8 @@ from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
 from mitmproxy.utils import human, signals
+
+logger = logging.getLogger(__name__)
 
 
 class Servers:
@@ -73,11 +76,11 @@ class Servers:
             for ret in await asyncio.gather(*stop_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
-                    ctx.log.error(str(ret))
+                    logger.error(str(ret))
             for ret in await asyncio.gather(*start_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
-                    ctx.log.error(str(ret))
+                    logger.error(str(ret))
 
         await self.changed.send()
         return all_ok
@@ -247,7 +250,7 @@ class Proxyserver(ServerManager):
                 raise exceptions.OptionsError(f"Cannot spawn multiple servers on the same address: {dup_addr}")
 
             if ctx.options.mode and not ctx.master.addons.get("nextlayer"):
-                ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
+                logger.warning("Warning: Running proxyserver without nextlayer addon!")
             if any(isinstance(m, mode_specs.TransparentMode) for m in modes):
                 if platform.original_addr:
                     platform.init_transparent_mode()
@@ -282,7 +285,7 @@ class Proxyserver(ServerManager):
         self, flow: Flow, to_client: bool, message: bytes, is_text: bool = True
     ):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
-            ctx.log.warn("Cannot inject WebSocket messages into non-WebSocket flows.")
+            logger.warning("Cannot inject WebSocket messages into non-WebSocket flows.")
 
         msg = websocket.WebSocketMessage(
             Opcode.TEXT if is_text else Opcode.BINARY, not to_client, message
@@ -291,18 +294,18 @@ class Proxyserver(ServerManager):
         try:
             self.inject_event(event)
         except ValueError as e:
-            ctx.log.warn(str(e))
+            logger.warning(str(e))
 
     @command.command("inject.tcp")
     def inject_tcp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, tcp.TCPFlow):
-            ctx.log.warn("Cannot inject TCP messages into non-TCP flows.")
+            logger.warning("Cannot inject TCP messages into non-TCP flows.")
 
         event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message))
         try:
             self.inject_event(event)
         except ValueError as e:
-            ctx.log.warn(str(e))
+            logger.warning(str(e))
 
     @command.command("inject.udp")
     def inject_udp(self, flow: Flow, to_client: bool, message: bytes):

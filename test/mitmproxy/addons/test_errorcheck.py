@@ -1,29 +1,22 @@
-import asyncio
-
 import pytest
 
-from mitmproxy import log
 from mitmproxy.addons.errorcheck import ErrorCheck
+from mitmproxy.tools import main
 
 
-@pytest.mark.parametrize("do_log", [True, False])
-def test_errorcheck(capsys, do_log):
-    async def run():
-        # suppress error that task exception was not retrieved.
-        asyncio.get_running_loop().set_exception_handler(lambda *_: 0)
-        e = ErrorCheck(do_log)
-        e.add_log(log.LogEntry("fatal", "error"))
-        await e.shutdown_if_errored()
-        await asyncio.sleep(0)
-
+def test_errorcheck(tdata, capsys):
+    """Integration test: Make sure that we catch errors on startup an exit."""
     with pytest.raises(SystemExit):
-        asyncio.run(run())
-
-    if do_log:
-        assert capsys.readouterr().err == "Error on startup: fatal\n"
+        main.mitmproxy(
+            [
+                "-s",
+                tdata.path("mitmproxy/data/addonscripts/load_error.py"),
+            ]
+        )
+    assert "Error on startup" in capsys.readouterr().err
 
 
 async def test_no_error():
     e = ErrorCheck()
     await e.shutdown_if_errored()
-    await asyncio.sleep(0)
+    e.finish()

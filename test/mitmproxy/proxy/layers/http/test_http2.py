@@ -1032,7 +1032,7 @@ class TestClient:
             >> DataReceived(
                 tctx.server, frame_factory.build_headers_frame(resp).serialize()
             )
-            << Log(f"Swallowing HTTP/2 informational response: {log_msg}", "info")
+            << Log(f"Swallowing HTTP/2 informational response: {log_msg}")
         )
 
 
