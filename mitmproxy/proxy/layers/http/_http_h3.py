@@ -10,7 +10,6 @@ from aioquic.h3.connection import (
     HeadersState,
 )
 from aioquic.h3.events import HeadersReceived
-from aioquic.quic.connection import stream_is_client_initiated, stream_is_unidirectional
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import ConnectionTerminated, StreamDataReceived
 from aioquic.quic.packet import QuicErrorCode
@@ -38,6 +37,9 @@ class TrailersReceived(H3Event):
 
     stream_id: int
     "The ID of the stream the trailers were received for."
+
+    stream_ended: bool
+    "Whether the STREAM frame had the FIN bit set."
 
     push_id: Optional[int] = None
     "The Push ID or `None` if this is not a push."
@@ -100,6 +102,10 @@ class MockQuic:
         self._next_stream_id[index] = stream_id + 4
         return stream_id
 
+    def get_reserved_stream_ids(self, is_unidirectional: bool = False) -> Iterable[int]:
+        index = (int(is_unidirectional) << 1) | int(not self._is_client)
+        return range(index, self._next_stream_id[index] + 1, 4)
+
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
 
@@ -123,12 +129,6 @@ class LayeredH3Connection(H3Connection):
         if end_stream:
             self._stream[stream_id].headers_send_state = HeadersState.AFTER_TRAILERS
 
-    def _can_receive(self, stream_id: int) -> bool:
-        return (
-            stream_is_client_initiated(stream_id) != self._is_client
-            or not stream_is_unidirectional(stream_id)
-        )
-
     def _handle_request_or_push_frame(
         self,
         frame_type: int,
@@ -143,7 +143,7 @@ class LayeredH3Connection(H3Connection):
                 isinstance(event, HeadersReceived)
                 and self._stream[event.stream_id].headers_recv_state == HeadersState.AFTER_TRAILERS
             ):
-                events[index] = TrailersReceived(event.headers, event.stream_id, event.push_id)
+                events[index] = TrailersReceived(event.headers, event.stream_id, event.stream_ended, event.push_id)
         return events
 
     def close_connection(self, error_code: int = QuicErrorCode.NO_ERROR, reason_phrase: str = "") -> None:
@@ -153,14 +153,22 @@ class LayeredH3Connection(H3Connection):
         self._quic.close(error_code=error_code, reason_phrase=reason_phrase)
 
     def end_stream(self, stream_id: int) -> None:
-        """Ends the given stream."""
+        """Ends the given stream locally."""
 
-        self.send_data(stream_id, data=b"", end_stream=True)
+        # check whether the stream hasn't been ended before
+        stream = self._get_or_create_stream(stream_id)
+        if stream.headers_send_state != HeadersState.AFTER_TRAILERS:
+            self.send_data(stream_id, data=b"", end_stream=True)
 
     def get_next_available_stream_id(self, is_unidirectional: bool = False):
         """Reserves and returns the next available stream ID."""
 
         return self._quic.get_next_available_stream_id(is_unidirectional)
+
+    def get_reserved_stream_ids(self, is_unidirectional: bool = False) -> Iterable[int]:
+        """Returns all reserved stream IDs."""
+
+        return self._mock.get_reserved_stream_ids(is_unidirectional)
 
     def handle_event(self, event: QuicStreamEvent) -> list[H3Event]:
         # don't do anything if we're done
@@ -181,11 +189,9 @@ class LayeredH3Connection(H3Connection):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def is_stream_open(self, stream_id: int) -> bool:
-        """Indicates whether the given stream is receivable."""
+    def has_ended(self, stream_id: int) -> bool:
+        """Indicates whether the given stream has been ended by the peer."""
 
-        if not self._can_receive(stream_id):
-            return False
         try:
             return not self._stream[stream_id].ended
         except KeyError:
@@ -198,14 +204,6 @@ class LayeredH3Connection(H3Connection):
             return self._stream[stream_id].headers_send_state != HeadersState.INITIAL
         except KeyError:
             return False
-
-    @property
-    def open_stream_ids(self) -> Iterable[int]:
-        """Returns all receivable streams."""
-
-        for stream in self._stream.values():
-            if self._can_receive(stream.stream_id) and not stream.ended:
-                yield stream.stream_id
 
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         """Resets a stream that hasn't been ended locally yet."""

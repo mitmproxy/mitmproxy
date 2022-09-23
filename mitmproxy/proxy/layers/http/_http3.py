@@ -78,7 +78,7 @@ class Http3Connection(HttpConnection):
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                     self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
-                    if self.h3_conn.is_stream_open(event.stream_id):
+                    if not self.h3_conn.has_ended(event.stream_id):
                         code = {
                             status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED,
                         }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR)
@@ -130,7 +130,8 @@ class Http3Connection(HttpConnection):
                         )
                     )
                 elif isinstance(h3_event, DataReceived) and h3_event.push_id is None:
-                    yield ReceiveHttp(self.ReceiveData(h3_event.stream_id, h3_event.data))
+                    if h3_event.data:
+                        yield ReceiveHttp(self.ReceiveData(h3_event.stream_id, h3_event.data))
                     if h3_event.stream_ended:
                         yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 elif isinstance(h3_event, HeadersReceived) and h3_event.push_id is None:
@@ -148,6 +149,8 @@ class Http3Connection(HttpConnection):
                             yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 elif isinstance(h3_event, TrailersReceived) and h3_event.push_id is None:
                     yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, http.Headers(h3_event.trailers)))
+                    if h3_event.stream_ended:
+                        yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 else:
                     # we don't support push, web transport, etc.
                     yield commands.Log(f"Ignored unsupported H3 event: {h3_event!r}")
@@ -160,7 +163,7 @@ class Http3Connection(HttpConnection):
                 if close_event is None else
                 close_event.reason_phrase or error_code_to_str(close_event.error_code)
             )
-            for stream_id in self.h3_conn.open_stream_ids:
+            for stream_id in self.h3_conn.get_reserved_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
             self._handle_event = self.done  # type: ignore
 
