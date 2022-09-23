@@ -104,7 +104,7 @@ class MockQuic:
 
     def get_reserved_stream_ids(self, is_unidirectional: bool = False) -> Iterable[int]:
         index = (int(is_unidirectional) << 1) | int(not self._is_client)
-        return range(index, self._next_stream_id[index] + 1, 4)
+        return range(index, self._next_stream_id[index], 4)
 
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))

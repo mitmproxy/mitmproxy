@@ -251,7 +251,7 @@ class DnsMode(ProxyMode):
 
 class Http3Mode(ProxyMode):
     """
-    A regular HTTP3 proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests).
+    A regular HTTP3 proxy that is interfaced with absolute-form HTTP requests.
     (This class will be merged into `RegularMode` once the UDP implementation is deemed stable enough.)
     """
     description = "HTTP3 proxy"
