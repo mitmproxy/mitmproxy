@@ -511,28 +511,28 @@ class RawQuicLayer(layer.Layer):
             ):
                 # get the target connection and stream ID
                 to_client = command.connection is child_layer.client
-                conn = self.context.client if to_client else self.context.server
+                quic_conn = self.context.client if to_client else self.context.server
                 stream_id = child_layer.client_stream_id if to_client else child_layer.server_stream_id
 
                 # write data and check CloseConnection wasn't called before
                 if isinstance(command, commands.SendData):
                     assert stream_id is not None
-                    assert conn.state & connection.ConnectionState.CAN_WRITE
-                    yield SendQuicStreamData(conn, stream_id, command.data)
+                    if command.connection.state & connection.ConnectionState.CAN_WRITE:
+                        yield SendQuicStreamData(quic_conn, stream_id, command.data)
 
                 # send a FIN and optionally also a STOP frame
                 elif isinstance(command, commands.CloseConnection):
                     assert stream_id is not None
-                    if conn.state & connection.ConnectionState.CAN_WRITE:
-                        conn.state &= ~connection.ConnectionState.CAN_WRITE
-                        yield SendQuicStreamData(conn, stream_id, b"", end_stream=True)
+                    if command.connection.state & connection.ConnectionState.CAN_WRITE:
+                        command.connection.state &= ~connection.ConnectionState.CAN_WRITE
+                        yield SendQuicStreamData(quic_conn, stream_id, b"", end_stream=True)
                     if not command.half_close:
                         if (
                             stream_is_client_initiated(stream_id) == to_client
                             or not stream_is_unidirectional(stream_id)
                         ):
-                            yield StopQuicStream(conn, stream_id, QuicErrorCode.NO_ERROR)
-                        yield from self.close_stream_layer(child_layer, conn)
+                            yield StopQuicStream(quic_conn, stream_id, QuicErrorCode.NO_ERROR)
+                        yield from self.close_stream_layer(child_layer, command.connection)
 
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):

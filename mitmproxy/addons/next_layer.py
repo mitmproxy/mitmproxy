@@ -17,12 +17,12 @@ that sets nextlayer.layer works just as well.
 import re
 from collections.abc import Sequence
 import struct
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable, Optional, Union, cast
 
 from mitmproxy import ctx, dns, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import context, layer, layers
+from mitmproxy.proxy import context, layer, layers, mode_specs
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, dtls_parse_client_hello, parse_client_hello
@@ -155,6 +155,24 @@ class NextLayer:
             for rex in hosts
         )
 
+    def is_reverse_proxy_scheme(self, context: context.Context, *args: str):
+        def s(*layers):
+            return stack_match(context, layers)
+
+        # we allow all possible security layer combinations and rely on the correctness of ReverseProxy
+        return (
+            (
+                s(modes.ReverseProxy)
+                or
+                s(modes.ReverseProxy, layers.ClientTLSLayer)
+                or
+                s(modes.ReverseProxy, layers.ServerTLSLayer)
+                or
+                s(modes.ReverseProxy, layers.ServerTLSLayer, layers.ClientTLSLayer)
+            )
+            and cast(mode_specs.ReverseMode, context.client.proxy_mode).scheme in args
+        )
+
     def detect_udp_tls(self, data_client: bytes) -> Optional[tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls]]:
         if len(data_client) == 0:
             return None
@@ -195,7 +213,11 @@ class NextLayer:
             return stack_match(context, layers)
 
         if context.client.transport_protocol == "tcp":
-            if len(data_client) < 3 and not data_server:
+            if (
+                len(data_client) < 3
+                and not data_server
+                and not isinstance(context.layers[-1], layers.QuicStreamLayer)
+            ):
                 return None  # not enough data yet to make a decision
 
             # 1. check for --ignore/--allow
@@ -229,7 +251,15 @@ class NextLayer:
             if self.is_destination_in_hosts(context, self.tcp_hosts):
                 return layers.TCPLayer(context)
 
-            # 5. Check for raw tcp mode.
+            # 5. Check for raw reverse mode.
+            if self.is_reverse_proxy_scheme(context, "tcp", "tls"):
+                return layers.TCPLayer(context)
+            # NOTE at this point we are either
+            #      - in http or https reverse mode
+            #      - at the top level of a non-reverse/regular/upstream mode
+            #      - at a deeper layer nesting level
+
+            # 6. Check for raw tcp mode.
             very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
             probably_no_http = not very_likely_http and (
                 not data_client[
@@ -240,16 +270,27 @@ class NextLayer:
             if ctx.options.rawtcp and probably_no_http:
                 return layers.TCPLayer(context)
 
-            # 6. Assume HTTP by default.
+            # 7. Assume HTTP by default.
             return layers.HttpLayer(context, HTTPMode.transparent)
 
         elif context.client.transport_protocol == "udp":
-            # unlike TCP, we make a decision immediately
-            if isinstance(context.layers[-1], layers.ServerQuicLayer):
+            # for http3, upstream:http3 and reverse:quic/http3 proxies, there has to be a client quic layer
+            if (
+                s(modes.HttpProxy)
+                or
+                s(modes.HttpUpstreamProxy)
+                or
+                s(modes.ReverseProxy, layers.ServerQuicLayer)
+            ):
                 return layers.ClientQuicLayer(context)
+
+            # unlike TCP, we make a decision immediately
             tls = self.detect_udp_tls(data_client)
-            is_quic = isinstance(context.layers[-1], layers.ClientQuicLayer)
-            raw_layer_cls = layers.RawQuicLayer if is_quic else layers.UDPLayer
+            raw_layer_cls = (
+                layers.RawQuicLayer
+                if isinstance(context.layers[-1], layers.ClientQuicLayer) else
+                layers.UDPLayer
+            )
 
             # 1. check for --ignore/--allow
             if self.ignore_connection(
@@ -276,15 +317,25 @@ class NextLayer:
             if self.is_destination_in_hosts(context, self.udp_hosts):
                 return raw_layer_cls(context)
 
-            # 5. Check for HTTP mode, but only on QUIC.
-            if (
-                is_quic
-                and context.client.alpn
-                and (context.client.alpn == b"h3" or context.client.alpn.startswith(b"h3-"))
-            ):
-                return layers.HttpLayer(context, HTTPMode.transparent)
+            # 5. Check for raw reverse mode.
+            if self.is_reverse_proxy_scheme(context, "udp", "dtls"):
+                return layers.UDPLayer(context)
 
-            # 6. Check for DNS
+            # 6. Check for explicit QUIC reverse modes
+            if (s(modes.ReverseProxy, layers.ServerQuicLayer, layers.ClientQuicLayer)):
+                scheme = cast(mode_specs.ReverseMode, context.client.proxy_mode).scheme
+                if scheme == "quic":
+                    return layers.RawQuicLayer(context)
+                if scheme == "http3":
+                    return layers.HttpLayer(context, HTTPMode.transparent)
+            # 6b. ... or DNS mode
+            if self.is_reverse_proxy_scheme(context, "dns"):
+                return layers.DNSLayer(context)
+            # NOTE at this point we are either
+            #      - at the top level of a non-reverse/regular/upstream mode
+            #      - at a deeper layer nesting level
+
+            # 7. Check for DNS
             try:
                 dns.Message.unpack(data_client)
             except struct.error:
@@ -292,7 +343,7 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 7. Use raw mode.
+            # 8. Use raw mode.
             return raw_layer_cls(context)
 
         else:

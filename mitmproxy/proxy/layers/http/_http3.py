@@ -163,6 +163,7 @@ class Http3Connection(HttpConnection):
 
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, events.ConnectionClosed):
+            self._handle_event = self.done  # type: ignore
             close_event = get_connection_error(self.conn)
             msg = (
                 "peer closed connection"
@@ -171,7 +172,6 @@ class Http3Connection(HttpConnection):
             )
             for stream_id in self.h3_conn.get_reserved_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
-            self._handle_event = self.done  # type: ignore
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
