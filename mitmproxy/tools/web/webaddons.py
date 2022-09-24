@@ -44,7 +44,7 @@ def open_browser(url: str) -> bool:
         "macosx",
         "wslview %s",
         "gio",
-        "x-www-browser %s",
+        "x-www-browser",
         "gnome-open %s",
         "xdg-open",
         "google-chrome",
