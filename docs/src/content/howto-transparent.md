@@ -12,6 +12,14 @@ network layer, without any client configuration being required. This makes
 transparent proxying ideal for those situations where you can't change client
 behaviour - proxy-oblivious mobile applications being a common example.
 
+{{% note %}}
+The new [WireGuard mode]({{< relref "concepts-modes" >}}#wireguard-transparent-proxy)
+provides an alternative implementation for transparent proxying. It is much
+easier to set up, as it does not require setting up IP forwarding or modifying
+routing rules. Additionally, this mode also works on Windows, in addition to
+Linux and macOS, and setting it up does not require administrative privileges.
+{{% /note %}}
+
 To set up transparent proxying, we need two new components. The first is a
 redirection mechanism that transparently reroutes a TCP connection destined for
 a server on the Internet to a listening proxy server. This usually takes the
