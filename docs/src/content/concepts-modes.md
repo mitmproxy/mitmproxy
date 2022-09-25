@@ -9,6 +9,7 @@ menu:
 
 - [Regular](#regular-proxy) (the default)
 - [Transparent](#transparent-proxy)
+- [WireGuard](#wireguard-transparent-proxy)
 - [Reverse Proxy](#reverse-proxy)
 - [Upstream Proxy](#upstream-proxy)
 - [SOCKS Proxy](#socks-proxy)
@@ -137,6 +138,72 @@ and much will depend on the router or packet filter you're using. In
 most cases, the configuration will look like this:
 
 {{< figure src="/schematics/proxy-modes-transparent-3.png" >}}
+
+## WireGuard (transparent proxy)
+
+```shell
+mitmdump --mode wireguard
+```
+
+The WireGuard mode works in the same way as transparent mode, except that setup
+and routing client traffic to mitmproxy are different. In this mode, mitmproxy
+runs an internal WireGuard server, which devices can be connected to by using
+standard WireGuard client applications:
+
+1. Start `mitmweb --mode wireguard`.
+2. Install a WireGuard client on target device.
+3. Import the WireGuard client configuration provided by mitmproxy.
+
+No additional routing configuration is required for this mode, since WireGuard
+operates by exchanging UDP packets between client and server (with encrypted IP
+packets as their payload) instead of routing IP packets directly. Additionally,
+the WireGuard server runs entirely in userspace, so no administrative privileges
+are necessary for setup or operation of mitmproxy in this mode.
+
+### Configuration
+
+#### WireGuard server
+
+By default, the WireGuard server will listen on port `51820/udp`, the default
+port for WireGuard servers. This can be changed by setting the `listen_port`
+option or by specifying an explicit port (`--mode wireguard@51821`).
+
+The encryption keys for WireGuard connections are stored in
+`~/.mitmproxy/wireguard.conf`. It is possible to specify a custom path with
+`--mode wireguard:path`. New keys will be generated automatically if the
+specified file does not yet exist. For example, to connect two clients
+simultaneously, you can run
+`mitmdump --mode wireguard:wg-keys-1.conf --mode wireguard:wg-keys-2.conf@51821`.
+
+#### WireGuard clients
+
+It is possible to limit the IP addresses for which traffic is sent over the
+WireGuard tunnel to specific ranges. In this case, the `AllowedIPs` setting
+in the WireGuard client configuration can be changed from `0.0.0.0/0` (i.e
+"route *all* IPv4 traffic through the WireGuard tunnel") to the desired ranges
+of IP addresses (this setting allows multiple, comma-separated values).
+
+For more complex network layouts it might also be necessary to override the
+automatically detected `Endpoint` IP address (i.e. the address of the host on
+which mitmproxy and its WireGuard server are running).
+
+### Limitations
+
+#### Transparently proxying mitmproxy host traffic
+
+With the current implementation, it is not possible to proxy all traffic of the
+host that mitmproxy itself is running on, since this would result in outgoing
+WireGuard packets being sent over the WireGuard tunnel themselves.
+
+#### Limited support for IPv6 traffic
+
+The WireGuard server internal to mitmproxy supports receiving IPv6 packets from
+client devices, but support for proxying IPv6 packets themselves is still
+limited. For this reason, the `AllowedIPs` setting in generated WireGuard client
+configurations does not list any IPv6 addresses yet. To enable the incomplete
+support for IPv6 traffic, `::/0` (i.e. "route *all* IPv6 traffic through the
+WireGuard tunnel") or other IPv6 address ranges can be added to the list of
+allowed IP addresses.
 
 ## Reverse Proxy
 
