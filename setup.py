@@ -77,7 +77,7 @@ setup(
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "cryptography>=38.0,<38.1",
         "flask>=1.1.1,<2.3",
-        "h11>=0.11,<0.14",
+        "h11>=0.14,<0.15",
         "h2>=4.1,<5",
         "hyperframe>=6.0,<7",
         "kaitaistruct>=0.10,<0.11",
