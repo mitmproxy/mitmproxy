@@ -525,8 +525,6 @@ class RawQuicLayer(layer.Layer):
     def event_to_child(self, child_layer: layer.Layer, event: events.Event) -> layer.CommandGenerator[None]:
         """Forwards events to child layers and translates commands."""
 
-        close_client = False
-        close_server = False
         for command in child_layer.handle_event(event):
             # intercept commands for streams connections
             if (
@@ -560,10 +558,7 @@ class RawQuicLayer(layer.Layer):
                             or not stream_is_unidirectional(stream_id)
                         ):
                             yield StopQuicStream(quic_conn, stream_id, QuicErrorCode.NO_ERROR)
-                        if to_client:
-                            close_client = True
-                        else:
-                            close_server = True
+                        yield from self.close_stream_layer(child_layer, to_client)
 
                 # open server connections by reserving the next stream ID
                 elif isinstance(command, commands.OpenConnection):
@@ -589,12 +584,6 @@ class RawQuicLayer(layer.Layer):
                 if isinstance(command, commands.OpenConnection):
                     self.connections[command.connection] = child_layer
                 yield command
-
-        # we have to exhaust the previous generator to prevent re-entrance
-        if close_client:
-            yield from self.close_stream_layer(child_layer, client=True)
-        if close_server:
-            yield from self.close_stream_layer(child_layer, client=False)
 
     def get_next_available_stream_id(self, is_client: bool, is_unidirectional: bool = False) -> int:
         index = (int(is_unidirectional) << 1) | int(not is_client)
