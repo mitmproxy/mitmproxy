@@ -689,6 +689,7 @@ class QuicLayer(tunnel.TunnelLayer):
             cipher_suites=tls_data.settings.cipher_suites,
             private_key=tls_data.settings.certificate_private_key,
             verify_mode=tls_data.settings.verify_mode,
+            max_datagram_frame_size=65536,
         )
         self.quic = QuicConnection(
             configuration=configuration,
