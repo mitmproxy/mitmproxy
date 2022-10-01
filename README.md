@@ -26,7 +26,7 @@ General information, tutorials, and precompiled binaries can be found on the mit
 The documentation for mitmproxy is available on our website:
 
 [![mitmproxy documentation stable](https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg)](https://docs.mitmproxy.org/stable/)
-[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/main/)
+[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/dev/)
 
 If you have questions on how to use mitmproxy, please
 use GitHub Discussions!
