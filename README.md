@@ -1,4 +1,6 @@
-# mitmproxy
+# ![logo][] mitmproxy
+
+[logo]: /release/installbuilder/logo-installer-icon.png
 
 [![Continuous Integration Status](https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=main)](https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amain)
 [![Coverage Status](https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/main.svg?label=codecov)](https://codecov.io/gh/mitmproxy/mitmproxy)
