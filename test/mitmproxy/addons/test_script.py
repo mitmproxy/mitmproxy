@@ -19,7 +19,7 @@ from mitmproxy.tools import main
 script.ReloadInterval = 0.1
 
 
-def test_load_script(tdata, caplog):
+def test_load_script(tmp_path, tdata, caplog):
     ns = script.load_script(
         tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
     )
@@ -28,7 +28,8 @@ def test_load_script(tdata, caplog):
     script.load_script("nonexistent")
     assert "No such file or directory" in caplog.text
 
-    script.load_script(tdata.path("mitmproxy/data/addonscripts/recorder/error.py"))
+    (tmp_path / "error.py").write_text("this is invalid syntax")
+    script.load_script(str(tmp_path / "error.py"))
     assert "invalid syntax" in caplog.text
 
 
