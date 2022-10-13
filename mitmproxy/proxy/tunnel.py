@@ -117,11 +117,9 @@ class TunnelLayer(layer.Layer):
                 yield from self.send_data(command.data)
             elif isinstance(command, commands.CloseConnection):
                 if self.conn != self.tunnel_connection:
-                    if command.half_close:
-                        self.conn.state &= ~connection.ConnectionState.CAN_WRITE
-                    else:
-                        self.conn.state = connection.ConnectionState.CLOSED
-                yield from self.send_close(command.half_close)
+                    self.conn.state &= ~connection.ConnectionState.CAN_WRITE
+                    command.connection = self.tunnel_connection
+                yield from self.send_close(command)
             elif isinstance(command, commands.OpenConnection):
                 # create our own OpenConnection command object that blocks here.
                 self.command_to_reply_to = command
@@ -172,8 +170,8 @@ class TunnelLayer(layer.Layer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         yield commands.SendData(self.tunnel_connection, data)
 
-    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
-        yield commands.CloseConnection(self.tunnel_connection, half_close=half_close)
+    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
+        yield command
 
 
 class LayerStack:

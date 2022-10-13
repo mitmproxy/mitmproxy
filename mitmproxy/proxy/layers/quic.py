@@ -824,7 +824,7 @@ class QuicLayer(tunnel.TunnelLayer):
             self.quic.send_datagram_frame(data)
         yield from self.tls_interact()
 
-    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
+    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
         # properly close the QUIC connection
         if self.quic is not None:
             close_event = get_connection_error(self.conn)
@@ -833,7 +833,7 @@ class QuicLayer(tunnel.TunnelLayer):
             else:
                 self.quic.close(close_event.error_code, close_event.frame_type, close_event.reason_phrase)
             yield from self.tls_interact()
-        yield from super().send_close(half_close)
+        yield from super().send_close(command)
 
 
 class ServerQuicLayer(QuicLayer):

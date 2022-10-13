@@ -369,7 +369,7 @@ class Http1Client(Http1Connection):
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             elif http1.expected_http_body_size(self.request, self.response) == -1:
-                yield commands.CloseConnection(self.conn, half_close=True)
+                yield commands.CloseTcpConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         else:
             raise AssertionError(f"Unexpected event: {event}")

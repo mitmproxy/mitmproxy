@@ -224,11 +224,10 @@ class Playbook:
                 for cmd in cmds:
                     pos += 1
                     assert self.actual[pos] == cmd
-                    if isinstance(cmd, commands.CloseConnection):
-                        if cmd.half_close:
-                            cmd.connection.state &= ~ConnectionState.CAN_WRITE
-                        else:
-                            cmd.connection.state = ConnectionState.CLOSED
+                    if isinstance(cmd, commands.CloseTcpConnection) and cmd.half_close:
+                        cmd.connection.state &= ~ConnectionState.CAN_WRITE
+                    elif isinstance(cmd, commands.CloseConnection):
+                        cmd.connection.state = ConnectionState.CLOSED
                     elif isinstance(cmd, commands.Log):
                         need_to_emulate_log = (
                             not self.logs

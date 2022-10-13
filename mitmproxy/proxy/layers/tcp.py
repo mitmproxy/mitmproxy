@@ -132,7 +132,7 @@ class TCPLayer(layer.Layer):
                     yield TcpEndHook(self.flow)
                     self.flow.live = False
             else:
-                yield commands.CloseConnection(send_to, half_close=True)
+                yield commands.CloseTcpConnection(send_to, half_close=True)
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

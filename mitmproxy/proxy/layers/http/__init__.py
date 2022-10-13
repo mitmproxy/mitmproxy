@@ -791,7 +791,8 @@ class HttpStream(layer.Layer):
                     # The easiest approach for this is to just always full close for now.
                     # Alternatively, we could signal that we want a half close only through ResponseProtocolError,
                     # but that is more complex to implement.
-                    command.half_close = False
+                    if isinstance(command, commands.CloseTcpConnection):
+                        command = commands.CloseConnection(command.connection)
                     yield command
             else:
                 yield command
