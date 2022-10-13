@@ -12,16 +12,16 @@
   ([#5465](https://github.com/mitmproxy/mitmproxy/pull/5465), @meitinger, @mhils)
 * Add UDP layer and flow support.
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
-* Setting `connection_strategy` to `lazy` now also disables early 
+* Setting `connection_strategy` to `lazy` now also disables early
   upstream connections to fetch TLS certificate details.
   ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix `tls_version_server_min` and `tls_version_server_max` options.
   ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
-* DTLS support. 
+* DTLS support.
   ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
-* Added Magisk module generation for Android onboarding 
+* Added Magisk module generation for Android onboarding
   ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
-* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. 
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31.
   ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
 * Render application/prpc content as gRPC/Protocol Buffers
   ([#5568](https://github.com/mitmproxy/mitmproxy/pull/5568), @selfisekai)
@@ -33,7 +33,7 @@
   ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
 * Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
-* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
 * Add MQTT content view.
   ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
@@ -41,6 +41,8 @@
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 * Fix mitmweb not properly opening a browser and being stuck on some Linux.
   ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
+* Add error type / code enum.
+  ([#4554](https://github.com/mitmproxy/mitmproxy/issues/4554), @KarlParkinson
 
 
 ## 28 June 2022: mitmproxy 8.1.1
@@ -77,7 +79,7 @@
   ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
-* Add example addon to dump contents to files based on a filter expression 
+* Add example addon to dump contents to files based on a filter expression
   ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
 * Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
@@ -87,14 +89,14 @@
   ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 * Improve cut addon to better handle binary contents
   ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
-* Fix text truncation for full-width characters 
+* Fix text truncation for full-width characters
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
 * Add example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
 * When opening an external viewer for message contents, mailcap files are not considered anymore.  
-  This preempts the upcoming deprecation of Python's `mailcap` module. 
+  This preempts the upcoming deprecation of Python's `mailcap` module.
   ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
 * Fix hostname encoding for IDNA domains in upstream mode.
   ([#5316](https://github.com/mitmproxy/mitmproxy/issues/5316), @nneonneo)
@@ -155,7 +157,7 @@
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
 * Add support for rotating saved streams every hour or day (@EndUser509)
 * Console Improvements on Windows (@mhils)
-* Fix processing of `--set` options (#5067, @marwinxxii) 
+* Fix processing of `--set` options (#5067, @marwinxxii)
 * Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
 * Exit early if there are errors on startup (#4544, @mhils)
 * Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)
