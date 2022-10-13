@@ -1,12 +1,19 @@
 import asyncio
 import time
 import uuid
+import enum
 from typing import Any, ClassVar, Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
+
+
+class ErrorEnum(enum.Enum):
+    INTERRUPTED_CONNECTION = 1
+    TIMEOUT = 2
+    PROTOCOL_ERROR = 3
 
 
 class Error(stateobject.StateObject):
@@ -22,15 +29,19 @@ class Error(stateobject.StateObject):
     msg: str
     """Message describing the error."""
 
+    code: int
+    """Code describing the type of error raised."""
+
     timestamp: float
     """Unix timestamp of when this error happened."""
 
     KILLED_MESSAGE: ClassVar[str] = "Connection killed."
 
-    def __init__(self, msg: str, timestamp: Optional[float] = None) -> None:
+    def __init__(self, msg: str, code: Optional[int] = ErrorEnum.INTERRUPTED_CONNECTION, timestamp: Optional[float] = None) -> None:
         """Create an error. If no timestamp is passed, the current time is used."""
         self.msg = msg
         self.timestamp = timestamp or time.time()
+        self.error_code = code
 
     _stateobject_attributes = dict(msg=str, timestamp=float)
 
