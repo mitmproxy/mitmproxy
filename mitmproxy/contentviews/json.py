@@ -28,7 +28,10 @@ def format_json(data: Any) -> Iterator[base.TViewLine]:
             yield current_line
             current_line = []
         if re.match(r'\s*"', chunk):
-            current_line.append(("json_string", chunk))
+            if len(current_line) == 1 and current_line[0][0] == "text" and current_line[0][1].isspace():
+                current_line.append(("json_key", chunk))
+            else:
+                current_line.append(("json_string", chunk))
         elif re.match(r"\s*\d", chunk):
             current_line.append(("json_number", chunk))
         elif re.match(r"\s*(true|null|false)", chunk):

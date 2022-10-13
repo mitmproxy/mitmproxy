@@ -17,6 +17,32 @@ def test_parse_json():
 
 def test_format_json():
     assert list(json.format_json({"data": ["str", 42, True, False, None, {}, []]}))
+    assert list(json.format_json({"string": "test"})) == [
+        [('text', '{'), ('text', '')],
+        [('text', '    '), ('json_key', '"string"'), ('text', ': '), ('json_string', '"test"'), ('text', '')],
+        [('text', ''), ('text', '}')]]
+    assert list(json.format_json({"num": 4})) == [
+        [('text', '{'), ('text', '')],
+        [('text', '    '), ('json_key', '"num"'), ('text', ': '), ('json_number', '4'), ('text', '')],
+        [('text', ''), ('text', '}')]]
+    assert list(json.format_json({"bool": True})) == [
+        [('text', '{'), ('text', '')],
+        [('text', '    '), ('json_key', '"bool"'), ('text', ': '), ('json_boolean', 'true'), ('text', '')],
+        [('text', ''), ('text', '}')]]
+    assert list(json.format_json({"object": {"int": 1}})) == [
+        [('text', '{'), ('text', '')],
+        [('text', '    '), ('json_key', '"object"'), ('text', ': '), ('text', '{'), ('text', '')],
+        [('text', '        '), ('json_key', '"int"'), ('text', ': '), ('json_number', '1'), ('text', '')],
+        [('text', '    '), ('text', '}'), ('text', '')],
+        [('text', ''), ('text', '}')]]
+    assert list(json.format_json({"list": ["string", 1, True]})) == [
+        [('text', '{'), ('text', '')],
+        [('text', '    '), ('json_key', '"list"'), ('text', ': '), ('text', '[')],
+        [('json_string', '        "string"'), ('text', ',')],
+        [('json_number', '        1'), ('text', ',')],
+        [('json_boolean', '        true'), ('text', '')],
+        [('text', '    '), ('text', ']'), ('text', '')],
+        [('text', ''), ('text', '}')]]
 
 
 def test_view_json():
