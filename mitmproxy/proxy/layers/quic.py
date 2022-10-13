@@ -177,6 +177,56 @@ class StopQuicStream(QuicStreamCommand):
         self.error_code = error_code
 
 
+class CloseQuicConnection(commands.CloseConnection):
+    """Close a QUIC connection."""
+
+    error_code: int
+    "The error code which was specified when closing the connection."
+
+    frame_type: int | None
+    "The frame type which caused the connection to be closed, or `None`."
+
+    reason_phrase: str
+    "The human-readable reason for which the connection was closed."
+
+    # XXX: A bit much boilerplate right now. Should switch to dataclasses.
+    def __init__(
+        self,
+        conn: connection.Connection,
+        error_code: int,
+        frame_type: int | None,
+        reason_phrase: str,
+    ):
+        super().__init__(conn)
+        self.error_code = error_code
+        self.frame_type = frame_type
+        self.reason_phrase = reason_phrase
+
+
+class QuicConnectionClosed(events.ConnectionClosed):
+    """QUIC connection has been closed."""
+    error_code: int
+    "The error code which was specified when closing the connection."
+
+    frame_type: int | None
+    "The frame type which caused the connection to be closed, or `None`."
+
+    reason_phrase: str
+    "The human-readable reason for which the connection was closed."
+
+    def __init__(
+        self,
+        conn: connection.Connection,
+        error_code: int,
+        frame_type: int | None,
+        reason_phrase: str,
+    ):
+        super().__init__(conn)
+        self.error_code = error_code
+        self.frame_type = frame_type
+        self.reason_phrase = reason_phrase
+
+
 class QuicSecretsLogger:
     logger: tls.MasterSecretLogger
 
@@ -208,26 +258,10 @@ def error_code_to_str(error_code: int) -> str:
             return f"unknown error (0x{error_code:x})"
 
 
-def get_connection_error(conn: connection.Connection) -> quic_events.ConnectionTerminated | None:
-    """Returns the QUIC close event that is associated with the given connection."""
-
-    close_event = getattr(conn, "quic_error", None)
-    if close_event is None:
-        return None
-    assert isinstance(close_event, quic_events.ConnectionTerminated)
-    return close_event
-
-
 def is_success_error_code(error_code: int) -> bool:
     """Returns whether the given error code actually indicates no error."""
 
     return error_code in (QuicErrorCode.NO_ERROR, H3ErrorCode.H3_NO_ERROR)
-
-
-def set_connection_error(conn: connection.Connection, close_event: quic_events.ConnectionTerminated) -> None:
-    """Stores the given close event for the given connection."""
-
-    setattr(conn, "quic_error", close_event)
 
 
 @dataclass
@@ -481,17 +515,13 @@ class RawQuicLayer(layer.Layer):
 
         # handle close events that target this context
         elif (
-            isinstance(event, events.ConnectionClosed)
+            isinstance(event, QuicConnectionClosed)
             and (
                 event.connection is self.context.client
                 or event.connection is self.context.server
             )
         ):
-            # copy the connection error
             from_client = event.connection is self.context.client
-            close_event = get_connection_error(event.connection)
-            if close_event is not None:
-                set_connection_error(self.context.server if from_client else self.context.client, close_event)
 
             # always forward to the datagram layer
             yield from self.event_to_child(self.datagram_layer, event)
@@ -552,7 +582,9 @@ class RawQuicLayer(layer.Layer):
                     if command.connection.state & connection.ConnectionState.CAN_WRITE:
                         command.connection.state &= ~connection.ConnectionState.CAN_WRITE
                         yield SendQuicStreamData(quic_conn, stream_id, b"", end_stream=True)
-                    if not command.half_close:
+                    # XXX: Use `command.connection.state & connection.ConnectionState.CAN_READ` instead?
+                    only_close_our_half = isinstance(command, commands.CloseTcpConnection) and command.half_close
+                    if not only_close_our_half:
                         if (
                             stream_is_client_initiated(stream_id) == to_client
                             or not stream_is_unidirectional(stream_id)
@@ -786,13 +818,12 @@ class QuicLayer(tunnel.TunnelLayer):
         # handle post-handshake events
         while event := self.quic.next_event():
             if isinstance(event, quic_events.ConnectionTerminated):
-                set_connection_error(self.conn, event)
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
                         f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", DEBUG
                     )
-                yield commands.CloseConnection(self.conn)
+                yield CloseQuicConnection(self.conn, event.error_code, event.frame_type, event.reason_phrase)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit
             elif isinstance(event, quic_events.DatagramFrameReceived):
                 yield from self.event_to_child(events.DataReceived(self.conn, event.data))
@@ -827,11 +858,10 @@ class QuicLayer(tunnel.TunnelLayer):
     def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
         # properly close the QUIC connection
         if self.quic is not None:
-            close_event = get_connection_error(self.conn)
-            if close_event is None:
-                self.quic.close()
+            if isinstance(command, CloseQuicConnection):
+                self.quic.close(command.error_code, command.frame_type, command.reason_phrase)
             else:
-                self.quic.close(close_event.error_code, close_event.frame_type, close_event.reason_phrase)
+                self.quic.close()
             yield from self.tls_interact()
         yield from super().send_close(command)
 
