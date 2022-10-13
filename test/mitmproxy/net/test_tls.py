@@ -47,11 +47,8 @@ def test_sslkeylogfile(tdata, monkeypatch):
     server = SSL.Connection(sctx)
     server.set_accept_state()
 
-    # Use pyOpenSSL API once it has shipped: https://github.com/pyca/pyopenssl/pull/1121
-    ok = SSL._lib.SSL_use_certificate(server._ssl, entry.cert.to_pyopenssl()._x509)  # type: ignore
-    SSL._openssl_assert(ok == 1)  # type: ignore
-    ok = SSL._lib.SSL_use_PrivateKey(server._ssl, crypto.PKey.from_cryptography_key(entry.privatekey)._pkey)  # type: ignore
-    SSL._openssl_assert(ok == 1)  # type: ignore
+    server.use_certificate(entry.cert.to_pyopenssl())
+    server.use_privatekey(crypto.PKey.from_cryptography_key(entry.privatekey))
 
     client = SSL.Connection(cctx)
     client.set_connect_state()
