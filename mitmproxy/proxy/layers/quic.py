@@ -333,7 +333,7 @@ class QuicStreamLayer(layer.Layer):
     """Virtual client connection for this stream. Use this in QuicRawLayer instead of `context.client`."""
     server: connection.Server
     """Virtual server connection for this stream. Use this in QuicRawLayer instead of `context.server`."""
-    child_layer: layer.Layer
+    child_layer: TCPLayer
     """The stream's child layer."""
 
     def __init__(self, context: context.Context, ignore: bool, stream_id: int) -> None:
@@ -369,11 +369,21 @@ class QuicStreamLayer(layer.Layer):
             if ignore else
             layer.NextLayer(context)
         )
+        if ignore:
+            self.child_layer = TCPLayer(context, ignore=True)
+        else:
+            tcp_layer = TCPLayer(context)
+            # This can potentially move to a smarter place later on,
+            # but it's useful debugging info in mitmproxy for now.
+            tcp_layer.flow.metadata["quic_is_unidirectional"] = stream_is_unidirectional(stream_id)
+            tcp_layer.flow.metadata["quic_initiator"] = "client" if stream_is_client_initiated(stream_id) else "server"
+            tcp_layer.flow.metadata["quic_stream_id_client"] = stream_id
+            self.child_layer = tcp_layer
         self.handle_event = self.child_layer.handle_event  # type: ignore
         self._handle_event = self.child_layer._handle_event  # type: ignore
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        pass
+        raise AssertionError
 
     def open_server_stream(self, server_stream_id) -> None:
         assert self._server_stream_id is None
@@ -388,6 +398,8 @@ class QuicStreamLayer(layer.Layer):
             if stream_is_unidirectional(server_stream_id) else
             connection.ConnectionState.OPEN
         )
+        if self.child_layer.flow:
+            self.child_layer.flow.metadata["quic_stream_id_server"] = server_stream_id
 
     def stream_id(self, client: bool) -> int | None:
         return self._client_stream_id if client else self._server_stream_id
