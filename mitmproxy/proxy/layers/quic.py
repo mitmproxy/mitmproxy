@@ -605,21 +605,24 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        # turn Wakeup events into empty DataReceived events
         if (
             isinstance(event, events.Wakeup)
             and event.command in self._wakeup_commands
         ):
+            # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
+            # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             timer = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
                 self.quic.handle_timer(now=max(timer, self._loop.time()))
-                event = events.DataReceived(self.tunnel_connection, b"")
-        yield from super()._handle_event(event)
+                yield from super()._handle_event(
+                    events.DataReceived(self.tunnel_connection, b"")
+                )
+        else:
+            yield from super()._handle_event(event)
 
     def _handle_command(self, command: commands.Command) -> layer.CommandGenerator[None]:
         """Turns stream commands into aioquic connection invocations."""
-
         if (
             isinstance(command, QuicStreamCommand)
             and command.connection is self.conn
@@ -801,6 +804,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 quic_events.ConnectionIdIssued,
                 quic_events.ConnectionIdRetired,
                 quic_events.PingAcknowledged,
+                quic_events.ProtocolNegotiated,
             )):
                 pass
             else:
