@@ -18,9 +18,24 @@ def test_parse_msgpack():
 
 
 def test_format_msgpack():
-    assert list(
-        msgpack.format_msgpack({"data": ["str", 42, True, False, None, {}, []]})
-    )
+    assert list(msgpack.format_msgpack({"string": "test", "int": 1, "float": 1.44, "bool": True})) == [
+        [('text', '{')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"string"'), ('text', ': '), ('msgpack_string', '"test"'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"int"'), ('text', ': '), ('msgpack_number', '1'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"float"'), ('text', ': '), ('msgpack_number', '1.44'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"bool"'), ('text', ': '), ('msgpack_boolean', 'True')],
+        [('text', ''), ('text', '}')]
+    ]
+
+    assert list(msgpack.format_msgpack({"object": {"key": "value"}, "list": [1]})) == [
+        [('text', '{')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"object"'), ('text', ': '), ('text', '{')],
+        [('text', '    '), ('text', '    '), ('msgpack_key', '"key"'), ('text', ': '), ('msgpack_string', '"value"')],
+        [('text', '    '), ('text', '}'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('msgpack_key', '"list"'), ('text', ': '), ('text', '[')],
+        [('text', '    '), ('text', '    '), ('msgpack_number', '1')],
+        [('text', '    '), ('text', ']')],
+        [('text', ''), ('text', '}')]]
 
 
 def test_view_msgpack():

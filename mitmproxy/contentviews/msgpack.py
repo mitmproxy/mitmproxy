@@ -15,23 +15,64 @@ def parse_msgpack(s: bytes) -> Any:
         return PARSE_ERROR
 
 
-def pretty(value, htchar="    ", lfchar="\n", indent=0):
-    nlch = lfchar + htchar * (indent + 1)
-    if type(value) is dict:
-        items = [
-            nlch + repr(key) + ": " + pretty(value[key], htchar, lfchar, indent + 1)
-            for key in value
-        ]
-        return "{%s}" % (",".join(items) + lfchar + htchar * indent)
-    elif type(value) is list:
-        items = [nlch + pretty(item, htchar, lfchar, indent + 1) for item in value]
-        return "[%s]" % (",".join(items) + lfchar + htchar * indent)
+def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base.TViewLine]:
+    if output is None:
+        output = [[]]
+
+    indent = ("text", "    " * indent_count)
+
+    if type(data) is str:
+        token = [("msgpack_string", f"\"{data}\"")]
+        output[-1] += token
+
+        # If that was the first token, this is the sole msgpack object, so we need to return
+        # as there is no dict/list loop which will do so for us
+        if len(output) == 1:
+            return output
+
+    elif type(data) is float or type(data) is int:
+        token = [("msgpack_number", repr(data))]
+        output[-1] += token
+        if len(output) == 1:
+            return output
+
+    elif type(data) is bool:
+        token = [("msgpack_boolean", repr(data))]
+        output[-1] += token
+        if len(output) == 1:
+            return output
+
+    elif type(data) is dict:
+        output[-1] += [("text", "{")]
+        for key in data:
+            output.append([indent, ("text", "    "), ("msgpack_key", f'"{key}"'), ("text", ": ")])
+            format_msgpack(data[key], output, indent_count + 1)
+
+            if key != list(data)[-1]:
+                output[-1] += [("text", ",")]
+
+        output.append([indent, ("text", "}")])
+
+        return output
+
+    elif type(data) is list:
+        output[-1] += [("text", "[")]
+        for item in data:
+            output.append([indent, ("text", "    ")])
+            format_msgpack(item, output, indent_count + 1)
+
+            if item != data[-1]:
+                output[-1] += [("text", ",")]
+
+        output.append([indent, ("text", "]")])
+
+        return output
+
     else:
-        return repr(value)
-
-
-def format_msgpack(data):
-    return base.format_text(pretty(data))
+        token = [("text", repr(data))]
+        output[-1] += token
+        if len(output) == 1:
+            return output
 
 
 class ViewMsgPack(base.View):
@@ -44,7 +85,7 @@ class ViewMsgPack(base.View):
     def __call__(self, data, **metadata):
         data = parse_msgpack(data)
         if data is not PARSE_ERROR:
-            return "MsgPack", format_msgpack(data)
+            return "MsgPack", (line for line in format_msgpack(data))
 
     def render_priority(
         self, data: bytes, *, content_type: Optional[str] = None, **metadata

@@ -41,7 +41,8 @@
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 * Fix mitmweb not properly opening a browser and being stuck on some Linux.
   ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
-
+* Add syntax highlighting to JSON and msgpack content view.
+  ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
 
 ## 28 June 2022: mitmproxy 8.1.1
 
