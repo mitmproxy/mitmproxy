@@ -21,7 +21,7 @@ class Column(base.Column):
     def keypress(self, key: str, editor):
         if key in "rRe":
             signals.status_message.send(
-                message="Press enter to edit this field.", expire=1000
+                message="Press enter to edit this field."
             )
             return
         elif key == "m_select":
