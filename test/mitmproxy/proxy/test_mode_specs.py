@@ -7,7 +7,7 @@ def test_parse():
     m = ProxyMode.parse("reverse:https://example.com/@127.0.0.1:443")
     m = ProxyMode.from_state(m.get_state())
 
-    assert m.type == "reverse"
+    assert m.type_name == "reverse"
     assert m.full_spec == "reverse:https://example.com/@127.0.0.1:443"
     assert m.data == "https://example.com/"
     assert m.custom_listen_host == "127.0.0.1"

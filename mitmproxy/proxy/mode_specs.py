@@ -49,14 +49,14 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     custom_listen_port: int | None
     """A custom listen port, if specified in the spec."""
 
-    type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
+    type_name: ClassVar[str]  # automatically derived from the class name in __init_subclass__
     """The unique name for this proxy mode, e.g. "regular" or "reverse"."""
     __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
 
     def __init_subclass__(cls, **kwargs):
-        cls.type = cls.__name__.removesuffix("Mode").lower()
-        assert cls.type not in ProxyMode.__types
-        ProxyMode.__types[cls.type] = cls
+        cls.type_name = cls.__name__.removesuffix("Mode").lower()
+        assert cls.type_name not in ProxyMode.__types
+        ProxyMode.__types[cls.type_name] = cls
 
     def __repr__(self):
         return f"ProxyMode.parse({self.full_spec!r})"
@@ -117,7 +117,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise ValueError(f"unknown mode")
 
         if not issubclass(mode_cls, cls):
-            raise ValueError(f"{mode!r} is not a spec for a {cls.type} mode")
+            raise ValueError(f"{mode!r} is not a spec for a {cls.type_name} mode")
 
         return mode_cls(
             full_spec=spec,
