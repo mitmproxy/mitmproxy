@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from collections.abc import Callable
+
 from mitmproxy.utils import signals
 
 
@@ -9,11 +12,21 @@ def _status_message(message: tuple[str, str] | str, expire: int | None = None) -
 
 status_message = signals.SyncSignal(_status_message)
 
+
 # Prompt for input
-status_prompt = signals.SyncSignal(lambda prompt, text, callback, args=(): None)
+def _status_prompt(prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
+    ...
+
+
+status_prompt = signals.SyncSignal(_status_prompt)
+
 
 # Prompt for a single keystroke
-status_prompt_onekey = signals.SyncSignal(lambda prompt, keys, callback, args=(): None)
+def _status_prompt_onekey(prompt: str, keys: list[tuple[str,str]], callback: Callable[[str], None]) -> None:
+    ...
+
+
+status_prompt_onekey = signals.SyncSignal(_status_prompt_onekey)
 
 
 # Prompt for a command
@@ -23,8 +36,13 @@ def _status_prompt_command(partial: str = "", cursor: int | None = None) -> None
 
 status_prompt_command = signals.SyncSignal(_status_prompt_command)
 
+
 # Call a callback in N seconds
-call_in = signals.SyncSignal(lambda seconds, callback, args=(): None)
+def _call_in(seconds: float, callback: Callable[[], None]) -> None:
+    ...
+
+
+call_in = signals.SyncSignal(_call_in)
 
 # Focus the body, footer or header of the main window
 focus = signals.SyncSignal(lambda section: None)

@@ -55,9 +55,9 @@ async def test_statusbar(console, monkeypatch):
     ],
 )
 def test_shorten_message(message, ready_message):
-    assert statusbar.ActionBar.shorten_message(message, max_width=30) == ready_message
+    assert statusbar.shorten_message(message, max_width=30) == ready_message
 
 
 def test_shorten_message_narrow():
-    shorten_msg = statusbar.ActionBar.shorten_message("error", max_width=4)
+    shorten_msg = statusbar.shorten_message("error", max_width=4)
     assert shorten_msg == [(None, "\u2026"), ("warn", "(more in eventlog)")]

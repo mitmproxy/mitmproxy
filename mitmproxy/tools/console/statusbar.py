@@ -1,4 +1,6 @@
+from __future__ import annotations
 import os.path
+from collections.abc import Callable
 from typing import Optional
 
 import urwid
@@ -11,30 +13,40 @@ from mitmproxy.tools.console.commander import commander
 from mitmproxy.utils import human
 
 
-class PromptPath:
-    def __init__(self, callback, args):
-        self.callback, self.args = callback, args
+def shorten_message(msg: tuple[str, str] | str, max_width: int) -> list[tuple[str, str]]:
+    """
+    Shorten message so that it fits into a single line in the statusbar.
+    """
+    if isinstance(msg, tuple):
+        disp_attr, msg_text = msg
+    elif isinstance(msg, str):
+        msg_text = msg
+        disp_attr = ""
+    else:
+        raise AssertionError(f"Unexpected message type: {type(msg)}")
+    msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
+    prompt = "(more in eventlog)"
 
-    def __call__(self, pth: str):
-        if not pth:
-            return
-        pth = os.path.expanduser(pth)
-        try:
-            return self.callback(pth, *self.args)
-        except OSError as v:
-            signals.status_message.send(message=v.strerror)
+    msg_lines = msg_text.split("\n")
+    first_line = msg_lines[0]
+    if len(msg_lines) > 1:
+        # First line of messages with a few lines must end with prompt.
+        line_length = len(first_line) + len(prompt)
+    else:
+        line_length = len(first_line)
 
+    if line_length > max_width:
+        shortening_index = max(0, max_width - len(prompt) - len(msg_end))
+        first_line = first_line[:shortening_index] + msg_end
+    else:
+        if len(msg_lines) == 1:
+            prompt = ""
 
-class PromptStub:
-    def __init__(self, callback, args):
-        self.callback, self.args = callback, args
-
-    def __call__(self, txt):
-        return self.callback(txt, *self.args)
+    return [(disp_attr, first_line), ("warn", prompt)]
 
 
 class ActionBar(urwid.WidgetWrap):
-    def __init__(self, master):
+    def __init__(self, master: mitmproxy.tools.console.master.ConsoleMaster) -> None:
         self.master = master
         urwid.WidgetWrap.__init__(self, None)
         self.clear()
@@ -43,66 +55,32 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
 
-        self.prompting = None
+        self.prompting: Callable[[str], None] | None = None
 
-        self.onekey = False
+        self.onekey: set[str] | None = None
 
-    def sig_message(self, message: str, expire: int = 1) -> None:
+    def sig_message(self, message: tuple[str, str] | str, expire: int | None = 1) -> None:
         if self.prompting:
             return
         cols, _ = self.master.ui.get_cols_rows()
-        w = urwid.Text(self.shorten_message(message, cols))
+        w = urwid.Text(shorten_message(message, cols))
         self._w = w
         if expire:
 
-            def cb(*args):
+            def cb():
                 if w == self._w:
                     self.clear()
 
             signals.call_in.send(seconds=expire, callback=cb)
 
-    def prep_prompt(self, p):
-        return p.strip() + ": "
-
-    @staticmethod
-    def shorten_message(msg, max_width):
-        """
-        Shorten message so that it fits into a single line in the statusbar.
-        """
-        if isinstance(msg, tuple):
-            disp_attr, msg_text = msg
-        elif isinstance(msg, str):
-            disp_attr, msg_text = None, msg
-        else:
-            return msg
-        msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
-        prompt = "(more in eventlog)"
-
-        msg_lines = msg_text.split("\n")
-        first_line = msg_lines[0]
-        if len(msg_lines) > 1:
-            # First line of messages with a few lines must end with prompt.
-            line_length = len(first_line) + len(prompt)
-        else:
-            line_length = len(first_line)
-
-        if line_length > max_width:
-            shortening_index = max(0, max_width - len(prompt) - len(msg_end))
-            first_line = first_line[:shortening_index] + msg_end
-        else:
-            if len(msg_lines) == 1:
-                prompt = ""
-
-        return [(disp_attr, first_line), ("warn", prompt)]
-
-    def sig_prompt(self, prompt, text, callback, args=()):
+    def sig_prompt(self, prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
         signals.focus.send(section="footer")
-        self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
-        self.prompting = PromptStub(callback, args)
+        self._w = urwid.Edit(f"{prompt.strip()}: ", text or "")
+        self.prompting = callback
 
     def sig_prompt_command(
         self, partial: str = "", cursor: Optional[int] = None
-    ):
+    ) -> None:
         signals.focus.send(section="footer")
         self._w = commander.CommandEdit(
             self.master,
@@ -112,31 +90,31 @@ class ActionBar(urwid.WidgetWrap):
             self._w.cbuf.cursor = cursor
         self.prompting = self.execute_command
 
-    def execute_command(self, txt):
+    def execute_command(self, txt: str) -> None:
         if txt.strip():
             self.master.commands.call("commands.history.add", txt)
         execute = commandexecutor.CommandExecutor(self.master)
         execute(txt)
 
-    def sig_prompt_onekey(self, prompt, keys, callback, args=()) -> None:
+    def sig_prompt_onekey(self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]) -> None:
         """
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
         """
         signals.focus.send(section="footer")
-        prompt = [prompt, " ("]
+        parts = [prompt, " ("]
         mkup = []
         for i, e in enumerate(keys):
             mkup.extend(common.highlight_key(e[0], e[1]))
             if i < len(keys) - 1:
                 mkup.append(",")
-        prompt.extend(mkup)
-        prompt.append(")? ")
+        parts.extend(mkup)
+        parts.append(")? ")
         self.onekey = {i[1] for i in keys}
-        self._w = urwid.Edit(prompt, "")
-        self.prompting = PromptStub(callback, args)
+        self._w = urwid.Edit(parts, "")
+        self.prompting = callback
 
-    def selectable(self):
+    def selectable(self) -> bool:
         return True
 
     def keypress(self, size, k):
@@ -157,20 +135,20 @@ class ActionBar(urwid.WidgetWrap):
                 else:
                     return k
 
-    def clear(self):
+    def clear(self) -> None:
         self._w = urwid.Text("")
-        self.prompting = None
 
     def prompt_done(self) -> None:
         self.prompting = None
-        self.onekey = False
-        signals.status_message.send(message="")
+        self.onekey = None
+        self.clear()
         signals.focus.send(section="body")
 
     def prompt_execute(self, txt) -> None:
-        p = self.prompting
+        callback = self.prompting
+        assert callback is not None
         self.prompt_done()
-        msg = p(txt)
+        msg = callback(txt)
         if msg:
             signals.status_message.send(message=msg, expire=1)
 
@@ -179,7 +157,7 @@ class StatusBar(urwid.WidgetWrap):
     REFRESHTIME = 0.5  # Timed refresh time in seconds
     keyctx = ""
 
-    def __init__(self, master: "mitmproxy.tools.console.master.ConsoleMaster") -> None:
+    def __init__(self, master: mitmproxy.tools.console.master.ConsoleMaster) -> None:
         self.master = master
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
@@ -201,8 +179,8 @@ class StatusBar(urwid.WidgetWrap):
     def keypress(self, *args, **kwargs):
         return self.ab.keypress(*args, **kwargs)
 
-    def get_status(self):
-        r = []
+    def get_status(self) -> list[tuple[str,str] | str]:
+        r: list[tuple[str,str] | str] = []
 
         sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")
@@ -291,7 +269,7 @@ class StatusBar(urwid.WidgetWrap):
 
         return r
 
-    def redraw(self):
+    def redraw(self) -> None:
         fc = self.master.commands.execute("view.properties.length")
         if self.master.view.focus.flow is None:
             offset = 0
@@ -307,8 +285,8 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.commands.execute("view.properties.marked"):
             marked = "M"
 
-        t = [
-            ("heading", (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
+        t: list[tuple[str, str] | str] = [
+            ("heading", f"{arrow} {marked} [{offset}/{fc}]".ljust(11)),
         ]
 
         listen_addrs: list[str] = list(dict.fromkeys(
@@ -331,5 +309,5 @@ class StatusBar(urwid.WidgetWrap):
         )
         self.ib._w = status
 
-    def selectable(self):
+    def selectable(self) -> bool:
         return True

@@ -73,10 +73,10 @@ class ConsoleMaster(master.Master):
     def prompt_for_exit(self) -> None:
         signals.status_prompt_onekey.send(
             prompt="Quit",
-            keys=(
+            keys=[
                 ("yes", "y"),
                 ("no", "n"),
-            ),
+            ],
             callback=self.quit,
         )
 
@@ -94,9 +94,9 @@ class ConsoleMaster(master.Master):
                 expire=5,
             )
 
-    def sig_call_in(self, seconds, callback, args=()):
+    def sig_call_in(self, seconds, callback):
         def cb(*_):
-            return callback(*args)
+            return callback()
 
         self.loop.set_alarm_in(seconds, cb)
 
