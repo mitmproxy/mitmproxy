@@ -25,28 +25,26 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
         token = [("msgpack_string", f"\"{data}\"")]
         output[-1] += token
 
-        # If that was the first token, this is the sole msgpack object, so we need to return
-        # as there is no dict/list loop which will do so for us
-        if len(output) == 1:
-            return output
+        # Need to return if single value, but return is discarded in dict/list loop
+        return output
 
     elif type(data) is float or type(data) is int:
         token = [("msgpack_number", repr(data))]
         output[-1] += token
-        if len(output) == 1:
-            return output
+
+        return output
 
     elif type(data) is bool:
         token = [("msgpack_boolean", repr(data))]
         output[-1] += token
-        if len(output) == 1:
-            return output
+
+        return output
 
     elif type(data) is dict:
         output[-1] += [("text", "{")]
         for key in data:
             output.append([indent, ("text", "    "), ("msgpack_key", f'"{key}"'), ("text", ": ")])
-            format_msgpack(data[key], output, indent_count + 1)
+            _ = format_msgpack(data[key], output, indent_count + 1)
 
             if key != list(data)[-1]:
                 output[-1] += [("text", ",")]
@@ -59,7 +57,7 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
         output[-1] += [("text", "[")]
         for item in data:
             output.append([indent, ("text", "    ")])
-            format_msgpack(item, output, indent_count + 1)
+            _ = format_msgpack(item, output, indent_count + 1)
 
             if item != data[-1]:
                 output[-1] += [("text", ",")]
@@ -71,8 +69,8 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
     else:
         token = [("text", repr(data))]
         output[-1] += token
-        if len(output) == 1:
-            return output
+
+        return output
 
 
 class ViewMsgPack(base.View):

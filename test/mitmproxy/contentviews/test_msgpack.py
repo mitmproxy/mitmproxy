@@ -37,6 +37,14 @@ def test_format_msgpack():
         [('text', '    '), ('text', ']')],
         [('text', ''), ('text', '}')]]
 
+    assert list(msgpack.format_msgpack('string')) == [[('msgpack_string', '"string"')]]
+
+    assert list(msgpack.format_msgpack(1.2)) == [[('msgpack_number', '1.2')]]
+
+    assert list(msgpack.format_msgpack(True)) == [[('msgpack_boolean', 'True')]]
+
+    assert list(msgpack.format_msgpack(b'\x01\x02\x03')) == [[('text', "b'\\x01\\x02\\x03'")]]
+
 
 def test_view_msgpack():
     v = full_eval(msgpack.ViewMsgPack())
