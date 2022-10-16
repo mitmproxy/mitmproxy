@@ -1,6 +1,6 @@
 import * as React from "react"
 import renderer from 'react-test-renderer'
-import {EventlogToggle, MenuToggle, OptionsToggle} from '../../../components/Header/MenuToggle'
+import {DarkModeToggle, EventlogToggle, MenuToggle, OptionsToggle} from '../../../components/Header/MenuToggle'
 import {Provider} from 'react-redux'
 import {TStore} from '../../ducks/tutils'
 import * as optionsEditorActions from "../../../ducks/ui/optionsEditor"
@@ -41,4 +41,16 @@ test("EventlogToggle", async () => {
     fireEvent.click(screen.getByText("Display Event Log"));
 
     expect(store.getState().eventLog.visible).toBeFalsy();
+})
+
+test("DarkModeToggle", async () => {
+    const {asFragment, store} = render(
+        <DarkModeToggle/>
+    );
+    expect(asFragment()).toMatchSnapshot();
+
+    expect(store.getState().darkMode.on).toBeFalsy();
+    fireEvent.click(screen.getByText("Dark mode"));
+
+    expect(store.getState().eventLog.visible).toBeTruthy();
 })

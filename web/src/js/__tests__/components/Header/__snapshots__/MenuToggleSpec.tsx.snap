@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`DarkModeToggle 1`] = `
+<DocumentFragment>
+  <div
+    class="menu-entry"
+  >
+    <label>
+      <input
+        type="checkbox"
+      />
+      Dark mode
+    </label>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`EventlogToggle 1`] = `
 <DocumentFragment>
   <div

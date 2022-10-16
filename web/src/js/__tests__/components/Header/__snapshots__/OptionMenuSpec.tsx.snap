@@ -116,6 +116,18 @@ exports[`OptionMenu Component should render correctly 1`] = `
           Display Command Bar
         </label>
       </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Dark mode
+        </label>
+      </div>
     </div>
     <div
       className="menu-legend"
