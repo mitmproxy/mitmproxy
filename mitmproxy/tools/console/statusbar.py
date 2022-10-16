@@ -1,5 +1,4 @@
 from __future__ import annotations
-import os.path
 from collections.abc import Callable
 from typing import Optional
 
@@ -179,8 +178,8 @@ class StatusBar(urwid.WidgetWrap):
     def keypress(self, *args, **kwargs):
         return self.ab.keypress(*args, **kwargs)
 
-    def get_status(self) -> list[tuple[str,str] | str]:
-        r: list[tuple[str,str] | str] = []
+    def get_status(self) -> list[tuple[str, str] | str]:
+        r: list[tuple[str, str] | str] = []
 
         sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")

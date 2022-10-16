@@ -178,7 +178,7 @@ class ConsoleMaster(master.Master):
         t = threading.Timer(1.0, os.unlink, args=[name])
         t.start()
 
-    def set_palette(self, updated) -> None:
+    def set_palette(self, *_) -> None:
         self.ui.register_palette(
             palettes.palettes[self.options.console_palette].palette(
                 self.options.console_palette_transparent
