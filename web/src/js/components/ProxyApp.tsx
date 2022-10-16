@@ -9,6 +9,7 @@ import Footer from './Footer'
 import Modal from './Modal/Modal'
 import {RootState} from "../ducks";
 import {connect} from 'react-redux'
+import { initUiMode } from '../utils'
 
 type ProxyAppMainProps = {
     showEventLog: boolean
@@ -64,6 +65,7 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
 
     componentDidMount() {
         window.addEventListener("keydown", this.props.onKeyDown);
+        initUiMode();
     }
 
     componentWillUnmount() {

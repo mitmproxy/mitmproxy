@@ -140,3 +140,20 @@ export function getDiff(obj1, obj2) {
     }
     return result
 }
+
+export function setUiMode(isDarkModeEnabled: boolean) {
+    localStorage.setItem('isDarkModeEnabled', isDarkModeEnabled.toString()); 
+    if (isDarkModeEnabled) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+}
+
+export function isDarkModeEnabled(): boolean {
+    return localStorage.getItem('isDarkModeEnabled') == "true"
+}
+
+export function initUiMode() {
+    setUiMode(isDarkModeEnabled())
+}

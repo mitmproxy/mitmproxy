@@ -7,10 +7,10 @@
     flex-direction: column;
 
     > div {
-        background-color: #F2F2F2;
+        background-color: @main-bg;
         padding: 0 5px;
         flex: 0 0 auto;
-        border-top: 1px solid #aaa;
+        border-top: 1px solid @border-color;
         cursor: row-resize;
     }
 
@@ -21,17 +21,17 @@
         border-radius: 0;
         overflow-x: auto;
         overflow-y: scroll;
-        background-color: #fcfcfc;
+        background-color: @lite-grey;
     }
 
     .fa-close {
         cursor: pointer;
         float: right;
-        color: grey;
+        color: var(--grey);
         padding: 3px 0;
         padding-left: 10px;
         &:hover {
-            color: black;
+            color: @black;
         }
     }
 

@@ -13,6 +13,7 @@ import ui from "./ui/index"
 import connection from "./connection"
 import options from './options'
 import commandBar from "./commandBar";
+import darkMode from "./darkMode";
 import thunk, {ThunkAction, ThunkDispatch, ThunkMiddleware} from "redux-thunk";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import backendState from "./backendState";
@@ -23,6 +24,7 @@ import options_meta from "./options_meta";
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 export const rootReducer = combineReducers({
+    darkMode,
     commandBar,
     eventLog,
     flows,

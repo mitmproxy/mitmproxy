@@ -1,24 +1,23 @@
 .nav-tabs {
 
-    @separator-color: lighten(grey, 15%);
-
-    border-bottom: solid @separator-color 1px;
+    border-bottom: solid @border-color 1px;
 
     > a {
         display: inline-block;
         border: solid transparent 1px;
         text-decoration: none;
+        color: @blue;
         //text-transform: uppercase;
         //font-family: Lato;
 
         &.active {
-            background-color: white;
-            border-color: @separator-color;
-            border-bottom-color: white;
+            background-color: @white-color;
+            border-color: @border-color-lite;
+            border-bottom-color: @white-color;
         }
         &.special {
             @special-color: #396cad;
-            color: white;
+            color: @white-color;
             background-color: @special-color;
             border-bottom-color: @special-color;
             &:hover {

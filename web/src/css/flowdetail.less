@@ -5,16 +5,17 @@
     flex-direction: column;
 
     nav {
-        background-color: #F2F2F2;
+        background-color: @main-bg;
     }
 
     section {
         overflow-y: scroll;
         flex: 1;
         padding: 5px 12px 10px;
+        background: @main-bg;
 
         > footer {
-            box-shadow: 0 0 3px gray;
+            box-shadow: 0 0 3px @gray;
             padding: 2px;
             margin: 0;
             height: 23px;
@@ -24,8 +25,8 @@
 
     .first-line {
         font-family: @font-family-monospace;
-        background-color: #428bca;
-        color: white;
+        background-color: @lite-blue;
+        color: @white-color;
         margin: 0 -8px 2px;
         padding: 4px 8px;
         border-radius: 5px;
@@ -46,6 +47,7 @@
                 font-size: 12px;
                 font-weight: bold;
                 margin: 10px 0;
+                color: @text-main;
             }
         }
 
@@ -74,7 +76,7 @@
 
     &[placeholder]:empty:not(:focus-visible):before {
         content: attr(placeholder);
-        color: lightgray;
+        color: @lightgray;
         font-style: italic;
     }
 
@@ -103,10 +105,11 @@
     width: 100%;
     table-layout: fixed;
     word-break: break-all;
+    color: @text-body;
 
     tr {
         &:not(:first-child) {
-            border-top: 1px solid #f7f7f7;
+            border-top: 1px solid @border-color;
         }
     }
 
@@ -141,12 +144,13 @@
     }
 
     .inline-input {
-        background-color: white;
+        background-color: @white-color;
+        color: @text-body;
     }
 
     .kv-add-row {
         opacity: 0;
-        color: #666;
+        color: @text-main;
         position: absolute;
         bottom: 4px;
         right: 4px;

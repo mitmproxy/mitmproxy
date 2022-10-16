@@ -7,7 +7,7 @@
 
 header {
     padding-top: 6px;
-    background-color: white;
+    background-color: var(--main-bg);
     @separator-color: lighten(grey, 15%);
     > div {
         display: block;
@@ -35,12 +35,14 @@ header {
         display: inline-block;
     }
     > .btn, > a > .btn {
-        height: @menu-height - @menu-legend-height;
+        height: @menu-height - @menu-legend-height - 4px;
         text-align: center;
-        margin: 0 1px;
+        margin: 2px;
         padding: 12px 5px;
         border: none;
-        border-radius: 0;
+        border-radius: 4px;
+        color: @text-main;
+        background: @white-color;
         i {
             font-size: 20px;
             display: block;
@@ -69,6 +71,7 @@ header {
         font-size: 1.2rem;
         font-weight: normal;
         margin: 0;
+        color: @text-main;
     }
     input[type=checkbox] {
         margin: 0 2px;
@@ -88,7 +91,7 @@ header {
     @space: 10px;
     margin-left: -(@menu-group-hmargin + 1px);
     content: " ";
-    border-left: solid 1px lighten(grey, 40%);
+    border-left: solid 1px @border-color-lite;
     margin-top: @space;
     height: @menu-height - @space*2;
     position: absolute;
