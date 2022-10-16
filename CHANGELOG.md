@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Added Dark mode for the web interface.
+  ([#3886])(https://github.com/mitmproxy/mitmproxy/issues/3886), @devapro)
 * Add UDP NextLayer detection, update proxy mode syntax.
   ([#5556])(https://github.com/mitmproxy/mitmproxy/issues/5556), @meitinger)
 * Fix running hook issue and signal proxyserver updates.
