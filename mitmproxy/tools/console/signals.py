@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Union
 
 from mitmproxy.utils import signals
 
-# https://github.com/python/mypy/issues/11098
-StatusMessage = tuple[str, str] | str  # type: ignore
+StatusMessage = Union[tuple[str, str], str]
 
 
 # Show a status message in the action bar

@@ -26,7 +26,7 @@ class BasicKeyHelp:
 
 HelpItems: TypeAlias = dict[str, str | BasicKeyHelp]
 """
-A mapping from the short text that should be displayed in the help bar to the full help text provided for the key 
+A mapping from the short text that should be displayed in the help bar to the full help text provided for the key
 binding. The order of the items in the dictionary determines the order in which they are displayed in the help bar.
 
 Some help items explain builtin urwid functionality, so there is no key binding for them. In this case, the value
