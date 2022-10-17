@@ -2,7 +2,6 @@
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
 from dataclasses import dataclass
-from typing import TypeAlias
 
 import urwid
 
@@ -24,7 +23,7 @@ class BasicKeyHelp:
     key: str
 
 
-HelpItems: TypeAlias = dict[str, str | BasicKeyHelp]
+HelpItems = dict[str, str | BasicKeyHelp]
 """
 A mapping from the short text that should be displayed in the help bar to the full help text provided for the key
 binding. The order of the items in the dictionary determines the order in which they are displayed in the help bar.
