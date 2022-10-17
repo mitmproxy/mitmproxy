@@ -141,7 +141,7 @@ class Keymap:
         return None
 
     @cache
-    def binding_for_help(self, help: str) -> Binding | None:
+    def binding_for_help(self, help: str) -> Optional[Binding]:
         for b in self.bindings:
             if b.help == help:
                 return b
