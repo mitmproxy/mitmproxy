@@ -246,6 +246,10 @@ async def start_server(
 ) -> UdpServer:
     """UDP variant of asyncio.start_server."""
 
+    if host == "":
+        # binding to an empty string does not work on Windows or Ubuntu.
+        host = "0.0.0.0"
+
     loop = asyncio.get_running_loop()
     _, protocol = await loop.create_datagram_endpoint(
         lambda: UdpServer(datagram_received_cb, loop),
