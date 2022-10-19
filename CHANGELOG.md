@@ -41,6 +41,8 @@
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 * Fix mitmweb not properly opening a browser and being stuck on some Linux.
   ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
+* Fix race condition when updating mitmweb WebSocket connections that are closing.
+  ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), @mhils)
 
 
 ## 28 June 2022: mitmproxy 8.1.1
