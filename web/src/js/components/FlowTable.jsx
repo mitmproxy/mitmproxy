@@ -85,7 +85,7 @@ class FlowTable extends React.Component {
         })
 
         if (this.state.viewportTop !== viewportTop || !shallowEqual(this.state.vScroll, vScroll)) {
-            this.setState({ vScroll, viewportTop })
+            this.setState({ vScroll, viewportTop: vScroll.start > vScroll.end ? 0 : viewportTop })
         }
     }
 
