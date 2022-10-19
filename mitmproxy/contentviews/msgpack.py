@@ -44,7 +44,7 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
         output[-1] += [("text", "{")]
         for key in data:
             output.append([indent, ("text", "    "), ("Token_Name_Tag", f'"{key}"'), ("text", ": ")])
-            _ = format_msgpack(data[key], output, indent_count + 1)
+            format_msgpack(data[key], output, indent_count + 1)
 
             if key != list(data)[-1]:
                 output[-1] += [("text", ",")]
@@ -83,7 +83,7 @@ class ViewMsgPack(base.View):
     def __call__(self, data, **metadata):
         data = parse_msgpack(data)
         if data is not PARSE_ERROR:
-            return "MsgPack", (line for line in format_msgpack(data))
+            return "MsgPack", format_msgpack(data)
 
     def render_priority(
         self, data: bytes, *, content_type: Optional[str] = None, **metadata
