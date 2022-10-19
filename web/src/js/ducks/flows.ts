@@ -12,7 +12,6 @@ export const SELECT = 'FLOWS_SELECT'
 export const SET_FILTER = 'FLOWS_SET_FILTER'
 export const SET_SORT = 'FLOWS_SET_SORT'
 export const SET_HIGHLIGHT = 'FLOWS_SET_HIGHLIGHT'
-export const REQUEST_ACTION = 'FLOWS_REQUEST_ACTION'
 
 interface FlowSortFn extends store.SortFn<Flow> {
 }
@@ -206,13 +205,6 @@ export function uploadContent(flow: Flow, file, type) {
 
 export function clear() {
     return dispatch => fetchApi('/clear', {method: 'POST'})
-}
-
-export function download() {
-    if (process.env.NODE_ENV !== 'test') {
-        window.location.href = '/flows/dump';
-    }
-    return {type: REQUEST_ACTION}
 }
 
 export function upload(file) {

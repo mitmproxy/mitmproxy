@@ -17,6 +17,10 @@
   ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix `tls_version_server_min` and `tls_version_server_max` options.
   ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
+* DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Added Magisk module generation for Android onboarding (@jorants).
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. (@jorants)
+* "Save filtered" button in mitmweb. ([#5531](https://github.com/mitmproxy/mitmproxy/pull/5531), @rnbwdsh, @mhils)
 * DTLS support. 
   ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
 * Added Magisk module generation for Android onboarding 

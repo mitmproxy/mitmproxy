@@ -314,13 +314,19 @@ class DumpFlows(RequestHandler):
         self.set_header("Content-Disposition", "attachment; filename=flows")
         self.set_header("Content-Type", "application/octet-stream")
 
-        bio = BytesIO()
-        fw = io.FlowWriter(bio)
-        for f in self.view:
-            fw.add(f)
+        try:
+            match = flowfilter.parse(self.request.arguments["filter"][0].decode())
+        except ValueError:  # thrown py flowfilter.parse if filter is invalid
+            raise APIError(400, f"Invalid filter argument / regex")
+        except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
+            match = bool  # returns always true
 
-        self.write(bio.getvalue())
-        bio.close()
+        with BytesIO() as bio:
+            fw = io.FlowWriter(bio)
+            for f in self.view:
+                if match(f):
+                    fw.add(f)
+            self.write(bio.getvalue())
 
     def post(self):
         self.view.clear()

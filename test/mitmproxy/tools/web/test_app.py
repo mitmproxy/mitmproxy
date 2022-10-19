@@ -217,6 +217,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/flows/dump")
         assert b"address" in resp.body
 
+    def test_flows_dump_filter(self):
+        resp = self.fetch("/flows/dump?filter=foo")
+        assert b"" == resp.body
+
+    def test_flows_dump_filter_error(self):
+        resp = self.fetch("/flows/dump?filter=[")
+        assert resp.code == 400
+
     def test_clear(self):
         events = self.events.data.copy()
         flows = list(self.view)
