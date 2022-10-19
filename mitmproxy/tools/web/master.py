@@ -1,3 +1,5 @@
+import logging
+
 import errno
 import tornado.httpserver
 import tornado.ioloop
@@ -12,8 +14,11 @@ from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
+from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.contrib.tornado import patch_tornado
 from mitmproxy.tools.web import app, webaddons, static_viewer
+
+logger = logging.getLogger(__name__)
 
 
 class WebMaster(master.Master):
@@ -44,6 +49,8 @@ class WebMaster(master.Master):
             errorcheck.ErrorCheck(),
         )
         self.app = app.Application(self, self.options.web_debug)
+        self.proxyserver: Proxyserver = self.addons.get("proxyserver")
+        self.proxyserver.servers.changed.connect(self._sig_servers_changed)
 
     def _sig_view_add(self, flow: flow.Flow) -> None:
         app.ClientConnection.broadcast(
@@ -75,6 +82,13 @@ class WebMaster(master.Master):
             resource="options", cmd="update", data=options_dict
         )
 
+    def _sig_servers_changed(self) -> None:
+        app.ClientConnection.broadcast(
+            resource="state",
+            cmd="update",
+            data={"servers": [s.to_json() for s in self.proxyserver.servers]}
+        )
+
     async def running(self):
         patch_tornado()
         # Register tornado with the current event loop
@@ -90,7 +104,7 @@ class WebMaster(master.Master):
                 message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 1}`."
             raise OSError(e.errno, message, e.filename) from e
 
-        self.log.info(
+        logger.info(
             f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",
         )
 

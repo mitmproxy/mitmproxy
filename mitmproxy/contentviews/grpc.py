@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import logging
 import struct
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Generator, Iterable, Iterator
 
-from mitmproxy import contentviews, ctx, flow, flowfilter, http
+from mitmproxy import contentviews, flow, flowfilter, http
 from mitmproxy.contentviews import base
 from mitmproxy.net.encoding import decode
 
@@ -258,8 +259,7 @@ class ProtoParser:
         packed_field: ProtoParser.Field,
     ) -> list[ProtoParser.Field]:
         if not isinstance(packed_field.wire_value, bytes):
-            ctx.log(type(packed_field.wire_value))
-            raise ValueError("can not unpack field with data other than bytes")
+            raise ValueError(f"can not unpack field with data other than bytes: {type(packed_field.wire_value)}")
         wire_data: bytes = packed_field.wire_value
         tag: int = packed_field.tag
         options: ProtoParser.ParserOptions = packed_field.options
@@ -526,7 +526,7 @@ class ProtoParser:
                     self.preferred_decoding = decoding
                 self.try_unpack = as_packed
             except Exception as e:
-                ctx.log.warn(e)
+                logging.warning(e)
 
         def _gen_tag_str(self):
             tags = self.parent_tags[:]
@@ -966,6 +966,9 @@ class ViewGrpcProtobuf(base.View):
     ]
     __content_types_grpc = [
         "application/grpc",
+        # seems specific to chromium infra tooling
+        # https://chromium.googlesource.com/infra/luci/luci-go/+/refs/heads/main/grpc/prpc/
+        "application/prpc",
     ]
 
     # first value serves as default algorithm for compressed messages, if 'grpc-encoding' header is missing
@@ -1084,7 +1087,7 @@ class ViewGrpcProtobuf(base.View):
             # hook to log exception tracebacks on iterators
 
             # import traceback
-            # ctx.log.warn("gRPC contentview: {}".format(traceback.format_exc()))
+            # logging.warning("gRPC contentview: {}".format(traceback.format_exc()))
             raise e
 
         return title, text_iter

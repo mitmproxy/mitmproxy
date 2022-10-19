@@ -83,7 +83,7 @@ class TestModifyBodyFile:
             mb.request(f)
             assert f.request.content == b"bar"
 
-    async def test_nonexistent(self, tmpdir):
+    async def test_nonexistent(self, tmpdir, caplog):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:
             with pytest.raises(Exception, match="Invalid file path"):
@@ -96,4 +96,4 @@ class TestModifyBodyFile:
             f = tflow.tflow()
             f.request.content = b"foo"
             mb.request(f)
-            await tctx.master.await_log("could not read")
+            assert "Could not read" in caplog.text

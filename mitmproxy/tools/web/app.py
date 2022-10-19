@@ -280,7 +280,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         self.connections.add(self)
 
     def on_close(self):
-        self.connections.remove(self)
+        self.connections.discard(self)
 
     @classmethod
     def broadcast(cls, **kwargs):
@@ -288,11 +288,16 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             "utf8", "surrogateescape"
         )
 
+        errored = []
         for conn in cls.connections:
             try:
-                conn.write_message(message)
+                if not conn.ws_connection.is_closing():
+                    conn.write_message(message)
             except Exception:  # pragma: no cover
-                logging.error("Error sending message", exc_info=True)
+                logging.debug("Error sending WebSocket message.", exc_info=True)
+                errored.append(conn)  # workaround for https://github.com/tornadoweb/tornado/issues/2958
+        for conn in errored:
+            cls.connections.remove(conn)
 
 
 class ClientConnection(WebSocketEventBroadcaster):
@@ -492,7 +497,7 @@ class FlowContentView(RequestHandler):
             viewname, message, flow
         )
         if error:
-            self.master.log.error(error)
+            logging.error(error)
         if max_lines:
             lines = islice(lines, max_lines)
 
@@ -606,19 +611,17 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
+                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
-class Conf(RequestHandler):
+class State(RequestHandler):
     def get(self):
-        conf = {
-            "static": False,
+        self.write({
             "version": version.VERSION,
             "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
-        }
-        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
-        self.set_header("content-type", "application/javascript")
+            "servers": [s.to_json() for s in self.master.proxyserver.servers]
+        })
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
@@ -679,6 +682,6 @@ class Application(tornado.web.Application):
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
-                (r"/conf\.js", Conf),
+                (r"/state(?:\.json)?", State),
             ],
         )

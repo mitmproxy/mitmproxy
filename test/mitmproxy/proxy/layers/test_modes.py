@@ -1,9 +1,11 @@
 import copy
 
 import pytest
+from mitmproxy import dns
 
 from mitmproxy.addons.proxyauth import ProxyAuth
 from mitmproxy.connection import Client, Server
+from mitmproxy.proxy import layers
 from mitmproxy.proxy.commands import (
     CloseConnection,
     Log,
@@ -23,6 +25,7 @@ from mitmproxy.proxy.layers.tls import (
 )
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
+from mitmproxy.test import tflow
 from test.mitmproxy.proxy.layers.test_tls import (
     reply_tls_start_client,
     reply_tls_start_server,
@@ -146,6 +149,23 @@ def test_reverse_proxy(tctx, keep_host_header):
         << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
     )
     assert server().address == ("localhost", 8000)
+
+
+def test_reverse_dns(tctx):
+    f = Placeholder(dns.DNSFlow)
+    server = Placeholder(Server)
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8:53")
+    tctx.options.connection_strategy = "lazy"
+    assert (
+        Playbook(modes.ReverseProxy(tctx), hooks=False)
+        >> DataReceived(tctx.client, tflow.tdnsreq().packed)
+        << layers.dns.DnsRequestHook(f)
+        >> reply(None)
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(tctx.server, tflow.tdnsreq().packed)
+    )
+    assert server().address == ("8.8.8.8", 53)
 
 
 @pytest.mark.parametrize("patch", [True, False])

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os.path
 import sys
 from typing import BinaryIO, Optional
@@ -46,9 +47,9 @@ class ReadFile:
                 cnt += 1
         except (OSError, exceptions.FlowReadException) as e:
             if cnt:
-                ctx.log.warn("Flow file corrupted - loaded %i flows." % cnt)
+                logging.warning("Flow file corrupted - loaded %i flows." % cnt)
             else:
-                ctx.log.error("Flow file corrupted.")
+                logging.error("Flow file corrupted.")
             raise exceptions.FlowReadException(str(e)) from e
         else:
             return cnt
@@ -59,7 +60,7 @@ class ReadFile:
             with open(path, "rb") as f:
                 return await self.load_flows(f)
         except OSError as e:
-            ctx.log.error(f"Cannot load flows: {e}")
+            logging.error(f"Cannot load flows: {e}")
             raise exceptions.FlowReadException(str(e)) from e
 
     async def doread(self, rfile):

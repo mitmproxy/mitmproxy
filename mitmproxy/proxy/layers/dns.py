@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 import struct
 
-from mitmproxy import dns, flow
-from mitmproxy import connection
+from mitmproxy import dns, flow as mflow
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
@@ -40,40 +39,37 @@ class DNSLayer(layer.Layer):
     Layer that handles resolving DNS queries.
     """
 
-    flow: dns.DNSFlow
+    flows: dict[int, dns.DNSFlow]
 
     def __init__(self, context: Context):
         super().__init__(context)
-        self.flow = dns.DNSFlow(self.context.client, self.context.server, live=True)
+        self.flows = {}
 
-    def handle_request(self, msg: dns.Message) -> layer.CommandGenerator[None]:
-        self.flow.request = msg  # if already set, continue and query upstream again
-        yield DnsRequestHook(
-            self.flow
-        )  # give hooks a chance to change the request or produce a response
-        if self.flow.response:
-            yield from self.handle_response(self.flow.response)
-        elif not self.flow.server_conn.address:
-            yield from self.handle_error("No hook has set a response.")
+    def handle_request(self, flow: dns.DNSFlow, msg: dns.Message) -> layer.CommandGenerator[None]:
+        flow.request = msg  # if already set, continue and query upstream again
+        yield DnsRequestHook(flow)
+        if flow.response:
+            yield from self.handle_response(flow, flow.response)
+        elif not self.context.server.address:
+            yield from self.handle_error(flow, "No hook has set a response and there is no upstream server.")
         else:
-            if (
-                self.flow.server_conn.state is connection.ConnectionState.CLOSED
-            ):  # we need an upstream connection
-                err = yield commands.OpenConnection(self.flow.server_conn)
+            if not self.context.server.connected:
+                err = yield commands.OpenConnection(self.context.server)
                 if err:
-                    yield from self.handle_error(str(err))
-                    return  # cannot recover from this
-            yield commands.SendData(self.flow.server_conn, self.flow.request.packed)
+                    yield from self.handle_error(flow, str(err))
+                    # cannot recover from this
+                    return
+            yield commands.SendData(self.context.server, flow.request.packed)
 
-    def handle_response(self, msg: dns.Message) -> layer.CommandGenerator[None]:
-        self.flow.response = msg
-        yield DnsResponseHook(self.flow)
-        if self.flow.response:  # allows the response hook to suppress an answer
-            yield commands.SendData(self.context.client, self.flow.response.packed)
+    def handle_response(self, flow: dns.DNSFlow, msg: dns.Message) -> layer.CommandGenerator[None]:
+        flow.response = msg
+        yield DnsResponseHook(flow)
+        if flow.response:
+            yield commands.SendData(self.context.client, flow.response.packed)
 
-    def handle_error(self, err: str) -> layer.CommandGenerator[None]:
-        self.flow.error = flow.Error(err)
-        yield DnsErrorHook(self.flow)
+    def handle_error(self, flow: dns.DNSFlow, err: str) -> layer.CommandGenerator[None]:
+        flow.error = mflow.Error(err)
+        yield DnsErrorHook(flow)
 
     @expect(events.Start)
     def state_start(self, _) -> layer.CommandGenerator[None]:
@@ -90,18 +86,26 @@ class DNSLayer(layer.Layer):
                 msg = dns.Message.unpack(event.data)
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
+                yield commands.CloseConnection(event.connection)
+                self._handle_event = self.state_done
             else:
+                try:
+                    flow = self.flows[msg.id]
+                except KeyError:
+                    flow = dns.DNSFlow(self.context.client, self.context.server, live=True)
+                    self.flows[msg.id] = flow
                 if from_client:
-                    yield from self.handle_request(msg)
+                    yield from self.handle_request(flow, msg)
                 else:
-                    yield from self.handle_response(msg)
+                    yield from self.handle_response(flow, msg)
 
         elif isinstance(event, events.ConnectionClosed):
-            other_conn = self.flow.server_conn if from_client else self.context.client
-            if other_conn.state is not connection.ConnectionState.CLOSED:
+            other_conn = self.context.server if from_client else self.context.client
+            if other_conn.connected:
                 yield commands.CloseConnection(other_conn)
             self._handle_event = self.state_done
-            self.flow.live = False
+            for flow in self.flows.values():
+                flow.live = False
 
         else:
             raise AssertionError(f"Unexpected event: {event}")

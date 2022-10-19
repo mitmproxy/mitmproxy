@@ -8,9 +8,8 @@ from typing import Any, BinaryIO, Callable, Iterable, Optional
 import certifi
 
 from OpenSSL.crypto import X509
-from cryptography.hazmat.primitives.asymmetric import rsa
 
-from OpenSSL import SSL, crypto
+from OpenSSL import SSL
 from mitmproxy import certs
 
 
@@ -166,8 +165,6 @@ def create_client_proxy_context(
     min_version: Version,
     max_version: Version,
     cipher_list: Optional[tuple[str, ...]],
-    cert: certs.Cert,
-    key: rsa.RSAPrivateKey,
     chain_file: Optional[Path],
     alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
     request_client_cert: bool,
@@ -181,8 +178,6 @@ def create_client_proxy_context(
         cipher_list=cipher_list,
     )
 
-    context.use_certificate(cert.to_pyopenssl())
-    context.use_privatekey(crypto.PKey.from_cryptography_key(key))
     if chain_file is not None:
         try:
             context.load_verify_locations(str(chain_file), None)

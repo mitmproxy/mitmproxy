@@ -138,13 +138,17 @@ async def resolve_message(
 
 class DnsResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
-        proxy_mode = flow.client_conn.proxy_mode
-        assert isinstance(proxy_mode, mode_specs.DnsMode)
         should_resolve = (
-            flow.live
+            (
+                isinstance(flow.client_conn.proxy_mode, mode_specs.DnsMode)
+                or (
+                    isinstance(flow.client_conn.proxy_mode, mode_specs.WireGuardMode)
+                    and flow.server_conn.address == ("10.0.0.53", 53)
+                )
+            )
+            and flow.live
             and not flow.response
             and not flow.error
-            and proxy_mode.resolve_local
         )
         if should_resolve:
             flow.response = await resolve_message(

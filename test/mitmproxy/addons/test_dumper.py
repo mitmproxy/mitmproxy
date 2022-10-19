@@ -173,7 +173,8 @@ def test_echo_request_line():
         sio.truncate(0)
 
 
-async def test_contentview():
+async def test_contentview(caplog):
+    caplog.set_level("DEBUG")
     with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
         va.side_effect = ValueError("")
         sio = io.StringIO()
@@ -181,7 +182,7 @@ async def test_contentview():
         with taddons.context(d) as tctx:
             tctx.configure(d, flow_detail=4)
             d.response(tflow.tflow())
-            await tctx.master.await_log("content viewer failed")
+            assert "content viewer failed" in caplog.text
 
 
 def test_tcp():

@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import re
 import urllib.parse
@@ -133,7 +134,7 @@ class MapLocal:
                     try:
                         contents = local_file.read_bytes()
                     except OSError as e:
-                        ctx.log.warn(f"Could not read file: {e}")
+                        logging.warning(f"Could not read file: {e}")
                         continue
 
                     flow.response = http.Response.make(200, contents, headers)
@@ -141,6 +142,6 @@ class MapLocal:
                     return
         if all_candidates:
             flow.response = http.Response.make(404)
-            ctx.log.info(
+            logging.info(
                 f"None of the local file candidates exist: {', '.join(str(x) for x in all_candidates)}"
             )

@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import collections
 import ipaddress
+import logging
 from contextlib import contextmanager
 from typing import Iterable, Iterator, Optional
 
@@ -28,13 +29,12 @@ from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
 from mitmproxy.utils import human, signals
 
+logger = logging.getLogger(__name__)
+
 
 class Servers:
     def __init__(self, manager: ServerManager):
-        self.updating = signals.AsyncSignal(lambda old_modes, new_modes: None)
-        """"Notified before any instances are started or stopped"""
-        self.updated = signals.AsyncSignal(lambda old_modes, new_modes: None)
-        """"Notified after all instances have been configured."""
+        self.changed = signals.AsyncSignal(lambda: None)
         self._instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
         self._lock = asyncio.Lock()
         self._manager = manager
@@ -47,45 +47,40 @@ class Servers:
         all_ok = True
 
         async with self._lock:
-            # Notify listeners about the pending update.
-            old_modes = set(self._instances.keys())
-            new_modes = set(modes)
-            if not ctx.options.server:
-                new_modes.clear()
-            await self.updating.send(old_modes=old_modes, new_modes=new_modes)
+            new_instances: dict[mode_specs.ProxyMode, ServerInstance] = {}
+
+            start_tasks = []
+            if ctx.options.server:
+                # Create missing modes and keep existing ones.
+                for spec in modes:
+                    if spec in self._instances:
+                        instance = self._instances[spec]
+                    else:
+                        instance = ServerInstance.make(spec, self._manager)
+                        start_tasks.append(instance.start())
+                    new_instances[spec] = instance
 
             # Shutdown modes that have been removed from the list.
             stop_tasks = [
                 s.stop() for spec, s in self._instances.items()
-                if spec not in new_modes
+                if spec not in new_instances
             ]
+
+            self._instances = new_instances
+            # Notify listeners about the new not-yet-started servers.
+            await self.changed.send()
+
+            # We first need to free ports before starting new servers.
             for ret in await asyncio.gather(*stop_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
-                    ctx.log.error(str(ret))
-
-            # Create missing modes and keep existing ones.
-            instances: dict[mode_specs.ProxyMode, ServerInstance] = dict()
-            for spec in new_modes:
-                if not (instance := self._instances.get(spec, None)):
-                    instance = ServerInstance.make(spec, self._manager)
-                instances[spec] = instance
-
-            # Start all non-running instances.
-            start_tasks = [
-                s.start() for s in instances.values()
-                if not s.is_running
-            ]
+                    logger.error(str(ret))
             for ret in await asyncio.gather(*start_tasks, return_exceptions=True):
                 if ret:
                     all_ok = False
-                    ctx.log.error(str(ret))
+                    logger.error(str(ret))
 
-            # Set the new instances and...
-            self._instances = instances
-
-        # ...notify the listeners outside the lock.
-        await self.updated.send(old_modes=old_modes, new_modes=new_modes)
+        await self.changed.send()
         return all_ok
 
     def __len__(self) -> int:
@@ -253,7 +248,7 @@ class Proxyserver(ServerManager):
                 raise exceptions.OptionsError(f"Cannot spawn multiple servers on the same address: {dup_addr}")
 
             if ctx.options.mode and not ctx.master.addons.get("nextlayer"):
-                ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
+                logger.warning("Warning: Running proxyserver without nextlayer addon!")
             if any(isinstance(m, mode_specs.TransparentMode) for m in modes):
                 if platform.original_addr:
                     platform.init_transparent_mode()
@@ -264,7 +259,7 @@ class Proxyserver(ServerManager):
                 asyncio.create_task(self.servers.update(modes))
 
     async def setup_servers(self) -> bool:
-        return await self.servers.update(map(mode_specs.ProxyMode.parse, ctx.options.mode))
+        return await self.servers.update([mode_specs.ProxyMode.parse(m) for m in ctx.options.mode])
 
     def listen_addrs(self) -> list[Address]:
         return [
@@ -275,7 +270,7 @@ class Proxyserver(ServerManager):
 
     def inject_event(self, event: events.MessageInjected):
         connection_id = (
-            "tcp",
+            event.flow.client_conn.transport_protocol,
             event.flow.client_conn.peername,
             event.flow.client_conn.sockname,
         )
@@ -288,7 +283,7 @@ class Proxyserver(ServerManager):
         self, flow: Flow, to_client: bool, message: bytes, is_text: bool = True
     ):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
-            ctx.log.warn("Cannot inject WebSocket messages into non-WebSocket flows.")
+            logger.warning("Cannot inject WebSocket messages into non-WebSocket flows.")
 
         msg = websocket.WebSocketMessage(
             Opcode.TEXT if is_text else Opcode.BINARY, not to_client, message
@@ -297,18 +292,18 @@ class Proxyserver(ServerManager):
         try:
             self.inject_event(event)
         except ValueError as e:
-            ctx.log.warn(str(e))
+            logger.warning(str(e))
 
     @command.command("inject.tcp")
     def inject_tcp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, tcp.TCPFlow):
-            ctx.log.warn("Cannot inject TCP messages into non-TCP flows.")
+            logger.warning("Cannot inject TCP messages into non-TCP flows.")
 
         event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message))
         try:
             self.inject_event(event)
         except ValueError as e:
-            ctx.log.warn(str(e))
+            logger.warning(str(e))
 
     def server_connect(self, data: server_hooks.ServerConnectionHookData):
         if data.server.sockname is None:

@@ -8,7 +8,7 @@ enableFetchMocks();
 
 test("ProxyApp", async () => {
     const cv: ContentViewData = {lines: [[["text", "my data"]]], description: ""}
-    fetchMock.doMockOnceIf("./flows/flow2/request/content/Auto.json?lines=81", JSON.stringify(cv));
+    fetchMock.doMockOnceIf("./flows/flow2/request/content/Auto.json?lines=513", JSON.stringify(cv));
     render(<ProxyApp/>);
     expect(screen.getByTitle("Mitmproxy Version")).toBeDefined();
     await waitFor(() => screen.getByText("my data"));

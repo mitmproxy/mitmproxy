@@ -7,7 +7,7 @@ def test_parse():
     m = ProxyMode.parse("reverse:https://example.com/@127.0.0.1:443")
     m = ProxyMode.from_state(m.get_state())
 
-    assert m.type == "reverse"
+    assert m.type_name == "reverse"
     assert m.full_spec == "reverse:https://example.com/@127.0.0.1:443"
     assert m.data == "https://example.com/"
     assert m.custom_listen_host == "127.0.0.1"
@@ -45,6 +45,9 @@ def test_listen_addr():
     assert ProxyMode.parse("regular").listen_host(default="127.0.0.3") == "127.0.0.3"
     assert ProxyMode.parse("regular@127.0.0.2:8080").listen_host(default="127.0.0.3") == "127.0.0.2"
 
+    assert ProxyMode.parse("reverse:https://1.2.3.4").listen_port() == 8080
+    assert ProxyMode.parse("reverse:dns://8.8.8.8").listen_port() == 53
+
 
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
@@ -52,9 +55,12 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("upstream:https://proxy")
     assert ProxyMode.parse("reverse:https://host@443")
     assert ProxyMode.parse("socks5")
-    assert ProxyMode.parse("dns").resolve_local
-    assert ProxyMode.parse("dns:reverse:8.8.8.8")
-    assert ProxyMode.parse("dtls:reverse:127.0.0.1:8004")
+    assert ProxyMode.parse("dns")
+    assert ProxyMode.parse("reverse:dns://8.8.8.8")
+    assert ProxyMode.parse("reverse:dtls://127.0.0.1:8004")
+    assert ProxyMode.parse("wireguard")
+    assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
+    assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")
@@ -65,26 +71,8 @@ def test_parse_specific_modes():
     with pytest.raises(ValueError, match="invalid upstream proxy scheme"):
         ProxyMode.parse("upstream:dns://example.com")
 
-    with pytest.raises(ValueError, match="invalid reverse proxy scheme"):
-        ProxyMode.parse("reverse:dns://example.com")
-
-    with pytest.raises(ValueError, match="invalid dns mode"):
+    with pytest.raises(ValueError, match="takes no arguments"):
         ProxyMode.parse("dns:invalid")
 
-    with pytest.raises(ValueError, match="invalid dns scheme"):
-        ProxyMode.parse("dns:reverse:https://example.com")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls")
-
     with pytest.raises(ValueError, match="Port specification missing."):
-        ProxyMode.parse("dtls:reverse:127.0.0.1")
-
-    with pytest.raises(ValueError, match="invalid dtls scheme"):
-        ProxyMode.parse("dtls:reverse:https://example.com")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls:invalid")
-
-    with pytest.raises(ValueError, match="invalid dtls mode"):
-        ProxyMode.parse("dtls@127.0.0.1:0")
+        ProxyMode.parse("reverse:dtls://127.0.0.1")

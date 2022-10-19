@@ -17,7 +17,7 @@ def test_dataclasses(tconn):
     assert repr(commands.SendData(tconn, b"foo"))
     assert repr(commands.OpenConnection(tconn))
     assert repr(commands.CloseConnection(tconn))
-    assert repr(commands.Log("hello", "info"))
+    assert repr(commands.Log("hello"))
 
 
 def test_start_hook():

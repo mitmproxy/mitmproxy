@@ -9,6 +9,7 @@ The View:
   removed from the store.
 """
 import collections
+import logging
 import re
 from collections.abc import Iterator, MutableMapping, Sequence
 from typing import Any, Optional
@@ -27,6 +28,7 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.log import ALERT
 from mitmproxy.utils import human, signals
 
 
@@ -417,7 +419,7 @@ class View(collections.abc.Sequence):
         if dups:
             self.add(dups)
             self.focus.flow = dups[0]
-            ctx.log.alert("Duplicated %s flows" % len(dups))
+            logging.log(ALERT, "Duplicated %s flows" % len(dups))
 
     @command.command("view.flows.remove")
     def remove(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
@@ -437,7 +439,7 @@ class View(collections.abc.Sequence):
                 del self._store[f.id]
                 self.sig_store_remove.send(flow=f)
         if len(flows) > 1:
-            ctx.log.alert("Removed %s flows" % len(flows))
+            logging.log(ALERT, "Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
     def resolve(self, flow_spec: str) -> Sequence[mitmproxy.flow.Flow]:
@@ -494,9 +496,9 @@ class View(collections.abc.Sequence):
                     # .newid() method or something.
                     self.add([i.copy()])
         except OSError as e:
-            ctx.log.error(e.strerror)
+            logging.error(e.strerror)
         except exceptions.FlowReadException as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     def add(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """

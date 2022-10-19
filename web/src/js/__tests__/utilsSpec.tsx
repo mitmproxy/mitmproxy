@@ -27,6 +27,13 @@ describe('formatTimeStamp', () => {
     })
 })
 
+describe('formatAddress', () => {
+    it('should return formatted addresses', () => {
+        expect(utils.formatAddress(["127.0.0.1", 8080])).toEqual("127.0.0.1:8080");
+        expect(utils.formatAddress(["::1", 8080])).toEqual("[::1]:8080");
+    })
+})
+
 describe('reverseString', () => {
     it('should return reversed string', () => {
         let str1 = "abc", str2 = "xyz"

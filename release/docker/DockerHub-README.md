@@ -45,6 +45,7 @@ Proxy server listening at http://*:8080
 [...]
 ```
 
+If `~/.mitmproxy/mitmproxy-ca.pem` is present in the container, mitmproxy will assume uid and gid from the file owner.
 For further details, please consult the mitmproxy [documentation](http://docs.mitmproxy.org/en/stable/).
 
 ## Tags

@@ -1,10 +1,14 @@
 import asyncio
+import logging
 import traceback
 import urllib.parse
 
 import asgiref.compatibility
 import asgiref.wsgi
+
 from mitmproxy import ctx, http
+
+logger = logging.getLogger(__name__)
 
 
 class ASGIApp:
@@ -132,7 +136,7 @@ async def serve(app, flow: http.HTTPFlow):
         if not sent_response:
             raise RuntimeError(f"no response sent.")
     except Exception:
-        ctx.log.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
+        logger.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
         flow.response = http.Response.make(500, b"ASGI Error.")
     finally:
         done.set()

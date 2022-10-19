@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from OpenSSL import SSL
+from OpenSSL import SSL, crypto
 from mitmproxy import certs
 from mitmproxy.net import tls
 
@@ -37,8 +37,6 @@ def test_sslkeylogfile(tdata, monkeypatch):
         min_version=tls.DEFAULT_MIN_VERSION,
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
-        cert=entry.cert,
-        key=entry.privatekey,
         chain_file=entry.chain_file,
         alpn_select_callback=None,
         request_client_cert=False,
@@ -49,13 +47,15 @@ def test_sslkeylogfile(tdata, monkeypatch):
     server = SSL.Connection(sctx)
     server.set_accept_state()
 
+    server.use_certificate(entry.cert.to_pyopenssl())
+    server.use_privatekey(crypto.PKey.from_cryptography_key(entry.privatekey))
+
     client = SSL.Connection(cctx)
     client.set_connect_state()
 
     read, write = client, server
     while True:
         try:
-            print(read)
             read.do_handshake()
         except SSL.WantReadError:
             write.bio_write(read.bio_read(2 ** 16))

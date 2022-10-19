@@ -24,7 +24,7 @@ async def test_simple(monkeypatch):
         assert f.response
 
         f = tflow.tdnsflow()
-        f.client_conn.proxy_mode = ProxyMode.parse("dns:reverse:8.8.8.8")
+        f.client_conn.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8")
         await dr.dns_request(f)
         assert not f.response
 
