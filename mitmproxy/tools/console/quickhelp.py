@@ -7,7 +7,7 @@ from typing import Optional, Union
 import urwid
 
 from mitmproxy import flow
-from mitmproxy.tools.console import flowlist
+from mitmproxy.http import HTTPFlow
 from mitmproxy.tools.console.eventlog import EventLog
 from mitmproxy.tools.console.flowlist import FlowListBox
 from mitmproxy.tools.console.flowview import FlowView
@@ -57,7 +57,7 @@ def make(
     if widget in (FlowListBox, FlowView):
         top_label = "Flow:"
         if focused_flow:
-            if widget == flowlist.FlowListBox:
+            if widget == FlowListBox:
                 top_items["Select"] = "Select"
             else:
                 top_items["Edit"] = "Edit a flow component"
@@ -75,6 +75,13 @@ def make(
                 top_items["Resume"] = "Resume this intercepted flow"
             if focused_flow.modified():
                 top_items["Restore"] = "Revert changes to this flow"
+            if isinstance(focused_flow, HTTPFlow) and focused_flow.response:
+                top_items["Save body"] = "Save response body to file"
+            if widget == FlowView:
+                top_items |= {
+                    "Next flow": "Go to next flow",
+                    "Prev flow": "Go to previous flow",
+                }
         else:
             top_items |= {
                 "Load flows": "Load flows from file",
@@ -145,6 +152,7 @@ def make(
     bottom_items |= {
         "Layout": "Cycle to next layout",
         "Switch": "Focus next layout pane",
+        "Follow new": "Set focus follow",
     }
 
     label_len = max(len(top_label), len(bottom_label), 8) + 1
