@@ -151,11 +151,14 @@ class ActionBar(urwid.WidgetWrap):
 
     def show_quickhelp(self) -> None:
         try:
-            focused_widget = type(self.master.window.focus_stack().top_widget())
+            s = self.master.window.focus_stack()
+            focused_widget = type(s.top_widget())
+            is_top_widget = len(s.stack) == 1
         except AttributeError:  # on startup
             focused_widget = flowlist.FlowListBox
+            is_top_widget = True
         focused_flow = self.master.view.focus.flow
-        qh = quickhelp.make(focused_widget, focused_flow)
+        qh = quickhelp.make(focused_widget, focused_flow, is_top_widget)
         self.top._w, self.bottom._w = qh.make_rows(self.master.keymap)
 
     def prompt_done(self) -> None:

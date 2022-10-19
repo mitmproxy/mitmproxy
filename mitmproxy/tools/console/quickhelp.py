@@ -47,7 +47,11 @@ class QuickHelp:
         return top, bottom
 
 
-def make(widget: type[urwid.Widget], focused_flow: Optional[flow.Flow]) -> QuickHelp:
+def make(
+    widget: type[urwid.Widget],
+    focused_flow: Optional[flow.Flow],
+    is_root_widget: bool,
+) -> QuickHelp:
     top_label = ""
     top_items: HelpItems = {}
     if widget in (FlowListBox, FlowView):
@@ -122,7 +126,12 @@ def make(widget: type[urwid.Widget], focused_flow: Optional[flow.Flow]) -> Quick
     bottom_label = "Proxy:"
     bottom_items: HelpItems = {
         "Help": "View help",
-        "Quit": "Exit the current view",
+    }
+    if is_root_widget:
+        bottom_items["Quit"] = "Exit the current view"
+    else:
+        bottom_items["Back"] = "Exit the current view"
+    bottom_items |= {
         "Events": "View event log",
         "Options": "View options",
         "Intercept": "Set intercept",

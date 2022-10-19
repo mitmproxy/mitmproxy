@@ -27,21 +27,21 @@ tflow2.marked = "x"
 
 
 @pytest.mark.parametrize(
-    "widget, flow",
+    "widget, flow, is_root_widget",
     [
-        (FlowListBox, None),
-        (FlowListBox, tflow()),
-        (FlowView, tflow2),
-        (KeyBindings, None),
-        (Options, None),
-        (HelpView, None),
-        (EventLog, None),
-        (PathEditor, None),
-        (SimpleOverlay, None),
+        (FlowListBox, None, False),
+        (FlowListBox, tflow(), False),
+        (FlowView, tflow2, True),
+        (KeyBindings, None, True),
+        (Options, None, True),
+        (HelpView, None, False),
+        (EventLog, None, True),
+        (PathEditor, None, False),
+        (SimpleOverlay, None, False),
     ]
 )
-def test_quickhelp(widget, flow, keymap):
-    qh = quickhelp.make(widget, flow)
+def test_quickhelp(widget, flow, keymap, is_root_widget):
+    qh = quickhelp.make(widget, flow, is_root_widget)
     for row in [qh.top_items, qh.bottom_items]:
         for (title, v) in row.items():
             if isinstance(v, quickhelp.BasicKeyHelp):
@@ -61,5 +61,5 @@ def test_make_rows():
     # make sure that we don't crash if a default binding is missing.
     keymap.unbind(keymap.binding_for_help("View event log"))
 
-    qh = quickhelp.make(HelpView, None)
+    qh = quickhelp.make(HelpView, None, True)
     assert qh.make_rows(keymap)
