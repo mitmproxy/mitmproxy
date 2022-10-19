@@ -20,28 +20,28 @@ def test_parse_msgpack():
 def test_format_msgpack():
     assert list(msgpack.format_msgpack({"string": "test", "int": 1, "float": 1.44, "bool": True})) == [
         [('text', '{')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"string"'), ('text', ': '), ('msgpack_string', '"test"'), ('text', ',')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"int"'), ('text', ': '), ('msgpack_number', '1'), ('text', ',')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"float"'), ('text', ': '), ('msgpack_number', '1.44'), ('text', ',')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"bool"'), ('text', ': '), ('msgpack_boolean', 'True')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"string"'), ('text', ': '), ('Token_Literal_String', '"test"'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"int"'), ('text', ': '), ('Token_Literal_Number', '1'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"float"'), ('text', ': '), ('Token_Literal_Number', '1.44'), ('text', ',')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"bool"'), ('text', ': '), ('Token_Keyword_Constant', 'True')],
         [('text', ''), ('text', '}')]
     ]
 
     assert list(msgpack.format_msgpack({"object": {"key": "value"}, "list": [1]})) == [
         [('text', '{')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"object"'), ('text', ': '), ('text', '{')],
-        [('text', '    '), ('text', '    '), ('msgpack_key', '"key"'), ('text', ': '), ('msgpack_string', '"value"')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"object"'), ('text', ': '), ('text', '{')],
+        [('text', '    '), ('text', '    '), ('Token_Name_Tag', '"key"'), ('text', ': '), ('Token_Literal_String', '"value"')],
         [('text', '    '), ('text', '}'), ('text', ',')],
-        [('text', ''), ('text', '    '), ('msgpack_key', '"list"'), ('text', ': '), ('text', '[')],
-        [('text', '    '), ('text', '    '), ('msgpack_number', '1')],
+        [('text', ''), ('text', '    '), ('Token_Name_Tag', '"list"'), ('text', ': '), ('text', '[')],
+        [('text', '    '), ('text', '    '), ('Token_Literal_Number', '1')],
         [('text', '    '), ('text', ']')],
         [('text', ''), ('text', '}')]]
 
-    assert list(msgpack.format_msgpack('string')) == [[('msgpack_string', '"string"')]]
+    assert list(msgpack.format_msgpack('string')) == [[('Token_Literal_String', '"string"')]]
 
-    assert list(msgpack.format_msgpack(1.2)) == [[('msgpack_number', '1.2')]]
+    assert list(msgpack.format_msgpack(1.2)) == [[('Token_Literal_Number', '1.2')]]
 
-    assert list(msgpack.format_msgpack(True)) == [[('msgpack_boolean', 'True')]]
+    assert list(msgpack.format_msgpack(True)) == [[('Token_Keyword_Constant', 'True')]]
 
     assert list(msgpack.format_msgpack(b'\x01\x02\x03')) == [[('text', "b'\\x01\\x02\\x03'")]]
 

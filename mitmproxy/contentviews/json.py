@@ -29,13 +29,13 @@ def format_json(data: Any) -> Iterator[base.TViewLine]:
             current_line = []
         if re.match(r'\s*"', chunk):
             if len(current_line) == 1 and current_line[0][0] == "text" and current_line[0][1].isspace():
-                current_line.append(("json_key", chunk))
+                current_line.append(("Token_Name_Tag", chunk))
             else:
-                current_line.append(("json_string", chunk))
+                current_line.append(("Token_Literal_String", chunk))
         elif re.match(r"\s*\d", chunk):
-            current_line.append(("json_number", chunk))
+            current_line.append(("Token_Literal_Number", chunk))
         elif re.match(r"\s*(true|null|false)", chunk):
-            current_line.append(("json_boolean", chunk))
+            current_line.append(("Token_Keyword_Constant", chunk))
         else:
             current_line.append(("text", chunk))
     yield current_line
