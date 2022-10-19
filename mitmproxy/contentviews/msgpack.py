@@ -57,7 +57,7 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
         output[-1] += [("text", "[")]
         for item in data:
             output.append([indent, ("text", "    ")])
-            _ = format_msgpack(item, output, indent_count + 1)
+            format_msgpack(item, output, indent_count + 1)
 
             if item != data[-1]:
                 output[-1] += [("text", ",")]
