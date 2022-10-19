@@ -280,7 +280,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         self.connections.add(self)
 
     def on_close(self):
-        self.connections.remove(self)
+        self.connections.discard(self)
 
     @classmethod
     def broadcast(cls, **kwargs):
@@ -288,12 +288,16 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             "utf8", "surrogateescape"
         )
 
+        errored = []
         for conn in cls.connections:
             try:
                 if not conn.ws_connection.is_closing():
                     conn.write_message(message)
             except Exception:  # pragma: no cover
-                logging.error("Error sending message", exc_info=True)
+                logging.debug("Error sending WebSocket message.", exc_info=True)
+                errored.append(conn)  # workaround for https://github.com/tornadoweb/tornado/issues/2958
+        for conn in errored:
+            cls.connections.remove(conn)
 
 
 class ClientConnection(WebSocketEventBroadcaster):
