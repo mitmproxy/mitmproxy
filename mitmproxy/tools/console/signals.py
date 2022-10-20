@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Union
 
 from mitmproxy.utils import signals
 
+StatusMessage = Union[tuple[str, str], str]
+
 
 # Show a status message in the action bar
-def _status_message(message: tuple[str, str] | str, expire: int | None = None) -> None:
+# Instead of using this signal directly, consider emitting a log event.
+def _status_message(message: StatusMessage, expire: int = 5) -> None:
     ...
 
 
@@ -55,6 +59,9 @@ flow_change = signals.SyncSignal(lambda flow: None)
 
 # Pop and push view state onto a stack
 pop_view_state = signals.SyncSignal(lambda: None)
+
+# Fired when the window state changes
+window_refresh = signals.SyncSignal(lambda: None)
 
 # Fired when the key bindings change
 keybindings_change = signals.SyncSignal(lambda: None)

@@ -189,6 +189,7 @@ class Window(urwid.Frame):
             )
 
         self.body = urwid.AttrWrap(w, "background")
+        signals.window_refresh.send()
 
     def flow_changed(self, flow: flow.Flow) -> None:
         if self.master.view.focus.flow:

@@ -46,6 +46,8 @@
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 * Fix mitmweb not properly opening a browser and being stuck on some Linux.
   ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
+* Add a quick help bar displaying common key bindings.
+  ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
 * Add syntax highlighting to JSON and msgpack content view.
   ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
 * Fix race condition when updating mitmweb WebSocket connections that are closing.

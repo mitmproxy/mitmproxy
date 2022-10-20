@@ -1,4 +1,7 @@
-def map(km):
+from mitmproxy.tools.console.keymap import Keymap
+
+
+def map(km: Keymap) -> None:
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
     km.add(
         ";",
