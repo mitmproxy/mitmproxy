@@ -60,8 +60,9 @@ def appendWebsocketMessages(flow: mitmproxy.http.HTTPFlow, entry):
             'type': 'send' if message.from_client else 'receive',
             'time': message.timestamp,
             'opcode': message.type.value,
-            'data': message.content.decode()
+            'data': message.content.decode() if message.is_text else base64.b64encode(message.content).decode()
             }
+            print(dir(message.content))
             websocketMessages.append(websocketMessage)
 
         entry['_resourceType'] = 'websocket'
