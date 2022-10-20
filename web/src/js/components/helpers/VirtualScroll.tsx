@@ -13,7 +13,7 @@ export type VScroll = {
     paddingBottom: number
 }
 
-export function calcVScroll(opts: VScrollArgs | undefined = undefined) {
+export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll {
     if (!opts) {
         return {start: 0, end: 0, paddingTop: 0, paddingBottom: 0};
     }
