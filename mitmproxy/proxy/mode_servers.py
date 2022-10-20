@@ -84,8 +84,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         mode = get_args(cls.__orig_bases__[0])[0]
         if not isinstance(mode, TypeVar):
             assert issubclass(mode, mode_specs.ProxyMode)
-            assert mode.type not in ServerInstance.__modes
-            ServerInstance.__modes[mode.type] = cls
+            assert mode.type_name not in ServerInstance.__modes
+            ServerInstance.__modes[mode.type_name] = cls
 
     @classmethod
     def make(
@@ -95,7 +95,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     ) -> Self:
         if isinstance(mode, str):
             mode = mode_specs.ProxyMode.parse(mode)
-        inst = ServerInstance.__modes[mode.type](mode, manager)
+        inst = ServerInstance.__modes[mode.type_name](mode, manager)
 
         if not isinstance(inst, cls):
             raise ValueError(f"{mode!r} is not a spec for a {cls.__name__} server.")
@@ -126,7 +126,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     def to_json(self) -> dict:
         return {
-            "type": self.mode.type,
+            "type": self.mode.type_name,
             "description": self.mode.description,
             "full_spec": self.mode.full_spec,
             "is_running": self.is_running,

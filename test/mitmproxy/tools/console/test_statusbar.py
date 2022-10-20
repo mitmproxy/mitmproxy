@@ -35,14 +35,14 @@ async def test_statusbar(console, monkeypatch):
 @pytest.mark.parametrize(
     "message,ready_message",
     [
-        ("", [(None, ""), ("warn", "")]),
+        ("", [("", ""), ("warn", "")]),
         (
             ("info", "Line fits into statusbar"),
             [("info", "Line fits into statusbar"), ("warn", "")],
         ),
         (
             "Line doesn't fit into statusbar",
-            [(None, "Line doesn'\u2026"), ("warn", "(more in eventlog)")],
+            [("", "Line doesn'\u2026"), ("warn", "(more in eventlog)")],
         ),
         (
             ("alert", "Two lines.\nFirst fits"),
@@ -50,14 +50,14 @@ async def test_statusbar(console, monkeypatch):
         ),
         (
             "Two long lines\nFirst doesn't fit",
-            [(None, "Two long li\u2026"), ("warn", "(more in eventlog)")],
+            [("", "Two long li\u2026"), ("warn", "(more in eventlog)")],
         ),
     ],
 )
 def test_shorten_message(message, ready_message):
-    assert statusbar.ActionBar.shorten_message(message, max_width=30) == ready_message
+    assert statusbar.shorten_message(message, max_width=30) == ready_message
 
 
 def test_shorten_message_narrow():
-    shorten_msg = statusbar.ActionBar.shorten_message("error", max_width=4)
-    assert shorten_msg == [(None, "\u2026"), ("warn", "(more in eventlog)")]
+    shorten_msg = statusbar.shorten_message("error", max_width=4)
+    assert shorten_msg == [("", "\u2026"), ("warn", "(more in eventlog)")]

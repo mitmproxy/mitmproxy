@@ -15,14 +15,6 @@ if http3 is None:
     b"\x01\x1d\x00\x00\xd1\xc1\xd7P\x8a\x08\x9d\\\x0b\x81p\xdcx\x0f\x03_P\x88%\xb6P\xc3\xab\xbc\xda\xe0\xdd",
     # broken HEADERS
     b"\x01\x1d\x00\x00\xd1\xc1\xd7P\x8a\x08\x9d\\\x0b\x81p\xdcx\x0f\x03_P\x88%\xb6P\xc3\xab\xff\xff\xff\xff",
-    # SETTINGS
-    b"\x00\x04\r\x06\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x07\x00",
-    # unknown setting
-    b"\x00\x04\r\x3f\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x07\x00",
-    # out of bounds
-    b"\x00\x04\r\x06\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x42\x00",
-    # incomplete
-    b"\x00\x04\r\x06\xff\xff\xff",
     # headers + data
     (
         b'\x01@I\x00\x00\xdb_\'\x93I|\xa5\x89\xd3M\x1fj\x12q\xd8\x82\xa6\x0bP\xb0\xd0C\x1b_M\x90\xd0bXt\x1eT\xad\x8f~\xfdp'
@@ -38,6 +30,28 @@ def test_view_http3(data):
     t = tflow.ttcpflow(messages=[
         TCPMessage(from_client=len(data) > 16, content=data)
     ])
+    t.metadata["quic_is_unidirectional"] = False
+    assert (v(b"", flow=t, tcp_message=t.messages[0]))
+
+
+@pytest.mark.parametrize("data", [
+    # SETTINGS
+    b"\x00\x04\r\x06\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x07\x00",
+    # unknown setting
+    b"\x00\x04\r\x3f\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x07\x00",
+    # out of bounds
+    b"\x00\x04\r\x06\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x42\x00",
+    # incomplete
+    b"\x00\x04\r\x06\xff\xff\xff",
+    # QPACK encoder stream
+    b"\x02",
+])
+def test_view_http3_unidirectional(data):
+    v = full_eval(http3.ViewHttp3())
+    t = tflow.ttcpflow(messages=[
+        TCPMessage(from_client=len(data) > 16, content=data)
+    ])
+    t.metadata["quic_is_unidirectional"] = True
     assert (v(b"", flow=t, tcp_message=t.messages[0]))
 
 

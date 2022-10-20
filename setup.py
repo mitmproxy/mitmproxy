@@ -77,7 +77,7 @@ setup(
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "cryptography>=38.0,<38.1",
         "flask>=1.1.1,<2.3",
-        "h11>=0.11,<0.14",
+        "h11>=0.11,<0.15",
         "h2>=4.1,<5",
         "hyperframe>=6.0,<7",
         "kaitaistruct>=0.10,<0.11",
@@ -86,7 +86,7 @@ setup(
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<5",
-        "pyOpenSSL>=22.0,<22.1",
+        "pyOpenSSL>=22.1,<22.2",
         "pyparsing>=2.4.2,<3.1",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.18",
@@ -96,7 +96,7 @@ setup(
         "wsproto>=1.0,<1.3",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.19",
-        "typing-extensions>=4.3,<4.4; python_version<'3.10'",
+        "typing-extensions>=4.3,<4.5; python_version<'3.10'",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -107,9 +107,9 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==5.4.1",
+            "pyinstaller==5.5",
             "pytest-asyncio>=0.17,<0.20",
-            "pytest-cov>=2.7.1,<3.1",
+            "pytest-cov>=2.7.1,<4.1",
             "pytest-timeout>=1.3.3,<2.2",
             "pytest-xdist>=2.1.0,<3",
             "pytest>=6.1.0,<8",
