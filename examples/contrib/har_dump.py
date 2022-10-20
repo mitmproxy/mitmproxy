@@ -16,6 +16,7 @@ from datetime import datetime
 from datetime import timezone
 
 import zlib
+import uuid
 
 import mitmproxy
 from mitmproxy import connection
@@ -25,6 +26,8 @@ from mitmproxy.net.http import cookies
 from mitmproxy.utils import strutils
 
 HAR: dict = {}
+requestID_to_wsMessages: dict = {}
+requestID_to_entry: dict = {}
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
@@ -50,6 +53,30 @@ def configure(updated):
         }
     })
 
+def websocket_message(flow: mitmproxy.http.HTTPFlow):
+    assert flow.websocket is not None
+    message = flow.websocket.messages[-1]
+    wsMessage = {
+        'type': 'send' if message.from_client else 'receive',
+        'time': message.timestamp,
+        'opcode': message.type.value,
+        'data': message.content.decode()
+    }
+    if not requestID_to_wsMessages[flow.request.id]:
+        requestID_to_wsMessages[flow.request.id] = []
+        requestID_to_entry[flow.request.id]['_resourceType'] = 'websocket'
+        requestID_to_entry[flow.request.id]['_webSocketMessages'] = requestID_to_wsMessages[flow.request.id]
+    requestID_to_wsMessages[flow.request.id].append(wsMessage)
+
+    print('wsMessage:')
+    print(wsMessage)
+
+
+def request(flow: mitmproxy.http.HTTPFlow):
+    request_uuid = uuid.uuid4()
+    print(f'request.id: {request_uuid}')
+    flow.request.id = request_uuid
+    requestID_to_wsMessages[request_uuid] = []
 
 def response(flow: mitmproxy.http.HTTPFlow):
     """
@@ -153,7 +180,7 @@ def response(flow: mitmproxy.http.HTTPFlow):
 
     if flow.server_conn.connected:
         entry["serverIPAddress"] = str(flow.server_conn.peername[0])
-
+    requestID_to_entry[flow.request.id] = entry
     HAR["log"]["entries"].append(entry)
 
 
