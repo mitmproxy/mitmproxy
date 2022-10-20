@@ -15,23 +15,62 @@ def parse_msgpack(s: bytes) -> Any:
         return PARSE_ERROR
 
 
-def pretty(value, htchar="    ", lfchar="\n", indent=0):
-    nlch = lfchar + htchar * (indent + 1)
-    if type(value) is dict:
-        items = [
-            nlch + repr(key) + ": " + pretty(value[key], htchar, lfchar, indent + 1)
-            for key in value
-        ]
-        return "{%s}" % (",".join(items) + lfchar + htchar * indent)
-    elif type(value) is list:
-        items = [nlch + pretty(item, htchar, lfchar, indent + 1) for item in value]
-        return "[%s]" % (",".join(items) + lfchar + htchar * indent)
+def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base.TViewLine]:
+    if output is None:
+        output = [[]]
+
+    indent = ("text", "    " * indent_count)
+
+    if type(data) is str:
+        token = [("Token_Literal_String", f"\"{data}\"")]
+        output[-1] += token
+
+        # Need to return if single value, but return is discarded in dict/list loop
+        return output
+
+    elif type(data) is float or type(data) is int:
+        token = [("Token_Literal_Number", repr(data))]
+        output[-1] += token
+
+        return output
+
+    elif type(data) is bool:
+        token = [("Token_Keyword_Constant", repr(data))]
+        output[-1] += token
+
+        return output
+
+    elif type(data) is dict:
+        output[-1] += [("text", "{")]
+        for key in data:
+            output.append([indent, ("text", "    "), ("Token_Name_Tag", f'"{key}"'), ("text", ": ")])
+            format_msgpack(data[key], output, indent_count + 1)
+
+            if key != list(data)[-1]:
+                output[-1] += [("text", ",")]
+
+        output.append([indent, ("text", "}")])
+
+        return output
+
+    elif type(data) is list:
+        output[-1] += [("text", "[")]
+        for item in data:
+            output.append([indent, ("text", "    ")])
+            format_msgpack(item, output, indent_count + 1)
+
+            if item != data[-1]:
+                output[-1] += [("text", ",")]
+
+        output.append([indent, ("text", "]")])
+
+        return output
+
     else:
-        return repr(value)
+        token = [("text", repr(data))]
+        output[-1] += token
 
-
-def format_msgpack(data):
-    return base.format_text(pretty(data))
+        return output
 
 
 class ViewMsgPack(base.View):
