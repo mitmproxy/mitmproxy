@@ -34,6 +34,10 @@ class FlowTable extends React.Component {
         window.addEventListener('resize', this.onViewportUpdate)
     }
 
+    componentDidMount() {
+        this.onViewportUpdate();
+    }
+
     UNSAFE_componentWillUnmount() {
         window.removeEventListener('resize', this.onViewportUpdate)
     }
