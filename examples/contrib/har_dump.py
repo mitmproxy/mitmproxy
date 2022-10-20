@@ -175,11 +175,6 @@ def websocket_end(flow: mitmproxy.http.HTTPFlow):
     assert flow.websocket is not None
     flow_entry(flow)
 
-def request(flow: mitmproxy.http.HTTPFlow):
-    request_uuid = uuid.uuid4()
-    print(f'request.id: {request_uuid}')
-    flow.request.id = request_uuid
-
 def response(flow: mitmproxy.http.HTTPFlow):
     """
        Called when a server response has been received.
