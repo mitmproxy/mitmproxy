@@ -46,9 +46,16 @@ def configure(updated):
                 "version": "0.1",
                 "comment": "mitmproxy version %s" % version.MITMPROXY
             },
+            "pages": [
+                {
+                    "pageTimings": {}
+                }
+            ],
             "entries": []
         }
     })
+    # The `pages` attribute is needed for Firefox Dev Tools to load the HAR file.
+    # An empty value works fine.
 
 
 def response(flow: mitmproxy.http.HTTPFlow):
