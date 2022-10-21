@@ -50,25 +50,8 @@ def configure(updated):
         }
     })
 
-def appendWebsocketMessages(flow: mitmproxy.http.HTTPFlow, entry):
-    if flow.websocket:
-        messages = flow.websocket.messages
-        websocketMessages = []
 
-        for message in messages:
-            websocketMessage = {
-            'type': 'send' if message.from_client else 'receive',
-            'time': message.timestamp,
-            'opcode': message.type.value,
-            'data': message.content.decode() if message.is_text else base64.b64encode(message.content).decode()
-            }
-            print(dir(message.content))
-            websocketMessages.append(websocketMessage)
-
-        entry['_resourceType'] = 'websocket'
-        entry['_webSocketMessages'] = websocketMessages
-
-def flow_entry(flow: mitmproxy.http.HTTPFlow):
+def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
 
     # -1 indicates that these values do not apply to current request
     ssl_time = -1
@@ -168,13 +151,10 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow):
     if flow.server_conn.connected:
         entry["serverIPAddress"] = str(flow.server_conn.peername[0])
 
-    appendWebsocketMessages(flow, entry)
-
     HAR["log"]["entries"].append(entry)
 
-def websocket_end(flow: mitmproxy.http.HTTPFlow):
-    assert flow.websocket is not None
-    flow_entry(flow)
+    return entry
+
 
 def response(flow: mitmproxy.http.HTTPFlow):
     """
@@ -182,6 +162,29 @@ def response(flow: mitmproxy.http.HTTPFlow):
     """
     if flow.websocket is None:
         flow_entry(flow)
+
+
+def websocket_end(flow: mitmproxy.http.HTTPFlow):
+    entry = flow_entry(flow)
+
+    websocket_messages = []
+
+    for message in flow.websocket.messages:
+        if message.is_text:
+            data = message.text
+        else:
+            data = base64.b64encode(message.content).decode()
+        websocket_message = {
+            'type': 'send' if message.from_client else 'receive',
+            'time': message.timestamp,
+            'opcode': message.type.value,
+            'data': data
+        }
+        websocket_messages.append(websocket_message)
+
+    entry['_resourceType'] = 'websocket'
+    entry['_webSocketMessages'] = websocket_messages
+
 
 def done():
     """
