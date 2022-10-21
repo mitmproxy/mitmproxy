@@ -10,58 +10,58 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - uses: TrueBrain/actions-flake8@c2deca24d388aa5aedd6478332aa9df4600b5eac # v2.1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - run: pip install tox
       - run: tox -e flake8
   filename-matching:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - run: pip install tox
       - run: tox -e filename_matching
   mypy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - run: pip install tox
       - run: tox -e mypy
   individual-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # there's a weird bug on 3.10 where some lines are not counted as covered.
+          python-version-file: .github/python-version.txt
       - run: pip install tox
       - run: tox -e individual_coverage
   test:
@@ -80,11 +80,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - run: printenv
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.py }}
       - run: pip install tox
@@ -112,21 +112,21 @@ jobs:
             platform: macos
           - image: windows-2019
             platform: windows
-          - image: ubuntu-20.04  # Oldest avalible version so we get oldest glibc possible.
+          - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
             platform: linux
     runs-on: ${{ matrix.image }}
     env:
       CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - if: matrix.platform == 'windows'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: release/installbuilder/setup
           key: installbuilder
@@ -146,15 +146,15 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
       - run: git rev-parse --abbrev-ref HEAD
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: '14'
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -175,12 +175,12 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.92.1/hugo_extended_0.92.1_Linux-64bit.deb
           echo "a9440adfd3ecce40089def287dee4e42ffae252ba08c77d1ac575b880a079ce6 hugo_extended_0.92.1_Linux-64bit.deb" | sha256sum -c
@@ -201,21 +201,21 @@ jobs:
       )
     environment: deploy-docker
     needs:
-     - test
-     - test-web-ui
-     - build
-     - docs
+      - test
+      - test-web-ui
+      - build
+      - docs
     runs-on: ubuntu-latest
     env:
       DOCKER_USERNAME: mitmbot
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - uses: actions/download-artifact@v2
         with:
           name: binaries.linux
@@ -227,8 +227,8 @@ jobs:
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
     # In particular, we don't blindly `pip install` anything to minimize the risk of supply chain attacks.
-    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
-    environment: deploy
+    if: github.repository == 'mitmproxy/mitmproxy' && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
+    environment: ${{ (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')) && 'deploy-release' || 'deploy-snapshot' }}
     needs:
       - test
       - test-web-ui
@@ -236,7 +236,9 @@ jobs:
       - docs
     runs-on: ubuntu-latest
     env:
-      TWINE_USERNAME: mitmproxy
+      # PyPI and MSFT keys are only available for the deploy-release environment
+      # The AWS access key for snapshots is scoped to branches/* as well.
+      TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -246,14 +248,17 @@ jobs:
       MSFT_CLIENT_ID: ${{ secrets.MSFT_CLIENT_ID }}
       MSFT_CLIENT_SECRET: ${{ secrets.MSFT_CLIENT_SECRET }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version-file: .github/python-version.txt
       - run: sudo apt-get update
-      - run: sudo apt-get install -y twine awscli
+      - run: sudo apt-get install -y awscli
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: sudo apt-get install -y twine
+
       - uses: actions/download-artifact@v3
         with:
           name: docs
@@ -272,10 +277,14 @@ jobs:
           path: release/dist
       - run: ls docs/public
       - run: ls release/dist
+
       - run: ./release/deploy.py
-      - if: github.ref == 'refs/heads/citest'
+
+      - name: Deploy to Microsoft Store (test flight)
+        if: github.ref == 'refs/heads/citest'
         run: ./release/deploy-microsoft-store.py release/dist/*.msix
         env:
           MSFT_APP_FLIGHT: 174ca570-8cae-4444-9858-c07293f1f13a
-      - if: startsWith(github.ref, 'refs/tags/')
+      - name: Deploy to Microsoft Store
+        if: startsWith(github.ref, 'refs/tags/')
         run: ./release/deploy-microsoft-store.py release/dist/*.msix
