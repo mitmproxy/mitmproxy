@@ -53,7 +53,11 @@ def wheel():
             DIST_DIR,
         ]
     )
-    (whl,) = DIST_DIR.glob("mitmproxy-*-py3-none-any.whl")
+    if os.environ.get("GITHUB_REF", "").startswith("refs/tags/"):
+        ver = version()  # assert for tags that the version matches the tag.
+    else:
+        ver = "*"
+    (whl,) = DIST_DIR.glob(f"mitmproxy-{ver}-py3-none-any.whl")
     print(f"Found wheel package: {whl}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
 
@@ -80,12 +84,7 @@ def archive(path: Path) -> tarfile.TarFile | ZipFile2:
 
 
 def version() -> str:
-    if ref := os.environ.get("GITHUB_REF", ""):
-        if ref.startswith("refs/heads/"):
-            return ref.replace("refs/heads/", "")
-        if ref.startswith("refs/tags/"):
-            return ref.replace("refs/tags/", "")
-    return os.environ.get("BUILD_VERSION", "dev")
+    return os.environ.get("GITHUB_REF_NAME", "").replace("/", "-") or os.environ.get("BUILD_VERSION", "dev")
 
 
 def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
