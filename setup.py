@@ -13,7 +13,7 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 long_description_content_type = "text/markdown"
 
-with open(os.path.join(here, "mitmproxy", "version.py")) as f:
+with open(os.path.join(here, "mitmproxy/version.py")) as f:
     match = re.search(r'VERSION = "(.+?)"', f.read())
     assert match
     VERSION = match.group(1)
