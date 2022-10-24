@@ -288,7 +288,7 @@ sudo -u nobody mitmproxy --mode transparent --showhost
 
 {{% note %}}
 This feature is currently unavailable in mitmproxy 7 and above
-(<a href="https://github.com/mitmproxy/mitmproxy/discussions/4914">#4914</a>).
+([#4914](https://github.com/mitmproxy/mitmproxy/discussions/4914)).
 {{% /note %}}
 
 By default mitmproxy will use its own local IP address for its server-side
