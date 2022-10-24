@@ -16,8 +16,7 @@ behaviour - proxy-oblivious mobile applications being a common example.
 The new [WireGuard mode]({{< relref "concepts-modes" >}}#wireguard-transparent-proxy)
 provides an alternative implementation for transparent proxying. It is much
 easier to set up, as it does not require setting up IP forwarding or modifying
-routing rules. Additionally, this mode also works on Windows, in addition to
-Linux and macOS, and setting it up does not require administrative privileges.
+routing rules.
 {{% /note %}}
 
 To set up transparent proxying, we need two new components. The first is a
@@ -283,6 +282,58 @@ Follow steps **3-5** above. This will redirect the packets from all users other 
 ```bash
 sudo -u nobody mitmproxy --mode transparent --showhost
 ```
+
+## Windows
+
+All commands will need to be run on Windows 10 or above with elevated privileges. PowerShell should be run as Administrator.
+
+### 1. Enable IP routing.
+
+```batch
+reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters /v IPEnableRouter /D 1 /t REG_DWORD /f
+```
+
+This enables your Windows to be able act as an IP router. The RemoteAccess service can now be enabled.
+
+```batch
+sc config RemoteAccess start= demand
+```
+
+This command enables the IP routing service. The `demand` option allows the service to manually be started. Alternatively,
+you can replace `demand` with `auto` to enable IP routing on startup.
+
+```batch
+sc start RemoteAccess
+```
+
+Starts the RemoteAccess service. Windows can now route IP's!
+
+### 2. Block outgoing ICMP redirect.
+
+```batch
+netsh advfirewall firewall add rule name="Don't send ICMP redirects" dir=out protocol=icmpv4:5,any action=block
+```
+
+Command above puts a rule in the advanced firewall to not redirect any ICMP packets.
+
+If your test device is on the same physical network, your machine shouldn't inform the device that
+there's a shorter route available by skipping the proxy.
+
+### 3. Fire up mitmproxy.
+
+You probably want a command like this:
+
+```batch
+mitmproxy --mode transparent --showhost
+```
+
+The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
+mitmproxy to use the value of the Host header for URL display.
+
+### 4. Finally, configure your test device.
+
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
+[install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 ## "Full" transparent mode on Linux
 
