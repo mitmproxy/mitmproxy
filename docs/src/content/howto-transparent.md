@@ -16,8 +16,7 @@ behaviour - proxy-oblivious mobile applications being a common example.
 The new [WireGuard mode]({{< relref "concepts-modes" >}}#wireguard-transparent-proxy)
 provides an alternative implementation for transparent proxying. It is much
 easier to set up, as it does not require setting up IP forwarding or modifying
-routing rules. Additionally, this mode also works on Windows, in addition to
-Linux and macOS, and setting it up does not require administrative privileges.
+routing rules.
 {{% /note %}}
 
 To set up transparent proxying, we need two new components. The first is a
@@ -284,9 +283,9 @@ Follow steps **3-5** above. This will redirect the packets from all users other 
 sudo -u nobody mitmproxy --mode transparent --showhost
 ```
 
-## Windows 10
+## Windows
 
-All commands will need to be run with elevated privileges. CMD or PowerShell should be run as Administrator.
+All commands will need to be run on Windows 10 or above with elevated privileges. PowerShell should be run as Administrator.
 
 ### 1. Enable IP routing.
 
