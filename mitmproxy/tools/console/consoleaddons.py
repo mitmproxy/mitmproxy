@@ -310,7 +310,7 @@ class ConsoleAddon:
 
     @command.command("console.view.eventlog")
     def view_eventlog(self) -> None:
-        """View the options editor."""
+        """View the event log."""
         self.master.switch_view("eventlog")
 
     @command.command("console.view.help")
