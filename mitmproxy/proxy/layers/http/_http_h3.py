@@ -17,12 +17,12 @@ from aioquic.quic.packet import QuicErrorCode
 from mitmproxy import connection
 from mitmproxy.proxy import commands, layer
 from mitmproxy.proxy.layers.quic import (
+    CloseQuicConnection,
     QuicStreamDataReceived,
     QuicStreamEvent,
     QuicStreamReset,
     ResetQuicStream,
     SendQuicStreamData,
-    set_connection_error,
 )
 
 
@@ -87,13 +87,10 @@ class MockQuic:
         # we'll get closed if a protocol error occurs in `H3Connection.handle_event`
         # we note the error on the connection and yield a CloseConnection
         # this will then call `QuicConnection.close` with the proper values
-        # once the `Http3Connection` receives `ConnectionClosed`, it will send out `*ProtocolError`
-        set_connection_error(self.conn, ConnectionTerminated(
-            error_code=error_code,
-            frame_type=frame_type,
-            reason_phrase=reason_phrase,
-        ))
-        self.pending_commands.append(commands.CloseConnection(self.conn))
+        # once the `Http3Connection` receives `ConnectionClosed`, it will send out `ProtocolError`
+        self.pending_commands.append(
+            CloseQuicConnection(self.conn, error_code, frame_type, reason_phrase)
+        )
 
     def get_next_available_stream_id(self, is_unidirectional: bool = False) -> int:
         # since we always reserve the ID, we have to "find" the next ID like `QuicConnection` does

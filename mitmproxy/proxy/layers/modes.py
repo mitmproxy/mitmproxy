@@ -60,13 +60,14 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme in ("https", "http3", "quic", "tls", "dtls"):
+        if spec.scheme in ("http3", "quic"):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
-            if spec.scheme == "http3" or spec.scheme == "quic":
-                self.child_layer = quic.ServerQuicLayer(self.context)
-            else:
-                self.child_layer = tls.ServerTLSLayer(self.context)
+            self.child_layer = quic.ServerQuicLayer(self.context)
+        elif spec.scheme in ("https", "tls", "dtls"):
+            if not self.context.options.keep_host_header:
+                self.context.server.sni = spec.address[0]
+            self.child_layer = tls.ServerTLSLayer(self.context)
         elif spec.scheme == "udp":
             self.child_layer = udp.UDPLayer(self.context)
         elif spec.scheme == "http" or spec.scheme == "tcp":

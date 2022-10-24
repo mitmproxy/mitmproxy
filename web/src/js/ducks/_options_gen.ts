@@ -43,7 +43,6 @@ export interface OptionsState {
     proxy_debug: boolean
     proxyauth: string | undefined
     rawtcp: boolean
-    rawudp: boolean
     readfile_filter: string | undefined
     rfile: string | undefined
     save_stream_file: string | undefined
@@ -135,7 +134,6 @@ export const defaultState: OptionsState = {
     proxy_debug: false,
     proxyauth: undefined,
     rawtcp: true,
-    rawudp: true,
     readfile_filter: undefined,
     rfile: undefined,
     save_stream_file: undefined,

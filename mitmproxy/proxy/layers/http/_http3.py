@@ -12,9 +12,9 @@ from mitmproxy import connection, http, version
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
+    QuicConnectionClosed,
     QuicStreamEvent,
     error_code_to_str,
-    get_connection_error,
 )
 from mitmproxy.proxy.utils import expect
 
@@ -164,12 +164,10 @@ class Http3Connection(HttpConnection):
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, events.ConnectionClosed):
             self._handle_event = self.done  # type: ignore
-            close_event = get_connection_error(self.conn)
-            msg = (
-                "peer closed connection"
-                if close_event is None else
-                close_event.reason_phrase or error_code_to_str(close_event.error_code)
-            )
+            if isinstance(event, QuicConnectionClosed):
+                msg = event.reason_phrase or error_code_to_str(event.error_code)
+            else:
+                msg = "peer closed connection"
             for stream_id in self.h3_conn.get_reserved_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
 

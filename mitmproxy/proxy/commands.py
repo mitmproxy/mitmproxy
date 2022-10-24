@@ -94,6 +94,8 @@ class CloseConnection(ConnectionCommand):
     all other connections will ultimately be closed during cleanup.
     """
 
+
+class CloseTcpConnection(CloseConnection):
     half_close: bool
     """
     If True, only close our half of the connection by sending a FIN packet.

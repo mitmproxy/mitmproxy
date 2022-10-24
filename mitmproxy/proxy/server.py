@@ -369,8 +369,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     assert writer
                     if not writer.is_closing():
                         writer.write(command.data)
-                elif isinstance(command, commands.CloseConnection):
+                elif isinstance(command, commands.CloseTcpConnection):
                     self.close_connection(command.connection, command.half_close)
+                elif isinstance(command, commands.CloseConnection):
+                    self.close_connection(command.connection, False)
                 elif isinstance(command, commands.StartHook):
                     asyncio_utils.create_task(
                         self.hook_task(command),
