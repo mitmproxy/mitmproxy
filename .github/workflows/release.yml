@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to release (major.minor.patch)'
+        required: true
+        type: string
+
+jobs:
+  # this job is just here as a fail-safe to make sure that the invoking user has the necessary permissions
+  # before we start the release process. This way we hopefully don't have to clean up incomplete release processes.
+  permission-check:
+    runs-on: ubuntu-latest
+    environment: deploy-release
+    steps:
+      - run: echo "ok"
+
+  release:
+    needs: permission-check
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .github/node-version.txt
+      - uses: actions/setup-python@v4
+        with:
+          python-version-file: .github/python-version.txt
+      - run: ./release/release.py ${{ inputs.version }}
