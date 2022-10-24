@@ -11,7 +11,7 @@ from aioquic.h3.connection import (
 )
 from aioquic.h3.events import HeadersReceived
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.events import ConnectionTerminated, StreamDataReceived
+from aioquic.quic.events import StreamDataReceived
 from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection

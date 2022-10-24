@@ -27,7 +27,7 @@ from aioquic.quic.packet import (
 )
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import certs, connection
+from mitmproxy import certs, connection, flow
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, tunnel
 from mitmproxy.proxy.layers.tcp import TCPLayer
@@ -136,7 +136,7 @@ class QuicStreamCommand(commands.ConnectionCommand):
     stream_id: int
     """The ID of the stream the command was issued for."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int):
+    def __init__(self, connection: connection.Connection, stream_id: int) -> None:
         super().__init__(connection)
         self.stream_id = stream_id
 
@@ -149,7 +149,7 @@ class SendQuicStreamData(QuicStreamCommand):
     end_stream: bool
     """Whether the FIN bit should be set in the STREAM frame."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, data: bytes, end_stream: bool = False):
+    def __init__(self, connection: connection.Connection, stream_id: int, data: bytes, end_stream: bool = False) -> None:
         super().__init__(connection, stream_id)
         self.data = data
         self.end_stream = end_stream
@@ -161,7 +161,7 @@ class ResetQuicStream(QuicStreamCommand):
     error_code: int
     """An error code indicating why the stream is being reset."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int):
+    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int) -> None:
         super().__init__(connection, stream_id)
         self.error_code = error_code
 
@@ -172,7 +172,7 @@ class StopQuicStream(QuicStreamCommand):
     error_code: int
     """An error code indicating why the stream is being stopped."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int):
+    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int) -> None:
         super().__init__(connection, stream_id)
         self.error_code = error_code
 
@@ -196,7 +196,7 @@ class CloseQuicConnection(commands.CloseConnection):
         error_code: int,
         frame_type: int | None,
         reason_phrase: str,
-    ):
+    ) -> None:
         super().__init__(conn)
         self.error_code = error_code
         self.frame_type = frame_type
@@ -220,7 +220,7 @@ class QuicConnectionClosed(events.ConnectionClosed):
         error_code: int,
         frame_type: int | None,
         reason_phrase: str,
-    ):
+    ) -> None:
         super().__init__(conn)
         self.error_code = error_code
         self.frame_type = frame_type
@@ -323,6 +323,25 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
     raise ValueError("No ClientHello returned.")
 
 
+class QuicStreamNextLayer(layer.NextLayer):
+    """`NextLayer` variant that callbacks `QuicStreamLayer` after layer decision."""
+
+    def __init__(self, context: context.Context, stream: QuicStreamLayer, ask_on_start: bool = False) -> None:
+        super().__init__(context, ask_on_start)
+        self._stream = stream
+        self._layer: layer.Layer | None = None
+
+    @property
+    def layer(self) -> layer.Layer | None:
+        return self._layer
+
+    @layer.setter
+    def layer(self, value: layer.Layer | None) -> None:
+        self._layer = value
+        if self._layer:
+            self._stream.refresh_metadata()
+
+
 class QuicStreamLayer(layer.Layer):
     """
     Layer for QUIC streams.
@@ -333,7 +352,7 @@ class QuicStreamLayer(layer.Layer):
     """Virtual client connection for this stream. Use this in QuicRawLayer instead of `context.client`."""
     server: connection.Server
     """Virtual server connection for this stream. Use this in QuicRawLayer instead of `context.server`."""
-    child_layer: TCPLayer
+    child_layer: layer.Layer
     """The stream's child layer."""
 
     def __init__(self, context: context.Context, ignore: bool, stream_id: int) -> None:
@@ -367,18 +386,11 @@ class QuicStreamLayer(layer.Layer):
         self.child_layer = (
             TCPLayer(context, ignore=True)
             if ignore else
-            layer.NextLayer(context)
+            QuicStreamNextLayer(context, self)
         )
-        if ignore:
-            self.child_layer = TCPLayer(context, ignore=True)
-        else:
-            tcp_layer = TCPLayer(context)
-            # This can potentially move to a smarter place later on,
-            # but it's useful debugging info in mitmproxy for now.
-            tcp_layer.flow.metadata["quic_is_unidirectional"] = stream_is_unidirectional(stream_id)
-            tcp_layer.flow.metadata["quic_initiator"] = "client" if stream_is_client_initiated(stream_id) else "server"
-            tcp_layer.flow.metadata["quic_stream_id_client"] = stream_id
-            self.child_layer = tcp_layer
+        self.refresh_metadata()
+
+        # we don't handle any events, pass everything to the child layer
         self.handle_event = self.child_layer.handle_event  # type: ignore
         self._handle_event = self.child_layer._handle_event  # type: ignore
 
@@ -398,8 +410,21 @@ class QuicStreamLayer(layer.Layer):
             if stream_is_unidirectional(server_stream_id) else
             connection.ConnectionState.OPEN
         )
-        if self.child_layer.flow:
-            self.child_layer.flow.metadata["quic_stream_id_server"] = server_stream_id
+        self.refresh_metadata()
+
+    def refresh_metadata(self) -> None:
+        # find the first non-NextLayer
+        child_layer = self.child_layer
+        while isinstance(child_layer, layer.NextLayer):
+            child_layer = child_layer.layer
+        if child_layer:
+            # try to get the layer's flow
+            f = getattr(child_layer, "flow", None)
+            if isinstance(f, flow.Flow):
+                f.metadata["quic_is_unidirectional"] = stream_is_unidirectional(self._client_stream_id)
+                f.metadata["quic_initiator"] = "client" if stream_is_client_initiated(self._client_stream_id) else "server"
+                f.metadata["quic_stream_id_client"] = self._client_stream_id
+                f.metadata["quic_stream_id_server"] = self._server_stream_id
 
     def stream_id(self, client: bool) -> int | None:
         return self._client_stream_id if client else self._server_stream_id

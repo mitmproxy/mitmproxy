@@ -1,7 +1,7 @@
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Union
 
 from aioquic.h3.connection import Setting, parse_settings
 
@@ -76,7 +76,7 @@ class StreamType:
 @dataclass
 class ConnectionState:
     message_count: int = 0
-    frames: dict[int, list[Frame | StreamType]] = field(default_factory=dict)
+    frames: dict[int, list[Union[Frame, StreamType]]] = field(default_factory=dict)
     client_buf: bytearray = field(default_factory=bytearray)
     server_buf: bytearray = field(default_factory=bytearray)
 
@@ -154,7 +154,7 @@ class ViewHttp3(base.View):
         return 2 * float(bool(flow and is_h3_alpn(flow.client_conn.alpn))) * float(isinstance(flow, tcp.TCPFlow))
 
 
-def fmt_frames(frames: list[Frame | StreamType]) -> Iterator[base.TViewLine]:
+def fmt_frames(frames: list[Union[Frame, StreamType]]) -> Iterator[base.TViewLine]:
     for i, frame in enumerate(frames):
         if i > 0:
             yield [("text", "")]
