@@ -56,10 +56,27 @@ class Frame:
         ]
 
 
+@dataclass(frozen=True)
+class StreamType:
+    """Representation of an HTTP/3 stream types."""
+    type: int
+
+    def pretty(self):
+        stream_type = {
+            0x00: "Control Stream",
+            0x01: "Push Stream",
+            0x02: "QPACK Encoder Stream",
+            0x03: "QPACK Decoder Stream",
+        }.get(self.type, f"0x{self.type:x} Stream")
+        return [
+            [("header", stream_type)]
+        ]
+
+
 @dataclass
 class ConnectionState:
     message_count: int = 0
-    frames: dict[int, list[Frame]] = field(default_factory=dict)
+    frames: dict[int, list[Frame | StreamType]] = field(default_factory=dict)
     client_buf: bytearray = field(default_factory=bytearray)
     server_buf: bytearray = field(default_factory=bytearray)
 
@@ -89,9 +106,15 @@ class ViewHttp3(base.View):
                 buf = state.server_buf
             buf += message.content
 
-            # TODO: It would be much better to know if the stream is unidirectional.
-            if buf.startswith(b"\x00\x04"):
-                del buf[:1]
+            if state.message_count == 0 and flow.metadata["quic_is_unidirectional"]:
+                h3_buf = Buffer(data=bytes(buf[:8]))
+                stream_type = h3_buf.pull_uint_var()
+                consumed = h3_buf.tell()
+                assert consumed == 1
+                del buf[:consumed]
+                state.frames[0] = [
+                    StreamType(stream_type)
+                ]
 
             while True:
                 h3_buf = Buffer(data=bytes(buf[:16]))
@@ -131,7 +154,7 @@ class ViewHttp3(base.View):
         return 2 * float(bool(flow and is_h3_alpn(flow.client_conn.alpn))) * float(isinstance(flow, tcp.TCPFlow))
 
 
-def fmt_frames(frames: list[Frame]) -> Iterator[base.TViewLine]:
+def fmt_frames(frames: list[Frame | StreamType]) -> Iterator[base.TViewLine]:
     for i, frame in enumerate(frames):
         if i > 0:
             yield [("text", "")]

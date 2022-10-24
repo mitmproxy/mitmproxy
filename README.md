@@ -26,7 +26,7 @@ General information, tutorials, and precompiled binaries can be found on the mit
 The documentation for mitmproxy is available on our website:
 
 [![mitmproxy documentation stable](https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg)](https://docs.mitmproxy.org/stable/)
-[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/main/)
+[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/dev/)
 
 If you have questions on how to use mitmproxy, please
 use GitHub Discussions!
@@ -39,6 +39,6 @@ As an open source project, mitmproxy welcomes contributions of all forms.
 
 [![Dev Guide](https://shields.mitmproxy.org/badge/dev_docs-CONTRIBUTING.md-blue)](./CONTRIBUTING.md)
 
-Also, please feel free to join our developer Slack!
+Also, please feel free to join our developer Slack! However, please note that the primary purpose of our Slack is direct communication between maintainers and contributors. If you have questions where the answer might be valuable to others, please use [GitHub Discussions](https://github.com/mitmproxy/mitmproxy/discussions).
 
 [![Slack Developer Chat](https://shields.mitmproxy.org/badge/slack-mitmproxy-E01563.svg)](http://slack.mitmproxy.org/)

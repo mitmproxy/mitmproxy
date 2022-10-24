@@ -34,6 +34,10 @@ class FlowTable extends React.Component {
         window.addEventListener('resize', this.onViewportUpdate)
     }
 
+    componentDidMount() {
+        this.onViewportUpdate();
+    }
+
     UNSAFE_componentWillUnmount() {
         window.removeEventListener('resize', this.onViewportUpdate)
     }
@@ -85,7 +89,14 @@ class FlowTable extends React.Component {
         })
 
         if (this.state.viewportTop !== viewportTop || !shallowEqual(this.state.vScroll, vScroll)) {
-            this.setState({ vScroll, viewportTop })
+            // the next rendered state may only have much lower number of rows compared to what the current
+            // viewportHeight anticipates. To make sure that we update (almost) at once, we already constrain
+            // the maximum viewportTop value. See https://github.com/mitmproxy/mitmproxy/pull/5658 for details.
+            let newViewportTop = Math.min(viewportTop, vScroll.end * this.props.rowHeight);
+            this.setState({
+                vScroll,
+                viewportTop: newViewportTop
+            });
         }
     }
 

@@ -35,7 +35,7 @@ class EncodingMixin:
         try:
             return data.decode(*self.encoding_args)
         except ValueError:
-            signals.status_message.send(message="Invalid encoding.", expire=1000)
+            signals.status_message.send(message="Invalid encoding.")
             raise
 
 

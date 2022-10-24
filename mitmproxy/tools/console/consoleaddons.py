@@ -137,6 +137,13 @@ class ConsoleAddon:
         """
         self.master.window.switch()
 
+    @command.command("console.panes.prev")
+    def panes_prev(self) -> None:
+        """
+        Go to the previous layout pane.
+        """
+        return self.panes_next()
+
     @command.command("console.options.reset.focus")
     def options_reset_current(self) -> None:
         """

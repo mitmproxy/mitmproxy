@@ -69,10 +69,11 @@ class Palette:
         "mark",
         # Hex view
         "offset",
-        # JSON view
-        "json_string",
-        "json_number",
-        "json_boolean",
+        # JSON/msgpack view
+        "Token_Name_Tag",
+        "Token_Literal_String",
+        "Token_Literal_Number",
+        "Token_Keyword_Constant",
         # TCP flow details
         "from_client",
         "to_client",
@@ -207,10 +208,11 @@ class LowDark(Palette):
         mark=("light red", "default"),
         # Hex view
         offset=("dark cyan", "default"),
-        # JSON view
-        json_string=("dark blue", "default"),
-        json_number=("light magenta", "default"),
-        json_boolean=("dark magenta", "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=("dark green", "default"),
+        Token_Literal_String=("dark blue", "default"),
+        Token_Literal_Number=("light magenta", "default"),
+        Token_Keyword_Constant=("dark magenta", "default"),
         # TCP flow details
         from_client=("light blue", "default"),
         to_client=("light red", "default"),
@@ -306,10 +308,11 @@ class LowLight(Palette):
         mark=("dark red", "default"),
         # Hex view
         offset=("dark blue", "default"),
-        # JSON view
-        json_string=("dark blue", "default"),
-        json_number=("light magenta", "default"),
-        json_boolean=("dark magenta", "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=("dark green", "default"),
+        Token_Literal_String=("dark blue", "default"),
+        Token_Literal_Number=("light magenta", "default"),
+        Token_Keyword_Constant=("dark magenta", "default"),
         # TCP flow details
         from_client=("dark blue", "default"),
         to_client=("dark red", "default"),
@@ -427,10 +430,11 @@ class SolarizedLight(LowLight):
         ),
         # Hex view
         offset=(sol_cyan, "default"),
-        # JSON view
-        json_string=(sol_cyan, "default"),
-        json_number=(sol_blue, "default"),
-        json_boolean=(sol_magenta, "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=(sol_green, "default"),
+        Token_Literal_String=(sol_cyan, "default"),
+        Token_Literal_Number=(sol_blue, "default"),
+        Token_Keyword_Constant=(sol_magenta, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),
@@ -506,10 +510,11 @@ class SolarizedDark(LowDark):
         ),
         # Hex view
         offset=(sol_cyan, "default"),
-        # JSON view
-        json_string=(sol_cyan, "default"),
-        json_number=(sol_blue, "default"),
-        json_boolean=(sol_magenta, "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=(sol_green, "default"),
+        Token_Literal_String=(sol_cyan, "default"),
+        Token_Literal_Number=(sol_blue, "default"),
+        Token_Keyword_Constant=(sol_magenta, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections.abc import Sequence
 
 import urwid
@@ -10,7 +11,6 @@ from mitmproxy import optmanager
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
-from mitmproxy.utils import signals as utils_signals
 
 HELP_HEIGHT = 5
 
@@ -25,9 +25,6 @@ def can_edit_inplace(opt):
 def fcol(s, width, attr):
     s = str(s)
     return ("fixed", width, urwid.Text((attr, s)))
-
-
-option_focus_change = utils_signals.SyncSignal(lambda text: None)
 
 
 class OptionItem(urwid.WidgetWrap):
@@ -88,8 +85,9 @@ class OptionItem(urwid.WidgetWrap):
 
 
 class OptionListWalker(urwid.ListWalker):
-    def __init__(self, master):
+    def __init__(self, master, help_widget: OptionHelp):
         self.master = master
+        self.help_widget = help_widget
 
         self.index = 0
         self.focusobj = None
@@ -134,7 +132,7 @@ class OptionListWalker(urwid.ListWalker):
         opt = self.master.options._options[name]
         self.index = index
         self.focus_obj = self._get(self.index, self.editing)
-        option_focus_change.send(opt.help)
+        self.help_widget.update_help_text(opt.help)
         self._modified()
 
     def get_next(self, pos):
@@ -157,9 +155,9 @@ class OptionListWalker(urwid.ListWalker):
 
 
 class OptionsList(urwid.ListBox):
-    def __init__(self, master):
+    def __init__(self, master, help_widget: OptionHelp):
         self.master = master
-        self.walker = OptionListWalker(master)
+        self.walker = OptionListWalker(master, help_widget)
         super().__init__(self.walker)
 
     def save_config(self, path):
@@ -228,7 +226,6 @@ class OptionHelp(urwid.Frame):
         self.master = master
         super().__init__(self.widget(""))
         self.set_active(False)
-        option_focus_change.connect(self.sig_mod)
 
     def set_active(self, val):
         h = urwid.Text("Option Help")
@@ -239,7 +236,7 @@ class OptionHelp(urwid.Frame):
         cols, _ = self.master.ui.get_cols_rows()
         return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
-    def sig_mod(self, txt):
+    def update_help_text(self, txt: str) -> None:
         self.set_body(self.widget(txt))
 
 
@@ -249,7 +246,7 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
 
     def __init__(self, master):
         oh = OptionHelp(master)
-        self.optionslist = OptionsList(master)
+        self.optionslist = OptionsList(master, oh)
         super().__init__(
             [
                 self.optionslist,

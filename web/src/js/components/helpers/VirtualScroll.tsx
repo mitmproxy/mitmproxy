@@ -1,24 +1,3 @@
-/**
- * Calculate virtual scroll stuffs
- *
- * @param {?Object} opts Options for calculation
- *
- * @returns {Object} result
- *
- * __opts__ should have following properties:
- * - {number}         itemCount
- * - {number}         rowHeight
- * - {number}         viewportTop
- * - {number}         viewportHeight
- * - {Array<?number>} [itemHeights]
- *
- * __result__ have following properties:
- * - {number} start
- * - {number} end
- * - {number} paddingTop
- * - {number} paddingBottom
- */
-
 type VScrollArgs = {
     itemCount: number
     rowHeight: number
@@ -34,12 +13,12 @@ export type VScroll = {
     paddingBottom: number
 }
 
-export function calcVScroll(opts: VScrollArgs | undefined = undefined) {
+export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll {
     if (!opts) {
-        return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
+        return {start: 0, end: 0, paddingTop: 0, paddingBottom: 0};
     }
 
-    const { itemCount, rowHeight, viewportTop, viewportHeight, itemHeights } = opts;
+    const {itemCount, rowHeight, viewportTop, viewportHeight, itemHeights} = opts;
     const viewportBottom = viewportTop + viewportHeight;
 
     let start = 0;
@@ -50,7 +29,8 @@ export function calcVScroll(opts: VScrollArgs | undefined = undefined) {
 
     if (itemHeights) {
 
-        for (let i = 0, pos = 0; i < itemCount; i++) {
+        let pos = 0;
+        for (let i = 0; i < itemCount; i++) {
             const height = itemHeights[i] || rowHeight;
 
             if (pos <= viewportTop && i % 2 === 0) {
@@ -66,21 +46,30 @@ export function calcVScroll(opts: VScrollArgs | undefined = undefined) {
 
             pos += height;
         }
+        // viewportTop + viewportHeight is larger than our total table height.
+        // this means that rows have been freshly removed and we need to calculate with
+        // an updated (smaller) viewportTop.
+        if(viewportTop > 0 && pos < viewportTop + viewportHeight)
+            return calcVScroll({itemCount, rowHeight, viewportTop: pos - viewportHeight, viewportHeight, itemHeights});
 
     } else {
+        // We may have removed a lot of rows since the last render,
+        // which means viewportTop will move up.
+        let newViewportTop = Math.min(
+            viewportTop,
+            Math.max(0, itemCount * rowHeight - viewportHeight)
+        );
 
         // Make sure that we start at an even row so that CSS `:nth-child(even)` is preserved
-        start = Math.max(0, Math.floor(viewportTop / rowHeight) - 1) & ~1;
+        start = Math.max(0, Math.floor(newViewportTop / rowHeight) - 1) & ~1;
         end = Math.min(
             itemCount,
             start + Math.ceil(viewportHeight / rowHeight) + 2
         );
 
-        // When a large trunk of elements is removed from the button, start may be far off the viewport.
-        // To make this issue less severe, limit the top placeholder to the total number of rows.
-        paddingTop = Math.min(start, itemCount) * rowHeight;
-        paddingBottom = Math.max(0, itemCount - end) * rowHeight;
+        paddingTop = start * rowHeight;
+        paddingBottom = (itemCount - end) * rowHeight;
     }
 
-    return { start, end, paddingTop, paddingBottom };
+    return {start, end, paddingTop, paddingBottom};
 }

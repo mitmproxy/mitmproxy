@@ -1,142 +1,134 @@
-import os.path
+from __future__ import annotations
+from collections.abc import Callable
+from functools import lru_cache
 from typing import Optional
 
 import urwid
 
 import mitmproxy.tools.console.master
-from mitmproxy.tools.console import commandexecutor
+from mitmproxy.tools.console import commandexecutor, flowlist, quickhelp
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.utils import human
 
 
-class PromptPath:
-    def __init__(self, callback, args):
-        self.callback, self.args = callback, args
+@lru_cache
+def shorten_message(msg: tuple[str, str] | str, max_width: int) -> list[tuple[str, str]]:
+    """
+    Shorten message so that it fits into a single line in the statusbar.
+    """
+    if isinstance(msg, tuple):
+        disp_attr, msg_text = msg
+    elif isinstance(msg, str):
+        msg_text = msg
+        disp_attr = ""
+    else:
+        raise AssertionError(f"Unexpected message type: {type(msg)}")
+    msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
+    prompt = "(more in eventlog)"
 
-    def __call__(self, pth: str):
-        if not pth:
-            return
-        pth = os.path.expanduser(pth)
-        try:
-            return self.callback(pth, *self.args)
-        except OSError as v:
-            signals.status_message.send(message=v.strerror)
+    msg_lines = msg_text.split("\n")
+    first_line = msg_lines[0]
+    if len(msg_lines) > 1:
+        # First line of messages with a few lines must end with prompt.
+        line_length = len(first_line) + len(prompt)
+    else:
+        line_length = len(first_line)
 
+    if line_length > max_width:
+        shortening_index = max(0, max_width - len(prompt) - len(msg_end))
+        first_line = first_line[:shortening_index] + msg_end
+    else:
+        if len(msg_lines) == 1:
+            prompt = ""
 
-class PromptStub:
-    def __init__(self, callback, args):
-        self.callback, self.args = callback, args
-
-    def __call__(self, txt):
-        return self.callback(txt, *self.args)
+    return [(disp_attr, first_line), ("warn", prompt)]
 
 
 class ActionBar(urwid.WidgetWrap):
-    def __init__(self, master):
+    def __init__(self, master: mitmproxy.tools.console.master.ConsoleMaster) -> None:
         self.master = master
-        urwid.WidgetWrap.__init__(self, None)
-        self.clear()
+        self.top = urwid.WidgetWrap(urwid.Text(""))
+        self.bottom = urwid.WidgetWrap(urwid.Text(""))
+        super().__init__(urwid.Pile([self.top, self.bottom]))
+        self.show_quickhelp()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
+        signals.window_refresh.connect(self.sig_update)
+        master.view.focus.sig_change.connect(self.sig_update)
+        master.view.sig_view_update.connect(self.sig_update)
 
-        self.prompting = None
+        self.prompting: Callable[[str], None] | None = None
 
-        self.onekey = False
+        self.onekey: set[str] | None = None
 
-    def sig_message(self, message: str, expire: int = 1) -> None:
+    def sig_update(self, flow=None) -> None:
+        if not self.prompting and flow is None or flow == self.master.view.focus.flow:
+            self.show_quickhelp()
+
+    def sig_message(self, message: tuple[str, str] | str, expire: int | None = 1) -> None:
         if self.prompting:
             return
         cols, _ = self.master.ui.get_cols_rows()
-        w = urwid.Text(self.shorten_message(message, cols))
-        self._w = w
+        w = urwid.Text(shorten_message(message, cols))
+        self.top._w = w
+        self.bottom._w = urwid.Text("")
         if expire:
 
-            def cb(*args):
-                if w == self._w:
-                    self.clear()
+            def cb():
+                if w == self.top._w:
+                    self.show_quickhelp()
 
             signals.call_in.send(seconds=expire, callback=cb)
 
-    def prep_prompt(self, p):
-        return p.strip() + ": "
-
-    @staticmethod
-    def shorten_message(msg, max_width):
-        """
-        Shorten message so that it fits into a single line in the statusbar.
-        """
-        if isinstance(msg, tuple):
-            disp_attr, msg_text = msg
-        elif isinstance(msg, str):
-            disp_attr, msg_text = None, msg
-        else:
-            return msg
-        msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
-        prompt = "(more in eventlog)"
-
-        msg_lines = msg_text.split("\n")
-        first_line = msg_lines[0]
-        if len(msg_lines) > 1:
-            # First line of messages with a few lines must end with prompt.
-            line_length = len(first_line) + len(prompt)
-        else:
-            line_length = len(first_line)
-
-        if line_length > max_width:
-            shortening_index = max(0, max_width - len(prompt) - len(msg_end))
-            first_line = first_line[:shortening_index] + msg_end
-        else:
-            if len(msg_lines) == 1:
-                prompt = ""
-
-        return [(disp_attr, first_line), ("warn", prompt)]
-
-    def sig_prompt(self, prompt, text, callback, args=()):
+    def sig_prompt(self, prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
         signals.focus.send(section="footer")
-        self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
-        self.prompting = PromptStub(callback, args)
+        self.top._w = urwid.Edit(f"{prompt.strip()}: ", text or "")
+        self.bottom._w = urwid.Text("")
+        self.prompting = callback
 
     def sig_prompt_command(
         self, partial: str = "", cursor: Optional[int] = None
-    ):
+    ) -> None:
         signals.focus.send(section="footer")
-        self._w = commander.CommandEdit(
+        self.top._w = commander.CommandEdit(
             self.master,
             partial,
         )
         if cursor is not None:
-            self._w.cbuf.cursor = cursor
+            self.top._w.cbuf.cursor = cursor
+        self.bottom._w = urwid.Text("")
         self.prompting = self.execute_command
 
-    def execute_command(self, txt):
+    def execute_command(self, txt: str) -> None:
         if txt.strip():
             self.master.commands.call("commands.history.add", txt)
         execute = commandexecutor.CommandExecutor(self.master)
         execute(txt)
 
-    def sig_prompt_onekey(self, prompt, keys, callback, args=()) -> None:
+    def sig_prompt_onekey(self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]) -> None:
         """
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
         """
         signals.focus.send(section="footer")
-        prompt = [prompt, " ("]
+        parts = [prompt, " ("]
         mkup = []
         for i, e in enumerate(keys):
             mkup.extend(common.highlight_key(e[0], e[1]))
             if i < len(keys) - 1:
                 mkup.append(",")
-        prompt.extend(mkup)
-        prompt.append(")? ")
+        parts.extend(mkup)
+        parts.append(")? ")
         self.onekey = {i[1] for i in keys}
-        self._w = urwid.Edit(prompt, "")
-        self.prompting = PromptStub(callback, args)
+        self.top._w = urwid.Edit(parts, "")
+        self.bottom._w = urwid.Text("")
+        self.prompting = callback
 
-    def selectable(self):
+    def selectable(self) -> bool:
         return True
 
     def keypress(self, size, k):
@@ -149,28 +141,37 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                text = self._w.get_edit_text()
+                text = self.top._w.get_edit_text()
                 self.prompt_execute(text)
             else:
                 if common.is_keypress(k):
-                    self._w.keypress(size, k)
+                    self.top._w.keypress(size, k)
                 else:
                     return k
 
-    def clear(self):
-        self._w = urwid.Text("")
-        self.prompting = None
+    def show_quickhelp(self) -> None:
+        try:
+            s = self.master.window.focus_stack()
+            focused_widget = type(s.top_widget())
+            is_top_widget = len(s.stack) == 1
+        except AttributeError:  # on startup
+            focused_widget = flowlist.FlowListBox
+            is_top_widget = True
+        focused_flow = self.master.view.focus.flow
+        qh = quickhelp.make(focused_widget, focused_flow, is_top_widget)
+        self.top._w, self.bottom._w = qh.make_rows(self.master.keymap)
 
     def prompt_done(self) -> None:
         self.prompting = None
-        self.onekey = False
-        signals.status_message.send(message="")
+        self.onekey = None
+        self.show_quickhelp()
         signals.focus.send(section="body")
 
     def prompt_execute(self, txt) -> None:
-        p = self.prompting
+        callback = self.prompting
+        assert callback is not None
         self.prompt_done()
-        msg = p(txt)
+        msg = callback(txt)
         if msg:
             signals.status_message.send(message=msg, expire=1)
 
@@ -179,7 +180,7 @@ class StatusBar(urwid.WidgetWrap):
     REFRESHTIME = 0.5  # Timed refresh time in seconds
     keyctx = ""
 
-    def __init__(self, master: "mitmproxy.tools.console.master.ConsoleMaster") -> None:
+    def __init__(self, master: mitmproxy.tools.console.master.ConsoleMaster) -> None:
         self.master = master
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
@@ -201,8 +202,8 @@ class StatusBar(urwid.WidgetWrap):
     def keypress(self, *args, **kwargs):
         return self.ab.keypress(*args, **kwargs)
 
-    def get_status(self):
-        r = []
+    def get_status(self) -> list[tuple[str, str] | str]:
+        r: list[tuple[str, str] | str] = []
 
         sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")
@@ -282,7 +283,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[%s]" % (":".join(opts)))
 
         if self.master.options.mode != ["regular"]:
-            r.append(f"[{','.join(self.master.options.mode)}]")
+            if len(self.master.options.mode) == 1:
+                r.append(f"[{self.master.options.mode[0]}]")
+            else:
+                r.append(f"[modes:{len(self.master.options.mode)}]")
         if self.master.options.scripts:
             r.append("[scripts:%s]" % len(self.master.options.scripts))
 
@@ -291,7 +295,7 @@ class StatusBar(urwid.WidgetWrap):
 
         return r
 
-    def redraw(self):
+    def redraw(self) -> None:
         fc = self.master.commands.execute("view.properties.length")
         if self.master.view.focus.flow is None:
             offset = 0
@@ -307,8 +311,8 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.commands.execute("view.properties.marked"):
             marked = "M"
 
-        t = [
-            ("heading", (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
+        t: list[tuple[str, str] | str] = [
+            ("heading", f"{arrow} {marked} [{offset}/{fc}]".ljust(11)),
         ]
 
         listen_addrs: list[str] = list(dict.fromkeys(
@@ -331,5 +335,5 @@ class StatusBar(urwid.WidgetWrap):
         )
         self.ib._w = status
 
-    def selectable(self):
+    def selectable(self) -> bool:
         return True
