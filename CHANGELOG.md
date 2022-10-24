@@ -54,6 +54,8 @@
   ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), @mhils)
 * Fix mitmweb crash when using filters.
   ([#5658](https://github.com/mitmproxy/mitmproxy/issues/5658), [#5661](https://github.com/mitmproxy/mitmproxy/issues/5661), @LIU-shuyi, @mhils)
+* Added Docs for Transparent Mode on Windows.
+  ([#5402])(https://github.com/mitmproxy/mitmproxy/issues/5402), [#5672](https://github.com/mitmproxy/mitmproxy/pull/5672), @stephenspol
 
 
 ## 28 June 2022: mitmproxy 8.1.1
