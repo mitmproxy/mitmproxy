@@ -73,8 +73,8 @@ jobs:
             py: "3.11"
           - os: windows-latest
             py: "3.11"
-          - os: macos-latest
-            py: "3.11"
+          #- os: macos-latest
+          #  py: "3.11"
           - os: ubuntu-latest
             py: "3.10"
           - os: ubuntu-latest
@@ -110,8 +110,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: macos-11
-            platform: macos
+          #- image: macos-11
+          #  platform: macos
           - image: windows-2019
             platform: windows
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
@@ -288,10 +288,10 @@ jobs:
         with:
           name: binaries.linux
           path: release/dist
-      - uses: actions/download-artifact@v3
-        with:
-          name: binaries.macos
-          path: release/dist
+      #- uses: actions/download-artifact@v3
+      #  with:
+      #    name: binaries.macos
+      #    path: release/dist
       - run: ls docs/public
       - run: ls release/dist
 
