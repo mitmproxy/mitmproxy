@@ -107,7 +107,7 @@ setup(
             "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pyinstaller==5.6",
+            "pyinstaller==5.6.1",
             "pytest-asyncio>=0.20,<0.21",
             "pytest-cov>=2.7.1,<4.1",
             "pytest-timeout>=1.3.3,<2.2",
