@@ -1,10 +1,9 @@
 import ssl
-import time
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection, pull_quic_header
-from typing import Optional
+from typing import Optional, TypeVar
 from unittest.mock import MagicMock
 import pytest
 from mitmproxy import connection, options
@@ -19,6 +18,9 @@ from mitmproxy.tcp import TCPFlow
 
 
 tlsdata = data.Data(__name__)
+
+
+T = TypeVar('T', bound=layer.Layer)
 
 
 @pytest.fixture
@@ -200,9 +202,11 @@ class SSLTest:
 
         self.ctx.server_name = None if server_side else sni
 
+        self.now = 0.0
         self.quic = None if server_side else QuicConnection(configuration=self.ctx)
 
     def write(self, buf: bytes) -> int:
+        self.now = self.now + 0.1
         if self.quic is None:
             quic_buf = QuicBuffer(data=buf)
             header = pull_quic_header(quic_buf, host_cid_length=8)
@@ -210,12 +214,13 @@ class SSLTest:
                 configuration=self.ctx,
                 original_destination_connection_id=header.destination_cid,
             )
-        self.quic.receive_datagram(buf, ("0.0.0.0", 0), time.time())
+        self.quic.receive_datagram(buf, ("0.0.0.0", 0), self.now)
 
     def read(self) -> bytes:
+        self.now = self.now + 0.1
         buf = b""
         has_data = False
-        for datagram, addr in self.quic.datagrams_to_send(time.time()):
+        for datagram, addr in self.quic.datagrams_to_send(self.now):
             assert addr == ("0.0.0.0", 0)
             buf += datagram
             has_data = True
@@ -245,12 +250,14 @@ def _test_echo(
     while event := tssl.quic.next_event():
         if isinstance(event, quic_events.DatagramFrameReceived):
             assert event.data == b"hello world"
+            break
     else:
         raise AssertionError()
 
 
 class TlsEchoLayer(tutils.EchoLayer):
     err: Optional[str] = None
+    closed: Optional[quic.QuicConnectionClosed] = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
@@ -259,13 +266,25 @@ class TlsEchoLayer(tutils.EchoLayer):
                 yield commands.SendData(
                     event.connection, f"open-connection failed: {err}".encode()
                 )
+        elif isinstance(event, quic.QuicConnectionClosed):
+            self.closed = event
         else:
             yield from super()._handle_event(event)
 
 
 def finish_handshake(
-    playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest
-):
+    playbook: tutils.Playbook,
+    conn: connection.Connection,
+    tssl: SSLTest,
+    child_layer: type[T]
+) -> T:
+    result: Optional[T] = None
+
+    def set_layer(next_layer: layer.NextLayer) -> None:
+        nonlocal result
+        result = child_layer(next_layer.context)
+        next_layer.layer = result
+
     data = tutils.Placeholder(bytes)
     tls_hook_data = tutils.Placeholder(tls.TlsData)
     if isinstance(conn, connection.Client):
@@ -279,10 +298,13 @@ def finish_handshake(
         >> tutils.reply()
         << commands.SendData(conn, data)
         << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(TlsEchoLayer)
+        >> tutils.reply(side_effect=set_layer)
     )
     assert tls_hook_data().conn.error is None
     tssl.write(data())
+
+    assert result
+    return result
 
 
 def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
@@ -303,11 +325,11 @@ def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
 
 class TestServerTLS:
     def test_repr(self, tctx: context.Context):
-        assert repr(quic.ServerQuicLayer(tctx))
+        assert repr(quic.ServerQuicLayer(tctx, time=lambda: 0))
 
     def test_not_connected(self, tctx: context.Context):
         """Test that we don't do anything if no server connection exists."""
-        layer = quic.ServerQuicLayer(tctx)
+        layer = quic.ServerQuicLayer(tctx, time=lambda: 0)
         layer.child_layer = TlsEchoLayer(tctx)
 
         assert (
@@ -317,12 +339,12 @@ class TestServerTLS:
         )
 
     def test_simple(self, tctx: context.Context):
-        playbook = tutils.Playbook(quic.ServerQuicLayer(tctx))
+        tssl = SSLTest(server_side=True)
+
+        playbook = tutils.Playbook(quic.ServerQuicLayer(tctx, time=lambda: tssl.now))
         tctx.server.address = ("example.mitmproxy.org", 443)
         tctx.server.state = connection.ConnectionState.OPEN
         tctx.server.sni = "example.mitmproxy.org"
-
-        tssl = SSLTest(server_side=True)
 
         # send ClientHello, receive ClientHello
         data = tutils.Placeholder(bytes)
@@ -331,13 +353,13 @@ class TestServerTLS:
             << quic.QuicStartServerHook(tutils.Placeholder())
             >> reply_tls_start_server()
             << commands.SendData(tctx.server, data)
-            << commands.RequestWakeup(tutils.Placeholder())
+            << commands.RequestWakeup(0.2)
         )
         tssl.write(data())
         assert not tssl.handshake_completed()
 
         # finish handshake (mitmproxy)
-        finish_handshake(playbook, tctx.server, tssl)
+        echo = finish_handshake(playbook, tctx.server, tssl, TlsEchoLayer)
 
         # finish handshake (locally)
         assert tssl.handshake_completed()
@@ -353,4 +375,20 @@ class TestServerTLS:
             >> events.DataReceived(tctx.client, b"foo")
             << commands.SendData(tctx.client, b"foo")
         )
+        _test_echo(playbook, tssl, tctx.server)
 
+        tssl.quic.close(42, None, "goodbye from simple")
+        playbook >> events.DataReceived(tctx.server, tssl.read())
+        playbook << None
+        assert playbook
+        tssl.now = tssl.now + 60
+        assert (
+            playbook
+            >> events.Wakeup(playbook.actual[4])
+            << commands.CloseConnection(tctx.server)
+            >> events.ConnectionClosed(tctx.server)
+            << None
+        )
+        assert echo.closed
+        assert echo.closed.error_code == 42
+        assert echo.closed.reason_phrase == "goodbye from simple"

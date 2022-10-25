@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from logging import DEBUG, ERROR, WARNING
 from ssl import VerifyMode
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import H3_ALPN, ErrorCode as H3ErrorCode
@@ -690,10 +690,10 @@ class QuicLayer(tunnel.TunnelLayer):
     quic: QuicConnection | None = None
     tls: QuicTlsSettings | None = None
 
-    def __init__(self, context: context.Context, conn: connection.Connection) -> None:
+    def __init__(self, context: context.Context, conn: connection.Connection, time: Callable[[], float] | None) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
-        self._loop = asyncio.get_event_loop()
+        self._time = time or asyncio.get_running_loop().time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
         self._routes: dict[connection.Address, ConnectionHandler | None] = dict()
         conn.tls = True
@@ -708,7 +708,7 @@ class QuicLayer(tunnel.TunnelLayer):
             assert self.quic
             timer = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(now=max(timer, self._loop.time()))
+                self.quic.handle_timer(now=max(timer, self._time()))
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -749,7 +749,7 @@ class QuicLayer(tunnel.TunnelLayer):
             yield QuicStartClientHook(tls_data)
         else:
             yield QuicStartServerHook(tls_data)
-        if tls_data.settings is None:
+        if not tls_data.settings:
             yield commands.Log(f"No QUIC context was provided, failing connection.", ERROR)
             yield commands.CloseConnection(self.conn)
             return
@@ -785,7 +785,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # if we act as client, connect to upstream
         if original_destination_connection_id is None:
-            self.quic.connect(self.conn.peername, now=self._loop.time())
+            self.quic.connect(self.conn.peername, now=self._time())
             yield from self.tls_interact()
 
     def tls_interact(self) -> layer.CommandGenerator[None]:
@@ -793,7 +793,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        for data, addr in self.quic.datagrams_to_send(now=self._loop.time()):
+        for data, addr in self.quic.datagrams_to_send(now=self._time()):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
 
@@ -803,7 +803,7 @@ class QuicLayer(tunnel.TunnelLayer):
             timer is not None
             and not any(existing <= timer for existing in self._wakeup_commands.values())
         ):
-            command = commands.RequestWakeup(timer - self._loop.time())
+            command = commands.RequestWakeup(timer - self._time())
             self._wakeup_commands[command] = timer
             yield command
 
@@ -812,7 +812,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # forward incoming data to aioquic
         if data:
-            self.quic.receive_datagram(data, self.conn.peername, now=self._loop.time())
+            self.quic.receive_datagram(data, self.conn.peername, now=self._time())
 
         # handle pre-handshake events
         while event := self.quic.next_event():
@@ -822,13 +822,13 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(event, quic_events.HandshakeCompleted):
                 # concatenate all peer certificates
                 all_certs: list[x509.Certificate] = []
-                if self.quic.tls._peer_certificate is not None:
+                if self.quic.tls._peer_certificate:
                     all_certs.append(self.quic.tls._peer_certificate)
-                if self.quic.tls._peer_certificate_chain is not None:
+                if self.quic.tls._peer_certificate_chain:
                     all_certs.extend(self.quic.tls._peer_certificate_chain)
 
                 # set the connection's TLS properties
-                self.conn.timestamp_tls_setup = self._loop.time()
+                self.conn.timestamp_tls_setup = time.time()
                 if event.alpn_protocol:
                     self.conn.alpn = event.alpn_protocol.encode("ascii")
                 self.conn.certificate_list = [certs.Cert(cert) for cert in all_certs]
@@ -875,7 +875,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # forward incoming data to aioquic
         if data:
-            self.quic.receive_datagram(data, self.conn.peername, now=self._loop.time())
+            self.quic.receive_datagram(data, self.conn.peername, now=self._time())
 
         # handle post-handshake events
         while event := self.quic.next_event():
@@ -885,7 +885,12 @@ class QuicLayer(tunnel.TunnelLayer):
                     yield commands.Log(
                         f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", DEBUG
                     )
-                yield CloseQuicConnection(self.conn, event.error_code, event.frame_type, event.reason_phrase)
+                # We don't rely on `ConnectionTerminated` to dispatch `QuicConnectionClosed`, because
+                # after aioquic receives a termination frame, it still waits for the next `handle_timer`
+                # before returning `ConnectionTerminated in `next_event`. In the meantime, the underlying
+                # connection could be closed. Therefore, we dispatch when `ConnectionClosed` and simply
+                # close the connection here.
+                yield commands.CloseConnection(self.tunnel_connection)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit
             elif isinstance(event, quic_events.DatagramFrameReceived):
                 yield from self.event_to_child(events.DataReceived(self.conn, event.data))
@@ -907,8 +912,14 @@ class QuicLayer(tunnel.TunnelLayer):
         yield from self.tls_interact()
 
     def receive_close(self) -> layer.CommandGenerator[None]:
-        # unlike TLS we haven't sent CloseConnection before
-        yield from super().receive_close()
+        # if `_close_event` is not set, the underlying connection has been closed
+        # we turn this into a QUIC close event as well
+        close_event = self.quic._close_event or quic_events.ConnectionTerminated(
+            QuicErrorCode.APPLICATION_ERROR, None, "Connection closed."
+        )
+        yield from self.event_to_child(
+            QuicConnectionClosed(self.conn, close_event.error_code, close_event.frame_type, close_event.reason_phrase)
+        )
 
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         # non-stream data uses datagram frames
@@ -919,7 +930,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
     def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
         # properly close the QUIC connection
-        if self.quic is not None:
+        if self.quic:
             if isinstance(command, CloseQuicConnection):
                 self.quic.close(command.error_code, command.frame_type, command.reason_phrase)
             else:
@@ -935,8 +946,8 @@ class ServerQuicLayer(QuicLayer):
 
     wait_for_clienthello: bool = False
 
-    def __init__(self, context: context.Context, conn: connection.Server | None = None):
-        super().__init__(context, conn or context.server)
+    def __init__(self, context: context.Context, conn: connection.Server | None = None, time: Callable[[], float] | None = None):
+        super().__init__(context, conn or context.server, time)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         wait_for_clienthello = (
@@ -975,7 +986,7 @@ class ClientQuicLayer(QuicLayer):
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
 
-    def __init__(self, context: context.Context) -> None:
+    def __init__(self, context: context.Context, time: Callable[[], float] | None = None) -> None:
         # same as ClientTLSLayer, we might be nested in some other transport
         if context.client.tls:
             context.client.alpn = None
@@ -988,7 +999,7 @@ class ClientQuicLayer(QuicLayer):
             context.client.alpn_offers = []
             context.client.cipher_list = []
 
-        super().__init__(context, context.client)
+        super().__init__(context, context.client, time)
         self.server_tls_available = isinstance(self.context.layers[-2], ServerQuicLayer)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
@@ -996,7 +1007,7 @@ class ClientQuicLayer(QuicLayer):
 
     def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, str | None]]:
         # if we already had a valid client hello, don't process further packets
-        if self.tls is not None:
+        if self.tls:
             return (yield from super().receive_handshake_data(data))
 
         # fail if the received data is not a QUIC packet
@@ -1044,7 +1055,7 @@ class ClientQuicLayer(QuicLayer):
         # replace the QUIC layer with an UDP layer if requested
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
-                ("ignore-conn", 0), ("ignore-conn", 0), self._loop.time(),
+                ("ignore-conn", 0), ("ignore-conn", 0), time.time(),
                 transport_protocol="udp", proxy_mode=self.context.client.proxy_mode
             )
 
