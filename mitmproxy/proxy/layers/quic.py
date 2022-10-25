@@ -27,7 +27,7 @@ from aioquic.quic.packet import (
 )
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import certs, connection, flow
+from mitmproxy import certs, connection
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, tunnel
 from mitmproxy.proxy.layers.tcp import TCPLayer
@@ -395,7 +395,7 @@ class QuicStreamLayer(layer.Layer):
         self._handle_event = self.child_layer._handle_event  # type: ignore
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        raise AssertionError
+        raise AssertionError  # pragma: no cover
 
     def open_server_stream(self, server_stream_id) -> None:
         assert self._server_stream_id is None
@@ -413,18 +413,20 @@ class QuicStreamLayer(layer.Layer):
         self.refresh_metadata()
 
     def refresh_metadata(self) -> None:
-        # find the first non-NextLayer
+        # find the first transport layer
         child_layer = self.child_layer
-        while isinstance(child_layer, layer.NextLayer):
-            child_layer = child_layer.layer
-        if child_layer:
-            # try to get the layer's flow
-            f = getattr(child_layer, "flow", None)
-            if isinstance(f, flow.Flow):
-                f.metadata["quic_is_unidirectional"] = stream_is_unidirectional(self._client_stream_id)
-                f.metadata["quic_initiator"] = "client" if stream_is_client_initiated(self._client_stream_id) else "server"
-                f.metadata["quic_stream_id_client"] = self._client_stream_id
-                f.metadata["quic_stream_id_server"] = self._server_stream_id
+        while True:
+            if isinstance(child_layer, layer.NextLayer):
+                child_layer = child_layer.layer
+            elif isinstance(child_layer, tunnel.TunnelLayer):
+                child_layer = child_layer.child_layer
+            else:
+                break
+        if isinstance(child_layer, (UDPLayer, TCPLayer)) and child_layer.flow:
+            child_layer.flow.metadata["quic_is_unidirectional"] = stream_is_unidirectional(self._client_stream_id)
+            child_layer.flow.metadata["quic_initiator"] = "client" if stream_is_client_initiated(self._client_stream_id) else "server"
+            child_layer.flow.metadata["quic_stream_id_client"] = self._client_stream_id
+            child_layer.flow.metadata["quic_stream_id_server"] = self._server_stream_id
 
     def stream_id(self, client: bool) -> int | None:
         return self._client_stream_id if client else self._server_stream_id
@@ -479,6 +481,7 @@ class RawQuicLayer(layer.Layer):
                 err = yield commands.OpenConnection(self.context.server)
                 if err:
                     yield commands.CloseConnection(self.context.client)
+                    self._handle_event = self.done
                     return
             yield from self.event_to_child(self.datagram_layer, event)
 
@@ -559,18 +562,37 @@ class RawQuicLayer(layer.Layer):
             )
         ):
             from_client = event.connection is self.context.client
+            other_conn = self.context.server if from_client else self.context.client
 
-            # always forward to the datagram layer
-            yield from self.event_to_child(self.datagram_layer, event)
+            # be done if both connections are closed
+            if not other_conn.connected:
+                self._handle_event = self.done
 
-            # forward to either the client or server connection of stream layers
+            # always forward to the datagram layer and swallow `CloseConnection` commands
+            for command in self.event_to_child(self.datagram_layer, event):
+                if (
+                    not isinstance(command, commands.CloseConnection)
+                    or command.connection is not other_conn
+                ):
+                    yield command
+
+            # forward to either the client or server connection of stream layers and swallow empty stream end
             for conn, child_layer in self.connections.items():
                 if (
                     isinstance(child_layer, QuicStreamLayer)
                     and ((conn is child_layer.client) if from_client else (conn is child_layer.server))
                 ):
                     conn.state &= ~connection.ConnectionState.CAN_WRITE
-                    yield from self.close_stream_layer(child_layer, from_client)
+                    for command in self.close_stream_layer(child_layer, from_client):
+                        if (
+                            not isinstance(command, SendQuicStreamData)
+                            or command.data
+                        ):
+                            yield command
+
+            # forward the close event
+            if other_conn.connected:
+                yield CloseQuicConnection(other_conn, event.error_code, event.frame_type, event.reason_phrase)
 
         # all other connection events are routed to their corresponding layer
         elif isinstance(event, events.ConnectionEvent):
@@ -659,6 +681,9 @@ class RawQuicLayer(layer.Layer):
         stream_id = self.next_stream_id[index]
         self.next_stream_id[index] = stream_id + 4
         return stream_id
+
+    def done(self, _) -> layer.CommandGenerator[None]:
+        yield from ()
 
 
 class QuicLayer(tunnel.TunnelLayer):

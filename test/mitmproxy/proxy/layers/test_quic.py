@@ -1,6 +1,33 @@
+import ssl
+import time
+from aioquic.buffer import Buffer as QuicBuffer
+from aioquic.quic import events as quic_events
+from aioquic.quic.configuration import QuicConfiguration
+from aioquic.quic.connection import QuicConnection, pull_quic_header
+from typing import Optional
+from unittest.mock import MagicMock
 import pytest
+from mitmproxy import connection, options
+from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.proxy import commands, context, events, layer, tunnel
+from mitmproxy.proxy import layers
+from mitmproxy.proxy.layers import quic, tls
+from mitmproxy.utils import data
+from test.mitmproxy.proxy import tutils
 
-from mitmproxy.proxy.layers import quic
+from mitmproxy.tcp import TCPFlow
+
+
+tlsdata = data.Data(__name__)
+
+
+@pytest.fixture
+def tctx() -> context.Context:
+    opts = options.Options()
+    Proxyserver().load(opts)
+    return context.Context(
+        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
+    )
 
 
 def test_error_code_to_str():
@@ -56,3 +83,274 @@ def test_parse_client_hello():
         quic.quic_parse_client_hello(
             client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
+
+
+@pytest.mark.parametrize("value", ["s1 s2\n", "s1 s2"])
+def test_secrets_logger(value: str):
+    logger = MagicMock()
+    quic_logger = quic.QuicSecretsLogger(logger)
+    assert quic_logger.write(value) == 6
+    quic_logger.flush()
+    logger.assert_called_once()
+    logger.assert_called_once_with(None, b"s1 s2")
+
+
+def test_quic_stream_layer_ignored(tctx: context.Context):
+    quic_layer = quic.QuicStreamLayer(tctx, True, 1)
+    assert isinstance(quic_layer.child_layer, layers.TCPLayer)
+    assert not quic_layer.child_layer.flow
+    quic_layer.child_layer.flow = TCPFlow(MagicMock(), MagicMock())
+    quic_layer.refresh_metadata()
+    assert quic_layer.child_layer.flow.metadata["quic_is_unidirectional"] is False
+    assert quic_layer.child_layer.flow.metadata["quic_initiator"] == "server"
+    assert quic_layer.child_layer.flow.metadata["quic_stream_id_client"] == 1
+    assert quic_layer.child_layer.flow.metadata["quic_stream_id_server"] is None
+    assert quic_layer.stream_id(True) == 1
+    assert quic_layer.stream_id(False) is None
+
+
+def test_quic_stream_layer(tctx: context.Context):
+    quic_layer = quic.QuicStreamLayer(tctx, False, 2)
+    assert isinstance(quic_layer.child_layer, layer.NextLayer)
+    tunnel_layer = tunnel.TunnelLayer(tctx, MagicMock(), MagicMock())
+    quic_layer.child_layer.layer = tunnel_layer
+    tcp_layer = layers.TCPLayer(tctx)
+    tunnel_layer.child_layer = tcp_layer
+    quic_layer.open_server_stream(3)
+    assert tcp_layer.flow.metadata["quic_is_unidirectional"] is True
+    assert tcp_layer.flow.metadata["quic_initiator"] == "client"
+    assert tcp_layer.flow.metadata["quic_stream_id_client"] == 2
+    assert tcp_layer.flow.metadata["quic_stream_id_server"] == 3
+    assert quic_layer.stream_id(True) == 2
+    assert quic_layer.stream_id(False) == 3
+
+
+@pytest.mark.parametrize("ignore", [True, False])
+def test_raw_quic_layer_error(tctx: context.Context, ignore: bool):
+    quic_layer = quic.RawQuicLayer(tctx, ignore=ignore)
+    assert (
+        tutils.Playbook(quic_layer)
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply("failed to open")
+        << commands.CloseConnection(tctx.client)
+    )
+    assert quic_layer._handle_event == quic_layer.done
+
+
+def test_raw_quic_layer_ignored(tctx: context.Context):
+    quic_layer = quic.RawQuicLayer(tctx, ignore=True)
+    assert (
+        tutils.Playbook(quic_layer)
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> events.DataReceived(tctx.client, b"msg1")
+        << commands.SendData(tctx.server, b"msg1")
+        >> events.DataReceived(tctx.server, b"msg2")
+        << commands.SendData(tctx.client, b"msg2")
+        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg3", end_stream=False)
+        << quic.SendQuicStreamData(tctx.server, 0, b"msg3", end_stream=False)
+        >> quic.QuicStreamDataReceived(tctx.client, 6, b"msg4", end_stream=False)
+        << quic.SendQuicStreamData(tctx.server, 2, b"msg4", end_stream=False)
+        >> quic.QuicStreamDataReceived(tctx.server, 9, b"msg5", end_stream=False)
+        << quic.SendQuicStreamData(tctx.client, 1, b"msg5", end_stream=False)
+        >> quic.QuicStreamDataReceived(tctx.client, 0, b"", end_stream=True)
+        << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+        >> quic.QuicConnectionClosed(tctx.client, 42, None, "closed")
+        << quic.CloseQuicConnection(tctx.server, 42, None, "closed")
+        >> quic.QuicConnectionClosed(tctx.server, 42, None, "closed")
+        << None
+    )
+    assert quic_layer._handle_event == quic_layer.done
+
+
+class SSLTest:
+    """Helper container for Python's builtin SSL object."""
+
+    def __init__(
+        self,
+        server_side: bool = False,
+        alpn: Optional[list[str]] = None,
+        sni: Optional[bytes] = b"example.mitmproxy.org",
+    ):
+        self.ctx = QuicConfiguration(
+            is_client=not server_side,
+            max_datagram_frame_size=65536,
+        )
+
+        self.ctx.verify_mode = ssl.CERT_OPTIONAL
+        self.ctx.load_verify_locations(
+            cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
+        )
+
+        if alpn:
+            self.ctx.alpn_protocols = alpn
+        if server_side:
+            if sni == b"192.0.2.42":
+                filename = "trusted-leaf-ip"
+            else:
+                filename = "trusted-leaf"
+            self.ctx.load_cert_chain(
+                certfile=tlsdata.path(
+                    f"../../net/data/verificationcerts/{filename}.crt"
+                ),
+                keyfile=tlsdata.path(
+                    f"../../net/data/verificationcerts/{filename}.key"
+                ),
+            )
+
+        self.ctx.server_name = None if server_side else sni
+
+        self.quic = None if server_side else QuicConnection(configuration=self.ctx)
+
+    def write(self, buf: bytes) -> int:
+        if self.quic is None:
+            quic_buf = QuicBuffer(data=buf)
+            header = pull_quic_header(quic_buf, host_cid_length=8)
+            self.quic = QuicConnection(
+                configuration=self.ctx,
+                original_destination_connection_id=header.destination_cid,
+            )
+        self.quic.receive_datagram(buf, ("0.0.0.0", 0), time.time())
+
+    def read(self) -> bytes:
+        buf = b""
+        has_data = False
+        for datagram, addr in self.quic.datagrams_to_send(time.time()):
+            assert addr == ("0.0.0.0", 0)
+            buf += datagram
+            has_data = True
+        if not has_data:
+            raise AssertionError("no datagrams to send")
+        return buf
+
+    def handshake_completed(self) -> bool:
+        while event := self.quic.next_event():
+            if isinstance(event, quic_events.HandshakeCompleted):
+                return True
+        else:
+            return False
+
+
+def _test_echo(
+    playbook: tutils.Playbook, tssl: SSLTest, conn: connection.Connection
+) -> None:
+    tssl.quic.send_datagram_frame(b"Hello World")
+    data = tutils.Placeholder(bytes)
+    assert (
+        playbook
+        >> events.DataReceived(conn, tssl.read())
+        << commands.SendData(conn, data)
+    )
+    tssl.write(data())
+    while event := tssl.quic.next_event():
+        if isinstance(event, quic_events.DatagramFrameReceived):
+            assert event.data == b"hello world"
+    else:
+        raise AssertionError()
+
+
+class TlsEchoLayer(tutils.EchoLayer):
+    err: Optional[str] = None
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                yield commands.SendData(
+                    event.connection, f"open-connection failed: {err}".encode()
+                )
+        else:
+            yield from super()._handle_event(event)
+
+
+def finish_handshake(
+    playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest
+):
+    data = tutils.Placeholder(bytes)
+    tls_hook_data = tutils.Placeholder(tls.TlsData)
+    if isinstance(conn, connection.Client):
+        established_hook = tls.TlsEstablishedClientHook(tls_hook_data)
+    else:
+        established_hook = tls.TlsEstablishedServerHook(tls_hook_data)
+    assert (
+        playbook
+        >> events.DataReceived(conn, tssl.read())
+        << established_hook
+        >> tutils.reply()
+        << commands.SendData(conn, data)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(TlsEchoLayer)
+    )
+    assert tls_hook_data().conn.error is None
+    tssl.write(data())
+
+
+def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
+    """
+    Helper function to simplify the syntax for quic_start_server hooks.
+    """
+
+    def make_server_conn(tls_start: quic.QuicTlsData) -> None:
+        # ssl_context = SSL.Context(Method.TLS_METHOD)
+        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
+        tls_start.settings = quic.QuicTlsSettings(
+            ca_file=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
+            verify_mode=ssl.CERT_REQUIRED,
+        )
+
+    return tutils.reply(*args, side_effect=make_server_conn, **kwargs)
+
+
+class TestServerTLS:
+    def test_repr(self, tctx: context.Context):
+        assert repr(quic.ServerQuicLayer(tctx))
+
+    def test_not_connected(self, tctx: context.Context):
+        """Test that we don't do anything if no server connection exists."""
+        layer = quic.ServerQuicLayer(tctx)
+        layer.child_layer = TlsEchoLayer(tctx)
+
+        assert (
+            tutils.Playbook(layer)
+            >> events.DataReceived(tctx.client, b"Hello World")
+            << commands.SendData(tctx.client, b"hello world")
+        )
+
+    def test_simple(self, tctx: context.Context):
+        playbook = tutils.Playbook(quic.ServerQuicLayer(tctx))
+        tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.state = connection.ConnectionState.OPEN
+        tctx.server.sni = "example.mitmproxy.org"
+
+        tssl = SSLTest(server_side=True)
+
+        # send ClientHello, receive ClientHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            << quic.QuicStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server()
+            << commands.SendData(tctx.server, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+        )
+        tssl.write(data())
+        assert not tssl.handshake_completed()
+
+        # finish handshake (mitmproxy)
+        finish_handshake(playbook, tctx.server, tssl)
+
+        # finish handshake (locally)
+        assert tssl.handshake_completed()
+        playbook >> events.DataReceived(tctx.server, tssl.read())
+        playbook << None
+        assert playbook
+
+        assert tctx.server.tls_established
+
+        # Echo
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, b"foo")
+            << commands.SendData(tctx.client, b"foo")
+        )
+
