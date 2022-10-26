@@ -2,34 +2,53 @@
 
 ## Unreleased: mitmproxy next
 
-* Add UDP NextLayer detection, update proxy mode syntax.
-  ([#5556])(https://github.com/mitmproxy/mitmproxy/issues/5556), @meitinger)
-* Fix running hook issue and signal proxyserver updates.
+### Major Features
+
+* Add Raw UDP support.
+  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
+* Add WireGuard mode to enable transparent proxying via WireGuard.
+  ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
+* Add DTLS support. 
+  ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Add a quick help bar to mitmproxy.
+  ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
+
+### Deprecations
+
+* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
+  See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
+  See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+
+### Full Changelog
+
+* Mitmproxy binaries now ship with Python 3.11.
+  ([#5678](https://github.com/mitmproxy/mitmproxy/issues/5678), @mhils)
+* One mitmproxy instance can now spawn multiple proxy servers.
+  ([#5393](https://github.com/mitmproxy/mitmproxy/pull/5393), @mhils)
+* Add syntax highlighting to JSON and msgpack content view.
+  ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
+* Add MQTT content view.
+  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
+* Setting `connection_strategy` to `lazy` now also disables early 
+  upstream connections to fetch TLS certificate details.
+  ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
+* Fix order of event hooks on startup.
   ([#5376](https://github.com/mitmproxy/mitmproxy/issues/5376), @meitinger)
 * Include server information in bind/listen errors.
   ([#5495](https://github.com/mitmproxy/mitmproxy/pull/5495), @meitinger)
 * Include information about lazy connection_strategy in related errors.
   ([#5465](https://github.com/mitmproxy/mitmproxy/pull/5465), @meitinger, @mhils)
-* Add UDP layer and flow support.
-  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
-* Setting `connection_strategy` to `lazy` now also disables early 
-  upstream connections to fetch TLS certificate details.
-  ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix `tls_version_server_min` and `tls_version_server_max` options.
   ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
-* Mitmproxy binaries now ship with Python 3.11.
-  ([#5678](https://github.com/mitmproxy/mitmproxy/issues/5678), @mhils)
-* DTLS support ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
-* Added Magisk module generation for Android onboarding (@jorants).
-* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. (@jorants)
-* "Save filtered" button in mitmweb.
+* Added Magisk module generation for Android onboarding.
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants)
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31.
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants)
+* Add "Save filtered" button in mitmweb.
   ([#5531](https://github.com/mitmproxy/mitmproxy/pull/5531), @rnbwdsh, @mhils)
-* DTLS support. 
-  ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
-* Added Magisk module generation for Android onboarding 
-  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
-* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31. 
-  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants).
 * Render application/prpc content as gRPC/Protocol Buffers
   ([#5568](https://github.com/mitmproxy/mitmproxy/pull/5568), @selfisekai)
 * Mitmweb now supports `content_view_lines_cutoff`.
@@ -38,27 +57,14 @@
   ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
 * Add HTTP/3 binary frame content view.
   ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
-* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
-  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
-* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module. 
-  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
-* Add MQTT content view.
-  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
-* Add WireGuard mode to enable userspace transparent proxying via WireGuard.
-  ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
 * Fix mitmweb not properly opening a browser and being stuck on some Linux.
   ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
-* Add a quick help bar displaying common key bindings.
-  ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
-* Add syntax highlighting to JSON and msgpack content view.
-  ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
 * Fix race condition when updating mitmweb WebSocket connections that are closing.
-  ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), @mhils)
+  ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), [#5686](https://github.com/mitmproxy/mitmproxy/issues/5686), @mhils)
 * Fix mitmweb crash when using filters.
   ([#5658](https://github.com/mitmproxy/mitmproxy/issues/5658), [#5661](https://github.com/mitmproxy/mitmproxy/issues/5661), @LIU-shuyi, @mhils)
-* Added Docs for Transparent Mode on Windows.
+* Add docs for transparent mode on Windows.
   ([#5402](https://github.com/mitmproxy/mitmproxy/issues/5402), @stephenspol)
-
 
 ## 28 June 2022: mitmproxy 8.1.1
 
