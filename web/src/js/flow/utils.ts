@@ -154,8 +154,11 @@ export function endTime(flow: Flow): number | undefined {
             }
             return undefined
         case "tcp":
-        case "udp":
             return flow.server_conn?.timestamp_end
+        case "udp":
+            // there is no formal close here and server_conn.timestamp_end usually represents the timeout timestamp,
+            // which is not quite what we want.
+            return flow.messages_meta.timestamp_last
         case "dns":
             return flow.response?.timestamp
     }
