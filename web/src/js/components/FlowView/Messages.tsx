@@ -24,7 +24,16 @@ export default function Messages({flow, messages_meta}: MessagesPropTypes) {
         MessageUtils.getContentURL(flow, "messages", contentView, maxLines + 1),
         flow.id + messages_meta.count
     );
-    const messages = useMemo<ContentViewData[] | undefined>(() => content && JSON.parse(content), [content]) || [];
+    const messages = useMemo<ContentViewData[] | undefined>(() => {
+        if (content) {
+            try {
+                return JSON.parse(content)
+            } catch (e) {
+                const err: ContentViewData = {"description": "Network Error", lines: [[["error", `${content}`]]]};
+                return err;
+            }
+        }
+    }, [content]) || [];
 
     return (
         <div className="contentview">
