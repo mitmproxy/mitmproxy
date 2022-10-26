@@ -151,6 +151,7 @@ class DnsResolver:
             and not flow.error
         )
         if should_resolve:
+            # TODO: We need to handle overly long responses here.
             flow.response = await resolve_message(
                 flow.request, asyncio.get_running_loop()
             )
