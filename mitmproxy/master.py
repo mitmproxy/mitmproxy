@@ -38,7 +38,7 @@ class Master:
         try:
             self.should_exit = asyncio.Event()
         except RuntimeError:  # python 3.9 and below
-            self.should_exit = asyncio.Event(loop=self.event_loop)
+            self.should_exit = asyncio.Event(loop=self.event_loop)  # type: ignore
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = self.log  # deprecated, do not use.
         mitmproxy_ctx.options = self.options
