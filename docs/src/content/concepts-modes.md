@@ -332,4 +332,4 @@ Since the lookup API is limited to turning host names into IP addresses
 and vice-versa, only A, AAAA, PTR and CNAME queries are supported.
 You can, however, use reverse mode to specify an upstream server and
 unlock all query types. For example, to use Google's Public DNS server
-specify `--mode reverse:dns://8.8.8.8@53`.
+specify `--mode reverse:dns://8.8.8.8`.
