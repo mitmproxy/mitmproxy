@@ -1,3 +1,4 @@
+from logging import WARNING
 import ssl
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
@@ -33,18 +34,35 @@ def tctx() -> context.Context:
     )
 
 
-def test_error_code_to_str():
-    assert quic.error_code_to_str(0x6) == "FINAL_SIZE_ERROR"
-    assert quic.error_code_to_str(0x104) == "H3_CLOSED_CRITICAL_STREAM"
-    assert quic.error_code_to_str(0xdead) == f"unknown error (0xdead)"
+class InvalidStreamEvent(quic.QuicStreamEvent):
+    pass
 
 
-def test_is_success_error_code():
-    assert quic.is_success_error_code(0x0)
-    assert not quic.is_success_error_code(0x6)
-    assert quic.is_success_error_code(0x100)
-    assert not quic.is_success_error_code(0x104)
-    assert not quic.is_success_error_code(0xdead)
+class InvalidEvent(events.Event):
+    pass
+
+
+class InvalidConnectionCommand(commands.ConnectionCommand):
+    pass
+
+
+class TlsEchoLayer(tutils.EchoLayer):
+    err: Optional[str] = None
+    closed: Optional[quic.QuicConnectionClosed] = None
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                yield commands.SendData(
+                    event.connection, f"open-connection failed: {err}".encode()
+                )
+        elif isinstance(event, events.DataReceived) and event.data == b"invalid-command":
+            yield InvalidConnectionCommand(event.connection)
+        elif isinstance(event, quic.QuicConnectionClosed):
+            self.closed = event
+        else:
+            yield from super()._handle_event(event)
 
 
 client_hello = bytes.fromhex(
@@ -80,45 +98,18 @@ client_hello = bytes.fromhex(
 )
 
 
-def test_parse_client_hello():
-    assert quic.quic_parse_client_hello(client_hello).sni == "example.com"
-    with pytest.raises(ValueError):
-        quic.quic_parse_client_hello(
-            client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-        )
-    with pytest.raises(ValueError, match="not initial"):
-        quic.quic_parse_client_hello(
-            b'\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~'
-        )
+def test_error_code_to_str():
+    assert quic.error_code_to_str(0x6) == "FINAL_SIZE_ERROR"
+    assert quic.error_code_to_str(0x104) == "H3_CLOSED_CRITICAL_STREAM"
+    assert quic.error_code_to_str(0xdead) == f"unknown error (0xdead)"
 
 
-def test_parse_client_hello_invalid(monkeypatch):
-    class InvalidClientHello(Exception):
-        @property
-        def data(self):
-            raise EOFError()
-
-    monkeypatch.setattr(quic, "QuicClientHello", InvalidClientHello)
-    with pytest.raises(ValueError, match="Invalid ClientHello"):
-        quic.quic_parse_client_hello(client_hello)
-
-
-def test_parse_client_hello_conn_err(monkeypatch):
-    def raise_conn_err(self, data, addr, now):
-        raise quic.QuicConnectionError(0, 0, "Conn err")
-
-    monkeypatch.setattr(QuicConnection, "receive_datagram", raise_conn_err)
-    with pytest.raises(ValueError, match="Conn err"):
-        quic.quic_parse_client_hello(client_hello)
-
-
-def test_parse_client_hello_none(monkeypatch):
-    def do_nothing(self, data, addr, now):
-        pass
-
-    monkeypatch.setattr(QuicConnection, "receive_datagram", do_nothing)
-    with pytest.raises(ValueError, match="No ClientHello"):
-        quic.quic_parse_client_hello(client_hello)
+def test_is_success_error_code():
+    assert quic.is_success_error_code(0x0)
+    assert not quic.is_success_error_code(0x6)
+    assert quic.is_success_error_code(0x100)
+    assert not quic.is_success_error_code(0x104)
+    assert not quic.is_success_error_code(0xdead)
 
 
 @pytest.mark.parametrize("value", ["s1 s2\n", "s1 s2"])
@@ -131,262 +122,264 @@ def test_secrets_logger(value: str):
     logger.assert_called_once_with(None, b"s1 s2")
 
 
-def test_quic_stream_layer_ignored(tctx: context.Context):
-    quic_layer = quic.QuicStreamLayer(tctx, True, 1)
-    assert isinstance(quic_layer.child_layer, layers.TCPLayer)
-    assert not quic_layer.child_layer.flow
-    quic_layer.child_layer.flow = TCPFlow(MagicMock(), MagicMock())
-    quic_layer.refresh_metadata()
-    assert quic_layer.child_layer.flow.metadata["quic_is_unidirectional"] is False
-    assert quic_layer.child_layer.flow.metadata["quic_initiator"] == "server"
-    assert quic_layer.child_layer.flow.metadata["quic_stream_id_client"] == 1
-    assert quic_layer.child_layer.flow.metadata["quic_stream_id_server"] is None
-    assert quic_layer.stream_id(True) == 1
-    assert quic_layer.stream_id(False) is None
+class TestParseClientHello:
+
+    def test_input(self):
+        assert quic.quic_parse_client_hello(client_hello).sni == "example.com"
+        with pytest.raises(ValueError):
+            quic.quic_parse_client_hello(
+                client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            )
+        with pytest.raises(ValueError, match="not initial"):
+            quic.quic_parse_client_hello(
+                b'\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~'
+            )
+
+    def test_invalid(self, monkeypatch):
+        class InvalidClientHello(Exception):
+            @property
+            def data(self):
+                raise EOFError()
+
+        monkeypatch.setattr(quic, "QuicClientHello", InvalidClientHello)
+        with pytest.raises(ValueError, match="Invalid ClientHello"):
+            quic.quic_parse_client_hello(client_hello)
+
+    def test_connection_error(self, monkeypatch):
+        def raise_conn_err(self, data, addr, now):
+            raise quic.QuicConnectionError(0, 0, "Conn err")
+
+        monkeypatch.setattr(QuicConnection, "receive_datagram", raise_conn_err)
+        with pytest.raises(ValueError, match="Conn err"):
+            quic.quic_parse_client_hello(client_hello)
+
+    def test_no_return(self, monkeypatch):
+        def do_nothing(self, data, addr, now):
+            pass
+
+        monkeypatch.setattr(QuicConnection, "receive_datagram", do_nothing)
+        with pytest.raises(ValueError, match="No ClientHello"):
+            quic.quic_parse_client_hello(client_hello)
 
 
-def test_quic_stream_layer(tctx: context.Context):
-    quic_layer = quic.QuicStreamLayer(tctx, False, 2)
-    assert isinstance(quic_layer.child_layer, layer.NextLayer)
-    tunnel_layer = tunnel.TunnelLayer(tctx, MagicMock(), MagicMock())
-    quic_layer.child_layer.layer = tunnel_layer
-    tcp_layer = layers.TCPLayer(tctx)
-    tunnel_layer.child_layer = tcp_layer
-    quic_layer.open_server_stream(3)
-    assert tcp_layer.flow.metadata["quic_is_unidirectional"] is True
-    assert tcp_layer.flow.metadata["quic_initiator"] == "client"
-    assert tcp_layer.flow.metadata["quic_stream_id_client"] == 2
-    assert tcp_layer.flow.metadata["quic_stream_id_server"] == 3
-    assert quic_layer.stream_id(True) == 2
-    assert quic_layer.stream_id(False) == 3
+class TestQuicStreamLayer:
+    def test_ignored(self, tctx: context.Context):
+        quic_layer = quic.QuicStreamLayer(tctx, True, 1)
+        assert isinstance(quic_layer.child_layer, layers.TCPLayer)
+        assert not quic_layer.child_layer.flow
+        quic_layer.child_layer.flow = TCPFlow(MagicMock(), MagicMock())
+        quic_layer.refresh_metadata()
+        assert quic_layer.child_layer.flow.metadata["quic_is_unidirectional"] is False
+        assert quic_layer.child_layer.flow.metadata["quic_initiator"] == "server"
+        assert quic_layer.child_layer.flow.metadata["quic_stream_id_client"] == 1
+        assert quic_layer.child_layer.flow.metadata["quic_stream_id_server"] is None
+        assert quic_layer.stream_id(True) == 1
+        assert quic_layer.stream_id(False) is None
+
+    def test_simple(self, tctx: context.Context):
+        quic_layer = quic.QuicStreamLayer(tctx, False, 2)
+        assert isinstance(quic_layer.child_layer, layer.NextLayer)
+        tunnel_layer = tunnel.TunnelLayer(tctx, MagicMock(), MagicMock())
+        quic_layer.child_layer.layer = tunnel_layer
+        tcp_layer = layers.TCPLayer(tctx)
+        tunnel_layer.child_layer = tcp_layer
+        quic_layer.open_server_stream(3)
+        assert tcp_layer.flow.metadata["quic_is_unidirectional"] is True
+        assert tcp_layer.flow.metadata["quic_initiator"] == "client"
+        assert tcp_layer.flow.metadata["quic_stream_id_client"] == 2
+        assert tcp_layer.flow.metadata["quic_stream_id_server"] == 3
+        assert quic_layer.stream_id(True) == 2
+        assert quic_layer.stream_id(False) == 3
 
 
-@pytest.mark.parametrize("ignore", [True, False])
-def test_raw_quic_layer_error(tctx: context.Context, ignore: bool):
-    quic_layer = quic.RawQuicLayer(tctx, ignore=ignore)
-    assert (
-        tutils.Playbook(quic_layer)
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply("failed to open")
-        << commands.CloseConnection(tctx.client)
-    )
-    assert quic_layer._handle_event == quic_layer.done
+class TestRawQuicLayer:
+    @pytest.mark.parametrize("ignore", [True, False])
+    def test_error(self, tctx: context.Context, ignore: bool):
+        quic_layer = quic.RawQuicLayer(tctx, ignore=ignore)
+        assert (
+            tutils.Playbook(quic_layer)
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply("failed to open")
+            << commands.CloseConnection(tctx.client)
+        )
+        assert quic_layer._handle_event == quic_layer.done
 
+    def test_ignored(self, tctx: context.Context):
+        quic_layer = quic.RawQuicLayer(tctx, ignore=True)
+        assert (
+            tutils.Playbook(quic_layer)
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> events.DataReceived(tctx.client, b"msg1")
+            << commands.SendData(tctx.server, b"msg1")
+            >> events.DataReceived(tctx.server, b"msg2")
+            << commands.SendData(tctx.client, b"msg2")
+            >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg3", end_stream=False)
+            << quic.SendQuicStreamData(tctx.server, 0, b"msg3", end_stream=False)
+            >> quic.QuicStreamDataReceived(tctx.client, 6, b"msg4", end_stream=False)
+            << quic.SendQuicStreamData(tctx.server, 2, b"msg4", end_stream=False)
+            >> quic.QuicStreamDataReceived(tctx.server, 9, b"msg5", end_stream=False)
+            << quic.SendQuicStreamData(tctx.client, 1, b"msg5", end_stream=False)
+            >> quic.QuicStreamDataReceived(tctx.client, 0, b"", end_stream=True)
+            << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+            >> quic.QuicStreamReset(tctx.client, 6, 142)
+            << quic.ResetQuicStream(tctx.server, 2, 142)
+            >> quic.QuicConnectionClosed(tctx.client, 42, None, "closed")
+            << quic.CloseQuicConnection(tctx.server, 42, None, "closed")
+            >> quic.QuicConnectionClosed(tctx.server, 42, None, "closed")
+            << None
+        )
+        assert quic_layer._handle_event == quic_layer.done
 
-def test_raw_quic_layer_ignored(tctx: context.Context):
-    quic_layer = quic.RawQuicLayer(tctx, ignore=True)
-    assert (
-        tutils.Playbook(quic_layer)
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> events.DataReceived(tctx.client, b"msg1")
-        << commands.SendData(tctx.server, b"msg1")
-        >> events.DataReceived(tctx.server, b"msg2")
-        << commands.SendData(tctx.client, b"msg2")
-        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg3", end_stream=False)
-        << quic.SendQuicStreamData(tctx.server, 0, b"msg3", end_stream=False)
-        >> quic.QuicStreamDataReceived(tctx.client, 6, b"msg4", end_stream=False)
-        << quic.SendQuicStreamData(tctx.server, 2, b"msg4", end_stream=False)
-        >> quic.QuicStreamDataReceived(tctx.server, 9, b"msg5", end_stream=False)
-        << quic.SendQuicStreamData(tctx.client, 1, b"msg5", end_stream=False)
-        >> quic.QuicStreamDataReceived(tctx.client, 0, b"", end_stream=True)
-        << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
-        >> quic.QuicStreamReset(tctx.client, 6, 142)
-        << quic.ResetQuicStream(tctx.server, 2, 142)
-        >> quic.QuicConnectionClosed(tctx.client, 42, None, "closed")
-        << quic.CloseQuicConnection(tctx.server, 42, None, "closed")
-        >> quic.QuicConnectionClosed(tctx.server, 42, None, "closed")
-        << None
-    )
-    assert quic_layer._handle_event == quic_layer.done
+    def test_msg_inject(self, tctx: context.Context):
+        udpflow = tutils.Placeholder(UDPFlow)
+        playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+        assert (
+            playbook
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> events.DataReceived(tctx.client, b"msg1")
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(udp.UDPLayer)
+            << udp.UdpStartHook(udpflow)
+            >> tutils.reply()
+            << udp.UdpMessageHook(udpflow)
+            >> tutils.reply()
+            << commands.SendData(tctx.server, b"msg1")
+            >> udp.UdpMessageInjected(udpflow, UDPMessage(True, b"msg2"))
+            << udp.UdpMessageHook(udpflow)
+            >> tutils.reply()
+            << commands.SendData(tctx.server, b"msg2")
+            >> udp.UdpMessageInjected(UDPFlow(("other", 80), tctx.server), UDPMessage(True, b"msg3"))
+            << udp.UdpMessageHook(udpflow)
+            >> tutils.reply()
+            << commands.SendData(tctx.server, b"msg3")
+        )
+        with pytest.raises(AssertionError, match="not associated"):
+            playbook >> udp.UdpMessageInjected(UDPFlow(("notfound", 0), ("noexist", 0)), UDPMessage(True, b"msg2"))
+            assert playbook
 
+    def test_reset_with_end_hook(self, tctx: context.Context):
+        tcpflow = tutils.Placeholder(TCPFlow)
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg1", end_stream=False)
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(tcp.TCPLayer)
+            << tcp.TcpStartHook(tcpflow)
+            >> tutils.reply()
+            << tcp.TcpMessageHook(tcpflow)
+            >> tutils.reply()
+            << quic.SendQuicStreamData(tctx.server, 2, b"msg1", end_stream=False)
+            >> quic.QuicStreamReset(tctx.client, 2, 42)
+            << quic.ResetQuicStream(tctx.server, 2, 42)
+            << tcp.TcpEndHook(tcpflow)
+            >> tutils.reply()
+        )
 
-def test_raw_quic_layer_msg_inject(tctx: context.Context):
-    udpflow = tutils.Placeholder(UDPFlow)
-    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
-    assert (
-        playbook
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> events.DataReceived(tctx.client, b"msg1")
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(udp.UDPLayer)
-        << udp.UdpStartHook(udpflow)
-        >> tutils.reply()
-        << udp.UdpMessageHook(udpflow)
-        >> tutils.reply()
-        << commands.SendData(tctx.server, b"msg1")
-        >> udp.UdpMessageInjected(udpflow, UDPMessage(True, b"msg2"))
-        << udp.UdpMessageHook(udpflow)
-        >> tutils.reply()
-        << commands.SendData(tctx.server, b"msg2")
-        >> udp.UdpMessageInjected(UDPFlow(("other", 80), tctx.server), UDPMessage(True, b"msg3"))
-        << udp.UdpMessageHook(udpflow)
-        >> tutils.reply()
-        << commands.SendData(tctx.server, b"msg3")
-    )
-    with pytest.raises(AssertionError, match="not associated"):
-        playbook >> udp.UdpMessageInjected(UDPFlow(("notfound", 0), ("noexist", 0)), UDPMessage(True, b"msg2"))
-        assert playbook
+    def test_close_with_end_hooks(self, tctx: context.Context):
+        udpflow = tutils.Placeholder(UDPFlow)
+        tcpflow = tutils.Placeholder(TCPFlow)
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> events.DataReceived(tctx.client, b"msg1")
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(udp.UDPLayer)
+            << udp.UdpStartHook(udpflow)
+            >> tutils.reply()
+            << udp.UdpMessageHook(udpflow)
+            >> tutils.reply()
+            << commands.SendData(tctx.server, b"msg1")
+            >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg2", end_stream=False)
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(tcp.TCPLayer)
+            << tcp.TcpStartHook(tcpflow)
+            >> tutils.reply()
+            << tcp.TcpMessageHook(tcpflow)
+            >> tutils.reply()
+            << quic.SendQuicStreamData(tctx.server, 2, b"msg2", end_stream=False)
+            >> quic.QuicConnectionClosed(tctx.client, 42, None, "bye")
+            << quic.CloseQuicConnection(tctx.server, 42, None, "bye")
+            << tcp.TcpEndHook(tcpflow)
+            >> tutils.reply()
+            >> quic.QuicConnectionClosed(tctx.server, 42, None, "bye")
+            << udp.UdpEndHook(udpflow)
+            >> tutils.reply()
+        )
 
+    def test_invalid_stream_event(self, tctx: context.Context):
+        playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+        )
+        with pytest.raises(AssertionError, match="Unexpected stream event"):
+            playbook >> InvalidStreamEvent(tctx.client, 0)
+            assert playbook
 
-def test_raw_quic_layer_reset_with_end_hook(tctx: context.Context):
-    tcpflow = tutils.Placeholder(TCPFlow)
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg1", end_stream=False)
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(tcp.TCPLayer)
-        << tcp.TcpStartHook(tcpflow)
-        >> tutils.reply()
-        << tcp.TcpMessageHook(tcpflow)
-        >> tutils.reply()
-        << quic.SendQuicStreamData(tctx.server, 2, b"msg1", end_stream=False)
-        >> quic.QuicStreamReset(tctx.client, 2, 42)
-        << quic.ResetQuicStream(tctx.server, 2, 42)
-        << tcp.TcpEndHook(tcpflow)
-        >> tutils.reply()
-    )
+    def test_invalid_event(self, tctx: context.Context):
+        playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+        )
+        with pytest.raises(AssertionError, match="Unexpected event"):
+            playbook >> InvalidEvent()
+            assert playbook
 
+    def test_full_close(self, tctx: context.Context):
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=True)
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(lambda ctx: udp.UDPLayer(ctx, ignore=True))
+            << quic.SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
+            << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+            << quic.StopQuicStream(tctx.server, 0, 0)
+        )
 
-def test_raw_quic_layer_close_with_end_hooks(tctx: context.Context):
-    udpflow = tutils.Placeholder(UDPFlow)
-    tcpflow = tutils.Placeholder(TCPFlow)
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> events.DataReceived(tctx.client, b"msg1")
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(udp.UDPLayer)
-        << udp.UdpStartHook(udpflow)
-        >> tutils.reply()
-        << udp.UdpMessageHook(udpflow)
-        >> tutils.reply()
-        << commands.SendData(tctx.server, b"msg1")
-        >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg2", end_stream=False)
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(tcp.TCPLayer)
-        << tcp.TcpStartHook(tcpflow)
-        >> tutils.reply()
-        << tcp.TcpMessageHook(tcpflow)
-        >> tutils.reply()
-        << quic.SendQuicStreamData(tctx.server, 2, b"msg2", end_stream=False)
-        >> quic.QuicConnectionClosed(tctx.client, 42, None, "bye")
-        << quic.CloseQuicConnection(tctx.server, 42, None, "bye")
-        << tcp.TcpEndHook(tcpflow)
-        >> tutils.reply()
-        >> quic.QuicConnectionClosed(tctx.server, 42, None, "bye")
-        << udp.UdpEndHook(udpflow)
-        >> tutils.reply()
-    )
+    def test_open_connection(self, tctx: context.Context):
+        server = connection.Server(("other", 80))
 
+        def echo_new_server(ctx: context.Context):
+            echo_layer = TlsEchoLayer(ctx)
+            echo_layer.context.server = server
+            return echo_layer
 
-class InvalidStreamEvent(quic.QuicStreamEvent):
-    pass
+        assert (
+            tutils.Playbook(quic.RawQuicLayer(tctx))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> quic.QuicStreamDataReceived(tctx.client, 0, b"open-connection", end_stream=False)
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(echo_new_server)
+            << commands.OpenConnection(server)
+            >> tutils.reply("uhoh")
+            << quic.SendQuicStreamData(tctx.client, 0, b"open-connection failed: uhoh", end_stream=False)
+        )
 
-
-def test_raw_quic_layer_invalid_stream_event(tctx: context.Context):
-    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-    )
-    with pytest.raises(AssertionError, match="Unexpected stream event"):
-        playbook >> InvalidStreamEvent(tctx.client, 0)
-        assert playbook
-
-
-class InvalidEvent(events.Event):
-    pass
-
-
-def test_raw_quic_layer_invalid_event(tctx: context.Context):
-    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-    )
-    with pytest.raises(AssertionError, match="Unexpected event"):
-        playbook >> InvalidEvent()
-        assert playbook
-
-
-def test_raw_quic_layer_full_close(tctx: context.Context):
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=True)
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(lambda ctx: udp.UDPLayer(ctx, ignore=True))
-        << quic.SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
-        << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
-        << quic.StopQuicStream(tctx.server, 0, 0)
-    )
-
-
-class InvalidConnectionCommand(commands.ConnectionCommand):
-    pass
-
-
-class TlsEchoLayer(tutils.EchoLayer):
-    err: Optional[str] = None
-    closed: Optional[quic.QuicConnectionClosed] = None
-
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
-            err = yield commands.OpenConnection(self.context.server)
-            if err:
-                yield commands.SendData(
-                    event.connection, f"open-connection failed: {err}".encode()
-                )
-        elif isinstance(event, events.DataReceived) and event.data == b"invalid-command":
-            yield InvalidConnectionCommand(event.connection)
-        elif isinstance(event, quic.QuicConnectionClosed):
-            self.closed = event
-        else:
-            yield from super()._handle_event(event)
-
-
-def test_raw_quic_layer_open_connection(tctx: context.Context):
-    server = connection.Server(("other", 80))
-
-    def echo_new_server(ctx: context.Context):
-        echo_layer = TlsEchoLayer(ctx)
-        echo_layer.context.server = server
-        return echo_layer
-
-    assert (
-        tutils.Playbook(quic.RawQuicLayer(tctx))
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> quic.QuicStreamDataReceived(tctx.client, 0, b"open-connection", end_stream=False)
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(echo_new_server)
-        << commands.OpenConnection(server)
-        >> tutils.reply(None)
-    )
-
-
-def test_raw_quic_layer_invalid_connection_command(tctx: context.Context):
-    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
-    assert (
-        playbook
-        << commands.OpenConnection(tctx.server)
-        >> tutils.reply(None)
-        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=False)
-        << layer.NextLayerHook(tutils.Placeholder())
-        >> tutils.reply_next_layer(TlsEchoLayer)
-        << quic.SendQuicStreamData(tctx.client, 0, b"msg1", end_stream=False)
-    )
-    with pytest.raises(AssertionError, match="Unexpected stream connection command"):
-        playbook >> quic.QuicStreamDataReceived(tctx.client, 0, b"invalid-command", end_stream=False)
-        assert playbook
+    def test_invalid_connection_command(self, tctx: context.Context):
+        playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+        assert (
+            playbook
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=False)
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(TlsEchoLayer)
+            << quic.SendQuicStreamData(tctx.client, 0, b"msg1", end_stream=False)
+        )
+        with pytest.raises(AssertionError, match="Unexpected stream connection command"):
+            playbook >> quic.QuicStreamDataReceived(tctx.client, 0, b"invalid-command", end_stream=False)
+            assert playbook
 
 
 class SSLTest:
@@ -396,7 +389,7 @@ class SSLTest:
         self,
         server_side: bool = False,
         alpn: Optional[list[str]] = None,
-        sni: Optional[bytes] = b"example.mitmproxy.org",
+        sni: Optional[str] = "example.mitmproxy.org",
     ):
         self.ctx = QuicConfiguration(
             is_client=not server_side,
@@ -411,7 +404,7 @@ class SSLTest:
         if alpn:
             self.ctx.alpn_protocols = alpn
         if server_side:
-            if sni == b"192.0.2.42":
+            if sni == "192.0.2.42":
                 filename = "trusted-leaf-ip"
             else:
                 filename = "trusted-leaf"
@@ -427,6 +420,7 @@ class SSLTest:
         self.ctx.server_name = None if server_side else sni
 
         self.now = 0.0
+        self.address = (sni, 443)
         self.quic = None if server_side else QuicConnection(configuration=self.ctx)
 
     def write(self, buf: bytes) -> int:
@@ -438,14 +432,14 @@ class SSLTest:
                 configuration=self.ctx,
                 original_destination_connection_id=header.destination_cid,
             )
-        self.quic.receive_datagram(buf, ("0.0.0.0", 0), self.now)
+        self.quic.receive_datagram(buf, self.address, self.now)
 
     def read(self) -> bytes:
         self.now = self.now + 0.1
         buf = b""
         has_data = False
         for datagram, addr in self.quic.datagrams_to_send(self.now):
-            assert addr == ("0.0.0.0", 0)
+            assert addr == self.address
             buf += datagram
             has_data = True
         if not has_data:
@@ -514,14 +508,32 @@ def finish_handshake(
     return result
 
 
+def reply_tls_start_client(*args, **kwargs) -> tutils.reply:
+    """
+    Helper function to simplify the syntax for quic_start_client hooks.
+    """
+
+    def make_client_conn(tls_start: quic.QuicTlsData) -> None:
+        config = QuicConfiguration()
+        config.load_cert_chain(
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt"),
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key"),
+        )
+        tls_start.settings = quic.QuicTlsSettings(
+            certificate = config.certificate,
+            certificate_chain = config.certificate_chain,
+            certificate_private_key = config.private_key,
+        )
+
+    return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
+
+
 def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for quic_start_server hooks.
     """
 
     def make_server_conn(tls_start: quic.QuicTlsData) -> None:
-        # ssl_context = SSL.Context(Method.TLS_METHOD)
-        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
         tls_start.settings = quic.QuicTlsSettings(
             ca_file=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
             verify_mode=ssl.CERT_REQUIRED,
@@ -599,3 +611,124 @@ class TestServerTLS:
         assert echo.closed
         assert echo.closed.error_code == 42
         assert echo.closed.reason_phrase == "goodbye from simple"
+
+    def test_untrusted_cert(self, tctx: context.Context):
+        """If the certificate is not trusted, we should fail."""
+        tssl = SSLTest(server_side=True)
+
+        playbook = tutils.Playbook(quic.ServerQuicLayer(tctx, time=lambda: tssl.now))
+        tctx.server.address = ("wrong.host.mitmproxy.org", 443)
+        tctx.server.sni = "wrong.host.mitmproxy.org"
+
+        # send ClientHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(TlsEchoLayer)
+            >> events.DataReceived(tctx.client, b"open-connection")
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            << quic.QuicStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server()
+            << commands.SendData(tctx.server, data)
+            << commands.RequestWakeup(0.2)
+        )
+
+        # receive ServerHello, finish client handshake
+        tssl.write(data())
+        assert not tssl.handshake_completed()
+
+        # exchange termination data
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, tssl.read())
+            << commands.SendData(tctx.server, data)
+        )
+        tssl.write(data())
+        tssl.now = tssl.now + 60
+
+        tls_hook_data = tutils.Placeholder(quic.QuicTlsData)
+        assert (
+            playbook
+            >> events.Wakeup(playbook.actual[9])
+            << commands.Log(
+                "Server QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match 'example.mitmproxy.org'",
+                WARNING
+            )
+            << tls.TlsFailedServerHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.server)
+            << commands.SendData(
+                tctx.client,
+                b"open-connection failed: hostname 'wrong.host.mitmproxy.org' doesn't match 'example.mitmproxy.org'",
+            )
+        )
+        assert (
+            tls_hook_data().conn.error == "hostname 'wrong.host.mitmproxy.org' doesn't match 'example.mitmproxy.org'"
+        )
+        assert not tctx.server.tls_established
+
+
+def make_client_tls_layer(
+    tctx: context.Context, **kwargs
+) -> tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
+    tssl_client = SSLTest(alpn=quic.H3_ALPN, **kwargs)
+    tssl_client.quic.connect(("example.mitmproxy.org", 443), 0)
+
+    # This is a bit contrived as the client layer expects a server layer as parent.
+    # We also set child layers manually to avoid NextLayer noise.
+    server_layer = quic.ServerQuicLayer(tctx, time=lambda: tssl_client.now)
+    client_layer = quic.ClientQuicLayer(tctx, time=lambda: tssl_client.now)
+    server_layer.child_layer = client_layer
+    playbook = tutils.Playbook(server_layer)
+
+    # Add some server config, this is needed anyways.
+    tctx.server.__dict__["address"] = (
+        "example.mitmproxy.org",
+        443,
+    )  # .address fails because connection is open
+    tctx.server.sni = "example.mitmproxy.org"
+
+    # Start handshake.
+    assert not tssl_client.handshake_completed()
+
+    return playbook, client_layer, tssl_client
+
+
+class TestClientTLS:
+    def test_client_only(self, tctx: context.Context):
+        """Test TLS with client only"""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        client_layer.debug = "  "
+        assert not tctx.client.tls_established
+
+        # Send ClientHello, receive ServerHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << quic.QuicStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+        )
+        tssl_client.write(data())
+        assert tssl_client.handshake_completed()
+        # Finish Handshake
+        finish_handshake(playbook, tctx.client, tssl_client, TlsEchoLayer)
+
+        assert tssl_client.quic.tls._peer_certificate
+        assert tctx.client.tls_established
+
+        # Echo
+        _test_echo(playbook, tssl_client, tctx.client)
+        other_server = connection.Server(None)
+        assert (
+            playbook
+            >> events.DataReceived(other_server, b"Plaintext")
+            << commands.SendData(other_server, b"plaintext")
+        )
