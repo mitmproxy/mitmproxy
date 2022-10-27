@@ -24,6 +24,7 @@
 
 ### Full Changelog
 
+* Fix missing default port when starting a browser. (@rbdixon)
 * Mitmproxy binaries now ship with Python 3.11.
   ([#5678](https://github.com/mitmproxy/mitmproxy/issues/5678), @mhils)
 * One mitmproxy instance can now spawn multiple proxy servers.
