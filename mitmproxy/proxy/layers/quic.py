@@ -276,7 +276,7 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
 
     # ensure the first packet is indeed the initial one
     buffer = QuicBuffer(data=data)
-    header = pull_quic_header(buffer)
+    header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
         raise ValueError("Packet is not initial one.")
 
@@ -545,11 +545,17 @@ class RawQuicLayer(layer.Layer):
                 if event.end_stream:
                     yield from self.close_stream_layer(stream_layer, from_client)
             elif isinstance(event, QuicStreamReset):
-                if self.debug is not None:
-                    yield commands.Log(
-                        f"{self.debug}[quic] stream_reset (stream_id={event.stream_id}, error_code={event.error_code})", DEBUG
-                    )
-                yield from self.close_stream_layer(stream_layer, from_client)
+                # preserve stream resets
+                for command in self.close_stream_layer(stream_layer, from_client):
+                    if (
+                        isinstance(command, SendQuicStreamData)
+                        and command.stream_id == stream_layer.stream_id(not from_client)
+                        and command.end_stream
+                        and not command.data
+                    ):
+                        yield ResetQuicStream(command.connection, command.stream_id, event.error_code)
+                    else:
+                        yield command
             else:
                 raise AssertionError(f"Unexpected stream event: {event!r}")
 
@@ -565,7 +571,9 @@ class RawQuicLayer(layer.Layer):
             other_conn = self.context.server if from_client else self.context.client
 
             # be done if both connections are closed
-            if not other_conn.connected:
+            if other_conn.connected:
+                yield CloseQuicConnection(other_conn, event.error_code, event.frame_type, event.reason_phrase)
+            else:
                 self._handle_event = self.done
 
             # always forward to the datagram layer and swallow `CloseConnection` commands
@@ -589,10 +597,6 @@ class RawQuicLayer(layer.Layer):
                             or command.data
                         ):
                             yield command
-
-            # forward the close event
-            if other_conn.connected:
-                yield CloseQuicConnection(other_conn, event.error_code, event.frame_type, event.reason_phrase)
 
         # all other connection events are routed to their corresponding layer
         elif isinstance(event, events.ConnectionEvent):
@@ -887,8 +891,8 @@ class QuicLayer(tunnel.TunnelLayer):
                     )
                 # We don't rely on `ConnectionTerminated` to dispatch `QuicConnectionClosed`, because
                 # after aioquic receives a termination frame, it still waits for the next `handle_timer`
-                # before returning `ConnectionTerminated in `next_event`. In the meantime, the underlying
-                # connection could be closed. Therefore, we dispatch when `ConnectionClosed` and simply
+                # before returning `ConnectionTerminated` in `next_event`. In the meantime, the underlying
+                # connection could be closed. Therefore, we instead dispatch on `ConnectionClosed` and simply
                 # close the connection here.
                 yield commands.CloseConnection(self.tunnel_connection)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit

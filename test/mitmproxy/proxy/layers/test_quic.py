@@ -10,7 +10,8 @@ from mitmproxy import connection, options
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy import commands, context, events, layer, tunnel
 from mitmproxy.proxy import layers
-from mitmproxy.proxy.layers import quic, tls
+from mitmproxy.proxy.layers import quic, tcp, tls, udp
+from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
 
@@ -85,6 +86,39 @@ def test_parse_client_hello():
         quic.quic_parse_client_hello(
             client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
+    with pytest.raises(ValueError, match="not initial"):
+        quic.quic_parse_client_hello(
+            b'\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~'
+        )
+
+
+def test_parse_client_hello_invalid(monkeypatch):
+    class InvalidClientHello(Exception):
+        @property
+        def data(self):
+            raise EOFError()
+
+    monkeypatch.setattr(quic, "QuicClientHello", InvalidClientHello)
+    with pytest.raises(ValueError, match="Invalid ClientHello"):
+        quic.quic_parse_client_hello(client_hello)
+
+
+def test_parse_client_hello_conn_err(monkeypatch):
+    def raise_conn_err(self, data, addr, now):
+        raise quic.QuicConnectionError(0, 0, "Conn err")
+
+    monkeypatch.setattr(QuicConnection, "receive_datagram", raise_conn_err)
+    with pytest.raises(ValueError, match="Conn err"):
+        quic.quic_parse_client_hello(client_hello)
+
+
+def test_parse_client_hello_none(monkeypatch):
+    def do_nothing(self, data, addr, now):
+        pass
+
+    monkeypatch.setattr(QuicConnection, "receive_datagram", do_nothing)
+    with pytest.raises(ValueError, match="No ClientHello"):
+        quic.quic_parse_client_hello(client_hello)
 
 
 @pytest.mark.parametrize("value", ["s1 s2\n", "s1 s2"])
@@ -157,12 +191,202 @@ def test_raw_quic_layer_ignored(tctx: context.Context):
         << quic.SendQuicStreamData(tctx.client, 1, b"msg5", end_stream=False)
         >> quic.QuicStreamDataReceived(tctx.client, 0, b"", end_stream=True)
         << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+        >> quic.QuicStreamReset(tctx.client, 6, 142)
+        << quic.ResetQuicStream(tctx.server, 2, 142)
         >> quic.QuicConnectionClosed(tctx.client, 42, None, "closed")
         << quic.CloseQuicConnection(tctx.server, 42, None, "closed")
         >> quic.QuicConnectionClosed(tctx.server, 42, None, "closed")
         << None
     )
     assert quic_layer._handle_event == quic_layer.done
+
+
+def test_raw_quic_layer_msg_inject(tctx: context.Context):
+    udpflow = tutils.Placeholder(UDPFlow)
+    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+    assert (
+        playbook
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> events.DataReceived(tctx.client, b"msg1")
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(udp.UDPLayer)
+        << udp.UdpStartHook(udpflow)
+        >> tutils.reply()
+        << udp.UdpMessageHook(udpflow)
+        >> tutils.reply()
+        << commands.SendData(tctx.server, b"msg1")
+        >> udp.UdpMessageInjected(udpflow, UDPMessage(True, b"msg2"))
+        << udp.UdpMessageHook(udpflow)
+        >> tutils.reply()
+        << commands.SendData(tctx.server, b"msg2")
+        >> udp.UdpMessageInjected(UDPFlow(("other", 80), tctx.server), UDPMessage(True, b"msg3"))
+        << udp.UdpMessageHook(udpflow)
+        >> tutils.reply()
+        << commands.SendData(tctx.server, b"msg3")
+    )
+    with pytest.raises(AssertionError, match="not associated"):
+        playbook >> udp.UdpMessageInjected(UDPFlow(("notfound", 0), ("noexist", 0)), UDPMessage(True, b"msg2"))
+        assert playbook
+
+
+def test_raw_quic_layer_reset_with_end_hook(tctx: context.Context):
+    tcpflow = tutils.Placeholder(TCPFlow)
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg1", end_stream=False)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(tcp.TCPLayer)
+        << tcp.TcpStartHook(tcpflow)
+        >> tutils.reply()
+        << tcp.TcpMessageHook(tcpflow)
+        >> tutils.reply()
+        << quic.SendQuicStreamData(tctx.server, 2, b"msg1", end_stream=False)
+        >> quic.QuicStreamReset(tctx.client, 2, 42)
+        << quic.ResetQuicStream(tctx.server, 2, 42)
+        << tcp.TcpEndHook(tcpflow)
+        >> tutils.reply()
+    )
+
+
+def test_raw_quic_layer_close_with_end_hooks(tctx: context.Context):
+    udpflow = tutils.Placeholder(UDPFlow)
+    tcpflow = tutils.Placeholder(TCPFlow)
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> events.DataReceived(tctx.client, b"msg1")
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(udp.UDPLayer)
+        << udp.UdpStartHook(udpflow)
+        >> tutils.reply()
+        << udp.UdpMessageHook(udpflow)
+        >> tutils.reply()
+        << commands.SendData(tctx.server, b"msg1")
+        >> quic.QuicStreamDataReceived(tctx.client, 2, b"msg2", end_stream=False)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(tcp.TCPLayer)
+        << tcp.TcpStartHook(tcpflow)
+        >> tutils.reply()
+        << tcp.TcpMessageHook(tcpflow)
+        >> tutils.reply()
+        << quic.SendQuicStreamData(tctx.server, 2, b"msg2", end_stream=False)
+        >> quic.QuicConnectionClosed(tctx.client, 42, None, "bye")
+        << quic.CloseQuicConnection(tctx.server, 42, None, "bye")
+        << tcp.TcpEndHook(tcpflow)
+        >> tutils.reply()
+        >> quic.QuicConnectionClosed(tctx.server, 42, None, "bye")
+        << udp.UdpEndHook(udpflow)
+        >> tutils.reply()
+    )
+
+
+class InvalidStreamEvent(quic.QuicStreamEvent):
+    pass
+
+
+def test_raw_quic_layer_invalid_stream_event(tctx: context.Context):
+    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+    )
+    with pytest.raises(AssertionError, match="Unexpected stream event"):
+        playbook >> InvalidStreamEvent(tctx.client, 0)
+        assert playbook
+
+
+class InvalidEvent(events.Event):
+    pass
+
+
+def test_raw_quic_layer_invalid_event(tctx: context.Context):
+    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+    )
+    with pytest.raises(AssertionError, match="Unexpected event"):
+        playbook >> InvalidEvent()
+        assert playbook
+
+
+def test_raw_quic_layer_full_close(tctx: context.Context):
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=True)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(lambda ctx: udp.UDPLayer(ctx, ignore=True))
+        << quic.SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
+        << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+        << quic.StopQuicStream(tctx.server, 0, 0)
+    )
+
+
+class InvalidConnectionCommand(commands.ConnectionCommand):
+    pass
+
+
+class TlsEchoLayer(tutils.EchoLayer):
+    err: Optional[str] = None
+    closed: Optional[quic.QuicConnectionClosed] = None
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                yield commands.SendData(
+                    event.connection, f"open-connection failed: {err}".encode()
+                )
+        elif isinstance(event, events.DataReceived) and event.data == b"invalid-command":
+            yield InvalidConnectionCommand(event.connection)
+        elif isinstance(event, quic.QuicConnectionClosed):
+            self.closed = event
+        else:
+            yield from super()._handle_event(event)
+
+
+def test_raw_quic_layer_open_connection(tctx: context.Context):
+    server = connection.Server(("other", 80))
+
+    def echo_new_server(ctx: context.Context):
+        echo_layer = TlsEchoLayer(ctx)
+        echo_layer.context.server = server
+        return echo_layer
+
+    assert (
+        tutils.Playbook(quic.RawQuicLayer(tctx))
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> quic.QuicStreamDataReceived(tctx.client, 0, b"open-connection", end_stream=False)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(echo_new_server)
+        << commands.OpenConnection(server)
+        >> tutils.reply(None)
+    )
+
+
+def test_raw_quic_layer_invalid_connection_command(tctx: context.Context):
+    playbook = tutils.Playbook(quic.RawQuicLayer(tctx))
+    assert (
+        playbook
+        << commands.OpenConnection(tctx.server)
+        >> tutils.reply(None)
+        >> quic.QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=False)
+        << layer.NextLayerHook(tutils.Placeholder())
+        >> tutils.reply_next_layer(TlsEchoLayer)
+        << quic.SendQuicStreamData(tctx.client, 0, b"msg1", end_stream=False)
+    )
+    with pytest.raises(AssertionError, match="Unexpected stream connection command"):
+        playbook >> quic.QuicStreamDataReceived(tctx.client, 0, b"invalid-command", end_stream=False)
+        assert playbook
 
 
 class SSLTest:
@@ -253,23 +477,6 @@ def _test_echo(
             break
     else:
         raise AssertionError()
-
-
-class TlsEchoLayer(tutils.EchoLayer):
-    err: Optional[str] = None
-    closed: Optional[quic.QuicConnectionClosed] = None
-
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
-            err = yield commands.OpenConnection(self.context.server)
-            if err:
-                yield commands.SendData(
-                    event.connection, f"open-connection failed: {err}".encode()
-                )
-        elif isinstance(event, quic.QuicConnectionClosed):
-            self.closed = event
-        else:
-            yield from super()._handle_event(event)
 
 
 def finish_handshake(
