@@ -98,8 +98,11 @@ if __name__ == "__main__":
                     "--title", f"mitmproxy {version}",
                     "--notes-file", "release/github-release-notes.txt"], cwd=root, check=True)
 
-    print("➡️ Dispatching release workflow...")
-    subprocess.run(["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True)
+    # We currently have to use a personal access token, which auto-triggers CI.
+    # The default GITHUB_TOKEN cannot push to protected branches,
+    # see https://github.com/community/community/discussions/13836.
+    # print("➡️ Dispatching release workflow...")
+    # subprocess.run(["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True)
 
     print("")
     print("✅ CI is running now. Make sure to approve the deploy step: https://github.com/mitmproxy/mitmproxy/actions")
