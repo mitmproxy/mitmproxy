@@ -8,6 +8,10 @@ on:
         required: true
         type: string
 
+permissions:
+  actions: write
+  contents: write
+
 jobs:
   # this job is just here as a fail-safe to make sure that the invoking user has the necessary permissions
   # before we start the release process. This way we hopefully don't have to clean up incomplete release processes.
