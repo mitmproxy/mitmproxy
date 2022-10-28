@@ -2,6 +2,7 @@
 import datetime
 import http.client
 import json
+import os
 import re
 import subprocess
 import sys
@@ -39,6 +40,10 @@ if __name__ == "__main__":
 
     skip_branch_status_check = sys.argv[2] == "true"
 
+    # changing this is useful for testing on a fork.
+    repo = os.environ.get("GITHUB_REPOSITORY", "mitmproxy/mitmproxy")
+    print(f"{version=} {skip_branch_status_check=} {repo=}")
+
     branch = subprocess.run(
         ["git", "branch", "--show-current"],
         cwd=root, check=True, capture_output=True, text=True
@@ -51,7 +56,7 @@ if __name__ == "__main__":
         print(f"⚠️ Skipping status check for {branch}.")
     else:
         print(f"➡️ CI is passing for {branch}?")
-        assert get_json(f"https://api.github.com/repos/mitmproxy/mitmproxy/commits/{branch}/status")["state"] == "success"
+        assert get_json(f"https://api.github.com/repos/{repo}/commits/{branch}/status")["state"] == "success"
 
     print("➡️ Updating CHANGELOG.md...")
     changelog = root / "CHANGELOG.md"
@@ -79,6 +84,10 @@ if __name__ == "__main__":
     subprocess.run(["git", "config", "user.name", "mitmproxy release bot"], cwd=root, check=True)
     subprocess.run(["git", "commit", "-a", "-m", f"mitmproxy {version}"], cwd=root, check=True)
     subprocess.run(["git", "tag", version], cwd=root, check=True)
+    release_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root, check=True, capture_output=True, text=True
+    ).stdout.strip()
 
     if branch == "main":
         print("➡️ Bump version...")
@@ -105,54 +114,52 @@ if __name__ == "__main__":
     # subprocess.run(["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True)
 
     print("")
-    print("✅ CI is running now. Make sure to approve the deploy step: https://github.com/mitmproxy/mitmproxy/actions")
+    print("✅ CI is running now.")
 
-    for _ in range(60):
-        time.sleep(3)
-        print(".", end="")
-    print("")
+    while True:
+        print("⌛ Waiting for CI...")
+        workflows = get_json(f"https://api.github.com/repos/{repo}/actions/runs?head_sha={release_sha}")["workflow_runs"]
+
+        all_done = True
+        if not workflows:
+            all_done = False  # we expect to have at least one workflow.
+        for workflow in workflows:
+            if workflow["status"] != "completed":
+                all_done = False
+            if workflow["status"] == "waiting":
+                print(f"⚠️ CI is waiting for approval: {workflow['html_url']}")
+
+        if all_done:
+            for workflow in workflows:
+                if workflow["conclusion"] != "success":
+                    print(f"⚠️ {workflow['display_title']} workflow run failed.")
+            break
+        else:
+            time.sleep(30)  # relatively strict rate limits here.
 
     print("➡️ Checking GitHub Releases...")
-    resp = get(f"https://api.github.com/repos/mitmproxy/mitmproxy/releases/tags/{version}")
+    resp = get(f"https://api.github.com/repos/{repo}/releases/tags/{version}")
     assert resp.status == 200
 
-    while True:
-        print("➡️ Checking PyPI...")
-        pypi_data = get_json("https://pypi.org/pypi/mitmproxy/json")
-        if version in pypi_data["releases"]:
-            print(f"{version} is on PyPI.")
-            break
-        else:
-            print(f"{version} not yet on PyPI.")
-            time.sleep(10)
+    print("➡️ Checking PyPI...")
+    pypi_data = get_json("https://pypi.org/pypi/mitmproxy/json")
+    assert version in pypi_data["releases"]
 
-    while True:
-        print("➡️ Checking docs archive...")
-        resp = get(f"https://docs.mitmproxy.org/archive/v{major_version}/")
-        if resp.status == 200:
-            break
-        else:
-            time.sleep(10)
+    print("➡️ Checking docs archive...")
+    resp = get(f"https://docs.mitmproxy.org/archive/v{major_version}/")
+    assert resp.status == 200
 
-    while True:
-        print(f"➡️ Checking Docker ({version} tag)...")
-        resp = get(f"https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/{version}")
-        if resp.status == 200:
-            break
-        else:
-            time.sleep(10)
+    print(f"➡️ Checking Docker ({version} tag)...")
+    resp = get(f"https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/{version}")
+    assert resp.status == 200
 
     if branch == "main":
-        while True:
-            print("➡️ Checking Docker (latest tag)...")
-            docker_latest_data = get_json("https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/latest")
-            docker_last_updated = datetime.datetime.fromisoformat(
-                docker_latest_data["last_updated"].replace("Z", "+00:00"))
-            print(f"Last update: {docker_last_updated.isoformat(timespec='minutes')}")
-            if docker_last_updated > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2):
-                break
-            else:
-                time.sleep(10)
+        print("➡️ Checking Docker (latest tag)...")
+        docker_latest_data = get_json("https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/latest")
+        docker_last_updated = datetime.datetime.fromisoformat(
+            docker_latest_data["last_updated"].replace("Z", "+00:00"))
+        print(f"Last update: {docker_last_updated.isoformat(timespec='minutes')}")
+        assert docker_last_updated > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
 
     print("")
     print("✅ All done. 🥳")
