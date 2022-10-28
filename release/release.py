@@ -37,6 +37,8 @@ if __name__ == "__main__":
     assert re.match(r"^\d+\.\d+\.\d+$", version)
     major_version = int(version.split(".")[0])
 
+    skip_branch_status_check = sys.argv[2] == "true"
+
     branch = subprocess.run(
         ["git", "branch", "--show-current"],
         cwd=root, check=True, capture_output=True, text=True
@@ -45,8 +47,11 @@ if __name__ == "__main__":
     print("➡️ Working dir clean?")
     assert not subprocess.run(["git", "status", "--porcelain"]).stdout
 
-    print(f"➡️ CI is passing for {branch}?")
-    assert get_json(f"https://api.github.com/repos/mitmproxy/mitmproxy/commits/{branch}/status")["state"] == "success"
+    if skip_branch_status_check:
+        print(f"⚠️ Skipping status check for {branch}.")
+    else:
+        print(f"➡️ CI is passing for {branch}?")
+        assert get_json(f"https://api.github.com/repos/mitmproxy/mitmproxy/commits/{branch}/status")["state"] == "success"
 
     print("➡️ Updating CHANGELOG.md...")
     changelog = root / "CHANGELOG.md"
@@ -93,8 +98,11 @@ if __name__ == "__main__":
                     "--title", f"mitmproxy {version}",
                     "--notes-file", "release/github-release-notes.txt"], cwd=root, check=True)
 
-    print("➡️ Dispatching release workflow...")
-    subprocess.run(["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True)
+    # We currently have to use a personal access token, which auto-triggers CI.
+    # The default GITHUB_TOKEN cannot push to protected branches,
+    # see https://github.com/community/community/discussions/13836.
+    # print("➡️ Dispatching release workflow...")
+    # subprocess.run(["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True)
 
     print("")
     print("✅ CI is running now. Make sure to approve the deploy step: https://github.com/mitmproxy/mitmproxy/actions")

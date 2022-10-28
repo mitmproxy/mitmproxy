@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 28 October 2022: mitmproxy 9.0.0
+
 ### Major Features
 
 * Add Raw UDP support.
@@ -63,6 +67,8 @@
   ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), [#5686](https://github.com/mitmproxy/mitmproxy/issues/5686), @mhils)
 * Fix mitmweb crash when using filters.
   ([#5658](https://github.com/mitmproxy/mitmproxy/issues/5658), [#5661](https://github.com/mitmproxy/mitmproxy/issues/5661), @LIU-shuyi, @mhils)
+* Fix missing default port when starting a browser.
+  ([#5687](https://github.com/mitmproxy/mitmproxy/issues/5687), @rbdixon)
 * Add docs for transparent mode on Windows.
   ([#5402](https://github.com/mitmproxy/mitmproxy/issues/5402), @stephenspol)
 

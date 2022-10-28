@@ -85,7 +85,7 @@ class Browser:
                     *cmd,
                     "--user-data-dir=%s" % str(tdir.name),
                     "--proxy-server={}:{}".format(
-                        ctx.options.listen_host or "127.0.0.1", ctx.options.listen_port
+                        ctx.options.listen_host or "127.0.0.1", ctx.options.listen_port or "8080"
                     ),
                     "--disable-fre",
                     "--no-default-browser-check",
