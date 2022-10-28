@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 28 October 2022: mitmproxy 9.0.0
+
 ### Major Features
 
 * Add Raw UDP support.
