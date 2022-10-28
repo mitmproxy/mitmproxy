@@ -308,25 +308,37 @@ class TlsConfig:
             return  # a user addon has already provided the settings.
         tls_start.settings = quic.QuicTlsSettings()
 
+        # keep the following part in sync with `tls_start_client`
         assert isinstance(tls_start.conn, connection.Client)
 
         client: connection.Client = tls_start.conn
         server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
-        tls_start.settings.certificate = entry.cert._cert
-        tls_start.settings.certificate_private_key = entry.privatekey
-        tls_start.settings.certificate_chain = [cert._cert for cert in entry.chain_certs]
 
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
+
+        if ctx.options.add_upstream_certs_to_client_chain:
+            extra_chain_certs = server.certificate_list
+        else:
+            extra_chain_certs = []
+
+        # set context parameters
         if client.cipher_list:
             tls_start.settings.cipher_suites = [
                 CipherSuite[cipher] for cipher in client.cipher_list
             ]
+        tls_start.settings.alpn_protocols = [
+            alpn.decode("ascii") for alpn in (client.alpn, server.alpn) if alpn
+        ]
 
-        if ctx.options.add_upstream_certs_to_client_chain:
-            tls_start.settings.certificate_chain.extend(cert._cert for cert in server.certificate_list)
+        # set the certificates
+        tls_start.settings.certificate = entry.cert._cert
+        tls_start.settings.certificate_private_key = entry.privatekey
+        tls_start.settings.certificate_chain = [
+            cert._cert for cert in (*entry.chain_certs, *extra_chain_certs)
+        ]
 
     def quic_start_server(self, tls_start: quic.QuicTlsData) -> None:
         """Establish QUIC between proxy and server."""
@@ -334,6 +346,7 @@ class TlsConfig:
             return  # a user addon has already provided the settings.
         tls_start.settings = quic.QuicTlsSettings()
 
+        # keep the following part in sync with `tls_start_server`
         assert isinstance(tls_start.conn, connection.Server)
 
         client: connection.Client = tls_start.context.client
@@ -342,20 +355,32 @@ class TlsConfig:
 
         if ctx.options.ssl_insecure:
             tls_start.settings.verify_mode = ssl.CERT_NONE
+        else:
+            tls_start.settings.verify_mode = ssl.CERT_REQUIRED
 
         if server.sni is None:
             server.sni = client.sni or server.address[0]
 
         if not server.alpn_offers:
-            server.alpn_offers = client.alpn_offers
+            if client.alpn_offers:
+                server.alpn_offers = tuple(client.alpn_offers)
+            else:
+                server.alpn_offers = []
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
+
+        # set context parameters
         if server.cipher_list:
             tls_start.settings.cipher_suites = [
                 CipherSuite[cipher] for cipher in server.cipher_list
             ]
+        if server.alpn_offers:
+            tls_start.settings.alpn_protocols = [
+                alpn.decode("ascii") for alpn in server.alpn_offers
+            ]
 
+        # set the certificates
         client_cert = self.get_client_cert(server)
         if client_cert:
             config = QuicConfiguration()
@@ -366,7 +391,6 @@ class TlsConfig:
                 assert isinstance(config.private_key, (dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey, rsa.RSAPrivateKey))
                 tls_start.settings.certificate_private_key = config.private_key
             tls_start.settings.certificate_chain = config.certificate_chain
-
         tls_start.settings.ca_path = ctx.options.ssl_verify_upstream_trusted_confdir
         tls_start.settings.ca_file = ctx.options.ssl_verify_upstream_trusted_ca
 

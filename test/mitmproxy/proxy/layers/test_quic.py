@@ -4,7 +4,7 @@ from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection, pull_quic_header
-from typing import Optional, TypeVar
+from typing import Literal, Optional, TypeVar
 from unittest.mock import MagicMock
 import pytest
 from mitmproxy import connection, options
@@ -508,7 +508,9 @@ def finish_handshake(
     return result
 
 
-def reply_tls_start_client(*args, **kwargs) -> tutils.reply:
+def reply_tls_start_client(
+    alpn: Optional[str] = None, *args, **kwargs
+) -> tutils.reply:
     """
     Helper function to simplify the syntax for quic_start_client hooks.
     """
@@ -524,11 +526,15 @@ def reply_tls_start_client(*args, **kwargs) -> tutils.reply:
             certificate_chain = config.certificate_chain,
             certificate_private_key = config.private_key,
         )
+        if alpn is not None:
+            tls_start.settings.alpn_protocols = [alpn]
 
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
+def reply_tls_start_server(
+    alpn: Optional[str] = None, *args, **kwargs
+) -> tutils.reply:
     """
     Helper function to simplify the syntax for quic_start_server hooks.
     """
@@ -538,6 +544,8 @@ def reply_tls_start_server(*args, **kwargs) -> tutils.reply:
             ca_file=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
             verify_mode=ssl.CERT_REQUIRED,
         )
+        if alpn is not None:
+            tls_start.settings.alpn_protocols = [alpn]
 
     return tutils.reply(*args, side_effect=make_server_conn, **kwargs)
 
@@ -674,7 +682,7 @@ class TestServerTLS:
 def make_client_tls_layer(
     tctx: context.Context, **kwargs
 ) -> tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
-    tssl_client = SSLTest(alpn=quic.H3_ALPN, **kwargs)
+    tssl_client = SSLTest(**kwargs)
     tssl_client.quic.connect(("example.mitmproxy.org", 443), 0)
 
     # This is a bit contrived as the client layer expects a server layer as parent.
@@ -732,3 +740,75 @@ class TestClientTLS:
             >> events.DataReceived(other_server, b"Plaintext")
             << commands.SendData(other_server, b"plaintext")
         )
+
+    @pytest.mark.parametrize("server_state", ["open", "closed"])
+    def test_server_required(self, tctx: context.Context, server_state: Literal["open", "closed"]):
+        """
+        Test the scenario where a server connection is required (for example, because of an unknown ALPN)
+        to establish TLS with the client.
+        """
+        if server_state == "open":
+            tctx.server.state = connection.ConnectionState.OPEN
+        tssl_server = SSLTest(server_side=True, alpn=["quux"])
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+
+        # We should now get instructed to open a server connection.
+        data = tutils.Placeholder(bytes)
+
+        def require_server_conn(client_hello: tls.ClientHelloData) -> None:
+            client_hello.establish_server_tls_first = True
+
+        (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=require_server_conn)
+        )
+        if server_state == "closed":
+            playbook << commands.OpenConnection(tctx.server)
+            playbook >> tutils.reply(None)
+        assert (
+            playbook
+            << quic.QuicStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server(alpn="quux")
+            << commands.SendData(tctx.server, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+        )
+
+        # Establish TLS with the server...
+        tssl_server.write(data())
+        assert not tssl_server.handshake_completed()
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, tssl_server.read())
+            << tls.TlsEstablishedServerHook(tutils.Placeholder())
+            >> tutils.reply()
+            << commands.SendData(tctx.server, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+            << quic.QuicStartClientHook(tutils.Placeholder())
+        )
+        tssl_server.write(data())
+        assert tctx.server.tls_established
+        # Server TLS is established, we can now reply to the client handshake...
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> reply_tls_start_client(alpn="quux")
+            << commands.SendData(tctx.client, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+        )
+        tssl_client.write(data())
+        assert tssl_client.handshake_completed()
+        finish_handshake(playbook, tctx.client, tssl_client, TlsEchoLayer)
+
+        # Both handshakes completed!
+        assert tctx.client.tls_established
+        assert tctx.server.tls_established
+        assert tctx.server.sni == tctx.client.sni
+        assert tctx.client.alpn == b"quux"
+        assert tctx.server.alpn == b"quux"
+        _test_echo(playbook, tssl_server, tctx.server)
+        _test_echo(playbook, tssl_client, tctx.client)

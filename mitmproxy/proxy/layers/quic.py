@@ -7,7 +7,7 @@ import time
 from typing import TYPE_CHECKING, Callable
 
 from aioquic.buffer import Buffer as QuicBuffer
-from aioquic.h3.connection import H3_ALPN, ErrorCode as H3ErrorCode
+from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import (
@@ -51,6 +51,8 @@ class QuicTlsSettings:
     Settings necessary to establish QUIC's TLS context.
     """
 
+    alpn_protocols: list[str] | None = None
+    """A list of supported ALPN protocols."""
     certificate: x509.Certificate | None = None
     """The certificate to use for the connection."""
     certificate_chain: list[x509.Certificate] = field(default_factory=list)
@@ -331,8 +333,8 @@ class QuicStreamNextLayer(layer.NextLayer):
         self._stream = stream
         self._layer: layer.Layer | None = None
 
-    @property
-    def layer(self) -> layer.Layer | None:
+    @property  # type: ignore
+    def layer(self) -> layer.Layer | None:  # type: ignore
         return self._layer
 
     @layer.setter
@@ -414,7 +416,7 @@ class QuicStreamLayer(layer.Layer):
 
     def refresh_metadata(self) -> None:
         # find the first transport layer
-        child_layer = self.child_layer
+        child_layer: layer.Layer | None = self.child_layer
         while True:
             if isinstance(child_layer, layer.NextLayer):
                 child_layer = child_layer.layer
@@ -481,7 +483,7 @@ class RawQuicLayer(layer.Layer):
                 err = yield commands.OpenConnection(self.context.server)
                 if err:
                     yield commands.CloseConnection(self.context.client)
-                    self._handle_event = self.done
+                    self._handle_event = self.done  # type: ignore
                     return
             yield from self.event_to_child(self.datagram_layer, event)
 
@@ -574,7 +576,7 @@ class RawQuicLayer(layer.Layer):
             if other_conn.connected:
                 yield CloseQuicConnection(other_conn, event.error_code, event.frame_type, event.reason_phrase)
             else:
-                self._handle_event = self.done
+                self._handle_event = self.done  # type: ignore
 
             # always forward to the datagram layer and swallow `CloseConnection` commands
             for command in self.event_to_child(self.datagram_layer, event):
@@ -760,11 +762,7 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # build the aioquic connection
         configuration = QuicConfiguration(
-            alpn_protocols=(
-                [offer.decode("ascii") for offer in self.conn.alpn_offers]
-                if self.conn.alpn_offers else
-                H3_ALPN
-            ),
+            alpn_protocols=tls_data.settings.alpn_protocols,
             is_client=self.conn is self.context.server,
             secrets_log_file=(
                 QuicSecretsLogger(tls.log_master_secret)  # type: ignore
@@ -916,6 +914,7 @@ class QuicLayer(tunnel.TunnelLayer):
         yield from self.tls_interact()
 
     def receive_close(self) -> layer.CommandGenerator[None]:
+        assert self.quic
         # if `_close_event` is not set, the underlying connection has been closed
         # we turn this into a QUIC close event as well
         close_event = self.quic._close_event or quic_events.ConnectionTerminated(
