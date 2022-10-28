@@ -1,5 +1,6 @@
-from logging import WARNING
+from logging import DEBUG, WARNING
 import ssl
+import time
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
@@ -683,7 +684,7 @@ def make_client_tls_layer(
     tctx: context.Context, **kwargs
 ) -> tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
     tssl_client = SSLTest(**kwargs)
-    tssl_client.quic.connect(("example.mitmproxy.org", 443), 0)
+    tssl_client.quic.connect(tssl_client.address, 0)
 
     # This is a bit contrived as the client layer expects a server layer as parent.
     # We also set child layers manually to avoid NextLayer noise.
@@ -812,3 +813,111 @@ class TestClientTLS:
         assert tctx.server.alpn == b"quux"
         _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
+
+    @pytest.mark.parametrize("server_state", ["open", "closed"])
+    def test_passthrough_from_clienthello(self, tctx: context.Context, server_state: Literal["open", "closed"]):
+        """
+        Test the scenario where the connection is moved to passthrough mode in the tls_clienthello hook.
+        """
+        if server_state == "open":
+            tctx.server.timestamp_start = time.time()
+            tctx.server.state = connection.ConnectionState.OPEN
+
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+        client_layer.child_layer = TlsEchoLayer(client_layer.context)
+
+        def make_passthrough(client_hello: tls.ClientHelloData) -> None:
+            client_hello.ignore_connection = True
+
+        client_hello = tssl_client.read()
+        (
+            playbook
+            >> events.DataReceived(tctx.client, client_hello)
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=make_passthrough)
+        )
+        if server_state == "closed":
+            playbook << commands.OpenConnection(tctx.server)
+            playbook >> tutils.reply(None)
+        assert (
+            playbook
+            << commands.SendData(tctx.server, client_hello)  # passed through unmodified
+            >> events.DataReceived(
+                tctx.server, b"ServerHello"
+            )  # and the same for the serverhello.
+            << commands.SendData(tctx.client, b"ServerHello")
+        )
+
+    def test_cannot_parse_clienthello(self, tctx: context.Context):
+        """Test the scenario where we cannot parse the ClientHello"""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        tls_hook_data = tutils.Placeholder(quic.QuicTlsData)
+
+        invalid = b"\x16\x03\x01\x00\x00"
+
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, invalid)
+            << commands.Log(
+                f"Client QUIC handshake failed. Cannot parse QUIC header: Packet fixed bit is zero ({invalid.hex()})",
+                level=WARNING,
+            )
+            << tls.TlsFailedClientHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.client)
+        )
+        assert tls_hook_data().conn.error
+        assert not tctx.client.tls_established
+
+        # Make sure that an active server connection does not cause child layers to spawn.
+        client_layer.debug = ""
+        assert (
+            playbook
+            >> events.DataReceived(connection.Server(None), b"data on other stream")
+            << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
+            << commands.Log(
+                "[quic] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
+                DEBUG,
+            )
+        )
+
+    def test_mitmproxy_ca_is_untrusted(self, tctx: context.Context):
+        """Test the scenario where the client doesn't trust the mitmproxy CA."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(
+            tctx, sni="wrong.host.mitmproxy.org"
+        )
+        playbook.logs = True
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << quic.QuicStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, data)
+            << commands.RequestWakeup(tutils.Placeholder())
+        )
+        tssl_client.write(data())
+        assert not tssl_client.handshake_completed()
+
+        # Finish Handshake
+        tls_hook_data = tutils.Placeholder(quic.QuicTlsData)
+        playbook >> events.DataReceived(tctx.client, tssl_client.read())
+        assert playbook
+        tssl_client.now = tssl_client.now + 60
+        assert (
+            playbook
+            >> events.Wakeup(playbook.actual[7])
+            << commands.Log(
+                "Client QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match 'example.mitmproxy.org'",
+                WARNING,
+            )
+            << tls.TlsFailedClientHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.client)
+            >> events.ConnectionClosed(tctx.client)
+        )
+        assert not tctx.client.tls_established
+        assert tls_hook_data().conn.error

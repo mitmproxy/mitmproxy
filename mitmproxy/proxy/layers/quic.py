@@ -1072,7 +1072,7 @@ class ClientQuicLayer(QuicLayer):
             parent_layer.handle_event = replacement_layer.handle_event  # type: ignore
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
-            yield from parent_layer.handle_event(events.DataReceived(self.conn, data))
+            yield from parent_layer.handle_event(events.DataReceived(self.context.client, data))
             return True, None
 
         # start the server QUIC connection if demanded and available
