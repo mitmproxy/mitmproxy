@@ -37,6 +37,8 @@ if __name__ == "__main__":
     assert re.match(r"^\d+\.\d+\.\d+$", version)
     major_version = int(version.split(".")[0])
 
+    skip_branch_status_check = sys.argv[2] == "true"
+
     branch = subprocess.run(
         ["git", "branch", "--show-current"],
         cwd=root, check=True, capture_output=True, text=True
@@ -45,8 +47,11 @@ if __name__ == "__main__":
     print("➡️ Working dir clean?")
     assert not subprocess.run(["git", "status", "--porcelain"]).stdout
 
-    print(f"➡️ CI is passing for {branch}?")
-    assert get_json(f"https://api.github.com/repos/mitmproxy/mitmproxy/commits/{branch}/status")["state"] == "success"
+    if skip_branch_status_check:
+        print(f"⚠️ Skipping status check for {branch}.")
+    else:
+        print(f"➡️ CI is passing for {branch}?")
+        assert get_json(f"https://api.github.com/repos/mitmproxy/mitmproxy/commits/{branch}/status")["state"] == "success"
 
     print("➡️ Updating CHANGELOG.md...")
     changelog = root / "CHANGELOG.md"

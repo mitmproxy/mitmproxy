@@ -4,9 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'The version to release (major.minor.patch)'
+        description: 'Version (major.minor.patch)'
         required: true
         type: string
+      skip-branch-status-check:
+        description: 'Skip CI status check.'
+        default: false
+        required: false
+        type: boolean
 
 permissions:
   actions: write
@@ -34,4 +39,4 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version-file: .github/python-version.txt
-      - run: ./release/release.py ${{ inputs.version }}
+      - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}
