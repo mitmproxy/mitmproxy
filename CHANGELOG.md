@@ -24,7 +24,6 @@
 
 ### Full Changelog
 
-* Fix missing default port when starting a browser. (@rbdixon)
 * Mitmproxy binaries now ship with Python 3.11.
   ([#5678](https://github.com/mitmproxy/mitmproxy/issues/5678), @mhils)
 * One mitmproxy instance can now spawn multiple proxy servers.
@@ -64,6 +63,8 @@
   ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), [#5686](https://github.com/mitmproxy/mitmproxy/issues/5686), @mhils)
 * Fix mitmweb crash when using filters.
   ([#5658](https://github.com/mitmproxy/mitmproxy/issues/5658), [#5661](https://github.com/mitmproxy/mitmproxy/issues/5661), @LIU-shuyi, @mhils)
+* Fix missing default port when starting a browser.
+  ([#5687](https://github.com/mitmproxy/mitmproxy/issues/5687), @rbdixon)
 * Add docs for transparent mode on Windows.
   ([#5402](https://github.com/mitmproxy/mitmproxy/issues/5402), @stephenspol)
 
