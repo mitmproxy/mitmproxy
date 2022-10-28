@@ -1,6 +1,6 @@
 name: CI
 
-on: [ push, pull_request ]
+on: [ push, pull_request, workflow_dispatch ]
 
 permissions:
   contents: read
@@ -70,13 +70,15 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.10"
+            py: "3.11"
           - os: windows-latest
-            py: "3.10"
+            py: "3.11"
           - os: macos-latest
+            py: "3.11"
+          - os: ubuntu-latest
             py: "3.10"
           - os: ubuntu-latest
-            py: 3.9
+            py: "3.9"
     runs-on: ${{ matrix.os }}
     steps:
       - run: printenv
@@ -152,7 +154,7 @@ jobs:
       - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
@@ -190,6 +192,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: docs
+          path: docs/public
+      # For releases, also build the archive version of the docs.
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: ./docs/build.py
+        env:
+          DOCS_ARCHIVE: true
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs-archive
           path: docs/public
 
   # Separate from everything else because slow.
@@ -263,6 +275,11 @@ jobs:
         with:
           name: docs
           path: docs/public
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v3
+        with:
+          name: docs-archive
+          path: docs/archive
       - uses: actions/download-artifact@v3
         with:
           name: binaries.windows

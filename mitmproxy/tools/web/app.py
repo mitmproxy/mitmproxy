@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import hashlib
 import json
@@ -274,7 +275,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections: ClassVar[set]
+    connections: ClassVar[set[WebSocketEventBroadcaster]]
 
     def open(self):
         self.connections.add(self)
@@ -283,21 +284,23 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         self.connections.discard(self)
 
     @classmethod
+    def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
+        async def wrapper():
+            try:
+                await conn.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                cls.connections.discard(conn)
+
+        asyncio.ensure_future(wrapper())
+
+    @classmethod
     def broadcast(cls, **kwargs):
         message = json.dumps(kwargs, ensure_ascii=False).encode(
             "utf8", "surrogateescape"
         )
 
-        errored = []
         for conn in cls.connections:
-            try:
-                if not conn.ws_connection.is_closing():
-                    conn.write_message(message)
-            except Exception:  # pragma: no cover
-                logging.debug("Error sending WebSocket message.", exc_info=True)
-                errored.append(conn)  # workaround for https://github.com/tornadoweb/tornado/issues/2958
-        for conn in errored:
-            cls.connections.remove(conn)
+            cls.send(conn, message)
 
 
 class ClientConnection(WebSocketEventBroadcaster):

@@ -83,7 +83,7 @@ it('should be possible to get an end time', () => {
     f.websocket = undefined;
     expect(utils.endTime(f)).toEqual(946681203);
     expect(utils.endTime(TTCPFlow())).toEqual(946681205);
-    expect(utils.endTime(TUDPFlow())).toEqual(946681205);
+    expect(utils.endTime(TUDPFlow())).toEqual(946681204.5);
     expect(utils.endTime(TDNSFlow())).toEqual(946681201);
 })
 

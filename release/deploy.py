@@ -29,14 +29,14 @@ if __name__ == "__main__":
         [
             "aws",
             "s3",
-            "cp",
+            "sync",
+            "--delete",
             "--acl",
             "public-read",
             "--exclude",
             "*.msix",
             root / "release/dist",
-            f"s3://snapshots.mitmproxy.org/{upload_dir}/",
-            "--recursive",
+            f"s3://snapshots.mitmproxy.org/{upload_dir}",
         ]
     )
 
@@ -46,9 +46,8 @@ if __name__ == "__main__":
         (whl,) = root.glob("release/dist/mitmproxy-*-py3-none-any.whl")
         subprocess.check_call(["twine", "upload", whl])
 
-    # Upload dev docs
-    if branch == "main":
-        print(f"Uploading dev docs...")
+    # Upload docs
+    def upload_docs(path: str, src: Path = root / "docs/public"):
         subprocess.check_call(["aws", "configure", "set", "preview.cloudfront", "true"])
         subprocess.check_call(
             [
@@ -58,8 +57,8 @@ if __name__ == "__main__":
                 "--delete",
                 "--acl",
                 "public-read",
-                root / "docs/public",
-                "s3://docs.mitmproxy.org/dev",
+                src,
+                f"s3://docs.mitmproxy.org{path}",
             ]
         )
         subprocess.check_call(
@@ -70,6 +69,14 @@ if __name__ == "__main__":
                 "--distribution-id",
                 "E1TH3USJHFQZ5Q",
                 "--paths",
-                "/dev/*",
+                f"{path}/*",
             ]
         )
+
+    if branch == "main":
+        print(f"Uploading dev docs...")
+        upload_docs("/dev")
+    if tag:
+        print(f"Uploading release docs...")
+        upload_docs("/stable")
+        upload_docs(f"/archive/v{tag.split('.')[0]}", src=root / "docs/archive")
