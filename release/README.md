@@ -5,6 +5,7 @@
 3. The spawned workflow runs will require manual confirmation on GitHub which you need to approve twice: 
    https://github.com/mitmproxy/mitmproxy/actions
 4. Once everything has been deployed, update the website.
+5. Verify that the front-page download links for all platforms are working.
 
 ### GitHub Releases
 
