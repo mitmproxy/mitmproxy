@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from logging import DEBUG, ERROR, WARNING
 from ssl import VerifyMode
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -40,9 +40,6 @@ from mitmproxy.proxy.layers.tls import (
 )
 from mitmproxy.proxy.layers.udp import UDPLayer
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
-
-if TYPE_CHECKING:
-    from mitmproxy.proxy.server import ConnectionHandler
 
 
 @dataclass
@@ -423,7 +420,7 @@ class QuicStreamLayer(layer.Layer):
             elif isinstance(child_layer, tunnel.TunnelLayer):
                 child_layer = child_layer.child_layer
             else:
-                break
+                break  # pragma: no cover
         if isinstance(child_layer, (UDPLayer, TCPLayer)) and child_layer.flow:
             child_layer.flow.metadata["quic_is_unidirectional"] = stream_is_unidirectional(self._client_stream_id)
             child_layer.flow.metadata["quic_initiator"] = "client" if stream_is_client_initiated(self._client_stream_id) else "server"
@@ -701,7 +698,6 @@ class QuicLayer(tunnel.TunnelLayer):
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
         self._time = time or asyncio.get_running_loop().time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
-        self._routes: dict[connection.Address, ConnectionHandler | None] = dict()
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -826,8 +822,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 all_certs: list[x509.Certificate] = []
                 if self.quic.tls._peer_certificate:
                     all_certs.append(self.quic.tls._peer_certificate)
-                if self.quic.tls._peer_certificate_chain:
-                    all_certs.extend(self.quic.tls._peer_certificate_chain)
+                all_certs.extend(self.quic.tls._peer_certificate_chain)
 
                 # set the connection's TLS properties
                 self.conn.timestamp_tls_setup = time.time()
@@ -983,7 +978,7 @@ class ServerQuicLayer(QuicLayer):
 
 class ClientQuicLayer(QuicLayer):
     """
-    This layer establishes QUIC on a single client connection or roams to another connection.
+    This layer establishes QUIC on a single client connection.
     """
 
     server_tls_available: bool
@@ -1091,6 +1086,7 @@ class ClientQuicLayer(QuicLayer):
 
         # start the client QUIC connection
         yield from self.start_tls(header.destination_cid)
+        # XXX copied from TLS, we assume that `CloseConnection` in `start_tls` takes effect immediately
         if not self.conn.connected:
             return False, "connection closed early"
 
