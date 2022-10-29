@@ -184,8 +184,8 @@ def installbuilder_installer():
     """Windows: Build the InstallBuilder installer."""
     _ensure_pyinstaller_onedir()
 
-    IB_VERSION = "21.6.0"
-    IB_SETUP_SHA256 = "2bc9f9945cb727ad176aa31fa2fa5a8c57a975bad879c169b93e312af9d05814"
+    IB_VERSION = "22.10.0"
+    IB_SETUP_SHA256 = "49cbfc3ee8de02426abc0c1b92839934bdb0bf0ea12d88388dde9e4102fc429f"
     IB_DIR = here / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(
@@ -226,7 +226,7 @@ def installbuilder_installer():
                     break
                 ib_setup_hash.update(data)
         if ib_setup_hash.hexdigest() != IB_SETUP_SHA256:  # pragma: no cover
-            raise RuntimeError("InstallBuilder hashes don't match.")
+            raise RuntimeError(f"InstallBuilder hashes don't match: {ib_setup_hash.hexdigest()}")
 
         print("Install InstallBuilder...")
         subprocess.run(
@@ -246,9 +246,12 @@ def installbuilder_installer():
             "--setvars",
             f"project.version={version()}",
             "--verbose",
-        ]
+        ],
+        cwd=IB_DIR,
     )
-    assert (DIST_DIR / f"mitmproxy-{version()}-windows-x64-installer.exe").exists()
+    installer = DIST_DIR / f"mitmproxy-{version()}-windows-x64-installer.exe"
+    assert installer.exists()
+    assert installer.stat().st_size > 10 * 1024 * 1024  # sanity check that files are included: we expect at least 10mb.
 
 
 if __name__ == "__main__":
