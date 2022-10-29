@@ -78,9 +78,9 @@ class ZipFile2(zipfile.ZipFile):
 
 def archive(path: Path) -> tarfile.TarFile | ZipFile2:
     if platform.system() == "Windows":
-        return ZipFile2(path.with_suffix(".zip"), "w")
+        return ZipFile2(path.with_name(f"{path.name}.zip"), "w")
     else:
-        return tarfile.open(path.with_suffix(".tar.gz"), "w:gz")
+        return tarfile.open(path.with_name(f"{path.name}.tar.gz"), "w:gz")
 
 
 def version() -> str:
@@ -251,7 +251,16 @@ def installbuilder_installer():
     )
     installer = DIST_DIR / f"mitmproxy-{version()}-windows-x64-installer.exe"
     assert installer.exists()
-    assert installer.stat().st_size > 10 * 1024 * 1024  # sanity check that files are included: we expect at least 10mb.
+
+    print("Run installer...")
+    subprocess.run(
+        [installer, "--mode", "unattended", "--unattendedmodeui", "none"], check=True
+    )
+    MITMPROXY_INSTALL_DIR = Path(rf"C:\Program Files\mitmproxy\bin")
+    for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
+        executable = (MITMPROXY_INSTALL_DIR / tool).with_suffix(".exe")
+        print(f"> {executable} --version")
+        subprocess.check_call([executable, "--version"])
 
 
 if __name__ == "__main__":
