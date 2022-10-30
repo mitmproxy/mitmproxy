@@ -96,7 +96,7 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.3",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11,<0.19",
+        "zstandard>=0.11,<0.20",
         "typing-extensions>=4.3,<4.5; python_version<'3.10'",
     ],
     extras_require={
