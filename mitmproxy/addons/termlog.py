@@ -51,7 +51,9 @@ class TermLogHandler(log.MitmLogHandler):
         self.formatter = log.MitmFormatter(self.has_vt_codes)
 
     def emit(self, record: logging.LogRecord) -> None:
-        print(
-            self.format(record),
-            file=self.file
-        )
+        try:
+            print(self.format(record), file=self.file)
+        except OSError:
+            # We cannot print, exit immediately.
+            # See https://github.com/mitmproxy/mitmproxy/issues/4669
+            sys.exit(1)
