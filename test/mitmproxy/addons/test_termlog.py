@@ -58,7 +58,7 @@ async def test_styling(monkeypatch) -> None:
     t.done()
 
 
-def test_cannot_print(monkeypatch) -> None:
+async def test_cannot_print(monkeypatch) -> None:
     def _raise(*args, **kwargs):
         raise OSError
 
@@ -71,3 +71,5 @@ def test_cannot_print(monkeypatch) -> None:
             logging.info("Should not log this, but raise instead")
 
         assert exc_info.value.args[0] == 1
+
+    t.done()
