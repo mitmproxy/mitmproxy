@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits
+  ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn))
 
 
 ## 28 October 2022: mitmproxy 9.0.0
