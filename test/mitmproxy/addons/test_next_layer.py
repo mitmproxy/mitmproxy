@@ -256,20 +256,20 @@ class TestNextLayer:
         ctx.client.transport_protocol = "udp"
         with taddons.context(nl) as tctx:
             tctx.configure(nl, ignore_hosts=["example.com"])
-            
+
             ctx.layers = [layers.modes.HttpProxy(ctx), layers.ClientQuicLayer(ctx)]
             decision = nl._next_layer(ctx, b"", b"")
             assert isinstance(decision, layers.ServerQuicLayer)
             assert isinstance(decision.child_layer, layers.RawQuicLayer)
-            
+
             ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerQuicLayer(ctx), layers.ClientQuicLayer(ctx)]
             assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
-            
+
             ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerQuicLayer(ctx)]
             decision = nl._next_layer(ctx, b"", b"")
             assert isinstance(decision, layers.ClientQuicLayer)
             assert isinstance(decision.child_layer, layers.RawQuicLayer)
-            
+
             tctx.configure(nl, ignore_hosts=[])
 
     def test_next_layer_reverse_quic_mode(self):
