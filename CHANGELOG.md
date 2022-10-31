@@ -2,7 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
-* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits
+* Temporarily downgrade PyInstaller to fix standalone Linux binaries.
+  ([#5699](https://github.com/mitmproxy/mitmproxy/issues/5699), @mhils))
+* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits.
   ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn))
 
 
