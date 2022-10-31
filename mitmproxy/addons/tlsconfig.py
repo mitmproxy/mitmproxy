@@ -5,10 +5,7 @@ from pathlib import Path
 import ssl
 from typing import Any, Optional, TypedDict
 
-from aioquic.quic.configuration import QuicConfiguration
 from aioquic.tls import CipherSuite
-from cryptography import x509
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
 from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
@@ -202,19 +199,6 @@ class TlsConfig:
         )
         tls_start.ssl_conn.set_accept_state()
 
-    def get_client_cert(self, server: connection.Server) -> Optional[str]:
-        if ctx.options.client_certs:
-            client_certs = os.path.expanduser(ctx.options.client_certs)
-            if os.path.isfile(client_certs):
-                return client_certs
-            else:
-                assert server.address
-                server_name: str = server.sni or server.address[0]
-                p = os.path.join(client_certs, f"{server_name}.pem")
-                if os.path.isfile(p):
-                    return p
-        return None
-
     def tls_start_server(self, tls_start: tls.TlsData) -> None:
         """Establish TLS or DTLS between proxy and server."""
         if tls_start.ssl_conn is not None:
@@ -259,6 +243,17 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
+        client_cert: Optional[str] = None
+        if ctx.options.client_certs:
+            client_certs = os.path.expanduser(ctx.options.client_certs)
+            if os.path.isfile(client_certs):
+                client_cert = client_certs
+            else:
+                server_name: str = server.sni or server.address[0]
+                p = os.path.join(client_certs, f"{server_name}.pem")
+                if os.path.isfile(p):
+                    client_cert = p
+
         ssl_ctx = net_tls.create_proxy_server_context(
             method=net_tls.Method.DTLS_CLIENT_METHOD if tls_start.is_dtls else net_tls.Method.TLS_CLIENT_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_server_min],
@@ -267,7 +262,7 @@ class TlsConfig:
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
-            client_cert=self.get_client_cert(server),
+            client_cert=client_cert,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
@@ -319,7 +314,7 @@ class TlsConfig:
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
 
-        if ctx.options.add_upstream_certs_to_client_chain:
+        if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
             extra_chain_certs = server.certificate_list
         else:
             extra_chain_certs = []
@@ -381,16 +376,7 @@ class TlsConfig:
             ]
 
         # set the certificates
-        client_cert = self.get_client_cert(server)
-        if client_cert:
-            config = QuicConfiguration()
-            config.load_cert_chain(Path(client_cert))
-            assert isinstance(config.certificate, x509.Certificate)
-            tls_start.settings.certificate = config.certificate
-            if config.private_key:
-                assert isinstance(config.private_key, (dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey, rsa.RSAPrivateKey))
-                tls_start.settings.certificate_private_key = config.private_key
-            tls_start.settings.certificate_chain = config.certificate_chain
+        # NOTE client certificates are not supported
         tls_start.settings.ca_path = ctx.options.ssl_verify_upstream_trusted_confdir
         tls_start.settings.ca_file = ctx.options.ssl_verify_upstream_trusted_ca
 

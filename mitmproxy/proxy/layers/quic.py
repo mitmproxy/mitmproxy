@@ -265,20 +265,20 @@ def is_success_error_code(error_code: int) -> bool:
 
 def tls_settings_to_configuration(
     settings: QuicTlsSettings,
-    server_side: bool,
-    sni: str | None = None,
+    is_client: bool,
+    server_name: str | None = None,
 ) -> QuicConfiguration:
     """Converts `QuicTlsSettings` to `QuicConfiguration`."""
 
     return QuicConfiguration(
         alpn_protocols=settings.alpn_protocols,
-        is_client=server_side,
+        is_client=is_client,
         secrets_log_file=(
             QuicSecretsLogger(tls.log_master_secret)  # type: ignore
             if tls.log_master_secret is not None
             else None
         ),
-        server_name=sni,
+        server_name=server_name,
         cafile=settings.ca_file,
         capath=settings.ca_path,
         certificate=settings.certificate,
@@ -786,8 +786,8 @@ class QuicLayer(tunnel.TunnelLayer):
         # build the aioquic connection
         configuration = tls_settings_to_configuration(
             settings=tls_data.settings,
-            server_side=self.conn is self.context.server,
-            sni=self.conn.sni,
+            is_client=self.conn is self.context.server,
+            server_name=self.conn.sni,
         )
         self.quic = QuicConnection(
             configuration=configuration,

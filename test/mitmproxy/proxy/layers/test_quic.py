@@ -521,41 +521,53 @@ class SSLTest:
         alpn: Optional[list[str]] = None,
         sni: Optional[str] = "example.mitmproxy.org",
         version: Optional[int] = None,
+        settings: Optional[quic.QuicTlsSettings] = None,
     ):
-        self.ctx = QuicConfiguration(
-            is_client=not server_side,
-            max_datagram_frame_size=65536,
-        )
-
-        self.ctx.verify_mode = ssl.CERT_OPTIONAL
-        self.ctx.load_verify_locations(
-            cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
-        )
-
-        if alpn:
-            self.ctx.alpn_protocols = alpn
-        if server_side:
-            if sni == "192.0.2.42":
-                filename = "trusted-leaf-ip"
-            else:
-                filename = "trusted-leaf"
-            self.ctx.load_cert_chain(
-                certfile=tlsdata.path(
-                    f"../../net/data/verificationcerts/{filename}.crt"
-                ),
-                keyfile=tlsdata.path(
-                    f"../../net/data/verificationcerts/{filename}.key"
-                ),
+        if settings is None:
+            self.ctx = QuicConfiguration(
+                is_client=not server_side,
+                max_datagram_frame_size=65536,
             )
 
-        self.ctx.server_name = None if server_side else sni
+            self.ctx.verify_mode = ssl.CERT_OPTIONAL
+            self.ctx.load_verify_locations(
+                cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
+            )
 
-        if version is not None:
-            self.ctx.supported_versions = [version]
+            if alpn:
+                self.ctx.alpn_protocols = alpn
+            if server_side:
+                if sni == "192.0.2.42":
+                    filename = "trusted-leaf-ip"
+                else:
+                    filename = "trusted-leaf"
+                self.ctx.load_cert_chain(
+                    certfile=tlsdata.path(
+                        f"../../net/data/verificationcerts/{filename}.crt"
+                    ),
+                    keyfile=tlsdata.path(
+                        f"../../net/data/verificationcerts/{filename}.key"
+                    ),
+                )
+
+            self.ctx.server_name = None if server_side else sni
+
+            if version is not None:
+                self.ctx.supported_versions = [version]
+        else:
+            assert alpn is None
+            assert version is None
+            self.ctx = quic.tls_settings_to_configuration(
+                settings=settings,
+                is_client=not server_side,
+                server_name=sni,
+            )
 
         self.now = 0.0
         self.address = (sni, 443)
         self.quic = None if server_side else QuicConnection(configuration=self.ctx)
+        if not server_side:
+            self.quic.connect(self.address, now=self.now)
 
     def write(self, buf: bytes) -> int:
         self.now = self.now + 0.1
@@ -833,7 +845,6 @@ def make_client_tls_layer(
     tctx.server.sni = "example.mitmproxy.org"
 
     # Start handshake.
-    tssl_client.quic.connect(tssl_client.address, now=tssl_client.now)
     assert not tssl_client.handshake_completed()
 
     return playbook, client_layer, tssl_client
