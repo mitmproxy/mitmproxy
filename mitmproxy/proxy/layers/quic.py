@@ -263,6 +263,33 @@ def is_success_error_code(error_code: int) -> bool:
     return error_code in (QuicErrorCode.NO_ERROR, H3ErrorCode.H3_NO_ERROR)
 
 
+def tls_settings_to_configuration(
+    settings: QuicTlsSettings,
+    server_side: bool,
+    sni: str | None = None,
+) -> QuicConfiguration:
+    """Converts `QuicTlsSettings` to `QuicConfiguration`."""
+
+    return QuicConfiguration(
+        alpn_protocols=settings.alpn_protocols,
+        is_client=server_side,
+        secrets_log_file=(
+            QuicSecretsLogger(tls.log_master_secret)  # type: ignore
+            if tls.log_master_secret is not None
+            else None
+        ),
+        server_name=sni,
+        cafile=settings.ca_file,
+        capath=settings.ca_path,
+        certificate=settings.certificate,
+        certificate_chain=settings.certificate_chain,
+        cipher_suites=settings.cipher_suites,
+        private_key=settings.certificate_private_key,
+        verify_mode=settings.verify_mode,
+        max_datagram_frame_size=65536,
+    )
+
+
 @dataclass
 class QuicClientHello(Exception):
     """Helper error only used in `quic_parse_client_hello`."""
@@ -696,7 +723,7 @@ class QuicLayer(tunnel.TunnelLayer):
     def __init__(self, context: context.Context, conn: connection.Connection, time: Callable[[], float] | None) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
-        self._time = time or asyncio.get_running_loop().time
+        self._time = time or asyncio.get_event_loop().time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
         conn.tls = True
 
@@ -757,23 +784,10 @@ class QuicLayer(tunnel.TunnelLayer):
             return
 
         # build the aioquic connection
-        configuration = QuicConfiguration(
-            alpn_protocols=tls_data.settings.alpn_protocols,
-            is_client=self.conn is self.context.server,
-            secrets_log_file=(
-                QuicSecretsLogger(tls.log_master_secret)  # type: ignore
-                if tls.log_master_secret is not None
-                else None
-            ),
-            server_name=self.conn.sni,
-            cafile=tls_data.settings.ca_file,
-            capath=tls_data.settings.ca_path,
-            certificate=tls_data.settings.certificate,
-            certificate_chain=tls_data.settings.certificate_chain,
-            cipher_suites=tls_data.settings.cipher_suites,
-            private_key=tls_data.settings.certificate_private_key,
-            verify_mode=tls_data.settings.verify_mode,
-            max_datagram_frame_size=65536,
+        configuration = tls_settings_to_configuration(
+            settings=tls_data.settings,
+            server_side=self.conn is self.context.server,
+            sni=self.conn.sni,
         )
         self.quic = QuicConnection(
             configuration=configuration,

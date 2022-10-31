@@ -6,7 +6,7 @@ from pathlib import Path
 
 from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer
-from mitmproxy.proxy.layers import dns, http, modes, tcp, tls, udp, websocket
+from mitmproxy.proxy.layers import dns, http, modes, quic, tcp, tls, udp, websocket
 
 known = set()
 
@@ -136,6 +136,15 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             udp.UdpMessageHook,
             udp.UdpEndHook,
             udp.UdpErrorHook,
+        ],
+    )
+
+    category(
+        "QUIC",
+        "",
+        [
+            quic.QuicStartClientHook,
+            quic.QuicStartServerHook,
         ],
     )
 

@@ -146,6 +146,11 @@ async def test_inject_fail(caplog) -> None:
     ps.inject_tcp(tflow.tflow(), True, b"test")
     assert "Cannot inject TCP messages into non-TCP flows." in caplog.text
 
+    ps.inject_udp(tflow.tflow(), True, b"test")
+    assert "Cannot inject UDP messages into non-UDP flows." in caplog.text
+    ps.inject_udp(tflow.tudpflow(), True, b"test")
+    assert "Flow is not from a live connection." in caplog.text
+
     ps.inject_websocket(tflow.twebsocketflow(), True, b"test")
     assert "Flow is not from a live connection." in caplog.text
     ps.inject_websocket(tflow.ttcpflow(), True, b"test")

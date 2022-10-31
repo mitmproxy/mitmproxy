@@ -57,7 +57,7 @@ class TlsEchoLayer(tutils.EchoLayer):
         elif isinstance(event, events.DataReceived) and event.data == b"close-connection":
             yield commands.CloseConnection(event.connection)
         elif isinstance(event, events.DataReceived) and event.data == b"close-connection-error":
-            yield quic.CloseQuicConnection(event.connection, ~0, None, "error")
+            yield quic.CloseQuicConnection(event.connection, 123, None, "error")
         elif isinstance(event, events.DataReceived) and event.data == b"stop-stream":
             yield quic.StopQuicStream(event.connection, 24, 123)
         elif isinstance(event, events.DataReceived) and event.data == b"invalid-command":
@@ -131,7 +131,6 @@ def test_secrets_logger(value: str):
     quic_logger = quic.QuicSecretsLogger(logger)
     assert quic_logger.write(value) == 6
     quic_logger.flush()
-    logger.assert_called_once()
     logger.assert_called_once_with(None, b"s1 s2")
 
 
@@ -175,7 +174,7 @@ class TestQuicStreamLayer:
         quic_layer = quic.QuicStreamLayer(tctx, True, 1)
         assert isinstance(quic_layer.child_layer, layers.TCPLayer)
         assert not quic_layer.child_layer.flow
-        quic_layer.child_layer.flow = TCPFlow(MagicMock(), MagicMock())
+        quic_layer.child_layer.flow = TCPFlow(tctx.client, tctx.server)
         quic_layer.refresh_metadata()
         assert quic_layer.child_layer.flow.metadata["quic_is_unidirectional"] is False
         assert quic_layer.child_layer.flow.metadata["quic_initiator"] == "server"
@@ -187,7 +186,7 @@ class TestQuicStreamLayer:
     def test_simple(self, tctx: context.Context):
         quic_layer = quic.QuicStreamLayer(tctx, False, 2)
         assert isinstance(quic_layer.child_layer, layer.NextLayer)
-        tunnel_layer = tunnel.TunnelLayer(tctx, MagicMock(), MagicMock())
+        tunnel_layer = tunnel.TunnelLayer(tctx, tctx.client, tctx.server)
         quic_layer.child_layer.layer = tunnel_layer
         tcp_layer = layers.TCPLayer(tctx)
         tunnel_layer.child_layer = tcp_layer
@@ -414,7 +413,7 @@ class MockQuic(QuicConnection):
 def make_mock_quic(
     tctx: context.Context,
     event: Optional[quic_events.QuicEvent] = None,
-    established: bool = True
+    established: bool = True,
 ) -> tuple[tutils.Playbook, MockQuic]:
     tctx.client.state = connection.ConnectionState.CLOSED
     quic_layer = quic.QuicLayer(tctx, tctx.client, time=lambda: 0)
@@ -471,10 +470,10 @@ class TestQuicLayer:
         assert (
             playbook
             >> events.DataReceived(tctx.client, b"")
-            << quic.CloseQuicConnection(tctx.client, ~0, None, "error")
+            << quic.CloseQuicConnection(tctx.client, 123, None, "error")
         )
         assert conn._close_event
-        assert conn._close_event.error_code == ~0
+        assert conn._close_event.error_code == 123
 
     def test_datagram(self, tctx: context.Context):
         playbook, conn = make_mock_quic(
@@ -514,7 +513,7 @@ class TestQuicLayer:
 
 
 class SSLTest:
-    """Helper container for Python's builtin SSL object."""
+    """Helper container for QuicConnection object."""
 
     def __init__(
         self,

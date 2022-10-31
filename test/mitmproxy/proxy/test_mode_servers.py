@@ -18,7 +18,7 @@ def test_make():
     context = MagicMock()
     assert ServerInstance.make("regular", manager)
 
-    for mode in ["regular", "upstream:example.com", "transparent", "reverse:example.com", "socks5"]:
+    for mode in ["regular", "http3", "upstream:example.com", "transparent", "reverse:example.com", "socks5"]:
         inst = ServerInstance.make(mode, manager)
         assert inst
         assert inst.make_top_layer(context)
