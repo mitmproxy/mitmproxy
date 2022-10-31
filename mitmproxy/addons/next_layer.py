@@ -155,23 +155,26 @@ class NextLayer:
             for rex in hosts
         )
 
-    def is_reverse_proxy_scheme(self, context: context.Context, *args: str):
+    def get_http_layer(self, context: context.Context) -> Optional[layers.HttpLayer]:
         def s(*layers):
             return stack_match(context, layers)
 
-        # we allow all possible security layer combinations and rely on the correctness of ReverseProxy
-        return (
-            (
-                s(modes.ReverseProxy)
-                or
-                s(modes.ReverseProxy, layers.ClientTLSLayer)
-                or
-                s(modes.ReverseProxy, layers.ServerTLSLayer)
-                or
-                s(modes.ReverseProxy, layers.ServerTLSLayer, layers.ClientTLSLayer)
-            )
-            and cast(mode_specs.ReverseMode, context.client.proxy_mode).scheme in args
-        )
+        # Setup the HTTP layer for a regular HTTP proxy ...
+        if (
+            s(modes.HttpProxy)
+            or
+            # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
+            s(modes.HttpProxy, (layers.ClientTLSLayer, layers.ClientQuicLayer))
+        ):
+            return layers.HttpLayer(context, HTTPMode.regular)
+        # ... or an upstream proxy.
+        if (
+            s(modes.HttpUpstreamProxy)
+            or
+            s(modes.HttpUpstreamProxy, (layers.ClientTLSLayer, layers.ClientQuicLayer))
+        ):
+            return layers.HttpLayer(context, HTTPMode.upstream)
+        return None
 
     def detect_udp_tls(self, data_client: bytes) -> Optional[tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls]]:
         if len(data_client) == 0:
@@ -195,6 +198,36 @@ class NextLayer:
         # that's all we currently have to offer
         return None
 
+    def raw_udp_layer(self, context: context.Context, ignore: bool = False) -> layer.Layer:
+        def s(*layers):
+            return stack_match(context, layers)
+
+        # for regular and upstream HTTP3, if we already created a client QUIC layer
+        # we need a server and raw QUIC layer as well
+        if (
+            s(modes.HttpProxy, layers.ClientQuicLayer)
+            or
+            s(modes.HttpUpstreamProxy, layers.ClientQuicLayer)
+        ):
+            server_layer = layers.ServerQuicLayer(context)
+            server_layer.child_layer = layers.RawQuicLayer(context, ignore=ignore)
+            return server_layer
+
+        # for reverse HTTP3 and QUIC, we need a client and raw QUIC layer
+        elif (s(modes.ReverseProxy, layers.ServerQuicLayer)):
+            client_layer = layers.ClientQuicLayer(context)
+            client_layer.child_layer = layers.RawQuicLayer(context, ignore=ignore)
+            return client_layer
+
+        # in other cases we assume `setup_tls_layer` happened, so if the
+        # top layer is `ClientQuicLayer` we return a raw QUIC layer...
+        elif isinstance(context.layers[-1], layers.ClientQuicLayer):
+            return layers.RawQuicLayer(context, ignore=ignore)
+
+        # ... otherwise an UDP layer
+        else:
+            return layers.UDPLayer(context, ignore=ignore)
+
     def next_layer(self, nextlayer: layer.NextLayer):
         if nextlayer.layer is None:
             nextlayer.layer = self._next_layer(
@@ -207,10 +240,6 @@ class NextLayer:
         self, context: context.Context, data_client: bytes, data_server: bytes
     ) -> Optional[layer.Layer]:
         assert context.layers
-
-        # helper function to quickly check if the existing layer stack matches a particular configuration.
-        def s(*layers):
-            return stack_match(context, layers)
 
         if context.client.transport_protocol == "tcp":
             if (
@@ -231,35 +260,15 @@ class NextLayer:
             if is_tls_record_magic(data_client):
                 return self.setup_tls_layer(context)
 
-            # 3. Setup the HTTP layer for a regular HTTP proxy
-            if (
-                s(modes.HttpProxy)
-                or
-                # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
-                s(modes.HttpProxy, layers.ClientTLSLayer)
-            ):
-                return layers.HttpLayer(context, HTTPMode.regular)
-            # 3b. ... or an upstream proxy.
-            if (
-                s(modes.HttpUpstreamProxy)
-                or
-                s(modes.HttpUpstreamProxy, layers.ClientTLSLayer)
-            ):
-                return layers.HttpLayer(context, HTTPMode.upstream)
+            # 3. Check for HTTP
+            if http_layer := self.get_http_layer(context):
+                return http_layer
 
             # 4. Check for --tcp
             if self.is_destination_in_hosts(context, self.tcp_hosts):
                 return layers.TCPLayer(context)
 
-            # 5. Check for raw reverse mode.
-            if self.is_reverse_proxy_scheme(context, "tcp", "tls"):
-                return layers.TCPLayer(context)
-            # NOTE at this point we are either
-            #      - in http or https reverse mode
-            #      - at the top level of a non-reverse/regular/upstream mode
-            #      - at a deeper layer nesting level
-
-            # 6. Check for raw tcp mode.
+            # 5. Check for raw tcp mode.
             very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
             probably_no_http = not very_likely_http and (
                 not data_client[
@@ -270,27 +279,12 @@ class NextLayer:
             if ctx.options.rawtcp and probably_no_http:
                 return layers.TCPLayer(context)
 
-            # 7. Assume HTTP by default.
+            # 6. Assume HTTP by default.
             return layers.HttpLayer(context, HTTPMode.transparent)
 
         elif context.client.transport_protocol == "udp":
-            # for http3, upstream:http3 and reverse:quic/http3 proxies, there has to be a client quic layer
-            if (
-                s(modes.HttpProxy)
-                or
-                s(modes.HttpUpstreamProxy)
-                or
-                s(modes.ReverseProxy, layers.ServerQuicLayer)
-            ):
-                return layers.ClientQuicLayer(context)
-
             # unlike TCP, we make a decision immediately
             tls = self.detect_udp_tls(data_client)
-            raw_layer_cls = (
-                layers.RawQuicLayer
-                if isinstance(context.layers[-1], layers.ClientQuicLayer) else
-                layers.UDPLayer
-            )
 
             # 1. check for --ignore/--allow
             if self.ignore_connection(
@@ -299,43 +293,42 @@ class NextLayer:
                 is_tls=lambda _: tls is not None,
                 client_hello=lambda _: None if tls is None else tls[0]
             ):
-                return raw_layer_cls(context, ignore=True)
+                return self.raw_udp_layer(context, ignore=True)
 
             # 2. Check for DTLS/QUIC
             if tls is not None:
                 _, client_layer_cls, server_layer_cls = tls
                 return self.setup_tls_layer(context, client_layer_cls, server_layer_cls)
 
-            # 3. Setup the HTTP layer for a regular HTTP proxy
-            if s(modes.HttpProxy, layers.ClientQuicLayer):
-                return layers.HttpLayer(context, HTTPMode.regular)
-            # 3b. ... or an upstream proxy.
-            if s(modes.HttpUpstreamProxy, layers.ClientQuicLayer):
-                return layers.HttpLayer(context, HTTPMode.upstream)
+            # 3. Check for HTTP
+            if http_layer := self.get_http_layer(context):
+                return http_layer
 
             # 4. Check for --udp
             if self.is_destination_in_hosts(context, self.udp_hosts):
-                return raw_layer_cls(context)
+                return self.raw_udp_layer(context)
 
-            # 5. Check for raw reverse mode.
-            if self.is_reverse_proxy_scheme(context, "udp", "dtls"):
-                return layers.UDPLayer(context)
-
-            # 6. Check for explicit QUIC reverse modes
-            if (s(modes.ReverseProxy, layers.ServerQuicLayer, layers.ClientQuicLayer)):
+            # 5. Check for reverse modes
+            if (isinstance(context.layers[0], modes.ReverseProxy)):
                 scheme = cast(mode_specs.ReverseMode, context.client.proxy_mode).scheme
-                if scheme == "quic":
-                    return layers.RawQuicLayer(context)
-                if scheme == "http3":
+                if scheme in ("udp", "dtls"):
+                    return layers.UDPLayer(context)
+                elif scheme == "http3":
                     return layers.HttpLayer(context, HTTPMode.transparent)
-            # 6b. ... or DNS mode
-            if self.is_reverse_proxy_scheme(context, "dns"):
-                return layers.DNSLayer(context)
-            # NOTE at this point we are either
-            #      - at the top level of a non-reverse/regular/upstream mode
-            #      - at a deeper layer nesting level
+                elif scheme == "quic":
+                    # if the client supports QUIC, we use QUIC raw layer,
+                    # otherwise we only use the QUIC datagram only
+                    return (
+                        layers.RawQuicLayer(context)
+                        if isinstance(context.layers[-1], layers.ClientQuicLayer) else
+                        layers.UDPLayer(context)
+                    )
+                elif scheme == "dns":
+                    return layers.DNSLayer(context)
+                else:
+                    raise AssertionError(scheme)
 
-            # 7. Check for DNS
+            # 6. Check for DNS
             try:
                 dns.Message.unpack(data_client)
             except struct.error:
@@ -343,8 +336,8 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 8. Use raw mode.
-            return raw_layer_cls(context)
+            # 7. Use raw mode.
+            return self.raw_udp_layer(context)
 
         else:
             raise AssertionError(context.client.transport_protocol)
