@@ -61,12 +61,13 @@ def get_firefox_executable() -> Optional[str]:
 
     return None
 
+
 def get_browser_cmd() -> Optional[list[str]]:
     if browser := get_chrome_executable():
         return [browser]
     elif browser := get_chrome_flatpak():
         return ["flatpak", "run", "-p", browser]
-    elif browser := get_firefox():
+    elif browser := get_firefox_executable():
         return [browser]
     return None
 
