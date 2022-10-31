@@ -72,5 +72,3 @@ async def test_get_browser_cmd_firefox():
     with mock.patch("shutil.which") as which:
         which.side_effect = lambda cmd: cmd == "firefox"
         assert browser.get_browser_cmd() == ["firefox"]
-
-
