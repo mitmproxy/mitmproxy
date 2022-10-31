@@ -66,3 +66,11 @@ async def test_get_browser_cmd_no_flatpak():
         which.side_effect = lambda cmd: cmd == "flatpak"
         subprocess_run.return_value = mock.Mock(returncode=1)
         assert browser.get_browser_cmd() is None
+
+
+async def test_get_browser_cmd_firefox():
+    with mock.patch("shutil.which") as which:
+        which.side_effect = lambda cmd: cmd == "firefox"
+        assert browser.get_browser_cmd() == ["firefox"]
+
+

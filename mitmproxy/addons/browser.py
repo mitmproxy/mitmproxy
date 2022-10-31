@@ -50,12 +50,24 @@ def get_chrome_flatpak() -> Optional[str]:
     return None
 
 
+def get_firefox_executable() -> Optional[str]:
+    for browser in (
+        "/Applications/Firefox.app/Contents/MacOS/Firefox",
+        r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        "firefox",
+    ):
+        if shutil.which(browser):
+            return browser
+
+    return None
+
 def get_browser_cmd() -> Optional[list[str]]:
     if browser := get_chrome_executable():
         return [browser]
     elif browser := get_chrome_flatpak():
         return ["flatpak", "run", "-p", browser]
-
+    elif browser := get_firefox():
+        return [browser]
     return None
 
 
