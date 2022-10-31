@@ -6,6 +6,8 @@
   ([#5699](https://github.com/mitmproxy/mitmproxy/issues/5699), @mhils))
 * Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits.
   ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn))
+* Fix an permission error affecting the Docker images.
+  ([#5700](https://github.com/mitmproxy/mitmproxy/issues/5700), @mhils))
 
 
 ## 28 October 2022: mitmproxy 9.0.0
