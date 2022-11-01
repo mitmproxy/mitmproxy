@@ -65,10 +65,12 @@ class TestCertStore:
         (tmp_path / "mitmproxy-ca.pem").write_bytes(cert)
         ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
         assert ca.default_chain_file is None
+        assert len(ca.default_chain_certs) == 1
 
         (tmp_path / "mitmproxy-ca.pem").write_bytes(2 * cert)
         ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
         assert ca.default_chain_file == (tmp_path / "mitmproxy-ca.pem")
+        assert len(ca.default_chain_certs) == 2
 
     def test_sans(self, tstore):
         c1 = tstore.get_cert("foo.com", ["*.bar.com"])

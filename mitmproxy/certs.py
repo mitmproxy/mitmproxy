@@ -314,9 +314,9 @@ class CertStore:
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
             [
-                Cert.from_pem(cert)
-                for cert in re.split(rb"(?<=-----END CERTIFICATE-----\n)", self.default_chain_file.read_bytes())
-                if cert
+                Cert.from_pem(chunk)
+                for chunk in re.split(rb"(?=-----BEGIN( [A-Z]+)+-----)", self.default_chain_file.read_bytes())
+                if chunk.startswith(b"-----BEGIN CERTIFICATE-----")
             ]
             if self.default_chain_file
             else [default_ca]
