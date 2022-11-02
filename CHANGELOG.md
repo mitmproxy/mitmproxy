@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 02 November 2022: mitmproxy 9.0.1
+
 * The precompiled binaries now ship with OpenSSL 3.0.7, which resolves CVE-2022-3602 and CVE-2022-3786.
 * Performance and stability improvements for WireGuard mode.
   ([#5694](https://github.com/mitmproxy/mitmproxy/issues/5694), @mhils, @decathorpe)
