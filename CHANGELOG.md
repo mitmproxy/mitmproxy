@@ -38,6 +38,12 @@
 * Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
   See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+  
+### Breaking Changes
+
+ * The `mode` option is now a list of server specs instead of a single spec.
+   The CLI interface is unaffected, but users may need to update their `config.yaml`.
+   ([#5393](https://github.com/mitmproxy/mitmproxy/pull/5393), @mhils)
 
 ### Full Changelog
 
