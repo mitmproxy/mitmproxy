@@ -2,7 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
-* Temporarily downgrade PyInstaller to fix standalone Linux binaries.
+* The precompiled binaries now ship with OpenSSL 3.0.7, which resolves CVE-2022-3602 and CVE-2022-3786.
+* Performance and stability improvements for WireGuard mode.
+  ([#5694](https://github.com/mitmproxy/mitmproxy/issues/5694), @mhils, @decathorpe)
+* Fix a bug where the standalone Linux binaries would require libffi to be installed.
   ([#5699](https://github.com/mitmproxy/mitmproxy/issues/5699), @mhils)
 * Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits.
   ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn)
