@@ -103,8 +103,9 @@ class Options(optmanager.OptManager):
             The proxy server type(s) to spawn. Can be passed multiple times.
 
             Mitmproxy supports "regular" (HTTP), "transparent", "socks5", "reverse:SPEC",
-            and "upstream:SPEC" proxy servers. For reverse and upstream proxy modes, SPEC
-            is host specification in the form of "http[s]://host[:port]".
+            "upstream:SPEC", and "wireguard[:PATH]" proxy servers. For reverse and upstream proxy modes, SPEC
+            is host specification in the form of "http[s]://host[:port]". For WireGuard mode, PATH may point to
+            a file containing key material. If no such file exists, it will be created on startup.
 
             You may append `@listen_port` or `@listen_host:listen_port` to override `listen_host` or `listen_port` for
             a specific proxy mode. Features such as client playback will use the first mode to determine
