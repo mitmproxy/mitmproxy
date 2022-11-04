@@ -2,7 +2,13 @@
 
 ## Unreleased: mitmproxy next
 
+* ASGI/WSGI apps can now listen on all ports for a specific hostname. 
+  This makes it simpler to accept both HTTP and HTTPS.
 
+### Breaking Changes
+
+* The `onboarding_port` option has been removed. The onboarding app now responds
+  to all requests for the hostname specified in `onboarding_host`.
 
 ## 02 November 2022: mitmproxy 9.0.1
 
