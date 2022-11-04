@@ -121,14 +121,12 @@ def standalone_binaries():
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         _pyinstaller("standalone.spec")
 
+        _test_binaries(TEMP_DIR / "pyinstaller/dist")
+
         for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
             executable = TEMP_DIR / "pyinstaller/dist" / tool
             if platform.system() == "Windows":
                 executable = executable.with_suffix(".exe")
-
-            # Test if it works at all O:-)
-            print(f"> {executable} --version")
-            subprocess.check_call([executable, "--version"])
 
             f.add(str(executable), str(executable.name))
     print(f"Packed {f.name}.")
@@ -138,10 +136,20 @@ def _ensure_pyinstaller_onedir():
     if not (TEMP_DIR / "pyinstaller/dist/onedir").exists():
         _pyinstaller("windows-dir.spec")
 
+    _test_binaries(TEMP_DIR / "pyinstaller/dist/onedir")
+
+
+def _test_binaries(binary_directory: Path) -> None:
     for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
+        executable = binary_directory / tool
+        if platform.system() == "Windows":
+            executable = executable.with_suffix(".exe")
+
         print(f"> {tool} --version")
-        executable = (TEMP_DIR / "pyinstaller/dist/onedir" / tool).with_suffix(".exe")
         subprocess.check_call([executable, "--version"])
+
+        print(f"> {tool} -s selftest.py")
+        subprocess.check_call([executable, "-s", here / "selftest.py"])
 
 
 @cli.command()
@@ -256,11 +264,7 @@ def installbuilder_installer():
     subprocess.run(
         [installer, "--mode", "unattended", "--unattendedmodeui", "none"], check=True
     )
-    MITMPROXY_INSTALL_DIR = Path(rf"C:\Program Files\mitmproxy\bin")
-    for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
-        executable = (MITMPROXY_INSTALL_DIR / tool).with_suffix(".exe")
-        print(f"> {executable} --version")
-        subprocess.check_call([executable, "--version"])
+    _test_binaries(Path(r"C:\Program Files\mitmproxy\bin"))
 
 
 if __name__ == "__main__":
