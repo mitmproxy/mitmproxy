@@ -2,8 +2,19 @@
 
 ## Unreleased: mitmproxy next
 
-* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits
-  ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn))
+
+
+## 02 November 2022: mitmproxy 9.0.1
+
+* The precompiled binaries now ship with OpenSSL 3.0.7, which resolves CVE-2022-3602 and CVE-2022-3786.
+* Performance and stability improvements for WireGuard mode.
+  ([#5694](https://github.com/mitmproxy/mitmproxy/issues/5694), @mhils, @decathorpe)
+* Fix a bug where the standalone Linux binaries would require libffi to be installed.
+  ([#5699](https://github.com/mitmproxy/mitmproxy/issues/5699), @mhils)
+* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits.
+  ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn)
+* Fix a permission error affecting the Docker images.
+  ([#5700](https://github.com/mitmproxy/mitmproxy/issues/5700), @mhils)
 
 
 ## 28 October 2022: mitmproxy 9.0.0
@@ -27,6 +38,12 @@
 * Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
   See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+  
+### Breaking Changes
+
+ * The `mode` option is now a list of server specs instead of a single spec.
+   The CLI interface is unaffected, but users may need to update their `config.yaml`.
+   ([#5393](https://github.com/mitmproxy/mitmproxy/pull/5393), @mhils)
 
 ### Full Changelog
 

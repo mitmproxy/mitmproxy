@@ -308,6 +308,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
 
         try:
             if not conf_path.exists():
+                conf_path.parent.mkdir(parents=True, exist_ok=True)
                 conf_path.write_text(json.dumps({
                     "server_key": wg.genkey(),
                     "client_key": wg.genkey(),
