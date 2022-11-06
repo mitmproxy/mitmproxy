@@ -59,7 +59,7 @@ class Http3Connection(HttpConnection):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            pass
+            yield from self.h3_conn.transmit()
 
         # send mitmproxy HTTP events over the H3 connection
         elif isinstance(event, HttpEvent):
@@ -145,7 +145,6 @@ class Http3Connection(HttpConnection):
                                 error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
                                 reason_phrase=f"Invalid HTTP/3 request headers: {e}",
                             )
-                            yield from self.h3_conn.transmit()
                         else:
                             yield ReceiveHttp(receive_event)
                             if h3_event.stream_ended:
@@ -160,6 +159,7 @@ class Http3Connection(HttpConnection):
                     pass
                 else:
                     raise AssertionError(f"Unexpected event: {event!r}")
+            yield from self.h3_conn.transmit()
 
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, events.ConnectionClosed):
