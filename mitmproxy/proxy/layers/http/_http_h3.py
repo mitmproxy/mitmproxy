@@ -143,11 +143,16 @@ class LayeredH3Connection(H3Connection):
                 events[index] = TrailersReceived(event.headers, event.stream_id, event.stream_ended, event.push_id)
         return events
 
-    def close_connection(self, error_code: int = QuicErrorCode.NO_ERROR, reason_phrase: str = "") -> None:
+    def close_connection(
+        self,
+        error_code: int = QuicErrorCode.NO_ERROR,
+        frame_type: Optional[int] = None,
+        reason_phrase: str = "",
+    ) -> None:
         """Closes the underlying QUIC connection and ignores any incoming events."""
 
         self._is_done = True
-        self._quic.close(error_code=error_code, reason_phrase=reason_phrase)
+        self._quic.close(error_code, frame_type, reason_phrase)
 
     def end_stream(self, stream_id: int) -> None:
         """Ends the given stream locally."""

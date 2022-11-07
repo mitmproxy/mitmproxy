@@ -927,7 +927,7 @@ class QuicLayer(tunnel.TunnelLayer):
         # if `_close_event` is not set, the underlying connection has been closed
         # we turn this into a QUIC close event as well
         close_event = self.quic._close_event or quic_events.ConnectionTerminated(
-            QuicErrorCode.APPLICATION_ERROR, None, "Connection closed."
+            QuicErrorCode.NO_ERROR, None, "Connection closed."
         )
         yield from self.event_to_child(
             QuicConnectionClosed(self.conn, close_event.error_code, close_event.frame_type, close_event.reason_phrase)

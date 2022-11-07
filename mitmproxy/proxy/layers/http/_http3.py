@@ -162,19 +162,23 @@ class Http3Connection(HttpConnection):
             yield from self.h3_conn.transmit()
 
         # report a protocol error for all remaining open streams when a connection is closed
-        elif isinstance(event, events.ConnectionClosed):
+        elif isinstance(event, QuicConnectionClosed):
             self._handle_event = self.done  # type: ignore
-            if isinstance(event, QuicConnectionClosed):
-                msg = event.reason_phrase or error_code_to_str(event.error_code)
-            else:
-                msg = "peer closed connection"
+            msg = event.reason_phrase or error_code_to_str(event.error_code)
             for stream_id in self.h3_conn.get_reserved_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
+            # turn `QuicErrorCode.NO_ERROR` into `H3ErrorCode.H3_NO_ERROR`
+            self.h3_conn.close_connection(
+                event.error_code or H3ErrorCode.H3_NO_ERROR,
+                event.frame_type,
+                event.reason_phrase,
+            )
+            yield from self.h3_conn.transmit()
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    @expect(QuicStreamEvent, HttpEvent, events.ConnectionClosed)
+    @expect(HttpEvent, QuicStreamEvent, QuicConnectionClosed)
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
