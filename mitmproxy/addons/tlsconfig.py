@@ -5,6 +5,7 @@ from pathlib import Path
 import ssl
 from typing import Any, Optional, TypedDict
 
+from aioquic.h3.connection import H3_ALPN
 from aioquic.tls import CipherSuite
 from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions, connection, tls
@@ -360,7 +361,8 @@ class TlsConfig:
             if client.alpn_offers:
                 server.alpn_offers = tuple(client.alpn_offers)
             else:
-                server.alpn_offers = []
+                # aioquic fails if no ALPN is offered, so use H3
+                server.alpn_offers = tuple(alpn.encode("ascii") for alpn in H3_ALPN)
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")

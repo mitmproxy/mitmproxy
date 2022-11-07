@@ -314,15 +314,21 @@ class NextLayer:
                 if scheme in ("udp", "dtls"):
                     return layers.UDPLayer(context)
                 elif scheme == "http3":
-                    return layers.HttpLayer(context, HTTPMode.transparent)
+                    if isinstance(context.layers[-1], layers.ClientQuicLayer):
+                        return layers.HttpLayer(context, HTTPMode.transparent)
+                    else:
+                        return layers.ClientQuicLayer(context)
                 elif scheme == "quic":
-                    # if the client supports QUIC, we use QUIC raw layer,
-                    # otherwise we only use the QUIC datagram only
-                    return (
-                        layers.RawQuicLayer(context)
-                        if isinstance(context.layers[-1], layers.ClientQuicLayer) else
-                        layers.UDPLayer(context)
-                    )
+                    if isinstance(context.layers[-1], layers.ClientQuicLayer):
+                        # the client supports QUIC, use raw layer
+                        return layers.RawQuicLayer(context)
+                    elif data_client:
+                        # we have received data, which was not a handshake, use UDP
+                        # on the client, and send datagrams over QUIC to the server
+                        return layers.UDPLayer(context)
+                    else:
+                        # wait for client data to make a decision
+                        return None
                 elif scheme == "dns":
                     return layers.DNSLayer(context)
                 else:

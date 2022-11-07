@@ -289,7 +289,13 @@ class TestNextLayer:
             layers.modes.ReverseProxy(ctx),
             layers.ServerQuicLayer(ctx),
         ]
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
+        assert nl._next_layer(ctx, b"", b"") is None
+        assert isinstance(nl._next_layer(ctx, b"notahandshake", b""), layers.UDPLayer)
+        ctx.layers = [
+            layers.modes.ReverseProxy(ctx),
+            layers.ServerQuicLayer(ctx),
+        ]
+        assert isinstance(nl._next_layer(ctx, quic_client_hello, b""), layers.ClientQuicLayer)
 
     def test_next_layer_reverse_http3_mode(self):
         nl = NextLayer()
@@ -301,8 +307,8 @@ class TestNextLayer:
         ctx.layers = [
             layers.modes.ReverseProxy(ctx),
             layers.ServerQuicLayer(ctx),
-            layers.ClientQuicLayer(ctx),
         ]
+        assert isinstance(nl._next_layer(ctx, b"notahandshakebutignore", b""), layers.ClientQuicLayer)
         decision = nl._next_layer(ctx, b"", b"")
         assert isinstance(decision, layers.HttpLayer)
         assert decision.mode is HTTPMode.transparent

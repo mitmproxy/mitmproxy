@@ -1057,8 +1057,8 @@ class ClientQuicLayer(QuicLayer):
             return False, f"Cannot parse ClientHello: {str(e)} ({data.hex()})"
 
         # copy the client hello information
-        self.context.client.sni = client_hello.sni
-        self.context.client.alpn_offers = client_hello.alpn_protocols
+        self.conn.sni = client_hello.sni
+        self.conn.alpn_offers = client_hello.alpn_protocols
 
         # check with addons what we shall do
         tls_clienthello = ClientHelloData(self.context, client_hello)
@@ -1068,7 +1068,7 @@ class ClientQuicLayer(QuicLayer):
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
                 ("ignore-conn", 0), ("ignore-conn", 0), time.time(),
-                transport_protocol="udp", proxy_mode=self.context.client.proxy_mode
+                transport_protocol="udp"
             )
 
             # we need to replace the server layer as well, if there is one
