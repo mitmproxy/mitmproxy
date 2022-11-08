@@ -325,8 +325,12 @@ class TlsConfig:
             tls_start.settings.cipher_suites = [
                 CipherSuite[cipher] for cipher in client.cipher_list
             ]
+        # if we don't have upstream ALPN, we allow all offered by the client
         tls_start.settings.alpn_protocols = [
-            alpn.decode("ascii") for alpn in (client.alpn, server.alpn) if alpn
+            alpn.decode("ascii")
+            for alpn in [
+                alpn for alpn in (client.alpn, server.alpn) if alpn
+            ] or client.alpn_offers
         ]
 
         # set the certificates

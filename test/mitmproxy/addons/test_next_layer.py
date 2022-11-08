@@ -309,6 +309,7 @@ class TestNextLayer:
             layers.ServerQuicLayer(ctx),
         ]
         assert isinstance(nl._next_layer(ctx, b"notahandshakebutignore", b""), layers.ClientQuicLayer)
+        assert len(ctx.layers) == 3
         decision = nl._next_layer(ctx, b"", b"")
         assert isinstance(decision, layers.HttpLayer)
         assert decision.mode is HTTPMode.transparent
@@ -333,7 +334,9 @@ class TestNextLayer:
         ctx.client.proxy_mode.scheme = "dtls"
         ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerTLSLayer(ctx)]
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerTLSLayer(ctx), layers.ClientTLSLayer(ctx)]
+        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerTLSLayer(ctx)]
+        assert isinstance(nl._next_layer(ctx, dtls_client_hello_with_extensions, b""), layers.ClientTLSLayer)
+        assert len(ctx.layers) == 3
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
 
     def test_next_layer_reverse_udp_mode(self):
@@ -345,7 +348,9 @@ class TestNextLayer:
         ctx.client.proxy_mode.scheme = "udp"
         ctx.layers = [layers.modes.ReverseProxy(ctx)]
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ClientTLSLayer(ctx)]
+        ctx.layers = [layers.modes.ReverseProxy(ctx)]
+        assert isinstance(nl._next_layer(ctx, dtls_client_hello_with_extensions, b""), layers.ClientTLSLayer)
+        assert len(ctx.layers) == 2
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
 
     def test_next_layer_reverse_dns_mode(self):
@@ -357,7 +362,9 @@ class TestNextLayer:
         ctx.client.proxy_mode.scheme = "dns"
         ctx.layers = [layers.modes.ReverseProxy(ctx)]
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.DNSLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ClientTLSLayer(ctx)]
+        ctx.layers = [layers.modes.ReverseProxy(ctx)]
+        assert isinstance(nl._next_layer(ctx, dtls_client_hello_with_extensions, b""), layers.ClientTLSLayer)
+        assert len(ctx.layers) == 2
         assert isinstance(nl._next_layer(ctx, b"", b""), layers.DNSLayer)
 
     def test_next_layer_invalid_proto(self):
