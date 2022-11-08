@@ -757,15 +757,15 @@ async def test_reverse_http3_and_quic_stream(
             await caplog_async.await_log(f"Stopped reverse proxy to {scheme}")
 
 
-async def test_reverse_quic_datagram(caplog_async) -> None:
+@pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
+async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        # eager is not (yet) support for non-H3
-        tctx.options.connection_strategy = "lazy"
+        tctx.options.connection_strategy = connection_strategy
         ta.configure(["confdir"])
         async with quic_server(QuicDatagramEchoServer, alpn=["dgram"]) as server_addr:
             mode = f"reverse:quic://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"

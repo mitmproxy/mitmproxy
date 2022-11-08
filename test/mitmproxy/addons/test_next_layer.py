@@ -181,15 +181,15 @@ class TestNextLayer:
             assert isinstance(nl._next_layer(ctx, b"", b"hello"), layers.TCPLayer)
 
     @pytest.mark.parametrize(
-        ("client_hello", "client_layer", "server_layer"),
+        ("protocol", "client_layer", "server_layer"),
         [
-            (dtls_client_hello_with_extensions, layers.ClientTLSLayer, layers.ServerTLSLayer),
-            (quic_client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer),
+            ("dtls", layers.ClientTLSLayer, layers.ServerTLSLayer),
+            ("quic", layers.ClientQuicLayer, layers.ServerQuicLayer),
         ]
     )
     def test_next_layer_udp(
         self,
-        client_hello: bytes,
+        protocol: str,
         client_layer: layer.Layer,
         server_layer: layer.Layer,
     ):
@@ -205,6 +205,10 @@ class TestNextLayer:
                 and layer.mode is mode
             )
 
+        client_hello = {
+            "dtls": dtls_client_hello_with_extensions,
+            "quic": quic_client_hello,
+        }[protocol]
         nl = NextLayer()
         ctx = MagicMock()
         ctx.client.alpn = None

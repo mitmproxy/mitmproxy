@@ -26,7 +26,7 @@ from mitmproxy.proxy.layers.tls import (
 )
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
-from mitmproxy.test import tflow
+from mitmproxy.test import taddons, tflow
 from mitmproxy.udp import UDPFlow
 from test.mitmproxy.proxy.layers.test_tls import (
     reply_tls_start_client,
@@ -174,27 +174,28 @@ def test_reverse_dns(tctx):
 
 @pytest.mark.parametrize("keep_host_header", [True, False])
 def test_quic(tctx: Context, keep_host_header: bool):
-    tctx.options.keep_host_header = keep_host_header
-    tctx.server.sni = "other"
-    tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://1.2.3.4:5")
-    client_hello = Placeholder(bytes)
+    with taddons.context():
+        tctx.options.keep_host_header = keep_host_header
+        tctx.server.sni = "other"
+        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://1.2.3.4:5")
+        client_hello = Placeholder(bytes)
 
-    def set_settings(data: quic.QuicTlsData):
-        data.settings = quic.QuicTlsSettings()
+        def set_settings(data: quic.QuicTlsData):
+            data.settings = quic.QuicTlsSettings()
 
-    assert (
-        Playbook(modes.ReverseProxy(tctx))
-        << OpenConnection(tctx.server)
-        >> reply(None)
-        << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
-        >> reply(side_effect=set_settings)
-        << SendData(tctx.server, client_hello)
-        << RequestWakeup(Placeholder(float))
-    )
-    assert tctx.server.address == ("1.2.3.4", 5)
-    assert quic.quic_parse_client_hello(client_hello()).sni == (
-        "other" if keep_host_header else "1.2.3.4"
-    )
+        assert (
+            Playbook(modes.ReverseProxy(tctx))
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
+            >> reply(side_effect=set_settings)
+            << SendData(tctx.server, client_hello)
+            << RequestWakeup(Placeholder(float))
+        )
+        assert tctx.server.address == ("1.2.3.4", 5)
+        assert quic.quic_parse_client_hello(client_hello()).sni == (
+            "other" if keep_host_header else "1.2.3.4"
+        )
 
 
 def test_udp(tctx: Context):

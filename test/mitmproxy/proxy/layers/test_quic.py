@@ -8,8 +8,7 @@ from aioquic.quic.connection import QuicConnection, pull_quic_header
 from typing import Literal, Optional, TypeVar
 from unittest.mock import MagicMock
 import pytest
-from mitmproxy import connection, options
-from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy import connection
 from mitmproxy.proxy import commands, context, events, layer, tunnel
 from mitmproxy.proxy import layers
 from mitmproxy.proxy.layers import quic, tcp, tls, udp
@@ -24,15 +23,6 @@ tlsdata = data.Data(__name__)
 
 
 T = TypeVar('T', bound=layer.Layer)
-
-
-@pytest.fixture
-def tctx() -> context.Context:
-    opts = options.Options()
-    Proxyserver().load(opts)
-    return context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
-    )
 
 
 class DummyLayer(layer.Layer):
