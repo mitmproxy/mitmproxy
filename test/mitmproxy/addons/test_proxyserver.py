@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import socket
 import ssl
-from typing import AsyncGenerator, Optional, TypeVar
+from typing import AsyncGenerator, ClassVar, Optional, TypeVar
+from typing_extensions import Self
 from unittest.mock import Mock
 
 from aioquic.asyncio.protocol import QuicConnectionProtocol
@@ -425,16 +426,26 @@ class H3EchoServer(QuicConnectionProtocol):
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
         if isinstance(event, quic_events.ProtocolNegotiated):
-            assert event.alpn_protocol == "h3"
             self.http = H3Connection(self._quic)
         if self.http is not None:
             for http_event in self.http.handle_event(event):
                 self.http_event_received(http_event)
 
 
+class QuicDatagramEchoServer(QuicConnectionProtocol):
+    def quic_event_received(self, event: quic_events.QuicEvent) -> None:
+        if isinstance(event, quic_events.DatagramFrameReceived):
+            self._quic.send_datagram_frame(event.data)
+            self.transmit()
+
+
 @asynccontextmanager
 async def quic_server(create_protocol, alpn: list[str]) -> AsyncGenerator[Address, None]:
-    configuration = QuicConfiguration(is_client=False, alpn_protocols=alpn)
+    configuration = QuicConfiguration(
+        is_client=False,
+        alpn_protocols=alpn,
+        max_datagram_frame_size=65536,
+    )
     configuration.load_cert_chain(
         certfile=tlsdata.path("../net/data/verificationcerts/trusted-leaf.crt"),
         keyfile=tlsdata.path("../net/data/verificationcerts/trusted-leaf.key"),
@@ -453,16 +464,8 @@ async def quic_server(create_protocol, alpn: list[str]) -> AsyncGenerator[Addres
         server.close()
 
 
-@dataclass
-class H3Response:
-    waiter: asyncio.Future
-    headers: Optional[h3_events.H3Event] = None
-    data: Optional[bytes] = None
-    trailers: Optional[h3_events.H3Event] = None
-
-
 class QuicClient(QuicConnectionProtocol):
-    TIMEOUT = 5
+    TIMEOUT: ClassVar[int] = 5
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -483,7 +486,42 @@ class QuicClient(QuicConnectionProtocol):
         return super().connection_lost(exc)
 
     async def wait_handshake(self) -> None:
-        return await asyncio.wait_for(self._waiter, timeout=self.TIMEOUT)
+        return await asyncio.wait_for(self._waiter, timeout=QuicClient.TIMEOUT)
+
+
+class QuicDatagramClient(QuicClient):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._datagram: asyncio.Future[bytes] = self._loop.create_future()
+
+    def quic_event_received(self, event: quic_events.QuicEvent) -> None:
+        super().quic_event_received(event)
+        if not self._datagram.done():
+            if isinstance(event, quic_events.DatagramFrameReceived):
+                self._datagram.set_result(event.data)
+            elif isinstance(event, quic_events.ConnectionTerminated):
+                self._datagram.set_exception(QuicConnectionError(
+                    event.error_code, event.frame_type, event.reason_phrase
+                ))
+
+    def send_datagram(self, data: bytes) -> None:
+        self._quic.send_datagram_frame(data)
+        self.transmit()
+
+    async def recv_datagram(self) -> bytes:
+        return await asyncio.wait_for(self._datagram, timeout=QuicClient.TIMEOUT)
+
+
+@dataclass
+class H3Response:
+    waiter: asyncio.Future[Self]
+    stream_id: int
+    headers: Optional[h3_events.H3Event] = None
+    data: Optional[bytes] = None
+    trailers: Optional[h3_events.H3Event] = None
+
+    async def wait_result(self) -> Self:
+        return await asyncio.wait_for(self.waiter, timeout=QuicClient.TIMEOUT)
 
 
 class H3Client(QuicClient):
@@ -541,34 +579,36 @@ class H3Client(QuicClient):
         for http_event in self.http.handle_event(event):
             self.http_event_received(http_event)
 
-    async def request(
+    def request(
         self,
         headers: h3_events.H3Event,
         data: Optional[bytes] = None,
         trailers: Optional[h3_events.H3Event] = None,
+        end_stream: bool = True,
     ) -> H3Response:
         stream_id = self._quic.get_next_available_stream_id()
         self.http.send_headers(
             stream_id=stream_id,
             headers=headers,
-            end_stream=data is None and trailers is None,
+            end_stream=data is None and trailers is None and end_stream,
         )
         if data is not None:
             self.http.send_data(
                 stream_id=stream_id,
                 data=data,
-                end_stream=trailers is None,
+                end_stream=trailers is None and end_stream,
             )
         if trailers is not None:
             self.http.send_headers(
                 stream_id=stream_id,
                 headers=trailers,
-                end_stream=True,
+                end_stream=end_stream,
             )
         waiter = self._loop.create_future()
-        self._responses[stream_id] = H3Response(waiter=waiter)
+        response = H3Response(waiter=waiter, stream_id=stream_id)
+        self._responses[stream_id] = response
         self.transmit()
-        return await asyncio.wait_for(waiter, timeout=self.TIMEOUT)
+        return response
 
 
 T = TypeVar("T", bound=QuicClient)
@@ -585,6 +625,7 @@ async def quic_connect(
         alpn_protocols=alpn,
         server_name="example.mitmproxy.org",
         verify_mode=ssl.CERT_NONE,
+        max_datagram_frame_size=65536,
     )
     loop = asyncio.get_running_loop()
     transport, protocol = await loop.create_datagram_endpoint(
@@ -604,7 +645,7 @@ async def quic_connect(
 
 @pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
-async def test_reverse_http3(
+async def test_reverse_http3_and_quic_stream(
     caplog_async, scheme: str, connection_strategy: str
 ) -> None:
     def assert_no_data(response: H3Response):
@@ -647,7 +688,7 @@ async def test_reverse_http3(
                     headers=headers + [(b"x-request", b"justheaders")],
                     data=None,
                     trailers=None,
-                )
+                ).wait_result()
                 assert r1.headers == [
                     (b":status", b"200"),
                     (b"x-response", b"justheaders"),
@@ -659,7 +700,7 @@ async def test_reverse_http3(
                     headers=headers + [(b"x-request", b"hasdata")],
                     data=b"echo",
                     trailers=None,
-                )
+                ).wait_result()
                 assert r2.headers == [
                     (b":status", b"200"),
                     (b"x-response", b"hasdata"),
@@ -671,7 +712,7 @@ async def test_reverse_http3(
                     headers=headers + [(b"x-request", b"nodata")],
                     data=None,
                     trailers=[(b"x-request", b"buttrailers")],
-                )
+                ).wait_result()
                 assert r3.headers == [
                     (b":status", b"200"),
                     (b"x-response", b"nodata"),
@@ -683,7 +724,7 @@ async def test_reverse_http3(
                     headers=headers + [(b"x-request", b"this")],
                     data=b"has",
                     trailers=[(b"x-request", b"everything")],
-                )
+                ).wait_result()
                 assert r4.headers == [
                     (b":status", b"200"),
                     (b"x-response", b"this"),
@@ -691,5 +732,57 @@ async def test_reverse_http3(
                 assert r4.data == b"has"
                 assert r4.trailers == [(b"x-response", b"everything")]
 
+                r5 = client.request(
+                    headers=headers + [(b"x-request", b"this")],
+                    data=b"has",
+                    trailers=[(b"x-request", b"everything")],
+                    end_stream=False,
+                )
+                client._quic.send_stream_data(
+                    stream_id=r5.stream_id,
+                    data=b"",
+                    end_stream=True,
+                )
+                client.transmit()
+                await r5.wait_result()
+                assert r5.headers == [
+                    (b":status", b"200"),
+                    (b"x-response", b"this"),
+                ]
+                assert r5.data == b"has"
+                assert r5.trailers == [(b"x-response", b"everything")]
+
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"Stopped reverse proxy to {scheme}")
+
+
+async def test_reverse_quic_datagram(caplog_async) -> None:
+    caplog_async.set_level("INFO")
+    ps = Proxyserver()
+    nl = NextLayer()
+    ta = TlsConfig()
+    with taddons.context(ps, nl, ta) as tctx:
+        tctx.options.keep_host_header = True
+        # eager is not (yet) support for non-H3
+        tctx.options.connection_strategy = "lazy"
+        ta.configure(["confdir"])
+        async with quic_server(QuicDatagramEchoServer, alpn=["dgram"]) as server_addr:
+            mode = f"reverse:quic://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=tlsdata.path(
+                    "../net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+            tctx.configure(ps, mode=[mode])
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log(f"reverse proxy to quic://{server_addr[0]}:{server_addr[1]} listening")
+            assert ps.servers
+            addr = ps.servers[mode].listen_addrs[0]
+            async with quic_connect(QuicDatagramClient, alpn=["dgram"], address=addr) as client:
+                client.send_datagram(b"echo")
+                assert await client.recv_datagram() == b"echo"
+
+            tctx.configure(ps, server=False)
+            await caplog_async.await_log("Stopped reverse proxy to quic")
