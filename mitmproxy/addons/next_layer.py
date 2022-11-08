@@ -242,10 +242,11 @@ class NextLayer:
         assert context.layers
 
         if context.client.transport_protocol == "tcp":
+            is_quic_stream = isinstance(context.layers[-1], layers.QuicStreamLayer)
             if (
                 len(data_client) < 3
                 and not data_server
-                and not isinstance(context.layers[-1], layers.QuicStreamLayer)
+                and not is_quic_stream
             ):
                 return None  # not enough data yet to make a decision
 
@@ -253,7 +254,7 @@ class NextLayer:
             ignore = self.ignore_connection(context.server.address, data_client)
             if ignore is True:
                 return layers.TCPLayer(context, ignore=True)
-            if ignore is None:
+            if ignore is None and not is_quic_stream:
                 return None
 
             # 2. Check for TLS

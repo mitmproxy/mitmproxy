@@ -743,6 +743,13 @@ class QuicLayer(tunnel.TunnelLayer):
         else:
             yield from super()._handle_event(event)
 
+    def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
+        # the parent will call _handle_command multiple times, we transmit cumulative afterwards
+        # this will reduce the number of sends, especially if data=b"" and end_stream=True
+        yield from super().event_to_child(event)
+        if self.quic:
+            yield from self.tls_interact()
+
     def _handle_command(self, command: commands.Command) -> layer.CommandGenerator[None]:
         """Turns stream commands into aioquic connection invocations."""
         if (
@@ -760,7 +767,6 @@ class QuicLayer(tunnel.TunnelLayer):
                     self.quic.stop_stream(command.stream_id, command.error_code)
             else:
                 raise AssertionError(f"Unexpected stream command: {command!r}")
-            yield from self.tls_interact()
         else:
             yield from super()._handle_command(command)
 

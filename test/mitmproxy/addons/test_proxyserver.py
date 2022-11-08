@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import socket
 import ssl
-from typing import AsyncGenerator, ClassVar, Optional, TypeVar
+from typing import Any, AsyncGenerator, Callable, ClassVar, Optional, TypeVar
 from unittest.mock import Mock
 
 from aioquic.asyncio.protocol import QuicConnectionProtocol
@@ -520,9 +520,15 @@ class H3Response:
     headers: Optional[h3_events.H3Event] = None
     data: Optional[bytes] = None
     trailers: Optional[h3_events.H3Event] = None
+    callback: Optional[Callable[[str], None]] = None
 
     async def wait_result(self) -> H3Response:
         return await asyncio.wait_for(self.waiter, timeout=QuicClient.TIMEOUT)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__(name, value)
+        if self.callback:
+            self.callback(name)
 
 
 class H3Client(QuicClient):
@@ -733,12 +739,21 @@ async def test_reverse_http3_and_quic_stream(
                 assert r4.data == b"has"
                 assert r4.trailers == [(b"x-response", b"everything")]
 
+                # the following test makes sure that we behave properly if end_stream is sent separately
                 r5 = client.request(
                     headers=headers + [(b"x-request", b"this")],
                     data=b"has",
-                    trailers=[(b"x-request", b"everything")],
+                    trailers=[(b"x-request", b"everything but end_stream")],
                     end_stream=False,
                 )
+                if scheme == "quic":
+                    trailer_waiter = asyncio.get_running_loop().create_future()
+                    r5.callback = lambda name: name != "trailers" or trailer_waiter.set_result(None)
+                    await asyncio.wait_for(trailer_waiter, timeout=QuicClient.TIMEOUT)
+                    assert r5.trailers is not None
+                    assert not r5.waiter.done()
+                else:
+                    await asyncio.sleep(0)
                 client._quic.send_stream_data(
                     stream_id=r5.stream_id,
                     data=b"",
@@ -751,7 +766,7 @@ async def test_reverse_http3_and_quic_stream(
                     (b"x-response", b"this"),
                 ]
                 assert r5.data == b"has"
-                assert r5.trailers == [(b"x-response", b"everything")]
+                assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"Stopped reverse proxy to {scheme}")
