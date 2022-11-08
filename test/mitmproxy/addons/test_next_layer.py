@@ -250,69 +250,82 @@ class TestNextLayer:
 
     def test_next_layer_reverse_raw(self):
         nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        with taddons.context(nl) as tctx:
-            tctx.configure(nl, ignore_hosts=["example.com"])
+        with taddons.context(nl):
+            ctx = MagicMock()
+            ctx.client.alpn = None
+            ctx.server.address = ("example.com", 443)
+            ctx.client.transport_protocol = "udp"
+            with taddons.context(nl) as tctx:
+                tctx.configure(nl, ignore_hosts=["example.com"])
 
-            ctx.layers = [layers.modes.HttpProxy(ctx), layers.ClientQuicLayer(ctx)]
-            decision = nl._next_layer(ctx, b"", b"")
-            assert isinstance(decision, layers.ServerQuicLayer)
-            assert isinstance(decision.child_layer, layers.RawQuicLayer)
+                ctx.layers = [
+                    layers.modes.HttpProxy(ctx),
+                    layers.ClientQuicLayer(ctx),
+                ]
+                decision = nl._next_layer(ctx, b"", b"")
+                assert isinstance(decision, layers.ServerQuicLayer)
+                assert isinstance(decision.child_layer, layers.RawQuicLayer)
 
-            ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerQuicLayer(ctx), layers.ClientQuicLayer(ctx)]
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
+                ctx.layers = [
+                    layers.modes.ReverseProxy(ctx),
+                    layers.ServerQuicLayer(ctx),
+                    layers.ClientQuicLayer(ctx,),
+                ]
+                assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
 
-            ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerQuicLayer(ctx)]
-            decision = nl._next_layer(ctx, b"", b"")
-            assert isinstance(decision, layers.ClientQuicLayer)
-            assert isinstance(decision.child_layer, layers.RawQuicLayer)
+                ctx.layers = [
+                    layers.modes.ReverseProxy(ctx),
+                    layers.ServerQuicLayer(ctx),
+                ]
+                decision = nl._next_layer(ctx, b"", b"")
+                assert isinstance(decision, layers.ClientQuicLayer)
+                assert isinstance(decision.child_layer, layers.RawQuicLayer)
 
-            tctx.configure(nl, ignore_hosts=[])
+                tctx.configure(nl, ignore_hosts=[])
 
     def test_next_layer_reverse_quic_mode(self):
         nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "quic"
-        ctx.layers = [
-            layers.modes.ReverseProxy(ctx),
-            layers.ServerQuicLayer(ctx),
-            layers.ClientQuicLayer(ctx),
-        ]
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
-        ctx.layers = [
-            layers.modes.ReverseProxy(ctx),
-            layers.ServerQuicLayer(ctx),
-        ]
-        assert nl._next_layer(ctx, b"", b"") is None
-        assert isinstance(nl._next_layer(ctx, b"notahandshake", b""), layers.UDPLayer)
-        ctx.layers = [
-            layers.modes.ReverseProxy(ctx),
-            layers.ServerQuicLayer(ctx),
-        ]
-        assert isinstance(nl._next_layer(ctx, quic_client_hello, b""), layers.ClientQuicLayer)
+        with taddons.context(nl):
+            ctx = MagicMock()
+            ctx.client.alpn = None
+            ctx.server.address = ("example.com", 443)
+            ctx.client.transport_protocol = "udp"
+            ctx.client.proxy_mode.scheme = "quic"
+            ctx.layers = [
+                layers.modes.ReverseProxy(ctx),
+                layers.ServerQuicLayer(ctx),
+                layers.ClientQuicLayer(ctx),
+            ]
+            assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
+            ctx.layers = [
+                layers.modes.ReverseProxy(ctx),
+                layers.ServerQuicLayer(ctx),
+            ]
+            assert nl._next_layer(ctx, b"", b"") is None
+            assert isinstance(nl._next_layer(ctx, b"notahandshake", b""), layers.UDPLayer)
+            ctx.layers = [
+                layers.modes.ReverseProxy(ctx),
+                layers.ServerQuicLayer(ctx),
+            ]
+            assert isinstance(nl._next_layer(ctx, quic_client_hello, b""), layers.ClientQuicLayer)
 
     def test_next_layer_reverse_http3_mode(self):
         nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "http3"
-        ctx.layers = [
-            layers.modes.ReverseProxy(ctx),
-            layers.ServerQuicLayer(ctx),
-        ]
-        assert isinstance(nl._next_layer(ctx, b"notahandshakebutignore", b""), layers.ClientQuicLayer)
-        assert len(ctx.layers) == 3
-        decision = nl._next_layer(ctx, b"", b"")
-        assert isinstance(decision, layers.HttpLayer)
-        assert decision.mode is HTTPMode.transparent
+        with taddons.context(nl):
+            ctx = MagicMock()
+            ctx.client.alpn = None
+            ctx.server.address = ("example.com", 443)
+            ctx.client.transport_protocol = "udp"
+            ctx.client.proxy_mode.scheme = "http3"
+            ctx.layers = [
+                layers.modes.ReverseProxy(ctx),
+                layers.ServerQuicLayer(ctx),
+            ]
+            assert isinstance(nl._next_layer(ctx, b"notahandshakebutignore", b""), layers.ClientQuicLayer)
+            assert len(ctx.layers) == 3
+            decision = nl._next_layer(ctx, b"", b"")
+            assert isinstance(decision, layers.HttpLayer)
+            assert decision.mode is HTTPMode.transparent
 
     def test_next_layer_reverse_invalid_mode(self):
         nl = NextLayer()

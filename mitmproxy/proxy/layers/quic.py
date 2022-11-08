@@ -1,5 +1,4 @@
 from __future__ import annotations
-import asyncio
 from dataclasses import dataclass, field
 from logging import DEBUG, ERROR, WARNING
 from ssl import VerifyMode
@@ -27,7 +26,7 @@ from aioquic.quic.packet import (
 )
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import certs, connection
+from mitmproxy import certs, connection, ctx
 from mitmproxy.net import tls
 from mitmproxy.proxy import commands, context, events, layer, tunnel
 from mitmproxy.proxy.layers.tcp import TCPLayer
@@ -723,7 +722,7 @@ class QuicLayer(tunnel.TunnelLayer):
     def __init__(self, context: context.Context, conn: connection.Connection, time: Callable[[], float] | None) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
-        self._time = time or asyncio.get_event_loop().time
+        self._time = time or ctx.master.event_loop.time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
         conn.tls = True
 

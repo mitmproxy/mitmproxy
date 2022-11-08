@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import socket
 import ssl
 from typing import AsyncGenerator, ClassVar, Optional, TypeVar
-from typing_extensions import Self
 from unittest.mock import Mock
 
 from aioquic.asyncio.protocol import QuicConnectionProtocol
@@ -514,13 +515,13 @@ class QuicDatagramClient(QuicClient):
 
 @dataclass
 class H3Response:
-    waiter: asyncio.Future[Self]
+    waiter: asyncio.Future[H3Response]
     stream_id: int
     headers: Optional[h3_events.H3Event] = None
     data: Optional[bytes] = None
     trailers: Optional[h3_events.H3Event] = None
 
-    async def wait_result(self) -> Self:
+    async def wait_result(self) -> H3Response:
         return await asyncio.wait_for(self.waiter, timeout=QuicClient.TIMEOUT)
 
 
