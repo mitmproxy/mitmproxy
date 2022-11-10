@@ -955,8 +955,8 @@ class TestClientTLS:
         assert tctx.server.sni == tctx.client.sni
         assert tctx.client.alpn == b"quux"
         assert tctx.server.alpn == b"quux"
-        _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
+        _test_echo(playbook, tssl_server, tctx.server)
 
     @pytest.mark.parametrize("server_state", ["open", "closed"])
     def test_passthrough_from_clienthello(self, tctx: context.Context, server_state: Literal["open", "closed"]):

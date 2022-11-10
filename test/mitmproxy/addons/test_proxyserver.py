@@ -650,18 +650,102 @@ async def quic_connect(
         transport.close()
 
 
+async def _test_echo(client: H3Client, strict: bool) -> None:
+    def assert_no_data(response: H3Response):
+        if strict:
+            assert response.data is None
+        else:
+            assert not response.data
+
+    headers = [
+        (b":scheme", b"https"),
+        (b":authority", b"example.mitmproxy.org"),
+        (b":method", b"GET"),
+        (b":path", b"/test"),
+    ]
+    r1 = await client.request(
+        headers=headers + [(b"x-request", b"justheaders")],
+        data=None,
+        trailers=None,
+    ).wait_result()
+    assert r1.headers == [
+        (b":status", b"200"),
+        (b"x-response", b"justheaders"),
+    ]
+    assert_no_data(r1)
+    assert r1.trailers is None
+
+    r2 = await client.request(
+        headers=headers + [(b"x-request", b"hasdata")],
+        data=b"echo",
+        trailers=None,
+    ).wait_result()
+    assert r2.headers == [
+        (b":status", b"200"),
+        (b"x-response", b"hasdata"),
+    ]
+    assert r2.data == b"echo"
+    assert r2.trailers is None
+
+    r3 = await client.request(
+        headers=headers + [(b"x-request", b"nodata")],
+        data=None,
+        trailers=[(b"x-request", b"buttrailers")],
+    ).wait_result()
+    assert r3.headers == [
+        (b":status", b"200"),
+        (b"x-response", b"nodata"),
+    ]
+    assert_no_data(r3)
+    assert r3.trailers == [(b"x-response", b"buttrailers")]
+
+    r4 = await client.request(
+        headers=headers + [(b"x-request", b"this")],
+        data=b"has",
+        trailers=[(b"x-request", b"everything")],
+    ).wait_result()
+    assert r4.headers == [
+        (b":status", b"200"),
+        (b"x-response", b"this"),
+    ]
+    assert r4.data == b"has"
+    assert r4.trailers == [(b"x-response", b"everything")]
+
+    # the following test makes sure that we behave properly if end_stream is sent separately
+    r5 = client.request(
+        headers=headers + [(b"x-request", b"this")],
+        data=b"has",
+        trailers=[(b"x-request", b"everything but end_stream")],
+        end_stream=False,
+    )
+    if not strict:
+        trailer_waiter = asyncio.get_running_loop().create_future()
+        r5.callback = lambda name: name != "trailers" or trailer_waiter.set_result(None)
+        await asyncio.wait_for(trailer_waiter, timeout=QuicClient.TIMEOUT)
+        assert r5.trailers is not None
+        assert not r5.waiter.done()
+    else:
+        await asyncio.sleep(0)
+    client._quic.send_stream_data(
+        stream_id=r5.stream_id,
+        data=b"",
+        end_stream=True,
+    )
+    client.transmit()
+    await r5.wait_result()
+    assert r5.headers == [
+        (b":status", b"200"),
+        (b"x-response", b"this"),
+    ]
+    assert r5.data == b"has"
+    assert r5.trailers == [(b"x-response", b"everything but end_stream")]
+
+
 @pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
 async def test_reverse_http3_and_quic_stream(
     caplog_async, scheme: str, connection_strategy: str
 ) -> None:
-    def assert_no_data(response: H3Response):
-        # http3 is more strict
-        if scheme == "http3":
-            assert response.data is None
-        else:
-            assert not response.data
-
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
@@ -685,88 +769,8 @@ async def test_reverse_http3_and_quic_stream(
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
-                headers = [
-                    (b":scheme", b"https"),
-                    (b":authority", b"example.mitmproxy.org"),
-                    (b":method", b"GET"),
-                    (b":path", b"/test"),
-                ]
-                r1 = await client.request(
-                    headers=headers + [(b"x-request", b"justheaders")],
-                    data=None,
-                    trailers=None,
-                ).wait_result()
-                assert r1.headers == [
-                    (b":status", b"200"),
-                    (b"x-response", b"justheaders"),
-                ]
-                assert_no_data(r1)
-                assert r1.trailers is None
-
-                r2 = await client.request(
-                    headers=headers + [(b"x-request", b"hasdata")],
-                    data=b"echo",
-                    trailers=None,
-                ).wait_result()
-                assert r2.headers == [
-                    (b":status", b"200"),
-                    (b"x-response", b"hasdata"),
-                ]
-                assert r2.data == b"echo"
-                assert r2.trailers is None
-
-                r3 = await client.request(
-                    headers=headers + [(b"x-request", b"nodata")],
-                    data=None,
-                    trailers=[(b"x-request", b"buttrailers")],
-                ).wait_result()
-                assert r3.headers == [
-                    (b":status", b"200"),
-                    (b"x-response", b"nodata"),
-                ]
-                assert_no_data(r3)
-                assert r3.trailers == [(b"x-response", b"buttrailers")]
-
-                r4 = await client.request(
-                    headers=headers + [(b"x-request", b"this")],
-                    data=b"has",
-                    trailers=[(b"x-request", b"everything")],
-                ).wait_result()
-                assert r4.headers == [
-                    (b":status", b"200"),
-                    (b"x-response", b"this"),
-                ]
-                assert r4.data == b"has"
-                assert r4.trailers == [(b"x-response", b"everything")]
-
-                # the following test makes sure that we behave properly if end_stream is sent separately
-                r5 = client.request(
-                    headers=headers + [(b"x-request", b"this")],
-                    data=b"has",
-                    trailers=[(b"x-request", b"everything but end_stream")],
-                    end_stream=False,
-                )
-                if scheme == "quic":
-                    trailer_waiter = asyncio.get_running_loop().create_future()
-                    r5.callback = lambda name: name != "trailers" or trailer_waiter.set_result(None)
-                    await asyncio.wait_for(trailer_waiter, timeout=QuicClient.TIMEOUT)
-                    assert r5.trailers is not None
-                    assert not r5.waiter.done()
-                else:
-                    await asyncio.sleep(0)
-                client._quic.send_stream_data(
-                    stream_id=r5.stream_id,
-                    data=b"",
-                    end_stream=True,
-                )
-                client.transmit()
-                await r5.wait_result()
-                assert r5.headers == [
-                    (b":status", b"200"),
-                    (b"x-response", b"this"),
-                ]
-                assert r5.data == b"has"
-                assert r5.trailers == [(b"x-response", b"everything but end_stream")]
+                await _test_echo(client, strict=scheme == "http3")
+                assert len(ps.connections) == 1
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"Stopped reverse proxy to {scheme}")
@@ -802,3 +806,43 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log("Stopped reverse proxy to quic")
+
+
+async def test_regular_http3(caplog_async, monkeypatch) -> None:
+    caplog_async.set_level("INFO")
+    ps = Proxyserver()
+    nl = NextLayer()
+    ta = TlsConfig()
+    with taddons.context(ps, nl, ta) as tctx:
+        ta.configure(["confdir"])
+        async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
+            orig_open_connection = udp.open_connection
+
+            def open_connection_path(
+                host: str, port: int, *args, **kwargs
+            ) -> udp.UdpClient:
+                if host == "example.mitmproxy.org" and port == 443:
+                    host = server_addr[0]
+                    port = server_addr[1]
+                return orig_open_connection(host, port, *args, **kwargs)
+
+            monkeypatch.setattr(udp, "open_connection", open_connection_path)
+            mode = f"http3@127.0.0.1:0"
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=tlsdata.path(
+                    "../net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+            tctx.configure(ps, mode=[mode])
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log(f"HTTP3 proxy listening")
+            assert ps.servers
+            addr = ps.servers[mode].listen_addrs[0]
+            async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
+                await _test_echo(client=client, strict=True)
+                assert len(ps.connections) == 1
+
+            tctx.configure(ps, server=False)
+            await caplog_async.await_log("Stopped HTTP3 proxy")
