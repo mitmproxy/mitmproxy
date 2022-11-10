@@ -48,16 +48,16 @@ r = subprocess.run(
         "run",
         "--rm",
         "-v",
-        f"{root / 'release'}:/release"
+        f"{root / 'release'}:/release",
         "localtesting",
         "mitmdump",
         "-s", "/release/selftest.py",
     ],
-    check=True,
     capture_output=True,
 )
 print(r.stdout.decode())
 assert "Self-test successful" in r.stdout.decode()
+assert r.returncode == 0
 
 # Now we can deploy.
 subprocess.check_call(
