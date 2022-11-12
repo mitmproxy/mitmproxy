@@ -130,6 +130,7 @@ class KeyHelp(urwid.Frame):
 class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Key Bindings"
     keyctx = "keybindings"
+    focus_position: int
 
     def __init__(self, master):
         oh = KeyHelp(master)

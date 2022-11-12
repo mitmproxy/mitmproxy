@@ -41,7 +41,7 @@ class StateObject(serializable.Serializable):
                 setattr(self, attr, val)
             else:
                 curr = getattr(self, attr, None)
-                if hasattr(curr, "set_state"):
+                if curr is not None and hasattr(curr, "set_state"):
                     curr.set_state(val)
                 else:
                     setattr(self, attr, make_object(cls, val))

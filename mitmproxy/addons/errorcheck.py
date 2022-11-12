@@ -9,7 +9,7 @@ from mitmproxy import log
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
 
-    def __init__(self, log_to_stderr: bool = False):
+    def __init__(self, log_to_stderr: bool = False) -> None:
         self.log_to_stderr = log_to_stderr
 
         self.logger = ErrorCheckHandler()
@@ -31,7 +31,7 @@ class ErrorCheck:
 
 
 class ErrorCheckHandler(log.MitmLogHandler):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(logging.ERROR)
         self.has_errored: list[logging.LogRecord] = []
 

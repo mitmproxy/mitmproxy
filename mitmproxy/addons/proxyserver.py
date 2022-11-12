@@ -195,7 +195,7 @@ class Proxyserver(ServerManager):
     def running(self):
         self.is_running = True
 
-    def configure(self, updated):
+    def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
             try:
                 human.parse_size(ctx.options.stream_large_bodies)

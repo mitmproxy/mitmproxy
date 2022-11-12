@@ -18,7 +18,7 @@ try:
     from typing import ParamSpec
 except ImportError:  # pragma: no cover
     # Python 3.9
-    from typing_extensions import ParamSpec
+    from typing_extensions import ParamSpec  # type: ignore
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -37,7 +37,7 @@ def make_weak_ref(obj: Any) -> weakref.ReferenceType:
 # We're running into https://github.com/python/mypy/issues/6073 here,
 # which is why the base class is a mixin and not a generic superclass.
 class _SignalMixin:
-    def __init__(self):
+    def __init__(self) -> None:
         self.receivers: list[weakref.ref[Callable]] = []
 
     def connect(self, receiver: Callable) -> None:

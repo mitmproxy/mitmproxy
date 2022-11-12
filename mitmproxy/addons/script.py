@@ -79,7 +79,7 @@ class Script:
         self.name = "scriptmanager:" + path
         self.path = path
         self.fullpath = os.path.expanduser(path.strip("'\" "))
-        self.ns = None
+        self.ns: types.ModuleType | None = None
         self.is_running = False
 
         if not os.path.isfile(self.fullpath):
@@ -126,7 +126,7 @@ class Script:
                 ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
 
     async def watcher(self):
-        last_mtime = 0
+        last_mtime = 0.0
         while True:
             try:
                 mtime = os.stat(self.fullpath).st_mtime

@@ -129,7 +129,7 @@ def standalone_binaries():
                 executable = executable.with_suffix(".exe")
 
             f.add(str(executable), str(executable.name))
-    print(f"Packed {f.name}.")
+    print(f"Packed {f.name!r}.")
 
 
 def _ensure_pyinstaller_onedir():

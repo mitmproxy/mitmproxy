@@ -125,6 +125,8 @@ class Commands(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Command Reference"
     keyctx = "commands"
 
+    focus_position: int
+
     def __init__(self, master):
         oh = CommandHelp(master)
         super().__init__(

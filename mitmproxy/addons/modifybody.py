@@ -7,7 +7,7 @@ from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 
 class ModifyBody:
-    def __init__(self):
+    def __init__(self) -> None:
         self.replacements: list[ModifySpec] = []
 
     def load(self, loader):

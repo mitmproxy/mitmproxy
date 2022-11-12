@@ -30,8 +30,8 @@ def domain_match(a: str, b: str) -> bool:
 
 
 class StickyCookie:
-    def __init__(self):
-        self.jar: dict[TOrigin, dict[str, str]] = collections.defaultdict(dict)
+    def __init__(self) -> None:
+        self.jar: collections.defaultdict[TOrigin, dict[str, str]] = collections.defaultdict(dict)
         self.flt: Optional[flowfilter.TFilter] = None
 
     def load(self, loader):

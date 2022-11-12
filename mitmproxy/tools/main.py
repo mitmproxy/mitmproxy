@@ -1,3 +1,4 @@
+from __future__ import annotations
 import argparse
 import asyncio
 import logging
@@ -42,7 +43,7 @@ def run(
     master_cls: type[T],
     make_parser: Callable[[options.Options], argparse.ArgumentParser],
     arguments: Sequence[str],
-    extra: Callable[[Any], dict] = None,
+    extra: Callable[[Any], dict] | None = None,
 ) -> T:  # pragma: no cover
     """
     extra: Extra argument processing callable which returns a dict of

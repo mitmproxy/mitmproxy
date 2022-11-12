@@ -150,11 +150,11 @@ class ActionBar(urwid.WidgetWrap):
                     return k
 
     def show_quickhelp(self) -> None:
-        try:
-            s = self.master.window.focus_stack()
+        if w := self.master.window:
+            s = w.focus_stack()
             focused_widget = type(s.top_widget())
             is_top_widget = len(s.stack) == 1
-        except AttributeError:  # on startup
+        else:  # on startup
             focused_widget = flowlist.FlowListBox
             is_top_widget = True
         focused_flow = self.master.view.focus.flow
@@ -196,7 +196,7 @@ class StatusBar(urwid.WidgetWrap):
         self.redraw()
         signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
 
-    def sig_update(self, flow=None, updated=None):
+    def sig_update(self, *args, **kwargs) -> None:
         self.redraw()
 
     def keypress(self, *args, **kwargs):
@@ -297,7 +297,7 @@ class StatusBar(urwid.WidgetWrap):
 
     def redraw(self) -> None:
         fc = self.master.commands.execute("view.properties.length")
-        if self.master.view.focus.flow is None:
+        if self.master.view.focus.index is None:
             offset = 0
         else:
             offset = self.master.view.focus.index + 1

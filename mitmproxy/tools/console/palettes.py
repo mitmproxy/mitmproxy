@@ -3,6 +3,7 @@
 #
 # http://urwid.org/manual/displayattributes.html
 #
+from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Optional
 
@@ -89,9 +90,10 @@ class Palette:
     ]
     _fields.extend(["gradient_%02d" % i for i in range(100)])
     high: Optional[Mapping[str, Sequence[str]]] = None
+    low: Mapping[str, Sequence[str]]
 
-    def palette(self, transparent):
-        l = []
+    def palette(self, transparent: bool):
+        l: list[Sequence[str | None]] = []
         highback, lowback = None, None
         if not transparent:
             if self.high and self.high.get("background"):
@@ -102,14 +104,14 @@ class Palette:
             if transparent and i == "background":
                 l.append(["background", "default", "default"])
             else:
-                v = [i]
+                v: list[str | None] = [i]
                 low = list(self.low[i])
                 if lowback and low[1] == "default":
                     low[1] = lowback
                 v.extend(low)
                 if self.high and i in self.high:
                     v.append(None)
-                    high = list(self.high[i])
+                    high: list[str | None] = list(self.high[i])
                     if highback and high[1] == "default":
                         high[1] = highback
                     v.extend(high)

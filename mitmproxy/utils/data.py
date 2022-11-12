@@ -7,7 +7,9 @@ class Data:
     def __init__(self, name):
         self.name = name
         m = importlib.import_module(name)
-        dirname = os.path.dirname(inspect.getsourcefile(m))
+        f = inspect.getsourcefile(m)
+        assert f is not None
+        dirname = os.path.dirname(f)
         self.dirname = os.path.abspath(dirname)
 
     def push(self, subpath):

@@ -103,7 +103,7 @@ class OptManager:
     mutation doesn't change the option state inadvertently.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.deferred: dict[str, Any] = {}
         self.changed = signals.SyncSignal(_sig_changed_spec)
         self.changed.connect(self._notify_subscribers)
@@ -526,7 +526,7 @@ def parse(text):
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(
                 "Config error at line %s:\n%s\n%s"
-                % (v.problem_mark.line + 1, snip, v.problem)
+                % (v.problem_mark.line + 1, snip, getattr(v, 'problem', ''))
             )
         else:
             raise exceptions.OptionsError("Could not parse options.")
