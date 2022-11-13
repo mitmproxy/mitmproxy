@@ -1,8 +1,8 @@
 import abc
 import copy
 import os
-from collections.abc import Callable, Container, Iterable, Sequence
-from typing import Any, AnyStr, Optional
+from collections.abc import Callable, Container, Iterable, MutableSequence, Sequence
+from typing import Any, AnyStr, ClassVar, Optional
 
 import urwid
 
@@ -117,7 +117,7 @@ class GridWalker(urwid.ListWalker):
     """
 
     def __init__(self, lst: Iterable[list], editor: "GridEditor") -> None:
-        self.lst: Sequence[tuple[Any, set]] = [(i, set()) for i in lst]
+        self.lst: MutableSequence[tuple[Any, set]] = [(i, set()) for i in lst]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
@@ -150,7 +150,7 @@ class GridWalker(urwid.ListWalker):
             errors = set()
         row = list(self.lst[focus][0])
         row[focus_col] = val
-        self.lst[focus] = [tuple(row), errors]
+        self.lst[focus] = [tuple(row), errors]  # type: ignore
         self._modified()
 
     def delete_focus(self):
@@ -180,7 +180,7 @@ class GridWalker(urwid.ListWalker):
             self._modified()
 
     def stop_edit(self):
-        if self.edit_row:
+        if self.edit_row and self.edit_row.edit_col:
             try:
                 val = self.edit_row.edit_col.get_data()
             except ValueError:
@@ -242,7 +242,7 @@ FIRST_WIDTH_MAX = 40
 
 class BaseGridEditor(urwid.WidgetWrap):
     title: str = ""
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(
         self,
@@ -388,7 +388,7 @@ class BaseGridEditor(urwid.WidgetWrap):
 class GridEditor(BaseGridEditor):
     title = ""
     columns: Sequence[Column] = ()
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(
         self,
@@ -408,7 +408,7 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     A specialised GridEditor that edits the current focused flow.
     """
 
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(self, master):
         self.master = master

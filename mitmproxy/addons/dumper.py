@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 
 import itertools
@@ -29,7 +30,7 @@ def indent(n: int, text: str) -> str:
     return "\n".join(pad + i for i in l)
 
 
-CONTENTVIEW_STYLES = {
+CONTENTVIEW_STYLES: dict[str, dict[str, str | bool]] = {
     "highlight": dict(bold=True),
     "offset": dict(fg="blue"),
     "header": dict(fg="green", bold=True),

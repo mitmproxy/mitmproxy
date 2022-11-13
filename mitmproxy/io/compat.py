@@ -6,7 +6,7 @@ v3.0.0dev) and versioning. Every change or migration gets a new flow file
 version number, this prevents issues with developer builds and snapshots.
 """
 import uuid
-from typing import Any, Mapping, Union
+from typing import Any, Union
 
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -139,8 +139,8 @@ def convert_300_4(data):
     return data
 
 
-client_connections: Mapping[str, str] = {}
-server_connections: Mapping[str, str] = {}
+client_connections: dict[tuple[str, ...], str] = {}
+server_connections: dict[tuple[str, ...], str] = {}
 
 
 def convert_4_5(data):

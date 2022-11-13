@@ -10,7 +10,7 @@ from mitmproxy.utils import signals
 
 
 class EventStore:
-    def __init__(self, size=10000):
+    def __init__(self, size: int = 10000) -> None:
         self.data: collections.deque[LogEntry] = collections.deque(maxlen=size)
         self.sig_add = signals.SyncSignal(lambda entry: None)
         self.sig_refresh = signals.SyncSignal(lambda: None)

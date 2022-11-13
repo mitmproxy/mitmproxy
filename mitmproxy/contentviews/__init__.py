@@ -44,9 +44,8 @@ except ImportError:
     # FIXME: Remove once QUIC is merged.
     http3 = None  # type: ignore
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
-from ..http import HTTPFlow
-from ..tcp import TCPMessage, TCPFlow
-from ..udp import UDPMessage, UDPFlow
+from ..tcp import TCPMessage
+from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
 
 views: list[View] = []
@@ -101,7 +100,7 @@ def safe_to_print(lines, encoding="utf8"):
 def get_message_content_view(
     viewname: str,
     message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow, UDPFlow],
+    flow: flow.Flow,
 ):
     """
     Like get_content_view, but also handles message encoding.

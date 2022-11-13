@@ -22,7 +22,7 @@ REALM = "mitmproxy"
 class ProxyAuth:
     validator: Validator | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.authenticated: MutableMapping[
             connection.Client, tuple[str, str]
         ] = weakref.WeakKeyDictionary()

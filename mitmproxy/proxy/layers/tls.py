@@ -257,7 +257,7 @@ class TLSLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def __repr__(self):
-        return super().__repr__().replace(")", f" {self.conn.sni} {self.conn.alpn})")
+        return super().__repr__().replace(")", f" {self.conn.sni!r} {self.conn.alpn!r})")
 
     @property
     def is_dtls(self):

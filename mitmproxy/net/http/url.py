@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import urllib.parse
 from collections.abc import Sequence
@@ -85,7 +86,7 @@ def unparse(scheme: str, host: str, port: int, path: str = "") -> str:
     return f"{scheme}://{authority}{path}"
 
 
-def encode(s: Sequence[tuple[str, str]], similar_to: str = None) -> str:
+def encode(s: Sequence[tuple[str, str]], similar_to: str | None = None) -> str:
     """
     Takes a list of (key, value) tuples and returns a urlencoded string.
     If similar_to is passed, the output is formatted similar to the provided urlencoded string.

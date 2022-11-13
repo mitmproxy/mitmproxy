@@ -5,7 +5,7 @@ import json
 import logging
 import os.path
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar, Optional, Union
@@ -313,16 +313,18 @@ class Flows(RequestHandler):
 
 
 class DumpFlows(RequestHandler):
-    def get(self):
+    def get(self) -> None:
         self.set_header("Content-Disposition", "attachment; filename=flows")
         self.set_header("Content-Type", "application/octet-stream")
 
+        match: Callable[[mitmproxy.flow.Flow], bool]
         try:
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except ValueError:  # thrown py flowfilter.parse if filter is invalid
             raise APIError(400, f"Invalid filter argument / regex")
         except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
-            match = bool  # returns always true
+            def match(_) -> bool:
+                return True
 
         with BytesIO() as bio:
             fw = io.FlowWriter(bio)
@@ -381,7 +383,7 @@ class FlowHandler(RequestHandler):
             self.flow.kill()
         self.view.remove([self.flow])
 
-    def put(self, flow_id):
+    def put(self, flow_id) -> None:
         flow: mitmproxy.flow.Flow = self.flow
         flow.backup()
         try:
@@ -469,13 +471,13 @@ class FlowContent(RequestHandler):
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
+        assert isinstance(self.flow, HTTPFlow)
 
         original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
-            filename = re.search(r'filename=([-\w" .()]+)', original_cd)
-            if filename:
-                filename = filename.group(1)
+            if m := re.search(r'filename=([-\w" .()]+)', original_cd):
+                filename = m.group(1)
         if not filename:
             filename = self.flow.request.path.split("?")[0].split("/")[-1]
 
@@ -509,7 +511,7 @@ class FlowContentView(RequestHandler):
             description=description,
         )
 
-    def get(self, flow_id, message, content_view):
+    def get(self, flow_id, message, content_view) -> None:
         flow = self.flow
         assert isinstance(flow, (HTTPFlow, TCPFlow, UDPFlow))
 
@@ -519,6 +521,7 @@ class FlowContentView(RequestHandler):
             max_lines = None
 
         if message == "messages":
+            messages: list[TCPMessage] | list[UDPMessage] | list[WebSocketMessage]
             if isinstance(flow, HTTPFlow) and flow.websocket:
                 messages = flow.websocket.messages
             elif isinstance(flow, (TCPFlow, UDPFlow)):

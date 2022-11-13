@@ -57,7 +57,7 @@ def format_pbuf(raw):
             body = pair.value
 
         try:
-            pairs = _parse_proto(body)
+            pairs = _parse_proto(body)  # type: ignore
             stack.extend([(pair, indent_level + 2) for pair in pairs[::-1]])
             write_buf(out, pair.field_tag, None, indent_level)
         except:

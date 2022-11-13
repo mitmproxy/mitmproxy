@@ -4,6 +4,7 @@ Base class for protocol layers.
 import collections
 import textwrap
 from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from logging import DEBUG
 from typing import Any, ClassVar, Generator, NamedTuple, Optional, TypeVar
@@ -98,6 +99,7 @@ class Layer:
                 message = message[:256] + "…"
         else:
             Layer.__last_debug_message = message
+        assert self.debug is not None
         return commands.Log(textwrap.indent(message, self.debug), DEBUG)
 
     @property
@@ -247,7 +249,7 @@ class NextLayer(Layer):
         self.layer = None
         self.events = []
         self._ask_on_start = ask_on_start
-        self._handle = None
+        self._handle: Callable[[mevents.Event], CommandGenerator[None]] | None = None
 
     def __repr__(self):
         return f"NextLayer:{repr(self.layer)}"
@@ -296,8 +298,8 @@ class NextLayer(Layer):
             #  2. This layer is not needed anymore, so we directly reassign .handle_event.
             #  3. Some layers may however still have a reference to the old .handle_event.
             #     ._handle is just an optimization to reduce the callstack in these cases.
-            self.handle_event = self.layer.handle_event
-            self._handle_event = self.layer.handle_event
+            self.handle_event = self.layer.handle_event  # type: ignore
+            self._handle_event = self.layer.handle_event  # type: ignore
             self._handle = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.

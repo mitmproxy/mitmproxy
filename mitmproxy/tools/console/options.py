@@ -244,6 +244,8 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Options"
     keyctx = "options"
 
+    focus_position: int
+
     def __init__(self, master):
         oh = OptionHelp(master)
         self.optionslist = OptionsList(master, oh)

@@ -75,8 +75,8 @@ def test_remove():
 def test_load_path(tmpdir):
     dst = str(tmpdir.join("conf"))
 
-    kmc = keymap.KeymapConfig()
-    with taddons.context(kmc) as tctx:
+    with taddons.context() as tctx:
+        kmc = keymap.KeymapConfig(tctx.master)
         km = keymap.Keymap(tctx.master)
         tctx.master.keymap = km
 
@@ -148,8 +148,8 @@ def test_load_path(tmpdir):
 
 
 def test_parse():
-    kmc = keymap.KeymapConfig()
-    with taddons.context(kmc):
+    with taddons.context() as tctx:
+        kmc = keymap.KeymapConfig(tctx.master)
         assert kmc.parse("") == []
         assert kmc.parse("\n\n\n   \n") == []
         with pytest.raises(keymap.KeyBindingError, match="expected a list of keys"):

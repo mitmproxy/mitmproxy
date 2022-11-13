@@ -19,7 +19,7 @@ def load(_):
 
 def running():
     # attach is somewhere so that it's not collected.
-    ctx.task = asyncio.create_task(make_request())
+    ctx.task = asyncio.create_task(make_request())  # type: ignore
 
 
 async def make_request():

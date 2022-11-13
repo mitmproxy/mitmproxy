@@ -126,6 +126,7 @@ async def serve(app, flow: http.HTTPFlow):
             )
             flow.response.decode()
         elif event["type"] == "http.response.body":
+            assert flow.response
             flow.response.content += event.get("body", b"")
             if not event.get("more_body", False):
                 nonlocal sent_response

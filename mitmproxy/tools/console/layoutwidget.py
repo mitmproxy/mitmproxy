@@ -1,3 +1,6 @@
+from typing import ClassVar
+
+
 class LayoutWidget:
     """
     All top-level layout widgets and all widgets that may be set in an
@@ -6,7 +9,7 @@ class LayoutWidget:
 
     # Title is only required for windows, not overlay components
     title = ""
-    keyctx = ""
+    keyctx: ClassVar[str] = ""
 
     def key_responder(self):
         """

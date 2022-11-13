@@ -504,9 +504,11 @@ class ProtoParser:
                         if match:
                             if only_first_hit:
                                 # only first match
-                                self.name = fd.name
-                                self.preferred_decoding = fd.intended_decoding
-                                self.try_unpack = fd.as_packed
+                                if fd.name is not None:
+                                    self.name = fd.name
+                                if fd.intended_decoding is not None:
+                                    self.preferred_decoding = fd.intended_decoding
+                                self.try_unpack = bool(fd.as_packed)
                                 return
                             else:
                                 # overwrite matches till last rule was inspected
@@ -773,8 +775,8 @@ class ProtoParser:
     def __init__(
         self,
         data: bytes,
-        rules: list[ProtoParser.ParserRule] = None,
-        parser_options: ParserOptions = None,
+        rules: list[ProtoParser.ParserRule] | None = None,
+        parser_options: ParserOptions | None = None,
     ) -> None:
         self.data: bytes = data
         if parser_options is None:
@@ -979,7 +981,7 @@ class ViewGrpcProtobuf(base.View):
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
-    def __init__(self, config: ViewConfig = None) -> None:
+    def __init__(self, config: ViewConfig | None = None) -> None:
         super().__init__()
         if config is None:
             config = ViewConfig()

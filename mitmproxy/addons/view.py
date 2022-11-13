@@ -142,9 +142,9 @@ def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None:
 
 
 class View(collections.abc.Sequence):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._store = collections.OrderedDict()
+        self._store: collections.OrderedDict[str, mitmproxy.flow.Flow] = collections.OrderedDict()
         self.filter = flowfilter.match_all
         # Should we show only marked flows?
         self.show_marked = False
@@ -156,7 +156,7 @@ class View(collections.abc.Sequence):
             url=OrderRequestURL(self),
             size=OrderKeySize(self),
         )
-        self.order_key = self.default_order
+        self.order_key: _OrderKey = self.default_order
         self.order_reversed = False
         self.focus_follow = False
 
@@ -316,9 +316,9 @@ class View(collections.abc.Sequence):
         """
         if order_key not in self.orders:
             raise exceptions.CommandError("Unknown flow order: %s" % order_key)
-        order_key = self.orders[order_key]
-        self.order_key = order_key
-        newview = sortedcontainers.SortedListWithKey(key=order_key)
+        key = self.orders[order_key]
+        self.order_key = key
+        newview = sortedcontainers.SortedListWithKey(key=key)
         newview.update(self._view)
         self._view = newview
 
