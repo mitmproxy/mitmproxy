@@ -39,7 +39,6 @@ export interface OptionsState {
     normalize_outbound_headers: boolean
     onboarding: boolean
     onboarding_host: string
-    onboarding_port: number
     proxy_debug: boolean
     proxyauth: string | undefined
     rawtcp: boolean
@@ -131,7 +130,6 @@ export const defaultState: OptionsState = {
     normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
-    onboarding_port: 80,
     proxy_debug: false,
     proxyauth: undefined,
     rawtcp: true,

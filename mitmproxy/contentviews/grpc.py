@@ -504,10 +504,11 @@ class ProtoParser:
                         if match:
                             if only_first_hit:
                                 # only first match
-                                if fd.name and fd.intended_decoding and fd.as_packed:
+                                if fd.name is not None:
                                     self.name = fd.name
+                                if fd.intended_decoding is not None:
                                     self.preferred_decoding = fd.intended_decoding
-                                    self.try_unpack = fd.as_packed
+                                self.try_unpack = bool(fd.as_packed)
                                 return
                             else:
                                 # overwrite matches till last rule was inspected
