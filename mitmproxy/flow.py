@@ -44,7 +44,7 @@ class Error(stateobject.StateObject):
     def from_state(cls, state):
         # the default implementation assumes an empty constructor. Override
         # accordingly.
-        f = cls(None)
+        f = cls("")
         f.set_state(state)
         return f
 
@@ -180,7 +180,7 @@ class Flow(stateobject.StateObject):
             flow_cls = Flow.__types[state["type"]]
         except KeyError:
             raise ValueError(f"Unknown flow type: {state['type']}")
-        f = flow_cls(None, None)  # noqa
+        f = flow_cls(None, None)  # type: ignore
         f.set_state(state)
         return f
 

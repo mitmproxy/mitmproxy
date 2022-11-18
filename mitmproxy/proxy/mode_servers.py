@@ -81,7 +81,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     def __init_subclass__(cls, **kwargs):
         """Register all subclasses so that make() finds them."""
         # extract mode from Generic[Mode].
-        mode = get_args(cls.__orig_bases__[0])[0]
+        mode = get_args(cls.__orig_bases__[0])[0]  # type: ignore
         if not isinstance(mode, TypeVar):
             assert issubclass(mode, mode_specs.ProxyMode)
             assert mode.type_name not in ServerInstance.__modes

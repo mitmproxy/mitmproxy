@@ -77,6 +77,7 @@ class Save:
                     self.maybe_rotate_to_new_file()
                 except OSError as e:
                     raise exceptions.OptionsError(str(e)) from e
+                assert self.stream
                 self.stream.flt = self.filt
             else:
                 self.done()

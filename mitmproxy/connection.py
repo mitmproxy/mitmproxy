@@ -227,7 +227,7 @@ class Client(Connection):
         return client
 
     def set_state(self, state):
-        self.peername = tuple(state["address"]) if state["address"] else None
+        self.peername = tuple(state["address"]) if state["address"] else None  # type: ignore
         self.alpn = state["alpn"]
         self.cipher = state["cipher_name"]
         self.id = state["id"]
@@ -238,7 +238,7 @@ class Client(Connection):
         self.tls_version = state["tls_version"]
         # only used in sans-io
         self.state = ConnectionState(state["state"])
-        self.sockname = tuple(state["sockname"]) if state["sockname"] else None
+        self.sockname = tuple(state["sockname"]) if state["sockname"] else None  # type: ignore
         self.error = state["error"]
         self.tls = state["tls"]
         self.certificate_list = [
@@ -394,13 +394,13 @@ class Server(Connection):
         return server
 
     def set_state(self, state):
-        self.address = tuple(state["address"]) if state["address"] else None
+        self.address = tuple(state["address"]) if state["address"] else None  # type: ignore
         self.alpn = state["alpn"]
         self.id = state["id"]
-        self.peername = tuple(state["ip_address"]) if state["ip_address"] else None
+        self.peername = tuple(state["ip_address"]) if state["ip_address"] else None  # type: ignore
         self.sni = state["sni"]
         self.sockname = (
-            tuple(state["source_address"]) if state["source_address"] else None
+            tuple(state["source_address"]) if state["source_address"] else None  # type: ignore
         )
         self.timestamp_end = state["timestamp_end"]
         self.timestamp_start = state["timestamp_start"]

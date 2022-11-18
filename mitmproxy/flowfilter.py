@@ -288,19 +288,19 @@ class FBod(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.request and f.request.raw_content:
-                if self.re.search(f.request.get_content(strict=False)):
+            if f.request and (content := f.request.get_content(strict=False)) is not None:
+                if self.re.search(content):
                     return True
-            if f.response and f.response.raw_content:
-                if self.re.search(f.response.get_content(strict=False)):
+            if f.response and (content := f.response.get_content(strict=False)) is not None:
+                if self.re.search(content):
                     return True
             if f.websocket:
-                for msg in f.websocket.messages:
-                    if self.re.search(msg.content):
+                for wmsg in f.websocket.messages:
+                    if wmsg.content is not None and self.re.search(wmsg.content):
                         return True
         elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:
-                if self.re.search(msg.content):
+                if msg.content is not None and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
             if f.request and self.re.search(f.request.content):
@@ -318,12 +318,12 @@ class FBodRequest(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.request and f.request.raw_content:
-                if self.re.search(f.request.get_content(strict=False)):
+            if f.request and (content := f.request.get_content(strict=False)) is not None:
+                if self.re.search(content):
                     return True
             if f.websocket:
-                for msg in f.websocket.messages:
-                    if msg.from_client and self.re.search(msg.content):
+                for wmsg in f.websocket.messages:
+                    if wmsg.from_client and self.re.search(wmsg.content):
                         return True
         elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:
@@ -342,12 +342,12 @@ class FBodResponse(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.response and f.response.raw_content:
-                if self.re.search(f.response.get_content(strict=False)):
+            if f.response and (content := f.response.get_content(strict=False)) is not None:
+                if self.re.search(content):
                     return True
             if f.websocket:
-                for msg in f.websocket.messages:
-                    if not msg.from_client and self.re.search(msg.content):
+                for wmsg in f.websocket.messages:
+                    if not wmsg.from_client and self.re.search(wmsg.content):
                         return True
         elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             for msg in f.messages:

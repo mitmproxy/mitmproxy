@@ -36,7 +36,7 @@ def parse_spec(option: str) -> BlockSpec:
 
 
 class BlockList:
-    def __init__(self):
+    def __init__(self) -> None:
         self.items: list[BlockSpec] = []
 
     def load(self, loader):

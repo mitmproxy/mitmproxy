@@ -76,7 +76,7 @@ def file_candidates(url: str, spec: MapLocalSpec) -> list[Path]:
 
 
 class MapLocal:
-    def __init__(self):
+    def __init__(self) -> None:
         self.replacements: list[MapLocalSpec] = []
 
     def load(self, loader):

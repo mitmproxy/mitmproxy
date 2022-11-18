@@ -43,8 +43,8 @@ class Hook:
         all_hooks[cls.name] = cls
 
         # define a custom hash and __eq__ function so that events are hashable and not comparable.
-        cls.__hash__ = object.__hash__
-        cls.__eq__ = object.__eq__
+        cls.__hash__ = object.__hash__  # type: ignore
+        cls.__eq__ = object.__eq__  # type: ignore
 
 
 all_hooks: dict[str, type[Hook]] = {}

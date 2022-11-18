@@ -1,9 +1,9 @@
+from __future__ import annotations
 import collections
 import collections.abc
 import contextlib
 import ctypes
 import ctypes.wintypes
-import io
 import json
 import os
 import re
@@ -12,7 +12,7 @@ import socketserver
 import threading
 import time
 from collections.abc import Callable
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar, IO, Optional, cast
 
 import pydivert
 import pydivert.consts
@@ -27,20 +27,20 @@ REDIRECT_API_PORT = 8085
 # Resolver
 
 
-def read(rfile: io.BufferedReader) -> Any:
+def read(rfile: IO[bytes]) -> Any:
     x = rfile.readline().strip()
     if not x:
         return None
     return json.loads(x)
 
 
-def write(data, wfile: io.BufferedWriter) -> None:
+def write(data, wfile: IO[bytes]) -> None:
     wfile.write(json.dumps(data).encode() + b"\n")
     wfile.flush()
 
 
 class Resolver:
-    sock: socket.socket
+    sock: socket.socket | None
     lock: threading.RLock
 
     def __init__(self):
@@ -84,7 +84,9 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
     for each received pickled client address, port tuple.
     """
 
-    def handle(self):
+    server: APIServer
+
+    def handle(self) -> None:
         proxifier: TransparentProxy = self.server.proxifier
         try:
             pid: int = read(self.rfile)
@@ -96,7 +98,7 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
                     if c is None:
                         return
                     try:
-                        server = proxifier.client_server_map[tuple(c)]
+                        server = proxifier.client_server_map[cast(tuple[str, int], tuple(c))]
                     except KeyError:
                         server = None
                     write(server, self.wfile)
@@ -205,7 +207,7 @@ class TcpConnectionTable(collections.abc.Mapping):
         self._refresh_ipv6()
 
     def _refresh_ipv4(self):
-        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
+        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(  # type: ignore
             ctypes.byref(self._tcp),
             ctypes.byref(self._tcp_size),
             False,
@@ -228,7 +230,7 @@ class TcpConnectionTable(collections.abc.Mapping):
             )
 
     def _refresh_ipv6(self):
-        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
+        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(  # type: ignore
             ctypes.byref(self._tcp6),
             ctypes.byref(self._tcp6_size),
             False,
@@ -275,7 +277,7 @@ class Redirect(threading.Thread):
             try:
                 packet = self.windivert.recv()
             except OSError as e:
-                if e.winerror == 995:
+                if getattr(e, "winerror", None) == 995:
                     return
                 else:
                     raise

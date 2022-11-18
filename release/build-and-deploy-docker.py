@@ -21,7 +21,7 @@ if ref.startswith("refs/heads/"):
 elif ref.startswith("refs/tags/"):
     tag = ref.replace("refs/tags/", "")
 else:
-    raise AssertionError
+    raise AssertionError("Failed to parse $GITHUB_REF")
 
 (whl,) = root.glob("release/dist/mitmproxy-*-py3-none-any.whl")
 docker_build_dir = root / "release/docker"
@@ -47,15 +47,17 @@ r = subprocess.run(
         "docker",
         "run",
         "--rm",
+        "-v",
+        f"{root / 'release'}:/release",
         "localtesting",
         "mitmdump",
-        "--version",
+        "-s", "/release/selftest.py",
     ],
-    check=True,
     capture_output=True,
 )
 print(r.stdout.decode())
-assert "Mitmproxy: " in r.stdout.decode()
+assert "Self-test successful" in r.stdout.decode()
+assert r.returncode == 0
 
 # Now we can deploy.
 subprocess.check_call(

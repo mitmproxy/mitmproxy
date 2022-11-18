@@ -18,6 +18,7 @@ import urwid
 
 from mitmproxy import addons
 from mitmproxy import master
+from mitmproxy import options
 from mitmproxy import log
 from mitmproxy.addons import errorcheck, intercept
 from mitmproxy.addons import eventstore
@@ -36,7 +37,7 @@ T = TypeVar("T", str, bytes)
 
 
 class ConsoleMaster(master.Master):
-    def __init__(self, opts):
+    def __init__(self, opts: options.Options) -> None:
         super().__init__(opts)
 
         self.view: view.View = view.View()
@@ -48,8 +49,6 @@ class ConsoleMaster(master.Master):
         defaultkeys.map(self.keymap)
         self.options.errored.connect(self.options_error)
 
-        self.view_stack = []
-
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
@@ -57,11 +56,11 @@ class ConsoleMaster(master.Master):
             self.events,
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
-            keymap.KeymapConfig(),
+            keymap.KeymapConfig(self),
             errorcheck.ErrorCheck(log_to_stderr=True),
         )
 
-        self.window = None
+        self.window: window.Window | None = None
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -241,9 +240,11 @@ class ConsoleMaster(master.Master):
         await super().done()
 
     def overlay(self, widget, **kwargs):
+        assert self.window
         self.window.set_overlay(widget, **kwargs)
 
     def switch_view(self, name):
+        assert self.window
         self.window.push(name)
 
     def quit(self, a):

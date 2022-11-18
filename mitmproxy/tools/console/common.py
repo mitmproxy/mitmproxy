@@ -242,11 +242,11 @@ def rle_append_beginning_modify(rle, a_r):
             rle[0:0] = [(a, r)]
 
 
-def colorize_host(host):
+def colorize_host(host: str):
     tld = get_tld(host)
     sld = get_sld(host)
 
-    attr = []
+    attr: list = []
 
     tld_size = len(tld)
     sld_size = len(sld) - tld_size
@@ -268,14 +268,14 @@ def colorize_host(host):
     return attr
 
 
-def colorize_req(s):
+def colorize_req(s: str):
     path = s.split("?", 2)[0]
     i_query = len(path)
     i_last_slash = path.rfind("/")
     i_ext = path[i_last_slash + 1 :].rfind(".")
     i_ext = i_last_slash + i_ext if i_ext >= 0 else len(s)
     in_val = False
-    attr = []
+    attr: list = []
     for i in range(len(s)):
         c = s[i]
         if (

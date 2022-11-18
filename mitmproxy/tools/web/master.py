@@ -9,6 +9,7 @@ from mitmproxy import flow
 from mitmproxy import log
 from mitmproxy import master
 from mitmproxy import optmanager
+from mitmproxy import options
 from mitmproxy.addons import errorcheck, eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class WebMaster(master.Master):
-    def __init__(self, options, with_termlog=True):
-        super().__init__(options)
+    def __init__(self, opts: options.Options, with_termlog: bool = True):
+        super().__init__(opts)
         self.view = view.View()
         self.view.sig_view_add.connect(self._sig_view_add)
         self.view.sig_view_remove.connect(self._sig_view_remove)

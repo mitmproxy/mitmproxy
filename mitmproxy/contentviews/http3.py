@@ -84,7 +84,7 @@ class ConnectionState:
 class ViewHttp3(base.View):
     name = "HTTP/3 Frames"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.connections: defaultdict[tcp.TCPFlow, ConnectionState] = defaultdict(ConnectionState)
 
     def __call__(

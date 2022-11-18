@@ -152,6 +152,7 @@ class ClientPlayback:
         while True:
             self.inflight = await self.queue.get()
             try:
+                assert self.inflight
                 h = ReplayHandler(self.inflight, self.options)
                 if ctx.options.client_replay_concurrency == -1:
                     asyncio_utils.create_task(

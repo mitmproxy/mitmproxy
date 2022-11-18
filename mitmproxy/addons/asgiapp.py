@@ -2,6 +2,7 @@ import asyncio
 import logging
 import traceback
 import urllib.parse
+from typing import Optional
 
 import asgiref.compatibility
 import asgiref.wsgi
@@ -20,7 +21,7 @@ class ASGIApp:
         - It currently only implements the HTTP protocol (Lifespan and WebSocket are unimplemented).
     """
 
-    def __init__(self, asgi_app, host: str, port: int):
+    def __init__(self, asgi_app, host: str, port: Optional[int]):
         asgi_app = asgiref.compatibility.guarantee_single_callable(asgi_app)
         self.asgi_app, self.host, self.port = asgi_app, host, port
 
@@ -30,7 +31,8 @@ class ASGIApp:
 
     def should_serve(self, flow: http.HTTPFlow) -> bool:
         return bool(
-            (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
+            flow.request.pretty_host == self.host
+            and (self.port is None or flow.request.port == self.port)
             and flow.live
             and not flow.error
             and not flow.response
@@ -42,7 +44,7 @@ class ASGIApp:
 
 
 class WSGIApp(ASGIApp):
-    def __init__(self, wsgi_app, host: str, port: int):
+    def __init__(self, wsgi_app, host: str, port: Optional[int]):
         asgi_app = asgiref.wsgi.WsgiToAsgi(wsgi_app)
         super().__init__(asgi_app, host, port)
 
@@ -124,6 +126,7 @@ async def serve(app, flow: http.HTTPFlow):
             )
             flow.response.decode()
         elif event["type"] == "http.response.body":
+            assert flow.response
             flow.response.content += event.get("body", b"")
             if not event.get("more_body", False):
                 nonlocal sent_response

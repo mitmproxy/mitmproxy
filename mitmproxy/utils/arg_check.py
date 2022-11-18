@@ -131,10 +131,11 @@ def check():
 
     for option in REPLACED.splitlines():
         if option in args:
-            if isinstance(REPLACEMENTS.get(option), list):
-                new_options = REPLACEMENTS.get(option)
+            r = REPLACEMENTS.get(option)
+            if isinstance(r, list):
+                new_options = r
             else:
-                new_options = [REPLACEMENTS.get(option)]
+                new_options = [r]
             print(
                 "{} is deprecated.\n"
                 "Please use `{}` instead.".format(option, "` or `".join(new_options))

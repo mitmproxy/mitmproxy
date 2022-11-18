@@ -137,12 +137,13 @@ class HttpStream(layer.Layer):
     child_layer: Optional[layer.Layer] = None
 
     @cached_property
-    def mode(self):
+    def mode(self) -> HTTPMode:
         i = self.context.layers.index(self)
-        parent: HttpLayer = self.context.layers[i - 1]
+        parent = self.context.layers[i - 1]
+        assert isinstance(parent, HttpLayer)
         return parent.mode
 
-    def __init__(self, context: Context, stream_id: int):
+    def __init__(self, context: Context, stream_id: int) -> None:
         super().__init__(context)
         self.request_body_buf = b""
         self.response_body_buf = b""
@@ -490,10 +491,11 @@ class HttpStream(layer.Layer):
         if self.client_state == self.state_done:
             yield from self.flow_done()
 
-    def flow_done(self):
+    def flow_done(self) -> layer.CommandGenerator[None]:
         if not self.flow.websocket:
             self.flow.live = False
 
+        assert self.flow.response
         if self.flow.response.status_code == 101:
             if self.flow.websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)

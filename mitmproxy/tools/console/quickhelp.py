@@ -67,10 +67,11 @@ def make(
                 "Export": "Export this flow to file",
                 "Delete": "Delete flow from view",
             }
-            if focused_flow.marked:
-                top_items["Unmark"] = "Toggle mark on this flow"
-            else:
-                top_items["Mark"] = "Toggle mark on this flow"
+            if widget == FlowListBox:
+                if focused_flow.marked:
+                    top_items["Unmark"] = "Toggle mark on this flow"
+                else:
+                    top_items["Mark"] = "Toggle mark on this flow"
             if focused_flow.intercepted:
                 top_items["Resume"] = "Resume this intercepted flow"
             if focused_flow.modified():

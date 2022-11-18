@@ -71,7 +71,7 @@ class Binding:
 class Keymap:
     def __init__(self, master):
         self.executor = commandexecutor.CommandExecutor(master)
-        self.keys = {}
+        self.keys: dict[str, dict[str, Binding]] = {}
         for c in Contexts:
             self.keys[c] = {}
         self.bindings = []
@@ -161,7 +161,8 @@ class Keymap:
         """
         b = self.get(context, key) or self.get("global", key)
         if b:
-            return self.executor(b.command)
+            self.executor(b.command)
+            return None
         return key
 
     def handle_only(self, context: str, key: str) -> Optional[str]:
@@ -171,7 +172,8 @@ class Keymap:
         """
         b = self.get(context, key)
         if b:
-            return self.executor(b.command)
+            self.executor(b.command)
+            return None
         return key
 
 
@@ -187,10 +189,13 @@ requiredKeyAttrs = {"key", "cmd"}
 class KeymapConfig:
     defaultFile = "keys.yaml"
 
+    def __init__(self, master):
+        self.master = master
+
     @command.command("console.keymap.load")
     def keymap_load_path(self, path: mitmproxy.types.Path) -> None:
         try:
-            self.load_path(ctx.master.keymap, path)  # type: ignore
+            self.load_path(self.master.keymap, path)  # type: ignore
         except (OSError, KeyBindingError) as e:
             raise exceptions.CommandError("Could not load key bindings - %s" % e) from e
 
@@ -198,7 +203,7 @@ class KeymapConfig:
         p = os.path.join(os.path.expanduser(ctx.options.confdir), self.defaultFile)
         if os.path.exists(p):
             try:
-                self.load_path(ctx.master.keymap, p)
+                self.load_path(self.master.keymap, p)
             except KeyBindingError as e:
                 logging.error(e)
 

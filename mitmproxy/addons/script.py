@@ -39,6 +39,17 @@ def load_script(path: str) -> Optional[types.ModuleType]:
         loader.exec_module(m)
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
+    except ImportError as e:
+        err_msg = str(e)
+        if getattr(sys, "frozen", False):
+            err_msg = (
+                f"{err_msg}. \n"
+                f"Note that mitmproxy's binaries include their own Python environment. "
+                f"If your addon requires the installation of additional dependencies, "
+                f"please install mitmproxy from PyPI "
+                f"(https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)."
+            )
+        script_error_handler(path, e, msg=err_msg)
     except Exception as e:
         script_error_handler(path, e, msg=str(e))
     finally:
@@ -79,7 +90,7 @@ class Script:
         self.name = "scriptmanager:" + path
         self.path = path
         self.fullpath = os.path.expanduser(path.strip("'\" "))
-        self.ns = None
+        self.ns: types.ModuleType | None = None
         self.is_running = False
 
         if not os.path.isfile(self.fullpath):
@@ -126,7 +137,7 @@ class Script:
                 ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
 
     async def watcher(self):
-        last_mtime = 0
+        last_mtime = 0.0
         while True:
             try:
                 mtime = os.stat(self.fullpath).st_mtime

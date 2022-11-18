@@ -156,7 +156,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         name = _always_bytes(name)
         return [_native(x) for x in super().get_all(name)]
 
-    def set_all(self, name: Union[str, bytes], values: list[Union[str, bytes]]):
+    def set_all(self, name: Union[str, bytes], values: Iterable[Union[str, bytes]]):
         """
         Explicitly set multiple headers for the given key.
         See `Headers.get_all`.
@@ -985,7 +985,7 @@ class Request(Message):
         is_valid_content_type = (
             "multipart/form-data" in self.headers.get("content-type", "").lower()
         )
-        if is_valid_content_type:
+        if is_valid_content_type and self.content is not None:
             try:
                 return multipart.decode(self.headers.get("content-type"), self.content)
             except ValueError:

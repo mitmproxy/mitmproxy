@@ -1,8 +1,9 @@
+from __future__ import annotations
 import socket
 import struct
 from abc import ABCMeta
 from dataclasses import dataclass
-from typing import Optional
+from typing import Callable, Optional
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
@@ -156,7 +157,7 @@ class Socks5Proxy(DestinationKnown):
         else:
             raise AssertionError(f"Unknown event: {event}")
 
-    def state_greet(self):
+    def state_greet(self) -> layer.CommandGenerator[None]:
         if len(self.buf) < 2:
             return
 
@@ -196,9 +197,9 @@ class Socks5Proxy(DestinationKnown):
         self.buf = self.buf[2 + n_methods :]
         yield from self.state()
 
-    state = state_greet
+    state: Callable[..., layer.CommandGenerator[None]] = state_greet
 
-    def state_auth(self):
+    def state_auth(self) -> layer.CommandGenerator[None]:
         if len(self.buf) < 3:
             return
 
@@ -227,7 +228,7 @@ class Socks5Proxy(DestinationKnown):
         self.state = self.state_connect
         yield from self.state()
 
-    def state_connect(self):
+    def state_connect(self) -> layer.CommandGenerator[None]:
         # Parse Connect Request
         if len(self.buf) < 5:
             return

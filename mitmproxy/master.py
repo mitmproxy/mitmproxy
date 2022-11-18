@@ -22,7 +22,7 @@ class Master:
 
     event_loop: asyncio.AbstractEventLoop
 
-    def __init__(self, opts, event_loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(self, opts: options.Options, event_loop: Optional[asyncio.AbstractEventLoop] = None):
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
@@ -79,7 +79,7 @@ class Master:
         await self.addons.trigger_event(hooks.DoneHook())
         self._legacy_log_events.uninstall()
 
-    def _asyncio_exception_handler(self, loop, context):
+    def _asyncio_exception_handler(self, loop, context) -> None:
         try:
             exc: Exception = context["exception"]
         except KeyError:
@@ -108,6 +108,7 @@ class Master:
             # easy to replay saved flows against a different host.
             # We may change this in the future so that clientplayback always replays to the first mode.
             mode = ReverseMode.parse(self.options.mode[0])
+            assert isinstance(mode, ReverseMode)
             f.request.host, f.request.port, *_ = mode.address
             f.request.scheme = mode.scheme
 
