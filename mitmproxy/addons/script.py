@@ -39,6 +39,17 @@ def load_script(path: str) -> Optional[types.ModuleType]:
         loader.exec_module(m)
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
+    except ImportError as e:
+        err_msg = str(e)
+        if getattr(sys, "frozen", False):
+            err_msg = (
+                f"{err_msg}. \n"
+                f"Note that mitmproxy's binaries include their own Python environment. "
+                f"If your addon requires the installation of additional dependencies, "
+                f"please install mitmproxy from PyPI "
+                f"(https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)."
+            )
+        script_error_handler(path, e, msg=err_msg)
     except Exception as e:
         script_error_handler(path, e, msg=str(e))
     finally:
