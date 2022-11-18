@@ -123,6 +123,14 @@ class TestScript:
             await caplog_async.await_log("error.py")
             sc.done()
 
+    async def test_import_error(self, monkeypatch, tdata, caplog):
+        monkeypatch.setattr(sys, "frozen", True, raising=False)
+        script.Script(
+            tdata.path("mitmproxy/data/addonscripts/import_error.py"),
+            False,
+        )
+        assert "Note that mitmproxy's binaries include their own Python environment" in caplog.text
+
     async def test_optionexceptions(self, tdata, caplog_async):
         with taddons.context() as tctx:
             sc = script.Script(
