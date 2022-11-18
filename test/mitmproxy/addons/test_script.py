@@ -125,7 +125,7 @@ class TestScript:
 
     async def test_import_error(self, monkeypatch, tdata, caplog):
         monkeypatch.setattr(sys, "frozen", True, raising=False)
-        sc = script.Script(
+        script.Script(
             tdata.path("mitmproxy/data/addonscripts/import_error.py"),
             False,
         )
