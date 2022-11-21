@@ -2,11 +2,17 @@ import abc
 import collections.abc
 import dataclasses
 import enum
-import types
 import typing
 import uuid
 from functools import cache
 from typing import TypeVar
+
+try:
+    from types import UnionType, NoneType
+except ImportError:  # pragma: no cover
+    class UnionType:  # type: ignore
+        pass
+    NoneType = type(None)  # type: ignore
 
 T = TypeVar("T", bound="Serializable")
 
@@ -106,9 +112,9 @@ def _process(attr_val: typing.Any, attr_type: type[V], attr_name: str, make: boo
         if attr_val not in typing.get_args(attr_type):
             raise ValueError(f"Invalid value for {attr_name}: {attr_val!r} does not match any literal value.")
         return attr_val
-    if origin in (types.UnionType, typing.Union):
+    if origin in (UnionType, typing.Union):
         attr_type, nt = typing.get_args(attr_type)
-        assert nt is types.NoneType, f"{attr_name}: only `x | None` union types are supported`"  # noqa
+        assert nt is NoneType, f"{attr_name}: only `x | None` union types are supported`"  # noqa
         if attr_val is None:
             return None  # type: ignore
         else:

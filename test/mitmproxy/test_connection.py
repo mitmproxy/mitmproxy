@@ -28,7 +28,12 @@ class TestConnection:
 
 class TestClient:
     def test_basic(self):
-        c = Client(peername=("127.0.0.1", 52314), sockname=("127.0.0.1", 8080), timestamp_start=1607780791)
+        c = Client(
+            peername=("127.0.0.1", 52314),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1607780791,
+            cipher_list=["foo", "bar"]
+        )
         assert repr(c)
         assert str(c)
         c.timestamp_tls_setup = 1607780791

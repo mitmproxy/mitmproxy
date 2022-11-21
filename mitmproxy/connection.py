@@ -1,4 +1,5 @@
 import dataclasses
+import sys
 import time
 from dataclasses import dataclass, field
 import uuid
@@ -32,9 +33,14 @@ TransportProtocol = Literal["tcp", "udp"]
 # this version at least provides useful type checking messages.
 Address = tuple[str, int]
 
+if sys.version_info < (3, 10):  # pragma: no cover
+    kw_only = {}
+else:
+    kw_only = {"kw_only": True}
+
 
 # noinspection PyDataclass
-@dataclass(kw_only=True)
+@dataclass(**kw_only)
 class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """
     Base class for client and server connections.
@@ -42,20 +48,21 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     The connection object only exposes metadata about the connection, but not the underlying socket object.
     This is intentional, all I/O should be handled by `mitmproxy.proxy.server` exclusively.
     """
+    peername: Optional[Address]
+    """The remote's `(ip, port)` tuple for this connection."""
+    sockname: Optional[Address]
+    """Our local `(ip, port)` tuple for this connection."""
+
+    state: ConnectionState
+    """The current connection state."""
 
     # all connections have a unique id. While
     # f.client_conn == f2.client_conn already holds true for live flows (where we have object identity),
     # we also want these semantics for recorded flows.
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     """A unique UUID to identify the connection."""
-    state: ConnectionState
-    """The current connection state."""
     transport_protocol: TransportProtocol = field(default="tcp")
     """The connection protocol in use."""
-    peername: Optional[Address]
-    """The remote's `(ip, port)` tuple for this connection."""
-    sockname: Optional[Address]
-    """Our local `(ip, port)` tuple for this connection."""
     error: Optional[str] = None
     """
     A string describing a general error with connections to this address.
@@ -156,7 +163,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
 
 
 # noinspection PyDataclass
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False, **kw_only)
 class Client(Connection):
     """A connection between a client and mitmproxy."""
 
@@ -243,15 +250,20 @@ class Client(Connection):
 
 
 # noinspection PyDataclass
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False, **kw_only)
 class Server(Connection):
     """A connection between mitmproxy and an upstream server."""
+
+    address: Optional[Address]  # type: ignore
+    """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
+
+    if sys.version_info < (3, 10):  # pragma: no cover
+        # no keyword-only arguments here.
+        address: Optional[Address] = None
 
     peername: Optional[Address] = None
     """The server's resolved `(ip, port)` tuple. Will be set during connection establishment."""
     sockname: Optional[Address] = None
-    address: Optional[Address]
-    """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
 
     state: ConnectionState = field(default=ConnectionState.CLOSED)
 

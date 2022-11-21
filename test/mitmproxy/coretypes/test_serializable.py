@@ -4,7 +4,7 @@ import copy
 import enum
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
 
 import pytest
 
@@ -48,13 +48,13 @@ class TestSerializable:
 @dataclass
 class Simple(SerializableDataclass):
     x: int
-    y: str | None
+    y: Optional[str]
 
 
 @dataclass
 class SerializableChild(SerializableDataclass):
     foo: Simple
-    maybe_foo: Simple | None
+    maybe_foo: Optional[Simple]
 
 
 @dataclass
@@ -74,16 +74,16 @@ class TLiteral(SerializableDataclass):
 
 @dataclass
 class BuiltinChildren(SerializableDataclass):
-    a: list[int] | None
-    b: dict[str, int] | None
-    c: tuple[int, int] | None
+    a: Optional[list[int]]
+    b: Optional[dict[str, int]]
+    c: Optional[tuple[int, int]]
     d: list[Simple]
-    e: TEnum | None
+    e: Optional[TEnum]
 
 
 @dataclass
 class Defaults(SerializableDataclass):
-    z: int | None = 42
+    z: Optional[int] = 42
 
 
 @dataclass
@@ -118,7 +118,6 @@ class TestSerializableDataclass:
         assert s.maybe_foo is None
         with pytest.raises(ValueError, match="Unexpected fields"):
             Simple(0, "").set_state({"x": 42, "y": "foo", "z": True})
-
 
     def test_invalid_none(self):
         with pytest.raises(ValueError):
