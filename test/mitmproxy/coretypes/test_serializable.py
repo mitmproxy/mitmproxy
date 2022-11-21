@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import copy
 import enum
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Literal
 
 import pytest
 
@@ -64,6 +68,11 @@ class TEnum(enum.Enum):
 
 
 @dataclass
+class TLiteral(SerializableDataclass):
+    l: Literal["foo", "bar"]
+
+
+@dataclass
 class BuiltinChildren(SerializableDataclass):
     a: list[int] | None
     b: dict[str, int] | None
@@ -77,6 +86,16 @@ class Defaults(SerializableDataclass):
     z: int | None = 42
 
 
+@dataclass
+class Unsupported(SerializableDataclass):
+    a: Mapping[str, int]
+
+
+@dataclass
+class Addr(SerializableDataclass):
+    peername: tuple[str, int]
+
+
 class TestSerializableDataclass:
     @pytest.mark.parametrize("cls, state", [
         (Simple, {"x": 42, "y": 'foo'}),
@@ -86,27 +105,52 @@ class TestSerializableDataclass:
         (Inheritance, {"x": 42, "y": "foo", "z": True}),
         (BuiltinChildren, {"a": [1, 2, 3], "b": {"foo": 42}, "c": (1, 2), "d": [{"x": 42, "y": "foo"}], "e": 1}),
         (BuiltinChildren, {"a": None, "b": None, "c": None, "d": [], "e": None}),
+        (TLiteral, {"l": "foo"}),
     ])
     def test_roundtrip(self, cls, state):
         a = cls.from_state(copy.deepcopy(state))
         assert a.get_state() == state
+
+    def test_set(self):
+        s = SerializableChild(foo=Simple(x=42, y=None), maybe_foo=Simple(x=43, y=None))
+        s.set_state({"foo": {"x": 44, "y": None}, "maybe_foo": None})
+        assert s.foo.x == 44
+        assert s.maybe_foo is None
+        with pytest.raises(ValueError, match="Unexpected fields"):
+            Simple(0, "").set_state({"x": 42, "y": "foo", "z": True})
+
 
     def test_invalid_none(self):
         with pytest.raises(ValueError):
             Simple.from_state({"x": None, "y": "foo"})
 
     def test_defaults(self):
-        a = Defaults.from_state({})
+        a = Defaults()
         assert a.get_state() == {"z": 42}
 
     def test_invalid_type(self):
         with pytest.raises(ValueError):
             Simple.from_state({"x": 42, "y": 42})
+        with pytest.raises(ValueError):
+            BuiltinChildren.from_state({"a": None, "b": None, "c": ("foo",), "d": [], "e": None})
 
     def test_invalid_key(self):
         with pytest.raises(ValueError):
             Simple.from_state({"x": 42, "y": "foo", "z": True})
 
     def test_invalid_type_in_list(self):
+        with pytest.raises(ValueError, match="Invalid value for x"):
+            BuiltinChildren.from_state({"a": None, "b": None, "c": None, "d": [{"x": "foo", "y": "foo"}], "e": None})
+
+    def test_unsupported_type(self):
+        with pytest.raises(TypeError):
+            Unsupported.from_state({"a": "foo"})
+
+    def test_literal(self):
+        assert TLiteral.from_state({"l": "foo"}).get_state() == {"l": "foo"}
         with pytest.raises(ValueError):
-            BuiltinChildren.from_state({"w": [{"x": "foo", "y": "foo"}], "x": None, "y": None, "z": None})
+            TLiteral.from_state({"l": "unknown"})
+
+    def test_peername(self):
+        assert Addr.from_state({"peername": ("addr", 42)}).get_state() == {"peername": ("addr", 42)}
+        assert Addr.from_state({"peername": ("addr", 42, 0, 0)}).get_state() == {"peername": ("addr", 42, 0, 0)}

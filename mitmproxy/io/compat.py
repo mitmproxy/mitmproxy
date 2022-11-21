@@ -399,11 +399,10 @@ def convert_18_19(data):
     data["server_conn"]["via"] = data["server_conn"].pop("via2", None)
 
     for conn in ["client_conn", "server_conn"]:
-        if data[conn].get("timestamp_tls_setup") is None and data[conn].get("tls_established"):
-            data[conn]["timestamp_tls_setup"] = 1.0
         data[conn].pop("tls_established")
 
         data[conn]["cipher"] = data[conn].pop("cipher_name", None)
+        data[conn].setdefault("transport_protocol", "tcp")
 
         for name in ["peername", "sockname", "address"]:
             if data[conn].get(name) and isinstance(data[conn][name][0], bytes):
@@ -411,8 +410,6 @@ def convert_18_19(data):
 
     if data["server_conn"]["sni"] is True:
         data["server_conn"]["sni"] = data["server_conn"]["address"][0]
-    if data["server_conn"]["sni"] is False:
-        data["server_conn"]["sni"] = None
 
     return data
 

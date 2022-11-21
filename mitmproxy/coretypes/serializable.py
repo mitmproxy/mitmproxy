@@ -77,14 +77,7 @@ class SerializableDataclass(Serializable):
     def from_state(cls: type[U], state) -> U:
         # state = state.copy()
         for field in cls.__fields():
-            try:
-                state_val = state[field.name]
-            except KeyError:
-                if field.default is dataclasses.MISSING:
-                    raise ValueError(f"Missing state attribute: {field.name}")
-                else:
-                    continue
-            state[field.name] = _to_val(state_val, field.type, field.name)
+            state[field.name] = _to_val(state[field.name], field.type, field.name)
         try:
             return cls(**state)  # type: ignore
         except TypeError as e:
@@ -93,14 +86,15 @@ class SerializableDataclass(Serializable):
     def set_state(self, state):
         for field in self.__fields():
             current = getattr(self, field.name)
-            if isinstance(current, Serializable):
-                current.set_state(state.pop(field.name))
+            f_state = state.pop(field.name)
+            if isinstance(current, Serializable) and f_state is not None:
+                current.set_state(f_state)
             else:
-                val = _to_val(state.pop(field.name), field.type, field.name)
+                val = _to_val(f_state, field.type, field.name)
                 setattr(self, field.name, val)
 
         if state:
-            raise RuntimeWarning(f"Unexpected fields in SerializableDataclass.set_state: {state}")
+            raise ValueError(f"Unexpected fields in {type(self).__name__}.set_state: {state}")
 
 
 V = TypeVar("V")
@@ -109,7 +103,8 @@ V = TypeVar("V")
 def _process(attr_val: typing.Any, attr_type: type[V], attr_name: str, make: bool) -> V:
     origin = typing.get_origin(attr_type)
     if origin is typing.Literal:
-        assert attr_val in typing.get_args(attr_type), "Literal does not match."
+        if attr_val not in typing.get_args(attr_type):
+            raise ValueError(f"Invalid value for {attr_name}: {attr_val!r} does not match any literal value.")
         return attr_val
     if origin in (types.UnionType, typing.Union):
         attr_type, nt = typing.get_args(attr_type)
