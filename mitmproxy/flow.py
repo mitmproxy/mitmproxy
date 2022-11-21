@@ -2,15 +2,18 @@ import asyncio
 import copy
 import time
 import uuid
+from dataclasses import dataclass, field
 from typing import Any, ClassVar, Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
+from mitmproxy.coretypes import serializable
 
 
-class Error(stateobject.StateObject):
+@dataclass
+class Error(serializable.SerializableDataclass):
     """
     An Error.
 
@@ -23,31 +26,16 @@ class Error(stateobject.StateObject):
     msg: str
     """Message describing the error."""
 
-    timestamp: float
+    timestamp: float = field(default_factory=time.time)
     """Unix timestamp of when this error happened."""
 
     KILLED_MESSAGE: ClassVar[str] = "Connection killed."
-
-    def __init__(self, msg: str, timestamp: Optional[float] = None) -> None:
-        """Create an error. If no timestamp is passed, the current time is used."""
-        self.msg = msg
-        self.timestamp = timestamp or time.time()
-
-    _stateobject_attributes = dict(msg=str, timestamp=float)
 
     def __str__(self):
         return self.msg
 
     def __repr__(self):
         return self.msg
-
-    @classmethod
-    def from_state(cls, state):
-        # the default implementation assumes an empty constructor. Override
-        # accordingly.
-        f = cls("")
-        f.set_state(state)
-        return f
 
 
 class Flow(stateobject.StateObject):

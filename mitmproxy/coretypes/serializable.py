@@ -5,6 +5,7 @@ import enum
 import types
 import typing
 import uuid
+from functools import cache
 from typing import TypeVar
 
 T = TypeVar("T", bound="Serializable")
@@ -44,20 +45,38 @@ class Serializable(metaclass=abc.ABCMeta):
         return self.from_state(state)
 
 
+U = TypeVar("U", bound="SerializableDataclass")
+
+
 @dataclasses.dataclass
 class SerializableDataclass(Serializable):
 
+    @classmethod
+    @cache
+    def __fields(cls) -> tuple[dataclasses.Field, ...]:
+        # with from __future__ import annotations, `field.type` is a string,
+        # see https://github.com/python/cpython/issues/83623.
+        hints = None
+        fields = []
+        for field in dataclasses.fields(cls):
+            if isinstance(field.type, str):
+                if hints is None:
+                    hints = typing.get_type_hints(cls)
+                field.type = hints[field.name]
+            fields.append(field)
+        return tuple(fields)
+
     def get_state(self):
         state = {}
-        for field in dataclasses.fields(self):
+        for field in self.__fields():
             val = getattr(self, field.name)
             state[field.name] = _to_state(val, field.type, field.name)
         return state
 
     @classmethod
-    def from_state(cls: type[T], state) -> T:
+    def from_state(cls: type[U], state) -> U:
         # state = state.copy()
-        for field in dataclasses.fields(cls):
+        for field in cls.__fields():
             try:
                 state_val = state[field.name]
             except KeyError:
@@ -72,7 +91,7 @@ class SerializableDataclass(Serializable):
             raise ValueError(f"Invalid state for {cls}: {e} ({state=})") from e
 
     def set_state(self, state):
-        for field in dataclasses.fields(self):
+        for field in self.__fields():
             current = getattr(self, field.name)
             if isinstance(current, Serializable):
                 current.set_state(state.pop(field.name))
@@ -84,10 +103,10 @@ class SerializableDataclass(Serializable):
             raise RuntimeWarning(f"Unexpected fields in SerializableDataclass.set_state: {state}")
 
 
-U = TypeVar("U")
+V = TypeVar("V")
 
 
-def _process(attr_val: typing.Any, attr_type: type[U], attr_name: str, make: bool) -> U:
+def _process(attr_val: typing.Any, attr_type: type[V], attr_name: str, make: bool) -> V:
     origin = typing.get_origin(attr_type)
     if origin is typing.Literal:
         assert attr_val in typing.get_args(attr_type), "Literal does not match."
@@ -140,7 +159,7 @@ def _process(attr_val: typing.Any, attr_type: type[U], attr_name: str, make: boo
         else:
             return attr_val.value
     else:
-        raise TypeError(f"Unexpected type for {attr_name}: {attr_type}")
+        raise TypeError(f"Unexpected type for {attr_name}: {attr_type!r}")
 
 
 def _to_val(state: typing.Any, attr_type: type[U], attr_name: str) -> U:

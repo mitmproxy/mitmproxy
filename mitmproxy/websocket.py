@@ -7,10 +7,10 @@ This module only defines the classes for individual `WebSocketMessage`s and the 
 """
 import time
 import warnings
+from dataclasses import dataclass, field
 from typing import Union
 from typing import Optional
 
-from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
 from wsproto.frame_protocol import Opcode
 
@@ -144,13 +144,14 @@ class WebSocketMessage(serializable.Serializable):
         self.content = value.encode()
 
 
-class WebSocketData(stateobject.StateObject):
+@dataclass
+class WebSocketData(serializable.SerializableDataclass):
     """
     A data container for everything related to a single WebSocket connection.
     This is typically accessed as `mitmproxy.http.HTTPFlow.websocket`.
     """
 
-    messages: list[WebSocketMessage]
+    messages: list[WebSocketMessage] = field(default_factory=list)
     """All `WebSocketMessage`s transferred over this connection."""
 
     closed_by_client: Optional[bool] = None
@@ -167,22 +168,5 @@ class WebSocketData(stateobject.StateObject):
     timestamp_end: Optional[float] = None
     """*Timestamp:* WebSocket connection closed."""
 
-    _stateobject_attributes = dict(
-        messages=list[WebSocketMessage],
-        closed_by_client=bool,
-        close_code=int,
-        close_reason=str,
-        timestamp_end=float,
-    )
-
-    def __init__(self):
-        self.messages = []
-
     def __repr__(self):
         return f"<WebSocketData ({len(self.messages)} messages)>"
-
-    @classmethod
-    def from_state(cls, state):
-        d = WebSocketData()
-        d.set_state(state)
-        return d
