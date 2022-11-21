@@ -1000,7 +1000,7 @@ class HttpLayer(layer.Layer):
 
         if not can_use_context_connection:
 
-            context.server = Server(event.address)
+            context.server = Server(address=event.address)
 
             if event.via:
                 context.server.via = event.via

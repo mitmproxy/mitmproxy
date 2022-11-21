@@ -9,8 +9,7 @@ class StateObject(serializable.Serializable):
     """
     An object with serializable state.
 
-    State attributes can either be serializable types(str, tuple, bool, ...)
-    or StateObject instances themselves.
+    New code should look into adopting SerializableDataclass instead of this class.
     """
 
     _stateobject_attributes: typing.ClassVar[abc.MutableMapping[str, typing.Any]]

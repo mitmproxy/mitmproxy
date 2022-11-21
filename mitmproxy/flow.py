@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import time
 import uuid
 from typing import Any, ClassVar, Optional
@@ -163,7 +164,7 @@ class Flow(stateobject.StateObject):
         d = super().get_state()
         d.update(version=version.FLOW_FORMAT_VERSION, type=self.type)
         if self._backup and self._backup != d:
-            d.update(backup=self._backup)
+            d.update(backup=copy.deepcopy(self._backup))
         return d
 
     def set_state(self, state):

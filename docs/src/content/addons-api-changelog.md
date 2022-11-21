@@ -10,6 +10,10 @@ menu:
 
 We try to avoid them, but this page lists breaking changes in the mitmproxy addon API.
 
+## mitmproxy >= 9.1
+
+`mitmproxy.connection.Client` and `mitmproxy.connection.Server` now accept keyword arguments only.
+
 ## mitmproxy 9.0
 
 #### Logging

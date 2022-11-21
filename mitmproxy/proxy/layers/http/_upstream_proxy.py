@@ -32,7 +32,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         scheme, address = ctx.server.via
         assert scheme in ("http", "https")
 
-        http_proxy = connection.Server(address)
+        http_proxy = connection.Server(address=address)
 
         stack = tunnel.LayerStack()
         if scheme == "https":
