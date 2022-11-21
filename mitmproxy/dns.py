@@ -431,9 +431,17 @@ class DNSFlow(flow.Flow):
     response: Message | None = None
     """The DNS response."""
 
-    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes["request"] = Message
-    _stateobject_attributes["response"] = Message
+    def get_state(self) -> serializable.State:
+        return {
+            **super().get_state(),
+            "request": self.request.get_state(),
+            "response": self.response.get_state() if self.response else None,
+        }
+
+    def set_state(self, state: serializable.State) -> None:
+        self.request = Message.from_state(state.pop("request"))
+        self.response = Message.from_state(r) if (r := state.pop("response")) else None
+        super().set_state(state)
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"

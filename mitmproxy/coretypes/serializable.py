@@ -16,6 +16,8 @@ except ImportError:  # pragma: no cover
 
 T = TypeVar("T", bound="Serializable")
 
+State = typing.Any
+
 
 class Serializable(metaclass=abc.ABCMeta):
     """
@@ -27,11 +29,12 @@ class Serializable(metaclass=abc.ABCMeta):
     def from_state(cls: type[T], state) -> T:
         """
         Create a new object from the given state.
+        Consumes the passed state.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_state(self):
+    def get_state(self) -> State:
         """
         Retrieve object state.
         """
@@ -40,7 +43,8 @@ class Serializable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def set_state(self, state):
         """
-        Set object state to the given state.
+        Set object state to the given state. Consumes the passed state.
+        May return a `dataclasses.FrozenInstanceError` if the object is immutable.
         """
         raise NotImplementedError()
 
@@ -54,7 +58,6 @@ class Serializable(metaclass=abc.ABCMeta):
 U = TypeVar("U", bound="SerializableDataclass")
 
 
-@dataclasses.dataclass
 class SerializableDataclass(Serializable):
 
     @classmethod
@@ -62,17 +65,16 @@ class SerializableDataclass(Serializable):
     def __fields(cls) -> tuple[dataclasses.Field, ...]:
         # with from __future__ import annotations, `field.type` is a string,
         # see https://github.com/python/cpython/issues/83623.
-        hints = None
+        hints = typing.get_type_hints(cls)
         fields = []
+        # noinspection PyDataclass
         for field in dataclasses.fields(cls):
             if isinstance(field.type, str):
-                if hints is None:
-                    hints = typing.get_type_hints(cls)
                 field.type = hints[field.name]
             fields.append(field)
         return tuple(fields)
 
-    def get_state(self):
+    def get_state(self) -> State:
         state = {}
         for field in self.__fields():
             val = getattr(self, field.name)
@@ -89,15 +91,22 @@ class SerializableDataclass(Serializable):
         except TypeError as e:
             raise ValueError(f"Invalid state for {cls}: {e} ({state=})") from e
 
-    def set_state(self, state):
+    def set_state(self, state: State) -> None:
         for field in self.__fields():
             current = getattr(self, field.name)
             f_state = state.pop(field.name)
             if isinstance(current, Serializable) and f_state is not None:
-                current.set_state(f_state)
-            else:
-                val = _to_val(f_state, field.type, field.name)
+                try:
+                    current.set_state(f_state)
+                    continue
+                except dataclasses.FrozenInstanceError:
+                    pass
+            val = _to_val(f_state, field.type, field.name)
+            try:
                 setattr(self, field.name, val)
+            except dataclasses.FrozenInstanceError:
+                state[field.name] = f_state  # restore state dict.
+                raise
 
         if state:
             raise ValueError(f"Unexpected fields in {type(self).__name__}.set_state: {state}")

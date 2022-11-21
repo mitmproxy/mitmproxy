@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import dataclasses
 import enum
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -96,6 +97,16 @@ class Addr(SerializableDataclass):
     peername: tuple[str, int]
 
 
+@dataclass(frozen=True)
+class Frozen(SerializableDataclass):
+    x: int
+
+
+@dataclass
+class FrozenWrapper(SerializableDataclass):
+    f: Frozen
+
+
 class TestSerializableDataclass:
     @pytest.mark.parametrize("cls, state", [
         (Simple, {"x": 42, "y": 'foo'}),
@@ -153,3 +164,10 @@ class TestSerializableDataclass:
     def test_peername(self):
         assert Addr.from_state({"peername": ("addr", 42)}).get_state() == {"peername": ("addr", 42)}
         assert Addr.from_state({"peername": ("addr", 42, 0, 0)}).get_state() == {"peername": ("addr", 42, 0, 0)}
+
+    def test_set_immutable(self):
+        w = FrozenWrapper(Frozen(42))
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            w.f.set_state({"x": 43})
+        w.set_state({"f": {"x": 43}})
+        assert w.f.x == 43

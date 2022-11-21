@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import copy
 import time
@@ -7,7 +8,6 @@ from typing import Any, ClassVar, Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
-from mitmproxy import stateobject
 from mitmproxy import version
 from mitmproxy.coretypes import serializable
 
@@ -38,7 +38,7 @@ class Error(serializable.SerializableDataclass):
         return self.msg
 
 
-class Flow(stateobject.StateObject):
+class Flow(serializable.Serializable):
     """
     Base class for network flows. A flow is a collection of objects,
     for example HTTP request/response pairs or a list of TCP messages.
@@ -126,20 +126,7 @@ class Flow(stateobject.StateObject):
         self.metadata: dict[str, Any] = dict()
         self.comment: str = ""
 
-    _stateobject_attributes = dict(
-        id=str,
-        error=Error,
-        client_conn=connection.Client,
-        server_conn=connection.Server,
-        intercepted=bool,
-        is_replay=str,
-        marked=str,
-        metadata=dict[str, Any],
-        comment=str,
-        timestamp_created=float,
-    )
-
-    __types: dict[str, type["Flow"]] = {}
+    __types: dict[str, type[Flow]] = {}
 
     type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
     """The flow type, for example `http`, `tcp`, or `dns`."""
@@ -148,28 +135,55 @@ class Flow(stateobject.StateObject):
         cls.type = cls.__name__.removesuffix("Flow").lower()
         Flow.__types[cls.type] = cls
 
-    def get_state(self):
-        d = super().get_state()
-        d.update(version=version.FLOW_FORMAT_VERSION, type=self.type)
-        if self._backup and self._backup != d:
-            d.update(backup=copy.deepcopy(self._backup))
-        return d
+    def get_state(self) -> serializable.State:
+        state = {
+            "version": version.FLOW_FORMAT_VERSION,
+            "type": self.type,
+            "id": self.id,
+            "error": self.error.get_state() if self.error else None,
+            "client_conn": self.client_conn.get_state(),
+            "server_conn": self.server_conn.get_state(),
+            "intercepted": self.intercepted,
+            "is_replay": self.is_replay,
+            "marked": self.marked,
+            "metadata": copy.deepcopy(self.metadata),
+            "comment": self.comment,
+            "timestamp_created": self.timestamp_created,
+        }
+        state["backup"] = copy.deepcopy(self._backup) if self._backup != state else None
+        return state
 
-    def set_state(self, state):
-        state = state.copy()
-        state.pop("version")
-        state.pop("type")
-        if "backup" in state:
-            self._backup = state.pop("backup")
-        super().set_state(state)
+    def set_state(self, state: serializable.State) -> None:
+        assert state.pop("version") == version.FLOW_FORMAT_VERSION
+        assert state.pop("type") == self.type
+        self.id = state.pop("id")
+        if state["error"]:
+            if self.error:
+                self.error.set_state(state.pop("error"))
+            else:
+                self.error = Error.from_state(state.pop("error"))
+        else:
+            self.error = state.pop("error")
+        self.client_conn.set_state(state.pop("client_conn"))
+        self.server_conn.set_state(state.pop("server_conn"))
+        self.intercepted = state.pop("intercepted")
+        self.is_replay = state.pop("is_replay")
+        self.marked = state.pop("marked")
+        self.metadata = state.pop("metadata")
+        self.comment = state.pop("comment")
+        self.timestamp_created = state.pop("timestamp_created")
+        self._backup = state.pop("backup", None)
+        assert state == {}
 
     @classmethod
-    def from_state(cls, state):
+    def from_state(cls, state: serializable.State) -> Flow:
         try:
             flow_cls = Flow.__types[state["type"]]
         except KeyError:
             raise ValueError(f"Unknown flow type: {state['type']}")
-        f = flow_cls(None, None)  # type: ignore
+        client = connection.Client(peername=("", 0), sockname=("", 0))
+        server = connection.Server(address=None)
+        f = flow_cls(client, server)
         f.set_state(state)
         return f
 
