@@ -14,7 +14,7 @@ from mitmproxy.test import tflow
 @pytest.fixture
 def tctx():
     context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+        connection.Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
         tctx.options,
     )
 

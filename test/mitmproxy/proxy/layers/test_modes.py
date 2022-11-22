@@ -43,12 +43,12 @@ def test_upstream_https(tctx):
     curl -x localhost:8080 -k http://example.com
     """
     tctx1 = Context(
-        Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+        Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
         copy.deepcopy(tctx.options),
     )
     tctx1.client.proxy_mode = ProxyMode.parse("upstream:https://example.mitmproxy.org:8081")
     tctx2 = Context(
-        Client(("client", 4321), ("127.0.0.1", 8080), 1605699329),
+        Client(peername=("client", 4321), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
         copy.deepcopy(tctx.options),
     )
     assert tctx2.client.proxy_mode == ProxyMode.parse("regular")

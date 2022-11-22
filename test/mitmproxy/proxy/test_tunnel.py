@@ -56,7 +56,7 @@ class TTunnelLayer(tunnel.TunnelLayer):
 
 @pytest.mark.parametrize("success", ["success", "fail"])
 def test_tunnel_handshake_start(tctx: Context, success):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
     server.state = ConnectionState.OPEN
 
     tl = TTunnelLayer(tctx, server, tctx.server)
@@ -87,7 +87,7 @@ def test_tunnel_handshake_start(tctx: Context, success):
 
 @pytest.mark.parametrize("success", ["success", "fail"])
 def test_tunnel_handshake_command(tctx: Context, success):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -137,7 +137,7 @@ def test_tunnel_default_impls(tctx: Context):
     Some tunnels don't need certain features, so the default behaviour
     should be to be transparent.
     """
-    server = Server(None)
+    server = Server(address=None)
     server.state = ConnectionState.OPEN
     tl = tunnel.TunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -169,7 +169,7 @@ def test_tunnel_default_impls(tctx: Context):
 
 
 def test_tunnel_openconnection_error(tctx: Context):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -192,7 +192,7 @@ def test_tunnel_openconnection_error(tctx: Context):
 
 @pytest.mark.parametrize("disconnect", ["client", "server"])
 def test_disconnect_during_handshake_start(tctx: Context, disconnect):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
     server.state = ConnectionState.OPEN
 
     tl = TTunnelLayer(tctx, server, tctx.server)
@@ -224,7 +224,7 @@ def test_disconnect_during_handshake_start(tctx: Context, disconnect):
 
 @pytest.mark.parametrize("disconnect", ["client", "server"])
 def test_disconnect_during_handshake_command(tctx: Context, disconnect):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)

@@ -8,7 +8,7 @@ from mitmproxy.proxy import events, commands
 
 @pytest.fixture
 def tconn() -> connection.Server:
-    return connection.Server(None)
+    return connection.Server(address=None)
 
 
 def test_dataclasses(tconn):

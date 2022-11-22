@@ -419,9 +419,9 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         mode: mode_specs.ProxyMode,
     ) -> None:
         client = Client(
-            writer.get_extra_info("peername"),
-            writer.get_extra_info("sockname"),
-            time.time(),
+            peername=writer.get_extra_info("peername"),
+            sockname=writer.get_extra_info("sockname"),
+            timestamp_start=time.time(),
             proxy_mode=mode,
         )
         context = Context(client, options)

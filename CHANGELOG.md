@@ -9,6 +9,8 @@
 
 * The `onboarding_port` option has been removed. The onboarding app now responds
   to all requests for the hostname specified in `onboarding_host`.
+* `connection.Client` and `connection.Server` now accept keyword arguments only.
+  This is a breaking change for custom addons that use these classes directly.
 
 ## 02 November 2022: mitmproxy 9.0.1
 

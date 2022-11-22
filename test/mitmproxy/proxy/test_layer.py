@@ -51,8 +51,7 @@ class TestLayer:
             tutils.Playbook(tlayer, hooks=True, logs=True)
             << commands.Log(" >> Start({})", DEBUG)
             << commands.Log(
-                " << OpenConnection({'connection': Server({'id': '…rverid', 'address': None, "
-                "'state': <ConnectionState.CLOSED: 0>, 'transport_protocol': 'tcp'})})",
+                " << OpenConnection({'connection': Server({'id': '…rverid', 'address': None})})",
                 DEBUG,
             )
             << commands.OpenConnection(tctx.server)
@@ -60,9 +59,8 @@ class TestLayer:
             << commands.Log(" >! DataReceived(client, b'foo')", DEBUG)
             >> tutils.reply(None, to=-3)
             << commands.Log(
-                " >> Reply(OpenConnection({'connection': Server("
-                "{'id': '…rverid', 'address': None, 'state': <ConnectionState.OPEN: 3>, "
-                "'transport_protocol': 'tcp', 'timestamp_start': 1624544785})}), None)",
+                " >> Reply(OpenConnection({'connection': Server({'id': '…rverid', 'address': None, "
+                "'state': <ConnectionState.OPEN: 3>, 'timestamp_start': 1624544785})}), None)",
                 DEBUG,
             )
             << commands.Log(" !> DataReceived(client, b'foo')", DEBUG)

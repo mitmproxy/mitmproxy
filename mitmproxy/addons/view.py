@@ -475,8 +475,8 @@ class View(collections.abc.Sequence):
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
 
-        c = connection.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
-        s = connection.Server((req.host, req.port))
+        c = connection.Client(peername=("", 0), sockname=("", 0), timestamp_start=req.timestamp_start - 0.0001)
+        s = connection.Server(address=(req.host, req.port))
 
         f = http.HTTPFlow(c, s)
         f.request = req

@@ -133,9 +133,7 @@ def h2_responses(draw):
 
 @given(chunks(mutations(h1_requests())))
 def test_fuzz_h1_request(data):
-    tctx = context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
-    )
+    tctx = _tctx()
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
     for _ in layer.handle_event(Start()):
@@ -148,9 +146,7 @@ def test_fuzz_h1_request(data):
 @given(chunks(mutations(h2_responses())))
 @example([b"0 OK\r\n\r\n", b"\r\n", b"5\r\n12345\r\n0\r\n\r\n"])
 def test_fuzz_h1_response(data):
-    tctx = context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
-    )
+    tctx = _tctx()
     server = Placeholder(connection.Server)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
@@ -276,9 +272,7 @@ def h2_frames(draw):
 
 
 def h2_layer(opts):
-    tctx = context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
-    )
+    tctx = _tctx()
     tctx.options.http2_ping_keepalive = 0
     tctx.client.alpn = b"h2"
 
@@ -322,10 +316,15 @@ def test_fuzz_h2_request_mutations(chunks):
     _h2_request(chunks)
 
 
-def _h2_response(chunks):
-    tctx = context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
+def _tctx() -> context.Context:
+    return context.Context(
+        connection.Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
+        opts
     )
+
+
+def _h2_response(chunks):
+    tctx = _tctx()
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     server = Placeholder(connection.Server)
     assert (
@@ -427,9 +426,7 @@ def _test_cancel(stream_req, stream_resp, draw):
     """
     Test that we don't raise an exception if someone disconnects.
     """
-    tctx = context.Context(
-        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
-    )
+    tctx = _tctx()
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)
