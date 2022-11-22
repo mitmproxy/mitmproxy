@@ -307,7 +307,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
         async with self._drain_lock:
-            for transport in self.transports.values():
+            for transport in list(self.transports.values()):
                 if transport.writer is not None:
                     try:
                         await transport.writer.drain()
