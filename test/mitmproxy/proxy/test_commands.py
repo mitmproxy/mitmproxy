@@ -9,7 +9,7 @@ from mitmproxy.proxy import commands
 
 @pytest.fixture
 def tconn() -> connection.Server:
-    return connection.Server(None)
+    return connection.Server(address=None)
 
 
 def test_dataclasses(tconn):

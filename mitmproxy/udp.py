@@ -51,8 +51,15 @@ class UDPFlow(flow.Flow):
         super().__init__(client_conn, server_conn, live)
         self.messages = []
 
-    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes["messages"] = list[UDPMessage]
+    def get_state(self) -> serializable.State:
+        return {
+            **super().get_state(),
+            "messages": [m.get_state() for m in self.messages],
+        }
+
+    def set_state(self, state: serializable.State) -> None:
+        self.messages = [UDPMessage.from_state(m) for m in state.pop("messages")]
+        super().set_state(state)
 
     def __repr__(self):
         return f"<UDPFlow ({len(self.messages)} messages)>"

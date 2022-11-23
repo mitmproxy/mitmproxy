@@ -1,3 +1,5 @@
+import dataclasses
+
 import pytest
 
 from mitmproxy.proxy.mode_specs import ProxyMode, Socks5Mode
@@ -24,7 +26,7 @@ def test_parse():
         ProxyMode.parse("regular@99999")
 
     m.set_state(m.get_state())
-    with pytest.raises(RuntimeError, match="Proxy modes are frozen"):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         m.set_state("regular")
 
 

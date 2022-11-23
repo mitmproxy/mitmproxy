@@ -7,7 +7,7 @@ import pytest
 
 from cryptography import x509
 from OpenSSL import SSL
-from mitmproxy import certs, connection, tls
+from mitmproxy import certs, connection, tls, options
 from mitmproxy.addons import tlsconfig
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes, quic, tls as proxy_tls
@@ -61,6 +61,13 @@ def test_alpn_select_callback():
 here = Path(__file__).parent
 
 
+def _ctx(opts: options.Options) -> context.Context:
+    return context.Context(
+        connection.Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
+        opts,
+    )
+
+
 class TestTlsConfig:
     def test_configure(self, tdata):
         ta = tlsconfig.TlsConfig()
@@ -93,10 +100,7 @@ class TestTlsConfig:
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
 
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
 
             # Edge case first: We don't have _any_ idea about the server nor is there a SNI,
             # so we just return our local IP as subject.
@@ -133,10 +137,7 @@ class TestTlsConfig:
         # only really testing for coverage here, there's no point in mirroring the individual conditions
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ch = tls.ClientHelloData(ctx, None)  # type: ignore
             ta.tls_clienthello(ch)
             assert not ch.establish_server_tls_first
@@ -187,10 +188,7 @@ class TestTlsConfig:
                 ],
                 ciphers_client="ECDHE-ECDSA-AES128-GCM-SHA256",
             )
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
 
             tls_start = tls.TlsData(ctx.client, context=ctx)
             ta.tls_start_client(tls_start)
@@ -240,10 +238,7 @@ class TestTlsConfig:
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             ctx.server.sni = ""  # explicitly opt out of using the address.
 
@@ -254,10 +249,7 @@ class TestTlsConfig:
     def test_tls_start_server_verify_failed(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.client.alpn_offers = [b"h2"]
             ctx.client.cipher_list = ["TLS_AES_256_GCM_SHA384", "ECDHE-RSA-AES128-SHA"]
             ctx.server.address = ("example.mitmproxy.org", 443)
@@ -273,10 +265,7 @@ class TestTlsConfig:
     def test_tls_start_server_verify_ok(self, hostname, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = (hostname, 443)
             tctx.configure(
                 ta,
@@ -328,10 +317,7 @@ class TestTlsConfig:
     def test_tls_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
 
             tctx.configure(
@@ -372,10 +358,7 @@ class TestTlsConfig:
     def test_alpn_selection(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             tls_start = tls.TlsData(ctx.server, context=ctx)
 
@@ -415,10 +398,7 @@ class TestTlsConfig:
                 ],
             )
 
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             # mock up something that looks like a secure web proxy.
             ctx.layers = [modes.HttpProxy(ctx), 123]
             tls_start = tls.TlsData(ctx.client, context=ctx)
@@ -435,10 +415,7 @@ class TestTlsConfig:
     def test_client_cert_file(self, tdata, client_certs):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             tctx.configure(
                 ta,

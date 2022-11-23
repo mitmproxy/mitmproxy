@@ -5,6 +5,7 @@ The flow file version is decoupled from the mitmproxy release cycle (since
 v3.0.0dev) and versioning. Every change or migration gets a new flow file
 version number, this prevents issues with developer builds and snapshots.
 """
+import copy
 import uuid
 from typing import Any, Union
 
@@ -283,7 +284,7 @@ def convert_11_12(data):
     data["version"] = 12
 
     if "websocket" in data["metadata"]:
-        _websocket_handshakes[data["id"]] = data
+        _websocket_handshakes[data["id"]] = copy.deepcopy(data)
 
     if "websocket_handshake" in data["metadata"]:
         ws_flow = data
@@ -386,6 +387,33 @@ def convert_17_18(data):
     return data
 
 
+def convert_18_19(data):
+    data["version"] = 19
+    data["client_conn"]["peername"] = data["client_conn"].pop("address", None)
+    if data["client_conn"].get("timestamp_start") is None:
+        data["client_conn"]["timestamp_start"] = 0.0
+    data["client_conn"].pop("tls_extensions")
+
+    data["server_conn"]["peername"] = data["server_conn"].pop("ip_address", None)
+    data["server_conn"]["sockname"] = data["server_conn"].pop("source_address", None)
+    data["server_conn"]["via"] = data["server_conn"].pop("via2", None)
+
+    for conn in ["client_conn", "server_conn"]:
+        data[conn].pop("tls_established")
+
+        data[conn]["cipher"] = data[conn].pop("cipher_name", None)
+        data[conn].setdefault("transport_protocol", "tcp")
+
+        for name in ["peername", "sockname", "address"]:
+            if data[conn].get(name) and isinstance(data[conn][name][0], bytes):
+                data[conn][name][0] = data[conn][name][0].decode(errors="backslashreplace")
+
+    if data["server_conn"]["sni"] is True:
+        data["server_conn"]["sni"] = data["server_conn"]["address"][0]
+
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -448,6 +476,7 @@ converters = {
     15: convert_15_16,
     16: convert_16_17,
     17: convert_17_18,
+    18: convert_18_19,
 }
 
 

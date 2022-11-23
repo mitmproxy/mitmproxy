@@ -7,25 +7,20 @@ from ipaddress import IPv4Address, IPv6Address
 import time
 from typing import ClassVar
 
-from mitmproxy import flow, stateobject
+from mitmproxy import flow
+from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
 
 @dataclass
-class Question(stateobject.StateObject):
+class Question(serializable.SerializableDataclass):
     HEADER: ClassVar[struct.Struct] = struct.Struct("!HH")
 
     name: str
     type: int
     class_: int
-
-    _stateobject_attributes = dict(name=str, type=int, class_=int)
-
-    @classmethod
-    def from_state(cls, state):
-        return cls(**state)
 
     def __str__(self) -> str:
         return self.name
@@ -43,7 +38,7 @@ class Question(stateobject.StateObject):
 
 
 @dataclass
-class ResourceRecord(stateobject.StateObject):
+class ResourceRecord(serializable.SerializableDataclass):
     DEFAULT_TTL: ClassVar[int] = 60
     HEADER: ClassVar[struct.Struct] = struct.Struct("!HHIH")
 
@@ -52,12 +47,6 @@ class ResourceRecord(stateobject.StateObject):
     class_: int
     ttl: int
     data: bytes
-
-    _stateobject_attributes = dict(name=str, type=int, class_=int, ttl=int, data=bytes)
-
-    @classmethod
-    def from_state(cls, state):
-        return cls(**state)
 
     def __str__(self) -> str:
         try:
@@ -150,7 +139,7 @@ class ResourceRecord(stateobject.StateObject):
 
 # comments are taken from rfc1035
 @dataclass
-class Message(stateobject.StateObject):
+class Message(serializable.SerializableDataclass):
     HEADER: ClassVar[struct.Struct] = struct.Struct("!HHHHHH")
 
     timestamp: float
@@ -193,29 +182,6 @@ class Message(stateobject.StateObject):
     """Second resource record section."""
     additionals: list[ResourceRecord]
     """Third resource record section."""
-
-    _stateobject_attributes = dict(
-        timestamp=float,
-        id=int,
-        query=bool,
-        op_code=int,
-        authoritative_answer=bool,
-        truncation=bool,
-        recursion_desired=bool,
-        recursion_available=bool,
-        reserved=int,
-        response_code=int,
-        questions=list[Question],
-        answers=list[ResourceRecord],
-        authorities=list[ResourceRecord],
-        additionals=list[ResourceRecord],
-    )
-
-    @classmethod
-    def from_state(cls, state):
-        obj = cls.__new__(cls)  # `cls(**state)` won't work recursively
-        obj.set_state(state)
-        return obj
 
     def __str__(self) -> str:
         return "\r\n".join(
@@ -465,9 +431,17 @@ class DNSFlow(flow.Flow):
     response: Message | None = None
     """The DNS response."""
 
-    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes["request"] = Message
-    _stateobject_attributes["response"] = Message
+    def get_state(self) -> serializable.State:
+        return {
+            **super().get_state(),
+            "request": self.request.get_state(),
+            "response": self.response.get_state() if self.response else None,
+        }
+
+    def set_state(self, state: serializable.State) -> None:
+        self.request = Message.from_state(state.pop("request"))
+        self.response = Message.from_state(r) if (r := state.pop("response")) else None
+        super().set_state(state)
 
     def __repr__(self) -> str:
         return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"

@@ -35,11 +35,11 @@ class FlowReader:
                 try:
                     yield flow.Flow.from_state(compat.migrate_flow(loaded))
                 except ValueError as e:
-                    raise exceptions.FlowReadException(e)
+                    raise exceptions.FlowReadException(e) from e
         except (ValueError, TypeError, IndexError) as e:
             if str(e) == "not a tnetstring: empty file":
                 return  # Error is due to EOF
-            raise exceptions.FlowReadException("Invalid data format.")
+            raise exceptions.FlowReadException("Invalid data format.") from e
 
 
 class FilteredFlowWriter:

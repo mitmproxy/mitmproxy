@@ -570,12 +570,12 @@ class ClientTLSLayer(TLSLayer):
             # we've figured out that we don't want to intercept this connection, so we assign fake connection objects
             # to all TLS layers. This makes the real connection contents just go through.
             self.conn = self.tunnel_connection = connection.Client(
-                ("ignore-conn", 0), ("ignore-conn", 0), time.time()
+                peername=("ignore-conn", 0), sockname=("ignore-conn", 0)
             )
             parent_layer = self.context.layers[self.context.layers.index(self) - 1]
             if isinstance(parent_layer, ServerTLSLayer):
                 parent_layer.conn = parent_layer.tunnel_connection = connection.Server(
-                    None
+                    address=None
                 )
             if self.is_dtls:
                 self.child_layer = udp.UDPLayer(self.context, ignore=True)
@@ -670,4 +670,4 @@ class MockTLSLayer(TLSLayer):
     """
 
     def __init__(self, ctx: context.Context):
-        super().__init__(ctx, connection.Server(None))
+        super().__init__(ctx, connection.Server(address=None))

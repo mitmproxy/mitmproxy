@@ -501,7 +501,7 @@ class TestClientTLS:
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
-        other_server = Server(None)
+        other_server = Server(address=None)
         assert (
             playbook
             >> events.DataReceived(other_server, b"Plaintext")
@@ -636,7 +636,7 @@ class TestClientTLS:
         client_layer.debug = ""
         assert (
             playbook
-            >> events.DataReceived(Server(None), b"data on other stream")
+            >> events.DataReceived(Server(address=None), b"data on other stream")
             << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
             << commands.Log(
                 "[tls] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",

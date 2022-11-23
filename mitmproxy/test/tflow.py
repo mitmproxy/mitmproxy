@@ -8,6 +8,7 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy import websocket
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test.tutils import tdnsreq, tdnsresp
 from mitmproxy.test.tutils import treq, tresp
@@ -211,58 +212,50 @@ def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
 
 
 def tclient_conn() -> connection.Client:
-    c = connection.Client.from_state(
-        dict(
-            id=str(uuid.uuid4()),
-            address=("127.0.0.1", 22),
-            mitmcert=None,
-            tls_established=True,
-            timestamp_start=946681200,
-            timestamp_tls_setup=946681201,
-            timestamp_end=946681206,
-            sni="address",
-            cipher_name="cipher",
-            alpn=b"http/1.1",
-            tls_version="TLSv1.2",
-            tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
-            state=0,
-            sockname=("", 0),
-            error=None,
-            tls=False,
-            certificate_list=[],
-            alpn_offers=[],
-            cipher_list=[],
-            proxy_mode="regular",
-        )
+    c = connection.Client(
+        id=str(uuid.uuid4()),
+        peername=("127.0.0.1", 22),
+        sockname=("", 0),
+        mitmcert=None,
+        timestamp_start=946681200,
+        timestamp_tls_setup=946681201,
+        timestamp_end=946681206,
+        sni="address",
+        cipher="cipher",
+        alpn=b"http/1.1",
+        tls_version="TLSv1.2",
+        state=ConnectionState.OPEN,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_list=[],
+        proxy_mode=ProxyMode.parse("regular"),
     )
     return c
 
 
 def tserver_conn() -> connection.Server:
-    c = connection.Server.from_state(
-        dict(
-            id=str(uuid.uuid4()),
-            address=("address", 22),
-            source_address=("address", 22),
-            ip_address=("192.168.0.1", 22),
-            timestamp_start=946681202,
-            timestamp_tcp_setup=946681203,
-            timestamp_tls_setup=946681204,
-            timestamp_end=946681205,
-            tls_established=True,
-            sni="address",
-            alpn=None,
-            tls_version="TLSv1.2",
-            via=None,
-            state=0,
-            error=None,
-            tls=False,
-            certificate_list=[],
-            alpn_offers=[],
-            cipher_name=None,
-            cipher_list=[],
-            via2=None,
-        )
+    c = connection.Server(
+        id=str(uuid.uuid4()),
+        address=("address", 22),
+        peername=("192.168.0.1", 22),
+        sockname=("address", 22),
+        timestamp_start=946681202,
+        timestamp_tcp_setup=946681203,
+        timestamp_tls_setup=946681204,
+        timestamp_end=946681205,
+        sni="address",
+        alpn=None,
+        tls_version="TLSv1.2",
+        via=None,
+        state=ConnectionState.CLOSED,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher=None,
+        cipher_list=[],
     )
     return c
 

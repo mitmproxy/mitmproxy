@@ -931,7 +931,9 @@ class TestMessage:
         resp = tresp()
         resp.trailers = Headers()
         resp2 = Response.from_state(resp.get_state())
-        assert resp.data == resp2.data
+        resp3 = tresp()
+        resp3.set_state(resp.get_state())
+        assert resp.data == resp2.data == resp3.data
 
     def test_content_length_update(self):
         resp = tresp()

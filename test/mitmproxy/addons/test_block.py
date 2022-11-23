@@ -56,6 +56,6 @@ async def test_block_global(block_global, block_private, should_be_killed, addre
     ar = block.Block()
     with taddons.context(ar) as tctx:
         tctx.configure(ar, block_global=block_global, block_private=block_private)
-        client = connection.Client(address, ("127.0.0.1", 8080), 1607699500)
+        client = connection.Client(peername=address, sockname=("127.0.0.1", 8080))
         ar.client_connected(client)
         assert bool(client.error) == should_be_killed

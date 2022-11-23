@@ -42,7 +42,7 @@ example_response_trailers = ((b"resp-trailer-a", b"a"), (b"resp-trailer-b", b"b"
 def open_h2_server_conn():
     # this is a bit fake here (port 80, with alpn, but no tls - c'mon),
     # but we don't want to pollute our tests with TLS handshakes.
-    s = Server(("example.com", 80))
+    s = Server(address=("example.com", 80))
     s.state = ConnectionState.OPEN
     s.alpn = b"h2"
     return s

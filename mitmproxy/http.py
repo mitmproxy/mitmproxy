@@ -1251,11 +1251,19 @@ class HTTPFlow(flow.Flow):
     If this HTTP flow initiated a WebSocket connection, this attribute contains all associated WebSocket data.
     """
 
-    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    # mypy doesn't support update with kwargs
-    _stateobject_attributes.update(
-        dict(request=Request, response=Response, websocket=WebSocketData)
-    )
+    def get_state(self) -> serializable.State:
+        return {
+            **super().get_state(),
+            "request": self.request.get_state(),
+            "response": self.response.get_state() if self.response else None,
+            "websocket": self.websocket.get_state() if self.websocket else None,
+        }
+
+    def set_state(self, state: serializable.State) -> None:
+        self.request = Request.from_state(state.pop("request"))
+        self.response = Response.from_state(r) if (r := state.pop("response")) else None
+        self.websocket = WebSocketData.from_state(w) if (w := state.pop("websocket")) else None
+        super().set_state(state)
 
     def __repr__(self):
         s = "<HTTPFlow"

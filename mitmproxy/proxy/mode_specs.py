@@ -22,6 +22,7 @@ Examples:
 
 from __future__ import annotations
 
+import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import cache
@@ -161,7 +162,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     def set_state(self, state):
         if state != self.full_spec:
-            raise RuntimeError("Proxy modes are frozen.")
+            raise dataclasses.FrozenInstanceError("Proxy modes are immutable.")
 
 
 TCP: Literal['tcp', 'udp'] = "tcp"
