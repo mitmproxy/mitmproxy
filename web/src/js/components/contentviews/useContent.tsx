@@ -9,7 +9,7 @@ export type ContentViewData = {
     timestamp?: number
 }
 
-export function useContent(url: string, hash?: string): string | undefined {
+export function useContent(url: string, hash?: string, path?: string): string | undefined {
     const [content, setContent] = useState<string>(),
         [abort, setAbort] = useState<AbortController>();
 
@@ -42,7 +42,7 @@ export function useContent(url: string, hash?: string): string | undefined {
                     controller.abort();
             }
         },
-        [url, hash]
+        [url, hash, path]
     );
 
     return content;

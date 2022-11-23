@@ -4,7 +4,20 @@ import HttpMessage, {ViewImage} from '../../../components/contentviews/HttpMessa
 import {fireEvent, render, screen, waitFor} from "../../test-utils"
 import fetchMock, {enableFetchMocks} from "jest-fetch-mock";
 
-jest.mock("../../../contrib/CodeMirror")
+jest.mock("../../../contrib/CodeMirror", () => {
+    const React = require("react");
+    return {
+        __esModule: true,
+        default: React.forwardRef((props, ref) => {
+            React.useImperativeHandle(ref, () => ({
+                codeMirror: {
+                    getValue: () => props.value
+                }
+            }));
+            return <div>{props.value}</div>
+        })
+    }
+})
 
 enableFetchMocks();
 
@@ -28,10 +41,16 @@ test("HttpMessage", async () => {
         JSON.stringify({
             lines: Array(5).fill([["text", "rawdata"]]),
             description: "Raw",
+        }),
+        "",
+        JSON.stringify({
+            lines: Array(5).fill([["text", "rawdata"]]),
+            description: "Raw",
         })
     );
 
     const tflow = TFlow();
+    tflow.request.method = "POST";
     const {asFragment} = render(<HttpMessage flow={tflow} message={tflow.request}/>);
     await waitFor(() => screen.getAllByText("data"));
     expect(screen.queryByText('additional')).toBeNull();
@@ -49,6 +68,50 @@ test("HttpMessage", async () => {
     fireEvent.click(screen.getByText("Cancel"));
 
     await waitFor(() => screen.getAllByText("rawdata"));
+    expect(asFragment()).toMatchSnapshot();
+
+    fireEvent.click(screen.getByText("Edit"));
+    fireEvent.click(screen.getByText("Done"));
+    await waitFor(() => screen.getAllByText("rawdata"));
+    expect(asFragment()).toMatchSnapshot();
+});
+
+test("HttpMessage edit query string", async () => {
+    const lines = [
+        [
+            ["header", "foo"],
+            ["text", "1"],
+        ],
+        [
+            ["header", "bar"],
+            ["text", "2"],
+        ],
+    ];
+
+    fetchMock.mockResponses(
+        JSON.stringify({
+            lines: lines,
+            description: "Query",
+        }),
+        "foo=1\nbar=2",
+        '',
+        JSON.stringify({
+            lines,
+            description: "Query",
+        })
+    );
+
+    const tflow = TFlow();
+    tflow.request.path = "/path?foo=1&bar=2";
+    const { asFragment, debug } = render(
+        <HttpMessage flow={tflow} message={tflow.request} />
+    );
+    fireEvent.click(screen.getByText("Edit"));
+    await waitFor(() => screen.getAllByText(/foo/));
+    expect(asFragment()).toMatchSnapshot();
+    fireEvent.click(screen.getByText("Done"));
+
+    await waitFor(() => screen.getAllByText("foo"));
     expect(asFragment()).toMatchSnapshot();
 });
 

@@ -98,6 +98,8 @@
   ([#5687](https://github.com/mitmproxy/mitmproxy/issues/5687), @rbdixon)
 * Add docs for transparent mode on Windows.
   ([#5402](https://github.com/mitmproxy/mitmproxy/issues/5402), @stephenspol)
+* Fix query editing and replacement on mitmweb.
+  ([#5574](https://github.com/mitmproxy/mitmproxy/pull/5574), @yesmeck)
 
 ## 28 June 2022: mitmproxy 8.1.1
 

@@ -1,12 +1,12 @@
-import React, {useCallback, useMemo, useRef, useState} from "react";
-import {HTTPFlow, HTTPMessage} from "../../flow";
+import React, {Children, useCallback, useMemo, useRef, useState} from "react";
+import {HTTPFlow, HTTPMessage } from "../../flow";
 import {useAppDispatch, useAppSelector} from "../../ducks";
 import {setContentViewFor} from "../../ducks/ui/flow";
 import {ContentViewData, useContent} from "./useContent";
 import {MessageUtils} from "../../flow/utils";
 import FileChooser from "../common/FileChooser";
 import * as flowActions from "../../ducks/flows";
-import {uploadContent} from "../../ducks/flows";
+import {uploadContent, uploadQuery} from "../../ducks/flows";
 import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import LineRenderer from "./LineRenderer";
@@ -26,13 +26,15 @@ export default function HttpMessage({flow, message}: HttpMessageProps) {
     const [maxLines, setMaxLines] = useState<number>(useAppSelector(state => state.options.content_view_lines_cutoff));
     const showMore = useCallback(() => setMaxLines(Math.max(1024, maxLines * 2)), [maxLines]);
     const [edit, setEdit] = useState<boolean>(false);
+    const isGETRequest = flow.request.method === 'GET' && part === 'request';
     let url;
     if (edit) {
-        url = MessageUtils.getContentURL(flow, message);
+        url = isGETRequest ? MessageUtils.getQueryURL(flow) : MessageUtils.getContentURL(flow, message);
     } else {
         url = MessageUtils.getContentURL(flow, message, contentView, maxLines + 1);
     }
-    const content = useContent(url, message.contentHash);
+    let content = useContent(url, message.contentHash, flow.request.path);
+
     const contentViewData = useMemo<ContentViewData | undefined>(() => {
         if (content && !edit) {
             try {
@@ -48,8 +50,12 @@ export default function HttpMessage({flow, message}: HttpMessageProps) {
 
     if (edit) {
         const save = async () => {
-            const content = editorRef.current?.getContent();
-            await dispatch(flowActions.update(flow, {[part]: {content}}));
+            let content = editorRef.current?.getContent();
+            await dispatch(flowActions.update(flow, {
+                [part]: isGETRequest ? {
+                    query: content?.split("\n").map(item => item.split('='))
+                } : { content }
+            }));
             setEdit(false);
         }
         return (
@@ -76,7 +82,11 @@ export default function HttpMessage({flow, message}: HttpMessageProps) {
                         icon="fa-upload"
                         text="Replace"
                         title="Upload a file to replace the content."
-                        onOpenFile={content => dispatch(uploadContent(flow, content, part))}
+                        onOpenFile={content => dispatch(
+                            isGETRequest ?
+                                uploadQuery(flow, content) :
+                                uploadContent(flow, content, part)
+                        )}
                         className="btn btn-default btn-xs"/>
                     &nbsp;
                     <ViewSelector value={contentView}
