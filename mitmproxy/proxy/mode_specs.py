@@ -196,16 +196,14 @@ class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
     description = "HTTP(S) proxy (upstream mode)"
     transport_protocol = TCP
-    scheme: Literal["http", "https", "http3"]
+    scheme: Literal["http", "https"]
     address: tuple[str, int]
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
         scheme, self.address = server_spec.parse(self.data, default_scheme="http")
-        if scheme != "http" and scheme != "https" and scheme != "http3":
+        if scheme != "http" and scheme != "https":
             raise ValueError("invalid upstream proxy scheme")
-        if scheme == "http3":
-            self.transport_protocol = UDP
         self.scheme = scheme
 
 

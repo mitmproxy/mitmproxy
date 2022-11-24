@@ -14,6 +14,7 @@ from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layers.quic import (
     QuicConnectionClosed,
     QuicStreamEvent,
+    StopQuicStream,
     error_code_to_str,
 )
 from mitmproxy.proxy.utils import expect
@@ -76,33 +77,35 @@ class Http3Connection(HttpConnection):
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                     self.h3_conn.send_trailers(event.stream_id, [*event.trailers.fields])
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
-                    self.h3_conn.end_stream(event.stream_id)
+                    if not self.h3_conn.has_sent_end_stream(event.stream_id):
+                        self.h3_conn.send_data(event.stream_id, b"", end_stream=True)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
-                    if not self.h3_conn.has_ended(event.stream_id):
-                        code = {
-                            status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED.value,
-                        }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR.value)
-                        send_error_message = (
-                            isinstance(event, ResponseProtocolError)
-                            and not self.h3_conn.has_sent_headers(event.stream_id)
-                            and event.code != status_codes.NO_RESPONSE
+                    code = {
+                        status_codes.CLIENT_CLOSED_REQUEST: H3ErrorCode.H3_REQUEST_CANCELLED.value,
+                    }.get(event.code, H3ErrorCode.H3_INTERNAL_ERROR.value)
+                    send_error_message = (
+                        isinstance(event, ResponseProtocolError)
+                        and not self.h3_conn.has_sent_headers(event.stream_id)
+                        and event.code != status_codes.NO_RESPONSE
+                    )
+                    if send_error_message:
+                        self.h3_conn.send_headers(
+                            event.stream_id,
+                            [
+                                (b":status", b"%d" % event.code),
+                                (b"server", version.MITMPROXY.encode()),
+                                (b"content-type", b"text/html"),
+                            ],
                         )
-                        if send_error_message:
-                            self.h3_conn.send_headers(
-                                event.stream_id,
-                                [
-                                    (b":status", b"%d" % event.code),
-                                    (b"server", version.MITMPROXY.encode()),
-                                    (b"content-type", b"text/html"),
-                                ],
-                            )
-                            self.h3_conn.send_data(
-                                event.stream_id,
-                                format_error(event.code, event.message),
-                                end_stream=True,
-                            )
-                        else:
-                            self.h3_conn.reset_stream(event.stream_id, code)
+                        self.h3_conn.send_data(
+                            event.stream_id,
+                            format_error(event.code, event.message),
+                            end_stream=True,
+                        )
+                    elif self.h3_conn.has_sent_end_stream(event.stream_id):
+                        yield StopQuicStream(self.conn, event.stream_id, code)
+                    else:
+                        self.h3_conn.reset_stream(event.stream_id, code)
                 else:
                     raise AssertionError(f"Unexpected event: {event!r}")
 

@@ -17,9 +17,11 @@ from aioquic.h3.connection import (
 )
 
 from mitmproxy import connection, version
-from mitmproxy.http import HTTPFlow
+from mitmproxy.flow import Error
+from mitmproxy.http import HTTPFlow, Request
 from mitmproxy.proxy import commands, context, events, layers
 from mitmproxy.proxy.layers import http, quic
+from mitmproxy.proxy.layers.http._http3 import Http3Client
 from test.mitmproxy.proxy import tutils
 
 
@@ -693,7 +695,7 @@ def test_cancel_during_response_hook(tctx: context.Context):
         << (response := http.HttpResponseHook(flow))
         >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
         >> tutils.reply(to=response)
-        << cff.send_reset(error_code=ErrorCode.H3_INTERNAL_ERROR)
+        << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
     )
     assert cff.is_done
 
@@ -778,3 +780,93 @@ def test_stream_concurrent_get_connection(tctx: context.Context):
         >> sff.receive_decoder()  # for send_headers
     )
     assert cff.is_done and sff.is_done
+
+
+def test_kill_stream(tctx: context.Context):
+    """Test that we can kill individual streams."""
+    playbook, cff = start_h3_client(tctx)
+    flow1 = tutils.Placeholder(HTTPFlow)
+    flow2 = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    headers1 = [*example_request_headers, (b"x-order", b"1")]
+    headers2 = [*example_request_headers, (b"x-order", b"2")]
+
+    def kill(flow: HTTPFlow):
+        # Can't use flow.kill() here because that currently still depends on a reply object.
+        flow.error = Error(Error.KILLED_MESSAGE)
+
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(
+            headers1, stream_id=0, end_stream=True
+        )
+        << (request_header1 := http.HttpRequestHeadersHook(flow1))
+        << cff.send_decoder()  # for receive_headers
+        >> cff.receive_headers(
+            headers2, stream_id=4, end_stream=True
+        )
+        << (request_header2 := http.HttpRequestHeadersHook(flow2))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request_header2, side_effect=kill)
+        << http.HttpErrorHook(flow2)
+        >> tutils.reply()
+        << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR, stream_id=4)
+        >> tutils.reply(to=request_header1)
+        << http.HttpRequestHook(flow1)
+        >> tutils.reply()
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(
+            headers1, stream_id=0, end_stream=True
+        )
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done and sff.is_done
+
+
+class TestClient:
+    @pytest.mark.parametrize("end_stream", [True, False])
+    def test_no_data_on_closed_stream(self, tctx: context.Context, end_stream: bool):
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = MultiPlaybook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        resp = [(b":status", b"200")]
+        (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=end_stream)
+            << frame_factory.send_headers([
+                (b":method", b"GET"),
+                (b':scheme', b'http'),
+                (b':path', b'/'),
+                (b'content-length', b'0'),
+            ], end_stream=end_stream)
+            >> frame_factory.receive_decoder()  # for send_headers
+        )
+        if end_stream:
+            playbook >> http.RequestEndOfMessage(1)
+        (
+            playbook
+            >> frame_factory.receive_headers(resp)
+            << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
+            << frame_factory.send_decoder()  # for receive_headers
+            >> http.RequestProtocolError(
+                1, "cancelled", code=http.status_codes.CLIENT_CLOSED_REQUEST
+            )
+        )
+        if end_stream:
+            playbook << quic.StopQuicStream(frame_factory.conn, stream_id=0, error_code=ErrorCode.H3_REQUEST_CANCELLED)
+        else:
+            playbook << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        assert playbook
+        assert frame_factory.is_done

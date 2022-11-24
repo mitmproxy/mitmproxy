@@ -154,14 +154,6 @@ class LayeredH3Connection(H3Connection):
         self._is_done = True
         self._quic.close(error_code, frame_type, reason_phrase)
 
-    def end_stream(self, stream_id: int) -> None:
-        """Ends the given stream locally."""
-
-        # check whether the stream hasn't been ended before
-        stream = self._get_or_create_stream(stream_id)
-        if stream.headers_send_state != HeadersState.AFTER_TRAILERS:
-            self.send_data(stream_id, data=b"", end_stream=True)
-
     def get_next_available_stream_id(self, is_unidirectional: bool = False):
         """Reserves and returns the next available stream ID."""
 
@@ -191,13 +183,13 @@ class LayeredH3Connection(H3Connection):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def has_ended(self, stream_id: int) -> bool:
-        """Indicates whether the given stream has been ended by the peer."""
+    def has_sent_end_stream(self, stream_id: int) -> bool:
+        """Indicates whether the given stream has been ended locally."""
 
         try:
-            return not self._stream[stream_id].ended
+            return self._stream[stream_id].headers_send_state == HeadersState.AFTER_TRAILERS
         except KeyError:
-            return True
+            return False
 
     def has_sent_headers(self, stream_id: int) -> bool:
         """Indicates whether headers have been sent over the given stream."""
