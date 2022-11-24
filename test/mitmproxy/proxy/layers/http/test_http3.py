@@ -626,6 +626,48 @@ def test_upstream_error(tctx: context.Context):
     assert b"server &lt;&gt; error" in data
 
 
+def test_rst_then_close(tctx):
+    """
+    Test that we properly handle the case of a client that first causes protocol errors and then disconnects.
+
+    This is slightly different to H2, as QUIC will close the connection immediately.
+    """
+    playbook, cff = start_h3_client(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    err = tutils.Placeholder(str)
+
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        # request server
+        << (open := commands.OpenConnection(server))
+        >> cff.receive_data(b"unexpected data frame")
+        << quic.CloseQuicConnection(
+            tctx.client,
+            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION,
+            frame_type=None,
+            reason_phrase=err,
+        )
+        >> quic.QuicConnectionClosed(
+            tctx.client,
+            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION,
+            frame_type=None,
+            reason_phrase=err,
+        )
+        >> tutils.reply("connection cancelled", to=open)
+        << http.HttpErrorHook(flow)
+        >> tutils.reply()
+    )
+    assert flow().error.msg == "connection cancelled"
+
+
 def test_cancel_then_server_disconnect(tctx: context.Context):
     """
     Test that we properly handle the case of the following event sequence:
@@ -870,3 +912,33 @@ class TestClient:
             playbook << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         assert playbook
         assert frame_factory.is_done
+
+
+def test_early_server_data(tctx: context.Context):
+    playbook, cff = start_h3_client(tctx)
+    sff = FrameFactory(tctx.server, is_client=False)
+
+    tctx.server.address = ("example.com", 80)
+    tctx.server.state = connection.ConnectionState.OPEN
+    tctx.server.alpn = b"h3"
+
+    flow = tutils.Placeholder(HTTPFlow)
+    assert (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request_header := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request_header)
+        << (request := http.HttpRequestHook(flow))
+        # Surprise! We get data from the server before the request hook finishes.
+        >> sff.receive_stream_type(StreamType.CONTROL)
+        << sff.send_init()
+        >> sff.receive_stream_type(StreamType.QPACK_ENCODER)
+        >> sff.receive_stream_type(StreamType.QPACK_DECODER)
+        >> sff.receive_settings()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        # Request hook finishes...
+        >> tutils.reply(to=request)
+        << sff.send_headers(example_request_headers, end_stream=True)
+    )

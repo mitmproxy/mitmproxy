@@ -170,13 +170,6 @@ class Http3Connection(HttpConnection):
             msg = event.reason_phrase or error_code_to_str(event.error_code)
             for stream_id in self.h3_conn.get_reserved_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
-            # turn `QuicErrorCode.NO_ERROR` into `H3ErrorCode.H3_NO_ERROR`
-            self.h3_conn.close_connection(
-                event.error_code or H3ErrorCode.H3_NO_ERROR,
-                event.frame_type,
-                event.reason_phrase,
-            )
-            yield from self.h3_conn.transmit()
 
         else:
             raise AssertionError(f"Unexpected event: {event!r}")

@@ -177,7 +177,13 @@ class LayeredH3Connection(H3Connection):
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
-            return self.handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
+            if self._get_or_create_stream(event.stream_id).ended:
+                # aioquic will not send us any events once a stream has ended.
+                # Instead, it will close the connection. We simulate this here for H3 tests.
+                self.close_connection(error_code=QuicErrorCode.PROTOCOL_VIOLATION, reason_phrase="stream already ended")
+                return []
+            else:
+                return self.handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
 
         # should never happen
         else:
