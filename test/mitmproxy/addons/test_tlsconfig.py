@@ -215,10 +215,7 @@ class TestTlsConfig:
                 ],
                 ciphers_client="CHACHA20_POLY1305_SHA256",
             )
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
 
             tls_start = quic.QuicTlsData(ctx.client, context=ctx)
             ta.quic_start_client(tls_start)
@@ -289,10 +286,7 @@ class TestTlsConfig:
     def test_quic_start_server_verify_ok(self, hostname, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = (hostname, 443)
             tctx.configure(
                 ta,
@@ -336,10 +330,7 @@ class TestTlsConfig:
     def test_quic_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(
-                connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
-                tctx.options,
-            )
+            ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             ctx.client.alpn_offers = [b"h3"]
 

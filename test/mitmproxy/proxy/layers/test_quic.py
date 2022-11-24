@@ -348,7 +348,7 @@ class TestRawQuicLayer:
         )
 
     def test_open_connection(self, tctx: context.Context):
-        server = connection.Server(("other", 80))
+        server = connection.Server(address=("other", 80))
 
         def echo_new_server(ctx: context.Context):
             echo_layer = TlsEchoLayer(ctx)
@@ -869,7 +869,7 @@ class TestClientTLS:
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
-        other_server = connection.Server(None)
+        other_server = connection.Server(address=None)
         assert (
             playbook
             >> events.DataReceived(other_server, b"Plaintext")
@@ -1017,7 +1017,7 @@ class TestClientTLS:
         client_layer.debug = ""
         assert (
             playbook
-            >> events.DataReceived(connection.Server(None), b"data on other stream")
+            >> events.DataReceived(connection.Server(address=None), b"data on other stream")
             << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
             << commands.Log(
                 "[quic] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",

@@ -750,7 +750,6 @@ def test_stream_concurrent_get_connection(tctx: context.Context):
     """Test that an immediate second request for the same domain does not trigger a second connection attempt."""
     playbook, cff = start_h3_client(tctx)
     playbook.hooks = False
-    flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
     assert (
