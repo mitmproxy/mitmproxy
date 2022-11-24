@@ -1072,7 +1072,7 @@ class ClientQuicLayer(QuicLayer):
         # replace the QUIC layer with an UDP layer if requested
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
-                ("ignore-conn", 0), ("ignore-conn", 0), time.time(),
+                peername=("ignore-conn", 0), sockname=("ignore-conn", 0),
                 transport_protocol="udp"
             )
 
@@ -1080,7 +1080,7 @@ class ClientQuicLayer(QuicLayer):
             parent_layer = self.context.layers[self.context.layers.index(self) - 1]
             if isinstance(parent_layer, ServerQuicLayer):
                 parent_layer.conn = parent_layer.tunnel_connection = connection.Server(
-                    None
+                    address=None
                 )
             replacement_layer = UDPLayer(self.context, ignore=True)
             parent_layer.handle_event = replacement_layer.handle_event  # type: ignore

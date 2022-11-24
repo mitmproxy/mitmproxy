@@ -5,6 +5,7 @@ import pylsqpack
 
 from aioquic._buffer import Buffer
 from aioquic.h3.connection import (
+    ErrorCode,
     FrameType,
     Headers,
     Setting,
@@ -17,7 +18,7 @@ from aioquic.h3.connection import (
 
 from mitmproxy import connection, version
 from mitmproxy.http import HTTPFlow
-from mitmproxy.proxy import commands, context, layers
+from mitmproxy.proxy import commands, context, events, layers
 from mitmproxy.proxy.layers import http, quic
 from test.mitmproxy.proxy import tutils
 
@@ -30,6 +31,8 @@ example_request_headers = [
 ]
 
 example_response_headers = [(b":status", b"200")]
+
+example_request_trailers = [(b"req-trailer-a", b"a"), (b"req-trailer-b", b"b")]
 
 example_response_trailers = [(b"resp-trailer-a", b"a"), (b"resp-trailer-b", b"b")]
 
@@ -46,7 +49,7 @@ class CallbackPlaceholder(tutils._Placeholder[bytes]):
         super().__init__(bytes)
         self._cb = cb
 
-    def setdefault(self, value: bytes) -> None:
+    def setdefault(self, value: bytes) -> bytes:
         if self._obj is None:
             self._cb(value)
         return super().setdefault(value)
@@ -96,9 +99,9 @@ class FrameFactory:
             max_table_capacity=4096,
             blocked_streams=16,
         )
-        self.decoder_placeholders: list[tutils.Placeholder(bytes)] = []
+        self.decoder_placeholders: list[tutils.Placeholder[bytes]] = []
         self.encoder = pylsqpack.Encoder()
-        self.encoder_placeholder: Optional[tutils.Placeholder(bytes)] = None
+        self.encoder_placeholder: Optional[tutils.Placeholder[bytes]] = None
         self.peer_stream_id: dict[StreamType, int] = {}
         self.local_stream_id: dict[StreamType, int] = {}
         self.max_push_id: Optional[int] = None
@@ -331,6 +334,22 @@ class FrameFactory:
             end_stream=end_stream,
         )
 
+    def send_reset(self, error_code: int, stream_id: int = 0) -> quic.ResetQuicStream:
+        return quic.ResetQuicStream(
+            connection=self.conn,
+            stream_id=stream_id,
+            error_code=error_code,
+        )
+
+    def receive_reset(
+        self, error_code: int, stream_id: int = 0
+    ) -> quic.QuicStreamReset:
+        return quic.QuicStreamReset(
+            connection=self.conn,
+            stream_id=stream_id,
+            error_code=error_code,
+        )
+
     def send_init(self) -> Iterable[quic.SendQuicStreamData]:
         yield self.send_stream_type(StreamType.CONTROL)
         yield self.send_settings()
@@ -357,7 +376,7 @@ class FrameFactory:
 def open_h3_server_conn():
     # this is a bit fake here (port 80, with alpn, but no tls - c'mon),
     # but we don't want to pollute our tests with TLS handshakes.
-    server = connection.Server(("example.com", 80), transport_protocol="udp")
+    server = connection.Server(address=("example.com", 80), transport_protocol="udp")
     server.state = connection.ConnectionState.OPEN
     server.alpn = b"h3"
     return server
@@ -366,6 +385,7 @@ def open_h3_server_conn():
 def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactory]:
     tctx.client.alpn = b"h3"
     tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
 
     playbook = MultiPlaybook(layers.HttpLayer(tctx, layers.http.HTTPMode.regular))
     cff = FrameFactory(conn=tctx.client, is_client=True)
@@ -381,7 +401,6 @@ def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactor
 
 def make_h3(open_connection: commands.OpenConnection) -> None:
     open_connection.connection.alpn = b"h3"
-    open_connection.connection.transport_protocol = "udp"
 
 
 def test_simple(tctx: context.Context):
@@ -503,6 +522,70 @@ def test_response_trailers(
     assert cff.is_done and sff.is_done
 
 
+@pytest.mark.parametrize("stream", [True, False])
+def test_request_trailers(
+    tctx: context.Context,
+    open_h3_server_conn: connection.Server,
+    stream: bool,
+):
+    playbook, cff = start_h3_client(tctx)
+    tctx.server = open_h3_server_conn
+    sff = FrameFactory(tctx.server, is_client=False)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.request.stream = stream
+
+    flow = tutils.Placeholder(HTTPFlow)
+    (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers)
+        << (request_headers := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> cff.receive_data(b"Hello World!")
+        >> tutils.reply(to=request_headers, side_effect=enable_streaming)
+    )
+    if not stream:
+        (
+            playbook
+            >> cff.receive_headers(example_request_trailers, end_stream=True)
+            << (request := http.HttpRequestHook(flow))
+            << cff.send_decoder()  # for receive_headers
+            >> tutils.reply(to=request)
+        )
+    (
+        playbook
+        # request server
+        << sff.send_init()
+        << sff.send_headers(example_request_headers)
+        << sff.send_data(b"Hello World!")
+    )
+    if not stream:
+        playbook << sff.send_headers(example_request_trailers, end_stream=True)
+    (
+        playbook
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+    )
+    if stream:
+        (
+            playbook
+            >> cff.receive_headers(example_request_trailers, end_stream=True)
+            << (request := http.HttpRequestHook(flow))
+            << cff.send_decoder()  # for receive_headers
+            >> tutils.reply(to=request)
+            << sff.send_headers(example_request_trailers, end_stream=True)
+        )
+    assert (
+        playbook
+        >> sff.receive_decoder()  # for send_headers
+    )
+
+    assert cff.is_done and sff.is_done
+
+
 def test_upstream_error(tctx: context.Context):
     playbook, cff = start_h3_client(tctx)
     flow = tutils.Placeholder(HTTPFlow)
@@ -539,3 +622,160 @@ def test_upstream_error(tctx: context.Context):
     data = decode_frame(FrameType.DATA, err())
     assert b"502 Bad Gateway" in data
     assert b"server &lt;&gt; error" in data
+
+
+def test_cancel_then_server_disconnect(tctx: context.Context):
+    """
+    Test that we properly handle the case of the following event sequence:
+        - client cancels a stream
+        - we start an error hook
+        - server disconnects
+        - error hook completes.
+    """
+    playbook, cff = start_h3_client(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply(None)
+        << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        # cancel
+        >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
+        << commands.CloseConnection(server)
+        << http.HttpErrorHook(flow)
+        >> tutils.reply()
+        >> events.ConnectionClosed(server)
+        << None
+    )
+    assert cff.is_done
+
+
+def test_cancel_during_response_hook(tctx: context.Context):
+    """
+    Test that we properly handle the case of the following event sequence:
+        - we receive a server response
+        - we trigger the response hook
+        - the client cancels the stream
+        - the response hook completes
+
+    Given that we have already triggered the response hook, we don't want to trigger the error hook.
+    """
+    playbook, cff = start_h3_client(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply(None)
+        << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        # response server
+        >> events.DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+        << (reponse_headers := http.HttpResponseHeadersHook(flow))
+        << commands.CloseConnection(server)
+        >> tutils.reply(to=reponse_headers)
+        << (response := http.HttpResponseHook(flow))
+        >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
+        >> tutils.reply(to=response)
+        << cff.send_reset(error_code=ErrorCode.H3_INTERNAL_ERROR)
+    )
+    assert cff.is_done
+
+
+def test_stream_concurrency(tctx: context.Context):
+    """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
+    playbook, cff = start_h3_client(tctx)
+    flow1 = tutils.Placeholder(HTTPFlow)
+    flow2 = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    headers1 = [*example_request_headers, (b"x-order", b"1")]
+    headers2 = [*example_request_headers, (b"x-order", b"2")]
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(
+            headers1, stream_id=0, end_stream=True
+        )
+        << (request_header1 := http.HttpRequestHeadersHook(flow1))
+        << cff.send_decoder()  # for receive_headers
+        >> cff.receive_headers(
+            headers2, stream_id=4, end_stream=True
+        )
+        << (request_header2 := http.HttpRequestHeadersHook(flow2))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request_header1)
+        << (request1 := http.HttpRequestHook(flow1))
+        >> tutils.reply(to=request_header2)
+        << (request2 := http.HttpRequestHook(flow2))
+        # req 2 overtakes 1 and we already have a reply:
+        >> tutils.reply(to=request2)
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(
+            headers2, stream_id=0, end_stream=True
+        )
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+        >> tutils.reply(to=request1)
+        << sff.send_headers(
+            headers1, stream_id=4, end_stream=True
+        )
+        >> sff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done and sff.is_done
+
+
+def test_stream_concurrent_get_connection(tctx: context.Context):
+    """Test that an immediate second request for the same domain does not trigger a second connection attempt."""
+    playbook, cff = start_h3_client(tctx)
+    playbook.hooks = False
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    assert (
+        playbook
+        >> cff.receive_headers(
+            example_request_headers, stream_id=0, end_stream=True
+        )
+        << cff.send_decoder()  # for receive_headers
+        << (o := commands.OpenConnection(server))
+        >> cff.receive_headers(
+            example_request_headers, stream_id=4, end_stream=True
+        )
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(None, to=o, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(
+            example_request_headers, stream_id=0, end_stream=True
+        )
+        << sff.send_headers(
+            example_request_headers, stream_id=4, end_stream=True
+        )
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+        >> sff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done and sff.is_done

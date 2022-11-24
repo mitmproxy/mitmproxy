@@ -77,7 +77,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     state = start
 
     def read_body(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.stream_id
+        assert self.stream_id is not None
         while True:
             try:
                 if isinstance(event, events.DataReceived):
@@ -331,7 +331,7 @@ class Http1Client(Http1Connection):
             yield commands.CloseConnection(self.conn)
             return
 
-        if not self.stream_id:
+        if self.stream_id is None:
             assert isinstance(event, RequestHeaders)
             self.stream_id = event.stream_id
             self.request = event.request
@@ -383,7 +383,7 @@ class Http1Client(Http1Connection):
                 yield commands.Log(f"Unexpected data from server: {bytes(self.buf)!r}")
                 yield commands.CloseConnection(self.conn)
                 return
-            assert self.stream_id
+            assert self.stream_id is not None
 
             response_head = self.buf.maybe_extract_lines()
             if response_head:
