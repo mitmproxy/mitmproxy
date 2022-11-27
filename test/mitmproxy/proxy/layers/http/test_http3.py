@@ -447,11 +447,11 @@ def test_simple(tctx: context.Context):
     assert flow().response.text == "Hello, World!"
 
 
-@pytest.mark.parametrize("stream", [True, False])
+@pytest.mark.parametrize("stream", ["stream", ""])
 def test_response_trailers(
     tctx: context.Context,
     open_h3_server_conn: connection.Server,
-    stream: bool,
+    stream: str,
 ):
     playbook, cff = start_h3_client(tctx)
     tctx.server = open_h3_server_conn
@@ -499,22 +499,19 @@ def test_response_trailers(
         << (response := http.HttpResponseHook(flow))
         << sff.send_decoder()  # for receive_headers
     )
-
-    def modify_tailers(flow: HTTPFlow) -> None:
-        assert flow.response.trailers
-        del flow.response.trailers["resp-trailer-a"]
-
+    assert flow().response.trailers
+    del flow().response.trailers["resp-trailer-a"]
     if stream:
         assert (
             playbook
-            >> tutils.reply(to=response, side_effect=modify_tailers)
+            >> tutils.reply(to=response)
             << cff.send_headers(example_response_trailers[1:], end_stream=True)
             >> cff.receive_decoder()  # for send_headers
         )
     else:
         assert (
             playbook
-            >> tutils.reply(to=response, side_effect=modify_tailers)
+            >> tutils.reply(to=response)
             << cff.send_headers(example_response_headers)
             << cff.send_data(b"Hello, World!")
             << cff.send_headers(example_response_trailers[1:], end_stream=True)
@@ -524,11 +521,11 @@ def test_response_trailers(
     assert cff.is_done and sff.is_done
 
 
-@pytest.mark.parametrize("stream", [True, False])
+@pytest.mark.parametrize("stream", ["stream", ""])
 def test_request_trailers(
     tctx: context.Context,
     open_h3_server_conn: connection.Server,
-    stream: bool,
+    stream: str,
 ):
     playbook, cff = start_h3_client(tctx)
     tctx.server = open_h3_server_conn
@@ -624,6 +621,131 @@ def test_upstream_error(tctx: context.Context):
     data = decode_frame(FrameType.DATA, err())
     assert b"502 Bad Gateway" in data
     assert b"server &lt;&gt; error" in data
+
+
+@pytest.mark.parametrize("stream", ["stream", ""])
+@pytest.mark.parametrize("when", ["request", "response"])
+@pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])
+def test_http3_client_aborts(
+    tctx: context.Context, stream: str, when: str, how: str
+):
+    """
+    Test handling of the case where a client aborts during request or response transmission.
+
+    If the client aborts the request transmission, we must trigger an error hook,
+    if the client disconnects during response transmission, no error hook is triggered.
+    """
+    server = tutils.Placeholder(connection.Server)
+    flow = tutils.Placeholder(HTTPFlow)
+    playbook, cff = start_h3_client(tctx)
+
+    def enable_request_streaming(flow: HTTPFlow):
+        flow.request.stream = True
+
+    def enable_response_streaming(flow: HTTPFlow):
+        flow.response.stream = True
+
+    assert (
+        playbook
+        >> cff.receive_headers(example_request_headers)
+        << (request_headers := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+    )
+    if stream and when == "request":
+        assert (
+            playbook
+            >> tutils.reply(
+                side_effect=enable_request_streaming, to=request_headers
+            )
+            << commands.OpenConnection(server)
+            >> tutils.reply(None)
+            << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+        )
+    else:
+        assert playbook >> tutils.reply(to=request_headers)
+
+    if when == "request":
+        if "RST" in how:
+            playbook >> cff.receive_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        else:
+            playbook >> quic.QuicConnectionClosed(
+                tctx.client,
+                error_code=ErrorCode.H3_REQUEST_CANCELLED,
+                frame_type=None,
+                reason_phrase="peer closed connection"
+            )
+
+        if stream:
+            playbook << commands.CloseConnection(server)
+        playbook << http.HttpErrorHook(flow)
+        playbook >> tutils.reply()
+
+        if how == "RST+disconnect":
+            playbook >> quic.QuicConnectionClosed(
+                tctx.client,
+                error_code=ErrorCode.H3_NO_ERROR,
+                frame_type=None,
+                reason_phrase="peer closed connection"
+            )
+        assert playbook
+        assert (
+            "stream reset" in flow().error.msg
+            or "peer closed connection" in flow().error.msg
+        )
+        return
+
+    assert (
+        playbook
+        >> cff.receive_data(b"", end_stream=True)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        << commands.OpenConnection(server)
+        >> tutils.reply(None)
+        << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+        >> events.DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123")
+        << http.HttpResponseHeadersHook(flow)
+    )
+    if stream:
+        assert (
+            playbook
+            >> tutils.reply(side_effect=enable_response_streaming)
+            << cff.send_headers([
+                (b":status", b"200"),
+                (b"content-length", b"6"),
+            ])
+            << cff.send_data(b"123")
+        )
+    else:
+        assert playbook >> tutils.reply()
+
+    if "RST" in how:
+        playbook >> cff.receive_reset(ErrorCode.H3_REQUEST_CANCELLED)
+    else:
+        playbook >> quic.QuicConnectionClosed(
+            tctx.client,
+            error_code=ErrorCode.H3_REQUEST_CANCELLED,
+            frame_type=None,
+            reason_phrase="peer closed connection"
+        )
+
+    playbook << commands.CloseConnection(server)
+    playbook << http.HttpErrorHook(flow)
+    playbook >> tutils.reply()
+    assert playbook
+
+    if how == "RST+disconnect":
+        playbook >> quic.QuicConnectionClosed(
+            tctx.client,
+            error_code=ErrorCode.H3_REQUEST_CANCELLED,
+            frame_type=None,
+            reason_phrase="peer closed connection"
+        )
+        assert playbook
+
+    if "RST" in how:
+        assert "stream reset" in flow().error.msg
+    else:
+        assert "peer closed connection" in flow().error.msg
 
 
 def test_rst_then_close(tctx):
@@ -874,43 +996,37 @@ def test_kill_stream(tctx: context.Context):
 
 
 class TestClient:
-    @pytest.mark.parametrize("end_stream", [True, False])
-    def test_no_data_on_closed_stream(self, tctx: context.Context, end_stream: bool):
+    def test_no_data_on_closed_stream(self, tctx: context.Context):
         frame_factory = FrameFactory(tctx.server, is_client=False)
         playbook = MultiPlaybook(Http3Client(tctx))
         req = Request.make("GET", "http://example.com/")
         resp = [(b":status", b"200")]
-        (
+        assert (
             playbook
             << frame_factory.send_init()
             >> frame_factory.receive_init()
             << frame_factory.send_encoder()
             >> frame_factory.receive_encoder()
-            >> http.RequestHeaders(1, req, end_stream=end_stream)
+            >> http.RequestHeaders(1, req, end_stream=True)
             << frame_factory.send_headers([
                 (b":method", b"GET"),
                 (b':scheme', b'http'),
                 (b':path', b'/'),
                 (b'content-length', b'0'),
-            ], end_stream=end_stream)
+            ], end_stream=True)
             >> frame_factory.receive_decoder()  # for send_headers
-        )
-        if end_stream:
-            playbook >> http.RequestEndOfMessage(1)
-        (
-            playbook
+            >> http.RequestEndOfMessage(1)
             >> frame_factory.receive_headers(resp)
             << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
             << frame_factory.send_decoder()  # for receive_headers
             >> http.RequestProtocolError(
                 1, "cancelled", code=http.status_codes.CLIENT_CLOSED_REQUEST
             )
-        )
-        if end_stream:
-            playbook << quic.StopQuicStream(frame_factory.conn, stream_id=0, error_code=ErrorCode.H3_REQUEST_CANCELLED)
-        else:
-            playbook << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
-        assert playbook
+            << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+            >> frame_factory.receive_data(b"foo")
+            << quic.StopQuicStream(tctx.server, 0, ErrorCode.H3_REQUEST_CANCELLED)
+        )  # important: no ResponseData event here!
+
         assert frame_factory.is_done
 
 

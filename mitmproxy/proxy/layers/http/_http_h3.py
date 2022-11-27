@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from aioquic.h3.connection import (
+    FrameUnexpected,
     H3Connection,
-    FrameUnexpected as H3FrameUnexpected,
     H3Event,
     H3Stream,
     Headers,
     HeadersState,
+    StreamType,
 )
 from aioquic.h3.events import HeadersReceived
 from aioquic.quic.configuration import QuicConfiguration
@@ -99,10 +100,6 @@ class MockQuic:
         self._next_stream_id[index] = stream_id + 4
         return stream_id
 
-    def get_reserved_stream_ids(self, is_unidirectional: bool = False) -> Iterable[int]:
-        index = (int(is_unidirectional) << 1) | int(not self._is_client)
-        return range(index, self._next_stream_id[index], 4)
-
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
 
@@ -154,31 +151,56 @@ class LayeredH3Connection(H3Connection):
         self._is_done = True
         self._quic.close(error_code, frame_type, reason_phrase)
 
+    def end_stream(self, stream_id: int) -> None:
+        """Ends the given stream if not already done so."""
+
+        stream = self._get_or_create_stream(stream_id)
+        if stream.headers_send_state != HeadersState.AFTER_TRAILERS:
+            super().send_data(stream_id, b"", end_stream=True)
+            stream.headers_send_state = HeadersState.AFTER_TRAILERS
+
     def get_next_available_stream_id(self, is_unidirectional: bool = False):
         """Reserves and returns the next available stream ID."""
 
         return self._quic.get_next_available_stream_id(is_unidirectional)
 
-    def get_reserved_stream_ids(self, is_unidirectional: bool = False) -> Iterable[int]:
-        """Returns all reserved stream IDs."""
+    def get_open_stream_ids(self, push_id: Optional[int]) -> Iterable[int]:
+        """Iterates over all non-special open streams, optionally for a given push id."""
 
-        return self._mock.get_reserved_stream_ids(is_unidirectional)
+        return (
+            stream.stream_id
+            for stream in self._stream.values()
+            if (
+                stream.push_id == push_id
+                and stream.stream_type == (
+                    None
+                    if push_id is None else
+                    StreamType.PUSH
+                )
+                and not (
+                    stream.headers_recv_state == HeadersState.AFTER_TRAILERS
+                    and stream.headers_send_state == HeadersState.AFTER_TRAILERS
+                )
+            )
+        )
 
     def handle_stream_event(self, event: QuicStreamEvent) -> list[H3Event]:
         # don't do anything if we're done
         if self._is_done:
             return []
 
-        # treat reset events similar to stream end events
+        # treat reset events similar to data events with end_stream=True
+        # We can receive multiple reset events as long as the final size does not change.
         elif isinstance(event, QuicStreamReset):
             stream = self._get_or_create_stream(event.stream_id)
             stream.ended = True
+            stream.headers_recv_state = HeadersState.AFTER_TRAILERS
             return [StreamReset(event.stream_id, event.error_code, stream.push_id)]
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
             if self._get_or_create_stream(event.stream_id).ended:
-                # aioquic will not send us any events once a stream has ended.
+                # aioquic will not send us any data events once a stream has ended.
                 # Instead, it will close the connection. We simulate this here for H3 tests.
                 self.close_connection(error_code=QuicErrorCode.PROTOCOL_VIOLATION, reason_phrase="stream already ended")
                 return []
@@ -188,14 +210,6 @@ class LayeredH3Connection(H3Connection):
         # should never happen
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
-
-    def has_sent_end_stream(self, stream_id: int) -> bool:
-        """Indicates whether the given stream has been ended locally."""
-
-        try:
-            return self._stream[stream_id].headers_send_state == HeadersState.AFTER_TRAILERS
-        except KeyError:
-            return False
 
     def has_sent_headers(self, stream_id: int) -> bool:
         """Indicates whether headers have been sent over the given stream."""
@@ -208,12 +222,8 @@ class LayeredH3Connection(H3Connection):
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         """Resets a stream that hasn't been ended locally yet."""
 
-        # we don't allow reset after FIN
-        stream = self._get_or_create_stream(stream_id)
-        if stream.headers_send_state == HeadersState.AFTER_TRAILERS:
-            raise H3FrameUnexpected("reset not allowed in this state")
-
         # set the header state and queue a reset event
+        stream = self._get_or_create_stream(stream_id)
         stream.headers_send_state = HeadersState.AFTER_TRAILERS
         self._quic.reset_stream(stream_id, error_code)
 
@@ -233,7 +243,7 @@ class LayeredH3Connection(H3Connection):
         # ensure we haven't sent something before
         stream = self._get_or_create_stream(stream_id)
         if stream.headers_send_state != HeadersState.INITIAL:
-            raise H3FrameUnexpected("initial HEADERS frame is not allowed in this state")
+            raise FrameUnexpected("initial HEADERS frame is not allowed in this state")
         super().send_headers(stream_id, headers, end_stream)
         self._after_send(stream_id, end_stream)
 
@@ -243,7 +253,7 @@ class LayeredH3Connection(H3Connection):
         # ensure we got some headers first
         stream = self._get_or_create_stream(stream_id)
         if stream.headers_send_state != HeadersState.AFTER_HEADERS:
-            raise H3FrameUnexpected("trailing HEADERS frame is not allowed in this state")
+            raise FrameUnexpected("trailing HEADERS frame is not allowed in this state")
         super().send_headers(stream_id, trailers, end_stream=True)
         self._after_send(stream_id, end_stream=True)
 
