@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add QUIC support.
+  ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
   This makes it simpler to accept both HTTP and HTTPS.
 

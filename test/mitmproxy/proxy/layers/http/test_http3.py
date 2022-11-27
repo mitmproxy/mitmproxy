@@ -7,7 +7,7 @@ from aioquic._buffer import Buffer
 from aioquic.h3.connection import (
     ErrorCode,
     FrameType,
-    Headers,
+    Headers as H3Headers,
     Setting,
     StreamType,
     encode_frame,
@@ -18,7 +18,7 @@ from aioquic.h3.connection import (
 
 from mitmproxy import connection, version
 from mitmproxy.flow import Error
-from mitmproxy.http import HTTPFlow, Request
+from mitmproxy.http import Headers, HTTPFlow, Request
 from mitmproxy.proxy import commands, context, events, layers
 from mitmproxy.proxy.layers import http, quic
 from mitmproxy.proxy.layers.http._http3 import Http3Client
@@ -261,7 +261,7 @@ class FrameFactory:
 
     def send_headers(
         self,
-        headers: Headers,
+        headers: H3Headers,
         stream_id: int = 0,
         end_stream: bool = False,
     ) -> Iterable[quic.SendQuicStreamData]:
@@ -286,7 +286,7 @@ class FrameFactory:
 
     def receive_headers(
         self,
-        headers: Headers,
+        headers: H3Headers,
         stream_id: int = 0,
         end_stream: bool = False,
     ) -> Iterable[quic.QuicStreamDataReceived]:
@@ -403,6 +403,50 @@ def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactor
 
 def make_h3(open_connection: commands.OpenConnection) -> None:
     open_connection.connection.alpn = b"h3"
+
+
+def test_ignore_push(tctx: context.Context):
+    playbook, cff = start_h3_client(tctx)
+
+
+def test_fail_without_header(tctx: context.Context):
+    playbook = MultiPlaybook(layers.http.Http3Server(tctx))
+    cff = FrameFactory(tctx.client, is_client=True)
+    assert (
+        playbook
+        << cff.send_init()
+        >> cff.receive_init()
+        << cff.send_encoder()
+        >> cff.receive_encoder()
+        >> http.ResponseProtocolError(0, "first message", http.status_codes.NO_RESPONSE)
+        << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+    )
+    assert cff.is_done
+
+
+def test_invalid_header(tctx: context.Context):
+    playbook, cff = start_h3_client(tctx)
+    assert (
+        playbook
+        >> cff.receive_headers([
+            (b":method", b"CONNECT"),
+            (b":path", b"/"),
+            (b":authority", b"example.com"),
+        ], end_stream=True)
+        << cff.send_decoder()  # for receive_headers
+        << quic.CloseQuicConnection(
+            tctx.client,
+            error_code=ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
+            frame_type=None,
+            reason_phrase="Invalid HTTP/3 request headers: Required pseudo header is missing: b':scheme'",
+        )
+        # ensure that once we close, we don't process messages anymore
+        >> cff.receive_headers([
+            (b":method", b"CONNECT"),
+            (b":path", b"/"),
+            (b":authority", b"example.com"),
+        ], end_stream=True)
+    )
 
 
 def test_simple(tctx: context.Context):
@@ -1028,6 +1072,47 @@ class TestClient:
         )  # important: no ResponseData event here!
 
         assert frame_factory.is_done
+
+    def test_ignore_wrong_order(self, tctx: context.Context):
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = MultiPlaybook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestTrailers(1, Headers([(b"x-trailer", b"")]))
+            << commands.Log(
+                "Received RequestTrailers(stream_id=0, trailers=Headers[(b'x-trailer', b'')]) unexpectedly: "
+                "trailing HEADERS frame is not allowed in this state"
+            )
+            >> http.RequestEndOfMessage(1)
+            << commands.Log(
+                "Received RequestEndOfMessage(stream_id=0) unexpectedly: "
+                "DATA frame is not allowed in this state"
+            )
+            >> http.RequestData(1, b"123")
+            << commands.Log(
+                "Received RequestData(stream_id=0, data=b'123') unexpectedly: "
+                "DATA frame is not allowed in this state"
+            )
+            >> http.RequestHeaders(1, req, end_stream=False)
+            << frame_factory.send_headers([
+                (b":method", b"GET"),
+                (b':scheme', b'http'),
+                (b':path', b'/'),
+                (b'content-length', b'0'),
+            ], end_stream=False)
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> http.RequestHeaders(1, req, end_stream=False)
+            << commands.Log(
+                "Received RequestHeaders(stream_id=0, request=Request(GET example.com:80/),"
+                " end_stream=False, replay_flow=None) unexpectedly: "
+                "initial HEADERS frame is not allowed in this state"
+            )
+        )
 
 
 def test_early_server_data(tctx: context.Context):

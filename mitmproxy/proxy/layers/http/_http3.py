@@ -105,7 +105,7 @@ class Http3Connection(HttpConnection):
                         )
                     else:
                         self.h3_conn.reset_stream(event.stream_id, code)
-                else:
+                else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
 
             except H3FrameUnexpected as e:
@@ -121,7 +121,7 @@ class Http3Connection(HttpConnection):
             h3_events = self.h3_conn.handle_stream_event(event)
             if event.stream_id in self._stream_protocol_errors:
                 # we already reset or ended the stream, tell the peer to stop
-                # (this is a noop if the peer already did the same) 
+                # (this is a noop if the peer already did the same)
                 yield StopQuicStream(
                     self.conn,
                     event.stream_id,
@@ -166,21 +166,22 @@ class Http3Connection(HttpConnection):
                             yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, http.Headers(h3_event.trailers)))
                             if h3_event.stream_ended:
                                 yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
-                    elif isinstance(h3_event, PushPromiseReceived):
+                    elif isinstance(h3_event, PushPromiseReceived):  # pragma: no cover
                         # we don't support push
                         pass
-                    else:
+                    else:  # pragma: no cover
                         raise AssertionError(f"Unexpected event: {event!r}")
             yield from self.h3_conn.transmit()
 
         # report a protocol error for all remaining open streams when a connection is closed
         elif isinstance(event, QuicConnectionClosed):
             self._handle_event = self.done  # type: ignore
+            self.h3_conn.handle_connection_closed(event)
             msg = event.reason_phrase or error_code_to_str(event.error_code)
             for stream_id in self.h3_conn.get_open_stream_ids(push_id=None):
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
 
-        else:
+        else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event!r}")
 
     @expect(HttpEvent, QuicStreamEvent, QuicConnectionClosed)

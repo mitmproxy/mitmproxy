@@ -19,6 +19,7 @@ from mitmproxy import connection
 from mitmproxy.proxy import commands, layer
 from mitmproxy.proxy.layers.quic import (
     CloseQuicConnection,
+    QuicConnectionClosed,
     QuicStreamDataReceived,
     QuicStreamEvent,
     QuicStreamReset,
@@ -184,6 +185,9 @@ class LayeredH3Connection(H3Connection):
             )
         )
 
+    def handle_connection_closed(self, event: QuicConnectionClosed) -> None:
+        self._is_done = True
+
     def handle_stream_event(self, event: QuicStreamEvent) -> list[H3Event]:
         # don't do anything if we're done
         if self._is_done:
@@ -208,7 +212,7 @@ class LayeredH3Connection(H3Connection):
                 return self.handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
 
         # should never happen
-        else:
+        else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event!r}")
 
     def has_sent_headers(self, stream_id: int) -> bool:
