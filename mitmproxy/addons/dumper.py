@@ -16,6 +16,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.contrib import click as miniclick
+from mitmproxy.net.dns import response_codes
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils import human
@@ -377,9 +378,14 @@ class Dumper:
             self._echo_dns_query(f)
 
             arrows = self.style(" <<", bold=True)
-            answers = ", ".join(
-                self.style(str(x), fg="bright_blue") for x in f.response.answers
-            )
+            if f.response.answers:
+                answers = ", ".join(
+                    self.style(str(x), fg="bright_blue") for x in f.response.answers
+                )
+            else:
+                answers = self.style(response_codes.to_str(
+                    f.response.response_code,
+                ), fg="red")
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):

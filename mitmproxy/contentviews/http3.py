@@ -110,7 +110,6 @@ class ViewHttp3(base.View):
                 h3_buf = Buffer(data=bytes(buf[:8]))
                 stream_type = h3_buf.pull_uint_var()
                 consumed = h3_buf.tell()
-                assert consumed == 1
                 del buf[:consumed]
                 state.frames[0] = [
                     StreamType(stream_type)
