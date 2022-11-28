@@ -425,6 +425,7 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
             sockname=writer.get_extra_info("sockname"),
             timestamp_start=time.time(),
             proxy_mode=mode,
+            state=ConnectionState.OPEN,
         )
         context = Context(client, options)
         super().__init__(context)

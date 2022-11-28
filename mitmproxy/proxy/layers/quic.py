@@ -388,6 +388,7 @@ class QuicStreamLayer(layer.Layer):
             timestamp_start=time.time(),
             transport_protocol="tcp",
             proxy_mode=context.client.proxy_mode,
+            state=connection.ConnectionState.OPEN,
         )
 
         # unidirectional client streams are not fully open, set the appropriate state
@@ -1073,7 +1074,8 @@ class ClientQuicLayer(QuicLayer):
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
                 peername=("ignore-conn", 0), sockname=("ignore-conn", 0),
-                transport_protocol="udp"
+                transport_protocol="udp",
+                state=connection.ConnectionState.OPEN,
             )
 
             # we need to replace the server layer as well, if there is one

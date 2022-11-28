@@ -6,7 +6,9 @@ from mitmproxy.test.tflow import tclient_conn, tserver_conn
 
 class TestConnection:
     def test_basic(self):
-        c = Client(peername=("127.0.0.1", 52314), sockname=("127.0.0.1", 8080), timestamp_start=1607780791)
+        c = Client(peername=("127.0.0.1", 52314), sockname=("127.0.0.1", 8080),
+                   timestamp_start=1607780791,
+                   state=ConnectionState.OPEN)
         assert not c.tls_established
         c.timestamp_tls_setup = 1607780792
         assert c.tls_established
@@ -39,7 +41,7 @@ class TestClient:
         c.timestamp_tls_setup = 1607780791
         assert str(c)
         c.alpn = b"foo"
-        assert str(c) == "Client(127.0.0.1:52314, state=open, alpn=foo)"
+        assert str(c) == "Client(127.0.0.1:52314, state=closed, alpn=foo)"
 
     def test_state(self):
         c = tclient_conn()

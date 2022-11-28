@@ -414,6 +414,13 @@ def convert_18_19(data):
     return data
 
 
+def convert_19_20(data):
+    data["version"] = 20
+    data["client_conn"].pop("state", None)
+    data["server_conn"].pop("state", None)
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -477,6 +484,7 @@ converters = {
     16: convert_16_17,
     17: convert_17_18,
     18: convert_18_19,
+    19: convert_19_20,
 }
 
 

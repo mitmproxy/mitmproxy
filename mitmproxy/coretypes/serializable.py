@@ -69,6 +69,8 @@ class SerializableDataclass(Serializable):
         fields = []
         # noinspection PyDataclass
         for field in dataclasses.fields(cls):
+            if field.metadata.get("serialize", True) is False:
+                continue
             if isinstance(field.type, str):
                 field.type = hints[field.name]
             fields.append(field)

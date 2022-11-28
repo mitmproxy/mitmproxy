@@ -53,7 +53,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     sockname: Optional[Address]
     """Our local `(ip, port)` tuple for this connection."""
 
-    state: ConnectionState
+    state: ConnectionState = field(default=ConnectionState.CLOSED, metadata={"serialize": False})
     """The current connection state."""
 
     # all connections have a unique id. While
@@ -172,8 +172,6 @@ class Client(Connection):
     sockname: Address
     """The local address we received this connection on."""
 
-    state: ConnectionState = field(default=ConnectionState.OPEN)
-
     mitmcert: Optional[certs.Cert] = None
     """
     The certificate used by mitmproxy to establish TLS with the client.
@@ -264,8 +262,6 @@ class Server(Connection):
     peername: Optional[Address] = None
     """The server's resolved `(ip, port)` tuple. Will be set during connection establishment."""
     sockname: Optional[Address] = None
-
-    state: ConnectionState = field(default=ConnectionState.CLOSED)
 
     timestamp_start: Optional[float] = None
     """*Timestamp:* TCP SYN sent."""
