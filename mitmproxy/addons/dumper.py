@@ -336,16 +336,20 @@ class Dumper:
     def udp_error(self, f):
         self._proto_error(f)
 
-    def _proto_message(self, f):
+    def _proto_message(self, f: Union[TCPFlow, UDPFlow]) -> None:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
+            if f.client_conn.tls_version == "QUIC":
+                type_ = f"quic/{f.type}"
+            else:
+                type_ = f.type
             self.echo(
                 "{client} {direction} {type} {direction} {server}".format(
                     client=human.format_address(f.client_conn.peername),
                     server=human.format_address(f.server_conn.address),
                     direction=direction,
-                    type=f.type,
+                    type=type_,
                 )
             )
             if ctx.options.flow_detail >= 3:

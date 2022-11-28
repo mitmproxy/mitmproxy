@@ -7,6 +7,7 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
 from mitmproxy.http import Headers
+from mitmproxy.net.dns import response_codes
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -226,6 +227,12 @@ def test_dns():
         assert "8.8.8.8" in sio.getvalue()
         sio.truncate(0)
 
+        f = tflow.tdnsflow()
+        f.response = f.request.fail(response_codes.NOTIMP)
+        d.dns_response(f)
+        assert "NOTIMP" in sio.getvalue()
+        sio.truncate(0)
+
         f = tflow.tdnsflow(err=True)
         d.dns_error(f)
         assert "error" in sio.getvalue()
@@ -277,6 +284,16 @@ def test_http2():
         f.response.http_version = b"HTTP/2.0"
         d.response(f)
         assert "HTTP/2.0 200 OK" in sio.getvalue()
+
+
+def test_quic():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d):
+        f = tflow.ttcpflow()
+        f.client_conn.tls_version = "QUIC"
+        d.tcp_message(f)
+        assert "quic/tcp" in sio.getvalue()
 
 
 def test_styling():

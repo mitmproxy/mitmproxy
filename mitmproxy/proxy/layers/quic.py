@@ -382,14 +382,9 @@ class QuicStreamLayer(layer.Layer):
 
     def __init__(self, context: context.Context, ignore: bool, stream_id: int) -> None:
         # we mustn't reuse the client from the QUIC connection, as the state and protocol differs
-        self.client = context.client = connection.Client(
-            peername=context.client.peername,
-            sockname=context.client.sockname,
-            timestamp_start=time.time(),
-            transport_protocol="tcp",
-            proxy_mode=context.client.proxy_mode,
-            state=connection.ConnectionState.OPEN,
-        )
+        self.client = context.client = context.client.copy()
+        self.client.transport_protocol = "tcp"
+        self.client.state = connection.ConnectionState.OPEN
 
         # unidirectional client streams are not fully open, set the appropriate state
         if stream_is_unidirectional(stream_id):

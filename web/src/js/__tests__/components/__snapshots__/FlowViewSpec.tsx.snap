@@ -1006,7 +1006,7 @@ exports[`FlowView 7`] = `
         class="active"
         href="#"
       >
-        TCP Messages
+        Stream Data
       </a>
       <a
         class=""
@@ -1030,9 +1030,6 @@ exports[`FlowView 7`] = `
     <section
       class="tcp"
     >
-      <h4>
-        TCP Data
-      </h4>
       <div
         class="contentview"
       >
@@ -1079,7 +1076,7 @@ exports[`FlowView 8`] = `
         class=""
         href="#"
       >
-        TCP Messages
+        Stream Data
       </a>
       <a
         class="active"
@@ -1443,7 +1440,7 @@ exports[`FlowView 12`] = `
         class="active"
         href="#"
       >
-        UDP Messages
+        Datagrams
       </a>
       <a
         class=""
@@ -1467,9 +1464,6 @@ exports[`FlowView 12`] = `
     <section
       class="udp"
     >
-      <h4>
-        UDP Data
-      </h4>
       <div
         class="contentview"
       >
@@ -1516,7 +1510,7 @@ exports[`FlowView 13`] = `
         class=""
         href="#"
       >
-        UDP Messages
+        Datagrams
       </a>
       <a
         class="active"
