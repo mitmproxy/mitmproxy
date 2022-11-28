@@ -73,6 +73,7 @@ setup(
     # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
+        "aioquic_mitmproxy>=0.9.20,<0.10",
         "asgiref>=3.2.10,<3.6",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!

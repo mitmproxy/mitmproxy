@@ -440,9 +440,9 @@ class TLSLayer(tunnel.TunnelLayer):
             pass
         yield from self.tls_interact()
 
-    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
+    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
         # We should probably shutdown the TLS connection properly here.
-        yield from super().send_close(half_close)
+        yield from super().send_close(command)
 
 
 class ServerTLSLayer(TLSLayer):
@@ -659,7 +659,7 @@ class ClientTLSLayer(TLSLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"Swallowing {event} as handshake failed.", DEBUG)
+            yield commands.Log(f"{self.debug}[tls] Swallowing {event} as handshake failed.", DEBUG)
 
 
 class MockTLSLayer(TLSLayer):

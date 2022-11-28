@@ -119,6 +119,7 @@ SCHEME_STYLES = {
     "tcp": "scheme_tcp",
     "udp": "scheme_udp",
     "dns": "scheme_dns",
+    "quic": "scheme_quic",
 }
 HTTP_REQUEST_METHOD_STYLES = {
     "GET": "method_get",
@@ -763,12 +764,16 @@ def format_flow(
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
+        if f.client_conn.tls_version == "QUIC":
+            protocol = "quic"
+        else:
+            protocol = f.type
         return format_message_flow(
             render_mode=render_mode,
             focused=focused,
             timestamp_start=f.client_conn.timestamp_start,
             marked=f.marked,
-            protocol=f.type,
+            protocol=protocol,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
             total_size=total_size,

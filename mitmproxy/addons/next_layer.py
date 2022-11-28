@@ -17,17 +17,20 @@ that sets nextlayer.layer works just as well.
 import re
 from collections.abc import Sequence
 import struct
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable, Optional, Union, cast
 
 from mitmproxy import ctx, dns, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import context, layer, layers
+from mitmproxy.proxy import context, layer, layers, mode_specs
 from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers.quic import quic_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, dtls_parse_client_hello, parse_client_hello
 from mitmproxy.tls import ClientHello
 
 LayerCls = type[layer.Layer]
+ClientSecurityLayerCls = Union[type[layers.ClientTLSLayer], type[layers.ClientQuicLayer]]
+ServerSecurityLayerCls = Union[type[layers.ServerTLSLayer], type[layers.ServerQuicLayer]]
 
 
 def stack_match(
@@ -118,7 +121,12 @@ class NextLayer:
         else:  # pragma: no cover
             raise AssertionError()
 
-    def setup_tls_layer(self, context: context.Context) -> layer.Layer:
+    def setup_tls_layer(
+        self,
+        context: context.Context,
+        client_layer_cls: ClientSecurityLayerCls = layers.ClientTLSLayer,
+        server_layer_cls: ServerSecurityLayerCls = layers.ServerTLSLayer,
+    ) -> layer.Layer:
         def s(*layers):
             return stack_match(context, layers)
 
@@ -130,14 +138,14 @@ class NextLayer:
             s(modes.HttpProxy)
             or s(modes.HttpUpstreamProxy)
             or s(modes.ReverseProxy)
-            or s(modes.ReverseProxy, layers.ServerTLSLayer)
+            or s(modes.ReverseProxy, server_layer_cls)
         ):
-            return layers.ClientTLSLayer(context)
+            return client_layer_cls(context)
         else:
-            # We already assign the next layer here so that ServerTLSLayer
+            # We already assign the next layer here so that the server layer
             # knows that it can safely wait for a ClientHello.
-            ret = layers.ServerTLSLayer(context)
-            ret.child_layer = layers.ClientTLSLayer(context)
+            ret = server_layer_cls(context)
+            ret.child_layer = client_layer_cls(context)
             return ret
 
     def is_destination_in_hosts(self, context: context.Context, hosts: Iterable[re.Pattern]) -> bool:
@@ -146,6 +154,79 @@ class NextLayer:
             or (context.client.sni and rex.search(context.client.sni))
             for rex in hosts
         )
+
+    def get_http_layer(self, context: context.Context) -> Optional[layers.HttpLayer]:
+        def s(*layers):
+            return stack_match(context, layers)
+
+        # Setup the HTTP layer for a regular HTTP proxy ...
+        if (
+            s(modes.HttpProxy)
+            or
+            # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
+            s(modes.HttpProxy, (layers.ClientTLSLayer, layers.ClientQuicLayer))
+        ):
+            return layers.HttpLayer(context, HTTPMode.regular)
+        # ... or an upstream proxy.
+        if (
+            s(modes.HttpUpstreamProxy)
+            or
+            s(modes.HttpUpstreamProxy, (layers.ClientTLSLayer, layers.ClientQuicLayer))
+        ):
+            return layers.HttpLayer(context, HTTPMode.upstream)
+        return None
+
+    def detect_udp_tls(self, data_client: bytes) -> Optional[tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls]]:
+        if len(data_client) == 0:
+            return None
+
+        # first try DTLS (the parser may return None)
+        try:
+            client_hello = dtls_parse_client_hello(data_client)
+            if client_hello is not None:
+                return (client_hello, layers.ClientTLSLayer, layers.ServerTLSLayer)
+        except ValueError:
+            pass
+
+        # next try QUIC
+        try:
+            client_hello = quic_parse_client_hello(data_client)
+            return (client_hello, layers.ClientQuicLayer, layers.ServerQuicLayer)
+        except (ValueError, TypeError):
+            pass
+
+        # that's all we currently have to offer
+        return None
+
+    def raw_udp_layer(self, context: context.Context, ignore: bool = False) -> layer.Layer:
+        def s(*layers):
+            return stack_match(context, layers)
+
+        # for regular and upstream HTTP3, if we already created a client QUIC layer
+        # we need a server and raw QUIC layer as well
+        if (
+            s(modes.HttpProxy, layers.ClientQuicLayer)
+            or
+            s(modes.HttpUpstreamProxy, layers.ClientQuicLayer)
+        ):
+            server_layer = layers.ServerQuicLayer(context)
+            server_layer.child_layer = layers.RawQuicLayer(context, ignore=ignore)
+            return server_layer
+
+        # for reverse HTTP3 and QUIC, we need a client and raw QUIC layer
+        elif (s(modes.ReverseProxy, layers.ServerQuicLayer)):
+            client_layer = layers.ClientQuicLayer(context)
+            client_layer.child_layer = layers.RawQuicLayer(context, ignore=ignore)
+            return client_layer
+
+        # in other cases we assume `setup_tls_layer` happened, so if the
+        # top layer is `ClientQuicLayer` we return a raw QUIC layer...
+        elif isinstance(context.layers[-1], layers.ClientQuicLayer):
+            return layers.RawQuicLayer(context, ignore=ignore)
+
+        # ... otherwise an UDP layer
+        else:
+            return layers.UDPLayer(context, ignore=ignore)
 
     def next_layer(self, nextlayer: layer.NextLayer):
         if nextlayer.layer is None:
@@ -160,40 +241,29 @@ class NextLayer:
     ) -> Optional[layer.Layer]:
         assert context.layers
 
-        # helper function to quickly check if the existing layer stack matches a particular configuration.
-        def s(*layers):
-            return stack_match(context, layers)
-
         if context.client.transport_protocol == "tcp":
-            if len(data_client) < 3 and not data_server:
+            is_quic_stream = isinstance(context.layers[-1], layers.QuicStreamLayer)
+            if (
+                len(data_client) < 3
+                and not data_server
+                and not is_quic_stream
+            ):
                 return None  # not enough data yet to make a decision
 
             # 1. check for --ignore/--allow
             ignore = self.ignore_connection(context.server.address, data_client)
             if ignore is True:
                 return layers.TCPLayer(context, ignore=True)
-            if ignore is None:
+            if ignore is None and not is_quic_stream:
                 return None
 
             # 2. Check for TLS
             if is_tls_record_magic(data_client):
                 return self.setup_tls_layer(context)
 
-            # 3. Setup the HTTP layer for a regular HTTP proxy
-            if (
-                s(modes.HttpProxy)
-                or
-                # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
-                s(modes.HttpProxy, layers.ClientTLSLayer)
-            ):
-                return layers.HttpLayer(context, HTTPMode.regular)
-            # 3b. ... or an upstream proxy.
-            if (
-                s(modes.HttpUpstreamProxy)
-                or
-                s(modes.HttpUpstreamProxy, layers.ClientTLSLayer)
-            ):
-                return layers.HttpLayer(context, HTTPMode.upstream)
+            # 3. Check for HTTP
+            if http_layer := self.get_http_layer(context):
+                return http_layer
 
             # 4. Check for --tcp
             if self.is_destination_in_hosts(context, self.tcp_hosts):
@@ -215,31 +285,57 @@ class NextLayer:
 
         elif context.client.transport_protocol == "udp":
             # unlike TCP, we make a decision immediately
-            try:
-                dtls_client_hello = dtls_parse_client_hello(data_client)
-            except ValueError:
-                dtls_client_hello = None
+            tls = self.detect_udp_tls(data_client)
 
             # 1. check for --ignore/--allow
             if self.ignore_connection(
                 context.server.address,
                 data_client,
-                is_tls=lambda _: dtls_client_hello is not None,
-                client_hello=lambda _: dtls_client_hello
+                is_tls=lambda _: tls is not None,
+                client_hello=lambda _: None if tls is None else tls[0]
             ):
-                return layers.UDPLayer(context, ignore=True)
+                return self.raw_udp_layer(context, ignore=True)
 
-            # 2. Check for DTLS
-            if dtls_client_hello is not None:
-                return self.setup_tls_layer(context)
+            # 2. Check for DTLS/QUIC
+            if tls is not None:
+                _, client_layer_cls, server_layer_cls = tls
+                return self.setup_tls_layer(context, client_layer_cls, server_layer_cls)
 
-            # 3. (skipped for now, until we support HTTP/3)
+            # 3. Check for HTTP
+            if http_layer := self.get_http_layer(context):
+                return http_layer
 
             # 4. Check for --udp
             if self.is_destination_in_hosts(context, self.udp_hosts):
-                return layers.UDPLayer(context)
+                return self.raw_udp_layer(context)
 
-            # 5. Check for DNS
+            # 5. Check for reverse modes
+            if (isinstance(context.layers[0], modes.ReverseProxy)):
+                scheme = cast(mode_specs.ReverseMode, context.client.proxy_mode).scheme
+                if scheme in ("udp", "dtls"):
+                    return layers.UDPLayer(context)
+                elif scheme == "http3":
+                    if isinstance(context.layers[-1], layers.ClientQuicLayer):
+                        return layers.HttpLayer(context, HTTPMode.transparent)
+                    else:
+                        return layers.ClientQuicLayer(context)
+                elif scheme == "quic":
+                    if isinstance(context.layers[-1], layers.ClientQuicLayer):
+                        # the client supports QUIC, use raw layer
+                        return layers.RawQuicLayer(context)
+                    elif data_client:
+                        # we have received data, which was not a handshake, use UDP
+                        # on the client, and send datagrams over QUIC to the server
+                        return layers.UDPLayer(context)
+                    else:
+                        # wait for client data to make a decision
+                        return None
+                elif scheme == "dns":
+                    return layers.DNSLayer(context)
+                else:
+                    raise AssertionError(scheme)
+
+            # 6. Check for DNS
             try:
                 dns.Message.unpack(data_client)
             except struct.error:
@@ -247,12 +343,8 @@ class NextLayer:
             else:
                 return layers.DNSLayer(context)
 
-            # 6. Check for raw udp mode.
-            if ctx.options.rawudp:
-                return layers.UDPLayer(context)
-
-            # 7. Ignore the connection by default. (In the future, we'll assume HTTP/3)
-            return layers.UDPLayer(context, ignore=True)
+            # 7. Use raw mode.
+            return self.raw_udp_layer(context)
 
         else:
             raise AssertionError(context.client.transport_protocol)

@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 
 from mitmproxy.proxy import tunnel, layer
-from mitmproxy.proxy.commands import SendData, Log, CloseConnection, OpenConnection
+from mitmproxy.proxy.commands import CloseTcpConnection, SendData, Log, CloseConnection, OpenConnection
 from mitmproxy.connection import Server, ConnectionState
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import Event, DataReceived, Start, ConnectionClosed
@@ -24,7 +24,7 @@ class TChildLayer(layer.Layer):
             err = yield OpenConnection(self.context.server)
             yield Log(f"Opened: {err=}. Server state: {self.context.server.state.name}")
         elif isinstance(event, DataReceived) and event.data == b"half-close":
-            err = yield CloseConnection(event.connection, half_close=True)
+            err = yield CloseTcpConnection(event.connection, half_close=True)
         elif isinstance(event, ConnectionClosed):
             yield Log(f"Got {event.connection.__class__.__name__.lower()} close.")
             yield CloseConnection(event.connection)
@@ -164,7 +164,7 @@ def test_tunnel_default_impls(tctx: Context):
         >> reply(None)
         << Log("Opened: err=None. Server state: OPEN")
         >> DataReceived(server, b"half-close")
-        << CloseConnection(server, half_close=True)
+        << CloseTcpConnection(server, half_close=True)
     )
 
 

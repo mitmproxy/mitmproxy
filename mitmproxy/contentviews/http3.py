@@ -1,13 +1,14 @@
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from typing import Optional, Union
 
 from aioquic.h3.connection import Setting, parse_settings
 
 from mitmproxy import flow, tcp
 from . import base
 from .hex import ViewHex
-from ..proxy.layers.http import is_h3_alpn  # type: ignore
+from ..proxy.layers.http import is_h3_alpn
 
 from aioquic.buffer import Buffer, BufferReadError
 import pylsqpack
@@ -75,7 +76,7 @@ class StreamType:
 @dataclass
 class ConnectionState:
     message_count: int = 0
-    frames: dict[int, list[Frame | StreamType]] = field(default_factory=dict)
+    frames: dict[int, list[Union[Frame, StreamType]]] = field(default_factory=dict)
     client_buf: bytearray = field(default_factory=bytearray)
     server_buf: bytearray = field(default_factory=bytearray)
 
@@ -89,8 +90,8 @@ class ViewHttp3(base.View):
     def __call__(
         self,
         data,
-        flow: flow.Flow | None = None,
-        tcp_message: tcp.TCPMessage | None = None,
+        flow: Optional[flow.Flow] = None,
+        tcp_message: Optional[tcp.TCPMessage] = None,
         **metadata
     ):
         assert isinstance(flow, tcp.TCPFlow)
@@ -109,7 +110,6 @@ class ViewHttp3(base.View):
                 h3_buf = Buffer(data=bytes(buf[:8]))
                 stream_type = h3_buf.pull_uint_var()
                 consumed = h3_buf.tell()
-                assert consumed == 1
                 del buf[:consumed]
                 state.frames[0] = [
                     StreamType(stream_type)
@@ -147,13 +147,13 @@ class ViewHttp3(base.View):
     def render_priority(
         self,
         data: bytes,
-        flow: flow.Flow | None = None,
+        flow: Optional[flow.Flow] = None,
         **metadata
     ) -> float:
         return 2 * float(bool(flow and is_h3_alpn(flow.client_conn.alpn))) * float(isinstance(flow, tcp.TCPFlow))
 
 
-def fmt_frames(frames: list[Frame | StreamType]) -> Iterator[base.TViewLine]:
+def fmt_frames(frames: list[Union[Frame, StreamType]]) -> Iterator[base.TViewLine]:
     for i, frame in enumerate(frames):
         if i > 0:
             yield [("text", "")]

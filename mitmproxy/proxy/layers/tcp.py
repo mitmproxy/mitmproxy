@@ -123,16 +123,16 @@ class TCPLayer(layer.Layer):
                 or (self.context.server.state & ConnectionState.CAN_READ)
             )
             if all_done:
+                self._handle_event = self.done
                 if self.context.server.state is not ConnectionState.CLOSED:
                     yield commands.CloseConnection(self.context.server)
                 if self.context.client.state is not ConnectionState.CLOSED:
                     yield commands.CloseConnection(self.context.client)
-                self._handle_event = self.done
                 if self.flow:
                     yield TcpEndHook(self.flow)
                     self.flow.live = False
             else:
-                yield commands.CloseConnection(send_to, half_close=True)
+                yield commands.CloseTcpConnection(send_to, half_close=True)
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

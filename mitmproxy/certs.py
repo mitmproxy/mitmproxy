@@ -283,6 +283,7 @@ class CertStoreEntry:
     cert: Cert
     privatekey: rsa.RSAPrivateKey
     chain_file: Optional[Path]
+    chain_certs: list[Cert]
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
@@ -311,6 +312,15 @@ class CertStore:
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
+        self.default_chain_certs = (
+            [
+                Cert.from_pem(chunk)
+                for chunk in re.split(rb"(?=-----BEGIN( [A-Z]+)+-----)", self.default_chain_file.read_bytes())
+                if chunk.startswith(b"-----BEGIN CERTIFICATE-----")
+            ]
+            if self.default_chain_file
+            else [default_ca]
+        )
         self.dhparams = dhparams
         self.certs = {}
         self.expire_queue = []
@@ -453,7 +463,7 @@ class CertStore:
         except ValueError:
             key = self.default_privatekey
 
-        self.add_cert(CertStoreEntry(cert, key, path), spec)
+        self.add_cert(CertStoreEntry(cert, key, path, [cert]), spec)
 
     def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """
@@ -516,6 +526,7 @@ class CertStore:
                 ),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file,
+                chain_certs=self.default_chain_certs,
             )
             self.certs[(commonname, tuple(sans))] = entry
             self.expire(entry)

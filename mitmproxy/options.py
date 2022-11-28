@@ -150,13 +150,6 @@ class Options(optmanager.OptManager):
             "TCP connections are enabled by default. ",
         )
         self.add_option(
-            "rawudp",
-            bool,
-            True,
-            "Enable/disable raw UDP connections. "
-            "UDP connections are enabled by default. ",
-        )
-        self.add_option(
             "ssl_insecure",
             bool,
             False,

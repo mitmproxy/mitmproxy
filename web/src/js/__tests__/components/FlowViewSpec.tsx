@@ -30,7 +30,7 @@ test("FlowView", async () => {
 
     store.dispatch(flowActions.select(store.getState().flows.list[2].id));
 
-    fireEvent.click(screen.getByText("TCP Messages"));
+    fireEvent.click(screen.getByText("Stream Data"));
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Error"));
@@ -49,7 +49,7 @@ test("FlowView", async () => {
 
     store.dispatch(flowActions.select(store.getState().flows.list[4].id));
 
-    fireEvent.click(screen.getByText("UDP Messages"));
+    fireEvent.click(screen.getByText("Datagrams"));
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Error"));

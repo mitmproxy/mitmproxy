@@ -16,6 +16,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.contrib import click as miniclick
+from mitmproxy.net.dns import response_codes
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils import human
@@ -204,7 +205,7 @@ class Dumper:
             blink=(code_int == 418),
         )
 
-        if not flow.response.is_http2:
+        if not (flow.response.is_http2 or flow.response.is_http3):
             reason = flow.response.reason
         else:
             reason = http.status_codes.RESPONSES.get(flow.response.status_code, "")
@@ -335,16 +336,20 @@ class Dumper:
     def udp_error(self, f):
         self._proto_error(f)
 
-    def _proto_message(self, f):
+    def _proto_message(self, f: Union[TCPFlow, UDPFlow]) -> None:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
+            if f.client_conn.tls_version == "QUIC":
+                type_ = f"quic/{f.type}"
+            else:
+                type_ = f.type
             self.echo(
                 "{client} {direction} {type} {direction} {server}".format(
                     client=human.format_address(f.client_conn.peername),
                     server=human.format_address(f.server_conn.address),
                     direction=direction,
-                    type=f.type,
+                    type=type_,
                 )
             )
             if ctx.options.flow_detail >= 3:
@@ -377,9 +382,14 @@ class Dumper:
             self._echo_dns_query(f)
 
             arrows = self.style(" <<", bold=True)
-            answers = ", ".join(
-                self.style(str(x), fg="bright_blue") for x in f.response.answers
-            )
+            if f.response.answers:
+                answers = ", ".join(
+                    self.style(str(x), fg="bright_blue") for x in f.response.answers
+                )
+            else:
+                answers = self.style(response_codes.to_str(
+                    f.response.response_code,
+                ), fg="red")
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):

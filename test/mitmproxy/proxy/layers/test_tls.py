@@ -639,7 +639,7 @@ class TestClientTLS:
             >> events.DataReceived(Server(address=None), b"data on other stream")
             << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
             << commands.Log(
-                "Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
+                "[tls] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
                 DEBUG,
             )
         )

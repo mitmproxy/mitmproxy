@@ -2,15 +2,18 @@ import ipaddress
 import logging
 import os
 from pathlib import Path
+import ssl
 from typing import Any, Optional, TypedDict
 
+from aioquic.h3.connection import H3_ALPN
+from aioquic.tls import CipherSuite
 from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions, connection, tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
-from mitmproxy.proxy.layers import tls as proxy_tls
+from mitmproxy.proxy.layers import tls as proxy_tls, quic
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -294,6 +297,94 @@ class TlsConfig:
             tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
 
         tls_start.ssl_conn.set_connect_state()
+
+    def quic_start_client(self, tls_start: quic.QuicTlsData) -> None:
+        """Establish QUIC between client and proxy."""
+        if tls_start.settings is not None:
+            return  # a user addon has already provided the settings.
+        tls_start.settings = quic.QuicTlsSettings()
+
+        # keep the following part in sync with `tls_start_client`
+        assert isinstance(tls_start.conn, connection.Client)
+
+        client: connection.Client = tls_start.conn
+        server: connection.Server = tls_start.context.server
+
+        entry = self.get_cert(tls_start.context)
+
+        if not client.cipher_list and ctx.options.ciphers_client:
+            client.cipher_list = ctx.options.ciphers_client.split(":")
+
+        if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
+            extra_chain_certs = server.certificate_list
+        else:
+            extra_chain_certs = []
+
+        # set context parameters
+        if client.cipher_list:
+            tls_start.settings.cipher_suites = [
+                CipherSuite[cipher] for cipher in client.cipher_list
+            ]
+        # if we don't have upstream ALPN, we allow all offered by the client
+        tls_start.settings.alpn_protocols = [
+            alpn.decode("ascii")
+            for alpn in [
+                alpn for alpn in (client.alpn, server.alpn) if alpn
+            ] or client.alpn_offers
+        ]
+
+        # set the certificates
+        tls_start.settings.certificate = entry.cert._cert
+        tls_start.settings.certificate_private_key = entry.privatekey
+        tls_start.settings.certificate_chain = [
+            cert._cert for cert in (*entry.chain_certs, *extra_chain_certs)
+        ]
+
+    def quic_start_server(self, tls_start: quic.QuicTlsData) -> None:
+        """Establish QUIC between proxy and server."""
+        if tls_start.settings is not None:
+            return  # a user addon has already provided the settings.
+        tls_start.settings = quic.QuicTlsSettings()
+
+        # keep the following part in sync with `tls_start_server`
+        assert isinstance(tls_start.conn, connection.Server)
+
+        client: connection.Client = tls_start.context.client
+        server: connection.Server = tls_start.conn
+        assert server.address
+
+        if ctx.options.ssl_insecure:
+            tls_start.settings.verify_mode = ssl.CERT_NONE
+        else:
+            tls_start.settings.verify_mode = ssl.CERT_REQUIRED
+
+        if server.sni is None:
+            server.sni = client.sni or server.address[0]
+
+        if not server.alpn_offers:
+            if client.alpn_offers:
+                server.alpn_offers = tuple(client.alpn_offers)
+            else:
+                # aioquic fails if no ALPN is offered, so use H3
+                server.alpn_offers = tuple(alpn.encode("ascii") for alpn in H3_ALPN)
+
+        if not server.cipher_list and ctx.options.ciphers_server:
+            server.cipher_list = ctx.options.ciphers_server.split(":")
+
+        # set context parameters
+        if server.cipher_list:
+            tls_start.settings.cipher_suites = [
+                CipherSuite[cipher] for cipher in server.cipher_list
+            ]
+        if server.alpn_offers:
+            tls_start.settings.alpn_protocols = [
+                alpn.decode("ascii") for alpn in server.alpn_offers
+            ]
+
+        # set the certificates
+        # NOTE client certificates are not supported
+        tls_start.settings.ca_path = ctx.options.ssl_verify_upstream_trusted_confdir
+        tls_start.settings.ca_file = ctx.options.ssl_verify_upstream_trusted_ca
 
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with

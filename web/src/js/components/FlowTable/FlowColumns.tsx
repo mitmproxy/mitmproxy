@@ -38,6 +38,9 @@ icon.sortKey = flow => getIcon(flow)
 
 const getIcon = (flow: Flow): string => {
     if (flow.type !== "http") {
+        if (flow.client_conn.tls_version === "QUIC") {
+            return `resource-icon-quic`;
+        }
         return `resource-icon-${flow.type}`
     }
     if (flow.websocket) {

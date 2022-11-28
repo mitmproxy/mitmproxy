@@ -114,7 +114,7 @@ class UdpServer(DrainableDatagramProtocol):
 
 
 class DatagramReader:
-    _packets: asyncio.Queue
+    _packets: asyncio.Queue[bytes]
     _eof: bool
 
     def __init__(self) -> None:

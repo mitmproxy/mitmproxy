@@ -286,6 +286,10 @@ class Message(serializable.Serializable):
         return self.data.http_version == b"HTTP/2.0"
 
     @property
+    def is_http3(self) -> bool:
+        return self.data.http_version == b"HTTP/3"
+
+    @property
     def headers(self) -> Headers:
         """
         The HTTP headers.
@@ -763,7 +767,7 @@ class Request(Message):
 
         *See also:* `Request.authority`,`Request.host`, `Request.pretty_host`
         """
-        if self.is_http2:
+        if self.is_http2 or self.is_http3:
             return self.authority or self.data.headers.get("Host", None)
         else:
             return self.data.headers.get("Host", None)
@@ -771,13 +775,13 @@ class Request(Message):
     @host_header.setter
     def host_header(self, val: Union[None, str, bytes]) -> None:
         if val is None:
-            if self.is_http2:
+            if self.is_http2 or self.is_http3:
                 self.data.authority = b""
             self.headers.pop("Host", None)
         else:
-            if self.is_http2:
+            if self.is_http2 or self.is_http3:
                 self.authority = val  # type: ignore
-            if not self.is_http2 or "Host" in self.headers:
+            if not (self.is_http2 or self.is_http3) or "Host" in self.headers:
                 # For h2, we only overwrite, but not create, as :authority is the h2 host header.
                 self.headers["Host"] = val
 

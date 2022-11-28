@@ -8,7 +8,7 @@ from typing import Callable, Optional
 from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import dns, tls
+from mitmproxy.proxy.layers import quic, tls
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
@@ -61,16 +61,18 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme == "https" or spec.scheme == "tls" or spec.scheme == "dtls":
+        if spec.scheme in ("http3", "quic"):
+            if not self.context.options.keep_host_header:
+                self.context.server.sni = spec.address[0]
+            self.child_layer = quic.ServerQuicLayer(self.context)
+        elif spec.scheme in ("https", "tls", "dtls"):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
             self.child_layer = tls.ServerTLSLayer(self.context)
-        elif spec.scheme == "http" or spec.scheme == "tcp" or spec.scheme == "udp":
+        elif spec.scheme in ("tcp", "http", "udp", "dns"):
             self.child_layer = layer.NextLayer(self.context)
-        elif spec.scheme == "dns":
-            self.child_layer = dns.DNSLayer(self.context)
         else:
-            raise AssertionError(self.context.client.transport_protocol)  # pragma: no cover
+            raise AssertionError(spec.scheme)  # pragma: no cover
 
         err = yield from self.finish_start()
         if err:

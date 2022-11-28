@@ -36,13 +36,9 @@ from . import (
     graphql,
     grpc,
     mqtt,
+    http3,
 )
 
-try:
-    from . import http3
-except ImportError:
-    # FIXME: Remove once QUIC is merged.
-    http3 = None  # type: ignore
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
@@ -238,8 +234,7 @@ add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
 add(mqtt.ViewMQTT())
-if http3 is not None:
-    add(http3.ViewHttp3())
+add(http3.ViewHttp3())
 
 __all__ = [
     "View",

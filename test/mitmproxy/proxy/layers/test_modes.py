@@ -4,18 +4,19 @@ import pytest
 from mitmproxy import dns
 
 from mitmproxy.addons.proxyauth import ProxyAuth
-from mitmproxy.connection import Client, Server
+from mitmproxy.connection import Client, ConnectionState, Server
 from mitmproxy.proxy import layers
 from mitmproxy.proxy.commands import (
     CloseConnection,
     Log,
     OpenConnection,
+    RequestWakeup,
     SendData,
 )
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layer import NextLayer, NextLayerHook
-from mitmproxy.proxy.layers import http, modes, tcp, tls
+from mitmproxy.proxy.layers import http, modes, quic, tcp, tls, udp
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
 from mitmproxy.proxy.layers.tls import (
@@ -25,7 +26,8 @@ from mitmproxy.proxy.layers.tls import (
 )
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
-from mitmproxy.test import tflow
+from mitmproxy.test import taddons, tflow
+from mitmproxy.udp import UDPFlow
 from test.mitmproxy.proxy.layers.test_tls import (
     reply_tls_start_client,
     reply_tls_start_server,
@@ -43,12 +45,12 @@ def test_upstream_https(tctx):
     curl -x localhost:8080 -k http://example.com
     """
     tctx1 = Context(
-        Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
+        Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329, state=ConnectionState.OPEN),
         copy.deepcopy(tctx.options),
     )
     tctx1.client.proxy_mode = ProxyMode.parse("upstream:https://example.mitmproxy.org:8081")
     tctx2 = Context(
-        Client(peername=("client", 4321), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
+        Client(peername=("client", 4321), sockname=("127.0.0.1", 8080), timestamp_start=1605699329, state=ConnectionState.OPEN),
         copy.deepcopy(tctx.options),
     )
     assert tctx2.client.proxy_mode == ProxyMode.parse("regular")
@@ -159,6 +161,8 @@ def test_reverse_dns(tctx):
     assert (
         Playbook(modes.ReverseProxy(tctx), hooks=False)
         >> DataReceived(tctx.client, tflow.tdnsreq().packed)
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.DNSLayer)
         << layers.dns.DnsRequestHook(f)
         >> reply(None)
         << OpenConnection(server)
@@ -166,6 +170,53 @@ def test_reverse_dns(tctx):
         << SendData(tctx.server, tflow.tdnsreq().packed)
     )
     assert server().address == ("8.8.8.8", 53)
+
+
+@pytest.mark.parametrize("keep_host_header", [True, False])
+def test_quic(tctx: Context, keep_host_header: bool):
+    with taddons.context():
+        tctx.options.keep_host_header = keep_host_header
+        tctx.server.sni = "other"
+        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://1.2.3.4:5")
+        client_hello = Placeholder(bytes)
+
+        def set_settings(data: quic.QuicTlsData):
+            data.settings = quic.QuicTlsSettings()
+
+        assert (
+            Playbook(modes.ReverseProxy(tctx))
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
+            >> reply(side_effect=set_settings)
+            << SendData(tctx.server, client_hello)
+            << RequestWakeup(Placeholder(float))
+        )
+        assert tctx.server.address == ("1.2.3.4", 5)
+        assert quic.quic_parse_client_hello(client_hello()).sni == (
+            "other" if keep_host_header else "1.2.3.4"
+        )
+
+
+def test_udp(tctx: Context):
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:udp://1.2.3.4:5")
+    flow = Placeholder(UDPFlow)
+    assert (
+        Playbook(modes.ReverseProxy(tctx))
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> DataReceived(tctx.client, b"test-input")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow)
+        >> reply()
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(tctx.server, b"test-input")
+    )
+    assert tctx.server.address == ("1.2.3.4", 5)
+    assert len(flow().messages) == 1
+    assert flow().messages[0].content == b"test-input"
 
 
 @pytest.mark.parametrize("patch", [True, False])

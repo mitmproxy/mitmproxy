@@ -29,7 +29,9 @@ export default function Messages({flow, messages_meta}: MessagesPropTypes) {
             try {
                 return JSON.parse(content)
             } catch (e) {
-                const err: ContentViewData = {"description": "Network Error", lines: [[["error", `${content}`]]]};
+                const err: ContentViewData[] = [
+                    {"description": "Network Error", lines: [[["error", `${content}`]]]}
+                ];
                 return err;
             }
         }

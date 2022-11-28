@@ -313,6 +313,48 @@ def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator
             headers[i] = (headers[i][0].lower(), headers[i][1])
 
 
+def format_h2_request_headers(
+    context: Context,
+    event: RequestHeaders,
+) -> CommandGenerator[list[tuple[bytes, bytes]]]:
+    pseudo_headers = [
+        (b":method", event.request.data.method),
+        (b":scheme", event.request.data.scheme),
+        (b":path", event.request.data.path),
+    ]
+    if event.request.authority:
+        pseudo_headers.append((b":authority", event.request.data.authority))
+
+    if event.request.is_http2 or event.request.is_http3:
+        hdrs = list(event.request.headers.fields)
+        if context.options.normalize_outbound_headers:
+            yield from normalize_h2_headers(hdrs)
+    else:
+        headers = event.request.headers
+        if not event.request.authority and "host" in headers:
+            headers = headers.copy()
+            pseudo_headers.append((b":authority", headers.pop(b"host")))
+        hdrs = normalize_h1_headers(list(headers.fields), True)
+
+    return pseudo_headers + hdrs
+
+
+def format_h2_response_headers(
+    context: Context,
+    event: ResponseHeaders,
+) -> CommandGenerator[list[tuple[bytes, bytes]]]:
+    headers = [
+        (b":status", b"%d" % event.response.status_code),
+        *event.response.headers.fields,
+    ]
+    if event.response.is_http2 or event.response.is_http3:
+        if context.options.normalize_outbound_headers:
+            yield from normalize_h2_headers(headers)
+    else:
+        headers = normalize_h1_headers(headers, False)
+    return headers
+
+
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
@@ -330,19 +372,9 @@ class Http2Server(Http2Connection):
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, ResponseHeaders):
             if self.is_open_for_us(event.stream_id):
-                headers = [
-                    (b":status", b"%d" % event.response.status_code),
-                    *event.response.headers.fields,
-                ]
-                if event.response.is_http2:
-                    if self.context.options.normalize_outbound_headers:
-                        yield from normalize_h2_headers(headers)
-                else:
-                    headers = normalize_h1_headers(headers, False)
-
                 self.h2_conn.send_headers(
                     event.stream_id,
-                    headers,
+                    headers=(yield from format_h2_response_headers(self.context, event)),
                     end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -485,28 +517,9 @@ class Http2Client(Http2Connection):
                 yield RequestWakeup(self.context.options.http2_ping_keepalive)
             yield from super()._handle_event(event)
         elif isinstance(event, RequestHeaders):
-            pseudo_headers = [
-                (b":method", event.request.data.method),
-                (b":scheme", event.request.data.scheme),
-                (b":path", event.request.data.path),
-            ]
-            if event.request.authority:
-                pseudo_headers.append((b":authority", event.request.data.authority))
-
-            if event.request.is_http2:
-                hdrs = list(event.request.headers.fields)
-                if self.context.options.normalize_outbound_headers:
-                    yield from normalize_h2_headers(hdrs)
-            else:
-                headers = event.request.headers
-                if not event.request.authority and "host" in headers:
-                    headers = headers.copy()
-                    pseudo_headers.append((b":authority", headers.pop(b"host")))
-                hdrs = normalize_h1_headers(list(headers.fields), True)
-
             self.h2_conn.send_headers(
                 event.stream_id,
-                pseudo_headers + hdrs,
+                headers=(yield from format_h2_request_headers(self.context, event)),
                 end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
@@ -642,6 +655,10 @@ def parse_h2_response_headers(
 
 
 __all__ = [
+    "format_h2_request_headers",
+    "format_h2_response_headers",
+    "parse_h2_request_headers",
+    "parse_h2_response_headers",
     "Http2Client",
     "Http2Server",
 ]

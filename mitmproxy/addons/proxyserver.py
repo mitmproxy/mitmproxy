@@ -19,12 +19,14 @@ from mitmproxy import (
     http,
     platform,
     tcp,
+    udp,
     websocket,
 )
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
 from mitmproxy.proxy import events, mode_specs, server_hooks
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
+from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
 from mitmproxy.utils import human, signals
@@ -300,6 +302,17 @@ class Proxyserver(ServerManager):
             logger.warning("Cannot inject TCP messages into non-TCP flows.")
 
         event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message))
+        try:
+            self.inject_event(event)
+        except ValueError as e:
+            logger.warning(str(e))
+
+    @command.command("inject.udp")
+    def inject_udp(self, flow: Flow, to_client: bool, message: bytes):
+        if not isinstance(flow, udp.UDPFlow):
+            logger.warning("Cannot inject UDP messages into non-UDP flows.")
+
+        event = UdpMessageInjected(flow, udp.UDPMessage(not to_client, message))
         try:
             self.inject_event(event)
         except ValueError as e:

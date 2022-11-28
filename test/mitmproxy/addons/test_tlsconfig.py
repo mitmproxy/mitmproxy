@@ -5,13 +5,14 @@ from typing import Union
 
 import pytest
 
+from cryptography import x509
 from OpenSSL import SSL
 from mitmproxy import certs, connection, tls, options
 from mitmproxy.addons import tlsconfig
 from mitmproxy.proxy import context
-from mitmproxy.proxy.layers import modes, tls as proxy_tls
+from mitmproxy.proxy.layers import modes, quic, tls as proxy_tls
 from mitmproxy.test import taddons
-from test.mitmproxy.proxy.layers import test_tls
+from test.mitmproxy.proxy.layers import test_quic, test_tls
 
 
 def test_alpn_select_callback():
@@ -163,6 +164,19 @@ class TestTlsConfig:
 
         return True
 
+    def quic_do_handshake(
+        self,
+        tssl_client: test_quic.SSLTest,
+        tssl_server: test_quic.SSLTest,
+    ) -> bool:
+        tssl_server.write(tssl_client.read())
+        tssl_client.write(tssl_server.read())
+        tssl_server.write(tssl_client.read())
+        return (
+            tssl_client.handshake_completed()
+            and tssl_server.handshake_completed()
+        )
+
     def test_tls_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -189,6 +203,34 @@ class TestTlsConfig:
             assert tssl_client.obj.getpeercert()["subjectAltName"] == (
                 ("DNS", "example.mitmproxy.org"),
             )
+
+    def test_quic_start_client(self, tdata):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+            tctx.configure(
+                ta,
+                certs=[
+                    tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")
+                ],
+                ciphers_client="CHACHA20_POLY1305_SHA256",
+            )
+            ctx = _ctx(tctx.options)
+
+            tls_start = quic.QuicTlsData(ctx.client, context=ctx)
+            ta.quic_start_client(tls_start)
+            settings_server = tls_start.settings
+            settings_server.alpn_protocols = ["h3"]
+            tssl_server = test_quic.SSLTest(server_side=True, settings=settings_server)
+
+            # assert that a preexisting settings is not overwritten
+            ta.quic_start_client(tls_start)
+            assert settings_server is tls_start.settings
+
+            tssl_client = test_quic.SSLTest(alpn=["h3"])
+            assert self.quic_do_handshake(tssl_client, tssl_server)
+            san = tssl_client.quic.tls._peer_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+            assert san.value.get_values_for_type(x509.DNSName) == ["example.mitmproxy.org"]
 
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()
@@ -240,6 +282,32 @@ class TestTlsConfig:
             tssl_server = test_tls.SSLTest(server_side=True, sni=hostname.encode())
             assert self.do_handshake(tssl_client, tssl_server)
 
+    @pytest.mark.parametrize("hostname", ["example.mitmproxy.org", "192.0.2.42"])
+    def test_quic_start_server_verify_ok(self, hostname, tdata):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = _ctx(tctx.options)
+            ctx.server.address = (hostname, 443)
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+
+            tls_start = quic.QuicTlsData(ctx.server, context=ctx)
+            ta.quic_start_server(tls_start)
+            settings_client = tls_start.settings
+            settings_client.alpn_protocols = ["h3"]
+            tssl_client = test_quic.SSLTest(settings=settings_client)
+
+            # assert that a preexisting ssl_conn is not overwritten
+            ta.quic_start_server(tls_start)
+            assert settings_client is tls_start.settings
+
+            tssl_server = test_quic.SSLTest(server_side=True, sni=hostname.encode(), alpn=["h3"])
+            assert self.quic_do_handshake(tssl_client, tssl_server)
+
     def test_tls_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -258,6 +326,25 @@ class TestTlsConfig:
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
+
+    def test_quic_start_server_insecure(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
+            ctx.client.alpn_offers = [b"h3"]
+
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=None,
+                ssl_insecure=True,
+                ciphers_server="CHACHA20_POLY1305_SHA256",
+            )
+            tls_start = quic.QuicTlsData(ctx.server, context=ctx)
+            ta.quic_start_server(tls_start)
+            tssl_client = test_quic.SSLTest(settings=tls_start.settings)
+            tssl_server = test_quic.SSLTest(server_side=True, alpn=["h3"])
+            assert self.quic_do_handshake(tssl_client, tssl_server)
 
     def test_alpn_selection(self):
         ta = tlsconfig.TlsConfig()
