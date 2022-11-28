@@ -87,8 +87,12 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
 
         const node = ReactDOM.findDOMNode(this)
 
-        node.previousElementSibling.style.flex = ''
-        node.nextElementSibling.style.flex = ''
+        if (node.previousElementSibling){
+            node.previousElementSibling.style.flex = ''
+        }
+        if (node.nextElementSibling) {
+            node.nextElementSibling.style.flex = ''
+        }
 
         if (!willUnmount) {
             this.setState({ applied: false })
