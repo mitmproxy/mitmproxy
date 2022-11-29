@@ -4,9 +4,19 @@ import inspect
 import textwrap
 from pathlib import Path
 
-from mitmproxy import hooks, log, addonmanager
-from mitmproxy.proxy import server_hooks, layer
-from mitmproxy.proxy.layers import dns, http, modes, quic, tcp, tls, udp, websocket
+from mitmproxy import addonmanager
+from mitmproxy import hooks
+from mitmproxy import log
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy.layers import dns
+from mitmproxy.proxy.layers.http import _hooks as http
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import udp
+from mitmproxy.proxy.layers import websocket
 
 known = set()
 

@@ -6,6 +6,7 @@
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
   This makes it simpler to accept both HTTP and HTTPS.
+  ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
 
 ### Breaking Changes
 

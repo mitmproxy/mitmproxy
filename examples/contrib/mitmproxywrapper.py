@@ -87,8 +87,7 @@ class Wrapper:
 
         service_names = []
         for service_id in service_ids:
-            scutil_script = 'show Setup:/Network/Service/{}\n'.format(
-                service_id)
+            scutil_script = f"show Setup:/Network/Service/{service_id}\n"
             stdout = self.run_command_with_input(
                 '/usr/sbin/scutil',
                 scutil_script)
