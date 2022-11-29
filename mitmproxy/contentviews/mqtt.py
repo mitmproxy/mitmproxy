@@ -1,9 +1,8 @@
+import struct
 from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import strutils
-
-import struct
 
 # from https://github.com/nikitastupin/mitmproxy-mqtt-script
 
@@ -211,9 +210,13 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get('Password', b'None'))}
                 self.payload["WillTopic"] = f.decode("utf-8")
             elif self.connect_flags["Will"] and "WillMessage" not in self.payload:
                 self.payload["WillMessage"] = f
-            elif self.connect_flags["UserName"] and "UserName" not in self.payload:  # pragma: no cover
+            elif (
+                self.connect_flags["UserName"] and "UserName" not in self.payload
+            ):  # pragma: no cover
                 self.payload["UserName"] = f.decode("utf-8")
-            elif self.connect_flags["Password"] and "Password" not in self.payload:  # pragma: no cover
+            elif (
+                self.connect_flags["Password"] and "Password" not in self.payload
+            ):  # pragma: no cover
                 self.payload["Password"] = f
             else:
                 raise AssertionError(f"Unknown field in CONNECT payload: {f}")

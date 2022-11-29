@@ -15,8 +15,9 @@ Note:
 
 """
 import json
-from mitmproxy import http
 from typing import Union
+
+from mitmproxy import http
 
 
 PATH_TO_COOKIES = "./cookies.json"  # insert your path to the cookie file here
@@ -43,7 +44,14 @@ def stringify_cookies(cookies: list[dict[str, Union[str, None]]]) -> str:
     """
     Creates a cookie string from a list of cookie dicts.
     """
-    return "; ".join([f"{c['name']}={c['value']}" if c.get("value", None) is not None else f"{c['name']}" for c in cookies])
+    return "; ".join(
+        [
+            f"{c['name']}={c['value']}"
+            if c.get("value", None) is not None
+            else f"{c['name']}"
+            for c in cookies
+        ]
+    )
 
 
 def parse_cookies(cookie_string: str) -> list[dict[str, Union[str, None]]]:
@@ -52,7 +60,9 @@ def parse_cookies(cookie_string: str) -> list[dict[str, Union[str, None]]]:
     """
     return [
         {"name": g[0], "value": g[1]} if len(g) == 2 else {"name": g[0], "value": None}
-        for g in [k.split("=", 1) for k in [c.strip() for c in cookie_string.split(";")] if k]
+        for g in [
+            k.split("=", 1) for k in [c.strip() for c in cookie_string.split(";")] if k
+        ]
     ]
 
 

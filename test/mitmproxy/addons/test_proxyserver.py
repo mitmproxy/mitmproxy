@@ -1,35 +1,46 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
 import socket
 import ssl
-from typing import Any, AsyncGenerator, Callable, ClassVar, Optional, TypeVar
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import ClassVar
+from typing import Optional
+from typing import TypeVar
 from unittest.mock import Mock
 
+import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
 from aioquic.h3 import events as h3_events
-from aioquic.h3.connection import H3Connection, FrameUnexpected
+from aioquic.h3.connection import FrameUnexpected
+from aioquic.h3.connection import H3Connection
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import QuicConnection, QuicConnectionError
-import pytest
-from mitmproxy.addons.next_layer import NextLayer
-from mitmproxy.addons.tlsconfig import TlsConfig
+from aioquic.quic.connection import QuicConnection
+from aioquic.quic.connection import QuicConnectionError
 
 import mitmproxy.platform
-from mitmproxy import dns, exceptions
+from mitmproxy import dns
+from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver
+from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.net import udp
-from mitmproxy.proxy import layers, server_hooks
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.test import taddons, tflow
-from mitmproxy.test.tflow import tclient_conn, tserver_conn
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test.tflow import tclient_conn
+from mitmproxy.test.tflow import tserver_conn
 from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.utils import data
 
@@ -298,7 +309,9 @@ async def test_dns(caplog_async) -> None:
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        dns_layer = ps.connections[("udp", w.get_extra_info("sockname"), dns_addr)].layer
+        dns_layer = ps.connections[
+            ("udp", w.get_extra_info("sockname"), dns_addr)
+        ].layer
         assert isinstance(dns_layer, layers.DNSLayer)
         assert len(dns_layer.flows) == 2
 
@@ -339,10 +352,10 @@ async def test_dtls(monkeypatch, caplog_async) -> None:
     caplog_async.set_level("INFO")
 
     def server_handler(
-            transport: asyncio.DatagramTransport,
-            data: bytes,
-            remote_addr: Address,
-            _: Address,
+        transport: asyncio.DatagramTransport,
+        data: bytes,
+        remote_addr: Address,
+        _: Address,
     ):
         assert data == b"\x16"
         transport.sendto(b"\x01", remote_addr)
@@ -360,7 +373,9 @@ async def test_dtls(monkeypatch, caplog_async) -> None:
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
-            await caplog_async.await_log(f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening")
+            await caplog_async.await_log(
+                f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening"
+            )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             r, w = await udp.open_connection(*addr)
@@ -392,9 +407,7 @@ class H3EchoServer(QuicConnectionProtocol):
             response.append((b":status", b"200"))
         response.append((b"x-response", headers[b"x-request"]))
         self.http.send_headers(
-            stream_id=event.stream_id,
-            headers=response,
-            end_stream=event.stream_ended
+            stream_id=event.stream_id, headers=response, end_stream=event.stream_ended
         )
         self.transmit()
 
@@ -441,7 +454,9 @@ class QuicDatagramEchoServer(QuicConnectionProtocol):
 
 
 @asynccontextmanager
-async def quic_server(create_protocol, alpn: list[str]) -> AsyncGenerator[Address, None]:
+async def quic_server(
+    create_protocol, alpn: list[str]
+) -> AsyncGenerator[Address, None]:
     configuration = QuicConfiguration(
         is_client=False,
         alpn_protocols=alpn,
@@ -475,9 +490,11 @@ class QuicClient(QuicConnectionProtocol):
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
         if not self._waiter.done():
             if isinstance(event, quic_events.ConnectionTerminated):
-                self._waiter.set_exception(QuicConnectionError(
-                    event.error_code, event.frame_type, event.reason_phrase
-                ))
+                self._waiter.set_exception(
+                    QuicConnectionError(
+                        event.error_code, event.frame_type, event.reason_phrase
+                    )
+                )
             elif isinstance(event, quic_events.HandshakeCompleted):
                 self._waiter.set_result(None)
 
@@ -501,9 +518,11 @@ class QuicDatagramClient(QuicClient):
             if isinstance(event, quic_events.DatagramFrameReceived):
                 self._datagram.set_result(event.data)
             elif isinstance(event, quic_events.ConnectionTerminated):
-                self._datagram.set_exception(QuicConnectionError(
-                    event.error_code, event.frame_type, event.reason_phrase
-                ))
+                self._datagram.set_exception(
+                    QuicConnectionError(
+                        event.error_code, event.frame_type, event.reason_phrase
+                    )
+                )
 
     def send_datagram(self, data: bytes) -> None:
         self._quic.send_datagram_frame(data)
@@ -532,7 +551,6 @@ class H3Response:
 
 
 class H3Client(QuicClient):
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._responses: dict[int, H3Response] = dict()
@@ -765,7 +783,9 @@ async def test_reverse_http3_and_quic_stream(
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
-            await caplog_async.await_log(f"reverse proxy to {scheme}://{server_addr[0]}:{server_addr[1]} listening")
+            await caplog_async.await_log(
+                f"reverse proxy to {scheme}://{server_addr[0]}:{server_addr[1]} listening"
+            )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
@@ -797,10 +817,14 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
-            await caplog_async.await_log(f"reverse proxy to quic://{server_addr[0]}:{server_addr[1]} listening")
+            await caplog_async.await_log(
+                f"reverse proxy to quic://{server_addr[0]}:{server_addr[1]} listening"
+            )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            async with quic_connect(QuicDatagramClient, alpn=["dgram"], address=addr) as client:
+            async with quic_connect(
+                QuicDatagramClient, alpn=["dgram"], address=addr
+            ) as client:
                 client.send_datagram(b"echo")
                 assert await client.recv_datagram() == b"echo"
 

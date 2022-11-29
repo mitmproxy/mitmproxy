@@ -1,18 +1,25 @@
 from __future__ import annotations
+
 import contextlib
 import copy
-import weakref
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
 import os
 import pprint
 import textwrap
-from typing import Any, Optional, TextIO, Union
+import weakref
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Any
+from typing import Optional
+from typing import TextIO
+from typing import Union
 
 import ruamel.yaml
 
 from mitmproxy import exceptions
-from mitmproxy.utils import signals, typecheck
+from mitmproxy.utils import signals
+from mitmproxy.utils import typecheck
 
 """
     The base implementation for Options.
@@ -150,9 +157,7 @@ class OptManager:
             if i not in self._options:
                 raise exceptions.OptionsError("No such option: %s" % i)
 
-        self._subscriptions.append(
-            (signals.make_weak_ref(func), set(opts))
-        )
+        self._subscriptions.append((signals.make_weak_ref(func), set(opts)))
 
     def _notify_subscribers(self, updated) -> None:
         cleanup = False
@@ -526,7 +531,7 @@ def parse(text):
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(
                 "Config error at line %s:\n%s\n%s"
-                % (v.problem_mark.line + 1, snip, getattr(v, 'problem', ''))
+                % (v.problem_mark.line + 1, snip, getattr(v, "problem", ""))
             )
         else:
             raise exceptions.OptionsError("Could not parse options.")

@@ -33,4 +33,4 @@ def assemble_content_type(type, subtype, parameters):
     if not parameters:
         return f"{type}/{subtype}"
     params = "; ".join(f"{k}={v}" for k, v in parameters.items())
-    return "{}/{}; {}".format(type, subtype, params)
+    return f"{type}/{subtype}; {params}"

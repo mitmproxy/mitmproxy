@@ -2,8 +2,8 @@ import io
 import re
 from typing import Optional
 
-from mitmproxy.utils import strutils
 from mitmproxy.contentviews import base
+from mitmproxy.utils import strutils
 
 DELIMITERS = "{};\n"
 SPECIAL_AREAS = (

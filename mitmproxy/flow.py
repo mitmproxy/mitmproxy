@@ -1,10 +1,14 @@
 from __future__ import annotations
+
 import asyncio
 import copy
 import time
 import uuid
-from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Any
+from typing import ClassVar
+from typing import Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
@@ -128,7 +132,9 @@ class Flow(serializable.Serializable):
 
     __types: dict[str, type[Flow]] = {}
 
-    type: ClassVar[str]  # automatically derived from the class name in __init_subclass__
+    type: ClassVar[
+        str
+    ]  # automatically derived from the class name in __init_subclass__
     """The flow type, for example `http`, `tcp`, or `dns`."""
 
     def __init_subclass__(cls, **kwargs):

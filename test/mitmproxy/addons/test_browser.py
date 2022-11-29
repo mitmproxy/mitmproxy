@@ -6,7 +6,9 @@ from mitmproxy.test import taddons
 
 def test_browser(caplog):
     caplog.set_level("INFO")
-    with mock.patch("subprocess.Popen") as po, mock.patch("shutil.which") as which, taddons.context():
+    with mock.patch("subprocess.Popen") as po, mock.patch(
+        "shutil.which"
+    ) as which, taddons.context():
         which.return_value = "chrome"
         b = browser.Browser()
         b.start()

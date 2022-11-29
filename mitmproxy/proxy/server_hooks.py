@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from mitmproxy import connection
 from . import commands
+from mitmproxy import connection
 
 
 @dataclass

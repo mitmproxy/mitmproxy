@@ -1,13 +1,17 @@
 import codecs
-import os
 import glob
+import os
 import re
 from collections.abc import Sequence
-from typing import Any, Optional, TYPE_CHECKING, Union
+from typing import Any
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy.utils import emoji, strutils
+from mitmproxy.utils import emoji
+from mitmproxy.utils import strutils
 
 if TYPE_CHECKING:  # pragma: no cover
     from mitmproxy.command import CommandManager

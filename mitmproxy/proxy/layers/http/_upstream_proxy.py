@@ -1,15 +1,18 @@
-from logging import DEBUG
-
 import time
+from logging import DEBUG
 from typing import Optional
 
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http, connection
+from mitmproxy import connection
+from mitmproxy import http
 from mitmproxy.net.http import http1
-from mitmproxy.proxy import commands, context, layer, tunnel
-from mitmproxy.proxy.layers.http._hooks import HttpConnectUpstreamHook
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers.http._hooks import HttpConnectUpstreamHook
 from mitmproxy.utils import human
 
 
@@ -48,7 +51,9 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             return (yield from super().start_handshake())
         assert self.conn.address
         flow = http.HTTPFlow(self.context.client, self.tunnel_connection)
-        authority = self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
+        authority = (
+            self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
+        )
         flow.request = http.Request(
             host=self.conn.address[0],
             port=self.conn.address[1],
@@ -76,9 +81,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         response_head = self.buf.maybe_extract_lines()
         if response_head:
             try:
-                response = http1.read_response_head([
-                    bytes(x) for x in response_head
-                ])
+                response = http1.read_response_head([bytes(x) for x in response_head])
             except ValueError as e:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 yield commands.Log(f"{proxyaddr}: {e}")

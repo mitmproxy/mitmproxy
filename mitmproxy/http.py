@@ -1,26 +1,25 @@
 import binascii
+import json
 import os
 import re
 import time
 import urllib.parse
-import json
 import warnings
+from collections.abc import Iterable
+from collections.abc import Iterator
+from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import fields
 from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
+from typing import Any
 from typing import Callable
-from typing import Iterable
-from typing import Iterator
-from typing import Mapping
+from typing import cast
 from typing import Optional
 from typing import Union
-from typing import cast
-from typing import Any
 
 from mitmproxy import flow
-from mitmproxy.websocket import WebSocketData
 from mitmproxy.coretypes import multidict
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import encoding
@@ -35,6 +34,7 @@ from mitmproxy.utils import strutils
 from mitmproxy.utils import typecheck
 from mitmproxy.utils.strutils import always_bytes
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.websocket import WebSocketData
 
 
 # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
@@ -1262,7 +1262,9 @@ class HTTPFlow(flow.Flow):
     def set_state(self, state: serializable.State) -> None:
         self.request = Request.from_state(state.pop("request"))
         self.response = Response.from_state(r) if (r := state.pop("response")) else None
-        self.websocket = WebSocketData.from_state(w) if (w := state.pop("websocket")) else None
+        self.websocket = (
+            WebSocketData.from_state(w) if (w := state.pop("websocket")) else None
+        )
         super().set_state(state)
 
     def __repr__(self):

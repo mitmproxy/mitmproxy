@@ -19,14 +19,16 @@ Examples:
     RegularMode.parse("socks5")  # ValueError
 
 """
-
 from __future__ import annotations
 
 import dataclasses
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from dataclasses import dataclass
 from functools import cache
-from typing import ClassVar, Literal, Type, TypeVar
+from typing import ClassVar
+from typing import Literal
+from typing import TypeVar
 
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
@@ -41,6 +43,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     Parsed representation of a proxy mode spec. Subclassed for each specific mode,
     which then does its own data validation.
     """
+
     full_spec: str
     """The full proxy mode spec as entered by the user."""
     data: str
@@ -50,9 +53,11 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     custom_listen_port: int | None
     """A custom listen port, if specified in the spec."""
 
-    type_name: ClassVar[str]  # automatically derived from the class name in __init_subclass__
+    type_name: ClassVar[
+        str
+    ]  # automatically derived from the class name in __init_subclass__
     """The unique name for this proxy mode, e.g. "regular" or "reverse"."""
-    __types: ClassVar[dict[str, Type[ProxyMode]]] = {}
+    __types: ClassVar[dict[str, type[ProxyMode]]] = {}
 
     def __init_subclass__(cls, **kwargs):
         cls.type_name = cls.__name__.removesuffix("Mode").lower()
@@ -85,7 +90,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @classmethod
     @cache
-    def parse(cls: Type[Self], spec: str) -> Self:
+    def parse(cls: type[Self], spec: str) -> Self:
         """
         Parse a proxy mode specification and return the corresponding `ProxyMode` instance.
         """
@@ -121,10 +126,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise ValueError(f"{mode!r} is not a spec for a {cls.type_name} mode")
 
         return mode_cls(
-            full_spec=spec,
-            data=data,
-            custom_listen_host=host,
-            custom_listen_port=port
+            full_spec=spec, data=data, custom_listen_host=host, custom_listen_port=port
         )
 
     def listen_host(self, default: str | None = None) -> str:
@@ -165,8 +167,8 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise dataclasses.FrozenInstanceError("Proxy modes are immutable.")
 
 
-TCP: Literal['tcp', 'udp'] = "tcp"
-UDP: Literal['tcp', 'udp'] = "udp"
+TCP: Literal["tcp", "udp"] = "tcp"
+UDP: Literal["tcp", "udp"] = "udp"
 
 
 def _check_empty(data):
@@ -176,6 +178,7 @@ def _check_empty(data):
 
 class RegularMode(ProxyMode):
     """A regular HTTP(S) proxy that is interfaced with `HTTP CONNECT` calls (or absolute-form HTTP requests)."""
+
     description = "HTTP(S) proxy"
     transport_protocol = TCP
 
@@ -185,6 +188,7 @@ class RegularMode(ProxyMode):
 
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
+
     description = "transparent proxy"
     transport_protocol = TCP
 
@@ -194,6 +198,7 @@ class TransparentMode(ProxyMode):
 
 class UpstreamMode(ProxyMode):
     """A regular HTTP(S) proxy, but all connections are forwarded to a second upstream HTTP(S) proxy."""
+
     description = "HTTP(S) proxy (upstream mode)"
     transport_protocol = TCP
     scheme: Literal["http", "https"]
@@ -209,9 +214,12 @@ class UpstreamMode(ProxyMode):
 
 class ReverseMode(ProxyMode):
     """A reverse proxy. This acts like a normal server, but redirects all requests to a fixed target."""
+
     description = "reverse proxy"
     transport_protocol = TCP
-    scheme: Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"]
+    scheme: Literal[
+        "http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"
+    ]
     address: tuple[str, int]
 
     # noinspection PyDataclass
@@ -230,6 +238,7 @@ class ReverseMode(ProxyMode):
 
 class Socks5Mode(ProxyMode):
     """A SOCKSv5 proxy."""
+
     description = "SOCKS v5 proxy"
     default_port = 1080
     transport_protocol = TCP
@@ -240,6 +249,7 @@ class Socks5Mode(ProxyMode):
 
 class DnsMode(ProxyMode):
     """A DNS server."""
+
     description = "DNS server"
     default_port = 53
     transport_protocol = UDP
@@ -253,6 +263,7 @@ class Http3Mode(ProxyMode):
     A regular HTTP3 proxy that is interfaced with absolute-form HTTP requests.
     (This class will be merged into `RegularMode` once the UDP implementation is deemed stable enough.)
     """
+
     description = "HTTP3 proxy"
     transport_protocol = UDP
 
@@ -262,6 +273,7 @@ class Http3Mode(ProxyMode):
 
 class WireGuardMode(ProxyMode):
     """Proxy Server based on WireGuard"""
+
     description = "WireGuard server"
     default_port = 51820
     transport_protocol = UDP

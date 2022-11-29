@@ -1,7 +1,7 @@
 import pytest
 
-from mitmproxy.contentviews import css
 from . import full_eval
+from mitmproxy.contentviews import css
 
 
 @pytest.mark.parametrize(

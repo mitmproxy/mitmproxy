@@ -11,7 +11,8 @@ Example usage:
 import logging
 
 from mitmproxy import ctx
-from mitmproxy.proxy import layer, layers
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import layers
 
 
 def running():

@@ -1,7 +1,10 @@
 import asyncio
 import ipaddress
 import socket
-from typing import Callable, Iterable, Union
+from collections.abc import Iterable
+from typing import Callable
+from typing import Union
+
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
 

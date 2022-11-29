@@ -4,7 +4,9 @@ protobuf messages based on a user defined rule set.
 
 """
 from mitmproxy import contentviews
-from mitmproxy.contentviews.grpc import ViewGrpcProtobuf, ViewConfig, ProtoParser
+from mitmproxy.contentviews.grpc import ProtoParser
+from mitmproxy.contentviews.grpc import ViewConfig
+from mitmproxy.contentviews.grpc import ViewGrpcProtobuf
 
 config: ViewConfig = ViewConfig()
 config.parser_rules = [
@@ -68,13 +70,13 @@ config.parser_rules = [
                 tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"],
                 name="latitude",
                 intended_decoding=ProtoParser.DecodedTypes.double,
-            ),  # noqa: E501
+            ),
             ProtoParser.ParserFieldDefinition(
                 tag=".2",
                 tag_prefixes=["1.5.1", "1.5.3", "1.5.4", "1.5.5", "1.5.6"],
                 name="longitude",
                 intended_decoding=ProtoParser.DecodedTypes.double,
-            ),  # noqa: E501
+            ),
             ProtoParser.ParserFieldDefinition(tag="7", name="app"),
         ],
     ),

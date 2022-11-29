@@ -27,10 +27,7 @@ async def make_request():
         cafile = Path(ctx.options.confdir).expanduser() / "mitmproxy-ca.pem"
         ssl_ctx = ssl.create_default_context(cafile=cafile)
         port = ctx.master.addons.get("proxyserver").listen_addrs()[0][1]
-        reader, writer = await asyncio.open_connection(
-            "127.0.0.1", port,
-            ssl=ssl_ctx
-        )
+        reader, writer = await asyncio.open_connection("127.0.0.1", port, ssl=ssl_ctx)
         writer.write(b"GET / HTTP/1.1\r\nHost: mitm.it\r\nConnection: close\r\n\r\n")
         await writer.drain()
         resp = await reader.read()

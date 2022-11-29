@@ -2,7 +2,8 @@
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import urwid
 
@@ -21,6 +22,7 @@ from mitmproxy.tools.console.options import Options
 @dataclass
 class BasicKeyHelp:
     """Quick help for urwid-builtin keybindings (i.e. those keys that do not appear in the keymap)"""
+
     key: str
 
 
@@ -181,7 +183,7 @@ def _make_row(label: str, items: HelpItems, keymap: Keymap) -> urwid.Columns:
                 " ",
                 short,
             ],
-            wrap="clip"
+            wrap="clip",
         )
         cols.append((14, txt))
 

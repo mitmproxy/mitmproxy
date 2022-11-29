@@ -10,7 +10,8 @@ Usage:
 """
 import logging
 
-from mitmproxy import ctx, http
+from mitmproxy import ctx
+from mitmproxy import http
 
 
 def request(flow: http.HTTPFlow) -> None:

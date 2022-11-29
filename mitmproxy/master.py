@@ -3,14 +3,15 @@ import logging
 import traceback
 from typing import Optional
 
-from mitmproxy import addonmanager, hooks
+from . import ctx as mitmproxy_ctx
+from .proxy.mode_specs import ReverseMode
+from mitmproxy import addonmanager
 from mitmproxy import command
 from mitmproxy import eventsequence
+from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import options
-from . import ctx as mitmproxy_ctx
-from .proxy.mode_specs import ReverseMode
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,11 @@ class Master:
 
     event_loop: asyncio.AbstractEventLoop
 
-    def __init__(self, opts: options.Options, event_loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(
+        self,
+        opts: options.Options,
+        event_loop: Optional[asyncio.AbstractEventLoop] = None,
+    ):
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
@@ -102,7 +107,11 @@ class Master:
         Loads a flow
         """
 
-        if isinstance(f, http.HTTPFlow) and len(self.options.mode) == 1 and self.options.mode[0].startswith("reverse:"):
+        if (
+            isinstance(f, http.HTTPFlow)
+            and len(self.options.mode) == 1
+            and self.options.mode[0].startswith("reverse:")
+        ):
             # When we load flows in reverse proxy mode, we adjust the target host to
             # the reverse proxy destination for all flows we load. This makes it very
             # easy to replay saved flows against a different host.

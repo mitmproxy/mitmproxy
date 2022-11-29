@@ -1,5 +1,5 @@
-from mitmproxy.contentviews import hex
 from . import full_eval
+from mitmproxy.contentviews import hex
 
 
 def test_view_hex():

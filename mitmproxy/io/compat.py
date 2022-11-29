@@ -7,7 +7,8 @@ version number, this prevents issues with developer builds and snapshots.
 """
 import copy
 import uuid
-from typing import Any, Union
+from typing import Any
+from typing import Union
 
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -406,7 +407,9 @@ def convert_18_19(data):
 
         for name in ["peername", "sockname", "address"]:
             if data[conn].get(name) and isinstance(data[conn][name][0], bytes):
-                data[conn][name][0] = data[conn][name][0].decode(errors="backslashreplace")
+                data[conn][name][0] = data[conn][name][0].decode(
+                    errors="backslashreplace"
+                )
 
     if data["server_conn"]["sni"] is True:
         data["server_conn"]["sni"] = data["server_conn"]["address"][0]

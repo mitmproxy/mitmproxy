@@ -12,25 +12,36 @@ Example:
 from __future__ import annotations
 
 import asyncio
+import errno
 import json
 import logging
 import socket
 import textwrap
 import typing
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import ClassVar, Generic, TypeVar, cast, get_args
+from typing import cast
+from typing import ClassVar
+from typing import Generic
+from typing import get_args
+from typing import TypeVar
 
-import errno
 import mitmproxy_wireguard as wg
 
-from mitmproxy import ctx, flow, platform
+from mitmproxy import ctx
+from mitmproxy import flow
+from mitmproxy import platform
 from mitmproxy.connection import Address
 from mitmproxy.master import Master
-from mitmproxy.net import local_ip, udp
+from mitmproxy.net import local_ip
+from mitmproxy.net import udp
 from mitmproxy.net.udp_wireguard import WireGuardDatagramTransport
-from mitmproxy.proxy import commands, layers, mode_specs, server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import human
@@ -55,14 +66,16 @@ class ProxyConnectionHandler(server.LiveConnectionHandler):
                 await data.wait_for_resume()  # pragma: no cover
 
 
-M = TypeVar('M', bound=mode_specs.ProxyMode)
+M = TypeVar("M", bound=mode_specs.ProxyMode)
 
 
 class ServerManager(typing.Protocol):
     connections: dict[tuple, ProxyConnectionHandler]
 
     @contextmanager
-    def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
+    def register_connection(
+        self, connection_id: tuple, handler: ProxyConnectionHandler
+    ):
         ...  # pragma: no cover
 
 
@@ -89,7 +102,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     @classmethod
     def make(
-        cls: typing.Type[Self],
+        cls: type[Self],
         mode: mode_specs.ProxyMode | str,
         manager: ServerManager,
     ) -> Self:
@@ -196,7 +209,9 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)
         reader.feed_data(data, remote_addr)
 
-    async def handle_udp_connection(self, connection_id: tuple, handler: ProxyConnectionHandler) -> None:
+    async def handle_udp_connection(
+        self, connection_id: tuple, handler: ProxyConnectionHandler
+    ) -> None:
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
 
@@ -220,7 +235,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             self.last_exception = e
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
-                assert self.mode.custom_listen_host is None  # since [@ [listen_addr:]listen_port]
+                assert (
+                    self.mode.custom_listen_host is None
+                )  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
             raise OSError(e.errno, message, e.filename) from e
         except Exception as e:
@@ -261,9 +278,13 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     s.bind(("", 0))
                     fixed_port = s.getsockname()[1]
                     s.close()
-                    return await asyncio.start_server(self.handle_tcp_connection, host, fixed_port)
+                    return await asyncio.start_server(
+                        self.handle_tcp_connection, host, fixed_port
+                    )
                 except Exception as e:
-                    logger.debug(f"Failed to listen on a single port ({e!r}), falling back to default behavior.")
+                    logger.debug(
+                        f"Failed to listen on a single port ({e!r}), falling back to default behavior."
+                    )
             return await asyncio.start_server(self.handle_tcp_connection, host, port)
         elif self.mode.transport_protocol == "udp":
             # create_datagram_endpoint only creates one socket, so the workaround above doesn't apply
@@ -309,17 +330,24 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         try:
             if not conf_path.exists():
                 conf_path.parent.mkdir(parents=True, exist_ok=True)
-                conf_path.write_text(json.dumps({
-                    "server_key": wg.genkey(),
-                    "client_key": wg.genkey(),
-                }, indent=4))
+                conf_path.write_text(
+                    json.dumps(
+                        {
+                            "server_key": wg.genkey(),
+                            "client_key": wg.genkey(),
+                        },
+                        indent=4,
+                    )
+                )
 
             try:
                 c = json.loads(conf_path.read_text())
                 self.server_key = c["server_key"]
                 self.client_key = c["client_key"]
             except Exception as e:
-                raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
+                raise ValueError(
+                    f"Invalid configuration file ({conf_path}): {e}"
+                ) from e
             # error early on invalid keys
             p = wg.pubkey(self.client_key)
             _ = wg.pubkey(self.server_key)
@@ -355,7 +383,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             return None
         host = local_ip.get_local_ip() or local_ip.get_local_ip6()
         port = self.mode.listen_port(ctx.options.listen_port)
-        return textwrap.dedent(f"""
+        return textwrap.dedent(
+            f"""
             [Interface]
             PrivateKey = {self.client_key}
             Address = 10.0.0.1/32
@@ -365,13 +394,11 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             PublicKey = {wg.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
-            """).strip()
+            """
+        ).strip()
 
     def to_json(self) -> dict:
-        return {
-            "wireguard_conf": self.client_conf(),
-            **super().to_json()
-        }
+        return {"wireguard_conf": self.client_conf(), **super().to_json()}
 
     async def stop(self) -> None:
         assert self._server is not None
@@ -390,15 +417,12 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     async def wg_handle_tcp_connection(self, stream: wg.TcpStream) -> None:
         await self.handle_tcp_connection(stream, stream)
 
-    def wg_handle_udp_datagram(self, data: bytes, remote_addr: Address, local_addr: Address) -> None:
+    def wg_handle_udp_datagram(
+        self, data: bytes, remote_addr: Address, local_addr: Address
+    ) -> None:
         assert self._server is not None
         transport = WireGuardDatagramTransport(self._server, local_addr, remote_addr)
-        self.handle_udp_datagram(
-            transport,
-            data,
-            remote_addr,
-            local_addr
-        )
+        self.handle_udp_datagram(transport, data, remote_addr, local_addr)
 
 
 class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):

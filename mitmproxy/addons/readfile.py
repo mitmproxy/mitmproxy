@@ -2,13 +2,14 @@ import asyncio
 import logging
 import os.path
 import sys
-from typing import BinaryIO, Optional
+from typing import BinaryIO
+from typing import Optional
 
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
-from mitmproxy import command
 
 
 class ReadFile:

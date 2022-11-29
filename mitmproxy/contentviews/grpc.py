@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import logging
 import struct
-from dataclasses import dataclass, field
+from collections.abc import Generator
+from collections.abc import Iterable
+from collections.abc import Iterator
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
-from typing import Generator, Iterable, Iterator
 
-from mitmproxy import contentviews, flow, flowfilter, http
+from mitmproxy import contentviews
+from mitmproxy import flow
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.contentviews import base
 from mitmproxy.net.encoding import decode
 
@@ -259,7 +265,9 @@ class ProtoParser:
         packed_field: ProtoParser.Field,
     ) -> list[ProtoParser.Field]:
         if not isinstance(packed_field.wire_value, bytes):
-            raise ValueError(f"can not unpack field with data other than bytes: {type(packed_field.wire_value)}")
+            raise ValueError(
+                f"can not unpack field with data other than bytes: {type(packed_field.wire_value)}"
+            )
         wire_data: bytes = packed_field.wire_value
         tag: int = packed_field.tag
         options: ProtoParser.ParserOptions = packed_field.options
@@ -953,7 +961,9 @@ def format_grpc(
 
 @dataclass
 class ViewConfig:
-    parser_options: ProtoParser.ParserOptions = field(default_factory=ProtoParser.ParserOptions)
+    parser_options: ProtoParser.ParserOptions = field(
+        default_factory=ProtoParser.ParserOptions
+    )
     parser_rules: list[ProtoParser.ParserRule] = field(default_factory=list)
 
 

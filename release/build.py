@@ -84,7 +84,9 @@ def archive(path: Path) -> tarfile.TarFile | ZipFile2:
 
 
 def version() -> str:
-    return os.environ.get("GITHUB_REF_NAME", "").replace("/", "-") or os.environ.get("BUILD_VERSION", "dev")
+    return os.environ.get("GITHUB_REF_NAME", "").replace("/", "-") or os.environ.get(
+        "BUILD_VERSION", "dev"
+    )
 
 
 def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
@@ -170,7 +172,13 @@ def msix_installer():
     manifest = TEMP_DIR / "msix/AppxManifest.xml"
     app_version = version()
     if not re.match(r"\d+\.\d+\.\d+", app_version):
-        app_version = datetime.now().strftime("%y%m.%d.%H%M").replace(".0", ".").replace(".0", ".").replace(".0", ".")
+        app_version = (
+            datetime.now()
+            .strftime("%y%m.%d.%H%M")
+            .replace(".0", ".")
+            .replace(".0", ".")
+            .replace(".0", ".")
+        )
     manifest.write_text(manifest.read_text().replace("1.2.3", app_version))
 
     makeappx_exe = (
@@ -237,7 +245,9 @@ def installbuilder_installer():
                     break
                 ib_setup_hash.update(data)
         if ib_setup_hash.hexdigest() != IB_SETUP_SHA256:  # pragma: no cover
-            raise RuntimeError(f"InstallBuilder hashes don't match: {ib_setup_hash.hexdigest()}")
+            raise RuntimeError(
+                f"InstallBuilder hashes don't match: {ib_setup_hash.hexdigest()}"
+            )
 
         print("Install InstallBuilder...")
         subprocess.run(

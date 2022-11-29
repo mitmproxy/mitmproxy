@@ -11,25 +11,29 @@ The View:
 import collections
 import logging
 import re
-from collections.abc import Iterator, MutableMapping, Sequence
-from typing import Any, Optional
+from collections.abc import Iterator
+from collections.abc import MutableMapping
+from collections.abc import Sequence
+from typing import Any
+from typing import Optional
 
 import sortedcontainers
 
 import mitmproxy.flow
 from mitmproxy import command
+from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
-from mitmproxy import hooks
-from mitmproxy import connection
 from mitmproxy import flowfilter
+from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy.log import ALERT
-from mitmproxy.utils import human, signals
+from mitmproxy.utils import human
+from mitmproxy.utils import signals
 
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -144,7 +148,9 @@ def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None:
 class View(collections.abc.Sequence):
     def __init__(self) -> None:
         super().__init__()
-        self._store: collections.OrderedDict[str, mitmproxy.flow.Flow] = collections.OrderedDict()
+        self._store: collections.OrderedDict[
+            str, mitmproxy.flow.Flow
+        ] = collections.OrderedDict()
         self.filter = flowfilter.match_all
         # Should we show only marked flows?
         self.show_marked = False
@@ -475,7 +481,11 @@ class View(collections.abc.Sequence):
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
 
-        c = connection.Client(peername=("", 0), sockname=("", 0), timestamp_start=req.timestamp_start - 0.0001)
+        c = connection.Client(
+            peername=("", 0),
+            sockname=("", 0),
+            timestamp_start=req.timestamp_start - 0.0001,
+        )
         s = connection.Server(address=(req.host, req.port))
 
         f = http.HTTPFlow(c, s)

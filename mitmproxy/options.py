@@ -90,11 +90,19 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option("allow_hosts", Sequence[str], [], "Opposite of --ignore-hosts.")
-        self.add_option("listen_host", str, "",
-                        "Address to bind proxy server(s) to (may be overridden for individual modes, see `mode`).")
-        self.add_option("listen_port", Optional[int], None,
-                        "Port to bind proxy server(s) to (may be overridden for individual modes, see `mode`). "
-                        "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.")
+        self.add_option(
+            "listen_host",
+            str,
+            "",
+            "Address to bind proxy server(s) to (may be overridden for individual modes, see `mode`).",
+        )
+        self.add_option(
+            "listen_port",
+            Optional[int],
+            None,
+            "Port to bind proxy server(s) to (may be overridden for individual modes, see `mode`). "
+            "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.",
+        )
         self.add_option(
             "mode",
             Sequence[str],

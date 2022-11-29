@@ -1,8 +1,14 @@
 import asyncio
 from typing import Optional
+
 import pytest
+
 from mitmproxy.connection import Address
-from mitmproxy.net.udp import MAX_DATAGRAM_SIZE, DatagramReader, DatagramWriter, open_connection, start_server
+from mitmproxy.net.udp import DatagramReader
+from mitmproxy.net.udp import DatagramWriter
+from mitmproxy.net.udp import MAX_DATAGRAM_SIZE
+from mitmproxy.net.udp import open_connection
+from mitmproxy.net.udp import start_server
 
 
 async def test_client_server():
@@ -13,7 +19,7 @@ async def test_client_server():
         transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
-        local_addr: Address
+        local_addr: Address,
     ):
         nonlocal server_reader, server_writer
         if server_writer is None:
@@ -23,9 +29,14 @@ async def test_client_server():
     server = await start_server(handle_datagram, "127.0.0.1", 0)
     assert repr(server).startswith("<UdpServer socket=")
 
-    [client_reader, client_writer] = await open_connection(*server.sockets[0].getsockname())
+    [client_reader, client_writer] = await open_connection(
+        *server.sockets[0].getsockname()
+    )
     assert client_writer.get_extra_info("peername") == server.sockets[0].getsockname()
-    assert client_writer.get_extra_info("sockname") == client_writer._protocol.sockets[0].getsockname()
+    assert (
+        client_writer.get_extra_info("sockname")
+        == client_writer._protocol.sockets[0].getsockname()
+    )
 
     client_writer.write(b"msg1")
     client_writer.write(b"msg2")

@@ -1,10 +1,12 @@
 import io
 import re
 import textwrap
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 from mitmproxy.contentviews import base
-from mitmproxy.utils import sliding_window, strutils
+from mitmproxy.utils import sliding_window
+from mitmproxy.utils import strutils
 
 """
 A custom XML/HTML prettifier. Compared to other prettifiers, its main features are:
@@ -46,7 +48,7 @@ class Token:
         self.data = data
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, self.data)
+        return f"{type(self).__name__}({self.data})"
 
 
 class Text(Token):

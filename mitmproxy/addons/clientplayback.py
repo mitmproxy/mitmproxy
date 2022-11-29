@@ -1,10 +1,10 @@
 import asyncio
 import logging
+import time
 import traceback
 from collections.abc import Sequence
-from typing import Optional, cast
-
-import time
+from typing import cast
+from typing import Optional
 
 import mitmproxy.types
 from mitmproxy import command
@@ -13,11 +13,15 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
-from mitmproxy.connection import ConnectionState, Server
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.hooks import UpdateHook
 from mitmproxy.log import ALERT
 from mitmproxy.options import Options
-from mitmproxy.proxy import commands, events, layers, server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
@@ -161,9 +165,7 @@ class ClientPlayback:
                 else:
                     await h.replay()
             except Exception:
-                logger.error(
-                    f"Client replay has crashed!\n{traceback.format_exc()}"
-                )
+                logger.error(f"Client replay has crashed!\n{traceback.format_exc()}")
             self.queue.task_done()
             self.inflight = None
 

@@ -14,8 +14,9 @@ import mimetypes
 import os
 from pathlib import Path
 
-from mitmproxy import ctx, http
+from mitmproxy import ctx
 from mitmproxy import flowfilter
+from mitmproxy import http
 
 
 class HTTPDump:
@@ -32,7 +33,7 @@ class HTTPDump:
             name="open_browser",
             typespec=bool,
             default=True,
-            help="open integrated browser at start"
+            help="open integrated browser at start",
         )
 
     def running(self):

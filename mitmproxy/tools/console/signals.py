@@ -18,7 +18,9 @@ status_message = signals.SyncSignal(_status_message)
 
 
 # Prompt for input
-def _status_prompt(prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
+def _status_prompt(
+    prompt: str, text: str | None, callback: Callable[[str], None]
+) -> None:
     ...
 
 
@@ -26,7 +28,9 @@ status_prompt = signals.SyncSignal(_status_prompt)
 
 
 # Prompt for a single keystroke
-def _status_prompt_onekey(prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]) -> None:
+def _status_prompt_onekey(
+    prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]
+) -> None:
     ...
 
 

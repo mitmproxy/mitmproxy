@@ -1,12 +1,13 @@
-from zipfile import ZipFile
 import hashlib
+import os
+from zipfile import ZipFile
+
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 
-from mitmproxy import certs, ctx
+from mitmproxy import certs
+from mitmproxy import ctx
 from mitmproxy.options import CONF_BASENAME
-
-import os
 
 # The following 3 variables are for including in the magisk module as text file
 MODULE_PROP_TEXT = """id=mitmproxycert
@@ -84,14 +85,14 @@ def get_ca_from_files() -> x509.Certificate:
     return certstore.default_ca._cert
 
 
-def subject_hash_old(ca : x509.Certificate) -> str:
+def subject_hash_old(ca: x509.Certificate) -> str:
     # Mimics the -subject_hash_old option of openssl used for android certificate names
     full_hash = hashlib.md5(ca.subject.public_bytes()).digest()
-    sho = (full_hash[0] | (full_hash[1] << 8) | (full_hash[2] << 16) | full_hash[3] << 24)
+    sho = full_hash[0] | (full_hash[1] << 8) | (full_hash[2] << 16) | full_hash[3] << 24
     return hex(sho)[2:]
 
 
-def write_magisk_module(path : str):
+def write_magisk_module(path: str):
     # Makes a zip file that can be loaded by Magisk
     # Android certs are stored as DER files
     ca = get_ca_from_files()
@@ -103,7 +104,9 @@ def write_magisk_module(path : str):
         zipp.writestr("config.sh", CONFIG_SH_TEXT)
         zipp.writestr("META-INF/com/google/android/updater-script", "#MAGISK")
         zipp.writestr("META-INF/com/google/android/update-binary", UPDATE_BINARY_TEXT)
-        zipp.writestr("common/file_contexts_image", "/magisk(/.*)? u:object_r:system_file:s0")
+        zipp.writestr(
+            "common/file_contexts_image", "/magisk(/.*)? u:object_r:system_file:s0"
+        )
         zipp.writestr("common/post-fs-data.sh", "MODDIR=${0%/*}")
         zipp.writestr("common/service.sh", "MODDIR=${0%/*}")
         zipp.writestr("common/system.prop", "")

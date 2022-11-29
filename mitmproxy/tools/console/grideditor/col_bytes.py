@@ -1,4 +1,5 @@
 import urwid
+
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.utils import strutils

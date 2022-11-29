@@ -1,14 +1,20 @@
 import pytest
 
-from mitmproxy.connection import Server, Client, ConnectionState
-from mitmproxy.test.tflow import tclient_conn, tserver_conn
+from mitmproxy.connection import Client
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.test.tflow import tclient_conn
+from mitmproxy.test.tflow import tserver_conn
 
 
 class TestConnection:
     def test_basic(self):
-        c = Client(peername=("127.0.0.1", 52314), sockname=("127.0.0.1", 8080),
-                   timestamp_start=1607780791,
-                   state=ConnectionState.OPEN)
+        c = Client(
+            peername=("127.0.0.1", 52314),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1607780791,
+            state=ConnectionState.OPEN,
+        )
         assert not c.tls_established
         c.timestamp_tls_setup = 1607780792
         assert c.tls_established
@@ -34,7 +40,7 @@ class TestClient:
             peername=("127.0.0.1", 52314),
             sockname=("127.0.0.1", 8080),
             timestamp_start=1607780791,
-            cipher_list=["foo", "bar"]
+            cipher_list=["foo", "bar"],
         )
         assert repr(c)
         assert str(c)

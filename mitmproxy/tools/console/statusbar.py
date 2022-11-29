@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections.abc import Callable
 from functools import lru_cache
 from typing import Optional
@@ -6,15 +7,19 @@ from typing import Optional
 import urwid
 
 import mitmproxy.tools.console.master
-from mitmproxy.tools.console import commandexecutor, flowlist, quickhelp
+from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import quickhelp
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.utils import human
 
 
 @lru_cache
-def shorten_message(msg: tuple[str, str] | str, max_width: int) -> list[tuple[str, str]]:
+def shorten_message(
+    msg: tuple[str, str] | str, max_width: int
+) -> list[tuple[str, str]]:
     """
     Shorten message so that it fits into a single line in the statusbar.
     """
@@ -69,7 +74,9 @@ class ActionBar(urwid.WidgetWrap):
         if not self.prompting and flow is None or flow == self.master.view.focus.flow:
             self.show_quickhelp()
 
-    def sig_message(self, message: tuple[str, str] | str, expire: int | None = 1) -> None:
+    def sig_message(
+        self, message: tuple[str, str] | str, expire: int | None = 1
+    ) -> None:
         if self.prompting:
             return
         cols, _ = self.master.ui.get_cols_rows()
@@ -84,7 +91,9 @@ class ActionBar(urwid.WidgetWrap):
 
             signals.call_in.send(seconds=expire, callback=cb)
 
-    def sig_prompt(self, prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
+    def sig_prompt(
+        self, prompt: str, text: str | None, callback: Callable[[str], None]
+    ) -> None:
         signals.focus.send(section="footer")
         self.top._w = urwid.Edit(f"{prompt.strip()}: ", text or "")
         self.bottom._w = urwid.Text("")
@@ -109,7 +118,9 @@ class ActionBar(urwid.WidgetWrap):
         execute = commandexecutor.CommandExecutor(self.master)
         execute(txt)
 
-    def sig_prompt_onekey(self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]) -> None:
+    def sig_prompt_onekey(
+        self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]
+    ) -> None:
         """
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
@@ -315,10 +326,12 @@ class StatusBar(urwid.WidgetWrap):
             ("heading", f"{arrow} {marked} [{offset}/{fc}]".ljust(11)),
         ]
 
-        listen_addrs: list[str] = list(dict.fromkeys(
-            human.format_address(a)
-            for a in self.master.addons.get("proxyserver").listen_addrs()
-        ))
+        listen_addrs: list[str] = list(
+            dict.fromkeys(
+                human.format_address(a)
+                for a in self.master.addons.get("proxyserver").listen_addrs()
+            )
+        )
         if listen_addrs:
             boundaddr = f"[{', '.join(listen_addrs)}]"
         else:

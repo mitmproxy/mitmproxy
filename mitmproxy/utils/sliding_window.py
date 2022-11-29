@@ -1,5 +1,8 @@
 import itertools
-from typing import Iterable, Iterator, Optional, TypeVar
+from collections.abc import Iterable
+from collections.abc import Iterator
+from typing import Optional
+from typing import TypeVar
 
 T = TypeVar("T")
 

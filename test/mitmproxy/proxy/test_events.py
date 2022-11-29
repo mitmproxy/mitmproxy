@@ -3,7 +3,8 @@ from unittest.mock import Mock
 import pytest
 
 from mitmproxy import connection
-from mitmproxy.proxy import events, commands
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
 
 
 @pytest.fixture

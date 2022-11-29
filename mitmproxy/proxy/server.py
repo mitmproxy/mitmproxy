@@ -10,23 +10,35 @@ import abc
 import asyncio
 import collections
 import logging
-
 import time
 import traceback
-from collections.abc import Awaitable, Callable, MutableMapping
+from collections.abc import Awaitable
+from collections.abc import Callable
+from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import mitmproxy_wireguard as wg
 from OpenSSL import SSL
 
-from mitmproxy import http, options as moptions, tls
+from mitmproxy import http
+from mitmproxy import options as moptions
+from mitmproxy import tls
+from mitmproxy.connection import Address
+from mitmproxy.connection import Client
+from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
+from mitmproxy.net import udp
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import commands, events, layer, layers, mode_specs, server_hooks
-from mitmproxy.connection import Address, Client, Connection, ConnectionState
-from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
@@ -80,8 +92,12 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: Optional[asyncio.Task] = None
-    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader, wg.TcpStream]] = None
-    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter, wg.TcpStream]] = None
+    reader: Optional[
+        Union[asyncio.StreamReader, udp.DatagramReader, wg.TcpStream]
+    ] = None
+    writer: Optional[
+        Union[asyncio.StreamWriter, udp.DatagramWriter, wg.TcpStream]
+    ] = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -135,7 +151,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.server_event(events.Start())
             await asyncio.wait([handler])
             if not handler.cancelled() and (e := handler.exception()):
-                self.log(f"mitmproxy has crashed!\n{traceback.format_exception(e)}", logging.ERROR)
+                self.log(
+                    f"mitmproxy has crashed!\n{traceback.format_exception(e)}",
+                    logging.ERROR,
+                )
 
         watch.cancel()
         while self.wakeup_timer:
@@ -331,11 +350,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         pass
 
     def log(self, message: str, level: int = logging.INFO) -> None:
-        logger.log(
-            level,
-            message,
-            extra={"client": self.client.peername}
-        )
+        logger.log(level, message, extra={"client": self.client.peername})
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()

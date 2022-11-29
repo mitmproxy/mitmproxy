@@ -4,15 +4,14 @@ from collections.abc import Sequence
 from functools import cache
 from typing import Optional
 
-import ruamel.yaml
 import ruamel.yaml.error
 
+import mitmproxy.types
 from mitmproxy import command
-from mitmproxy.tools.console import commandexecutor
-from mitmproxy.tools.console import signals
 from mitmproxy import ctx
 from mitmproxy import exceptions
-import mitmproxy.types
+from mitmproxy.tools.console import commandexecutor
+from mitmproxy.tools.console import signals
 
 
 class KeyBindingError(Exception):
@@ -62,7 +61,9 @@ class Binding:
         return self.key.replace("space", " ")
 
     def key_short(self) -> str:
-        return self.key.replace("enter", "⏎").replace("right", "→").replace("space", "␣")
+        return (
+            self.key.replace("enter", "⏎").replace("right", "→").replace("space", "␣")
+        )
 
     def sortkey(self):
         return self.key + ",".join(self.contexts)

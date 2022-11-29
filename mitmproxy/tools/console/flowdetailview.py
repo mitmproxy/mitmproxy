@@ -4,8 +4,10 @@ import urwid
 
 import mitmproxy.flow
 from mitmproxy import http
-from mitmproxy.tools.console import common, searchable
-from mitmproxy.utils import human, strutils
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import searchable
+from mitmproxy.utils import human
+from mitmproxy.utils import strutils
 
 
 def maybe_timestamp(base, attr):

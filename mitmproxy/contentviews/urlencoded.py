@@ -1,7 +1,7 @@
 from typing import Optional
 
-from mitmproxy.net.http import url
 from . import base
+from mitmproxy.net.http import url
 
 
 class ViewURLEncoded(base.View):

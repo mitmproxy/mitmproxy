@@ -7,7 +7,8 @@ from typing import Optional
 import asgiref.compatibility
 import asgiref.wsgi
 
-from mitmproxy import ctx, http
+from mitmproxy import ctx
+from mitmproxy import http
 
 logger = logging.getLogger(__name__)
 

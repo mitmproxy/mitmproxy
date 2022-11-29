@@ -1,8 +1,10 @@
 import json
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import parse_json, PARSE_ERROR
+from mitmproxy.contentviews.json import PARSE_ERROR
+from mitmproxy.contentviews.json import parse_json
 
 
 def format_graphql(data):

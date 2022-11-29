@@ -1,16 +1,16 @@
+import struct
+
 import pytest
 
-from mitmproxy.contentviews import grpc
-from mitmproxy.contentviews.grpc import (
-    ViewGrpcProtobuf,
-    ViewConfig,
-    ProtoParser,
-    parse_grpc_messages,
-)
-from mitmproxy.net.encoding import encode
-from mitmproxy.test import tflow, tutils
-import struct
 from . import full_eval
+from mitmproxy.contentviews import grpc
+from mitmproxy.contentviews.grpc import parse_grpc_messages
+from mitmproxy.contentviews.grpc import ProtoParser
+from mitmproxy.contentviews.grpc import ViewConfig
+from mitmproxy.contentviews.grpc import ViewGrpcProtobuf
+from mitmproxy.net.encoding import encode
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 datadir = "mitmproxy/contentviews/test_grpc_data/"
 

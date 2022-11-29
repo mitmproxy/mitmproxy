@@ -129,7 +129,10 @@ class TestScript:
             tdata.path("mitmproxy/data/addonscripts/import_error.py"),
             False,
         )
-        assert "Note that mitmproxy's binaries include their own Python environment" in caplog.text
+        assert (
+            "Note that mitmproxy's binaries include their own Python environment"
+            in caplog.text
+        )
 
     async def test_optionexceptions(self, tdata, caplog_async):
         with taddons.context() as tctx:
@@ -183,7 +186,9 @@ class TestScriptLoader:
         with taddons.context(sc):
             sc.script_run([tflow.tflow(resp=True)], rp)
             await caplog_async.await_log("recorder response")
-            debug = [i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"]
+            debug = [
+                i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"
+            ]
             assert debug == [
                 "recorder configure",
                 "recorder running",
@@ -267,7 +272,9 @@ class TestScriptLoader:
                 ],
             )
             await caplog_async.await_log("configure")
-            debug = [i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"]
+            debug = [
+                i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"
+            ]
             assert debug == [
                 "a load",
                 "a configure",
@@ -291,7 +298,9 @@ class TestScriptLoader:
             )
 
             await caplog_async.await_log("b configure")
-            debug = [i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"]
+            debug = [
+                i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"
+            ]
             assert debug == [
                 "c configure",
                 "a configure",
@@ -307,7 +316,9 @@ class TestScriptLoader:
                 ],
             )
             await caplog_async.await_log("e configure")
-            debug = [i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"]
+            debug = [
+                i.msg for i in caplog_async.caplog.records if i.levelname == "DEBUG"
+            ]
             assert debug == [
                 "c done",
                 "b done",

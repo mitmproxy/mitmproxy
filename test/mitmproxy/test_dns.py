@@ -1,5 +1,6 @@
 import ipaddress
 import struct
+
 import pytest
 
 from mitmproxy import dns
@@ -111,7 +112,7 @@ class TestMessage:
             with pytest.raises(ValueError):
                 req.packed
 
-        test("id", 0, 2 ** 16 - 1)
+        test("id", 0, 2**16 - 1)
         test("reserved", 0, 7)
         test("op_code", 0, 0b1111)
         test("response_code", 0, 0b1111)

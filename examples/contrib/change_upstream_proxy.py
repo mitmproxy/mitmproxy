@@ -1,4 +1,3 @@
-
 from mitmproxy import http
 from mitmproxy.connection import Server
 from mitmproxy.net.server_spec import ServerSpec

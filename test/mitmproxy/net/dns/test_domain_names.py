@@ -1,5 +1,6 @@
 import re
 import struct
+
 import pytest
 
 from mitmproxy.net.dns import domain_names
@@ -15,14 +16,11 @@ def test_unpack_from_with_compression():
         domain_names.unpack_from_with_compression(
             b"\x03www\xc0\x00", 0, domain_names.cache()
         )
-    assert (
-        domain_names.unpack_from_with_compression(
-            b"\xFF\xFF\xFF\x07example\x03org\x00\xFF\xFF\xFF\x03www\xc0\x03",
-            19,
-            domain_names.cache(),
-        )
-        == ("www.example.org", 6)
-    )
+    assert domain_names.unpack_from_with_compression(
+        b"\xFF\xFF\xFF\x07example\x03org\x00\xFF\xFF\xFF\x03www\xc0\x03",
+        19,
+        domain_names.cache(),
+    ) == ("www.example.org", 6)
 
 
 def test_unpack():

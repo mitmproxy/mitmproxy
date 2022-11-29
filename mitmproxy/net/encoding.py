@@ -1,13 +1,13 @@
 """
 Utility functions for decoding response bodies.
 """
-
 import codecs
 import collections
 import gzip
 import zlib
 from io import BytesIO
-from typing import Union, overload
+from typing import overload
+from typing import Union
 
 import brotli
 import zstandard as zstd
@@ -184,7 +184,7 @@ def decode_zstd(content: bytes) -> bytes:
     except zstd.ZstdError:
         # If the zstd stream is streamed without a size header,
         # try decoding with a 10MiB output buffer
-        return zstd_ctx.decompress(content, max_output_size=10 * 2 ** 20)
+        return zstd_ctx.decompress(content, max_output_size=10 * 2**20)
 
 
 def encode_zstd(content: bytes) -> bytes:

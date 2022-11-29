@@ -1,27 +1,34 @@
-from logging import WARNING
-
 import gc
+from logging import WARNING
 
 import pytest
 
-from mitmproxy.connection import ConnectionState, Server
-from mitmproxy.http import HTTPFlow, Response
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Response
 from mitmproxy.proxy import layer
-from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layers import TCPLayer, http, tls
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import TCPLayer
+from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
+from mitmproxy.proxy.layers.tcp import TcpMessageInjected
+from mitmproxy.proxy.layers.tcp import TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.proxy.mode_specs import ProxyMode
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from test.mitmproxy.proxy.tutils import (
-    BytesMatching,
-    Placeholder,
-    Playbook,
-    reply,
-    reply_next_layer,
-)
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
+from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_http_proxy(tctx):
@@ -744,7 +751,8 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
             << OpenConnection(server)
             >> reply(None)
             << SendData(
-                server, b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
+                server,
+                b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
         )
 
@@ -799,7 +807,8 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         if redirect == "change-destination":
             playbook << SendData(
                 server2,
-                b"GET http://%s.test/two HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
+                b"GET http://%s.test/two HTTP/1.1\r\nHost: %s\r\n\r\n"
+                % (domain, domain),
             )
         else:
             playbook << SendData(
@@ -808,7 +817,9 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
             )
     else:
         if redirect == "change-destination":
-            playbook << SendData(server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain)
+            playbook << SendData(
+                server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain
+            )
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
@@ -830,9 +841,7 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         assert flow().server_conn.address[0] == domain.decode("idna")
 
     if redirect == "change-proxy":
-        assert (
-            server2().address == flow().server_conn.via[1] == ("other-proxy", 1234)
-        )
+        assert server2().address == flow().server_conn.via[1] == ("other-proxy", 1234)
     else:
         assert server2().address == flow().server_conn.via[1] == ("proxy", 8080)
 
@@ -958,8 +967,12 @@ def test_http_proxy_without_empty_chunk_in_head_request(tctx):
         << OpenConnection(server)
         >> reply(None)
         << SendData(server, b"HEAD / HTTP/1.1\r\n\r\n")
-        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
-        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+        >> DataReceived(
+            server, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+        )
+        << SendData(
+            tctx.client, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+        )
     )
 
 
@@ -1658,7 +1671,7 @@ def test_drop_stream_with_paused_events(tctx):
         << http.HttpRequestHeadersHook(flow)
         >> reply()
         << OpenConnection(server)
-        >> reply('Connection killed: error')
+        >> reply("Connection killed: error")
         << http.HttpErrorHook(flow)
         >> reply()
         << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection killed"))

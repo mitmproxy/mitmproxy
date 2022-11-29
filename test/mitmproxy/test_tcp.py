@@ -1,7 +1,7 @@
 import pytest
 
-from mitmproxy import tcp
 from mitmproxy import flowfilter
+from mitmproxy import tcp
 from mitmproxy.test import tflow
 
 

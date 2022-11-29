@@ -1,21 +1,22 @@
 import asyncio
+import importlib.machinery
+import importlib.util
 import logging
 import os
-import importlib.util
-import importlib.machinery
 import sys
-import types
 import traceback
+import types
 from collections.abc import Sequence
 from typing import Optional
 
-from mitmproxy import addonmanager, hooks
+import mitmproxy.types as mtypes
+from mitmproxy import addonmanager
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import eventsequence
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import command
-from mitmproxy import eventsequence
-from mitmproxy import ctx
-import mitmproxy.types as mtypes
+from mitmproxy import hooks
 from mitmproxy.utils import asyncio_utils
 
 logger = logging.getLogger(__name__)

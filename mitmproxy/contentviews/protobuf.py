@@ -2,6 +2,7 @@ import io
 from typing import Optional
 
 from kaitaistruct import KaitaiStream
+
 from . import base
 from mitmproxy.contrib.kaitaistruct import google_protobuf
 
@@ -26,7 +27,9 @@ def _parse_proto(raw: bytes) -> list[google_protobuf.GoogleProtobuf.Pair]:
     """Parse a bytestring into protobuf pairs and make sure that all pairs have a valid wire type."""
     buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(raw)))
     for pair in buf.pairs:
-        if not isinstance(pair.wire_type, google_protobuf.GoogleProtobuf.Pair.WireTypes):
+        if not isinstance(
+            pair.wire_type, google_protobuf.GoogleProtobuf.Pair.WireTypes
+        ):
             raise ValueError("Not a protobuf.")
     return buf.pairs
 

@@ -32,15 +32,21 @@
         ~c CODE     Response code.
         rex         Equivalent to ~u rex
 """
-
 import functools
 import re
 import sys
 from collections.abc import Sequence
-from typing import ClassVar, Protocol, Union
+from typing import ClassVar
+from typing import Protocol
+from typing import Union
+
 import pyparsing as pp
 
-from mitmproxy import dns, flow, http, tcp, udp
+from mitmproxy import dns
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
 
 
 def only(*types):
@@ -288,10 +294,16 @@ class FBod(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.request and (content := f.request.get_content(strict=False)) is not None:
+            if (
+                f.request
+                and (content := f.request.get_content(strict=False)) is not None
+            ):
                 if self.re.search(content):
                     return True
-            if f.response and (content := f.response.get_content(strict=False)) is not None:
+            if (
+                f.response
+                and (content := f.response.get_content(strict=False)) is not None
+            ):
                 if self.re.search(content):
                     return True
             if f.websocket:
@@ -318,7 +330,10 @@ class FBodRequest(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.request and (content := f.request.get_content(strict=False)) is not None:
+            if (
+                f.request
+                and (content := f.request.get_content(strict=False)) is not None
+            ):
                 if self.re.search(content):
                     return True
             if f.websocket:
@@ -342,7 +357,10 @@ class FBodResponse(_Rex):
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
-            if f.response and (content := f.response.get_content(strict=False)) is not None:
+            if (
+                f.response
+                and (content := f.response.get_content(strict=False)) is not None
+            ):
                 if self.re.search(content):
                     return True
             if f.websocket:

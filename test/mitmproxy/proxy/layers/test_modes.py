@@ -1,38 +1,46 @@
 import copy
 
 import pytest
-from mitmproxy import dns
 
+from mitmproxy import dns
 from mitmproxy.addons.proxyauth import ProxyAuth
-from mitmproxy.connection import Client, ConnectionState, Server
+from mitmproxy.connection import Client
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.proxy import layers
-from mitmproxy.proxy.commands import (
-    CloseConnection,
-    Log,
-    OpenConnection,
-    RequestWakeup,
-    SendData,
-)
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import RequestWakeup
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layer import NextLayer, NextLayerHook
-from mitmproxy.proxy.layers import http, modes, quic, tcp, tls, udp
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layer import NextLayer
+from mitmproxy.proxy.layer import NextLayerHook
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import udp
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
-from mitmproxy.proxy.layers.tls import (
-    ClientTLSLayer,
-    TlsStartClientHook,
-    TlsStartServerHook,
-)
+from mitmproxy.proxy.layers.tcp import TcpMessageHook
+from mitmproxy.proxy.layers.tcp import TcpStartHook
+from mitmproxy.proxy.layers.tls import ClientTLSLayer
+from mitmproxy.proxy.layers.tls import TlsStartClientHook
+from mitmproxy.proxy.layers.tls import TlsStartServerHook
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
-from mitmproxy.test import taddons, tflow
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 from mitmproxy.udp import UDPFlow
-from test.mitmproxy.proxy.layers.test_tls import (
-    reply_tls_start_client,
-    reply_tls_start_server,
-)
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_upstream_https(tctx):
@@ -45,12 +53,24 @@ def test_upstream_https(tctx):
     curl -x localhost:8080 -k http://example.com
     """
     tctx1 = Context(
-        Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329, state=ConnectionState.OPEN),
+        Client(
+            peername=("client", 1234),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
-    tctx1.client.proxy_mode = ProxyMode.parse("upstream:https://example.mitmproxy.org:8081")
+    tctx1.client.proxy_mode = ProxyMode.parse(
+        "upstream:https://example.mitmproxy.org:8081"
+    )
     tctx2 = Context(
-        Client(peername=("client", 4321), sockname=("127.0.0.1", 8080), timestamp_start=1605699329, state=ConnectionState.OPEN),
+        Client(
+            peername=("client", 4321),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
     assert tctx2.client.proxy_mode == ProxyMode.parse("regular")

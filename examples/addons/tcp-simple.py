@@ -12,8 +12,8 @@ Example Invocation:
 """
 import logging
 
-from mitmproxy.utils import strutils
 from mitmproxy import tcp
+from mitmproxy.utils import strutils
 
 
 def tcp_message(flow: tcp.TCPFlow):

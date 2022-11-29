@@ -1,18 +1,24 @@
 from __future__ import annotations
+
 import argparse
 import asyncio
 import logging
 import os
 import signal
 import sys
-from collections.abc import Callable, Sequence
-from typing import Any, Optional, TypeVar
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
+from typing import Optional
+from typing import TypeVar
 
-from mitmproxy import exceptions, master
+from mitmproxy import exceptions
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
-from mitmproxy.utils import debug, arg_check
+from mitmproxy.utils import arg_check
+from mitmproxy.utils import debug
 
 
 def process_options(parser, opts, args):
@@ -29,9 +35,7 @@ def process_options(parser, opts, args):
         args.flow_detail = 2
 
     adict = {
-        key: val
-        for key, val in vars(args).items()
-        if key in opts and val is not None
+        key: val for key, val in vars(args).items() if key in opts and val is not None
     }
     opts.update(**adict)
 
@@ -55,7 +59,9 @@ def run(
         logging.getLogger("tornado").setLevel(logging.WARNING)
         logging.getLogger("asyncio").setLevel(logging.WARNING)
         logging.getLogger("hpack").setLevel(logging.WARNING)
-        logging.getLogger("quic").setLevel(logging.WARNING)  # aioquic uses a different prefix...
+        logging.getLogger("quic").setLevel(
+            logging.WARNING
+        )  # aioquic uses a different prefix...
         debug.register_info_dumpers()
 
         opts = options.Options()

@@ -1,4 +1,6 @@
-from typing import Any, Callable, Iterator
+from collections.abc import Iterator
+from typing import Any
+from typing import Callable
 
 from mitmproxy import dns
 from mitmproxy import flow

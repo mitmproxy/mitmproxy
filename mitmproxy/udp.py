@@ -1,6 +1,7 @@
 import time
 
-from mitmproxy import connection, flow
+from mitmproxy import connection
+from mitmproxy import flow
 from mitmproxy.coretypes import serializable
 
 

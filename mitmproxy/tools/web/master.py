@@ -1,6 +1,6 @@
+import errno
 import logging
 
-import errno
 import tornado.httpserver
 import tornado.ioloop
 
@@ -8,16 +8,19 @@ from mitmproxy import addons
 from mitmproxy import flow
 from mitmproxy import log
 from mitmproxy import master
-from mitmproxy import optmanager
 from mitmproxy import options
-from mitmproxy.addons import errorcheck, eventstore
+from mitmproxy import optmanager
+from mitmproxy.addons import errorcheck
+from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.contrib.tornado import patch_tornado
-from mitmproxy.tools.web import app, webaddons, static_viewer
+from mitmproxy.tools.web import app
+from mitmproxy.tools.web import static_viewer
+from mitmproxy.tools.web import webaddons
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +90,7 @@ class WebMaster(master.Master):
         app.ClientConnection.broadcast(
             resource="state",
             cmd="update",
-            data={"servers": [s.to_json() for s in self.proxyserver.servers]}
+            data={"servers": [s.to_json() for s in self.proxyserver.servers]},
         )
 
     async def running(self):

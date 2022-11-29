@@ -7,7 +7,8 @@ The content view API is explained in the mitmproxy.contentviews module.
 """
 from typing import Optional
 
-from mitmproxy import contentviews, flow
+from mitmproxy import contentviews
+from mitmproxy import flow
 from mitmproxy import http
 
 

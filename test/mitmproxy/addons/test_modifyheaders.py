@@ -1,6 +1,7 @@
 import pytest
 
-from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifyHeaders
+from mitmproxy.addons.modifyheaders import ModifyHeaders
+from mitmproxy.addons.modifyheaders import parse_modify_spec
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tutils import tresp

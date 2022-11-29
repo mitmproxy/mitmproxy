@@ -2,10 +2,10 @@ import math
 
 import urwid
 
-from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import keymap
+from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import signals
 
 
 class SimpleOverlay(urwid.Overlay, layoutwidget.LayoutWidget):

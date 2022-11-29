@@ -3,7 +3,8 @@ import logging
 from collections.abc import Sequence
 
 import mitmproxy.types
-from mitmproxy import command, command_lexer
+from mitmproxy import command
+from mitmproxy import command_lexer
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns

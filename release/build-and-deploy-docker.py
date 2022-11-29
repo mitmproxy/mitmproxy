@@ -51,7 +51,8 @@ r = subprocess.run(
         f"{root / 'release'}:/release",
         "localtesting",
         "mitmdump",
-        "-s", "/release/selftest.py",
+        "-s",
+        "/release/selftest.py",
     ],
     capture_output=True,
 )

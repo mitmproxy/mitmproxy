@@ -3,11 +3,14 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from mitmproxy.addons.clientplayback import ClientPlayback, ReplayHandler
+from mitmproxy.addons.clientplayback import ClientPlayback
+from mitmproxy.addons.clientplayback import ReplayHandler
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.exceptions import CommandError, OptionsError
 from mitmproxy.connection import Address
-from mitmproxy.test import taddons, tflow
+from mitmproxy.exceptions import CommandError
+from mitmproxy.exceptions import OptionsError
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 @asynccontextmanager

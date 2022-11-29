@@ -1,8 +1,11 @@
 import io
-import pytest
 from unittest.mock import patch
+
+import pytest
+
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.test import tflow
-from mitmproxy import flowfilter, http
 
 
 class TestParsing:

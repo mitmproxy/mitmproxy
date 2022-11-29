@@ -8,4 +8,7 @@ def load(l):
     logging.info("This is some informative text.")
     logging.warning("This is a warning.")
     logging.error("This is an error.")
-    logging.log(ALERT, "This is an alert. It has the same urgency as info, but will also pop up in the status bar.")
+    logging.log(
+        ALERT,
+        "This is an alert. It has the same urgency as info, but will also pop up in the status bar.",
+    )

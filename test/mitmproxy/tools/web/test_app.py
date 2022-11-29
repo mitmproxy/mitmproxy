@@ -1,5 +1,5 @@
-import io
 import gzip
+import io
 import json
 import logging
 import textwrap
@@ -14,7 +14,10 @@ import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
-from mitmproxy import certs, log, options, optmanager
+from mitmproxy import certs
+from mitmproxy import log
+from mitmproxy import options
+from mitmproxy import optmanager
 from mitmproxy.http import Headers
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.test import tflow
@@ -159,7 +162,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             o = options.Options(http2=False)
             return webmaster.WebMaster(o, with_termlog=False)
 
-        m: webmaster.WebMaster = self.io_loop.asyncio_loop.run_until_complete(make_master())
+        m: webmaster.WebMaster = self.io_loop.asyncio_loop.run_until_complete(
+            make_master()
+        )
         f = tflow.tflow(resp=True)
         f.id = "42"
         f.request.content = b"foo\nbar"
@@ -177,11 +182,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         si2 = ServerInstance.make("reverse:example.com", m.proxyserver)
         si2.last_exception = RuntimeError("I failed somehow.")
         si3 = ServerInstance.make("socks5", m.proxyserver)
-        m.proxyserver.servers._instances.update({
-            si1.mode: si1,
-            si2.mode: si2,
-            si3.mode: si3,
-        })
+        m.proxyserver.servers._instances.update(
+            {
+                si1.mode: si1,
+                si2.mode: si2,
+                si3.mode: si3,
+            }
+        )
         self.master = m
         self.view = m.view
         self.events = m.events
@@ -497,11 +504,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             "export function TBackendState(): Required<BackendState> {\n"
             "    return %s\n"
             "}\n"
-            % textwrap.indent(json.dumps(data, indent=4, sort_keys=True), "    ").lstrip()
+            % textwrap.indent(
+                json.dumps(data, indent=4, sort_keys=True), "    "
+            ).lstrip()
         )
 
         (
-            Path(__file__).parent / "../../../../web/src/js/__tests__/ducks/_tbackendstate.ts"
+            Path(__file__).parent
+            / "../../../../web/src/js/__tests__/ducks/_tbackendstate.ts"
         ).write_bytes(content.encode())
 
     def test_err(self):

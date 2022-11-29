@@ -2,12 +2,22 @@ from typing import Optional
 
 import pytest
 
-from mitmproxy.proxy import tunnel, layer
-from mitmproxy.proxy.commands import CloseTcpConnection, SendData, Log, CloseConnection, OpenConnection
-from mitmproxy.connection import Server, ConnectionState
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import CloseTcpConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import Event, DataReceived, Start, ConnectionClosed
-from test.mitmproxy.proxy.tutils import Playbook, reply
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import Event
+from mitmproxy.proxy.events import Start
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 
 class TChildLayer(layer.Layer):

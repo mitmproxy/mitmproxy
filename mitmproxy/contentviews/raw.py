@@ -1,5 +1,5 @@
-from mitmproxy.utils import strutils
 from . import base
+from mitmproxy.utils import strutils
 
 
 class ViewRaw(base.View):

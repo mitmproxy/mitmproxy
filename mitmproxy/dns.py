@@ -1,15 +1,21 @@
 from __future__ import annotations
-from dataclasses import dataclass
+
 import itertools
 import random
 import struct
-from ipaddress import IPv4Address, IPv6Address
 import time
+from dataclasses import dataclass
+from ipaddress import IPv4Address
+from ipaddress import IPv6Address
 from typing import ClassVar
 
 from mitmproxy import flow
 from mitmproxy.coretypes import serializable
-from mitmproxy.net.dns import classes, domain_names, op_codes, response_codes, types
+from mitmproxy.net.dns import classes
+from mitmproxy.net.dns import domain_names
+from mitmproxy.net.dns import op_codes
+from mitmproxy.net.dns import response_codes
+from mitmproxy.net.dns import types
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 

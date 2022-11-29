@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import binascii
 import weakref
-from abc import ABC, abstractmethod
-from typing import MutableMapping
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import MutableMapping
 from typing import Optional
 
 import ldap3
 import passlib.apache
 
-from mitmproxy import connection, ctx
+from mitmproxy import connection
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.net.http import status_codes
@@ -141,7 +143,9 @@ def is_http_proxy(f: http.HTTPFlow) -> bool:
         - True, if authentication is done as if mitmproxy is a proxy
         - False, if authentication is done as if mitmproxy is an HTTP server
     """
-    return isinstance(f.client_conn.proxy_mode, (mode_specs.RegularMode, mode_specs.UpstreamMode))
+    return isinstance(
+        f.client_conn.proxy_mode, (mode_specs.RegularMode, mode_specs.UpstreamMode)
+    )
 
 
 def mkauth(username: str, password: str, scheme: str = "basic") -> str:

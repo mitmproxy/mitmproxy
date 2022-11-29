@@ -4,17 +4,18 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import patch
 
+from examples.contrib.webscanner_helper.urlindex import filter_404
+from examples.contrib.webscanner_helper.urlindex import JSONUrlIndexWriter
+from examples.contrib.webscanner_helper.urlindex import SetEncoder
+from examples.contrib.webscanner_helper.urlindex import TextUrlIndexWriter
+from examples.contrib.webscanner_helper.urlindex import UrlIndexAddon
+from examples.contrib.webscanner_helper.urlindex import UrlIndexWriter
+from examples.contrib.webscanner_helper.urlindex import WRITER
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from examples.contrib.webscanner_helper.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, \
-    TextUrlIndexWriter, WRITER, \
-    filter_404, \
-    UrlIndexAddon
-
 
 class TestBaseClass:
-
     @patch.multiple(UrlIndexWriter, __abstractmethods__=set())
     def test_base_class(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
@@ -25,14 +26,13 @@ class TestBaseClass:
 
 
 class TestSetEncoder:
-
     def test_set_encoder_set(self):
         test_set = {"foo", "bar", "42"}
         result = SetEncoder.default(SetEncoder(), test_set)
         assert isinstance(result, list)
-        assert 'foo' in result
-        assert 'bar' in result
-        assert '42' in result
+        assert "foo" in result
+        assert "bar" in result
+        assert "42" in result
 
     def test_set_encoder_str(self):
         test_str = "test"
@@ -45,18 +45,18 @@ class TestSetEncoder:
 
 
 class TestJSONUrlIndexWriter:
-
     def test_load(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(
-                "{\"http://example.com:80\": {\"/\": {\"GET\": [301]}}, \"http://www.example.com:80\": {\"/\": {\"GET\": [302]}}}")
+                '{"http://example.com:80": {"/": {"GET": [301]}}, "http://www.example.com:80": {"/": {"GET": [302]}}}'
+            )
         writer = JSONUrlIndexWriter(filename=tmpfile)
         writer.load()
-        assert 'http://example.com:80' in writer.host_urls
-        assert '/' in writer.host_urls['http://example.com:80']
-        assert 'GET' in writer.host_urls['http://example.com:80']['/']
-        assert 301 in writer.host_urls['http://example.com:80']['/']['GET']
+        assert "http://example.com:80" in writer.host_urls
+        assert "/" in writer.host_urls["http://example.com:80"]
+        assert "GET" in writer.host_urls["http://example.com:80"]["/"]
+        assert 301 in writer.host_urls["http://example.com:80"]["/"]["GET"]
 
     def test_load_empty(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
@@ -102,7 +102,8 @@ class TestTestUrlIndexWriter:
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(
-                "2020-04-22T05:41:08.679231 STATUS: 200 METHOD: GET URL:http://example.com")
+                "2020-04-22T05:41:08.679231 STATUS: 200 METHOD: GET URL:http://example.com"
+            )
         writer = TextUrlIndexWriter(filename=tmpfile)
         writer.load()
         assert True
@@ -173,7 +174,6 @@ class TestFilter:
 
 
 class TestUrlIndexAddon:
-
     def test_init(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
         UrlIndexAddon(tmpfile)
@@ -202,7 +202,9 @@ class TestUrlIndexAddon:
             tfile.write("")
         url_index = UrlIndexAddon(tmpfile, append=False)
         f = tflow.tflow(resp=tutils.tresp())
-        with mock.patch('examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.add_url'):
+        with mock.patch(
+            "examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.add_url"
+        ):
             url_index.response(f)
         assert not Path(tmpfile).exists()
 
@@ -210,7 +212,9 @@ class TestUrlIndexAddon:
         tmpfile = tmpdir.join("tmpfile")
         url_index = UrlIndexAddon(tmpfile)
         f = tflow.tflow(resp=tutils.tresp())
-        with mock.patch('examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.add_url') as mock_add_url:
+        with mock.patch(
+            "examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.add_url"
+        ) as mock_add_url:
             url_index.response(f)
         mock_add_url.assert_called()
 
@@ -229,6 +233,8 @@ class TestUrlIndexAddon:
     def test_done(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
         url_index = UrlIndexAddon(tmpfile)
-        with mock.patch('examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.save') as mock_save:
+        with mock.patch(
+            "examples.complex.webscanner_helper.urlindex.JSONUrlIndexWriter.save"
+        ) as mock_save:
             url_index.done()
         mock_save.assert_called()

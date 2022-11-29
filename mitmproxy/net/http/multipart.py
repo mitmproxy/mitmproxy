@@ -56,7 +56,7 @@ def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, byt
         except (KeyError, UnicodeError):
             return []
 
-        rx = re.compile(br'\bname="([^"]+)"')
+        rx = re.compile(rb'\bname="([^"]+)"')
         r = []
         if content is not None:
             for i in content.split(b"--" + boundary):

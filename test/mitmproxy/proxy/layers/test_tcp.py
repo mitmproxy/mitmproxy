@@ -1,11 +1,18 @@
 import pytest
 
-from mitmproxy.proxy.commands import CloseConnection, CloseTcpConnection, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import CloseTcpConnection
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from ..tutils import Placeholder, Playbook, reply
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
 
 
 def test_open_connection(tctx):

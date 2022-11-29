@@ -1,18 +1,20 @@
 import dataclasses
 import sys
 import time
-from dataclasses import dataclass, field
 import uuid
 import warnings
 from abc import ABCMeta
 from collections.abc import Sequence
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Flag
-from typing import Literal, Optional
+from typing import Literal
+from typing import Optional
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
-from mitmproxy.proxy import mode_specs
 from mitmproxy.net import server_spec
+from mitmproxy.proxy import mode_specs
 from mitmproxy.utils import human
 
 
@@ -48,12 +50,15 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     The connection object only exposes metadata about the connection, but not the underlying socket object.
     This is intentional, all I/O should be handled by `mitmproxy.proxy.server` exclusively.
     """
+
     peername: Optional[Address]
     """The remote's `(ip, port)` tuple for this connection."""
     sockname: Optional[Address]
     """Our local `(ip, port)` tuple for this connection."""
 
-    state: ConnectionState = field(default=ConnectionState.CLOSED, metadata={"serialize": False})
+    state: ConnectionState = field(
+        default=ConnectionState.CLOSED, metadata={"serialize": False}
+    )
     """The current connection state."""
 
     # all connections have a unique id. While
@@ -177,7 +182,9 @@ class Client(Connection):
     The certificate used by mitmproxy to establish TLS with the client.
     """
 
-    proxy_mode: mode_specs.ProxyMode = field(default=mode_specs.ProxyMode.parse("regular"))
+    proxy_mode: mode_specs.ProxyMode = field(
+        default=mode_specs.ProxyMode.parse("regular")
+    )
     """The proxy server type this client has been connecting to."""
 
     timestamp_start: float = field(default_factory=time.time)

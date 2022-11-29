@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 
-from mitmproxy import command, flow, ctx
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import flow
 from mitmproxy.hooks import UpdateHook
 
 

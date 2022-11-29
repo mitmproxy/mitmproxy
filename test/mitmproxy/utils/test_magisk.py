@@ -1,7 +1,9 @@
-from mitmproxy.utils import magisk
-from cryptography import x509
-from mitmproxy.test import taddons
 import os
+
+from cryptography import x509
+
+from mitmproxy.test import taddons
+from mitmproxy.utils import magisk
 
 
 def test_get_ca(tdata):

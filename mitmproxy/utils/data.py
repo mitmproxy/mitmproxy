@@ -1,6 +1,6 @@
-import os.path
 import importlib
 import inspect
+import os.path
 
 
 class Data:

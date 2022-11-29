@@ -5,7 +5,8 @@ import dataclasses
 import enum
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
+from typing import Optional
 
 import pytest
 
@@ -108,16 +109,31 @@ class FrozenWrapper(SerializableDataclass):
 
 
 class TestSerializableDataclass:
-    @pytest.mark.parametrize("cls, state", [
-        (Simple, {"x": 42, "y": 'foo'}),
-        (Simple, {"x": 42, "y": None}),
-        (SerializableChild, {"foo": {"x": 42, "y": "foo"}, "maybe_foo": None}),
-        (SerializableChild, {"foo": {"x": 42, "y": "foo"}, "maybe_foo": {"x": 42, "y": "foo"}}),
-        (Inheritance, {"x": 42, "y": "foo", "z": True}),
-        (BuiltinChildren, {"a": [1, 2, 3], "b": {"foo": 42}, "c": (1, 2), "d": [{"x": 42, "y": "foo"}], "e": 1}),
-        (BuiltinChildren, {"a": None, "b": None, "c": None, "d": [], "e": None}),
-        (TLiteral, {"l": "foo"}),
-    ])
+    @pytest.mark.parametrize(
+        "cls, state",
+        [
+            (Simple, {"x": 42, "y": "foo"}),
+            (Simple, {"x": 42, "y": None}),
+            (SerializableChild, {"foo": {"x": 42, "y": "foo"}, "maybe_foo": None}),
+            (
+                SerializableChild,
+                {"foo": {"x": 42, "y": "foo"}, "maybe_foo": {"x": 42, "y": "foo"}},
+            ),
+            (Inheritance, {"x": 42, "y": "foo", "z": True}),
+            (
+                BuiltinChildren,
+                {
+                    "a": [1, 2, 3],
+                    "b": {"foo": 42},
+                    "c": (1, 2),
+                    "d": [{"x": 42, "y": "foo"}],
+                    "e": 1,
+                },
+            ),
+            (BuiltinChildren, {"a": None, "b": None, "c": None, "d": [], "e": None}),
+            (TLiteral, {"l": "foo"}),
+        ],
+    )
     def test_roundtrip(self, cls, state):
         a = cls.from_state(copy.deepcopy(state))
         assert a.get_state() == state
@@ -142,7 +158,9 @@ class TestSerializableDataclass:
         with pytest.raises(ValueError):
             Simple.from_state({"x": 42, "y": 42})
         with pytest.raises(ValueError):
-            BuiltinChildren.from_state({"a": None, "b": None, "c": ("foo",), "d": [], "e": None})
+            BuiltinChildren.from_state(
+                {"a": None, "b": None, "c": ("foo",), "d": [], "e": None}
+            )
 
     def test_invalid_key(self):
         with pytest.raises(ValueError):
@@ -150,7 +168,15 @@ class TestSerializableDataclass:
 
     def test_invalid_type_in_list(self):
         with pytest.raises(ValueError, match="Invalid value for x"):
-            BuiltinChildren.from_state({"a": None, "b": None, "c": None, "d": [{"x": "foo", "y": "foo"}], "e": None})
+            BuiltinChildren.from_state(
+                {
+                    "a": None,
+                    "b": None,
+                    "c": None,
+                    "d": [{"x": "foo", "y": "foo"}],
+                    "e": None,
+                }
+            )
 
     def test_unsupported_type(self):
         with pytest.raises(TypeError):
@@ -162,8 +188,12 @@ class TestSerializableDataclass:
             TLiteral.from_state({"l": "unknown"})
 
     def test_peername(self):
-        assert Addr.from_state({"peername": ("addr", 42)}).get_state() == {"peername": ("addr", 42)}
-        assert Addr.from_state({"peername": ("addr", 42, 0, 0)}).get_state() == {"peername": ("addr", 42, 0, 0)}
+        assert Addr.from_state({"peername": ("addr", 42)}).get_state() == {
+            "peername": ("addr", 42)
+        }
+        assert Addr.from_state({"peername": ("addr", 42, 0, 0)}).get_state() == {
+            "peername": ("addr", 42, 0, 0)
+        }
 
     def test_set_immutable(self):
         w = FrozenWrapper(Frozen(42))

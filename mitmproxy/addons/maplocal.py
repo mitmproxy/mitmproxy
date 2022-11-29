@@ -8,7 +8,11 @@ from typing import NamedTuple
 
 from werkzeug.security import safe_join
 
-from mitmproxy import ctx, exceptions, flowfilter, http, version
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
+from mitmproxy import version
 from mitmproxy.utils.spec import parse_spec
 
 

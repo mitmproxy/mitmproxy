@@ -1,15 +1,15 @@
 import os
 import shlex
+from unittest import mock
 
-import pytest
 import pyperclip
+import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import export  # heh
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from unittest import mock
 
 
 @pytest.fixture

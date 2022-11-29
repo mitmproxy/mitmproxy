@@ -1,14 +1,18 @@
 import asyncio
 import platform
 from typing import cast
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+from unittest.mock import Mock
 
 import pytest
 
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance, ServerInstance, WireGuardServerInstance
+from mitmproxy.proxy.mode_servers import DnsInstance
+from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
 
@@ -18,14 +22,23 @@ def test_make():
     context = MagicMock()
     assert ServerInstance.make("regular", manager)
 
-    for mode in ["regular", "http3", "upstream:example.com", "transparent", "reverse:example.com", "socks5"]:
+    for mode in [
+        "regular",
+        "http3",
+        "upstream:example.com",
+        "transparent",
+        "reverse:example.com",
+        "socks5",
+    ]:
         inst = ServerInstance.make(mode, manager)
         assert inst
         assert inst.make_top_layer(context)
         assert inst.mode.description
         assert inst.to_json()
 
-    with pytest.raises(ValueError, match="is not a spec for a WireGuardServerInstance server."):
+    with pytest.raises(
+        ValueError, match="is not a spec for a WireGuardServerInstance server."
+    ):
         WireGuardServerInstance.make("regular", manager)
 
 
@@ -86,7 +99,9 @@ async def test_transparent(failure, monkeypatch, caplog_async):
     if failure:
         monkeypatch.setattr(mitmproxy.platform, "original_addr", None)
     else:
-        monkeypatch.setattr(mitmproxy.platform, "original_addr", lambda s: ("address", 42))
+        monkeypatch.setattr(
+            mitmproxy.platform, "original_addr", lambda s: ("address", 42)
+        )
 
     with taddons.context(Proxyserver()) as tctx:
         tctx.options.connection_strategy = "lazy"
@@ -199,12 +214,16 @@ async def test_wireguard_invalid_conf(tmp_path):
 async def test_tcp_start_error():
     manager = MagicMock()
 
-    server = await asyncio.start_server(MagicMock(), host="127.0.0.1", port=0, reuse_address=False)
+    server = await asyncio.start_server(
+        MagicMock(), host="127.0.0.1", port=0, reuse_address=False
+    )
     port = server.sockets[0].getsockname()[1]
 
     with taddons.context() as tctx:
         inst = ServerInstance.make(f"regular@127.0.0.1:{port}", manager)
-        with pytest.raises(OSError, match=f"proxy failed to listen on 127\\.0\\.0\\.1:{port}"):
+        with pytest.raises(
+            OSError, match=f"proxy failed to listen on 127\\.0\\.0\\.1:{port}"
+        ):
             await inst.start()
         tctx.options.listen_host = "127.0.0.1"
         tctx.options.listen_port = port
@@ -253,7 +272,9 @@ async def test_udp_start_error():
         await inst.start()
         port = inst.listen_addrs[0][1]
         inst2 = ServerInstance.make(f"dns@127.0.0.1:{port}", manager)
-        with pytest.raises(OSError, match=f"server failed to listen on 127\\.0\\.0\\.1:{port}"):
+        with pytest.raises(
+            OSError, match=f"server failed to listen on 127\\.0\\.0\\.1:{port}"
+        ):
             await inst2.start()
         await inst.stop()
 
@@ -267,8 +288,12 @@ async def test_udp_connection_reuse(monkeypatch):
 
     with taddons.context():
         inst = cast(DnsInstance, ServerInstance.make("dns", manager))
-        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0))
-        inst.handle_udp_datagram(MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0))
+        inst.handle_udp_datagram(
+            MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0)
+        )
+        inst.handle_udp_datagram(
+            MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0)
+        )
         await asyncio.sleep(0)
 
         assert len(inst.manager.connections) == 1

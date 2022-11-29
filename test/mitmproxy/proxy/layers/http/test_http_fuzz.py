@@ -2,44 +2,44 @@ from typing import Any
 
 import pytest
 from h2.settings import SettingCodes
-from hypothesis import example, given
-from hypothesis.strategies import (
-    binary,
-    booleans,
-    composite,
-    dictionaries,
-    integers,
-    lists,
-    sampled_from,
-    sets,
-    text,
-    data,
-)
+from hypothesis import example
+from hypothesis import given
+from hypothesis.strategies import binary
+from hypothesis.strategies import booleans
+from hypothesis.strategies import composite
+from hypothesis.strategies import data
+from hypothesis.strategies import dictionaries
+from hypothesis.strategies import integers
+from hypothesis.strategies import lists
+from hypothesis.strategies import sampled_from
+from hypothesis.strategies import sets
+from hypothesis.strategies import text
 
-from mitmproxy import options, connection
+from mitmproxy import connection
+from mitmproxy import options
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.connection import Server
 from mitmproxy.http import HTTPFlow
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import context, events
-from mitmproxy.proxy.commands import OpenConnection, SendData
-from mitmproxy.proxy.events import DataReceived, Start, ConnectionClosed
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import Start
 from mitmproxy.proxy.layers import http
-from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy.layers.http.test_http2 import (
-    make_h2,
-    example_response_headers,
-    example_request_headers,
-    start_h2_client,
-)
-from test.mitmproxy.proxy.tutils import (
-    Placeholder,
-    Playbook,
-    reply,
-    _TracebackInPlaybook,
-    _eq,
-)
 from mitmproxy.proxy.layers.http import _http2
+from mitmproxy.proxy.layers.http import HTTPMode
+from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
+from test.mitmproxy.proxy.layers.http.test_http2 import example_request_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
+from test.mitmproxy.proxy.layers.http.test_http2 import start_h2_client
+from test.mitmproxy.proxy.tutils import _eq
+from test.mitmproxy.proxy.tutils import _TracebackInPlaybook
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 opts = options.Options()
 Proxyserver().load(opts)
@@ -217,7 +217,7 @@ def h2_frames(draw):
         settings=draw(
             dictionaries(
                 keys=sampled_from(SettingCodes),
-                values=integers(0, 2 ** 32 - 1),
+                values=integers(0, 2**32 - 1),
                 max_size=5,
             )
         ),
@@ -244,7 +244,7 @@ def h2_frames(draw):
         draw(binary()), draw(h2_flags), stream_id=draw(h2_stream_ids_nonzero)
     )
     window_update = ff.build_window_update_frame(
-        draw(h2_stream_ids), draw(integers(0, 2 ** 32 - 1))
+        draw(h2_stream_ids), draw(integers(0, 2**32 - 1))
     )
 
     frames = draw(
@@ -318,8 +318,12 @@ def test_fuzz_h2_request_mutations(chunks):
 
 def _tctx() -> context.Context:
     return context.Context(
-        connection.Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
-        opts
+        connection.Client(
+            peername=("client", 1234),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+        ),
+        opts,
     )
 
 

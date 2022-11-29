@@ -1,28 +1,34 @@
+import time
+
 import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
-import time
 from h2.errors import ErrorCodes
 
-from mitmproxy.connection import ConnectionState, Server
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.flow import Error
-from mitmproxy.http import HTTPFlow, Headers, Request
+from mitmproxy.http import Headers
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Request
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy.commands import (
-    CloseConnection,
-    Log,
-    OpenConnection,
-    SendData,
-    RequestWakeup,
-)
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import RequestWakeup
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.http._http2 import Http2Client, split_pseudo_headers
+from mitmproxy.proxy.layers.http._http2 import Http2Client
+from mitmproxy.proxy.layers.http._http2 import split_pseudo_headers
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 example_request_headers = (
     (b":method", b"GET"),
@@ -325,8 +331,7 @@ def test_long_response(tctx: Context, trailers):
         << http.HttpResponseHeadersHook(flow)
         >> reply()
         >> DataReceived(
-            server,
-            sff.build_data_frame(b"a" * 10000, flags=[]).serialize()
+            server, sff.build_data_frame(b"a" * 10000, flags=[]).serialize()
         )
         >> DataReceived(
             server,
@@ -373,9 +378,7 @@ def test_long_response(tctx: Context, trailers):
             playbook
             >> DataReceived(
                 server,
-                sff.build_data_frame(
-                    b'', flags=["END_STREAM"]
-                ).serialize(),
+                sff.build_data_frame(b"", flags=["END_STREAM"]).serialize(),
             )
         )
     (
@@ -412,10 +415,7 @@ def test_long_response(tctx: Context, trailers):
                 tctx.client,
                 cff.build_data_frame(b"a" * 1).serialize(),
             )
-            << SendData(
-                tctx.client,
-                cff.build_data_frame(b"a" * 4464).serialize()
-            )
+            << SendData(tctx.client, cff.build_data_frame(b"a" * 4464).serialize())
             << SendData(
                 tctx.client,
                 cff.build_headers_frame(
@@ -430,15 +430,10 @@ def test_long_response(tctx: Context, trailers):
                 tctx.client,
                 cff.build_data_frame(b"a" * 1).serialize(),
             )
+            << SendData(tctx.client, cff.build_data_frame(b"a" * 4464).serialize())
             << SendData(
                 tctx.client,
-                cff.build_data_frame(b"a" * 4464).serialize()
-            )
-            << SendData(
-                tctx.client,
-                cff.build_data_frame(
-                    b"", flags=["END_STREAM"]
-                ).serialize(),
+                cff.build_data_frame(b"", flags=["END_STREAM"]).serialize(),
             )
         )
     assert flow().request.url == "http://example.com/"

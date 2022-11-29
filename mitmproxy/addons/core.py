@@ -3,15 +3,16 @@ import os
 from collections.abc import Sequence
 from typing import Union
 
-from mitmproxy.log import ALERT
-from mitmproxy.utils import emoji
-from mitmproxy import ctx, hooks
-from mitmproxy import exceptions
-from mitmproxy import command
-from mitmproxy import flow
-from mitmproxy import optmanager
-from mitmproxy.net.http import status_codes
 import mitmproxy.types
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import hooks
+from mitmproxy import optmanager
+from mitmproxy.log import ALERT
+from mitmproxy.net.http import status_codes
+from mitmproxy.utils import emoji
 
 
 logger = logging.getLogger(__name__)

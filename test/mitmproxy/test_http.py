@@ -1,17 +1,21 @@
 import asyncio
 import email
-import time
 import json
+import time
 from unittest import mock
 
 import pytest
 
 from mitmproxy import flow
 from mitmproxy import flowfilter
-from mitmproxy.http import Headers, Request, Response, HTTPFlow
+from mitmproxy.http import Headers
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tflow import tflow
-from mitmproxy.test.tutils import treq, tresp
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 class TestRequest:

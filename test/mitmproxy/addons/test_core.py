@@ -1,8 +1,9 @@
+import pytest
+
+from mitmproxy import exceptions
 from mitmproxy.addons import core
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy import exceptions
-import pytest
 
 
 def test_set():
