@@ -38,7 +38,7 @@ jobs:
       - uses: install-pinned/autoflake@fa3c1715169ac36d903ee9d492d64beb5cad331f
       - run: autoflake --in-place --remove-all-unused-imports --exclude contrib -r .
 
-      - uses: install-pinned/black@81e6dbf82145462d413a6662dd703fa382edeb11
+      - uses: install-pinned/black@dde5aed720bc458e86d99144d4d0c1f6c8e08844
       - run: black --extend-exclude mitmproxy/contrib .
 
       - uses: mhils/add-pr-ref-in-changelog@main
