@@ -2,10 +2,11 @@
 Use mitmproxy's filter pattern in scripts.
 """
 from __future__ import annotations
+
 import logging
 
-from mitmproxy import http
 from mitmproxy import flowfilter
+from mitmproxy import http
 
 
 class Filter:

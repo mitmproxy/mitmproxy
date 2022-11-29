@@ -1,8 +1,8 @@
 import asyncio
 import io
+from unittest import mock
 
 import pytest
-from unittest import mock
 
 import mitmproxy.io
 from mitmproxy import exceptions

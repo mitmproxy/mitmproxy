@@ -46,7 +46,10 @@ if __name__ == "__main__":
 
     branch = subprocess.run(
         ["git", "branch", "--show-current"],
-        cwd=root, check=True, capture_output=True, text=True
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
 
     print("➡️ Working dir clean?")
@@ -56,7 +59,12 @@ if __name__ == "__main__":
         print(f"⚠️ Skipping status check for {branch}.")
     else:
         print(f"➡️ CI is passing for {branch}?")
-        assert get_json(f"https://api.github.com/repos/{repo}/commits/{branch}/status")["state"] == "success"
+        assert (
+            get_json(f"https://api.github.com/repos/{repo}/commits/{branch}/status")[
+                "state"
+            ]
+            == "success"
+        )
 
     print("➡️ Updating CHANGELOG.md...")
     changelog = root / "CHANGELOG.md"
@@ -70,7 +78,9 @@ if __name__ == "__main__":
 
     print("➡️ Updating web assets...")
     subprocess.run(["npm", "ci"], cwd=root / "web", check=True, capture_output=True)
-    subprocess.run(["npm", "start", "prod"], cwd=root / "web", check=True, capture_output=True)
+    subprocess.run(
+        ["npm", "start", "prod"], cwd=root / "web", check=True, capture_output=True
+    )
 
     print("➡️ Updating version...")
     version_py = root / "mitmproxy" / "version.py"
@@ -80,13 +90,22 @@ if __name__ == "__main__":
     version_py.write_text(ver, "utf8")
 
     print("➡️ Do release commit...")
-    subprocess.run(["git", "config", "user.email", "noreply@mitmproxy.org"], cwd=root, check=True)
-    subprocess.run(["git", "config", "user.name", "mitmproxy release bot"], cwd=root, check=True)
-    subprocess.run(["git", "commit", "-a", "-m", f"mitmproxy {version}"], cwd=root, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "noreply@mitmproxy.org"], cwd=root, check=True
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "mitmproxy release bot"], cwd=root, check=True
+    )
+    subprocess.run(
+        ["git", "commit", "-a", "-m", f"mitmproxy {version}"], cwd=root, check=True
+    )
     subprocess.run(["git", "tag", version], cwd=root, check=True)
     release_sha = subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        cwd=root, check=True, capture_output=True, text=True
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
 
     if branch == "main":
@@ -97,15 +116,32 @@ if __name__ == "__main__":
         version_py.write_text(ver, "utf8")
 
         print("➡️ Reopen main for development...")
-        subprocess.run(["git", "commit", "-a", "-m", f"reopen main for development"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "commit", "-a", "-m", f"reopen main for development"],
+            cwd=root,
+            check=True,
+        )
 
     print("➡️ Pushing...")
-    subprocess.run(["git", "push", "--atomic", "origin", branch, version], cwd=root, check=True)
+    subprocess.run(
+        ["git", "push", "--atomic", "origin", branch, version], cwd=root, check=True
+    )
 
     print("➡️ Creating release on GitHub...")
-    subprocess.run(["gh", "release", "create", version,
-                    "--title", f"mitmproxy {version}",
-                    "--notes-file", "release/github-release-notes.txt"], cwd=root, check=True)
+    subprocess.run(
+        [
+            "gh",
+            "release",
+            "create",
+            version,
+            "--title",
+            f"mitmproxy {version}",
+            "--notes-file",
+            "release/github-release-notes.txt",
+        ],
+        cwd=root,
+        check=True,
+    )
 
     # We currently have to use a personal access token, which auto-triggers CI.
     # The default GITHUB_TOKEN cannot push to protected branches,
@@ -118,7 +154,9 @@ if __name__ == "__main__":
 
     while True:
         print("⌛ Waiting for CI...")
-        workflows = get_json(f"https://api.github.com/repos/{repo}/actions/runs?head_sha={release_sha}")["workflow_runs"]
+        workflows = get_json(
+            f"https://api.github.com/repos/{repo}/actions/runs?head_sha={release_sha}"
+        )["workflow_runs"]
 
         all_done = True
         if not workflows:
@@ -150,16 +188,23 @@ if __name__ == "__main__":
     assert resp.status == 200
 
     print(f"➡️ Checking Docker ({version} tag)...")
-    resp = get(f"https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/{version}")
+    resp = get(
+        f"https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/{version}"
+    )
     assert resp.status == 200
 
     if branch == "main":
         print("➡️ Checking Docker (latest tag)...")
-        docker_latest_data = get_json("https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/latest")
+        docker_latest_data = get_json(
+            "https://hub.docker.com/v2/repositories/mitmproxy/mitmproxy/tags/latest"
+        )
         docker_last_updated = datetime.datetime.fromisoformat(
-            docker_latest_data["last_updated"].replace("Z", "+00:00"))
+            docker_latest_data["last_updated"].replace("Z", "+00:00")
+        )
         print(f"Last update: {docker_last_updated.isoformat(timespec='minutes')}")
-        assert docker_last_updated > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
+        assert docker_last_updated > datetime.datetime.now(
+            datetime.timezone.utc
+        ) - datetime.timedelta(hours=2)
 
     print("")
     print("✅ All done. 🥳")

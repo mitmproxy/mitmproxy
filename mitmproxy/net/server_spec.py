@@ -9,7 +9,7 @@ from mitmproxy.net import check
 
 ServerSpec = tuple[
     Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"],
-    tuple[str, int]
+    tuple[str, int],
 ]
 
 server_spec_re = re.compile(
@@ -45,7 +45,17 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
         scheme = m.group("scheme")
     else:
         scheme = default_scheme
-    if scheme not in ("http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"):
+    if scheme not in (
+        "http",
+        "https",
+        "http3",
+        "tls",
+        "dtls",
+        "tcp",
+        "udp",
+        "dns",
+        "quic",
+    ):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")

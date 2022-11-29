@@ -1,19 +1,28 @@
 import ipaddress
 import logging
 import os
-from pathlib import Path
 import ssl
-from typing import Any, Optional, TypedDict
+from pathlib import Path
+from typing import Any
+from typing import Optional
+from typing import TypedDict
 
 from aioquic.h3.connection import H3_ALPN
 from aioquic.tls import CipherSuite
-from OpenSSL import SSL, crypto
-from mitmproxy import certs, ctx, exceptions, connection, tls
+from OpenSSL import crypto
+from OpenSSL import SSL
+
+from mitmproxy import certs
+from mitmproxy import connection
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
-from mitmproxy.proxy.layers import tls as proxy_tls, quic
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tls as proxy_tls
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -166,7 +175,9 @@ class TlsConfig:
             extra_chain_certs = []
 
         ssl_ctx = net_tls.create_client_proxy_context(
-            method=net_tls.Method.DTLS_SERVER_METHOD if tls_start.is_dtls else net_tls.Method.TLS_SERVER_METHOD,
+            method=net_tls.Method.DTLS_SERVER_METHOD
+            if tls_start.is_dtls
+            else net_tls.Method.TLS_SERVER_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
@@ -179,7 +190,9 @@ class TlsConfig:
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
 
         tls_start.ssl_conn.use_certificate(entry.cert.to_pyopenssl())
-        tls_start.ssl_conn.use_privatekey(crypto.PKey.from_cryptography_key(entry.privatekey))
+        tls_start.ssl_conn.use_privatekey(
+            crypto.PKey.from_cryptography_key(entry.privatekey)
+        )
 
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
@@ -256,7 +269,9 @@ class TlsConfig:
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(
-            method=net_tls.Method.DTLS_CLIENT_METHOD if tls_start.is_dtls else net_tls.Method.TLS_CLIENT_METHOD,
+            method=net_tls.Method.DTLS_CLIENT_METHOD
+            if tls_start.is_dtls
+            else net_tls.Method.TLS_CLIENT_METHOD,
             min_version=net_tls.Version[ctx.options.tls_version_server_min],
             max_version=net_tls.Version[ctx.options.tls_version_server_max],
             cipher_list=tuple(cipher_list),
@@ -328,9 +343,8 @@ class TlsConfig:
         # if we don't have upstream ALPN, we allow all offered by the client
         tls_start.settings.alpn_protocols = [
             alpn.decode("ascii")
-            for alpn in [
-                alpn for alpn in (client.alpn, server.alpn) if alpn
-            ] or client.alpn_offers
+            for alpn in [alpn for alpn in (client.alpn, server.alpn) if alpn]
+            or client.alpn_offers
         ]
 
         # set the certificates

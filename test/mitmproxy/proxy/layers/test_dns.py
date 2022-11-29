@@ -1,11 +1,18 @@
 import time
 
-from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layers import dns
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
 from mitmproxy.dns import DNSFlow
-from mitmproxy.test.tutils import tdnsreq, tdnsresp
-from ..tutils import Placeholder, Playbook, reply
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import dns
+from mitmproxy.test.tutils import tdnsreq
+from mitmproxy.test.tutils import tdnsresp
 
 
 def test_invalid_and_dummy_end(tctx):

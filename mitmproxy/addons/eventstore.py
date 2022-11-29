@@ -4,7 +4,8 @@ import logging
 from collections.abc import Callable
 from typing import Optional
 
-from mitmproxy import command, log
+from mitmproxy import command
+from mitmproxy import log
 from mitmproxy.log import LogEntry
 from mitmproxy.utils import signals
 

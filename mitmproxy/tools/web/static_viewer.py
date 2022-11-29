@@ -7,10 +7,12 @@ import time
 from collections.abc import Iterable
 from typing import Optional
 
-from mitmproxy import contentviews, http
+from mitmproxy import contentviews
 from mitmproxy import ctx
+from mitmproxy import flow
 from mitmproxy import flowfilter
-from mitmproxy import io, flow
+from mitmproxy import http
+from mitmproxy import io
 from mitmproxy import version
 from mitmproxy.tools.web.app import flow_to_json
 

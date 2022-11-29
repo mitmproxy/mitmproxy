@@ -3,7 +3,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import socket
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any
+from typing import Callable
+from typing import cast
+from typing import Optional
+from typing import Union
 
 from mitmproxy.connection import Address
 from mitmproxy.net import udp_wireguard
@@ -183,7 +187,9 @@ class DatagramWriter:
             self._closed = None
 
     @property
-    def _protocol(self) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
+    def _protocol(
+        self,
+    ) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
         return self._transport.get_protocol()  # type: ignore
 
     def write(self, data: bytes) -> None:

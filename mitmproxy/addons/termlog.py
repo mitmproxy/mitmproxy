@@ -1,19 +1,17 @@
 from __future__ import annotations
+
 import asyncio
 import logging
+import sys
 from typing import IO
 
-import sys
-
-from mitmproxy import ctx, log
+from mitmproxy import ctx
+from mitmproxy import log
 from mitmproxy.utils import vt_codes
 
 
 class TermLog:
-    def __init__(
-        self,
-        out: IO[str] | None = None
-    ):
+    def __init__(self, out: IO[str] | None = None):
         self.logger = TermLogHandler(out)
         self.logger.install()
 
@@ -41,10 +39,7 @@ class TermLog:
 
 
 class TermLogHandler(log.MitmLogHandler):
-    def __init__(
-        self,
-        out: IO[str] | None = None
-    ):
+    def __init__(self, out: IO[str] | None = None):
         super().__init__()
         self.file: IO[str] = out or sys.stdout
         self.has_vt_codes = vt_codes.ensure_supported(self.file)

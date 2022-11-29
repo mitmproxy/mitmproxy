@@ -2,7 +2,6 @@
 """
 All of the emoji and characters that can be used as flow markers.
 """
-
 # auto-generated. run this file to refresh.
 
 emoji = {

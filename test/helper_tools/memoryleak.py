@@ -1,7 +1,9 @@
 import gc
 import threading
-from pympler import muppy, refbrowser
+
 from OpenSSL import SSL
+from pympler import muppy
+from pympler import refbrowser
 
 # import os
 # os.environ["TK_LIBRARY"] = r"C:\Python27\tcl\tcl8.5"

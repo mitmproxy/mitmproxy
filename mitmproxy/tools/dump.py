@@ -1,7 +1,11 @@
 from mitmproxy import addons
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy.addons import dumper, errorcheck, keepserving, readfile, termlog
+from mitmproxy.addons import dumper
+from mitmproxy.addons import errorcheck
+from mitmproxy.addons import keepserving
+from mitmproxy.addons import readfile
+from mitmproxy.addons import termlog
 
 
 class DumpMaster(master.Master):

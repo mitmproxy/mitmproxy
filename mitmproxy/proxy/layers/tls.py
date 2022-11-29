@@ -1,18 +1,28 @@
 import struct
-from logging import DEBUG, ERROR, INFO, WARNING
-
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator, Optional
+from logging import DEBUG
+from logging import ERROR
+from logging import INFO
+from logging import WARNING
+from typing import Optional
 
 from OpenSSL import SSL
 
-from mitmproxy import certs, connection
-from mitmproxy.proxy import commands, events, layer, tunnel
+from mitmproxy import certs
+from mitmproxy import connection
+from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import tcp, udp
-from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import udp
+from mitmproxy.tls import ClientHello
+from mitmproxy.tls import ClientHelloData
+from mitmproxy.tls import TlsData
 from mitmproxy.utils import human
 
 
@@ -96,7 +106,7 @@ def is_dtls_handshake_record(d: bytes) -> bool:
         True, if the passed bytes start with the DTLS record magic bytes
         False, otherwise.
     """
-    return len(d) >= 3 and d[0] == 0x16 and d[1] == 0xfe and d[2] == 0xfd
+    return len(d) >= 3 and d[0] == 0x16 and d[1] == 0xFE and d[2] == 0xFD
 
 
 def dtls_handshake_record_contents(data: bytes) -> Iterator[bytes]:
@@ -136,7 +146,9 @@ def get_dtls_client_hello(data: bytes) -> Optional[bytes]:
         client_hello += d
         if len(client_hello) >= 13:
             # comment about slicing: we skip the epoch and sequence number
-            client_hello_size = struct.unpack("!I", b"\x00" + client_hello[9:12])[0] + 12
+            client_hello_size = (
+                struct.unpack("!I", b"\x00" + client_hello[9:12])[0] + 12
+            )
             if len(client_hello) >= client_hello_size:
                 return client_hello[:client_hello_size]
     return None
@@ -257,7 +269,9 @@ class TLSLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def __repr__(self):
-        return super().__repr__().replace(")", f" {self.conn.sni!r} {self.conn.alpn!r})")
+        return (
+            super().__repr__().replace(")", f" {self.conn.sni!r} {self.conn.alpn!r})")
+        )
 
     @property
     def is_dtls(self):
@@ -265,7 +279,7 @@ class TLSLayer(tunnel.TunnelLayer):
 
     @property
     def proto_name(self):
-        return 'DTLS' if self.is_dtls else 'TLS'
+        return "DTLS" if self.is_dtls else "TLS"
 
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
@@ -421,9 +435,7 @@ class TLSLayer(tunnel.TunnelLayer):
         if close:
             self.conn.state &= ~connection.ConnectionState.CAN_READ
             if self.debug:
-                yield commands.Log(
-                    f"{self.debug}[tls] close_notify {self.conn}", DEBUG
-                )
+                yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", DEBUG)
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
     def receive_close(self) -> layer.CommandGenerator[None]:
@@ -440,7 +452,9 @@ class TLSLayer(tunnel.TunnelLayer):
             pass
         yield from self.tls_interact()
 
-    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
+    def send_close(
+        self, command: commands.CloseConnection
+    ) -> layer.CommandGenerator[None]:
         # We should probably shutdown the TLS connection properly here.
         yield from super().send_close(command)
 
@@ -659,7 +673,9 @@ class ClientTLSLayer(TLSLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"{self.debug}[tls] Swallowing {event} as handshake failed.", DEBUG)
+            yield commands.Log(
+                f"{self.debug}[tls] Swallowing {event} as handshake failed.", DEBUG
+            )
 
 
 class MockTLSLayer(TLSLayer):

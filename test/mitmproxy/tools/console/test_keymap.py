@@ -1,7 +1,9 @@
-from mitmproxy.tools.console import keymap
-from mitmproxy.test import taddons
 from unittest import mock
+
 import pytest
+
+from mitmproxy.test import taddons
+from mitmproxy.tools.console import keymap
 
 
 def test_binding():

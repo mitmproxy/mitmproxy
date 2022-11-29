@@ -13,10 +13,7 @@ from mitmproxy.utils import vt_codes
 @pytest.fixture(autouse=True)
 def ensure_cleanup():
     yield
-    assert not any(
-        isinstance(x, termlog.TermLogHandler)
-        for x in logging.root.handlers
-    )
+    assert not any(isinstance(x, termlog.TermLogHandler) for x in logging.root.handlers)
 
 
 async def test_delayed_teardown():

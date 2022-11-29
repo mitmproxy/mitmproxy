@@ -58,12 +58,13 @@ class StreamSaver:
             return data
 
         if not self.fh:
-            self.path = datetime.fromtimestamp(self.flow.request.timestamp_start).strftime(
-                ctx.options.save_streamed_data)
-            self.path = self.path.replace('%+T', str(self.flow.request.timestamp_start))
-            self.path = self.path.replace('%+I', str(self.flow.client_conn.id))
-            self.path = self.path.replace('%+D', self.direction)
-            self.path = self.path.replace('%+C', self.flow.client_conn.address[0])
+            self.path = datetime.fromtimestamp(
+                self.flow.request.timestamp_start
+            ).strftime(ctx.options.save_streamed_data)
+            self.path = self.path.replace("%+T", str(self.flow.request.timestamp_start))
+            self.path = self.path.replace("%+I", str(self.flow.client_conn.id))
+            self.path = self.path.replace("%+D", self.direction)
+            self.path = self.path.replace("%+C", self.flow.client_conn.address[0])
             self.path = os.path.expanduser(self.path)
 
             parent = Path(self.path).parent
@@ -89,25 +90,27 @@ class StreamSaver:
 
 def load(loader):
     loader.add_option(
-        "save_streamed_data", Optional[str], None,
+        "save_streamed_data",
+        Optional[str],
+        None,
         "Format string for saving streamed data to files. If set each streamed request or response is written "
         "to a file with a name derived from the string. In addition to formating supported by python "
         "strftime() (using the request start time) the code '%+T' is replaced with the time stamp of the request, "
         "'%+D' by 'req' or 'rsp' depending on the direction of the data, '%+C' by the client IP addresses and "
-        "'%+I' by the client connection ID."
+        "'%+I' by the client connection ID.",
     )
 
 
 def requestheaders(flow):
     if ctx.options.save_streamed_data and flow.request.stream:
-        flow.request.stream = StreamSaver(flow, 'req')
+        flow.request.stream = StreamSaver(flow, "req")
 
 
 def responseheaders(flow):
     if isinstance(flow.request.stream, StreamSaver):
         flow.request.stream.done()
     if ctx.options.save_streamed_data and flow.response.stream:
-        flow.response.stream = StreamSaver(flow, 'rsp')
+        flow.response.stream = StreamSaver(flow, "rsp")
 
 
 def response(flow):

@@ -1,7 +1,8 @@
 import urwid
-from mitmproxy.tools.console.grideditor import base
-from mitmproxy.tools.console import signals
+
 from mitmproxy.net.http import cookies
+from mitmproxy.tools.console import signals
+from mitmproxy.tools.console.grideditor import base
 
 
 class Column(base.Column):
@@ -20,9 +21,7 @@ class Column(base.Column):
 
     def keypress(self, key: str, editor):
         if key in "rRe":
-            signals.status_message.send(
-                message="Press enter to edit this field."
-            )
+            signals.status_message.send(message="Press enter to edit this field.")
             return
         elif key == "m_select":
             self.subeditor.grideditor = editor

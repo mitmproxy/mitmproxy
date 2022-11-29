@@ -1,49 +1,47 @@
-from abc import abstractmethod
 import time
-from typing import Dict, Union
+from abc import abstractmethod
+from typing import Union
 
-from aioquic.h3.connection import (
-    ErrorCode as H3ErrorCode,
-    FrameUnexpected as H3FrameUnexpected,
-)
-from aioquic.h3.events import DataReceived, HeadersReceived, PushPromiseReceived
+from aioquic.h3.connection import ErrorCode as H3ErrorCode
+from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected
+from aioquic.h3.events import DataReceived
+from aioquic.h3.events import HeadersReceived
+from aioquic.h3.events import PushPromiseReceived
 
-from mitmproxy import connection, http, version
+from . import RequestData
+from . import RequestEndOfMessage
+from . import RequestHeaders
+from . import RequestProtocolError
+from . import RequestTrailers
+from . import ResponseData
+from . import ResponseEndOfMessage
+from . import ResponseHeaders
+from . import ResponseProtocolError
+from . import ResponseTrailers
+from ._base import format_error
+from ._base import HttpConnection
+from ._base import HttpEvent
+from ._base import ReceiveHttp
+from ._http2 import format_h2_request_headers
+from ._http2 import format_h2_response_headers
+from ._http2 import parse_h2_request_headers
+from ._http2 import parse_h2_response_headers
+from ._http_h3 import LayeredH3Connection
+from ._http_h3 import StreamReset
+from ._http_h3 import TrailersReceived
+from mitmproxy import connection
+from mitmproxy import http
+from mitmproxy import version
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy import commands, context, events, layer
-from mitmproxy.proxy.layers.quic import (
-    QuicConnectionClosed,
-    QuicStreamEvent,
-    StopQuicStream,
-    error_code_to_str,
-)
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers.quic import error_code_to_str
+from mitmproxy.proxy.layers.quic import QuicConnectionClosed
+from mitmproxy.proxy.layers.quic import QuicStreamEvent
+from mitmproxy.proxy.layers.quic import StopQuicStream
 from mitmproxy.proxy.utils import expect
-
-from . import (
-    RequestData,
-    RequestEndOfMessage,
-    RequestHeaders,
-    RequestProtocolError,
-    RequestTrailers,
-    ResponseData,
-    ResponseEndOfMessage,
-    ResponseHeaders,
-    ResponseProtocolError,
-    ResponseTrailers,
-)
-from ._base import (
-    HttpConnection,
-    HttpEvent,
-    ReceiveHttp,
-    format_error,
-)
-from ._http2 import (
-    format_h2_request_headers,
-    format_h2_response_headers,
-    parse_h2_request_headers,
-    parse_h2_response_headers,
-)
-from ._http_h3 import LayeredH3Connection, StreamReset, TrailersReceived
 
 
 class Http3Connection(HttpConnection):
@@ -56,7 +54,9 @@ class Http3Connection(HttpConnection):
 
     def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(context, conn)
-        self.h3_conn = LayeredH3Connection(self.conn, is_client=self.conn is self.context.server)
+        self.h3_conn = LayeredH3Connection(
+            self.conn, is_client=self.conn is self.context.server
+        )
         self._stream_protocol_errors: dict[int, int] = {}
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -74,9 +74,13 @@ class Http3Connection(HttpConnection):
                         if isinstance(event, RequestHeaders)
                         else format_h2_response_headers(self.context, event)
                     )
-                    self.h3_conn.send_headers(event.stream_id, headers, end_stream=event.end_stream)
+                    self.h3_conn.send_headers(
+                        event.stream_id, headers, end_stream=event.end_stream
+                    )
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
-                    self.h3_conn.send_trailers(event.stream_id, [*event.trailers.fields])
+                    self.h3_conn.send_trailers(
+                        event.stream_id, [*event.trailers.fields]
+                    )
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                     self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
@@ -145,9 +149,13 @@ class Http3Connection(HttpConnection):
                     elif isinstance(h3_event, DataReceived):
                         if h3_event.push_id is None:
                             if h3_event.data:
-                                yield ReceiveHttp(self.ReceiveData(h3_event.stream_id, h3_event.data))
+                                yield ReceiveHttp(
+                                    self.ReceiveData(h3_event.stream_id, h3_event.data)
+                                )
                             if h3_event.stream_ended:
-                                yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
+                                yield ReceiveHttp(
+                                    self.ReceiveEndOfMessage(h3_event.stream_id)
+                                )
                     elif isinstance(h3_event, HeadersReceived):
                         if h3_event.push_id is None:
                             try:
@@ -160,12 +168,20 @@ class Http3Connection(HttpConnection):
                             else:
                                 yield ReceiveHttp(receive_event)
                                 if h3_event.stream_ended:
-                                    yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
+                                    yield ReceiveHttp(
+                                        self.ReceiveEndOfMessage(h3_event.stream_id)
+                                    )
                     elif isinstance(h3_event, TrailersReceived):
                         if h3_event.push_id is None:
-                            yield ReceiveHttp(self.ReceiveTrailers(h3_event.stream_id, http.Headers(h3_event.trailers)))
+                            yield ReceiveHttp(
+                                self.ReceiveTrailers(
+                                    h3_event.stream_id, http.Headers(h3_event.trailers)
+                                )
+                            )
                             if h3_event.stream_ended:
-                                yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
+                                yield ReceiveHttp(
+                                    self.ReceiveEndOfMessage(h3_event.stream_id)
+                                )
                     elif isinstance(h3_event, PushPromiseReceived):  # pragma: no cover
                         # we don't support push
                         pass
@@ -204,7 +220,9 @@ class Http3Server(Http3Connection):
     def __init__(self, context: context.Context):
         super().__init__(context, context.client)
 
-    def parse_headers(self, event: HeadersReceived) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(
+        self, event: HeadersReceived
+    ) -> Union[RequestHeaders, ResponseHeaders]:
         # same as HTTP/2
         (
             host,
@@ -238,8 +256,8 @@ class Http3Client(Http3Connection):
     ReceiveProtocolError = ResponseProtocolError
     ReceiveTrailers = ResponseTrailers
 
-    our_stream_id: Dict[int, int]
-    their_stream_id: Dict[int, int]
+    our_stream_id: dict[int, int]
+    their_stream_id: dict[int, int]
 
     def __init__(self, context: context.Context):
         super().__init__(context, context.server)
@@ -263,7 +281,9 @@ class Http3Client(Http3Connection):
                 cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
             yield cmd
 
-    def parse_headers(self, event: HeadersReceived) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(
+        self, event: HeadersReceived
+    ) -> Union[RequestHeaders, ResponseHeaders]:
         # same as HTTP/2
         status_code, headers = parse_h2_response_headers(event.headers)
         response = http.Response(

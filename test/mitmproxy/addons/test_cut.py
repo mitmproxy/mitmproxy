@@ -1,12 +1,14 @@
+from unittest import mock
+
+import pyperclip
+import pytest
+
+from mitmproxy import certs
+from mitmproxy import exceptions
 from mitmproxy.addons import cut
 from mitmproxy.addons import view
-from mitmproxy import exceptions
-from mitmproxy import certs
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-import pytest
-import pyperclip
-from unittest import mock
 
 
 def test_extract(tdata):

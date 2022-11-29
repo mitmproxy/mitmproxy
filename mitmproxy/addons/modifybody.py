@@ -2,8 +2,10 @@ import logging
 import re
 from collections.abc import Sequence
 
-from mitmproxy import ctx, exceptions
-from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy.addons.modifyheaders import ModifySpec
+from mitmproxy.addons.modifyheaders import parse_modify_spec
 
 
 class ModifyBody:

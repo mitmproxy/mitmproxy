@@ -1,6 +1,6 @@
 import asyncio
+import contextlib
 import mimetypes
-import os
 import os.path
 import shlex
 import shutil
@@ -8,20 +8,19 @@ import stat
 import subprocess
 import sys
 import tempfile
-import contextlib
 import threading
 from typing import TypeVar
 
+import urwid
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
-import urwid
-
 from mitmproxy import addons
+from mitmproxy import log
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy import log
-from mitmproxy.addons import errorcheck, intercept
+from mitmproxy.addons import errorcheck
 from mitmproxy.addons import eventstore
+from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
 from mitmproxy.contrib.tornado import patch_tornado

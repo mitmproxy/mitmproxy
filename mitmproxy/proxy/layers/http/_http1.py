@@ -1,30 +1,39 @@
 import abc
-from typing import Callable, Optional, Union
+from typing import Callable
+from typing import Optional
+from typing import Union
 
 import h11
-from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
+from h11._readers import ChunkedReader
+from h11._readers import ContentLengthReader
+from h11._readers import Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http, version
-from mitmproxy.connection import Connection, ConnectionState
-from mitmproxy.net.http import http1, status_codes
-from mitmproxy.proxy import commands, events, layer
-from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
+from ...context import Context
+from ._base import format_error
+from ._base import HttpConnection
+from ._events import HttpEvent
+from ._events import RequestData
+from ._events import RequestEndOfMessage
+from ._events import RequestHeaders
+from ._events import RequestProtocolError
+from ._events import ResponseData
+from ._events import ResponseEndOfMessage
+from ._events import ResponseHeaders
+from ._events import ResponseProtocolError
+from mitmproxy import http
+from mitmproxy import version
+from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
+from mitmproxy.net.http import http1
+from mitmproxy.net.http import status_codes
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers.http._base import ReceiveHttp
+from mitmproxy.proxy.layers.http._base import StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
-from ._base import HttpConnection, format_error
-from ._events import (
-    HttpEvent,
-    RequestData,
-    RequestEndOfMessage,
-    RequestHeaders,
-    RequestProtocolError,
-    ResponseData,
-    ResponseEndOfMessage,
-    ResponseHeaders,
-    ResponseProtocolError,
-)
-from ...context import Context
 
 TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
@@ -189,7 +198,10 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
                 # This simplifies our connection management quite a bit as we can rely on
                 # the proxyserver's max-connection-per-server throttling.
-                or ((self.request.is_http2 or self.request.is_http3) and isinstance(self, Http1Client))
+                or (
+                    (self.request.is_http2 or self.request.is_http3)
+                    and isinstance(self, Http1Client)
+                )
             )
             if connection_done:
                 yield commands.CloseConnection(self.conn)
@@ -245,7 +257,11 @@ class Http1Server(Http1Connection):
         elif isinstance(event, ResponseEndOfMessage):
             assert self.request
             assert self.response
-            if self.request.method.upper() != "HEAD" and "chunked" in self.response.headers.get("transfer-encoding", "").lower():
+            if (
+                self.request.method.upper() != "HEAD"
+                and "chunked"
+                in self.response.headers.get("transfer-encoding", "").lower()
+            ):
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):

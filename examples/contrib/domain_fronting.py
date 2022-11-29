@@ -1,6 +1,8 @@
-from typing import Optional, Union
 import json
 from dataclasses import dataclass
+from typing import Optional
+from typing import Union
+
 from mitmproxy import ctx
 from mitmproxy.addonmanager import Loader
 from mitmproxy.http import HTTPFlow
@@ -79,7 +81,7 @@ class HttpsDomainFronting:
             index = host.find(".", index)
             if index == -1:
                 break
-            super_domain = host[(index + 1):]
+            super_domain = host[(index + 1) :]
             mapping = self.star_mappings.get(super_domain)
             if mapping is not None:
                 return mapping

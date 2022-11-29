@@ -4,15 +4,21 @@ from pathlib import Path
 from typing import Union
 
 import pytest
-
 from cryptography import x509
 from OpenSSL import SSL
-from mitmproxy import certs, connection, tls, options
+
+from mitmproxy import certs
+from mitmproxy import connection
+from mitmproxy import options
+from mitmproxy import tls
 from mitmproxy.addons import tlsconfig
 from mitmproxy.proxy import context
-from mitmproxy.proxy.layers import modes, quic, tls as proxy_tls
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tls as proxy_tls
 from mitmproxy.test import taddons
-from test.mitmproxy.proxy.layers import test_quic, test_tls
+from test.mitmproxy.proxy.layers import test_quic
+from test.mitmproxy.proxy.layers import test_tls
 
 
 def test_alpn_select_callback():
@@ -63,7 +69,11 @@ here = Path(__file__).parent
 
 def _ctx(opts: options.Options) -> context.Context:
     return context.Context(
-        connection.Client(peername=("client", 1234), sockname=("127.0.0.1", 8080), timestamp_start=1605699329),
+        connection.Client(
+            peername=("client", 1234),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+        ),
         opts,
     )
 
@@ -172,10 +182,7 @@ class TestTlsConfig:
         tssl_server.write(tssl_client.read())
         tssl_client.write(tssl_server.read())
         tssl_server.write(tssl_client.read())
-        return (
-            tssl_client.handshake_completed()
-            and tssl_server.handshake_completed()
-        )
+        return tssl_client.handshake_completed() and tssl_server.handshake_completed()
 
     def test_tls_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
@@ -229,8 +236,12 @@ class TestTlsConfig:
 
             tssl_client = test_quic.SSLTest(alpn=["h3"])
             assert self.quic_do_handshake(tssl_client, tssl_server)
-            san = tssl_client.quic.tls._peer_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName)
-            assert san.value.get_values_for_type(x509.DNSName) == ["example.mitmproxy.org"]
+            san = tssl_client.quic.tls._peer_certificate.extensions.get_extension_for_class(
+                x509.SubjectAlternativeName
+            )
+            assert san.value.get_values_for_type(x509.DNSName) == [
+                "example.mitmproxy.org"
+            ]
 
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()
@@ -240,7 +251,9 @@ class TestTlsConfig:
             ctx.server.sni = ""  # explicitly opt out of using the address.
 
             tls_start = tls.TlsData(ctx.server, context=ctx)
-            with pytest.raises(ValueError, match="Cannot validate certificate hostname without SNI"):
+            with pytest.raises(
+                ValueError, match="Cannot validate certificate hostname without SNI"
+            ):
                 ta.tls_start_server(tls_start)
 
     def test_tls_start_server_verify_failed(self):
@@ -305,7 +318,9 @@ class TestTlsConfig:
             ta.quic_start_server(tls_start)
             assert settings_client is tls_start.settings
 
-            tssl_server = test_quic.SSLTest(server_side=True, sni=hostname.encode(), alpn=["h3"])
+            tssl_server = test_quic.SSLTest(
+                server_side=True, sni=hostname.encode(), alpn=["h3"]
+            )
             assert self.quic_do_handshake(tssl_client, tssl_server)
 
     def test_tls_start_server_insecure(self):

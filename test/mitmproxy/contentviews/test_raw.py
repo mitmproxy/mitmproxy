@@ -1,5 +1,5 @@
-from mitmproxy.contentviews import raw
 from . import full_eval
+from mitmproxy.contentviews import raw
 
 
 def test_view_raw():

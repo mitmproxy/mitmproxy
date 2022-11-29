@@ -8,8 +8,10 @@ from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.io import tnetstring
-from mitmproxy.proxy import server_hooks, layers
-from mitmproxy.test import taddons, tflow
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server_hooks
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class State:

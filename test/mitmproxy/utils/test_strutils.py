@@ -44,7 +44,7 @@ def test_escape_control_characters():
 def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"foo") == "foo"
     assert strutils.bytes_to_escaped_str(b"\b") == r"\x08"
-    assert strutils.bytes_to_escaped_str(br"&!?=\)") == r"&!?=\\)"
+    assert strutils.bytes_to_escaped_str(rb"&!?=\)") == r"&!?=\\)"
     assert strutils.bytes_to_escaped_str(b"\xc3\xbc") == r"\xc3\xbc"
     assert strutils.bytes_to_escaped_str(b"'") == r"'"
     assert strutils.bytes_to_escaped_str(b'"') == r'"'
@@ -69,9 +69,9 @@ def test_bytes_to_escaped_str():
 def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes("foo") == b"foo"
     assert strutils.escaped_str_to_bytes("\x08") == b"\b"
-    assert strutils.escaped_str_to_bytes("&!?=\\\\)") == br"&!?=\)"
+    assert strutils.escaped_str_to_bytes("&!?=\\\\)") == rb"&!?=\)"
     assert strutils.escaped_str_to_bytes("\\x08") == b"\b"
-    assert strutils.escaped_str_to_bytes("&!?=\\\\)") == br"&!?=\)"
+    assert strutils.escaped_str_to_bytes("&!?=\\\\)") == rb"&!?=\)"
     assert strutils.escaped_str_to_bytes("\u00fc") == b"\xc3\xbc"
 
     with pytest.raises(ValueError):

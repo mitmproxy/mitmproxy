@@ -2,7 +2,8 @@ import os
 import re
 from codecs import open
 
-from setuptools import find_packages, setup
+from setuptools import find_packages
+from setuptools import setup
 
 # Based on https://github.com/pypa/sampleproject/blob/main/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
@@ -67,7 +68,7 @@ setup(
         ],
         "pyinstaller40": [
             "hook-dirs = mitmproxy.utils.pyinstaller:hook_dirs",
-        ]
+        ],
     },
     python_requires=">=3.9",
     # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires

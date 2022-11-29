@@ -1,10 +1,12 @@
 from __future__ import annotations
-import logging
 
 import itertools
+import logging
 import shutil
 import sys
-from typing import IO, Optional, Union
+from typing import IO
+from typing import Optional
+from typing import Union
 
 from wsproto.frame_protocol import CloseReason
 
@@ -17,12 +19,15 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.net.dns import response_codes
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from mitmproxy.udp import UDPFlow, UDPMessage
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
+from mitmproxy.udp import UDPFlow
+from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 from mitmproxy.utils import vt_codes
-from mitmproxy.websocket import WebSocketData, WebSocketMessage
+from mitmproxy.websocket import WebSocketData
+from mitmproxy.websocket import WebSocketMessage
 
 
 def indent(n: int, text: str) -> str:
@@ -387,9 +392,12 @@ class Dumper:
                     self.style(str(x), fg="bright_blue") for x in f.response.answers
                 )
             else:
-                answers = self.style(response_codes.to_str(
-                    f.response.response_code,
-                ), fg="red")
+                answers = self.style(
+                    response_codes.to_str(
+                        f.response.response_code,
+                    ),
+                    fg="red",
+                )
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):

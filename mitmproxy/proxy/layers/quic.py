@@ -1,44 +1,54 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from logging import DEBUG, ERROR, WARNING
-from ssl import VerifyMode
+
 import time
+from dataclasses import dataclass
+from dataclasses import field
+from logging import DEBUG
+from logging import ERROR
+from logging import WARNING
+from ssl import VerifyMode
 from typing import Callable
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import (
-    QuicConnection,
-    QuicConnectionError,
-    QuicConnectionState,
-    QuicErrorCode,
-    stream_is_client_initiated,
-    stream_is_unidirectional,
-)
-from aioquic.tls import CipherSuite, HandshakeType
-from aioquic.quic.packet import (
-    PACKET_TYPE_INITIAL,
-    QuicProtocolVersion,
-    encode_quic_version_negotiation,
-    pull_quic_header,
-)
+from aioquic.quic.connection import QuicConnection
+from aioquic.quic.connection import QuicConnectionError
+from aioquic.quic.connection import QuicConnectionState
+from aioquic.quic.connection import QuicErrorCode
+from aioquic.quic.connection import stream_is_client_initiated
+from aioquic.quic.connection import stream_is_unidirectional
+from aioquic.quic.packet import encode_quic_version_negotiation
+from aioquic.quic.packet import PACKET_TYPE_INITIAL
+from aioquic.quic.packet import pull_quic_header
+from aioquic.quic.packet import QuicProtocolVersion
+from aioquic.tls import CipherSuite
+from aioquic.tls import HandshakeType
 from cryptography import x509
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from mitmproxy import certs, connection, ctx
+from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+from mitmproxy import certs
+from mitmproxy import connection
+from mitmproxy import ctx
 from mitmproxy.net import tls
-from mitmproxy.proxy import commands, context, events, layer, tunnel
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.layers.tcp import TCPLayer
-from mitmproxy.proxy.layers.tls import (
-    TlsClienthelloHook,
-    TlsEstablishedClientHook,
-    TlsEstablishedServerHook,
-    TlsFailedClientHook,
-    TlsFailedServerHook,
-)
+from mitmproxy.proxy.layers.tls import TlsClienthelloHook
+from mitmproxy.proxy.layers.tls import TlsEstablishedClientHook
+from mitmproxy.proxy.layers.tls import TlsEstablishedServerHook
+from mitmproxy.proxy.layers.tls import TlsFailedClientHook
+from mitmproxy.proxy.layers.tls import TlsFailedServerHook
 from mitmproxy.proxy.layers.udp import UDPLayer
-from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
+from mitmproxy.tls import ClientHello
+from mitmproxy.tls import ClientHelloData
+from mitmproxy.tls import TlsData
 
 
 @dataclass
@@ -53,7 +63,9 @@ class QuicTlsSettings:
     """The certificate to use for the connection."""
     certificate_chain: list[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
-    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = None
+    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = (
+        None
+    )
     """The certificate's private key."""
     cipher_suites: list[CipherSuite] | None = None
     """An optional list of allowed/advertised cipher suites."""
@@ -147,7 +159,13 @@ class SendQuicStreamData(QuicStreamCommand):
     end_stream: bool
     """Whether the FIN bit should be set in the STREAM frame."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, data: bytes, end_stream: bool = False) -> None:
+    def __init__(
+        self,
+        connection: connection.Connection,
+        stream_id: int,
+        data: bytes,
+        end_stream: bool = False,
+    ) -> None:
         super().__init__(connection, stream_id)
         self.data = data
         self.end_stream = end_stream
@@ -159,7 +177,9 @@ class ResetQuicStream(QuicStreamCommand):
     error_code: int
     """An error code indicating why the stream is being reset."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int) -> None:
+    def __init__(
+        self, connection: connection.Connection, stream_id: int, error_code: int
+    ) -> None:
         super().__init__(connection, stream_id)
         self.error_code = error_code
 
@@ -170,7 +190,9 @@ class StopQuicStream(QuicStreamCommand):
     error_code: int
     """An error code indicating why the stream is being stopped."""
 
-    def __init__(self, connection: connection.Connection, stream_id: int, error_code: int) -> None:
+    def __init__(
+        self, connection: connection.Connection, stream_id: int, error_code: int
+    ) -> None:
         super().__init__(connection, stream_id)
         self.error_code = error_code
 
@@ -203,6 +225,7 @@ class CloseQuicConnection(commands.CloseConnection):
 
 class QuicConnectionClosed(events.ConnectionClosed):
     """QUIC connection has been closed."""
+
     error_code: int
     "The error code which was specified when closing the connection."
 
@@ -351,7 +374,12 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
 class QuicStreamNextLayer(layer.NextLayer):
     """`NextLayer` variant that callbacks `QuicStreamLayer` after layer decision."""
 
-    def __init__(self, context: context.Context, stream: QuicStreamLayer, ask_on_start: bool = False) -> None:
+    def __init__(
+        self,
+        context: context.Context,
+        stream: QuicStreamLayer,
+        ask_on_start: bool = False,
+    ) -> None:
         super().__init__(context, ask_on_start)
         self._stream = stream
         self._layer: layer.Layer | None = None
@@ -390,8 +418,8 @@ class QuicStreamLayer(layer.Layer):
         if stream_is_unidirectional(stream_id):
             self.client.state = (
                 connection.ConnectionState.CAN_READ
-                if stream_is_client_initiated(stream_id) else
-                connection.ConnectionState.CAN_WRITE
+                if stream_is_client_initiated(stream_id)
+                else connection.ConnectionState.CAN_WRITE
             )
         self._client_stream_id = stream_id
 
@@ -406,8 +434,8 @@ class QuicStreamLayer(layer.Layer):
         super().__init__(context)
         self.child_layer = (
             TCPLayer(context, ignore=True)
-            if ignore else
-            QuicStreamNextLayer(context, self)
+            if ignore
+            else QuicStreamNextLayer(context, self)
         )
         self.refresh_metadata()
 
@@ -425,11 +453,11 @@ class QuicStreamLayer(layer.Layer):
         self.server.state = (
             (
                 connection.ConnectionState.CAN_WRITE
-                if stream_is_client_initiated(server_stream_id) else
-                connection.ConnectionState.CAN_READ
+                if stream_is_client_initiated(server_stream_id)
+                else connection.ConnectionState.CAN_READ
             )
-            if stream_is_unidirectional(server_stream_id) else
-            connection.ConnectionState.OPEN
+            if stream_is_unidirectional(server_stream_id)
+            else connection.ConnectionState.OPEN
         )
         self.refresh_metadata()
 
@@ -444,8 +472,14 @@ class QuicStreamLayer(layer.Layer):
             else:
                 break  # pragma: no cover
         if isinstance(child_layer, (UDPLayer, TCPLayer)) and child_layer.flow:
-            child_layer.flow.metadata["quic_is_unidirectional"] = stream_is_unidirectional(self._client_stream_id)
-            child_layer.flow.metadata["quic_initiator"] = "client" if stream_is_client_initiated(self._client_stream_id) else "server"
+            child_layer.flow.metadata[
+                "quic_is_unidirectional"
+            ] = stream_is_unidirectional(self._client_stream_id)
+            child_layer.flow.metadata["quic_initiator"] = (
+                "client"
+                if stream_is_client_initiated(self._client_stream_id)
+                else "server"
+            )
             child_layer.flow.metadata["quic_stream_id_client"] = self._client_stream_id
             child_layer.flow.metadata["quic_stream_id_server"] = self._server_stream_id
 
@@ -483,8 +517,8 @@ class RawQuicLayer(layer.Layer):
         self.ignore = ignore
         self.datagram_layer = (
             UDPLayer(self.context.fork(), ignore=True)
-            if ignore else
-            layer.NextLayer(self.context.fork())
+            if ignore
+            else layer.NextLayer(self.context.fork())
         )
         self.client_stream_ids = {}
         self.server_stream_ids = {}
@@ -508,29 +542,34 @@ class RawQuicLayer(layer.Layer):
 
         # properly forward completion events based on their command
         elif isinstance(event, events.CommandCompleted):
-            yield from self.event_to_child(self.command_sources.pop(event.command), event)
+            yield from self.event_to_child(
+                self.command_sources.pop(event.command), event
+            )
 
         # route injected messages based on their connections (prefer client, fallback to server)
         elif isinstance(event, events.MessageInjected):
             if event.flow.client_conn in self.connections:
-                yield from self.event_to_child(self.connections[event.flow.client_conn], event)
+                yield from self.event_to_child(
+                    self.connections[event.flow.client_conn], event
+                )
             elif event.flow.server_conn in self.connections:
-                yield from self.event_to_child(self.connections[event.flow.server_conn], event)
+                yield from self.event_to_child(
+                    self.connections[event.flow.server_conn], event
+                )
             else:
                 raise AssertionError(f"Flow not associated: {event.flow!r}")
 
         # handle stream events targeting this context
-        elif (
-            isinstance(event, QuicStreamEvent)
-            and (
-                event.connection is self.context.client
-                or event.connection is self.context.server
-            )
+        elif isinstance(event, QuicStreamEvent) and (
+            event.connection is self.context.client
+            or event.connection is self.context.server
         ):
             from_client = event.connection is self.context.client
 
             # fetch or create the layer
-            stream_ids = self.client_stream_ids if from_client else self.server_stream_ids
+            stream_ids = (
+                self.client_stream_ids if from_client else self.server_stream_ids
+            )
             if event.stream_id in stream_ids:
                 stream_layer = stream_ids[event.stream_id]
             else:
@@ -549,7 +588,9 @@ class RawQuicLayer(layer.Layer):
                     server_stream_id = event.stream_id
 
                 # create, register and start the layer
-                stream_layer = QuicStreamLayer(self.context.fork(), self.ignore, client_stream_id)
+                stream_layer = QuicStreamLayer(
+                    self.context.fork(), self.ignore, client_stream_id
+                )
                 self.client_stream_ids[client_stream_id] = stream_layer
                 if server_stream_id is not None:
                     stream_layer.open_server_stream(server_stream_id)
@@ -562,7 +603,9 @@ class RawQuicLayer(layer.Layer):
             conn = stream_layer.client if from_client else stream_layer.server
             if isinstance(event, QuicStreamDataReceived):
                 if event.data:
-                    yield from self.event_to_child(stream_layer, events.DataReceived(conn, event.data))
+                    yield from self.event_to_child(
+                        stream_layer, events.DataReceived(conn, event.data)
+                    )
                 if event.end_stream:
                     yield from self.close_stream_layer(stream_layer, from_client)
             elif isinstance(event, QuicStreamReset):
@@ -574,26 +617,27 @@ class RawQuicLayer(layer.Layer):
                         and command.end_stream
                         and not command.data
                     ):
-                        yield ResetQuicStream(command.connection, command.stream_id, event.error_code)
+                        yield ResetQuicStream(
+                            command.connection, command.stream_id, event.error_code
+                        )
                     else:
                         yield command
             else:
                 raise AssertionError(f"Unexpected stream event: {event!r}")
 
         # handle close events that target this context
-        elif (
-            isinstance(event, QuicConnectionClosed)
-            and (
-                event.connection is self.context.client
-                or event.connection is self.context.server
-            )
+        elif isinstance(event, QuicConnectionClosed) and (
+            event.connection is self.context.client
+            or event.connection is self.context.server
         ):
             from_client = event.connection is self.context.client
             other_conn = self.context.server if from_client else self.context.client
 
             # be done if both connections are closed
             if other_conn.connected:
-                yield CloseQuicConnection(other_conn, event.error_code, event.frame_type, event.reason_phrase)
+                yield CloseQuicConnection(
+                    other_conn, event.error_code, event.frame_type, event.reason_phrase
+                )
             else:
                 self._handle_event = self.done  # type: ignore
 
@@ -607,16 +651,14 @@ class RawQuicLayer(layer.Layer):
 
             # forward to either the client or server connection of stream layers and swallow empty stream end
             for conn, child_layer in self.connections.items():
-                if (
-                    isinstance(child_layer, QuicStreamLayer)
-                    and ((conn is child_layer.client) if from_client else (conn is child_layer.server))
+                if isinstance(child_layer, QuicStreamLayer) and (
+                    (conn is child_layer.client)
+                    if from_client
+                    else (conn is child_layer.server)
                 ):
                     conn.state &= ~connection.ConnectionState.CAN_WRITE
                     for command in self.close_stream_layer(child_layer, from_client):
-                        if (
-                            not isinstance(command, SendQuicStreamData)
-                            or command.data
-                        ):
+                        if not isinstance(command, SendQuicStreamData) or command.data:
                             yield command
 
         # all other connection events are routed to their corresponding layer
@@ -626,7 +668,9 @@ class RawQuicLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def close_stream_layer(self, stream_layer: QuicStreamLayer, client: bool) -> layer.CommandGenerator[None]:
+    def close_stream_layer(
+        self, stream_layer: QuicStreamLayer, client: bool
+    ) -> layer.CommandGenerator[None]:
         """Closes the incoming part of a connection."""
 
         conn = stream_layer.client if client else stream_layer.server
@@ -636,7 +680,9 @@ class RawQuicLayer(layer.Layer):
             conn.timestamp_end = time.time()
             yield from self.event_to_child(stream_layer, events.ConnectionClosed(conn))
 
-    def event_to_child(self, child_layer: layer.Layer, event: events.Event) -> layer.CommandGenerator[None]:
+    def event_to_child(
+        self, child_layer: layer.Layer, event: events.Event
+    ) -> layer.CommandGenerator[None]:
         """Forwards events to child layers and translates commands."""
 
         for command in child_layer.handle_event(event):
@@ -664,16 +710,24 @@ class RawQuicLayer(layer.Layer):
                 elif isinstance(command, commands.CloseConnection):
                     assert stream_id is not None
                     if command.connection.state & connection.ConnectionState.CAN_WRITE:
-                        command.connection.state &= ~connection.ConnectionState.CAN_WRITE
-                        yield SendQuicStreamData(quic_conn, stream_id, b"", end_stream=True)
+                        command.connection.state &= (
+                            ~connection.ConnectionState.CAN_WRITE
+                        )
+                        yield SendQuicStreamData(
+                            quic_conn, stream_id, b"", end_stream=True
+                        )
                     # XXX: Use `command.connection.state & connection.ConnectionState.CAN_READ` instead?
-                    only_close_our_half = isinstance(command, commands.CloseTcpConnection) and command.half_close
+                    only_close_our_half = (
+                        isinstance(command, commands.CloseTcpConnection)
+                        and command.half_close
+                    )
                     if not only_close_our_half:
-                        if (
-                            stream_is_client_initiated(stream_id) == to_client
-                            or not stream_is_unidirectional(stream_id)
-                        ):
-                            yield StopQuicStream(quic_conn, stream_id, QuicErrorCode.NO_ERROR)
+                        if stream_is_client_initiated(
+                            stream_id
+                        ) == to_client or not stream_is_unidirectional(stream_id):
+                            yield StopQuicStream(
+                                quic_conn, stream_id, QuicErrorCode.NO_ERROR
+                            )
                         yield from self.close_stream_layer(child_layer, to_client)
 
                 # open server connections by reserving the next stream ID
@@ -684,14 +738,18 @@ class RawQuicLayer(layer.Layer):
                     assert client_stream_id is not None
                     stream_id = self.get_next_available_stream_id(
                         is_client=True,
-                        is_unidirectional=stream_is_unidirectional(client_stream_id)
+                        is_unidirectional=stream_is_unidirectional(client_stream_id),
                     )
                     child_layer.open_server_stream(stream_id)
                     self.server_stream_ids[stream_id] = child_layer
-                    yield from self.event_to_child(child_layer, events.OpenConnectionCompleted(command, None))
+                    yield from self.event_to_child(
+                        child_layer, events.OpenConnectionCompleted(command, None)
+                    )
 
                 else:
-                    raise AssertionError(f"Unexpected stream connection command: {command!r}")
+                    raise AssertionError(
+                        f"Unexpected stream connection command: {command!r}"
+                    )
 
             # remember blocking and wakeup commands
             else:
@@ -701,7 +759,9 @@ class RawQuicLayer(layer.Layer):
                     self.connections[command.connection] = child_layer
                 yield command
 
-    def get_next_available_stream_id(self, is_client: bool, is_unidirectional: bool = False) -> int:
+    def get_next_available_stream_id(
+        self, is_client: bool, is_unidirectional: bool = False
+    ) -> int:
         index = (int(is_unidirectional) << 1) | int(not is_client)
         stream_id = self.next_stream_id[index]
         self.next_stream_id[index] = stream_id + 4
@@ -715,7 +775,12 @@ class QuicLayer(tunnel.TunnelLayer):
     quic: QuicConnection | None = None
     tls: QuicTlsSettings | None = None
 
-    def __init__(self, context: context.Context, conn: connection.Connection, time: Callable[[], float] | None) -> None:
+    def __init__(
+        self,
+        context: context.Context,
+        conn: connection.Connection,
+        time: Callable[[], float] | None,
+    ) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
         self._time = time or ctx.master.event_loop.time
@@ -723,10 +788,7 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if (
-            isinstance(event, events.Wakeup)
-            and event.command in self._wakeup_commands
-        ):
+        if isinstance(event, events.Wakeup) and event.command in self._wakeup_commands:
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
@@ -746,15 +808,16 @@ class QuicLayer(tunnel.TunnelLayer):
         if self.quic:
             yield from self.tls_interact()
 
-    def _handle_command(self, command: commands.Command) -> layer.CommandGenerator[None]:
+    def _handle_command(
+        self, command: commands.Command
+    ) -> layer.CommandGenerator[None]:
         """Turns stream commands into aioquic connection invocations."""
-        if (
-            isinstance(command, QuicStreamCommand)
-            and command.connection is self.conn
-        ):
+        if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                self.quic.send_stream_data(command.stream_id, command.data, command.end_stream)
+                self.quic.send_stream_data(
+                    command.stream_id, command.data, command.end_stream
+                )
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -766,7 +829,9 @@ class QuicLayer(tunnel.TunnelLayer):
         else:
             yield from super()._handle_command(command)
 
-    def start_tls(self, original_destination_connection_id: bytes | None) -> layer.CommandGenerator[None]:
+    def start_tls(
+        self, original_destination_connection_id: bytes | None
+    ) -> layer.CommandGenerator[None]:
         """Initiates the aioquic connection."""
 
         # must only be called if QUIC is uninitialized
@@ -780,7 +845,9 @@ class QuicLayer(tunnel.TunnelLayer):
         else:
             yield QuicStartServerHook(tls_data)
         if not tls_data.settings:
-            yield commands.Log(f"No QUIC context was provided, failing connection.", ERROR)
+            yield commands.Log(
+                f"No QUIC context was provided, failing connection.", ERROR
+            )
             yield commands.CloseConnection(self.conn)
             return
 
@@ -812,15 +879,16 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
-        if (
-            timer is not None
-            and not any(existing <= timer for existing in self._wakeup_commands.values())
+        if timer is not None and not any(
+            existing <= timer for existing in self._wakeup_commands.values()
         ):
             command = commands.RequestWakeup(timer - self._time())
             self._wakeup_commands[command] = timer
             yield command
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, str | None]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         assert self.quic
 
         # forward incoming data to aioquic
@@ -854,18 +922,25 @@ class QuicLayer(tunnel.TunnelLayer):
                         f"{self.debug}[quic] tls established: {self.conn}", DEBUG
                     )
                 if self.conn is self.context.client:
-                    yield TlsEstablishedClientHook(QuicTlsData(self.conn, self.context, settings=self.tls))
+                    yield TlsEstablishedClientHook(
+                        QuicTlsData(self.conn, self.context, settings=self.tls)
+                    )
                 else:
-                    yield TlsEstablishedServerHook(QuicTlsData(self.conn, self.context, settings=self.tls))
+                    yield TlsEstablishedServerHook(
+                        QuicTlsData(self.conn, self.context, settings=self.tls)
+                    )
 
                 yield from self.tls_interact()
                 return True, None
-            elif isinstance(event, (
-                quic_events.ConnectionIdIssued,
-                quic_events.ConnectionIdRetired,
-                quic_events.PingAcknowledged,
-                quic_events.ProtocolNegotiated,
-            )):
+            elif isinstance(
+                event,
+                (
+                    quic_events.ConnectionIdIssued,
+                    quic_events.ConnectionIdRetired,
+                    quic_events.PingAcknowledged,
+                    quic_events.ProtocolNegotiated,
+                ),
+            ):
                 pass
             else:
                 raise AssertionError(f"Unexpected event: {event!r}")
@@ -877,9 +952,13 @@ class QuicLayer(tunnel.TunnelLayer):
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         self.conn.error = err
         if self.conn is self.context.client:
-            yield TlsFailedClientHook(QuicTlsData(self.conn, self.context, settings=self.tls))
+            yield TlsFailedClientHook(
+                QuicTlsData(self.conn, self.context, settings=self.tls)
+            )
         else:
-            yield TlsFailedServerHook(QuicTlsData(self.conn, self.context, settings=self.tls))
+            yield TlsFailedServerHook(
+                QuicTlsData(self.conn, self.context, settings=self.tls)
+            )
         yield from super().on_handshake_error(err)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
@@ -895,7 +974,8 @@ class QuicLayer(tunnel.TunnelLayer):
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
-                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})", DEBUG
+                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})",
+                        DEBUG,
                     )
                 # We don't rely on `ConnectionTerminated` to dispatch `QuicConnectionClosed`, because
                 # after aioquic receives a termination frame, it still waits for the next `handle_timer`
@@ -905,17 +985,28 @@ class QuicLayer(tunnel.TunnelLayer):
                 yield commands.CloseConnection(self.tunnel_connection)
                 return  # we don't handle any further events, nor do/can we transmit data, so exit
             elif isinstance(event, quic_events.DatagramFrameReceived):
-                yield from self.event_to_child(events.DataReceived(self.conn, event.data))
+                yield from self.event_to_child(
+                    events.DataReceived(self.conn, event.data)
+                )
             elif isinstance(event, quic_events.StreamDataReceived):
-                yield from self.event_to_child(QuicStreamDataReceived(self.conn, event.stream_id, event.data, event.end_stream))
+                yield from self.event_to_child(
+                    QuicStreamDataReceived(
+                        self.conn, event.stream_id, event.data, event.end_stream
+                    )
+                )
             elif isinstance(event, quic_events.StreamReset):
-                yield from self.event_to_child(QuicStreamReset(self.conn, event.stream_id, event.error_code))
-            elif isinstance(event, (
-                quic_events.ConnectionIdIssued,
-                quic_events.ConnectionIdRetired,
-                quic_events.PingAcknowledged,
-                quic_events.ProtocolNegotiated,
-            )):
+                yield from self.event_to_child(
+                    QuicStreamReset(self.conn, event.stream_id, event.error_code)
+                )
+            elif isinstance(
+                event,
+                (
+                    quic_events.ConnectionIdIssued,
+                    quic_events.ConnectionIdRetired,
+                    quic_events.PingAcknowledged,
+                    quic_events.ProtocolNegotiated,
+                ),
+            ):
                 pass
             else:
                 raise AssertionError(f"Unexpected event: {event!r}")
@@ -931,7 +1022,12 @@ class QuicLayer(tunnel.TunnelLayer):
             QuicErrorCode.NO_ERROR, None, "Connection closed."
         )
         yield from self.event_to_child(
-            QuicConnectionClosed(self.conn, close_event.error_code, close_event.frame_type, close_event.reason_phrase)
+            QuicConnectionClosed(
+                self.conn,
+                close_event.error_code,
+                close_event.frame_type,
+                close_event.reason_phrase,
+            )
         )
 
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
@@ -941,11 +1037,15 @@ class QuicLayer(tunnel.TunnelLayer):
             self.quic.send_datagram_frame(data)
         yield from self.tls_interact()
 
-    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
+    def send_close(
+        self, command: commands.CloseConnection
+    ) -> layer.CommandGenerator[None]:
         # properly close the QUIC connection
         if self.quic:
             if isinstance(command, CloseQuicConnection):
-                self.quic.close(command.error_code, command.frame_type, command.reason_phrase)
+                self.quic.close(
+                    command.error_code, command.frame_type, command.reason_phrase
+                )
             else:
                 self.quic.close()
             yield from self.tls_interact()
@@ -959,13 +1059,17 @@ class ServerQuicLayer(QuicLayer):
 
     wait_for_clienthello: bool = False
 
-    def __init__(self, context: context.Context, conn: connection.Server | None = None, time: Callable[[], float] | None = None):
+    def __init__(
+        self,
+        context: context.Context,
+        conn: connection.Server | None = None,
+        time: Callable[[], float] | None = None,
+    ):
         super().__init__(context, conn or context.server, time)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
-        wait_for_clienthello = (
-            not self.command_to_reply_to
-            and isinstance(self.child_layer, ClientQuicLayer)
+        wait_for_clienthello = not self.command_to_reply_to and isinstance(
+            self.child_layer, ClientQuicLayer
         )
         if wait_for_clienthello:
             self.wait_for_clienthello = True
@@ -999,7 +1103,9 @@ class ClientQuicLayer(QuicLayer):
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
 
-    def __init__(self, context: context.Context, time: Callable[[], float] | None = None) -> None:
+    def __init__(
+        self, context: context.Context, time: Callable[[], float] | None = None
+    ) -> None:
         # same as ClientTLSLayer, we might be nested in some other transport
         if context.client.tls:
             context.client.alpn = None
@@ -1018,7 +1124,9 @@ class ClientQuicLayer(QuicLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[tuple[bool, str | None]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         # if we already had a valid client hello, don't process further packets
         if self.tls:
             return (yield from super().receive_handshake_data(data))
@@ -1049,7 +1157,10 @@ class ClientQuicLayer(QuicLayer):
 
         # ensure it's (likely) a client handshake packet
         if len(data) < 1200 or header.packet_type != PACKET_TYPE_INITIAL:
-            return False, f"Invalid handshake received, roaming not supported. ({data.hex()})"
+            return (
+                False,
+                f"Invalid handshake received, roaming not supported. ({data.hex()})",
+            )
 
         # extract the client hello
         try:
@@ -1068,7 +1179,8 @@ class ClientQuicLayer(QuicLayer):
         # replace the QUIC layer with an UDP layer if requested
         if tls_clienthello.ignore_connection:
             self.conn = self.tunnel_connection = connection.Client(
-                peername=("ignore-conn", 0), sockname=("ignore-conn", 0),
+                peername=("ignore-conn", 0),
+                sockname=("ignore-conn", 0),
                 transport_protocol="udp",
                 state=connection.ConnectionState.OPEN,
             )
@@ -1083,7 +1195,9 @@ class ClientQuicLayer(QuicLayer):
             parent_layer.handle_event = replacement_layer.handle_event  # type: ignore
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
-            yield from parent_layer.handle_event(events.DataReceived(self.context.client, data))
+            yield from parent_layer.handle_event(
+                events.DataReceived(self.context.client, data)
+            )
             return True, None
 
         # start the server QUIC connection if demanded and available
@@ -1122,4 +1236,6 @@ class ClientQuicLayer(QuicLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"{self.debug}[quic] Swallowing {event} as handshake failed.", DEBUG)
+            yield commands.Log(
+                f"{self.debug}[quic] Swallowing {event} as handshake failed.", DEBUG
+            )

@@ -1,31 +1,29 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Optional
 
-from aioquic.h3.connection import (
-    FrameUnexpected,
-    H3Connection,
-    H3Event,
-    H3Stream,
-    Headers,
-    HeadersState,
-    StreamType,
-)
+from aioquic.h3.connection import FrameUnexpected
+from aioquic.h3.connection import H3Connection
+from aioquic.h3.connection import H3Event
+from aioquic.h3.connection import H3Stream
+from aioquic.h3.connection import Headers
+from aioquic.h3.connection import HeadersState
+from aioquic.h3.connection import StreamType
 from aioquic.h3.events import HeadersReceived
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import StreamDataReceived
 from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
-from mitmproxy.proxy import commands, layer
-from mitmproxy.proxy.layers.quic import (
-    CloseQuicConnection,
-    QuicConnectionClosed,
-    QuicStreamDataReceived,
-    QuicStreamEvent,
-    QuicStreamReset,
-    ResetQuicStream,
-    SendQuicStreamData,
-)
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers.quic import CloseQuicConnection
+from mitmproxy.proxy.layers.quic import QuicConnectionClosed
+from mitmproxy.proxy.layers.quic import QuicStreamDataReceived
+from mitmproxy.proxy.layers.quic import QuicStreamEvent
+from mitmproxy.proxy.layers.quic import QuicStreamReset
+from mitmproxy.proxy.layers.quic import ResetQuicStream
+from mitmproxy.proxy.layers.quic import SendQuicStreamData
 
 
 @dataclass
@@ -104,8 +102,12 @@ class MockQuic:
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
 
-    def send_stream_data(self, stream_id: int, data: bytes, end_stream: bool = False) -> None:
-        self.pending_commands.append(SendQuicStreamData(self.conn, stream_id, data, end_stream))
+    def send_stream_data(
+        self, stream_id: int, data: bytes, end_stream: bool = False
+    ) -> None:
+        self.pending_commands.append(
+            SendQuicStreamData(self.conn, stream_id, data, end_stream)
+        )
 
 
 class LayeredH3Connection(H3Connection):
@@ -114,7 +116,12 @@ class LayeredH3Connection(H3Connection):
     Also ensures that headers, data and trailers are sent in that order.
     """
 
-    def __init__(self, conn: connection.Connection, is_client: bool, enable_webtransport: bool = False) -> None:
+    def __init__(
+        self,
+        conn: connection.Connection,
+        is_client: bool,
+        enable_webtransport: bool = False,
+    ) -> None:
         self._mock = MockQuic(conn, is_client)
         super().__init__(self._mock, enable_webtransport)  # type: ignore
 
@@ -132,13 +139,18 @@ class LayeredH3Connection(H3Connection):
         stream_ended: bool,
     ) -> list[H3Event]:
         # turn HeadersReceived into TrailersReceived for trailers
-        events = super()._handle_request_or_push_frame(frame_type, frame_data, stream, stream_ended)
+        events = super()._handle_request_or_push_frame(
+            frame_type, frame_data, stream, stream_ended
+        )
         for index, event in enumerate(events):
             if (
                 isinstance(event, HeadersReceived)
-                and self._stream[event.stream_id].headers_recv_state == HeadersState.AFTER_TRAILERS
+                and self._stream[event.stream_id].headers_recv_state
+                == HeadersState.AFTER_TRAILERS
             ):
-                events[index] = TrailersReceived(event.headers, event.stream_id, event.stream_ended, event.push_id)
+                events[index] = TrailersReceived(
+                    event.headers, event.stream_id, event.stream_ended, event.push_id
+                )
         return events
 
     def close_connection(
@@ -173,11 +185,7 @@ class LayeredH3Connection(H3Connection):
             for stream in self._stream.values()
             if (
                 stream.push_id == push_id
-                and stream.stream_type == (
-                    None
-                    if push_id is None else
-                    StreamType.PUSH
-                )
+                and stream.stream_type == (None if push_id is None else StreamType.PUSH)
                 and not (
                     stream.headers_recv_state == HeadersState.AFTER_TRAILERS
                     and stream.headers_send_state == HeadersState.AFTER_TRAILERS
@@ -206,10 +214,15 @@ class LayeredH3Connection(H3Connection):
             if self._get_or_create_stream(event.stream_id).ended:
                 # aioquic will not send us any data events once a stream has ended.
                 # Instead, it will close the connection. We simulate this here for H3 tests.
-                self.close_connection(error_code=QuicErrorCode.PROTOCOL_VIOLATION, reason_phrase="stream already ended")
+                self.close_connection(
+                    error_code=QuicErrorCode.PROTOCOL_VIOLATION,
+                    reason_phrase="stream already ended",
+                )
                 return []
             else:
-                return self.handle_event(StreamDataReceived(event.data, event.end_stream, event.stream_id))
+                return self.handle_event(
+                    StreamDataReceived(event.data, event.end_stream, event.stream_id)
+                )
 
         # should never happen
         else:  # pragma: no cover
@@ -241,7 +254,9 @@ class LayeredH3Connection(H3Connection):
         # supporting datagrams would require additional information from the underlying QUIC connection
         raise NotImplementedError()  # pragma: no cover
 
-    def send_headers(self, stream_id: int, headers: Headers, end_stream: bool = False) -> None:
+    def send_headers(
+        self, stream_id: int, headers: Headers, end_stream: bool = False
+    ) -> None:
         """Sends headers over the given stream."""
 
         # ensure we haven't sent something before

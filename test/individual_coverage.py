@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-
-import io
+import configparser
 import contextlib
+import glob
+import io
+import itertools
+import multiprocessing
 import os
 import sys
-import glob
-import multiprocessing
-import configparser
-import itertools
+
 import pytest
 
 

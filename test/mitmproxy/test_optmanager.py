@@ -1,14 +1,14 @@
+import argparse
 import copy
 import io
 from collections.abc import Sequence
 from typing import Optional
 
 import pytest
-import argparse
 
+from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import optmanager
-from mitmproxy import exceptions
 
 
 class TO(optmanager.OptManager):

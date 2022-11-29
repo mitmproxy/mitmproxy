@@ -1,8 +1,8 @@
-import unittest
-import random
-import math
 import io
+import math
+import random
 import struct
+import unittest
 
 from mitmproxy.io import tnetstring
 

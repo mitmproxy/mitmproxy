@@ -5,10 +5,11 @@ from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
+from typing import Optional
 
 import mitmproxy.types
-from mitmproxy import command, tcp, udp
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -16,6 +17,8 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.log import ALERT
 
 

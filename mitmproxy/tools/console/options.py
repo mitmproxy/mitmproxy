@@ -1,16 +1,17 @@
 from __future__ import annotations
+
+import pprint
+import textwrap
 from collections.abc import Sequence
+from typing import Optional
 
 import urwid
-import textwrap
-import pprint
-from typing import Optional
 
 from mitmproxy import exceptions
 from mitmproxy import optmanager
 from mitmproxy.tools.console import layoutwidget
-from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
+from mitmproxy.tools.console import signals
 
 HELP_HEIGHT = 5
 

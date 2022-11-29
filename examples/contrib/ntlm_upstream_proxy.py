@@ -1,28 +1,34 @@
 import base64
+import binascii
 import logging
 import socket
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
-import binascii
-from ntlm_auth import gss_channel_bindings, ntlm
+from ntlm_auth import gss_channel_bindings
+from ntlm_auth import ntlm
 
-from mitmproxy import addonmanager, http
+from mitmproxy import addonmanager
 from mitmproxy import ctx
+from mitmproxy import http
 from mitmproxy.net.http import http1
-from mitmproxy.proxy import commands, layer
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.layers.http import HttpConnectUpstreamHook, HttpLayer, HttpStream
+from mitmproxy.proxy.layers.http import HttpConnectUpstreamHook
+from mitmproxy.proxy.layers.http import HttpLayer
+from mitmproxy.proxy.layers.http import HttpStream
 from mitmproxy.proxy.layers.http._upstream_proxy import HttpUpstreamProxy
 
 
 class NTLMUpstreamAuth:
     """
-        This addon handles authentication to systems upstream from us for the
-        upstream proxy and reverse proxy mode. There are 3 cases:
-        - Upstream proxy CONNECT requests should have authentication added, and
-          subsequent already connected requests should not.
-        - Upstream proxy regular requests
-        - Reverse proxy regular requests (CONNECT is invalid in this mode)
+    This addon handles authentication to systems upstream from us for the
+    upstream proxy and reverse proxy mode. There are 3 cases:
+    - Upstream proxy CONNECT requests should have authentication added, and
+      subsequent already connected requests should not.
+    - Upstream proxy regular requests
+    - Reverse proxy regular requests (CONNECT is invalid in this mode)
     """
 
     def load(self, loader: addonmanager.Loader) -> None:
@@ -34,7 +40,7 @@ class NTLMUpstreamAuth:
             help="""
             Add HTTP NTLM authentication to upstream proxy requests.
             Format: username:password.
-            """
+            """,
         )
         loader.add_option(
             name="upstream_ntlm_domain",
@@ -42,7 +48,7 @@ class NTLMUpstreamAuth:
             default=None,
             help="""
             Add HTTP NTLM domain for authentication to upstream proxy requests.
-            """
+            """,
         )
         loader.add_option(
             name="upstream_proxy_address",
@@ -50,7 +56,7 @@ class NTLMUpstreamAuth:
             default=None,
             help="""
                 upstream poxy address.
-                """
+                """,
         )
         loader.add_option(
             name="upstream_ntlm_compatibility",
@@ -59,7 +65,7 @@ class NTLMUpstreamAuth:
             help="""
             Add HTTP NTLM compatibility for authentication to upstream proxy requests.
             Valid values are 0-5 (Default: 3)
-            """
+            """,
         )
         logging.debug("AddOn: NTLM Upstream Authentication - Loaded")
 
@@ -69,9 +75,13 @@ class NTLMUpstreamAuth:
                 for l in context.layers:
                     if isinstance(l, HttpLayer):
                         for _, stream in l.streams.items():
-                            return stream.flow if isinstance(stream, HttpStream) else None
+                            return (
+                                stream.flow if isinstance(stream, HttpStream) else None
+                            )
 
-        def build_connect_flow(context: Context, connect_header: tuple) -> http.HTTPFlow:
+        def build_connect_flow(
+            context: Context, connect_header: tuple
+        ) -> http.HTTPFlow:
             flow = extract_flow_from_context(context)
             if not flow:
                 logging.error("failed to build connect flow")
@@ -85,23 +95,27 @@ class NTLMUpstreamAuth:
             assert self.conn.address
             self.ntlm_context = CustomNTLMContext(ctx)
             proxy_authorization = self.ntlm_context.get_ntlm_start_negotiate_message()
-            self.flow = build_connect_flow(self.context, ("Proxy-Authorization", proxy_authorization))
+            self.flow = build_connect_flow(
+                self.context, ("Proxy-Authorization", proxy_authorization)
+            )
             yield HttpConnectUpstreamHook(self.flow)
             raw = http1.assemble_request(self.flow.request)
             yield commands.SendData(self.tunnel_connection, raw)
 
         def extract_proxy_authenticate_msg(response_head: list) -> str:
             for header in response_head:
-                if b'Proxy-Authenticate' in header:
-                    challenge_message = str(bytes(header).decode('utf-8'))
+                if b"Proxy-Authenticate" in header:
+                    challenge_message = str(bytes(header).decode("utf-8"))
                     try:
-                        token = challenge_message.split(': ')[1]
+                        token = challenge_message.split(": ")[1]
                     except IndexError:
                         logging.error("Failed to extract challenge_message")
                         raise
                     return token
 
-        def patched_receive_handshake_data(self, data) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+        def patched_receive_handshake_data(
+            self, data
+        ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
             self.buf += data
             response_head = self.buf.maybe_extract_lines()
             if response_head:
@@ -119,8 +133,14 @@ class NTLMUpstreamAuth:
                 else:
                     if not challenge_message:
                         return True, None
-                    proxy_authorization = self.ntlm_context.get_ntlm_challenge_response_message(challenge_message)
-                    self.flow = build_connect_flow(self.context, ("Proxy-Authorization", proxy_authorization))
+                    proxy_authorization = (
+                        self.ntlm_context.get_ntlm_challenge_response_message(
+                            challenge_message
+                        )
+                    )
+                    self.flow = build_connect_flow(
+                        self.context, ("Proxy-Authorization", proxy_authorization)
+                    )
                     raw = http1.assemble_request(self.flow.request)
                     yield commands.SendData(self.tunnel_connection, raw)
                     return False, None
@@ -131,19 +151,19 @@ class NTLMUpstreamAuth:
         HttpUpstreamProxy.receive_handshake_data = patched_receive_handshake_data
 
     def done(self):
-        logging.info('close ntlm session')
+        logging.info("close ntlm session")
 
 
-addons = [
-    NTLMUpstreamAuth()
-]
+addons = [NTLMUpstreamAuth()]
 
 
 class CustomNTLMContext:
-    def __init__(self,
-                 ctx,
-                 preferred_type: str = 'NTLM',
-                 cbt_data: gss_channel_bindings.GssChannelBindingsStruct = None):
+    def __init__(
+        self,
+        ctx,
+        preferred_type: str = "NTLM",
+        cbt_data: gss_channel_bindings.GssChannelBindingsStruct = None,
+    ):
         # TODO:// take care the cbt_data
         auth: str = ctx.options.upstream_ntlm_auth
         domain: str = str(ctx.options.upstream_ntlm_domain).upper()
@@ -158,29 +178,39 @@ class CustomNTLMContext:
             domain=domain,
             workstation=workstation,
             ntlm_compatibility=ntlm_compatibility,
-            cbt_data=cbt_data)
+            cbt_data=cbt_data,
+        )
 
     def get_ntlm_start_negotiate_message(self) -> str:
         negotiate_message = self.ntlm_context.step()
         negotiate_message_base_64_in_bytes = base64.b64encode(negotiate_message)
-        negotiate_message_base_64_ascii = negotiate_message_base_64_in_bytes.decode("ascii")
-        negotiate_message_base_64_final = f'{self.preferred_type} {negotiate_message_base_64_ascii}'
+        negotiate_message_base_64_ascii = negotiate_message_base_64_in_bytes.decode(
+            "ascii"
+        )
+        negotiate_message_base_64_final = (
+            f"{self.preferred_type} {negotiate_message_base_64_ascii}"
+        )
         logging.debug(
-            f'{self.preferred_type} Authentication, negotiate message: {negotiate_message_base_64_final}'
+            f"{self.preferred_type} Authentication, negotiate message: {negotiate_message_base_64_final}"
         )
         return negotiate_message_base_64_final
 
     def get_ntlm_challenge_response_message(self, challenge_message: str) -> Any:
         challenge_message = challenge_message.replace(self.preferred_type + " ", "", 1)
         try:
-            challenge_message_ascii_bytes = base64.b64decode(challenge_message, validate=True)
+            challenge_message_ascii_bytes = base64.b64decode(
+                challenge_message, validate=True
+            )
         except binascii.Error as err:
-            logging.debug(f'{self.preferred_type} Authentication fail with error {err.__str__()}')
+            logging.debug(
+                f"{self.preferred_type} Authentication fail with error {err.__str__()}"
+            )
             return False
         authenticate_message = self.ntlm_context.step(challenge_message_ascii_bytes)
-        negotiate_message_base_64 = '{} {}'.format(self.preferred_type,
-                                                   base64.b64encode(authenticate_message).decode('ascii'))
+        negotiate_message_base_64 = "{} {}".format(
+            self.preferred_type, base64.b64encode(authenticate_message).decode("ascii")
+        )
         logging.debug(
-            f'{self.preferred_type} Authentication, response to challenge message: {negotiate_message_base_64}'
+            f"{self.preferred_type} Authentication, response to challenge message: {negotiate_message_base_64}"
         )
         return negotiate_message_base_64

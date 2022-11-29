@@ -1,10 +1,14 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from mitmproxy import flow, tcp
-from mitmproxy.proxy import commands, events, layer
+from mitmproxy import flow
+from mitmproxy import tcp
+from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.connection import ConnectionState, Connection
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import MessageInjected
 from mitmproxy.proxy.utils import expect

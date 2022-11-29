@@ -1,7 +1,12 @@
 # Default view cutoff *in lines*
-from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator, Mapping
-from typing import ClassVar, Optional, Union
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import Iterable
+from collections.abc import Iterator
+from collections.abc import Mapping
+from typing import ClassVar
+from typing import Optional
+from typing import Union
 
 from mitmproxy import flow
 from mitmproxy import http

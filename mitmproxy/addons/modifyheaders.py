@@ -4,7 +4,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
-from mitmproxy import ctx, exceptions, flowfilter, http
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.http import Headers
 from mitmproxy.utils import strutils
 from mitmproxy.utils.spec import parse_spec

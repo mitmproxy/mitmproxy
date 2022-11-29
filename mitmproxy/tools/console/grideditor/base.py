@@ -1,16 +1,23 @@
 import abc
 import copy
 import os
-from collections.abc import Callable, Container, Iterable, MutableSequence, Sequence
-from typing import Any, AnyStr, ClassVar, Optional
+from collections.abc import Callable
+from collections.abc import Container
+from collections.abc import Iterable
+from collections.abc import MutableSequence
+from collections.abc import Sequence
+from typing import Any
+from typing import AnyStr
+from typing import ClassVar
+from typing import Optional
 
 import urwid
 
-from mitmproxy.utils import strutils
-from mitmproxy import exceptions
-from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master
+from mitmproxy import exceptions
+from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import signals
+from mitmproxy.utils import strutils
 
 
 def read_file(filename: str, escaped: bool) -> AnyStr:

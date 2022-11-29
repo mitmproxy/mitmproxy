@@ -1,14 +1,19 @@
 from __future__ import annotations
+
 import socket
 import struct
 from abc import ABCMeta
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable
+from typing import Optional
 
 from mitmproxy import connection
-from mitmproxy.proxy import commands, events, layer
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import quic, tls
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 

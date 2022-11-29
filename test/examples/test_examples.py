@@ -1,8 +1,8 @@
 from mitmproxy import contentviews
+from mitmproxy.http import Headers
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from mitmproxy.http import Headers
 
 
 class TestScripts:

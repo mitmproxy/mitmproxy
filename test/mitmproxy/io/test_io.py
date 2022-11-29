@@ -1,11 +1,14 @@
 import io
 
 import pytest
-from hypothesis import example, given
+from hypothesis import example
+from hypothesis import given
 from hypothesis.strategies import binary
 
-from mitmproxy import exceptions, version
-from mitmproxy.io import FlowReader, tnetstring
+from mitmproxy import exceptions
+from mitmproxy import version
+from mitmproxy.io import FlowReader
+from mitmproxy.io import tnetstring
 
 
 class TestFlowReader:

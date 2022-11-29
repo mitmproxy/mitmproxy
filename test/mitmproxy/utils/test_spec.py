@@ -1,4 +1,5 @@
 import pytest
+
 from mitmproxy.utils.spec import parse_spec
 
 

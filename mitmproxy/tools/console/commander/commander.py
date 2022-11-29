@@ -1,6 +1,7 @@
 import abc
 from collections.abc import Sequence
-from typing import NamedTuple, Optional
+from typing import NamedTuple
+from typing import Optional
 
 import urwid
 from urwid.text_layout import calc_coords

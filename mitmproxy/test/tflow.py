@@ -1,5 +1,8 @@
 import uuid
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
+
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy import connection
 from mitmproxy import dns
@@ -10,9 +13,10 @@ from mitmproxy import udp
 from mitmproxy import websocket
 from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.mode_specs import ProxyMode
-from mitmproxy.test.tutils import tdnsreq, tdnsresp
-from mitmproxy.test.tutils import treq, tresp
-from wsproto.frame_protocol import Opcode
+from mitmproxy.test.tutils import tdnsreq
+from mitmproxy.test.tutils import tdnsresp
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 def ttcpflow(

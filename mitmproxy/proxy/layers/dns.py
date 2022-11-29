@@ -1,8 +1,11 @@
-from dataclasses import dataclass
 import struct
+from dataclasses import dataclass
 
-from mitmproxy import dns, flow as mflow
-from mitmproxy.proxy import commands, events, layer
+from mitmproxy import dns
+from mitmproxy import flow as mflow
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
 
@@ -45,13 +48,17 @@ class DNSLayer(layer.Layer):
         super().__init__(context)
         self.flows = {}
 
-    def handle_request(self, flow: dns.DNSFlow, msg: dns.Message) -> layer.CommandGenerator[None]:
+    def handle_request(
+        self, flow: dns.DNSFlow, msg: dns.Message
+    ) -> layer.CommandGenerator[None]:
         flow.request = msg  # if already set, continue and query upstream again
         yield DnsRequestHook(flow)
         if flow.response:
             yield from self.handle_response(flow, flow.response)
         elif not self.context.server.address:
-            yield from self.handle_error(flow, "No hook has set a response and there is no upstream server.")
+            yield from self.handle_error(
+                flow, "No hook has set a response and there is no upstream server."
+            )
         else:
             if not self.context.server.connected:
                 err = yield commands.OpenConnection(self.context.server)
@@ -61,7 +68,9 @@ class DNSLayer(layer.Layer):
                     return
             yield commands.SendData(self.context.server, flow.request.packed)
 
-    def handle_response(self, flow: dns.DNSFlow, msg: dns.Message) -> layer.CommandGenerator[None]:
+    def handle_response(
+        self, flow: dns.DNSFlow, msg: dns.Message
+    ) -> layer.CommandGenerator[None]:
         flow.response = msg
         yield DnsResponseHook(flow)
         if flow.response:
@@ -92,7 +101,9 @@ class DNSLayer(layer.Layer):
                 try:
                     flow = self.flows[msg.id]
                 except KeyError:
-                    flow = dns.DNSFlow(self.context.client, self.context.server, live=True)
+                    flow = dns.DNSFlow(
+                        self.context.client, self.context.server, live=True
+                    )
                     self.flows[msg.id] = flow
                 if from_client:
                     yield from self.handle_request(flow, msg)

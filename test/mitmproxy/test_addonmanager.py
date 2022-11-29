@@ -7,7 +7,8 @@ from mitmproxy import exceptions
 from mitmproxy import hooks
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy.proxy.layers.http import HttpRequestHook, HttpResponseHook
+from mitmproxy.proxy.layers.http import HttpRequestHook
+from mitmproxy.proxy.layers.http import HttpResponseHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 

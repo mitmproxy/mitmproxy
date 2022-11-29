@@ -1,22 +1,27 @@
 from collections import defaultdict
 from collections.abc import Iterator
-from dataclasses import dataclass, field
-from typing import Optional, Union
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Optional
+from typing import Union
 
-from aioquic.h3.connection import Setting, parse_settings
-
-from mitmproxy import flow, tcp
-from . import base
-from .hex import ViewHex
-from ..proxy.layers.http import is_h3_alpn
-
-from aioquic.buffer import Buffer, BufferReadError
 import pylsqpack
+from aioquic.buffer import Buffer
+from aioquic.buffer import BufferReadError
+from aioquic.h3.connection import parse_settings
+from aioquic.h3.connection import Setting
+
+from . import base
+from ..proxy.layers.http import is_h3_alpn
+from .hex import ViewHex
+from mitmproxy import flow
+from mitmproxy import tcp
 
 
 @dataclass(frozen=True)
 class Frame:
     """Representation of an HTTP/3 frame."""
+
     type: int
     data: bytes
 
@@ -27,10 +32,7 @@ class Frame:
         elif self.type == 1:
             try:
                 hdrs = pylsqpack.Decoder(4096, 16).feed_header(0, self.data)[1]
-                return [
-                    [("header", "HEADERS Frame")],
-                    *base.format_pairs(hdrs)
-                ]
+                return [[("header", "HEADERS Frame")], *base.format_pairs(hdrs)]
             except Exception as e:
                 frame_name = f"HEADERS Frame (error: {e})"
         elif self.type == 4:
@@ -46,10 +48,7 @@ class Frame:
                     except ValueError:
                         key = f"0x{k:x}"
                     settings.append((key, f"0x{v:x}"))
-                return [
-                    [("header", "SETTINGS Frame")],
-                    *base.format_pairs(settings)
-                ]
+                return [[("header", "SETTINGS Frame")], *base.format_pairs(settings)]
         return [
             [("header", frame_name)],
             *ViewHex._format(self.data),
@@ -59,6 +58,7 @@ class Frame:
 @dataclass(frozen=True)
 class StreamType:
     """Representation of an HTTP/3 stream types."""
+
     type: int
 
     def pretty(self):
@@ -68,9 +68,7 @@ class StreamType:
             0x02: "QPACK Encoder Stream",
             0x03: "QPACK Decoder Stream",
         }.get(self.type, f"0x{self.type:x} Stream")
-        return [
-            [("header", stream_type)]
-        ]
+        return [[("header", stream_type)]]
 
 
 @dataclass
@@ -85,21 +83,23 @@ class ViewHttp3(base.View):
     name = "HTTP/3 Frames"
 
     def __init__(self) -> None:
-        self.connections: defaultdict[tcp.TCPFlow, ConnectionState] = defaultdict(ConnectionState)
+        self.connections: defaultdict[tcp.TCPFlow, ConnectionState] = defaultdict(
+            ConnectionState
+        )
 
     def __call__(
         self,
         data,
         flow: Optional[flow.Flow] = None,
         tcp_message: Optional[tcp.TCPMessage] = None,
-        **metadata
+        **metadata,
     ):
         assert isinstance(flow, tcp.TCPFlow)
         assert tcp_message
 
         state = self.connections[flow]
 
-        for message in flow.messages[state.message_count:]:
+        for message in flow.messages[state.message_count :]:
             if message.from_client:
                 buf = state.client_buf
             else:
@@ -111,9 +111,7 @@ class ViewHttp3(base.View):
                 stream_type = h3_buf.pull_uint_var()
                 consumed = h3_buf.tell()
                 del buf[:consumed]
-                state.frames[0] = [
-                    StreamType(stream_type)
-                ]
+                state.frames[0] = [StreamType(stream_type)]
 
             while True:
                 h3_buf = Buffer(data=bytes(buf[:16]))
@@ -128,29 +126,33 @@ class ViewHttp3(base.View):
                 if len(buf) < consumed + frame_size:
                     break
 
-                frame_data = bytes(buf[consumed:consumed + frame_size])
+                frame_data = bytes(buf[consumed : consumed + frame_size])
 
                 frame = Frame(frame_type, frame_data)
 
                 state.frames.setdefault(state.message_count, []).append(frame)
 
-                del buf[:consumed + frame_size]
+                del buf[: consumed + frame_size]
 
             state.message_count += 1
 
         frames = state.frames.get(flow.messages.index(tcp_message), [])
         if not frames:
-            return "HTTP/3", []  # base.format_text(f"(no complete frames here, {state=})")
+            return (
+                "HTTP/3",
+                [],
+            )  # base.format_text(f"(no complete frames here, {state=})")
         else:
             return "HTTP/3", fmt_frames(frames)
 
     def render_priority(
-        self,
-        data: bytes,
-        flow: Optional[flow.Flow] = None,
-        **metadata
+        self, data: bytes, flow: Optional[flow.Flow] = None, **metadata
     ) -> float:
-        return 2 * float(bool(flow and is_h3_alpn(flow.client_conn.alpn))) * float(isinstance(flow, tcp.TCPFlow))
+        return (
+            2
+            * float(bool(flow and is_h3_alpn(flow.client_conn.alpn)))
+            * float(isinstance(flow, tcp.TCPFlow))
+        )
 
 
 def fmt_frames(frames: list[Union[Frame, StreamType]]) -> Iterator[base.TViewLine]:

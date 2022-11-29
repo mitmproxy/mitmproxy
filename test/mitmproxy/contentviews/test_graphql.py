@@ -1,8 +1,8 @@
 from hypothesis import given
 from hypothesis.strategies import binary
 
-from mitmproxy.contentviews import graphql
 from . import full_eval
+from mitmproxy.contentviews import graphql
 
 
 def test_render_priority():

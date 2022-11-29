@@ -49,7 +49,6 @@ if os.name == "nt":
         )
         return ok
 
-
 else:
 
     def ensure_supported(f: IO[str]) -> bool:

@@ -1,13 +1,13 @@
 import json
 
+from mitmproxy.net.http import cookies
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from mitmproxy.net.http import cookies
 
 
 class TestHARDump:
-    def flow(self, resp_content=b'message'):
+    def flow(self, resp_content=b"message"):
         times = dict(
             timestamp_start=746203272,
             timestamp_end=746203272,
@@ -15,8 +15,8 @@ class TestHARDump:
 
         # Create a dummy flow for testing
         return tflow.tflow(
-            req=tutils.treq(method=b'GET', **times),
-            resp=tutils.tresp(content=resp_content, **times)
+            req=tutils.treq(method=b"GET", **times),
+            resp=tutils.tresp(content=resp_content, **times),
         )
 
     def test_simple(self, tmpdir, tdata):
@@ -26,7 +26,7 @@ class TestHARDump:
             a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             # check script is read without errors
             assert tctx.master.logs == []
-            assert a.name_value   # last function in har_dump.py
+            assert a.name_value  # last function in har_dump.py
 
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
@@ -46,7 +46,9 @@ class TestHARDump:
             a.done()
             with open(path) as inp:
                 har = json.load(inp)
-            assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
+            assert (
+                har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
+            )
 
     def test_format_cookies(self, tdata):
         with taddons.context() as tctx:
@@ -55,17 +57,21 @@ class TestHARDump:
             CA = cookies.CookieAttrs
 
             f = a.format_cookies([("n", "v", CA([("k", "v")]))])[0]
-            assert f['name'] == "n"
-            assert f['value'] == "v"
-            assert not f['httpOnly']
-            assert not f['secure']
+            assert f["name"] == "n"
+            assert f["value"] == "v"
+            assert not f["httpOnly"]
+            assert not f["secure"]
 
-            f = a.format_cookies([("n", "v", CA([("httponly", None), ("secure", None)]))])[0]
-            assert f['httpOnly']
-            assert f['secure']
+            f = a.format_cookies(
+                [("n", "v", CA([("httponly", None), ("secure", None)]))]
+            )[0]
+            assert f["httpOnly"]
+            assert f["secure"]
 
-            f = a.format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
-            assert f['expires']
+            f = a.format_cookies(
+                [("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))]
+            )[0]
+            assert f["expires"]
 
     def test_binary(self, tmpdir, tdata):
         with taddons.context() as tctx:

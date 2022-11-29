@@ -1,7 +1,11 @@
 from collections.abc import Sequence
 from typing import NamedTuple
 
-from mitmproxy import ctx, exceptions, flowfilter, http, version
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
+from mitmproxy import version
 from mitmproxy.net.http.status_codes import NO_RESPONSE
 from mitmproxy.net.http.status_codes import RESPONSES
 

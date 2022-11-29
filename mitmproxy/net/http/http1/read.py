@@ -1,8 +1,11 @@
 import re
 import time
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
-from mitmproxy.http import Request, Headers, Response
+from mitmproxy.http import Headers
+from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.net.http import url
 
 
@@ -214,7 +217,7 @@ def expected_http_body_size(
 
 
 def raise_if_http_version_unknown(http_version: bytes) -> None:
-    if not re.match(br"^HTTP/\d\.\d$", http_version):
+    if not re.match(rb"^HTTP/\d\.\d$", http_version):
         raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 

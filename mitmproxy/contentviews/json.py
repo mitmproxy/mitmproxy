@@ -1,8 +1,9 @@
-import re
 import json
+import re
 from collections.abc import Iterator
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 from mitmproxy.contentviews import base
 
@@ -28,7 +29,11 @@ def format_json(data: Any) -> Iterator[base.TViewLine]:
             yield current_line
             current_line = []
         if re.match(r'\s*"', chunk):
-            if len(current_line) == 1 and current_line[0][0] == "text" and current_line[0][1].isspace():
+            if (
+                len(current_line) == 1
+                and current_line[0][0] == "text"
+                and current_line[0][1].isspace()
+            ):
                 current_line.append(("Token_Name_Tag", chunk))
             else:
                 current_line.append(("Token_Literal_String", chunk))

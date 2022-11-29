@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-
-from clidirector import CliDirector
 import screenplays
+from clidirector import CliDirector
 
 
 if __name__ == "__main__":

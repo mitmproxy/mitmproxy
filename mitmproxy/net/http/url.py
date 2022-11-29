@@ -1,16 +1,19 @@
 from __future__ import annotations
+
 import re
 import urllib.parse
 from collections.abc import Sequence
-from typing import AnyStr, Optional
+from typing import AnyStr
+from typing import Optional
 
 from mitmproxy.net import check
+from mitmproxy.net.check import is_valid_host
+from mitmproxy.net.check import is_valid_port
+from mitmproxy.utils.strutils import always_str
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
-from mitmproxy.net.check import is_valid_host, is_valid_port
-from mitmproxy.utils.strutils import always_str
 
 _authority_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 

@@ -1,10 +1,12 @@
 import collections
-from logging import DEBUG, ERROR
-
 import time
 from collections.abc import Sequence
 from enum import Enum
-from typing import ClassVar, Optional, Union
+from logging import DEBUG
+from logging import ERROR
+from typing import ClassVar
+from typing import Optional
+from typing import Union
 
 import h2.config
 import h2.connection
@@ -15,29 +17,40 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from mitmproxy import http, version
-from mitmproxy.connection import Connection
-from mitmproxy.net.http import status_codes, url
-from mitmproxy.utils import human
-from . import (
-    RequestData,
-    RequestEndOfMessage,
-    RequestHeaders,
-    RequestProtocolError,
-    ResponseData,
-    ResponseEndOfMessage,
-    ResponseHeaders,
-    RequestTrailers,
-    ResponseTrailers,
-    ResponseProtocolError,
-)
-from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
-from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
-from ...commands import CloseConnection, Log, SendData, RequestWakeup
+from . import RequestData
+from . import RequestEndOfMessage
+from . import RequestHeaders
+from . import RequestProtocolError
+from . import RequestTrailers
+from . import ResponseData
+from . import ResponseEndOfMessage
+from . import ResponseHeaders
+from . import ResponseProtocolError
+from . import ResponseTrailers
+from ...commands import CloseConnection
+from ...commands import Log
+from ...commands import RequestWakeup
+from ...commands import SendData
 from ...context import Context
-from ...events import ConnectionClosed, DataReceived, Event, Start, Wakeup
+from ...events import ConnectionClosed
+from ...events import DataReceived
+from ...events import Event
+from ...events import Start
+from ...events import Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
+from ._base import format_error
+from ._base import HttpConnection
+from ._base import HttpEvent
+from ._base import ReceiveHttp
+from ._http_h2 import BufferedH2Connection
+from ._http_h2 import H2ConnectionLogger
+from mitmproxy import http
+from mitmproxy import version
+from mitmproxy.connection import Connection
+from mitmproxy.net.http import status_codes
+from mitmproxy.net.http import url
+from mitmproxy.utils import human
 
 
 class StreamState(Enum):
@@ -70,8 +83,7 @@ class Http2Connection(HttpConnection):
         super().__init__(context, conn)
         if self.debug:
             self.h2_conf.logger = H2ConnectionLogger(
-                self.context.client.peername,
-                self.__class__.__name__
+                self.context.client.peername, self.__class__.__name__
             )
         self.h2_conf.validate_inbound_headers = (
             self.context.options.validate_inbound_headers
@@ -374,7 +386,9 @@ class Http2Server(Http2Connection):
             if self.is_open_for_us(event.stream_id):
                 self.h2_conn.send_headers(
                     event.stream_id,
-                    headers=(yield from format_h2_response_headers(self.context, event)),
+                    headers=(
+                        yield from format_h2_response_headers(self.context, event)
+                    ),
                     end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())

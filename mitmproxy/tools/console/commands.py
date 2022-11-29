@@ -1,5 +1,6 @@
-import urwid
 import textwrap
+
+import urwid
 
 from mitmproxy import command
 from mitmproxy.tools.console import layoutwidget

@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from OpenSSL import SSL, crypto
+from OpenSSL import crypto
+from OpenSSL import SSL
+
 from mitmproxy import certs
 from mitmproxy.net import tls
 
@@ -58,7 +60,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         try:
             read.do_handshake()
         except SSL.WantReadError:
-            write.bio_write(read.bio_read(2 ** 16))
+            write.bio_write(read.bio_read(2**16))
         else:
             break
         read, write = write, read

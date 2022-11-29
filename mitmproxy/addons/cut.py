@@ -1,18 +1,18 @@
-import io
 import csv
+import io
 import logging
 import os.path
 from collections.abc import Sequence
-from typing import Any, Union
-
-from mitmproxy import command
-from mitmproxy import exceptions
-from mitmproxy import flow
-from mitmproxy import certs
-import mitmproxy.types
+from typing import Any
+from typing import Union
 
 import pyperclip
 
+import mitmproxy.types
+from mitmproxy import certs
+from mitmproxy import command
+from mitmproxy import exceptions
+from mitmproxy import flow
 from mitmproxy.log import ALERT
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ class Cut:
                         writer.writerow(vals)
                 logger.log(
                     ALERT,
-                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows))
+                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)),
                 )
         except OSError as e:
             logger.error(str(e))

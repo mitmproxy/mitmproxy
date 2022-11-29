@@ -1,7 +1,10 @@
 import io
 import typing
 from collections.abc import Sequence
-from typing import Any, Optional, TextIO, Union
+from typing import Any
+from typing import Optional
+from typing import TextIO
+from typing import Union
 
 import pytest
 
@@ -84,4 +87,4 @@ def test_typesec_to_str():
 def test_typing_aliases():
     assert (typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
     typecheck.check_option_type("foo", [10], typing.Sequence[int])
-    typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])
+    typecheck.check_option_type("foo", (42, "42"), tuple[int, str])

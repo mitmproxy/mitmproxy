@@ -17,10 +17,13 @@ Example:
 import collections
 import logging
 import random
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from enum import Enum
 
-from mitmproxy import connection, ctx, tls
+from mitmproxy import connection
+from mitmproxy import ctx
+from mitmproxy import tls
 from mitmproxy.utils import human
 
 
@@ -54,6 +57,7 @@ class ConservativeStrategy(TlsStrategy):
     Conservative Interception Strategy - only intercept if there haven't been any failed attempts
     in the history.
     """
+
     def should_intercept(self, server_address: connection.Address) -> bool:
         return InterceptionResult.FAILURE not in self.history[server_address]
 
@@ -62,6 +66,7 @@ class ProbabilisticStrategy(TlsStrategy):
     """
     Fixed probability that we intercept a given connection.
     """
+
     def __init__(self, p: float):
         self.p = p
         super().__init__()
@@ -75,7 +80,9 @@ class MaybeTls:
 
     def load(self, l):
         l.add_option(
-            "tls_strategy", int, 0,
+            "tls_strategy",
+            int,
+            0,
             "TLS passthrough strategy. If set to 0, connections will be passed through after the first unsuccessful "
             "handshake. If set to 0 < p <= 100, connections with be passed through with probability p.",
         )
@@ -97,7 +104,9 @@ class MaybeTls:
 
     def tls_established_client(self, data: tls.TlsData):
         server_address = data.context.server.peername
-        logging.info(f"TLS handshake successful: {human.format_address(server_address)}")
+        logging.info(
+            f"TLS handshake successful: {human.format_address(server_address)}"
+        )
         self.strategy.record_success(server_address)
 
     def tls_failed_client(self, data: tls.TlsData):

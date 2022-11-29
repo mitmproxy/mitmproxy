@@ -1,7 +1,8 @@
-import os
 import configparser
-import pytest
+import os
 import sys
+
+import pytest
 
 here = os.path.abspath(os.path.dirname(__file__))
 

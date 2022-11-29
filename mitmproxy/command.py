@@ -4,16 +4,21 @@
 import functools
 import inspect
 import logging
-
-import pyparsing
 import sys
 import textwrap
 import types
-from collections.abc import Sequence, Callable, Iterable
-from typing import Any, NamedTuple, Optional
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
+from typing import Any
+from typing import NamedTuple
+from typing import Optional
+
+import pyparsing
 
 import mitmproxy.types
-from mitmproxy import exceptions, command_lexer
+from mitmproxy import command_lexer
+from mitmproxy import exceptions
 from mitmproxy.command_lexer import unquote
 
 
@@ -195,7 +200,9 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: pyparsing.ParseResults = command_lexer.expr.parseString(cmdstr, parseAll=True)
+        parts: pyparsing.ParseResults = command_lexer.expr.parseString(
+            cmdstr, parseAll=True
+        )
 
         parsed: list[ParseResult] = []
         next_params: list[CommandParameter] = [

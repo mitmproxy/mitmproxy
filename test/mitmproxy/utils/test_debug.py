@@ -1,6 +1,7 @@
 import io
 import sys
 from unittest import mock
+
 import pytest
 
 from mitmproxy.utils import debug

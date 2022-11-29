@@ -7,12 +7,14 @@ This module only defines the classes for individual `WebSocketMessage`s and the 
 """
 import time
 import warnings
-from dataclasses import dataclass, field
-from typing import Union
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Optional
+from typing import Union
+
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy.coretypes import serializable
-from wsproto.frame_protocol import Opcode
 
 WebSocketMessageState = tuple[int, bool, bytes, float, bool, bool]
 

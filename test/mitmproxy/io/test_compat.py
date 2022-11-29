@@ -1,7 +1,7 @@
 import pytest
 
-from mitmproxy import io
 from mitmproxy import exceptions
+from mitmproxy import io
 
 
 @pytest.mark.parametrize(

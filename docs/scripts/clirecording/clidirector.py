@@ -1,11 +1,12 @@
 import json
-from typing import NamedTuple, Optional
-
-import libtmux
 import random
 import subprocess
 import threading
 import time
+from typing import NamedTuple
+from typing import Optional
+
+import libtmux
 
 
 class InstructionSpec(NamedTuple):

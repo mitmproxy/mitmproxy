@@ -1,14 +1,14 @@
 import pytest
 
-from mitmproxy.test import tflow
-
-from mitmproxy.addons import view
-from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
 from mitmproxy import io
+from mitmproxy.addons import view
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 from mitmproxy.tools.console import consoleaddons
-from mitmproxy.tools.console.common import render_marker, SYMBOL_MARK
+from mitmproxy.tools.console.common import render_marker
+from mitmproxy.tools.console.common import SYMBOL_MARK
 
 
 def tft(*, method="get", start=0):

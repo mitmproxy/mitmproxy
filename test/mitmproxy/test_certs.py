@@ -1,13 +1,14 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
+
+import pytest
 from cryptography import x509
 from cryptography.x509 import NameOID
 
-import pytest
-
-from mitmproxy import certs
 from ..conftest import skip_windows
+from mitmproxy import certs
 
 
 # class TestDNTree:

@@ -1,26 +1,33 @@
 import collections.abc
-from typing import Callable, Iterable, Optional
-import pytest
+from collections.abc import Iterable
+from typing import Callable
+from typing import Optional
+
 import pylsqpack
-
+import pytest
 from aioquic._buffer import Buffer
-from aioquic.h3.connection import (
-    ErrorCode,
-    FrameType,
-    Headers as H3Headers,
-    Setting,
-    StreamType,
-    encode_frame,
-    encode_uint_var,
-    encode_settings,
-    parse_settings,
-)
+from aioquic.h3.connection import encode_frame
+from aioquic.h3.connection import encode_settings
+from aioquic.h3.connection import encode_uint_var
+from aioquic.h3.connection import ErrorCode
+from aioquic.h3.connection import FrameType
+from aioquic.h3.connection import Headers as H3Headers
+from aioquic.h3.connection import parse_settings
+from aioquic.h3.connection import Setting
+from aioquic.h3.connection import StreamType
 
-from mitmproxy import connection, version
+from mitmproxy import connection
+from mitmproxy import version
 from mitmproxy.flow import Error
-from mitmproxy.http import Headers, HTTPFlow, Request
-from mitmproxy.proxy import commands, context, events, layers
-from mitmproxy.proxy.layers import http, quic
+from mitmproxy.http import Headers
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Request
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layers
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers.http._http3 import Http3Client
 from test.mitmproxy.proxy import tutils
 
@@ -47,6 +54,7 @@ def decode_frame(frame_type: int, frame_data: bytes) -> bytes:
 
 class CallbackPlaceholder(tutils._Placeholder[bytes]):
     """Data placeholder that invokes a callback once its bytes get set."""
+
     def __init__(self, cb: Callable[[bytes], None]):
         super().__init__(bytes)
         self._cb = cb
@@ -59,6 +67,7 @@ class CallbackPlaceholder(tutils._Placeholder[bytes]):
 
 class DelayedPlaceholder(tutils._Placeholder[bytes]):
     """Data placeholder that resolves its bytes when needed."""
+
     def __init__(self, resolve: Callable[[], bytes]):
         super().__init__(bytes)
         self._resolve = resolve
@@ -71,6 +80,7 @@ class DelayedPlaceholder(tutils._Placeholder[bytes]):
 
 class MultiPlaybook(tutils.Playbook):
     """Playbook that allows multiple events and commands to be registered at once."""
+
     def __lshift__(self, c):
         if isinstance(c, collections.abc.Iterable):
             for c_i in c:
@@ -90,11 +100,8 @@ class MultiPlaybook(tutils.Playbook):
 
 class FrameFactory:
     """Helper class for generating QUIC stream events and commands."""
-    def __init__(
-        self,
-        conn: connection.Connection,
-        is_client: bool
-    ) -> None:
+
+    def __init__(self, conn: connection.Connection, is_client: bool) -> None:
         self.conn = conn
         self.is_client = is_client
         self.decoder = pylsqpack.Decoder(
@@ -108,11 +115,7 @@ class FrameFactory:
         self.local_stream_id: dict[StreamType, int] = {}
         self.max_push_id: Optional[int] = None
 
-    def get_default_stream_id(
-        self,
-        stream_type: StreamType,
-        for_local: bool
-    ) -> int:
+    def get_default_stream_id(self, stream_type: StreamType, for_local: bool) -> int:
         if stream_type == StreamType.CONTROL:
             stream_id = 2
         elif stream_type == StreamType.QPACK_ENCODER:
@@ -132,9 +135,7 @@ class FrameFactory:
     ) -> quic.SendQuicStreamData:
         assert stream_type not in self.peer_stream_id
         if stream_id is None:
-            stream_id = self.get_default_stream_id(
-                stream_type, for_local=False
-            )
+            stream_id = self.get_default_stream_id(stream_type, for_local=False)
         self.peer_stream_id[stream_type] = stream_id
         return quic.SendQuicStreamData(
             connection=self.conn,
@@ -150,9 +151,7 @@ class FrameFactory:
     ) -> quic.QuicStreamDataReceived:
         assert stream_type not in self.local_stream_id
         if stream_id is None:
-            stream_id = self.get_default_stream_id(
-                stream_type, for_local=True
-            )
+            stream_id = self.get_default_stream_id(stream_type, for_local=True)
         self.local_stream_id[stream_type] = stream_id
         return quic.QuicStreamDataReceived(
             connection=self.conn,
@@ -185,10 +184,12 @@ class FrameFactory:
             buf = Buffer(data=data)
             assert buf.pull_uint_var() == FrameType.SETTINGS
             settings = parse_settings(buf.pull_bytes(buf.pull_uint_var()))
-            placeholder.setdefault(self.encoder.apply_settings(
-                max_table_capacity=settings[Setting.QPACK_MAX_TABLE_CAPACITY],
-                blocked_streams=settings[Setting.QPACK_BLOCKED_STREAMS],
-            ))
+            placeholder.setdefault(
+                self.encoder.apply_settings(
+                    max_table_capacity=settings[Setting.QPACK_MAX_TABLE_CAPACITY],
+                    blocked_streams=settings[Setting.QPACK_BLOCKED_STREAMS],
+                )
+            )
 
         return quic.SendQuicStreamData(
             connection=self.conn,
@@ -368,10 +369,7 @@ class FrameFactory:
 
     @property
     def is_done(self) -> bool:
-        return (
-            self.encoder_placeholder is None
-            and not self.decoder_placeholders
-        )
+        return self.encoder_placeholder is None and not self.decoder_placeholders
 
 
 @pytest.fixture
@@ -428,11 +426,14 @@ def test_invalid_header(tctx: context.Context):
     playbook, cff = start_h3_client(tctx)
     assert (
         playbook
-        >> cff.receive_headers([
-            (b":method", b"CONNECT"),
-            (b":path", b"/"),
-            (b":authority", b"example.com"),
-        ], end_stream=True)
+        >> cff.receive_headers(
+            [
+                (b":method", b"CONNECT"),
+                (b":path", b"/"),
+                (b":authority", b"example.com"),
+            ],
+            end_stream=True,
+        )
         << cff.send_decoder()  # for receive_headers
         << quic.CloseQuicConnection(
             tctx.client,
@@ -441,11 +442,14 @@ def test_invalid_header(tctx: context.Context):
             reason_phrase="Invalid HTTP/3 request headers: Required pseudo header is missing: b':scheme'",
         )
         # ensure that once we close, we don't process messages anymore
-        >> cff.receive_headers([
-            (b":method", b"CONNECT"),
-            (b":path", b"/"),
-            (b":authority", b"example.com"),
-        ], end_stream=True)
+        >> cff.receive_headers(
+            [
+                (b":method", b"CONNECT"),
+                (b":path", b"/"),
+                (b":authority", b"example.com"),
+            ],
+            end_stream=True,
+        )
     )
 
 
@@ -621,10 +625,7 @@ def test_request_trailers(
             >> tutils.reply(to=request)
             << sff.send_headers(example_request_trailers, end_stream=True)
         )
-    assert (
-        playbook
-        >> sff.receive_decoder()  # for send_headers
-    )
+    assert playbook >> sff.receive_decoder()  # for send_headers
 
     assert cff.is_done and sff.is_done
 
@@ -648,11 +649,13 @@ def test_upstream_error(tctx: context.Context):
         >> tutils.reply("oops server <> error")
         << http.HttpErrorHook(flow)
         >> tutils.reply()
-        << cff.send_headers([
-            (b":status", b"502"),
-            (b'server', version.MITMPROXY.encode()),
-            (b'content-type', b'text/html'),
-        ])
+        << cff.send_headers(
+            [
+                (b":status", b"502"),
+                (b"server", version.MITMPROXY.encode()),
+                (b"content-type", b"text/html"),
+            ]
+        )
         << quic.SendQuicStreamData(
             tctx.client,
             stream_id=0,
@@ -670,9 +673,7 @@ def test_upstream_error(tctx: context.Context):
 @pytest.mark.parametrize("stream", ["stream", ""])
 @pytest.mark.parametrize("when", ["request", "response"])
 @pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])
-def test_http3_client_aborts(
-    tctx: context.Context, stream: str, when: str, how: str
-):
+def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how: str):
     """
     Test handling of the case where a client aborts during request or response transmission.
 
@@ -698,12 +699,12 @@ def test_http3_client_aborts(
     if stream and when == "request":
         assert (
             playbook
-            >> tutils.reply(
-                side_effect=enable_request_streaming, to=request_headers
-            )
+            >> tutils.reply(side_effect=enable_request_streaming, to=request_headers)
             << commands.OpenConnection(server)
             >> tutils.reply(None)
-            << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+            << commands.SendData(
+                server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n"
+            )
         )
     else:
         assert playbook >> tutils.reply(to=request_headers)
@@ -716,7 +717,7 @@ def test_http3_client_aborts(
                 tctx.client,
                 error_code=ErrorCode.H3_REQUEST_CANCELLED,
                 frame_type=None,
-                reason_phrase="peer closed connection"
+                reason_phrase="peer closed connection",
             )
 
         if stream:
@@ -729,7 +730,7 @@ def test_http3_client_aborts(
                 tctx.client,
                 error_code=ErrorCode.H3_NO_ERROR,
                 frame_type=None,
-                reason_phrase="peer closed connection"
+                reason_phrase="peer closed connection",
             )
         assert playbook
         assert (
@@ -746,17 +747,21 @@ def test_http3_client_aborts(
         << commands.OpenConnection(server)
         >> tutils.reply(None)
         << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
-        >> events.DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123")
+        >> events.DataReceived(
+            server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123"
+        )
         << http.HttpResponseHeadersHook(flow)
     )
     if stream:
         assert (
             playbook
             >> tutils.reply(side_effect=enable_response_streaming)
-            << cff.send_headers([
-                (b":status", b"200"),
-                (b"content-length", b"6"),
-            ])
+            << cff.send_headers(
+                [
+                    (b":status", b"200"),
+                    (b"content-length", b"6"),
+                ]
+            )
             << cff.send_data(b"123")
         )
     else:
@@ -769,7 +774,7 @@ def test_http3_client_aborts(
             tctx.client,
             error_code=ErrorCode.H3_REQUEST_CANCELLED,
             frame_type=None,
-            reason_phrase="peer closed connection"
+            reason_phrase="peer closed connection",
         )
 
     playbook << commands.CloseConnection(server)
@@ -782,7 +787,7 @@ def test_http3_client_aborts(
             tctx.client,
             error_code=ErrorCode.H3_REQUEST_CANCELLED,
             frame_type=None,
-            reason_phrase="peer closed connection"
+            reason_phrase="peer closed connection",
         )
         assert playbook
 
@@ -920,14 +925,10 @@ def test_stream_concurrency(tctx: context.Context):
     assert (
         playbook
         # request client
-        >> cff.receive_headers(
-            headers1, stream_id=0, end_stream=True
-        )
+        >> cff.receive_headers(headers1, stream_id=0, end_stream=True)
         << (request_header1 := http.HttpRequestHeadersHook(flow1))
         << cff.send_decoder()  # for receive_headers
-        >> cff.receive_headers(
-            headers2, stream_id=4, end_stream=True
-        )
+        >> cff.receive_headers(headers2, stream_id=4, end_stream=True)
         << (request_header2 := http.HttpRequestHeadersHook(flow2))
         << cff.send_decoder()  # for receive_headers
         >> tutils.reply(to=request_header1)
@@ -940,17 +941,13 @@ def test_stream_concurrency(tctx: context.Context):
         << commands.OpenConnection(server)
         >> tutils.reply(None, side_effect=make_h3)
         << sff.send_init()
-        << sff.send_headers(
-            headers2, stream_id=0, end_stream=True
-        )
+        << sff.send_headers(headers2, stream_id=0, end_stream=True)
         >> sff.receive_init()
         << sff.send_encoder()
         >> sff.receive_encoder()
         >> sff.receive_decoder()  # for send_headers
         >> tutils.reply(to=request1)
-        << sff.send_headers(
-            headers1, stream_id=4, end_stream=True
-        )
+        << sff.send_headers(headers1, stream_id=4, end_stream=True)
         >> sff.receive_decoder()  # for send_headers
     )
     assert cff.is_done and sff.is_done
@@ -964,23 +961,15 @@ def test_stream_concurrent_get_connection(tctx: context.Context):
     sff = FrameFactory(server, is_client=False)
     assert (
         playbook
-        >> cff.receive_headers(
-            example_request_headers, stream_id=0, end_stream=True
-        )
+        >> cff.receive_headers(example_request_headers, stream_id=0, end_stream=True)
         << cff.send_decoder()  # for receive_headers
         << (o := commands.OpenConnection(server))
-        >> cff.receive_headers(
-            example_request_headers, stream_id=4, end_stream=True
-        )
+        >> cff.receive_headers(example_request_headers, stream_id=4, end_stream=True)
         << cff.send_decoder()  # for receive_headers
         >> tutils.reply(None, to=o, side_effect=make_h3)
         << sff.send_init()
-        << sff.send_headers(
-            example_request_headers, stream_id=0, end_stream=True
-        )
-        << sff.send_headers(
-            example_request_headers, stream_id=4, end_stream=True
-        )
+        << sff.send_headers(example_request_headers, stream_id=0, end_stream=True)
+        << sff.send_headers(example_request_headers, stream_id=4, end_stream=True)
         >> sff.receive_init()
         << sff.send_encoder()
         >> sff.receive_encoder()
@@ -1007,14 +996,10 @@ def test_kill_stream(tctx: context.Context):
     assert (
         playbook
         # request client
-        >> cff.receive_headers(
-            headers1, stream_id=0, end_stream=True
-        )
+        >> cff.receive_headers(headers1, stream_id=0, end_stream=True)
         << (request_header1 := http.HttpRequestHeadersHook(flow1))
         << cff.send_decoder()  # for receive_headers
-        >> cff.receive_headers(
-            headers2, stream_id=4, end_stream=True
-        )
+        >> cff.receive_headers(headers2, stream_id=4, end_stream=True)
         << (request_header2 := http.HttpRequestHeadersHook(flow2))
         << cff.send_decoder()  # for receive_headers
         >> tutils.reply(to=request_header2, side_effect=kill)
@@ -1028,9 +1013,7 @@ def test_kill_stream(tctx: context.Context):
         << commands.OpenConnection(server)
         >> tutils.reply(None, side_effect=make_h3)
         << sff.send_init()
-        << sff.send_headers(
-            headers1, stream_id=0, end_stream=True
-        )
+        << sff.send_headers(headers1, stream_id=0, end_stream=True)
         >> sff.receive_init()
         << sff.send_encoder()
         >> sff.receive_encoder()
@@ -1052,12 +1035,15 @@ class TestClient:
             << frame_factory.send_encoder()
             >> frame_factory.receive_encoder()
             >> http.RequestHeaders(1, req, end_stream=True)
-            << frame_factory.send_headers([
-                (b":method", b"GET"),
-                (b':scheme', b'http'),
-                (b':path', b'/'),
-                (b'content-length', b'0'),
-            ], end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
             >> frame_factory.receive_decoder()  # for send_headers
             >> http.RequestEndOfMessage(1)
             >> frame_factory.receive_headers(resp)
@@ -1099,12 +1085,15 @@ class TestClient:
                 "DATA frame is not allowed in this state"
             )
             >> http.RequestHeaders(1, req, end_stream=False)
-            << frame_factory.send_headers([
-                (b":method", b"GET"),
-                (b':scheme', b'http'),
-                (b':path', b'/'),
-                (b'content-length', b'0'),
-            ], end_stream=False)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=False,
+            )
             >> frame_factory.receive_decoder()  # for send_headers
             >> http.RequestHeaders(1, req, end_stream=False)
             << commands.Log(

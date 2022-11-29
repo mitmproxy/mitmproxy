@@ -1,8 +1,8 @@
 import asyncio
 
+from mitmproxy import command
 from mitmproxy.addons import keepserving
 from mitmproxy.test import taddons
-from mitmproxy import command
 
 
 class Dummy:

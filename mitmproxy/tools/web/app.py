@@ -1,14 +1,18 @@
 from __future__ import annotations
+
 import asyncio
 import hashlib
 import json
 import logging
 import os.path
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
+from typing import Optional
+from typing import Union
 
 import tornado.escape
 import tornado.web
@@ -16,7 +20,9 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master
-from mitmproxy import certs, command, contentviews
+from mitmproxy import certs
+from mitmproxy import command
+from mitmproxy import contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
@@ -25,8 +31,10 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from mitmproxy.udp import UDPFlow, UDPMessage
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
+from mitmproxy.udp import UDPFlow
+from mitmproxy.udp import UDPMessage
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
@@ -191,7 +199,7 @@ class APIError(tornado.web.HTTPError):
 
 
 class RequestHandler(tornado.web.RequestHandler):
-    application: "Application"
+    application: Application
 
     def write(self, chunk: Union[str, bytes, dict, list]):
         # Writing arrays on the top level is ok nowadays.
@@ -237,11 +245,11 @@ class RequestHandler(tornado.web.RequestHandler):
             return self.request.body
 
     @property
-    def view(self) -> "mitmproxy.addons.view.View":
+    def view(self) -> mitmproxy.addons.view.View:
         return self.application.master.view
 
     @property
-    def master(self) -> "mitmproxy.tools.web.master.WebMaster":
+    def master(self) -> mitmproxy.tools.web.master.WebMaster:
         return self.application.master
 
     @property
@@ -322,7 +330,11 @@ class DumpFlows(RequestHandler):
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except ValueError:  # thrown py flowfilter.parse if filter is invalid
             raise APIError(400, f"Invalid filter argument / regex")
-        except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
+        except (
+            KeyError,
+            IndexError,
+        ):  # Key+Index: ["filter"][0] can fail, if it's not set
+
             def match(_) -> bool:
                 return True
 
@@ -617,31 +629,35 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
+            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
 class State(RequestHandler):
     def get(self):
-        self.write({
-            "version": version.VERSION,
-            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
-            "servers": [s.to_json() for s in self.master.proxyserver.servers]
-        })
+        self.write(
+            {
+                "version": version.VERSION,
+                "contentViews": [
+                    v.name for v in contentviews.views if v.name != "Query"
+                ],
+                "servers": [s.to_json() for s in self.master.proxyserver.servers],
+            }
+        )
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     CONTENT_TYPES = {
         "application/octet-stream",
-        *tornado.web.GZipContentEncoding.CONTENT_TYPES
+        *tornado.web.GZipContentEncoding.CONTENT_TYPES,
     }
 
 
 class Application(tornado.web.Application):
-    master: "mitmproxy.tools.web.master.WebMaster"
+    master: mitmproxy.tools.web.master.WebMaster
 
     def __init__(
-        self, master: "mitmproxy.tools.web.master.WebMaster", debug: bool
+        self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
         super().__init__(

@@ -2,6 +2,7 @@ import os
 import re
 
 import urwid
+
 from mitmproxy import flow
 from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import common
@@ -148,7 +149,9 @@ class Window(urwid.Frame):
         signals.flow_change.connect(self.flow_changed)
         signals.pop_view_state.connect(self.pop)
 
-        self.master.options.subscribe(self.configure, ["console_layout", "console_layout_headers"])
+        self.master.options.subscribe(
+            self.configure, ["console_layout", "console_layout_headers"]
+        )
         self.pane = 0
         self.stacks = [WindowStack(master, "flowlist"), WindowStack(master, "eventlog")]
 

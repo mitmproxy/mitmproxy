@@ -1,6 +1,7 @@
 import time
-import pytest
 from unittest import mock
+
+import pytest
 
 from mitmproxy.net.http import cookies
 

@@ -5,13 +5,20 @@ import collections
 import textwrap
 from abc import abstractmethod
 from collections.abc import Callable
+from collections.abc import Generator
 from dataclasses import dataclass
 from logging import DEBUG
-from typing import Any, ClassVar, Generator, NamedTuple, Optional, TypeVar
+from typing import Any
+from typing import ClassVar
+from typing import NamedTuple
+from typing import Optional
+from typing import TypeVar
 
 from mitmproxy.connection import Connection
-from mitmproxy.proxy import commands, events
-from mitmproxy.proxy.commands import Command, StartHook
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy.commands import Command
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 
 T = TypeVar("T")

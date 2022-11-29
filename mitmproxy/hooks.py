@@ -1,8 +1,12 @@
 import re
 import warnings
 from collections.abc import Sequence
-from dataclasses import dataclass, is_dataclass, fields
-from typing import Any, ClassVar, TYPE_CHECKING
+from dataclasses import dataclass
+from dataclasses import fields
+from dataclasses import is_dataclass
+from typing import Any
+from typing import ClassVar
+from typing import TYPE_CHECKING
 
 import mitmproxy.flow
 

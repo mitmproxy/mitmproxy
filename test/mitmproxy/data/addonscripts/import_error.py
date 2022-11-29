@@ -1,1 +1,3 @@
 import nonexistent
+
+nonexistent.foo()

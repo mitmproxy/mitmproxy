@@ -1,5 +1,5 @@
-from mitmproxy import contentviews
 from . import base
+from mitmproxy import contentviews
 
 
 class ViewAuto(base.View):

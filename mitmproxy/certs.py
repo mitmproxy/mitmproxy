@@ -6,15 +6,21 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NewType, Optional, Union
-
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
-from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography.x509 import NameOID, ExtendedKeyUsageOID
+from typing import NewType
+from typing import Optional
+from typing import Union
 
 import OpenSSL
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509 import ExtendedKeyUsageOID
+from cryptography.x509 import NameOID
+
 from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
@@ -315,7 +321,10 @@ class CertStore:
         self.default_chain_certs = (
             [
                 Cert.from_pem(chunk)
-                for chunk in re.split(rb"(?=-----BEGIN( [A-Z]+)+-----)", self.default_chain_file.read_bytes())
+                for chunk in re.split(
+                    rb"(?=-----BEGIN( [A-Z]+)+-----)",
+                    self.default_chain_file.read_bytes(),
+                )
                 if chunk.startswith(b"-----BEGIN CERTIFICATE-----")
             ]
             if self.default_chain_file

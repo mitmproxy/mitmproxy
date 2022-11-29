@@ -1,5 +1,7 @@
 import sys
+
 import pytest
+
 from mitmproxy.platform import pf
 
 

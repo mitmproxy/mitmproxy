@@ -6,10 +6,13 @@ from typing import Callable
 import pytest
 
 from mitmproxy import dns
-from mitmproxy.addons import dns_resolver, proxyserver
+from mitmproxy.addons import dns_resolver
+from mitmproxy.addons import proxyserver
 from mitmproxy.connection import Address
 from mitmproxy.proxy.mode_specs import ProxyMode
-from mitmproxy.test import taddons, tflow, tutils
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 async def test_simple(monkeypatch):

@@ -39,9 +39,9 @@ all other strings are returned as plain bytes.
 
 :License: MIT
 """
-
 import collections
-from typing import BinaryIO, Union
+from typing import BinaryIO
+from typing import Union
 
 TSerializable = Union[None, str, bool, int, float, bytes, list, tuple, dict]
 

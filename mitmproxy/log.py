@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import logging
 import os
 import warnings
 from dataclasses import dataclass
 
-from mitmproxy import hooks, master
+from mitmproxy import hooks
+from mitmproxy import master
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import human
 
@@ -42,7 +44,7 @@ class MitmFormatter(logging.Formatter):
         self.without_client = f"{time} %s"
 
     default_time_format = "%H:%M:%S"
-    default_msec_format = '%s.%03d'
+    default_msec_format = "%s.%03d"
 
     def format(self, record: logging.LogRecord) -> str:
         time = self.formatTime(record)
@@ -67,19 +69,18 @@ class MitmLogHandler(logging.Handler):
 
     def filter(self, record: logging.LogRecord) -> bool:
         # We can't remove stale handlers here because that would modify .handlers during iteration!
-        return (
-            super().filter(record)
-            and
-            (
-                not self._initiated_in_test
-                or self._initiated_in_test == os.environ.get("PYTEST_CURRENT_TEST")
-            )
+        return super().filter(record) and (
+            not self._initiated_in_test
+            or self._initiated_in_test == os.environ.get("PYTEST_CURRENT_TEST")
         )
 
     def install(self) -> None:
         if self._initiated_in_test:
             for h in list(logging.getLogger().handlers):
-                if isinstance(h, MitmLogHandler) and h._initiated_in_test != self._initiated_in_test:
+                if (
+                    isinstance(h, MitmLogHandler)
+                    and h._initiated_in_test != self._initiated_in_test
+                ):
                     h.uninstall()
 
         logging.getLogger().addHandler(self)
@@ -89,6 +90,7 @@ class MitmLogHandler(logging.Handler):
 
 
 # everything below is deprecated!
+
 
 class LogEntry:
     def __init__(self, msg, level):
@@ -194,6 +196,7 @@ LOGGING_LEVELS_TO_LOGENTRY = {
 
 class LegacyLogEvents(MitmLogHandler):
     """Emit deprecated `add_log` events from stdlib logging."""
+
     def __init__(
         self,
         master: master.Master,

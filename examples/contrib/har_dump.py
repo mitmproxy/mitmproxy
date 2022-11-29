@@ -7,15 +7,13 @@ mitmdump -s ./har_dump.py --set hardump=./dump.har
 filename endwith '.zhar' will be compressed:
 mitmdump -s ./har_dump.py --set hardump=./dump.zhar
 """
-
 import base64
 import json
 import logging
 import os
+import zlib
 from datetime import datetime
 from datetime import timezone
-
-import zlib
 
 import mitmproxy
 from mitmproxy import connection
@@ -33,27 +31,28 @@ SERVERS_SEEN: set[connection.Server] = set()
 
 def load(l):
     l.add_option(
-        "hardump", str, "", "HAR dump path.",
+        "hardump",
+        str,
+        "",
+        "HAR dump path.",
     )
 
 
 def configure(updated):
-    HAR.update({
-        "log": {
-            "version": "1.2",
-            "creator": {
-                "name": "mitmproxy har_dump",
-                "version": "0.1",
-                "comment": "mitmproxy version %s" % version.MITMPROXY
-            },
-            "pages": [
-                {
-                    "pageTimings": {}
-                }
-            ],
-            "entries": []
+    HAR.update(
+        {
+            "log": {
+                "version": "1.2",
+                "creator": {
+                    "name": "mitmproxy har_dump",
+                    "version": "0.1",
+                    "comment": "mitmproxy version %s" % version.MITMPROXY,
+                },
+                "pages": [{"pageTimings": {}}],
+                "entries": [],
+            }
         }
-    })
+    )
     # The `pages` attribute is needed for Firefox Dev Tools to load the HAR file.
     # An empty value works fine.
 
@@ -65,12 +64,15 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
     connect_time = -1
 
     if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
-        connect_time = (flow.server_conn.timestamp_tcp_setup -
-                        flow.server_conn.timestamp_start)
+        connect_time = (
+            flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
+        )
 
         if flow.server_conn.timestamp_tls_setup is not None:
-            ssl_time = (flow.server_conn.timestamp_tls_setup -
-                        flow.server_conn.timestamp_tcp_setup)
+            ssl_time = (
+                flow.server_conn.timestamp_tls_setup
+                - flow.server_conn.timestamp_tcp_setup
+            )
 
         SERVERS_SEEN.add(flow.server_conn)
 
@@ -81,28 +83,31 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
     # spent waiting between request.timestamp_end and response.timestamp_start
     # thus it correlates to HAR wait instead.
     timings_raw = {
-        'send': flow.request.timestamp_end - flow.request.timestamp_start,
-        'receive': flow.response.timestamp_end - flow.response.timestamp_start,
-        'wait': flow.response.timestamp_start - flow.request.timestamp_end,
-        'connect': connect_time,
-        'ssl': ssl_time,
+        "send": flow.request.timestamp_end - flow.request.timestamp_start,
+        "receive": flow.response.timestamp_end - flow.response.timestamp_start,
+        "wait": flow.response.timestamp_start - flow.request.timestamp_end,
+        "connect": connect_time,
+        "ssl": ssl_time,
     }
 
     # HAR timings are integers in ms, so we re-encode the raw timings to that format.
-    timings = {
-        k: int(1000 * v) if v != -1 else -1
-        for k, v in timings_raw.items()
-    }
+    timings = {k: int(1000 * v) if v != -1 else -1 for k, v in timings_raw.items()}
 
     # full_time is the sum of all timings.
     # Timings set to -1 will be ignored as per spec.
     full_time = sum(v for v in timings.values() if v > -1)
 
-    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+    started_date_time = datetime.fromtimestamp(
+        flow.request.timestamp_start, timezone.utc
+    ).isoformat()
 
     # Response body size and encoding
-    response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
-    response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
+    response_body_size = (
+        len(flow.response.raw_content) if flow.response.raw_content else 0
+    )
+    response_body_decoded_size = (
+        len(flow.response.content) if flow.response.content else 0
+    )
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = {
@@ -127,9 +132,9 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
             "content": {
                 "size": response_body_size,
                 "compression": response_body_compression,
-                "mimeType": flow.response.headers.get('Content-Type', '')
+                "mimeType": flow.response.headers.get("Content-Type", ""),
             },
-            "redirectURL": flow.response.headers.get('Location', ''),
+            "redirectURL": flow.response.headers.get("Location", ""),
             "headersSize": len(str(flow.response.headers)),
             "bodySize": response_body_size,
         },
@@ -139,7 +144,9 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
 
     # Store binary data as base64
     if strutils.is_mostly_bin(flow.response.content):
-        entry["response"]["content"]["text"] = base64.b64encode(flow.response.content).decode()
+        entry["response"]["content"]["text"] = base64.b64encode(
+            flow.response.content
+        ).decode()
         entry["response"]["content"]["encoding"] = "base64"
     else:
         entry["response"]["content"]["text"] = flow.response.get_text(strict=False)
@@ -152,7 +159,7 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
         entry["request"]["postData"] = {
             "mimeType": flow.request.headers.get("Content-Type", ""),
             "text": flow.request.get_text(strict=False),
-            "params": params
+            "params": params,
         }
 
     if flow.server_conn.connected:
@@ -165,7 +172,7 @@ def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
 
 def response(flow: mitmproxy.http.HTTPFlow):
     """
-       Called when a server response has been received.
+    Called when a server response has been received.
     """
     if flow.websocket is None:
         flow_entry(flow)
@@ -182,29 +189,29 @@ def websocket_end(flow: mitmproxy.http.HTTPFlow):
         else:
             data = base64.b64encode(message.content).decode()
         websocket_message = {
-            'type': 'send' if message.from_client else 'receive',
-            'time': message.timestamp,
-            'opcode': message.type.value,
-            'data': data
+            "type": "send" if message.from_client else "receive",
+            "time": message.timestamp,
+            "opcode": message.type.value,
+            "data": data,
         }
         websocket_messages.append(websocket_message)
 
-    entry['_resourceType'] = 'websocket'
-    entry['_webSocketMessages'] = websocket_messages
+    entry["_resourceType"] = "websocket"
+    entry["_webSocketMessages"] = websocket_messages
 
 
 def done():
     """
-        Called once on script shutdown, after any other events.
+    Called once on script shutdown, after any other events.
     """
     if ctx.options.hardump:
         json_dump: str = json.dumps(HAR, indent=2)
 
-        if ctx.options.hardump == '-':
+        if ctx.options.hardump == "-":
             print(json_dump)
         else:
             raw: bytes = json_dump.encode()
-            if ctx.options.hardump.endswith('.zhar'):
+            if ctx.options.hardump.endswith(".zhar"):
                 raw = zlib.compress(raw, 9)
 
             with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
@@ -234,7 +241,9 @@ def format_cookies(cookie_list):
         # Expiration time needs to be formatted
         expire_ts = cookies.get_expiration_ts(attrs)
         if expire_ts is not None:
-            cookie_har["expires"] = datetime.fromtimestamp(expire_ts, timezone.utc).isoformat()
+            cookie_har["expires"] = datetime.fromtimestamp(
+                expire_ts, timezone.utc
+            ).isoformat()
 
         rv.append(cookie_har)
 
@@ -251,6 +260,6 @@ def format_response_cookies(fields):
 
 def name_value(obj):
     """
-        Convert (key, value) pairs to HAR format.
+    Convert (key, value) pairs to HAR format.
     """
     return [{"name": k, "value": v} for k, v in obj.items()]

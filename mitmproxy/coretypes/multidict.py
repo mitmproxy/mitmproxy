@@ -1,6 +1,8 @@
 from abc import ABCMeta
 from abc import abstractmethod
-from collections.abc import Iterator, MutableMapping, Sequence
+from collections.abc import Iterator
+from collections.abc import MutableMapping
+from collections.abc import Sequence
 from typing import TypeVar
 
 from mitmproxy.coretypes import serializable

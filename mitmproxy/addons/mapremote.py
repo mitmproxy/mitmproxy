@@ -2,7 +2,10 @@ import re
 from collections.abc import Sequence
 from typing import NamedTuple
 
-from mitmproxy import ctx, exceptions, flowfilter, http
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.utils.spec import parse_spec
 
 

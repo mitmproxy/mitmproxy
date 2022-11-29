@@ -1,7 +1,6 @@
-from mitmproxy.test import tflow
-
 from mitmproxy.addons import anticache
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class TestAntiCache:

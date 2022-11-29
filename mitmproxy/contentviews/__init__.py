@@ -12,37 +12,41 @@ metadata depend on the protocol in use. Known attributes can be found in
 `base.View`.
 """
 import traceback
-from typing import Union
 from typing import Optional
+from typing import Union
 
-from mitmproxy import flow, tcp, udp
-from mitmproxy import http
-from mitmproxy.utils import signals, strutils
-from . import (
-    auto,
-    raw,
-    hex,
-    json,
-    xml_html,
-    wbxml,
-    javascript,
-    css,
-    urlencoded,
-    multipart,
-    image,
-    query,
-    protobuf,
-    msgpack,
-    graphql,
-    grpc,
-    mqtt,
-    http3,
-)
-
-from .base import View, KEY_MAX, format_text, format_dict, TViewResult
+from . import auto
+from . import css
+from . import graphql
+from . import grpc
+from . import hex
+from . import http3
+from . import image
+from . import javascript
+from . import json
+from . import mqtt
+from . import msgpack
+from . import multipart
+from . import protobuf
+from . import query
+from . import raw
+from . import urlencoded
+from . import wbxml
+from . import xml_html
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
+from .base import format_dict
+from .base import format_text
+from .base import KEY_MAX
+from .base import TViewResult
+from .base import View
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy.utils import signals
+from mitmproxy.utils import strutils
 
 views: list[View] = []
 

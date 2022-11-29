@@ -1,9 +1,14 @@
 import time
-from enum import Enum, auto
-from typing import Optional, Union
+from enum import auto
+from enum import Enum
+from typing import Optional
+from typing import Union
 
 from mitmproxy import connection
-from mitmproxy.proxy import commands, context, events, layer
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.layer import Layer
 
 
@@ -108,7 +113,9 @@ class TunnelLayer(layer.Layer):
                 yield from self.event_to_child(evt)
             self._event_queue.clear()
 
-    def _handle_command(self, command: commands.Command) -> layer.CommandGenerator[None]:
+    def _handle_command(
+        self, command: commands.Command
+    ) -> layer.CommandGenerator[None]:
         if (
             isinstance(command, commands.ConnectionCommand)
             and command.connection == self.conn
@@ -170,7 +177,9 @@ class TunnelLayer(layer.Layer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         yield commands.SendData(self.tunnel_connection, data)
 
-    def send_close(self, command: commands.CloseConnection) -> layer.CommandGenerator[None]:
+    def send_close(
+        self, command: commands.CloseConnection
+    ) -> layer.CommandGenerator[None]:
         yield command
 
 

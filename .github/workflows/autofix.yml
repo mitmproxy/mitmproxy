@@ -1,0 +1,40 @@
+name: autofix.ci
+on: [ push, pull_request ]
+permissions:
+  contents: read
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: install-pinned/pyupgrade@847ef2b8aa35a3817372540b887f4130d864d6b7
+      - name: Run pyupgrade
+        run: |
+          shopt -s globstar
+          export GLOBIGNORE='mitmproxy/contrib/**'
+          pyupgrade --exit-zero-even-if-changed --keep-runtime-typing --py39-plus **/*.py
+
+      - uses: install-pinned/reorder_python_imports@97c3e89c53ae5513cc41716e876e26daff8bbdd6
+      - name: Run reorder-python-imports
+        run: |
+          shopt -s globstar
+          export GLOBIGNORE='mitmproxy/contrib/**'
+          reorder-python-imports --exit-zero-even-if-changed --py39-plus **/*.py
+      - uses: install-pinned/yesqa@b752c9eed899985c6df094e35d7a5a5bd1b94acb
+
+      - name: Run yesqa
+        run: |
+           shopt -s globstar
+           export GLOBIGNORE='mitmproxy/contrib/**'
+           yesqa **/*.py || true
+      - uses: install-pinned/autoflake@fa3c1715169ac36d903ee9d492d64beb5cad331f
+      - run: autoflake --in-place --remove-all-unused-imports --exclude contrib -r .
+
+      - uses: install-pinned/black@81e6dbf82145462d413a6662dd703fa382edeb11
+      - run: black --extend-exclude mitmproxy/contrib .
+
+      - uses: mhils/add-pr-ref-in-changelog@main
+
+      - uses: autofix-ci/action@8bc06253bec489732e5f9c52884c7cace15c0160

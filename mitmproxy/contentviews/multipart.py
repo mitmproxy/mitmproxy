@@ -1,8 +1,8 @@
 from typing import Optional
 
+from . import base
 from mitmproxy.coretypes import multidict
 from mitmproxy.net.http import multipart
-from . import base
 
 
 class ViewMultipart(base.View):

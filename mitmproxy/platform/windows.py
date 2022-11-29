@@ -1,8 +1,7 @@
 from __future__ import annotations
-import collections
+
 import collections.abc
 import contextlib
-import ctypes
 import ctypes.wintypes
 import json
 import os
@@ -12,12 +11,16 @@ import socketserver
 import threading
 import time
 from collections.abc import Callable
-from typing import Any, ClassVar, IO, Optional, cast
+from typing import Any
+from typing import cast
+from typing import ClassVar
+from typing import IO
+from typing import Optional
 
-import pydivert
 import pydivert.consts
 
-from mitmproxy.net.local_ip import get_local_ip, get_local_ip6
+from mitmproxy.net.local_ip import get_local_ip
+from mitmproxy.net.local_ip import get_local_ip6
 
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
@@ -98,7 +101,9 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
                     if c is None:
                         return
                     try:
-                        server = proxifier.client_server_map[cast(tuple[str, int], tuple(c))]
+                        server = proxifier.client_server_map[
+                            cast(tuple[str, int], tuple(c))
+                        ]
                     except KeyError:
                         server = None
                     write(server, self.wfile)
@@ -397,7 +402,7 @@ class TransparentProxy:
 
     local: Optional[RedirectLocal] = None
     # really weird linting error here.
-    forward: Optional[Redirect] = None  # noqa
+    forward: Optional[Redirect] = None
     response: Redirect
     icmp: Redirect
 

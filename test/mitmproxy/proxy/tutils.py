@@ -1,17 +1,24 @@
 import collections.abc
 import difflib
-import logging
-
 import itertools
+import logging
 import re
 import textwrap
 import traceback
-from collections.abc import Callable, Iterable
-from typing import Any, AnyStr, Generic, Optional, TypeVar, Union
+from collections.abc import Callable
+from collections.abc import Iterable
+from typing import Any
+from typing import AnyStr
+from typing import Generic
+from typing import Optional
+from typing import TypeVar
+from typing import Union
 
-from mitmproxy.proxy import commands, context, layer
-from mitmproxy.proxy import events
 from mitmproxy.connection import ConnectionState
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.events import command_reply_subclasses
 from mitmproxy.proxy.layer import Layer
 

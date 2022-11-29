@@ -1,7 +1,9 @@
 import codecs
 import io
 import re
-from typing import Iterable, Union, overload
+from collections.abc import Iterable
+from typing import overload
+from typing import Union
 
 
 # https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading
@@ -236,7 +238,7 @@ def escape_special_areas(
     """
     buf = io.StringIO()
     parts = split_special_areas(data, area_delimiter)
-    rex = re.compile(fr"[{control_characters}]")
+    rex = re.compile(rf"[{control_characters}]")
     for i, x in enumerate(parts):
         if i % 2:
             x = rex.sub(_move_to_private_code_plane, x)

@@ -1,14 +1,18 @@
 import hashlib
 import logging
 import urllib
-from collections.abc import Hashable, Sequence
-from typing import Any, Optional
+from collections.abc import Hashable
+from collections.abc import Sequence
+from typing import Any
+from typing import Optional
 
 import mitmproxy.types
-from mitmproxy import command, hooks
-from mitmproxy import ctx, http
+from mitmproxy import command
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import hooks
+from mitmproxy import http
 from mitmproxy import io
 
 

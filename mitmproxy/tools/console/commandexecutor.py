@@ -3,7 +3,6 @@ from collections.abc import Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import flow
-
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 

@@ -74,7 +74,9 @@ class Browser:
 
         cmd = get_browser_cmd()
         if not cmd:
-            logging.log(ALERT, "Your platform is not supported yet - please submit a patch.")
+            logging.log(
+                ALERT, "Your platform is not supported yet - please submit a patch."
+            )
             return
 
         tdir = tempfile.TemporaryDirectory()
@@ -85,7 +87,8 @@ class Browser:
                     *cmd,
                     "--user-data-dir=%s" % str(tdir.name),
                     "--proxy-server={}:{}".format(
-                        ctx.options.listen_host or "127.0.0.1", ctx.options.listen_port or "8080"
+                        ctx.options.listen_host or "127.0.0.1",
+                        ctx.options.listen_port or "8080",
                     ),
                     "--disable-fre",
                     "--no-default-browser-check",

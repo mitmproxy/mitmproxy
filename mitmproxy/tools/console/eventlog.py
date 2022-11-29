@@ -1,8 +1,9 @@
 import collections
 
 import urwid
-from mitmproxy.tools.console import layoutwidget
+
 from mitmproxy import log
+from mitmproxy.tools.console import layoutwidget
 
 
 class LogBufferWalker(urwid.SimpleListWalker):

@@ -1,19 +1,23 @@
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator
 
-import wsproto
 import wsproto.extensions
 import wsproto.frame_protocol
 import wsproto.utilities
-from mitmproxy import connection, http, websocket
-from mitmproxy.proxy import commands, events, layer
+from wsproto import ConnectionState
+from wsproto.frame_protocol import Opcode
+
+from mitmproxy import connection
+from mitmproxy import http
+from mitmproxy import websocket
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import MessageInjected
 from mitmproxy.proxy.utils import expect
-from wsproto import ConnectionState
-from wsproto.frame_protocol import Opcode
 
 
 @dataclass

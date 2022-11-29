@@ -1,6 +1,6 @@
+from mitmproxy import ctx
 from mitmproxy.addons import asgiapp
 from mitmproxy.addons.onboardingapp import app
-from mitmproxy import ctx
 
 APP_HOST = "mitm.it"
 

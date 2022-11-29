@@ -1,7 +1,7 @@
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import msgpack
-
 
 from mitmproxy.contentviews import base
 
@@ -15,14 +15,16 @@ def parse_msgpack(s: bytes) -> Any:
         return PARSE_ERROR
 
 
-def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base.TViewLine]:
+def format_msgpack(
+    data: Any, output=None, indent_count: int = 0
+) -> list[base.TViewLine]:
     if output is None:
         output = [[]]
 
     indent = ("text", "    " * indent_count)
 
     if type(data) is str:
-        token = [("Token_Literal_String", f"\"{data}\"")]
+        token = [("Token_Literal_String", f'"{data}"')]
         output[-1] += token
 
         # Need to return if single value, but return is discarded in dict/list loop
@@ -43,7 +45,14 @@ def format_msgpack(data: Any, output = None, indent_count: int = 0) -> list[base
     elif type(data) is dict:
         output[-1] += [("text", "{")]
         for key in data:
-            output.append([indent, ("text", "    "), ("Token_Name_Tag", f'"{key}"'), ("text", ": ")])
+            output.append(
+                [
+                    indent,
+                    ("text", "    "),
+                    ("Token_Name_Tag", f'"{key}"'),
+                    ("text", ": "),
+                ]
+            )
             format_msgpack(data[key], output, indent_count + 1)
 
             if key != list(data)[-1]:

@@ -2,19 +2,27 @@ import secrets
 from dataclasses import dataclass
 
 import pytest
-
-import wsproto
 import wsproto.events
-from mitmproxy.http import HTTPFlow, Request, Response
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.commands import SendData, CloseConnection, Log
-from mitmproxy.connection import ConnectionState
-from mitmproxy.proxy.events import DataReceived, ConnectionClosed
-from mitmproxy.proxy.layers import http, websocket
-from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.websocket import WebSocketData, WebSocketMessage
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
 from wsproto.frame_protocol import Opcode
+
+from mitmproxy.connection import ConnectionState
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Request
+from mitmproxy.http import Response
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import websocket
+from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
+from mitmproxy.websocket import WebSocketData
+from mitmproxy.websocket import WebSocketMessage
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 
 @dataclass

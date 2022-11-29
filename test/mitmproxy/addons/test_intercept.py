@@ -1,7 +1,7 @@
 import pytest
 
-from mitmproxy.addons import intercept
 from mitmproxy import exceptions
+from mitmproxy.addons import intercept
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 

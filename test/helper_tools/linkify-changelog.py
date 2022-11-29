@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import re
+from pathlib import Path
 
 changelog = Path(__file__).parent / "../../CHANGELOG.md"
 

@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class TestConcurrent:

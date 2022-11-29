@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from mitmproxy import flowfilter
 
 

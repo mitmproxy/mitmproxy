@@ -1,15 +1,18 @@
 import os
 import threading
+from collections.abc import Iterable
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Iterable, Optional
+from typing import Any
+from typing import BinaryIO
+from typing import Callable
+from typing import Optional
 
 import certifi
-
+from OpenSSL import SSL
 from OpenSSL.crypto import X509
 
-from OpenSSL import SSL
 from mitmproxy import certs
 
 
@@ -18,8 +21,8 @@ class Method(Enum):
     TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
     TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
     # Type-pyopenssl does not know about these DTLS constants.
-    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD   # type: ignore
-    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD   # type: ignore
+    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD  # type: ignore
+    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD  # type: ignore
 
 
 try:

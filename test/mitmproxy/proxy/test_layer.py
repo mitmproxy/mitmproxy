@@ -2,7 +2,9 @@ from logging import DEBUG
 
 import pytest
 
-from mitmproxy.proxy import commands, events, layer
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.context import Context
 from test.mitmproxy.proxy import tutils
 
