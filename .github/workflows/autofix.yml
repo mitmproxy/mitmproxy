@@ -35,7 +35,7 @@ jobs:
            shopt -s globstar
            export GLOBIGNORE='mitmproxy/contrib/**'
            yesqa **/*.py || true
-      - uses: install-pinned/autoflake@fa3c1715169ac36d903ee9d492d64beb5cad331f
+      - uses: install-pinned/autoflake@32877f5112ce1c5b8b30cf57d70593a53d5fca87
       - run: autoflake --in-place --remove-all-unused-imports --exclude contrib -r .
 
       - uses: install-pinned/black@dde5aed720bc458e86d99144d4d0c1f6c8e08844
