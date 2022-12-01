@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version-file: .github/python-version.txt
-      - uses: TrueBrain/actions-flake8@c2deca24d388aa5aedd6478332aa9df4600b5eac # v2.1
+      - uses: TrueBrain/actions-flake8@c120815866a4bb260e23a2550dccee02d94a0385 # v2.2
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
     if: github.event_name == 'push'
