@@ -12,10 +12,11 @@ class DumpMaster(master.Master):
     def __init__(
         self,
         options: options.Options,
+        loop=None,
         with_termlog=True,
         with_dumper=True,
     ) -> None:
-        super().__init__(options)
+        super().__init__(options,event_loop=loop)
         if with_termlog:
             self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
