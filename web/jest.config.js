@@ -8,6 +8,7 @@ module.exports = async () => {
         "roots": [
             "<rootDir>/src/js"
         ],
+        "setupFilesAfterEnv": ["<rootDir>/src/js/__tests__/setupTests.tsx"],
         "unmockedModulePathPatterns": [
             "react"
         ],

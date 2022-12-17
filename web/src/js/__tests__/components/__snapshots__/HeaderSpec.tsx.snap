@@ -325,6 +325,16 @@ exports[`Header 2`] = `
                 Display Command Bar
               </label>
             </div>
+            <div
+              class="menu-entry"
+            >
+              <label>
+                <input
+                  type="checkbox"
+                />
+                Dark mode
+              </label>
+            </div>
           </div>
           <div
             class="menu-legend"
@@ -541,6 +551,16 @@ exports[`Header 3`] = `
                   type="checkbox"
                 />
                 Display Command Bar
+              </label>
+            </div>
+            <div
+              class="menu-entry"
+            >
+              <label>
+                <input
+                  type="checkbox"
+                />
+                Dark mode
               </label>
             </div>
           </div>

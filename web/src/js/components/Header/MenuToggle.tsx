@@ -2,6 +2,7 @@ import * as React from "react";
 import {useDispatch} from "react-redux"
 import * as eventLogActions from "../../ducks/eventLog"
 import * as commandBarActions from "../../ducks/commandBar"
+import * as darkModeActions from "../../ducks/darkMode"
 import {useAppDispatch, useAppSelector} from "../../ducks"
 import * as optionsActions from "../../ducks/options"
 
@@ -69,6 +70,20 @@ export function CommandBarToggle() {
             onChange={() => dispatch(commandBarActions.toggleVisibility())}
         >
             Display Command Bar
+        </MenuToggle>
+    )
+}
+
+export function DarkModeToggle() {
+    const dispatch = useDispatch(),
+        visible = useAppSelector(state => state.darkMode.on);
+
+    return (
+        <MenuToggle
+            value={visible}
+            onChange={() => dispatch(darkModeActions.toggleDarkMode())}
+        >
+            Dark mode
         </MenuToggle>
     )
 }

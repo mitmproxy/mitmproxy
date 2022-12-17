@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Added Dark mode for the web interface.
+  ([#3886])(https://github.com/mitmproxy/mitmproxy/issues/3886), @devapro)
 * Add experimental QUIC support.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 

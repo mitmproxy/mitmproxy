@@ -11,6 +11,7 @@
         "bootstrap": "^3.4.1",
         "classnames": "^2.3.1",
         "codemirror": "^5.62.3",
+        "darkreader": "^4.9.58",
         "lodash": "^4.17.21",
         "prop-types": "^15.7.2",
         "qrcode": "^1.5.1",

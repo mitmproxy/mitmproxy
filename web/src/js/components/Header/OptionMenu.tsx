@@ -1,5 +1,5 @@
 import * as React from "react";
-import {CommandBarToggle, EventlogToggle, OptionsToggle} from "./MenuToggle"
+import {CommandBarToggle, DarkModeToggle, EventlogToggle, OptionsToggle} from "./MenuToggle"
 import Button from "../common/Button"
 import DocsLink from "../common/DocsLink"
 import HideInStatic from "../common/HideInStatic";
@@ -45,6 +45,7 @@ export default function OptionMenu() {
                 <div className="menu-content">
                     <EventlogToggle/>
                     <CommandBarToggle/>
+                    <DarkModeToggle/>
                 </div>
                 <div className="menu-legend">View Options</div>
             </div>

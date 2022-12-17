@@ -1,3 +1,4 @@
+import DarkReader from 'darkreader';
 import _ from 'lodash'
 import * as React from 'react'
 
@@ -139,4 +140,26 @@ export function getDiff(obj1, obj2) {
             result[key] = getDiff(obj1[key], obj2[key])
     }
     return result
+}
+
+export function setUiMode(isDarkModeEnabled: boolean) {
+    localStorage.setItem('isDarkModeEnabled', isDarkModeEnabled.toString()); 
+    if (isDarkModeEnabled) {
+        DarkReader.setFetchMethod(window.fetch);
+        DarkReader.enable({
+            brightness: 100,
+            contrast: 90,
+            sepia: 10
+        });
+    } else {
+        DarkReader.disable();
+    }
+}
+
+export function isDarkModeEnabled(): boolean {
+    return localStorage.getItem('isDarkModeEnabled') == "true"
+}
+
+export function initUiMode() {
+    setUiMode(isDarkModeEnabled())
 }
