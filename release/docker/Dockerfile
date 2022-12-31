@@ -1,10 +1,10 @@
-FROM python:3.11-bullseye as wheelbuilder
+FROM python:3.9-buster as wheelbuilder
 
 ARG MITMPROXY_WHEEL
 COPY $MITMPROXY_WHEEL /wheels/
 RUN pip install wheel && pip wheel --wheel-dir /wheels /wheels/${MITMPROXY_WHEEL}
 
-FROM python:3.11-slim-bullseye
+FROM python:3.9-slim-buster
 
 RUN useradd -mU mitmproxy
 RUN apt-get update \

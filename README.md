@@ -1,3 +1,44 @@
+# The BrowserUp Fork of the MITM Proxy
+
+The BrowserUp MITM Proxy allows you to capture HTTP requests, responses and content, 
+and export performance data as a HAR file. 
+
+The proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), with an added performance testing, QA and DevOps flavor. 
+
+Along with the standard mitmproxy features, the BrowserUp MITM Proxy offers adds a REST control API and native language clients in 
+Java, JavaScript, Python and Ruby. It allows HAR capture (websockets and HTTP/2 too), and provides the ability to 
+verify (assert) about network traffic.
+
+BrowserUp MITM Proxy is especially useful when used with Playwright, Cypress or Selenium tests.
+
+The REST API is documented [here](./doc.html) 
+
+Getting started:
+
+Clone our fork:
+
+`git clone https://github.com/browserup/mitmproxy.git`
+
+Follow the mitmproxy [certificate setup instructions](https://docs.mitmproxy.org/stable/concepts-certificates/)
+
+Run one of our [examples in clients/examples](clients/examples)
+
+The standard mitmproxy executables, like mitmweb are also shipped, and should work as normal.
+
+BrowserUp is a code contributor to the upstream project, and we hope to continue to support them with 
+code contributions where possible.
+
+The main changes for our fork are in the folders below/
+
+mitmproxy/addons/browserup/
+test/mitmproxy/addons/browserup
+clients/
+
+The standard MITMProxy documentation follows below.
+
+----------------
+
+
 # mitmproxy
 
 [![Continuous Integration Status](https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=main)](https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amain)
@@ -26,7 +67,7 @@ General information, tutorials, and precompiled binaries can be found on the mit
 The documentation for mitmproxy is available on our website:
 
 [![mitmproxy documentation stable](https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg)](https://docs.mitmproxy.org/stable/)
-[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/dev/)
+[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/main/)
 
 If you have questions on how to use mitmproxy, please
 use GitHub Discussions!
@@ -39,6 +80,6 @@ As an open source project, mitmproxy welcomes contributions of all forms.
 
 [![Dev Guide](https://shields.mitmproxy.org/badge/dev_docs-CONTRIBUTING.md-blue)](./CONTRIBUTING.md)
 
-Also, please feel free to join our developer Slack! However, please note that the primary purpose of our Slack is direct communication between maintainers and contributors. If you have questions where the answer might be valuable to others, please use [GitHub Discussions](https://github.com/mitmproxy/mitmproxy/discussions).
+Also, please feel free to join our developer Slack!
 
 [![Slack Developer Chat](https://shields.mitmproxy.org/badge/slack-mitmproxy-E01563.svg)](http://slack.mitmproxy.org/)

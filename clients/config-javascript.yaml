@@ -1,0 +1,9 @@
+# package for generated api classes
+apiPackage: browserup-mitmproxy-client
+invokerPackage: BrowserUpMitmProxyClient
+licenseName: MIT
+moduleName: BrowserUpMitmProxyClient
+
+projectDescription: "REST client for the BrowserUp Proxy"
+projectName: browserup-mitmproxy-client
+projectVersion: 1.0.0

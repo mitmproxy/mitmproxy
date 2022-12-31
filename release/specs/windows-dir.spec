@@ -3,13 +3,16 @@ from pathlib import Path
 from PyInstaller.building.api import PYZ, EXE, COLLECT
 from PyInstaller.building.build_main import Analysis
 
+assert SPECPATH == "."
+
 here = Path(r".")
-tools = ["mitmproxy", "mitmdump", "mitmweb"]
+tools = ["mitmproxy", "mitmdump", "mitmweb", "browserup-proxy"]
 
 analysis = Analysis(
     tools,
     excludes=["tcl", "tk", "tkinter"],
     pathex=[str(here)],
+    hookspath=[str(here / ".." / "hooks")],
 )
 
 pyz = PYZ(analysis.pure, analysis.zipped_data)

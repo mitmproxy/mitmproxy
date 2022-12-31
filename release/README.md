@@ -1,49 +1,49 @@
 # Release Checklist
- 
-1. Make sure that `CHANGELOG.md` is up-to-date with all entries in the "Unreleased" section.
-2. Invoke the [release workflow](https://github.com/mitmproxy/mitmproxy/actions/workflows/release.yml) from the GitHub UI.
-3. The spawned workflow runs will require manual confirmation on GitHub which you need to approve twice: 
-   https://github.com/mitmproxy/mitmproxy/actions
-4. Once everything has been deployed, update the website.
-5. Verify that the front-page download links for all platforms are working.
+
+These steps assume you are on the correct branch and have a git remote called `origin` that points to the `mitmproxy/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
+
+- Update CHANGELOG.
+- Verify that the compiled mitmweb assets are up-to-date.
+- Verify that all CI tests pass.
+- Verify that `mitmproxy/version.py` is correct. Remove `.dev` suffix if it exists.
+- Tag the release and push to GitHub.
+  - `git tag v4.0.0`
+  - `git push origin v4.0.0`
+- Wait for tag CI to complete.
 
 ### GitHub Releases
 
-- CI will automatically create a GitHub release:  
-  https://github.com/mitmproxy/mitmproxy/releases
+- Create release notice on GitHub
+  [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
+  auto-created by the tag.
+- We DO NOT upload release artifacts to GitHub anymore. Simply add the
+  following snippet to the notice:
+  `You can find the latest release packages at https://mitmproxy.org/downloads/.`
 
 ### PyPi
 
-- CI will automatically push a wheel to GitHub:  
-  https://pypi.python.org/pypi/mitmproxy
-
-### Docker
-
-- CI will automatically push images to Docker Hub:  
-  https://hub.docker.com/r/mitmproxy/mitmproxy/tags/
-
-### Docs
-
-- CI will automatically update the stable docs and create an archive version:  
-  `https://docs.mitmproxy.org/archive/vMAJOR/`
-
-### Download Server
-
-- CI will automatically push binaries to our download S3 bucket:  
-  https://mitmproxy.org/downloads/
-
-### Microsoft Store
-
-- CI will automatically update the Microsoft Store version:  
-  https://apps.microsoft.com/store/detail/mitmproxy/9NWNDLQMNZD7
-- There is a review process, binaries may take a day to show up.
+- The created wheel is uploaded to PyPi automatically.
+- Please verify that https://pypi.python.org/pypi/mitmproxy has the latest version.
 
 ### Homebrew
 
 - The Homebrew maintainers are typically very fast and detect our new relese
   within a day.
 - If you feel the need, you can run this from a macOS machine:
-  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/<version number here>.tar.gz mitmproxy`
+  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>.tar.gz mitmproxy`
+
+### Docker
+
+- The docker image is built by our CI workers and pushed to Docker Hub automatically.
+- Please verify that https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ has the latest version.
+- Please verify that the latest tag points to the most recent image (same digest / hash).
+
+### Docs
+
+- `./build.py`. If everything looks alright, continue with
+- `./upload-stable.sh`,
+- `DOCS_ARCHIVE=true ./build.py`, and
+- `./upload-archive.sh v4`. Doing this now already saves you from switching back to an old state on the next release.
 
 ### Website
 

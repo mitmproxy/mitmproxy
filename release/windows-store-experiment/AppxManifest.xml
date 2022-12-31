@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" 
+	xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+	xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" 
+	xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10">
+	<Identity Name="Mitmproxy" ProcessorArchitecture="x86" Publisher="CN=E4E2D0A5-1FD2-42BF-B9FD-3BCA3E1C" Version="2.0.2.0" />
+	<Properties>
+		<DisplayName>Mitmproxy</DisplayName>
+		<PublisherDisplayName>Maximilian Hils</PublisherDisplayName>
+		<Logo>Assets\logo.44x44.png</Logo>
+	</Properties>
+	<Resources>
+		<Resource Language="en-us" />
+	</Resources>
+	<Dependencies>
+		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14316.0" MaxVersionTested="10.0.15063.296" />
+	</Dependencies>
+	<Capabilities>
+		<rescap:Capability Name="runFullTrust" />
+	</Capabilities>
+	<Applications>
+		<Application Id="mitmweb" Executable="mitmweb.exe" EntryPoint="Windows.FullTrustApplication">
+			<uap3:VisualElements DisplayName="Mitmproxy UI" Description="Mitmproxy Web UI" BackgroundColor="#333333"
+				Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png"/>
+			<Extensions>
+				<uap3:Extension Executable="mitmweb.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
+					<uap3:AppExecutionAlias>
+						<desktop:ExecutionAlias Alias="mitmweb.exe" />
+						<desktop:ExecutionAlias Alias="mitmproxy.exe" />
+					</uap3:AppExecutionAlias>
+				</uap3:Extension>
+			</Extensions>
+		</Application>
+	</Applications>
+	</Package>

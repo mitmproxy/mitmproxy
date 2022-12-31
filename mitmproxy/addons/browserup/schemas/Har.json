@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "required": [
+    "log"
+  ],
+  "properties": {
+    "log": {
+      "type": "object",
+      "externalDocs": {
+        "description": "HAR (HTTP Archive) Log Format",
+        "url": "http://www.softwareishard.com/blog/har-12-spec/"
+      },
+      "required": [
+        "version",
+        "creator",
+        "entries",
+        "pages"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "comment": {
+              "type": "string"
+            }
+          }
+        },
+        "browser": {
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "comment": {
+              "type": "string"
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Page"
+          },
+          "default": []
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Entry"
+          }
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
