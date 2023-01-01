@@ -105,7 +105,7 @@ jobs:
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
           sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
-      - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
+      - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
         with:
           file: ./coverage.xml
@@ -174,7 +174,7 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
+      - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
         # mirrored above and at https://github.com/mitmproxy/mitmproxy/settings/actions
         with:
           file: ./web/coverage/coverage-final.json
