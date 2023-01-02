@@ -114,6 +114,13 @@ class ServerPlayback:
         Replay server responses from flows.
         """
         self.flowmap = {}
+        self.add_flows(flows)
+
+    @command.command("replay.server.add")
+    def add_flows(self, flows: Sequence[flow.Flow]) -> None:
+        """
+        Add responses from flows to server replay list.
+        """
         for f in flows:
             if isinstance(f, http.HTTPFlow):
                 lst = self.flowmap.setdefault(self._hash(f), [])

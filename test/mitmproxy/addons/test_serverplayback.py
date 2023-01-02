@@ -58,6 +58,27 @@ def test_server_playback():
         assert not sp.flowmap
 
 
+def test_add_flows():
+    sp = serverplayback.ServerPlayback()
+    with taddons.context(sp) as tctx:
+        tctx.configure(sp)
+        f1 = tflow.tflow(resp=True)
+        f2 = tflow.tflow(resp=True)
+
+        sp.load_flows([f1])
+        sp.add_flows([f2])
+
+        assert sp.next_flow(f1)
+        assert sp.flowmap
+        assert sp.next_flow(f2)
+        assert not sp.flowmap
+
+        sp.add_flows([f1])
+        assert sp.flowmap
+        assert sp.next_flow(f1)
+        assert not sp.flowmap
+
+
 def test_ignore_host():
     sp = serverplayback.ServerPlayback()
     with taddons.context(sp) as tctx:
