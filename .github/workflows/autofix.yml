@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: install-pinned/pyupgrade@847ef2b8aa35a3817372540b887f4130d864d6b7
+      - uses: install-pinned/pyupgrade@423622e7c2088eeba495a591385ec22074284f90
       - name: Run pyupgrade
         run: |
           shopt -s globstar
