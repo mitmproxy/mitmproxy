@@ -611,5 +611,5 @@ def save(opts: OptManager, path: str, defaults: bool = False) -> None:
     else:
         data = ""
 
-    with open(path, "wt", encoding="utf8") as f:
+    with open(path, "w", encoding="utf8") as f:
         serialize(opts, f, data, defaults)
