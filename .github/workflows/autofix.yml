@@ -28,7 +28,7 @@ jobs:
           shopt -s globstar
           export GLOBIGNORE='mitmproxy/contrib/**'
           reorder-python-imports --exit-zero-even-if-changed --py39-plus **/*.py
-      - uses: install-pinned/yesqa@cf847492077eea907797bac45e68f87801d4de31
+      - uses: install-pinned/yesqa@a1262fbe567d4c0b3445afade67b90f3bba2c9a2
 
       - name: Run yesqa
         run: |
