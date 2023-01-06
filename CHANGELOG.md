@@ -8,6 +8,7 @@
   This makes it simpler to accept both HTTP and HTTPS.
   ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
 * Add `replay.server.add` command for adding flows to server replay buffer
+  ([#5851](https://github.com/mitmproxy/mitmproxy/pull/5851), @italankin)
 
 ### Breaking Changes
 
