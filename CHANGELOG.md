@@ -7,7 +7,7 @@
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
   This makes it simpler to accept both HTTP and HTTPS.
   ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
-* Add `replay.server.add` command for adding flows to server replay buffer (@italankin)
+* Add `replay.server.add` command for adding flows to server replay buffer
 
 ### Breaking Changes
 
