@@ -20,7 +20,9 @@ class Wrapper:
         self.extra_arguments = extra_arguments
 
     def run_networksetup_command(self, *arguments):
-        return subprocess.check_output(["sudo", "networksetup"] + list(arguments))
+        return subprocess.check_output(
+            ["sudo", "networksetup"] + list(arguments)
+        ).decode()
 
     def proxy_state_for_service(self, service):
         state = self.run_networksetup_command("-getwebproxy", service).splitlines()
@@ -47,8 +49,8 @@ class Wrapper:
 
     def run_command_with_input(self, command, input):
         popen = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        (stdout, stderr) = popen.communicate(input)
-        return stdout
+        (stdout, stderr) = popen.communicate(input.encode())
+        return stdout.decode()
 
     def primary_interace_name(self):
         scutil_script = "get State:/Network/Global/IPv4\nd.show\n"
