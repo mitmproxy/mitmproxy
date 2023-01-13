@@ -20,7 +20,9 @@ class Wrapper:
         self.extra_arguments = extra_arguments
 
     def run_networksetup_command(self, *arguments):
-        return subprocess.check_output(["sudo", "networksetup"] + list(arguments)).decode()
+        return subprocess.check_output(
+            ["sudo", "networksetup"] + list(arguments)
+        ).decode()
 
     def proxy_state_for_service(self, service):
         state = self.run_networksetup_command("-getwebproxy", service).splitlines()
