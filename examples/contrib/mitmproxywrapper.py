@@ -10,6 +10,7 @@ import argparse
 import contextlib
 import os
 import re
+import signal
 import socketserver
 import subprocess
 import sys
@@ -90,8 +91,6 @@ class Wrapper:
 
     def wrap_mitmproxy(self):
         with self.wrap_proxy():
-            # TODO install hook so that ^C will disable proxy
-            # This is especially needed for mitmweb, where ^C may be the only way to stop it.
             cmd = ["mitmweb" if self.use_mitmweb else "mitmproxy", "-p", str(self.port)]
             if self.extra_arguments:
                 cmd.extend(self.extra_arguments)
@@ -167,6 +166,13 @@ class Wrapper:
                 print(f"Using random port {port}...")
 
         wrapper = cls(port=port, use_mitmweb=args.web, extra_arguments=extra_arguments)
+
+        def handler(signum, frame):
+            print("Cleaning up proxy settings...")
+            wrapper.toggle_proxy()
+
+        signal.signal(signal.SIGINT, handler)
+
 
         if args.toggle:
             wrapper.toggle_proxy()
