@@ -10,13 +10,15 @@ import argparse
 import contextlib
 import os
 import re
+import socketserver
 import subprocess
 import sys
 
 
 class Wrapper:
-    def __init__(self, port, extra_arguments=None):
+    def __init__(self, port, use_mitmweb, extra_arguments=None):
         self.port = port
+        self.use_mitmweb = use_mitmweb
         self.extra_arguments = extra_arguments
 
     def run_networksetup_command(self, *arguments):
@@ -88,7 +90,9 @@ class Wrapper:
 
     def wrap_mitmproxy(self):
         with self.wrap_proxy():
-            cmd = ["mitmproxy", "-p", str(self.port)]
+            # TODO install hook so that ^C will disable proxy
+            # This is especially needed for mitmweb, where ^C may be the only way to stop it.
+            cmd = ["mitmweb" if self.use_mitmweb else "mitmproxy", "-p", str(self.port)]
             if self.extra_arguments:
                 cmd.extend(self.extra_arguments)
             subprocess.check_call(cmd)
@@ -124,7 +128,7 @@ class Wrapper:
     def main(cls):
         parser = argparse.ArgumentParser(
             description="Helper tool for OS X proxy configuration and mitmproxy.",
-            epilog="Any additional arguments will be passed on unchanged to mitmproxy.",
+            epilog="Any additional arguments will be passed on unchanged to mitmproxy/mitmweb.",
         )
         parser.add_argument(
             "-t",
@@ -140,9 +144,29 @@ class Wrapper:
             help="override the default port of 8080",
             default=8080,
         )
+        parser.add_argument(
+            "-P",
+            "--port-random",
+            action="store_true",
+            help="choose a random unused port",
+        )        
+        parser.add_argument(
+            "-w",
+            "--web",
+            action="store_true",
+            help="web interface: run mitmweb instead of mitmproxy",
+        )
         args, extra_arguments = parser.parse_known_args()
+        port = args.port
 
-        wrapper = cls(port=args.port, extra_arguments=extra_arguments)
+        # Allocate a random unused port, and hope no other process steals it before mitmproxy/mitmweb uses it.
+        # Passing the allocated socket to mitmproxy/mitmweb would be nicer of course.
+        if args.port_random:
+            with socketserver.TCPServer(("localhost", 0), None) as s:
+                port = s.server_address[1]
+                print(f"Using random port {port}...")
+
+        wrapper = cls(port=port, use_mitmweb=args.web, extra_arguments=extra_arguments)
 
         if args.toggle:
             wrapper.toggle_proxy()
