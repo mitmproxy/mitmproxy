@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 from mitmproxy import ctx
-from mitmproxy.utils import exit_codes
 
 
 def load(_):
@@ -38,4 +37,4 @@ async def make_request():
         ctx.master.shutdown()
     except Exception as e:
         print(f"{e!r}")
-        sys.exit(exit_codes.SELFTEST_ERROR)
+        sys.exit(1)
