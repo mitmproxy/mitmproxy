@@ -171,6 +171,21 @@ jobs:
           name: docs-archive
           path: docs/public
 
+  check:
+    if: always()
+    needs:
+    - lint
+    - filename-matching
+    - mypy
+    - individual-coverage
+    - test
+    - build
+    - test-web-ui
+    - docs
+    uses: mhils/workflows/.github/workflows/alls-green.yml@main
+    with:
+      jobs: ${{ toJSON(needs) }}
+
   # Separate from everything else because slow.
   build-and-deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && (
@@ -179,11 +194,7 @@ jobs:
       || startsWith(github.ref, 'refs/tags/')
       )
     environment: deploy-docker
-    needs:
-      - test
-      - test-web-ui
-      - build
-      - docs
+    needs: check
     runs-on: ubuntu-latest
     env:
       DOCKER_USERNAME: mitmbot
@@ -208,11 +219,7 @@ jobs:
     # In particular, we don't blindly `pip install` anything to minimize the risk of supply chain attacks.
     if: github.repository == 'mitmproxy/mitmproxy' && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
     environment: ${{ (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')) && 'deploy-release' || 'deploy-snapshot' }}
-    needs:
-      - test
-      - test-web-ui
-      - build
-      - docs
+    needs: check
     runs-on: ubuntu-latest
     env:
       # PyPI and MSFT keys are only available for the deploy-release environment
