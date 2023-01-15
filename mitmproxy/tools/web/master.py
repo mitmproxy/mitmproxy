@@ -17,7 +17,6 @@ from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.contrib.tornado import patch_tornado
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import static_viewer
 from mitmproxy.tools.web import webaddons
@@ -94,7 +93,6 @@ class WebMaster(master.Master):
         )
 
     async def running(self):
-        patch_tornado()
         # Register tornado with the current event loop
         tornado.ioloop.IOLoop.current()
 
