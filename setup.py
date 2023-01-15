@@ -78,7 +78,7 @@ setup(
         "asgiref>=3.2.10,<3.6",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
-        "cryptography>=38.0,<38.1",
+        "cryptography>=38.0,<39.1",
         "flask>=1.1.1,<2.3",
         "h11>=0.11,<0.15",
         "h2>=4.1,<5",
