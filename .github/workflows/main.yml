@@ -11,65 +11,31 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-pr:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: .github/python-version.txt
-      - uses: TrueBrain/actions-flake8@c120815866a4bb260e23a2550dccee02d94a0385 # v2.2
-        # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
-  lint-local:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: .github/python-version.txt
-      - run: pip install tox
-      - run: tox -e flake8
+  lint:
+    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    with:
+      cmd: tox -e flake8
+
   filename-matching:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: .github/python-version.txt
-      - run: pip install tox
-      - run: tox -e filename_matching
+    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    with:
+      cmd: tox -e filename_matching
+
   mypy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: .github/python-version.txt
-      - run: pip install tox
-      - run: tox -e mypy
+    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    with:
+      cmd: tox -e mypy
+
   individual-coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: .github/python-version.txt
-      - run: pip install tox
-      - run: tox -e individual_coverage
+    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    with:
+      cmd: tox -e individual_coverage
+
   test:
     strategy:
       fail-fast: false
@@ -155,7 +121,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/setup-node@v3
         with:
           node-version-file: .github/node-version.txt
