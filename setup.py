@@ -95,7 +95,7 @@ setup(
         "ruamel.yaml>=0.16,<0.18",
         "sortedcontainers>=2.3,<2.5",
         "tornado>=6.2,<7",
-        "urwid>=2.1.1,<2.2",
+        "urwid-mitmproxy>=2.1.1,<2.2",
         "wsproto>=1.0,<1.3",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.20",
