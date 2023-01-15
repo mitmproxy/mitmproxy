@@ -17,7 +17,6 @@ from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 
 
-
 class StackWidget(urwid.Frame):
     def __init__(self, window, widget, title, focus):
         self.is_focused = focus
