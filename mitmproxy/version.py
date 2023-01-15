@@ -18,7 +18,7 @@ def get_dev_version() -> str:
     mitmproxy_version = VERSION
 
     here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    try:
+    try:  # pragma: no cover
         # Check that we're in the mitmproxy repository: https://github.com/mitmproxy/mitmproxy/issues/3987
         # cb0e3287090786fad566feb67ac07b8ef361b2c3 is the first mitmproxy commit.
         subprocess.run(
