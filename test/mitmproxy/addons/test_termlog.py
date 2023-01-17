@@ -7,6 +7,7 @@ import pytest
 
 from mitmproxy.addons import termlog
 from mitmproxy.test import taddons
+from mitmproxy.utils import exit_codes
 from mitmproxy.utils import vt_codes
 
 
@@ -67,6 +68,6 @@ async def test_cannot_print(monkeypatch) -> None:
         with pytest.raises(SystemExit) as exc_info:
             logging.info("Should not log this, but raise instead")
 
-        assert exc_info.value.args[0] == 1
+        assert exc_info.value.args[0] == exit_codes.CANNOT_PRINT
 
     t.done()

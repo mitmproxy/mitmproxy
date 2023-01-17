@@ -6,6 +6,7 @@ from mitmproxy.addons import save
 from mitmproxy.addons import view
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.utils import exit_codes
 
 
 def test_configure(tmp_path):
@@ -193,7 +194,8 @@ def test_disk_full(tmp_path, monkeypatch, capsys):
 
         f = tflow.tflow(resp=True)
         sa.request(f)
-        with pytest.raises(SystemExit):
+        with pytest.raises(SystemExit) as excinfo:
             sa.response(f)
 
         assert "Error while writing" in capsys.readouterr().err
+        assert excinfo.value.code == exit_codes.CANNOT_WRITE_TO_FILE
