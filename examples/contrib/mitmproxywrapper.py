@@ -148,7 +148,7 @@ class Wrapper:
             "--port-random",
             action="store_true",
             help="choose a random unused port",
-        )        
+        )
         parser.add_argument(
             "-w",
             "--web",
@@ -172,7 +172,6 @@ class Wrapper:
             wrapper.toggle_proxy()
 
         signal.signal(signal.SIGINT, handler)
-
 
         if args.toggle:
             wrapper.toggle_proxy()
