@@ -19,12 +19,13 @@ from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
 from mitmproxy.utils import arg_check
 from mitmproxy.utils import debug
+from mitmproxy.utils import exit_codes
 
 
 def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
-        sys.exit(0)
+        sys.exit(exit_codes.SUCCESS)
     if args.quiet or args.options or args.commands:
         # also reduce log verbosity if --options or --commands is passed,
         # we don't want log messages from regular startup then.
@@ -79,7 +80,7 @@ def run(
             args = parser.parse_args(arguments)
         except SystemExit:
             arg_check.check()
-            sys.exit(1)
+            sys.exit(exit_codes.INVALID_ARGS)
 
         try:
             opts.set(*args.setoptions, defer=True)
@@ -92,10 +93,10 @@ def run(
 
             if args.options:
                 optmanager.dump_defaults(opts, sys.stdout)
-                sys.exit(0)
+                sys.exit(exit_codes.SUCCESS)
             if args.commands:
                 master.commands.dump()
-                sys.exit(0)
+                sys.exit(exit_codes.SUCCESS)
             if extra:
                 if args.filter_args:
                     logging.info(
@@ -105,7 +106,7 @@ def run(
 
         except exceptions.OptionsError as e:
             print(f"{sys.argv[0]}: {e}", file=sys.stderr)
-            sys.exit(1)
+            sys.exit(exit_codes.INVALID_OPTIONS)
 
         loop = asyncio.get_running_loop()
 

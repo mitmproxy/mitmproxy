@@ -3,6 +3,7 @@ import logging
 import sys
 
 from mitmproxy import log
+from mitmproxy.utils import exit_codes
 
 
 class ErrorCheck:
@@ -26,7 +27,7 @@ class ErrorCheck:
                 msg = "\n".join(r.msg for r in self.logger.has_errored)
                 print(f"Error{plural} on startup: {msg}", file=sys.stderr)
 
-            sys.exit(1)
+            sys.exit(exit_codes.STARTUP_ERROR)
 
 
 class ErrorCheckHandler(log.MitmLogHandler):

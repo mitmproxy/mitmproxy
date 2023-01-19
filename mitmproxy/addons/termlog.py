@@ -7,6 +7,7 @@ from typing import IO
 
 from mitmproxy import ctx
 from mitmproxy import log
+from mitmproxy.utils import exit_codes
 from mitmproxy.utils import vt_codes
 
 
@@ -51,4 +52,4 @@ class TermLogHandler(log.MitmLogHandler):
         except OSError:
             # We cannot print, exit immediately.
             # See https://github.com/mitmproxy/mitmproxy/issues/4669
-            sys.exit(1)
+            sys.exit(exit_codes.CANNOT_PRINT)

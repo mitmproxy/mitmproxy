@@ -29,6 +29,7 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
+from mitmproxy.utils import exit_codes
 
 
 T = TypeVar("T", str, bytes)
@@ -193,7 +194,7 @@ class ConsoleMaster(master.Master):
                 "Please run mitmproxy in an interactive shell environment.",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            sys.exit(exit_codes.NO_TTY)
 
         detected_encoding = urwid.detected_encoding.lower()
         if os.name != "nt" and detected_encoding and "utf" not in detected_encoding:
@@ -203,7 +204,7 @@ class ConsoleMaster(master.Master):
                 file=sys.stderr,
             )
             # Experimental (04/2022): We just don't exit here and see if/how that affects users.
-            # sys.exit(1)
+            # sys.exit(exit_codes.NO_UTF_CONSOLE)
         urwid.set_encoding("utf8")
 
         signals.call_in.connect(self.sig_call_in)
