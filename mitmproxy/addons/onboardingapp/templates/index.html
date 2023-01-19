@@ -50,6 +50,11 @@
         <li><code>mv mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt</code></li>
         <li><code>sudo update-ca-certificates</code></li>
     </ol>
+    <h5>Fedora</h5>
+    <ol>
+        <li><code>mv mitmproxy-ca-cert.pem /etc/pki/ca-trust/source/anchors/</code></li>
+        <li><code>sudo update-ca-trust</code></li>
+    </ol>
     {% endcall %}
     {% call entry('macOS', 'apple') %}
     <h5>Manual Installation</h5>
