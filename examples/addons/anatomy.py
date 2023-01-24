@@ -4,6 +4,8 @@ Basic skeleton of a mitmproxy addon.
 Run as follows: mitmproxy -s anatomy.py
 """
 import logging
+logging.basicConfig(level=logging.INFO)
+
 
 
 class Counter:
