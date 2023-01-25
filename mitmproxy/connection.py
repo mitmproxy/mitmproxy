@@ -271,7 +271,11 @@ class Server(Connection):
     sockname: Optional[Address] = None
 
     timestamp_start: Optional[float] = None
-    """*Timestamp:* TCP SYN sent."""
+    """
+    *Timestamp:* Connection establishment started. 
+    
+    For IP addresses, this corresponds to sending a TCP SYN; for domains, this corresponds to starting a DNS lookup.
+    """
     timestamp_tcp_setup: Optional[float] = None
     """*Timestamp:* TCP ACK received."""
 
