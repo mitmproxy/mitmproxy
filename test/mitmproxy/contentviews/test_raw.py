@@ -5,6 +5,10 @@ from mitmproxy.contentviews import raw
 def test_view_raw():
     v = full_eval(raw.ViewRaw())
     assert v(b"foo")
+    assert v("\\©".encode()) == (
+        "Raw",
+        [[("text", "\\©".encode())]],
+    )
 
 
 def test_render_priority():
