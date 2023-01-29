@@ -5,9 +5,15 @@ from mitmproxy.contentviews import raw
 def test_view_raw():
     v = full_eval(raw.ViewRaw())
     assert v(b"foo")
-    assert v("\\©".encode()) == (
+    # unicode
+    assert v("🫠".encode()) == (
         "Raw",
-        [[("text", "\\©".encode())]],
+        [[("text", "🫠".encode())]],
+    )
+    # invalid utf8
+    assert v(b"\xFF".encode()) == (
+        "Raw",
+        [[("text", b"\xFF")]],
     )
 
 
