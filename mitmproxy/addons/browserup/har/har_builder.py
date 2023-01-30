@@ -96,7 +96,7 @@ class HarBuilder():
             "redirectURL": "",
             "headersSize": -1,
             "bodySize": -1,
-            "comment": 0,
+            "comment": "",
         }
 
     @staticmethod
