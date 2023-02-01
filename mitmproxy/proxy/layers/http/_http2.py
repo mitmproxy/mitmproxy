@@ -276,7 +276,9 @@ class Http2Connection(HttpConnection):
             # Implementations MUST ignore and discard any frame that has a type that is unknown.
             yield Log(f"Ignoring unknown HTTP/2 frame type: {event.frame.type}")
         elif isinstance(event, h2.events.AlternativeServiceAvailable):
-            yield Log("Received HTTP/2 Alt-Svc frame, which will not be forwarded.", DEBUG)
+            yield Log(
+                "Received HTTP/2 Alt-Svc frame, which will not be forwarded.", DEBUG
+            )
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
         return False
