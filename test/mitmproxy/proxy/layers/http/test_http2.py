@@ -1201,7 +1201,12 @@ def test_alt_svc(tctx):
 
     assert (
         playbook
-        >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
         << http.HttpRequestHeadersHook(flow)
         >> reply()
         << http.HttpRequestHook(flow)
@@ -1210,8 +1215,7 @@ def test_alt_svc(tctx):
         >> reply(None, side_effect=make_h2)
         << SendData(server, initial)
         >> DataReceived(
-            server,
-            cff.build_alt_svc_frame(0, b"example.com", b"h3=\":443\"").serialize()
+            server, cff.build_alt_svc_frame(0, b"example.com", b'h3=":443"').serialize()
         )
         << Log(Placeholder(str), Placeholder(int))
     )
