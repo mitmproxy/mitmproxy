@@ -1,4 +1,5 @@
 import time
+from logging import DEBUG
 
 import h2.settings
 import hpack
@@ -1217,5 +1218,5 @@ def test_alt_svc(tctx):
         >> DataReceived(
             server, cff.build_alt_svc_frame(0, b"example.com", b'h3=":443"').serialize()
         )
-        << Log(Placeholder(str), Placeholder(int))
+        << Log("Received HTTP/2 Alt-Svc frame, which will not be forwarded.", DEBUG)
     )
