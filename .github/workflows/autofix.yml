@@ -22,7 +22,7 @@ jobs:
           export GLOBIGNORE='mitmproxy/contrib/**'
           pyupgrade --exit-zero-even-if-changed --keep-runtime-typing --py39-plus **/*.py
 
-      - uses: install-pinned/reorder_python_imports@515035fd9eb355713f61dee238b17a04ce01f4d2
+      - uses: install-pinned/reorder_python_imports@946c8bbd8fe048a3bee76063c90c938d5a59a9aa
       - name: Run reorder-python-imports
         run: |
           shopt -s globstar
