@@ -610,7 +610,7 @@ def split_pseudo_headers(
 ) -> tuple[dict[bytes, bytes], http.Headers]:
     pseudo_headers: dict[bytes, bytes] = {}
     i = 0
-    for (header, value) in h2_headers:
+    for header, value in h2_headers:
         if header.startswith(b":"):
             if header in pseudo_headers:
                 raise ValueError(f"Duplicate HTTP/2 pseudo header: {header!r}")

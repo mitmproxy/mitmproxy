@@ -97,7 +97,6 @@ class WebsocketLayer(layer.Layer):
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:
-
         client_extensions = []
         server_extensions = []
 

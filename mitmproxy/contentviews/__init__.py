@@ -89,7 +89,7 @@ def safe_to_print(lines, encoding="utf8"):
     """
     for line in lines:
         clean_line = []
-        for (style, text) in line:
+        for style, text in line:
             if isinstance(text, bytes):
                 text = text.decode(encoding, "replace")
             text = strutils.escape_control_characters(text)

@@ -1028,7 +1028,6 @@ class HttpLayer(layer.Layer):
         stack = tunnel.LayerStack()
 
         if not can_use_context_connection:
-
             context.server = Server(
                 address=event.address, transport_protocol=event.transport_protocol
             )

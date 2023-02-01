@@ -56,7 +56,7 @@ def validate_headers(headers: Headers) -> None:
     te_found = False
     cl_found = False
 
-    for (name, value) in headers.fields:
+    for name, value in headers.fields:
         if not _valid_header_name.match(name):
             raise ValueError(
                 f"Received an invalid header name: {name!r}. Invalid header names may introduce "

@@ -198,7 +198,6 @@ def test_parse_set_cookie_header():
 
 
 def test_refresh_cookie():
-
     # Invalid expires format, sent to us by Reddit.
     c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2133 23:59:59 GMT; Path=/"
     assert cookies.refresh_set_cookie_header(c, 60)

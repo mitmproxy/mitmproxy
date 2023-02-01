@@ -93,7 +93,6 @@ class TCPLayer(layer.Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed, TcpMessageInjected)
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
-
         if isinstance(event, TcpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(

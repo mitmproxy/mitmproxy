@@ -92,7 +92,6 @@ class UDPLayer(layer.Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
-
         if isinstance(event, UdpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(

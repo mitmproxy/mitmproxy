@@ -54,7 +54,6 @@ class RequestMultipartEditor(base.FocusEditor):
     columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
-
         return flow.request.multipart_form.items(multi=True)
 
     def set_data(self, vals, flow):
@@ -66,7 +65,6 @@ class RequestUrlEncodedEditor(base.FocusEditor):
     columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
-
         return flow.request.urlencoded_form.items(multi=True)
 
     def set_data(self, vals, flow):

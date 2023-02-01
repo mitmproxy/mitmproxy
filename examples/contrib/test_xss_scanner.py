@@ -408,7 +408,6 @@ class TestXSSScanner:
         assert sqli_info is None
 
     def test_test_query_injection(self, get_request_vuln):
-
         xss_info = xss.test_query_injection(
             "<html></html>", "https://example.com/vuln.php?cmd=ls", {}
         )[0]

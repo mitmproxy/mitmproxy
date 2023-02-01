@@ -1113,7 +1113,6 @@ class ViewGrpcProtobuf(base.View):
         http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
-
         if bool(data) and content_type in self.__content_types_grpc:
             return 1
         if bool(data) and content_type in self.__content_types_pb:

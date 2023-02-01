@@ -56,7 +56,6 @@ def configure(updated):
 
 
 def flow_entry(flow: mitmproxy.http.HTTPFlow) -> dict:
-
     # -1 indicates that these values do not apply to current request
     ssl_time = -1
     connect_time = -1

@@ -357,7 +357,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         try:
             layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
-
                 if isinstance(command, commands.OpenConnection):
                     assert command.connection not in self.transports
                     handler = asyncio_utils.create_task(

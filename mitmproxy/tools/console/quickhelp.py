@@ -169,7 +169,7 @@ def _make_row(label: str, items: HelpItems, keymap: Keymap) -> urwid.Columns:
     cols = [
         (len(label), urwid.Text(label)),
     ]
-    for (short, long) in items.items():
+    for short, long in items.items():
         if isinstance(long, BasicKeyHelp):
             key_short = long.key
         else:
