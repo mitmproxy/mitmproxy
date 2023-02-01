@@ -161,7 +161,7 @@ class OptManager:
 
     def _notify_subscribers(self, updated) -> None:
         cleanup = False
-        for (ref, opts) in self._subscriptions:
+        for ref, opts in self._subscriptions:
             callback = ref()
             if callback is not None:
                 if opts & updated:

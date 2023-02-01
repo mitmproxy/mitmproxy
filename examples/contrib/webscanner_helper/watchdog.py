@@ -66,7 +66,6 @@ class WatchdogAddon:
             and flow.error is not None
             and not isinstance(flow.error, HttpSyntaxException)
         ):
-
             self.last_trigger = time.time()
             logger.error(f"Watchdog triggered! Cause: {flow}")
             self.error_event.set()

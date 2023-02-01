@@ -141,7 +141,6 @@ class MappingAddon:
     def done(self) -> None:
         """Dumps all new content into the configuration file if self.persistent is set."""
         if self.persistent:
-
             # make sure that all items are strings and not soups.
             def value_dumper(value):
                 store = {}

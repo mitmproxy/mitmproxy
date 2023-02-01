@@ -132,6 +132,7 @@ IN4_ADDR = ctypes.c_ubyte * 4
 # IPv6
 #
 
+
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366896(v=vs.85).aspx
 class MIB_TCP6ROW_OWNER_PID(ctypes.Structure):
     _fields_ = [
@@ -160,6 +161,7 @@ def MIB_TCP6TABLE_OWNER_PID(size):
 #
 # IPv4
 #
+
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366913(v=vs.85).aspx
 class MIB_TCPROW_OWNER_PID(ctypes.Structure):

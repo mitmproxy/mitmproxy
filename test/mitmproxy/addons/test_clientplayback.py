@@ -50,7 +50,6 @@ async def test_playback(mode, concurrency):
     with taddons.context(cp, ps) as tctx:
         tctx.configure(cp, client_replay_concurrency=concurrency)
         async with tcp_server(handler) as addr:
-
             cp.running()
             flow = tflow.tflow(live=False)
             flow.request.content = b"data"

@@ -138,7 +138,7 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
     elif isinstance(value, dict):
         write(b"}")
         init_size = size = size + 1
-        for (k, v) in value.items():
+        for k, v in value.items():
             size = _rdumpq(q, size, v)
             size = _rdumpq(q, size, k)
         span = str(size - init_size).encode()

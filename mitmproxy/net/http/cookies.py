@@ -274,7 +274,6 @@ def format_set_cookie_header(set_cookies: list[TSetCookie]) -> str:
     rv = []
 
     for name, value, attrs in set_cookies:
-
         pairs = [(name, value)]
         pairs.extend(attrs.fields if hasattr(attrs, "fields") else attrs)
 

@@ -86,7 +86,6 @@ def format_pairs(items: Iterable[tuple[TTextType, TTextType]]) -> Iterator[TView
 
     for key, value in items:
         if isinstance(key, bytes):
-
             key += b":"
         else:
             key += ":"

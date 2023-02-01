@@ -44,7 +44,7 @@ tflow2.marked = "x"
 def test_quickhelp(widget, flow, keymap, is_root_widget):
     qh = quickhelp.make(widget, flow, is_root_widget)
     for row in [qh.top_items, qh.bottom_items]:
-        for (title, v) in row.items():
+        for title, v in row.items():
             if isinstance(v, quickhelp.BasicKeyHelp):
                 key_short = v.key
             else:

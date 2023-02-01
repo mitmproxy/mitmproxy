@@ -559,7 +559,7 @@ class FlowContentView(RequestHandler):
 class Commands(RequestHandler):
     def get(self) -> None:
         commands = {}
-        for (name, cmd) in self.master.commands.commands.items():
+        for name, cmd in self.master.commands.commands.items():
             commands[name] = {
                 "help": cmd.help,
                 "parameters": [

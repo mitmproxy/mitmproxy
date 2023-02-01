@@ -550,7 +550,6 @@ def format_http_flow_table(
         response_style = ""
 
     if response_code:
-
         status = str(response_code)
         status_style = response_style or HTTP_RESPONSE_CODE_STYLE.get(
             response_code // 100, "code_other"

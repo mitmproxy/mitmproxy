@@ -329,7 +329,7 @@ class FlowDetails(tabs.Tabs):
         text_objects = []
         for line in lines:
             txt = []
-            for (style, text) in line:
+            for style, text in line:
                 if total_chars + len(text) > max_chars:
                     text = text[: max_chars - total_chars]
                 txt.append((style, text))

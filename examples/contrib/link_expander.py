@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 
 
 def response(flow):
-
     if (
         "Content-Type" in flow.response.headers
         and flow.response.headers["Content-Type"].find("text/html") != -1

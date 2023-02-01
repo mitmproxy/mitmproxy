@@ -50,7 +50,6 @@ class URLDict(MutableMapping):
         return self.store.__len__()
 
     def get_generator(self, flow: HTTPFlow) -> Generator[Any, None, None]:
-
         for fltr, value in self.store.items():
             if flowfilter.match(fltr, flow):
                 yield value

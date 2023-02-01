@@ -111,7 +111,7 @@ class Dumper:
 
     def _colorful(self, line):
         yield "    "  # we can already indent here
-        for (style, text) in line:
+        for style, text in line:
             yield self.style(text, **CONTENTVIEW_STYLES.get(style, {}))
 
     def _echo_message(

@@ -60,7 +60,6 @@ class Mapping:
 
 
 class HttpsDomainFronting:
-
     # configurations for regular ("foo.example.com") mappings:
     star_mappings: dict[str, Mapping]
 
