@@ -1191,3 +1191,27 @@ def test_keepalive_disconnect(tctx, monkeypatch):
         >> reply(to=wakeup_command, side_effect=advance_time)
         << None
     )
+
+
+def test_alt_svc(tctx):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, initial)
+        >> DataReceived(
+            server,
+            cff.build_alt_svc_frame(0, b"example.com", b"h3=\":443\"").serialize()
+        )
+        << Log(Placeholder(str), Placeholder(int))
+    )
