@@ -2,6 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a bug where peername would be None in tls_passthrough script, which would make it not working.
+  ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
+
 * Add experimental QUIC support.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
