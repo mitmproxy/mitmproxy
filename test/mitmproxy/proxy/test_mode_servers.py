@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 
+import mitmproxy_rs
 import pytest
 
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance
+from mitmproxy.proxy.mode_servers import OsProxyInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
@@ -88,7 +90,7 @@ async def test_tcp_start_stop(caplog_async):
         assert await caplog_async.await_log("client disconnect")
 
         await inst.stop()
-        assert await caplog_async.await_log("Stopped HTTP(S) proxy")
+        assert await caplog_async.await_log("stopped")
 
 
 @pytest.mark.parametrize("failure", [True, False])
@@ -107,7 +109,7 @@ async def test_transparent(failure, monkeypatch, caplog_async):
         tctx.options.connection_strategy = "lazy"
         inst = ServerInstance.make("transparent@127.0.0.1:0", manager)
         await inst.start()
-        await caplog_async.await_log("proxy listening")
+        await caplog_async.await_log("listening")
 
         host, port, *_ = inst.listen_addrs[0]
         reader, writer = await asyncio.open_connection(host, port)
@@ -123,7 +125,7 @@ async def test_transparent(failure, monkeypatch, caplog_async):
             assert await caplog_async.await_log("client disconnect")
 
         await inst.stop()
-        assert await caplog_async.await_log("Stopped transparent proxy")
+        assert await caplog_async.await_log("stopped")
 
 
 async def test_wireguard(tdata, monkeypatch, caplog):
@@ -176,7 +178,7 @@ async def test_wireguard(tdata, monkeypatch, caplog):
             raise
 
         await inst.stop()
-        assert "Stopped WireGuard server" in caplog.text
+        assert "stopped" in caplog.text
 
 
 async def test_wireguard_generate_conf(tmp_path):
@@ -205,7 +207,7 @@ async def test_wireguard_invalid_conf(tmp_path):
         # directory instead of filename
         inst = WireGuardServerInstance.make(f"wireguard:{tmp_path}", MagicMock())
 
-        with pytest.raises(OSError):
+        with pytest.raises(ValueError, match="Invalid configuration file"):
             await inst.start()
 
         assert "Invalid configuration file" in repr(inst.last_exception)
@@ -261,7 +263,7 @@ async def test_udp_start_stop(caplog_async):
         writer.close()
 
         await inst.stop()
-        assert await caplog_async.await_log("Stopped")
+        assert await caplog_async.await_log("stopped")
 
 
 async def test_udp_start_error():
@@ -297,3 +299,77 @@ async def test_udp_connection_reuse(monkeypatch):
         await asyncio.sleep(0)
 
         assert len(inst.manager.connections) == 1
+
+
+@pytest.fixture()
+def patched_os_proxy(monkeypatch):
+    start_os_proxy = AsyncMock()
+    monkeypatch.setattr(mitmproxy_rs, "start_os_proxy", start_os_proxy)
+    # make sure _server and _instance are restored after this test
+    monkeypatch.setattr(OsProxyInstance, "_server", None)
+    monkeypatch.setattr(OsProxyInstance, "_instance", None)
+    return start_os_proxy
+
+
+async def test_os_proxy(patched_os_proxy, caplog_async):
+    caplog_async.set_level("INFO")
+
+    with taddons.context():
+        inst = ServerInstance.make(f"osproxy", MagicMock())
+        assert not inst.is_running
+
+        await inst.start()
+        assert patched_os_proxy.called
+        assert await caplog_async.await_log("OS proxy started.")
+        assert inst.is_running
+
+        await inst.stop()
+        assert await caplog_async.await_log("OS proxy stopped")
+        assert not inst.is_running
+
+        # just called for coverage
+        inst.make_top_layer(MagicMock())
+
+
+async def test_os_proxy_startup_err(patched_os_proxy):
+    patched_os_proxy.side_effect = RuntimeError("OS proxy startup error")
+
+    with taddons.context():
+        inst = ServerInstance.make(f"osproxy:!curl", MagicMock())
+        with pytest.raises(RuntimeError):
+            await inst.start()
+        assert not inst.is_running
+
+
+async def test_multiple_os_proxies(patched_os_proxy):
+    manager = MagicMock()
+
+    with taddons.context():
+        inst1 = ServerInstance.make(f"osproxy:curl", manager)
+        await inst1.start()
+
+        inst2 = ServerInstance.make(f"osproxy:wget", manager)
+        with pytest.raises(RuntimeError, match="Cannot spawn more than one OS proxy instance"):
+            await inst2.start()
+
+
+async def test_always_uses_current_instance(patched_os_proxy, monkeypatch):
+    manager = MagicMock()
+
+    with taddons.context():
+        inst1 = ServerInstance.make(f"osproxy:curl", manager)
+        await inst1.start()
+        await inst1.stop()
+
+        handle_tcp, handle_udp = patched_os_proxy.await_args[0]
+
+        inst2 = ServerInstance.make(f"osproxy:wget", manager)
+        await inst2.start()
+
+        monkeypatch.setattr(inst2, "handle_tcp_connection", h_tcp := AsyncMock())
+        await handle_tcp(Mock())
+        assert h_tcp.await_count
+
+        monkeypatch.setattr(inst2, "handle_udp_datagram", h_udp := Mock())
+        handle_udp(Mock(), b"", ("", 0), ("", 0))
+        assert h_udp.called

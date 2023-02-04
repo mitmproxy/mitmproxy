@@ -86,6 +86,7 @@ def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameF
 
 
 def make_h2(open_connection: OpenConnection) -> None:
+    assert isinstance(open_connection, OpenConnection), f"Expected OpenConnection event, not {open_connection}"
     open_connection.connection.alpn = b"h2"
 
 

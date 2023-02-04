@@ -22,6 +22,7 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
+import os
 from abc import ABCMeta
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -29,6 +30,8 @@ from functools import cache
 from typing import ClassVar
 from typing import Literal
 from typing import TypeVar
+
+import mitmproxy_rs
 
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
@@ -85,7 +88,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def transport_protocol(self) -> Literal["tcp", "udp"]:
+    def transport_protocol(self) -> Literal["tcp", "udp"] | None:
         """The transport protocol used by this mode's server."""
 
     @classmethod
@@ -189,7 +192,7 @@ class RegularMode(ProxyMode):
 class TransparentMode(ProxyMode):
     """A transparent proxy, see https://docs.mitmproxy.org/dev/howto-transparent/"""
 
-    description = "transparent proxy"
+    description = "Transparent Proxy"
     transport_protocol = TCP
 
     def __post_init__(self) -> None:
@@ -280,3 +283,14 @@ class WireGuardMode(ProxyMode):
 
     def __post_init__(self) -> None:
         pass
+
+
+class OsProxyMode(ProxyMode):
+    """OS-level transparent proxy."""
+
+    description = "OS proxy"
+    transport_protocol = None
+
+    def __post_init__(self) -> None:
+        # should not raise
+        mitmproxy_rs.OsProxy.describe_spec(self.data)
