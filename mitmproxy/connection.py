@@ -267,7 +267,10 @@ class Server(Connection):
         address: Optional[Address] = None
 
     peername: Optional[Address] = None
-    """The server's resolved `(ip, port)` tuple. Will be set during connection establishment."""
+    """
+    The server's resolved `(ip, port)` tuple. Will be set during connection establishment.
+    May be `None` in upstream proxy mode when the address is resolved by the upstream proxy only.
+    """
     sockname: Optional[Address] = None
 
     timestamp_start: Optional[float] = None
