@@ -795,6 +795,8 @@ class Request(Message):
     @port.setter
     def port(self, port: int) -> None:
         self.data.port = port
+        if "Host" in self.data.headers:
+            self.data.headers["Host"] += f":{port}"
 
     @property
     def path(self) -> str:
