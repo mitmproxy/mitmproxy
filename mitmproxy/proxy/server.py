@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Optional
 from typing import Union
 
-import mitmproxy_wireguard as wg
+import mitmproxy_rs
 from OpenSSL import SSL
 
 from mitmproxy import http
@@ -93,10 +93,10 @@ class TimeoutWatchdog:
 class ConnectionIO:
     handler: Optional[asyncio.Task] = None
     reader: Optional[
-        Union[asyncio.StreamReader, udp.DatagramReader, wg.TcpStream]
+        Union[asyncio.StreamReader, udp.DatagramReader, mitmproxy_rs.TcpStream]
     ] = None
     writer: Optional[
-        Union[asyncio.StreamWriter, udp.DatagramWriter, wg.TcpStream]
+        Union[asyncio.StreamWriter, udp.DatagramWriter, mitmproxy_rs.TcpStream]
     ] = None
 
 
@@ -430,8 +430,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: Union[asyncio.StreamReader, wg.TcpStream],
-        writer: Union[asyncio.StreamWriter, wg.TcpStream],
+        reader: Union[asyncio.StreamReader, mitmproxy_rs.TcpStream],
+        writer: Union[asyncio.StreamWriter, mitmproxy_rs.TcpStream],
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:

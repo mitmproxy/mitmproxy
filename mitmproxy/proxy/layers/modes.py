@@ -87,7 +87,7 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert self.context.server.address
+        assert self.context.server.address, "No server address set."
         self.child_layer = layer.NextLayer(self.context)
         err = yield from self.finish_start()
         if err:
