@@ -28,7 +28,7 @@ from typing import Generic
 from typing import get_args
 from typing import TypeVar
 
-import mitmproxy_wireguard as wg
+import mitmproxy_rs
 
 from mitmproxy import ctx
 from mitmproxy import flow
@@ -37,7 +37,6 @@ from mitmproxy.connection import Address
 from mitmproxy.master import Master
 from mitmproxy.net import local_ip
 from mitmproxy.net import udp
-from mitmproxy.net.udp_wireguard import WireGuardDatagramTransport
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
@@ -149,8 +148,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     async def handle_tcp_connection(
         self,
-        reader: asyncio.StreamReader | wg.TcpStream,
-        writer: asyncio.StreamWriter | wg.TcpStream,
+        reader: asyncio.StreamReader | mitmproxy_rs.TcpStream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.TcpStream,
     ) -> None:
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
@@ -182,7 +181,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     def handle_udp_datagram(
         self,
-        transport: asyncio.DatagramTransport,
+        transport: asyncio.DatagramTransport | mitmproxy_rs.DatagramTransport,
         data: bytes,
         remote_addr: Address,
         local_addr: Address,
@@ -304,7 +303,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
 
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
-    _server: wg.Server | None = None
+    _server: mitmproxy_rs.WireGuardServer | None = None
     _listen_addrs: tuple[Address, ...] = tuple()
 
     server_key: str
@@ -333,8 +332,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
                 conf_path.write_text(
                     json.dumps(
                         {
-                            "server_key": wg.genkey(),
-                            "client_key": wg.genkey(),
+                            "server_key": mitmproxy_rs.genkey(),
+                            "client_key": mitmproxy_rs.genkey(),
                         },
                         indent=4,
                     )
@@ -349,16 +348,16 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
                     f"Invalid configuration file ({conf_path}): {e}"
                 ) from e
             # error early on invalid keys
-            p = wg.pubkey(self.client_key)
-            _ = wg.pubkey(self.server_key)
+            p = mitmproxy_rs.pubkey(self.client_key)
+            _ = mitmproxy_rs.pubkey(self.server_key)
 
-            self._server = await wg.start_server(
+            self._server = await mitmproxy_rs.start_wireguard_server(
                 host,
                 port,
                 self.server_key,
                 [p],
                 self.wg_handle_tcp_connection,
-                self.wg_handle_udp_datagram,
+                self.handle_udp_datagram,
             )
             self._listen_addrs = (self._server.getsockname(),)
         except Exception as e:
@@ -391,7 +390,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             DNS = 10.0.0.53
 
             [Peer]
-            PublicKey = {wg.pubkey(self.server_key)}
+            PublicKey = {mitmproxy_rs.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
             """
@@ -414,15 +413,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     def listen_addrs(self) -> tuple[Address, ...]:
         return self._listen_addrs
 
-    async def wg_handle_tcp_connection(self, stream: wg.TcpStream) -> None:
+    async def wg_handle_tcp_connection(self, stream: mitmproxy_rs.TcpStream) -> None:
         await self.handle_tcp_connection(stream, stream)
-
-    def wg_handle_udp_datagram(
-        self, data: bytes, remote_addr: Address, local_addr: Address
-    ) -> None:
-        assert self._server is not None
-        transport = WireGuardDatagramTransport(self._server, local_addr, remote_addr)
-        self.handle_udp_datagram(transport, data, remote_addr, local_addr)
 
 
 class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):

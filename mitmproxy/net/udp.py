@@ -9,8 +9,9 @@ from typing import cast
 from typing import Optional
 from typing import Union
 
+import mitmproxy_rs
+
 from mitmproxy.connection import Address
-from mitmproxy.net import udp_wireguard
 from mitmproxy.utils import human
 
 logger = logging.getLogger(__name__)
@@ -162,14 +163,14 @@ class DatagramReader:
 
 
 class DatagramWriter:
-    _transport: asyncio.DatagramTransport
+    _transport: asyncio.DatagramTransport | mitmproxy_rs.DatagramTransport
     _remote_addr: Address
     _reader: DatagramReader | None
     _closed: asyncio.Event | None
 
     def __init__(
         self,
-        transport: asyncio.DatagramTransport,
+        transport: asyncio.DatagramTransport | mitmproxy_rs.DatagramTransport,
         remote_addr: Address,
         reader: DatagramReader | None = None,
     ) -> None:
@@ -189,7 +190,7 @@ class DatagramWriter:
     @property
     def _protocol(
         self,
-    ) -> DrainableDatagramProtocol | udp_wireguard.WireGuardDatagramTransport:
+    ) -> DrainableDatagramProtocol | mitmproxy_rs.DatagramTransport:
         return self._transport.get_protocol()  # type: ignore
 
     def write(self, data: bytes) -> None:
