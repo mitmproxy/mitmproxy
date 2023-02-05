@@ -161,6 +161,8 @@ class TestRequestCore:
 
     def test_port(self):
         _test_passthrough_attr(treq(), "port", 1234)
+        with pytest.raises(ValueError):
+            treq().port = "foo"
 
     def test_path(self):
         _test_decoded_attr(treq(), "path")
