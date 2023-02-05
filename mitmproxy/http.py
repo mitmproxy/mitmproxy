@@ -788,10 +788,10 @@ class Request(Message):
 
     @port.setter
     def port(self, port: int) -> None:
-        if isinstance(port, int):
-            self.data.port = port
-        else:
-            raise ValueError("Invalid port type, must be of type int.")
+        if not isinstance(port, int):
+            raise ValueError(f"Port must be an integer, not {port!r}.")
+
+        self.data.port = port
         self._update_host_and_authority()
 
     def _update_host_and_authority(self) -> None:
