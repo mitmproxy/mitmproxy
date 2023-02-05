@@ -788,16 +788,14 @@ class Request(Message):
 
     @port.setter
     def port(self, port: int) -> None:
-        self.data.port = port
+        if isinstance(port, int):
+            self.data.port = port
+        else:
+            raise ValueError("Invalid port type, must be of type int.")
         self._update_host_and_authority()
 
     def _update_host_and_authority(self) -> None:
-        val = url.hostport(
-            self.scheme,
-            self.host,
-            # test_http.py::TestRequestCore::test_port sets port = b"foo" as the port
-            0 if not isinstance(self.port, int) else self.port,
-        )
+        val = url.hostport(self.scheme, self.host, self.port)
 
         # Update host header
         if "Host" in self.data.headers:
