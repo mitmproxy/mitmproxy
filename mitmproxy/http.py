@@ -749,13 +749,7 @@ class Request(Message):
     @host.setter
     def host(self, val: Union[str, bytes]) -> None:
         self.data.host = always_str(val, "idna", "strict")
-
-        # Update host header
-        if "Host" in self.data.headers:
-            self.data.headers["Host"] = val
-        # Update authority
-        if self.data.authority:
-            self.authority = url.hostport(self.scheme, self.host, self.port)
+        self._update_host_and_authority()
 
     @property
     def host_header(self) -> Optional[str]:
@@ -795,10 +789,22 @@ class Request(Message):
     @port.setter
     def port(self, port: int) -> None:
         self.data.port = port
+        self._update_host_and_authority()
+
+    def _update_host_and_authority(self) -> None:
+        val = url.hostport(
+            self.scheme,
+            self.host,
+            # test_http.py::TestRequestCore::test_port sets port = b"foo" as the port
+            0 if not isinstance(self.port, int) else self.port,
+        )
+
+        # Update host header
         if "Host" in self.data.headers:
-            # avoids adding default ports implied by the scheme
-            if (port, self.scheme) not in ((80, "http"), (443, "https")):
-                self.data.headers["Host"] += f":{port}"
+            self.data.headers["Host"] = val
+        # Update authority
+        if self.data.authority:
+            self.authority = val
 
     @property
     def path(self) -> str:

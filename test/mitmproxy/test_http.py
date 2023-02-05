@@ -199,8 +199,7 @@ class TestRequestCore:
         request.headers["Host"] = "foo"
         request.authority = "foo"
         request.host = "example.org"
-        assert request.headers["Host"] == "example.org"
-        assert request.authority == "example.org:22"
+        assert request.headers["Host"] == request.authority == "example.org:22"
 
     def test_get_host_header(self):
         no_hdr = treq()
