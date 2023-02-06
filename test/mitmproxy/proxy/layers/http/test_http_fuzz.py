@@ -273,7 +273,6 @@ def h2_frames(draw):
 
 def h2_layer(opts):
     tctx = _tctx()
-    tctx.options.http2_ping_keepalive = 0
     tctx.client.alpn = b"h2"
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
@@ -317,7 +316,7 @@ def test_fuzz_h2_request_mutations(chunks):
 
 
 def _tctx() -> context.Context:
-    return context.Context(
+    tctx = context.Context(
         connection.Client(
             peername=("client", 1234),
             sockname=("127.0.0.1", 8080),
@@ -325,6 +324,8 @@ def _tctx() -> context.Context:
         ),
         opts,
     )
+    tctx.options.http2_ping_keepalive = 0
+    return tctx
 
 
 def _h2_response(chunks):

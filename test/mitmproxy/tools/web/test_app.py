@@ -8,6 +8,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Optional
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 import tornado.testing
@@ -176,8 +177,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         m.events._add_log(log.LogEntry("test log", "info"))
         m.events.done()
         si1 = ServerInstance.make("regular", m.proxyserver)
-        si1._listen_addrs = [("127.0.0.1", 8080), ("::1", 8080)]
-        si1._server = True  # spoof is_running
+        sock1 = Mock()
+        sock1.getsockname.return_value = ("127.0.0.1", 8080)
+        sock2 = Mock()
+        sock2.getsockname.return_value = ("::1", 8080)
+        server = Mock()
+        server.sockets = [sock1, sock2]
+        si1._server = server
         si2 = ServerInstance.make("reverse:example.com", m.proxyserver)
         si2.last_exception = RuntimeError("I failed somehow.")
         si3 = ServerInstance.make("socks5", m.proxyserver)

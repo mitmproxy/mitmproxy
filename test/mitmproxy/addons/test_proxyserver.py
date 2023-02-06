@@ -111,7 +111,7 @@ async def test_start_stop(caplog_async):
 
             await ps.setup_servers()  # assert this can always be called without side effects
             tctx.configure(ps, server=False)
-            await caplog_async.await_log("Stopped HTTP(S) proxy at")
+            await caplog_async.await_log("stopped")
             if ps.servers.is_updating:
                 async with ps.servers._lock:
                     pass  # wait until start/stop is finished.
@@ -318,7 +318,7 @@ async def test_dns(caplog_async) -> None:
         w.write(b"\x00")
         await caplog_async.await_log("sent an invalid message")
         tctx.configure(ps, server=False)
-        await caplog_async.await_log("Stopped DNS server at")
+        await caplog_async.await_log("stopped")
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -384,7 +384,7 @@ async def test_dtls(monkeypatch, caplog_async) -> None:
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
-            await caplog_async.await_log("Stopped reverse proxy to dtls")
+            await caplog_async.await_log("stopped")
 
 
 class H3EchoServer(QuicConnectionProtocol):
@@ -793,7 +793,7 @@ async def test_reverse_http3_and_quic_stream(
                 assert len(ps.connections) == 1
 
             tctx.configure(ps, server=False)
-            await caplog_async.await_log(f"Stopped reverse proxy to {scheme}")
+            await caplog_async.await_log(f"stopped")
 
 
 @pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
@@ -829,7 +829,7 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
                 assert await client.recv_datagram() == b"echo"
 
             tctx.configure(ps, server=False)
-            await caplog_async.await_log("Stopped reverse proxy to quic")
+            await caplog_async.await_log("stopped")
 
 
 async def test_regular_http3(caplog_async, monkeypatch) -> None:
@@ -869,4 +869,4 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
                 assert len(ps.connections) == 1
 
             tctx.configure(ps, server=False)
-            await caplog_async.await_log("Stopped HTTP3 proxy")
+            await caplog_async.await_log("stopped")
