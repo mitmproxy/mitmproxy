@@ -349,7 +349,9 @@ async def test_multiple_os_proxies(patched_os_proxy):
         await inst1.start()
 
         inst2 = ServerInstance.make(f"osproxy:wget", manager)
-        with pytest.raises(RuntimeError, match="Cannot spawn more than one OS proxy instance"):
+        with pytest.raises(
+            RuntimeError, match="Cannot spawn more than one OS proxy instance"
+        ):
             await inst2.start()
 
 

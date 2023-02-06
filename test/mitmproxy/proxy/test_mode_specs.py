@@ -4,7 +4,6 @@ import pytest
 
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.proxy.mode_specs import Socks5Mode
-from test.conftest import skip_not_windows
 
 
 def test_parse():

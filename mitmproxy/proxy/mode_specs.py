@@ -22,7 +22,6 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
-import os
 from abc import ABCMeta
 from abc import abstractmethod
 from dataclasses import dataclass
