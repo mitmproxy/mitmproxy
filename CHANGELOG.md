@@ -11,6 +11,9 @@
   ([#5851](https://github.com/mitmproxy/mitmproxy/pull/5851), @italankin)
 * Removed string escaping in raw view.
   ([#5470](https://github.com/mitmproxy/mitmproxy/issues/5470), @stephenspol)
+* Updating `Request.port` now also updates the Host header if present.
+  This aligns with `Request.host`, which already does this.
+  ([#5908](https://github.com/mitmproxy/mitmproxy/pull/5908), @sujaldev)
 
 ### Breaking Changes
 

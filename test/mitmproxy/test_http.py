@@ -2,6 +2,7 @@ import asyncio
 import email
 import json
 import time
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -10,6 +11,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Message
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
@@ -158,7 +160,9 @@ class TestRequestCore:
         _test_decoded_attr(treq(), "scheme")
 
     def test_port(self):
-        _test_passthrough_attr(treq(), "port")
+        _test_passthrough_attr(treq(), "port", 1234)
+        with pytest.raises(ValueError):
+            treq().port = "foo"
 
     def test_path(self):
         _test_decoded_attr(treq(), "path")
@@ -199,8 +203,7 @@ class TestRequestCore:
         request.headers["Host"] = "foo"
         request.authority = "foo"
         request.host = "example.org"
-        assert request.headers["Host"] == "example.org"
-        assert request.authority == "example.org:22"
+        assert request.headers["Host"] == request.authority == "example.org:22"
 
     def test_get_host_header(self):
         no_hdr = treq()
@@ -864,10 +867,10 @@ class TestHeaders:
         ]
 
 
-def _test_passthrough_attr(message, attr):
+def _test_passthrough_attr(message: Message, attr: str, value: Any = b"foo") -> None:
     assert getattr(message, attr) == getattr(message.data, attr)
-    setattr(message, attr, b"foo")
-    assert getattr(message.data, attr) == b"foo"
+    setattr(message, attr, value)
+    assert getattr(message.data, attr) == value
 
 
 def _test_decoded_attr(message, attr):

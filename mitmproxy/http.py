@@ -749,13 +749,7 @@ class Request(Message):
     @host.setter
     def host(self, val: Union[str, bytes]) -> None:
         self.data.host = always_str(val, "idna", "strict")
-
-        # Update host header
-        if "Host" in self.data.headers:
-            self.data.headers["Host"] = val
-        # Update authority
-        if self.data.authority:
-            self.authority = url.hostport(self.scheme, self.host, self.port)
+        self._update_host_and_authority()
 
     @property
     def host_header(self) -> Optional[str]:
@@ -794,7 +788,21 @@ class Request(Message):
 
     @port.setter
     def port(self, port: int) -> None:
+        if not isinstance(port, int):
+            raise ValueError(f"Port must be an integer, not {port!r}.")
+
         self.data.port = port
+        self._update_host_and_authority()
+
+    def _update_host_and_authority(self) -> None:
+        val = url.hostport(self.scheme, self.host, self.port)
+
+        # Update host header
+        if "Host" in self.data.headers:
+            self.data.headers["Host"] = val
+        # Update authority
+        if self.data.authority:
+            self.authority = val
 
     @property
     def path(self) -> str:
