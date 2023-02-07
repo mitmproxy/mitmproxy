@@ -95,22 +95,27 @@ class MaybeTls:
         else:
             self.strategy = ConservativeStrategy()
 
+    @staticmethod
+    def get_addr(server: connection.Server):
+        # .peername may be unset in upstream proxy mode, so we need a fallback.
+        return server.peername or server.address
+
     def tls_clienthello(self, data: tls.ClientHelloData):
-        server_address = data.context.server.peername
+        server_address = self.get_addr(data.context.server)
         if not self.strategy.should_intercept(server_address):
             logging.info(f"TLS passthrough: {human.format_address(server_address)}.")
             data.ignore_connection = True
             self.strategy.record_skipped(server_address)
 
     def tls_established_client(self, data: tls.TlsData):
-        server_address = data.context.server.peername
+        server_address = self.get_addr(data.context.server)
         logging.info(
             f"TLS handshake successful: {human.format_address(server_address)}"
         )
         self.strategy.record_success(server_address)
 
     def tls_failed_client(self, data: tls.TlsData):
-        server_address = data.context.server.peername
+        server_address = self.get_addr(data.context.server)
         logging.info(f"TLS handshake failed: {human.format_address(server_address)}")
         self.strategy.record_failure(server_address)
 
