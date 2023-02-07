@@ -16,7 +16,7 @@ class ViewMultipart(base.View):
     def __call__(self, data: bytes, content_type: Optional[str] = None, **metadata):
         if content_type is None:
             return
-        v = multipart.decode(content_type, data)
+        v = multipart.decode_multipart(content_type, data)
         if v:
             return "Multipart form", self._format(v)
 

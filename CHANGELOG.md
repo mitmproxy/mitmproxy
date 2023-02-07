@@ -17,6 +17,8 @@
 * Updating `Request.port` now also updates the Host header if present.
   This aligns with `Request.host`, which already does this.
   ([#5908](https://github.com/mitmproxy/mitmproxy/pull/5908), @sujaldev)
+* Fix editing of multipart HTTP requests from the CLI.
+  ([#5148](https://github.com/mitmproxy/mitmproxy/issues/5148), @mhils)
 
 ### Breaking Changes
 

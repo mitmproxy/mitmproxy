@@ -434,7 +434,7 @@ class TestRequestUtils:
         request.headers["Content-Type"] = "multipart/form-data"
         assert list(request.multipart_form.items()) == []
 
-        with mock.patch("mitmproxy.net.http.multipart.decode") as m:
+        with mock.patch("mitmproxy.net.http.multipart.decode_multipart") as m:
             m.side_effect = ValueError
             assert list(request.multipart_form.items()) == []
 
