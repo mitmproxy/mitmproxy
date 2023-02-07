@@ -16,7 +16,7 @@ def parse_msgpack(s: bytes) -> Any:
 
 
 def format_msgpack(
-    data: Any, output=None, indent_count: int = 0
+        data: Any, output=None, indent_count: int = 0
 ) -> list[base.TViewLine]:
     if output is None:
         output = [[]]
@@ -63,12 +63,17 @@ def format_msgpack(
         return output
 
     elif type(data) is list:
+        highest = None
+        for index, value in enumerate(data):
+            highest = index
         output[-1] += [("text", "[")]
+        i = -1
+
         for item in data:
             output.append([indent, ("text", "    ")])
             format_msgpack(item, output, indent_count + 1)
-
-            if item != data[-1]:
+            i += 1
+            if i != highest:
                 output[-1] += [("text", ",")]
 
         output.append([indent, ("text", "]")])
@@ -95,6 +100,6 @@ class ViewMsgPack(base.View):
             return "MsgPack", format_msgpack(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+            self, data: bytes, *, content_type: Optional[str] = None, **metadata
     ) -> float:
         return float(bool(data) and content_type in self.__content_types)
