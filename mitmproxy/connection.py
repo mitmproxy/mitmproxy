@@ -197,7 +197,9 @@ class Client(Connection):
             tls_state = ", tls"
         else:
             tls_state = ""
-        return f"Client({human.format_address(self.peername)}, state={self.state.name.lower()}{tls_state})"
+        state = self.state.name
+        assert state
+        return f"Client({human.format_address(self.peername)}, state={state.lower()}{tls_state})"
 
     @property
     def address(self):  # pragma: no cover
@@ -296,7 +298,9 @@ class Server(Connection):
             local_port = f", src_port={self.sockname[1]}"
         else:
             local_port = ""
-        return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
+        state = self.state.name
+        assert state
+        return f"Server({human.format_address(self.address)}, state={state.lower()}{tls_state}{local_port})"
 
     def __setattr__(self, name, value):
         if name in ("address", "via"):
