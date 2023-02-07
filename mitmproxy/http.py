@@ -8,6 +8,7 @@ import warnings
 from collections.abc import Iterable
 from collections.abc import Iterator
 from collections.abc import Mapping
+from collections.abc import Sequence
 from dataclasses import dataclass
 from dataclasses import fields
 from email.utils import formatdate
@@ -15,7 +16,6 @@ from email.utils import mktime_tz
 from email.utils import parsedate_tz
 from typing import Any
 from typing import Callable
-from typing import Sequence
 from typing import cast
 from typing import Optional
 from typing import Union
@@ -996,18 +996,16 @@ class Request(Message):
         )
         if is_valid_content_type and self.content is not None:
             try:
-                return multipart.decode_multipart(self.headers.get("content-type"), self.content)
+                return multipart.decode_multipart(
+                    self.headers.get("content-type"), self.content
+                )
             except ValueError:
                 pass
         return []
 
     def _set_multipart_form(self, value: list[tuple[bytes, bytes]]) -> None:
         ct = self.headers.get("content-type", "")
-        is_valid_content_type = (
-            ct
-            .lower()
-            .startswith("multipart/form-data")
-        )
+        is_valid_content_type = ct.lower().startswith("multipart/form-data")
         if not is_valid_content_type:
             """
             Generate a random boundary here.
@@ -1016,7 +1014,9 @@ class Request(Message):
             on generating the boundary.
             """
             boundary = "-" * 20 + binascii.hexlify(os.urandom(16)).decode()
-            self.headers["content-type"] = ct = f"multipart/form-data; boundary={boundary}"
+            self.headers[
+                "content-type"
+            ] = ct = f"multipart/form-data; boundary={boundary}"
         self.content = multipart.encode_multipart(ct, value)
 
     @property

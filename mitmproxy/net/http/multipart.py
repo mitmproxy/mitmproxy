@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import mimetypes
 import re
 import warnings
@@ -8,7 +9,9 @@ from urllib.parse import quote
 from mitmproxy.net.http import headers
 
 
-def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> bytes | None:
+def encode_multipart(
+    content_type: str, parts: list[tuple[bytes, bytes]]
+) -> bytes | None:
     if content_type:
         ct = headers.parse_content_type(content_type)
         if ct is not None:
@@ -45,7 +48,9 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
     return None
 
 
-def decode_multipart(content_type: Optional[str], content: bytes) -> list[tuple[bytes, bytes]]:
+def decode_multipart(
+    content_type: Optional[str], content: bytes
+) -> list[tuple[bytes, bytes]]:
     """
     Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
@@ -67,7 +72,7 @@ def decode_multipart(content_type: Optional[str], content: bytes) -> list[tuple[
                     match = rx.search(parts[1])
                     if match:
                         key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b""):])
+                        value = b"".join(parts[3 + parts[2:].index(b"") :])
                         r.append((key, value))
         return r
     return []

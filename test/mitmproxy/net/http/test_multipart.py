@@ -1,6 +1,5 @@
 import pytest
 
-from mitmproxy.http import Headers
 from mitmproxy.net.http import multipart
 
 
@@ -15,14 +14,18 @@ def test_decode():
         "value2\n"
         "--{0}--".format(boundary).encode()
     )
-    form = multipart.decode_multipart(f"multipart/form-data; boundary={boundary}", content)
+    form = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
 
     assert len(form) == 2
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
     boundary = "boundary茅莽"
-    result = multipart.decode_multipart(f"multipart/form-data; boundary={boundary}", content)
+    result = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
     assert result == []
 
     assert multipart.decode_multipart("", content) == []
@@ -30,7 +33,9 @@ def test_decode():
 
 def test_encode():
     data = [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
-    content = multipart.encode_multipart("multipart/form-data; boundary=127824672498", data)
+    content = multipart.encode_multipart(
+        "multipart/form-data; boundary=127824672498", data
+    )
 
     assert b'Content-Disposition: form-data; name="file"' in content
     assert (
@@ -41,7 +46,11 @@ def test_encode():
     assert len(content) == 252
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):
-        multipart.encode_multipart("multipart/form-data; boundary=127824672498", [(b"key", b"--127824672498")])
+        multipart.encode_multipart(
+            "multipart/form-data; boundary=127824672498", [(b"key", b"--127824672498")]
+        )
 
-    result = multipart.encode_multipart("multipart/form-data; boundary=boundary茅莽", data)
+    result = multipart.encode_multipart(
+        "multipart/form-data; boundary=boundary茅莽", data
+    )
     assert result == b""
