@@ -51,7 +51,7 @@ class ResponseHeaderEditor(HeaderEditor):
 
 class RequestMultipartEditor(base.FocusEditor):
     title = "Edit Multipart Form"
-    columns = [col_text.Column("Key"), col_text.Column("Value")]
+    columns = [col_bytes.Column("Key"), col_bytes.Column("Value")]
 
     def get_data(self, flow):
         return flow.request.multipart_form.items(multi=True)
