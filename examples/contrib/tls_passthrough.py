@@ -97,7 +97,8 @@ class MaybeTls:
 
     @staticmethod
     def get_addr(server: connection.Server):
-        return server.peername or server.address or server.sockname
+        # .peername may be unset in upstream proxy mode, so we need a fallback.
+        return server.peername or server.address
 
     def tls_clienthello(self, data: tls.ClientHelloData):
         server_address = self.get_addr(data.context.server)
