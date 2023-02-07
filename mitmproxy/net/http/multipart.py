@@ -9,9 +9,7 @@ from urllib.parse import quote
 from mitmproxy.net.http import headers
 
 
-def encode_multipart(
-    content_type: str, parts: list[tuple[bytes, bytes]]
-) -> bytes:
+def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> bytes:
     if content_type:
         ct = headers.parse_content_type(content_type)
         if ct is not None:
