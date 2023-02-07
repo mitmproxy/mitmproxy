@@ -11,7 +11,7 @@ from mitmproxy.net.http import headers
 
 def encode_multipart(
     content_type: str, parts: list[tuple[bytes, bytes]]
-) -> bytes | None:
+) -> bytes:
     if content_type:
         ct = headers.parse_content_type(content_type)
         if ct is not None:
@@ -45,7 +45,7 @@ def encode_multipart(
             hdrs.append(b"--%b--\r\n" % boundary.encode("utf-8"))
             temp = b"\r\n".join(hdrs)
             return temp
-    return None
+    return b""
 
 
 def decode_multipart(

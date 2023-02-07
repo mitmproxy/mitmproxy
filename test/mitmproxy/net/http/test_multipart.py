@@ -54,3 +54,5 @@ def test_encode():
         "multipart/form-data; boundary=boundary茅莽", data
     )
     assert result == b""
+
+    assert multipart.encode_multipart("", data) == b""
