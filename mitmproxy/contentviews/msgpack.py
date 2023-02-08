@@ -63,17 +63,12 @@ def format_msgpack(
         return output
 
     elif type(data) is list:
-        highest = None
-        for index, value in enumerate(data):
-            highest = index
         output[-1] += [("text", "[")]
-        i = -1
 
-        for item in data:
+        for count, item in enumerate(data):
             output.append([indent, ("text", "    ")])
             format_msgpack(item, output, indent_count + 1)
-            i += 1
-            if i != highest:
+            if count != len(data)-1:
                 output[-1] += [("text", ",")]
 
         output.append([indent, ("text", "]")])
