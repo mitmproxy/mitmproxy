@@ -68,7 +68,7 @@ def format_msgpack(
         for count, item in enumerate(data):
             output.append([indent, ("text", "    ")])
             format_msgpack(item, output, indent_count + 1)
-            if count != len(data)-1:
+            if count != len(data) - 1:
                 output[-1] += [("text", ",")]
 
         output.append([indent, ("text", "]")])
