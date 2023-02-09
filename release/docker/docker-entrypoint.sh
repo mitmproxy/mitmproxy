@@ -18,7 +18,7 @@ usermod -o \
     mitmproxy
 
 if [[ "$1" = "mitmdump" || "$1" = "mitmproxy" || "$1" = "mitmweb" ]]; then
-  gosu mitmproxy "$@"
+  exec gosu mitmproxy "$@"
 else
   exec "$@"
 fi
