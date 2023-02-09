@@ -255,20 +255,16 @@ class FlowDetails(tabs.Tabs):
         viewmode = self.master.commands.call("console.flowview.mode")
 
         widget_lines = []
-
-        from_client = flow.messages[0].from_client
         for m in flow.messages:
             _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
 
             for line in lines:
-                if from_client:
+                if m.from_client:
                     line.insert(0, self.FROM_CLIENT_MARKER)
                 else:
                     line.insert(0, self.TO_CLIENT_MARKER)
 
                 widget_lines.append(urwid.Text(line))
-
-            from_client = not from_client
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
