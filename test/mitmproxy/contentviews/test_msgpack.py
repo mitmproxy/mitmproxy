@@ -57,7 +57,9 @@ def test_format_msgpack():
         [("text", ""), ("text", "}")],
     ]
 
-    assert list(msgpack.format_msgpack({"object": {"key": "value"}, "list": [1]})) == [
+    assert list(
+        msgpack.format_msgpack({"object": {"key": "value"}, "list": [0, 0, 1, 0, 0]})
+    ) == [
         [("text", "{")],
         [
             ("text", ""),
@@ -81,7 +83,31 @@ def test_format_msgpack():
             ("text", ": "),
             ("text", "["),
         ],
-        [("text", "    "), ("text", "    "), ("Token_Literal_Number", "1")],
+        [
+            ("text", "    "),
+            ("text", "    "),
+            ("Token_Literal_Number", "0"),
+            ("text", ","),
+        ],
+        [
+            ("text", "    "),
+            ("text", "    "),
+            ("Token_Literal_Number", "0"),
+            ("text", ","),
+        ],
+        [
+            ("text", "    "),
+            ("text", "    "),
+            ("Token_Literal_Number", "1"),
+            ("text", ","),
+        ],
+        [
+            ("text", "    "),
+            ("text", "    "),
+            ("Token_Literal_Number", "0"),
+            ("text", ","),
+        ],
+        [("text", "    "), ("text", "    "), ("Token_Literal_Number", "0")],
         [("text", "    "), ("text", "]")],
         [("text", ""), ("text", "}")],
     ]
