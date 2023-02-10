@@ -19,7 +19,7 @@
   ([#5908](https://github.com/mitmproxy/mitmproxy/pull/5908), @sujaldev)
 * Fix editing of multipart HTTP requests from the CLI.
   ([#5148](https://github.com/mitmproxy/mitmproxy/issues/5148), @mhils)
-* Added documentation on creating a Magisk module for intercepting traffic in Android production builds.
+* Added documentation on using Magisk module for intercepting traffic in Android production builds.
   ([#5924](https://github.com/mitmproxy/mitmproxy/pull/5924), @Jurrie)
 
 ### Breaking Changes

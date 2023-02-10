@@ -53,15 +53,30 @@ If you want to use a production build (labeled "Google Play"; it's those builds 
 
 See the [instructions here](https://github.com/shakalaca/MagiskOnEmulator) for installing Magisk on your AVD.
 The instructions have been tested with API level 30, but are reportedly working with API levels 22 up to and including 30 and 'S' (except API level 28).
+Note: the instructions say to start your AVD. Do not supply an `-http-proxy` directive to mitmproxy at this point.
 
 When you are done with that, your emulator will allow root. You can check this by running a terminal emulator and typing `su`.
 Magisk should ask you if you want to grant root to the program. After granting this, typing `whoami` would display `root`.
 
 However, after you have installed Magisk, you can no longer start your emulator with `-writable-system`. It will cause a boot loop. (Start your AVD with `-show-kernel` to see the error.)
-But you can install your mitmproxy certificate by [creating a Magisk module](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules), and installing that module.
+But you can install your mitmproxy certificate by putting it in a Magisk module, and installing that module.
 Magisk will take care of copying your certificate to `/system/etc/security/cacerts/` during boot.
 
+#### Downloading the Magisk module from mitmweb
+If you run mitmweb, you can get simply download the Magisk module instead of handcrafting it.
+Stop your AVD, and start it again with `-http-proxy 127.0.0.1:8080` (or whatever IP and port combination you are running mitmweb's proxy on).
+
+Then, *inside* the AVD, start a browser and navigate to `http://mitm.it/cert/magisk`.
+You will be prompted to download `mitmproxy-magisk-module.zip`, which is the Magisk module you need. Store that file somewhere (like in 'Downloads').
+
+Then open up Magisk, click on `Modules` and install your module.
+
+Reboot your AVD.
+
 #### Creating the Magisk module containing your certificate
+If you do not run mitmweb, you'll need to create a Magisk module yourself.
+See [here](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) for in-depth information on Magisk modules, but basically it boils down to this:
+
 Create the following directories:
 - `mitmproxycert` (this will be the root of your module)
 - `mitmproxycert/com/google/android`
