@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
@@ -136,11 +138,13 @@ class ClientPlayback:
     inflight: Optional[http.HTTPFlow]
     queue: asyncio.Queue
     options: Options
+    replay_tasks: set[asyncio.Task]
 
     def __init__(self):
         self.queue = asyncio.Queue()
         self.inflight = None
         self.task = None
+        self.replay_tasks = set()
 
     def running(self):
         self.playback_task = asyncio_utils.create_task(
@@ -159,9 +163,12 @@ class ClientPlayback:
                 assert self.inflight
                 h = ReplayHandler(self.inflight, self.options)
                 if ctx.options.client_replay_concurrency == -1:
-                    asyncio_utils.create_task(
+                    t = asyncio_utils.create_task(
                         h.replay(), name="client playback awaiting response"
                     )
+                    # keep a reference so this is not garbage collected
+                    self.replay_tasks.add(t)
+                    t.add_done_callback(self.replay_tasks.remove)
                 else:
                     await h.replay()
             except Exception:

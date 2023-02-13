@@ -107,12 +107,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
+    hook_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
+        self.hook_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -388,11 +390,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, False)
                 elif isinstance(command, commands.StartHook):
-                    asyncio_utils.create_task(
+                    t = asyncio_utils.create_task(
                         self.hook_task(command),
                         name=f"handle_hook({command.name})",
                         client=self.client.peername,
                     )
+                    # Python 3.11 Use TaskGroup instead.
+                    self.hook_tasks.add(t)
+                    t.add_done_callback(self.hook_tasks.remove)
                 elif isinstance(command, commands.Log):
                     self.log(command.message, command.level)
                 else:

@@ -47,7 +47,7 @@ class AsyncLogCaptureFixture:
                 return True
             else:
                 await asyncio.sleep(0.01)
-        raise AssertionError(f"Did not find {text!r} in log:\n{self.caplog.text}.")
+        raise AssertionError(f"Did not find {text!r} in log:\n{self.caplog.text}")
 
     def clear(self) -> None:
         self.caplog.clear()

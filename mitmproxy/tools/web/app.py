@@ -284,6 +284,7 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
+    _send_tasks: ClassVar[set[asyncio.Task]] = set()
 
     def open(self):
         self.connections.add(self)
@@ -299,7 +300,9 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             except tornado.websocket.WebSocketClosedError:
                 cls.connections.discard(conn)
 
-        asyncio.ensure_future(wrapper())
+        t = asyncio.create_task(wrapper())
+        cls._send_tasks.add(t)
+        t.add_done_callback(cls._send_tasks.remove)
 
     @classmethod
     def broadcast(cls, **kwargs):
@@ -345,11 +348,11 @@ class DumpFlows(RequestHandler):
                     fw.add(f)
             self.write(bio.getvalue())
 
-    def post(self):
+    async def post(self):
         self.view.clear()
         bio = BytesIO(self.filecontents)
-        for i in io.FlowReader(bio).stream():
-            asyncio.ensure_future(self.master.load_flow(i))
+        for f in io.FlowReader(bio).stream():
+            await self.master.load_flow(f)
         bio.close()
 
 
