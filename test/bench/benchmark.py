@@ -56,7 +56,7 @@ class Benchmark:
     def running(self):
         if not self.started:
             self.started = True
-            asyncio.get_running_loop().create_task(self.procs())
+            self._task = asyncio.create_task(self.procs())
 
     def done(self):
         self.pr.dump_stats(ctx.options.benchmark_save_path + ".prof")

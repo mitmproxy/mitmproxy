@@ -11,6 +11,8 @@ from mitmproxy.utils import vt_codes
 
 
 class TermLog:
+    _teardown_task: asyncio.Task | None = None
+
     def __init__(self, out: IO[str] | None = None):
         self.logger = TermLogHandler(out)
         self.logger.install()
@@ -29,7 +31,7 @@ class TermLog:
         t = self._teardown()
         try:
             # try to delay teardown a bit.
-            asyncio.create_task(t)
+            self._teardown_task = asyncio.create_task(t)
         except RuntimeError:
             # no event loop, we're in a test.
             asyncio.run(t)

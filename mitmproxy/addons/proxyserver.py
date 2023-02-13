@@ -113,6 +113,7 @@ class Proxyserver(ServerManager):
 
     is_running: bool
     _connect_addr: Optional[Address] = None
+    _update_task: Optional[asyncio.Task] = None
 
     def __init__(self):
         self.connections = {}
@@ -274,7 +275,7 @@ class Proxyserver(ServerManager):
                     )
 
             if self.is_running:
-                asyncio.create_task(self.servers.update(modes))
+                self._update_task = asyncio.create_task(self.servers.update(modes))
 
     async def setup_servers(self) -> bool:
         return await self.servers.update(

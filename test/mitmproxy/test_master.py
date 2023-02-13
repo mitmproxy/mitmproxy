@@ -7,11 +7,17 @@ async def err():
     raise RuntimeError
 
 
-async def test_exception_handler(caplog):
+class TaskError:
+    def running(self):
+        # not assigned to anything
+        asyncio.create_task(err())
+
+
+async def test_exception_handler(caplog_async):
+    caplog_async.set_level("ERROR")
     m = Master(None)
+    m.addons.add(TaskError())
     running = asyncio.create_task(m.run())
-    asyncio.create_task(err())
-    await asyncio.sleep(0)
-    assert "Traceback" in caplog.text
+    await caplog_async.await_log("Traceback")
     m.shutdown()
     await running

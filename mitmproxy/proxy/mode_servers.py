@@ -233,7 +233,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
             # pre-register here - we may get datagrams before the task is executed.
             self.manager.connections[connection_id] = handler
-            asyncio.create_task(self.handle_udp_connection(connection_id, handler))
+            # assign it somewhere so that it does not get garbage-collected.
+            handler._handle_udp_task = asyncio.create_task(self.handle_udp_connection(connection_id, handler))
         else:
             handler = self.manager.connections[connection_id]
             reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)

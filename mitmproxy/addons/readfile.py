@@ -19,7 +19,7 @@ class ReadFile:
 
     def __init__(self):
         self.filter = None
-        self.is_reading = False
+        self._read_task: asyncio.Task | None = None
 
     def load(self, loader):
         loader.add_option("rfile", Optional[str], None, "Read flows from file.")
@@ -64,22 +64,21 @@ class ReadFile:
             logging.error(f"Cannot load flows: {e}")
             raise exceptions.FlowReadException(str(e)) from e
 
-    async def doread(self, rfile):
-        self.is_reading = True
+    async def doread(self, rfile: str) -> None:
         try:
-            await self.load_flows_from_path(ctx.options.rfile)
+            await self.load_flows_from_path(rfile)
         except exceptions.FlowReadException as e:
             raise exceptions.OptionsError(e) from e
         finally:
-            self.is_reading = False
+            self._read_task = None
 
     def running(self):
         if ctx.options.rfile:
-            asyncio.get_running_loop().create_task(self.doread(ctx.options.rfile))
+            self._read_task = asyncio.create_task(self.doread(ctx.options.rfile))
 
     @command.command("readfile.reading")
     def reading(self) -> bool:
-        return self.is_reading
+        return bool(self._read_task)
 
 
 class ReadFileStdin(ReadFile):
