@@ -33,11 +33,11 @@ class HarBuilder():
         }
 
     @staticmethod
-    def page(title="", id="", started_date_time=str(datetime.now(tz=timezone.utc).isoformat())):
+    def page(title="", id=""):
         return {
             "title": title,
             "id": id,
-            "startedDateTime": started_date_time,
+            "startedDateTime": str(datetime.now(tz=timezone.utc).isoformat()),
             "pageTimings": HarBuilder.page_timings()
         }
 
