@@ -150,6 +150,10 @@ async def test_wireguard(tdata, monkeypatch, caplog):
     else:
         return pytest.skip("Unsupported platform for wg-test-client.")
 
+    arch = platform.machine()
+    if arch != "AMD64" and arch != "x86_64":
+        return pytest.skip("Unsupported architecture for wg-test-client.")
+
     test_client_path = tdata.path(f"wg-test-client/{test_client_name}")
     test_conf = tdata.path(f"wg-test-client/test.conf")
 
