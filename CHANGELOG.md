@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* mitmproxy now requires Python 3.10 or above.
 * Fix a bug where the direction indicator in the message stream view would be in the wrong direction.
   ([#5921](https://github.com/mitmproxy/mitmproxy/issues/5921), @konradh)
 * Fix a bug where peername would be None in tls_passthrough script, which would make it not working.

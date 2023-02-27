@@ -17,13 +17,9 @@ from collections.abc import Callable
 from typing import Any
 from typing import cast
 from typing import Generic
+from typing import ParamSpec
 from typing import TypeVar
 
-try:
-    from typing import ParamSpec
-except ImportError:  # pragma: no cover
-    # Python 3.9
-    from typing_extensions import ParamSpec  # type: ignore
 
 P = ParamSpec("P")
 R = TypeVar("R")

@@ -14,8 +14,7 @@ forward, please consider contributing in the following areas:
 
 ## Development Setup
 
-To get started hacking on mitmproxy, please install a recent version of Python (we require at least Python 3.9).
-Then, do the following:
+To get started hacking on mitmproxy, please install the latest version of Python and do the following:
 
 ##### Linux / macOS
 

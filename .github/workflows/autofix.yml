@@ -15,30 +15,31 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: install-pinned/pyupgrade@423622e7c2088eeba495a591385ec22074284f90
+      - uses: install-pinned/pyupgrade@28e8d2633f6f1a03d5b4709682ce155a66324e6a
       - name: Run pyupgrade
         run: |
           shopt -s globstar
           export GLOBIGNORE='mitmproxy/contrib/**'
-          pyupgrade --exit-zero-even-if-changed --keep-runtime-typing --py39-plus **/*.py
+          pyupgrade --exit-zero-even-if-changed --keep-runtime-typing --py310-plus **/*.py
 
-      - uses: install-pinned/reorder_python_imports@946c8bbd8fe048a3bee76063c90c938d5a59a9aa
+      - uses: install-pinned/reorder_python_imports@2cc264e0f6bc33907796602661e5b26d8199314d
       - name: Run reorder-python-imports
         run: |
           shopt -s globstar
           export GLOBIGNORE='mitmproxy/contrib/**'
-          reorder-python-imports --exit-zero-even-if-changed --py39-plus **/*.py
-      - uses: install-pinned/yesqa@4af1e53e86a56db346a03ece9e89c19bfd0e5d0e
+          reorder-python-imports --exit-zero-even-if-changed --py310-plus **/*.py
 
+      - uses: install-pinned/yesqa@4896f663e9c294fddfbf5f4e4fc4f9b1a4556658
       - name: Run yesqa
         run: |
            shopt -s globstar
            export GLOBIGNORE='mitmproxy/contrib/**'
            yesqa **/*.py || true
-      - uses: install-pinned/autoflake@19ecc14a8688d57cca9dc6cfd705f16f200ff097
-      - run: autoflake --in-place --remove-all-unused-imports --exclude contrib -r .
 
-      - uses: install-pinned/black@13c8a20eb904ba800c87f0b34ccfd932ac2ff81d
+      - uses: install-pinned/autoflake@dfa39c5f136f5b885c175734a719dc6ad1f11fc7
+      - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
+
+      - uses: install-pinned/black@3375665f712256be11c3212db472c3dafc217fa1
       - run: black --extend-exclude mitmproxy/contrib .
 
       - uses: mhils/add-pr-ref-in-changelog@main
