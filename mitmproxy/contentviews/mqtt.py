@@ -1,5 +1,4 @@
 import struct
-from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import strutils
@@ -273,6 +272,6 @@ class ViewMQTT(base.View):
         return "MQTT", base.format_text(text)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return 0

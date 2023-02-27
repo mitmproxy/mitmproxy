@@ -3,10 +3,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import socket
+from collections.abc import Callable
 from typing import Any
-from typing import Callable
 from typing import cast
-from typing import Optional
 from typing import Union
 
 import mitmproxy_rs
@@ -267,7 +266,7 @@ async def start_server(
 
 
 async def open_connection(
-    host: str, port: int, *, local_addr: Optional[Address] = None
+    host: str, port: int, *, local_addr: Address | None = None
 ) -> tuple[DatagramReader, DatagramWriter]:
     """UDP variant of asyncio.open_connection."""
 

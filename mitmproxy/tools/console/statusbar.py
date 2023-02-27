@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Optional
 
 import urwid
 
@@ -99,9 +98,7 @@ class ActionBar(urwid.WidgetWrap):
         self.bottom._w = urwid.Text("")
         self.prompting = callback
 
-    def sig_prompt_command(
-        self, partial: str = "", cursor: Optional[int] = None
-    ) -> None:
+    def sig_prompt_command(self, partial: str = "", cursor: int | None = None) -> None:
         signals.focus.send(section="footer")
         self.top._w = commander.CommandEdit(
             self.master,

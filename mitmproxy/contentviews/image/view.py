@@ -1,5 +1,4 @@
 import imghdr
-from typing import Optional
 
 from . import image_parser
 from mitmproxy.contentviews import base
@@ -36,7 +35,7 @@ class ViewImage(base.View):
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(
             bool(

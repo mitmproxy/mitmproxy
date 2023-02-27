@@ -4,7 +4,6 @@ import urllib
 from collections.abc import Hashable
 from collections.abc import Sequence
 from typing import Any
-from typing import Optional
 
 import mitmproxy.types
 from mitmproxy import command
@@ -195,7 +194,7 @@ class ServerPlayback:
             key.append(headers)
         return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
 
-    def next_flow(self, flow: http.HTTPFlow) -> Optional[http.HTTPFlow]:
+    def next_flow(self, flow: http.HTTPFlow) -> http.HTTPFlow | None:
         """
         Returns the next flow object, or None if no matching flow was
         found.

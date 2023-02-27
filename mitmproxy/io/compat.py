@@ -8,7 +8,6 @@ version number, this prevents issues with developer builds and snapshots.
 import copy
 import uuid
 from typing import Any
-from typing import Union
 
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -491,9 +490,7 @@ converters = {
 }
 
 
-def migrate_flow(
-    flow_data: dict[Union[bytes, str], Any]
-) -> dict[Union[bytes, str], Any]:
+def migrate_flow(flow_data: dict[bytes | str, Any]) -> dict[bytes | str, Any]:
     while True:
         flow_version = flow_data.get(b"version", flow_data.get("version"))
 

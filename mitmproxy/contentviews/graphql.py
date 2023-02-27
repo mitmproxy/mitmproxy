@@ -1,6 +1,5 @@
 import json
 from typing import Any
-from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.contentviews.json import PARSE_ERROR
@@ -48,7 +47,7 @@ class ViewGraphQL(base.View):
                 return "GraphQL", base.format_text(format_query_list(data))
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if content_type != "application/json" or not data:
             return 0

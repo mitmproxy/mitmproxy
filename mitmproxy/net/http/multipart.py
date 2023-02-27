@@ -3,7 +3,6 @@ from __future__ import annotations
 import mimetypes
 import re
 import warnings
-from typing import Optional
 from urllib.parse import quote
 
 from mitmproxy.net.http import headers
@@ -47,7 +46,7 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
 
 
 def decode_multipart(
-    content_type: Optional[str], content: bytes
+    content_type: str | None, content: bytes
 ) -> list[tuple[bytes, bytes]]:
     """
     Takes a multipart boundary encoded string and returns list of (key, value) tuples.

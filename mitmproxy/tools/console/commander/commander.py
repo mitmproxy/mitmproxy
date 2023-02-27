@@ -1,7 +1,6 @@
 import abc
 from collections.abc import Sequence
 from typing import NamedTuple
-from typing import Optional
 
 import urwid
 from urwid.text_layout import calc_coords
@@ -54,7 +53,7 @@ class CommandBuffer:
         self.text = start
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
-        self.completion: Optional[CompletionState] = None
+        self.completion: CompletionState | None = None
 
     @property
     def cursor(self) -> int:

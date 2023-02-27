@@ -6,7 +6,6 @@ import shutil
 import sys
 from typing import IO
 from typing import Optional
-from typing import Union
 
 from wsproto.frame_protocol import CloseReason
 
@@ -45,8 +44,8 @@ CONTENTVIEW_STYLES: dict[str, dict[str, str | bool]] = {
 
 
 class Dumper:
-    def __init__(self, outfile: Optional[IO[str]] = None):
-        self.filter: Optional[flowfilter.TFilter] = None
+    def __init__(self, outfile: IO[str] | None = None):
+        self.filter: flowfilter.TFilter | None = None
         self.outfp: IO[str] = outfile or sys.stdout
         self.out_has_vt_codes = vt_codes.ensure_supported(self.outfp)
 
@@ -103,7 +102,7 @@ class Dumper:
             vs = strutils.bytes_to_escaped_str(v)
             self.echo(f"{ks}: {vs}", ident=4)
 
-    def _echo_trailers(self, trailers: Optional[http.Headers]):
+    def _echo_trailers(self, trailers: http.Headers | None):
         if not trailers:
             return
         self.echo("--- HTTP Trailers", fg="magenta", ident=4)
@@ -116,8 +115,8 @@ class Dumper:
 
     def _echo_message(
         self,
-        message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
-        flow: Union[http.HTTPFlow, TCPFlow, UDPFlow],
+        message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+        flow: http.HTTPFlow | TCPFlow | UDPFlow,
     ):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview, message, flow
@@ -341,7 +340,7 @@ class Dumper:
     def udp_error(self, f):
         self._proto_error(f)
 
-    def _proto_message(self, f: Union[TCPFlow, UDPFlow]) -> None:
+    def _proto_message(self, f: TCPFlow | UDPFlow) -> None:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"

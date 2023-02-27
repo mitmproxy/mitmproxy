@@ -27,7 +27,7 @@ class UpstreamAuth:
     - Reverse proxy regular requests (CONNECT is invalid in this mode)
     """
 
-    auth: Optional[bytes] = None
+    auth: bytes | None = None
 
     def load(self, loader):
         loader.add_option(

@@ -2,7 +2,6 @@ import logging
 import pathlib
 import time
 from datetime import datetime
-from typing import Union
 
 import mitmproxy.connections
 import mitmproxy.http
@@ -36,8 +35,8 @@ class WatchdogAddon:
             raise RuntimeError("Watchtdog output path must be a directory.")
         elif not self.flow_dir.exists():
             self.flow_dir.mkdir(parents=True)
-        self.last_trigger: Union[None, float] = None
-        self.timeout: Union[None, float] = timeout
+        self.last_trigger: None | float = None
+        self.timeout: None | float = timeout
 
     def serverconnect(self, conn: mitmproxy.connections.ServerConnection):
         if self.timeout is not None:

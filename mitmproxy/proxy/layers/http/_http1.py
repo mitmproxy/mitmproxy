@@ -1,6 +1,5 @@
 import abc
-from typing import Callable
-from typing import Optional
+from collections.abc import Callable
 from typing import Union
 
 import h11
@@ -39,19 +38,19 @@ TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 
 class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
-    stream_id: Optional[StreamId] = None
-    request: Optional[http.Request] = None
-    response: Optional[http.Response] = None
+    stream_id: StreamId | None = None
+    request: http.Request | None = None
+    response: http.Response | None = None
     request_done: bool = False
     response_done: bool = False
     # this is a bit of a hack to make both mypy and PyCharm happy.
-    state: Union[Callable[[events.Event], layer.CommandGenerator[None]], Callable]
+    state: Callable[[events.Event], layer.CommandGenerator[None]] | Callable
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
-    ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: type[Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: type[RequestProtocolError | ResponseProtocolError]
+    ReceiveData: type[RequestData | ResponseData]
+    ReceiveEndOfMessage: type[RequestEndOfMessage | ResponseEndOfMessage]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
@@ -464,7 +463,7 @@ def should_make_pipe(request: http.Request, response: http.Response) -> bool:
         return False
 
 
-def make_body_reader(expected_size: Optional[int]) -> TBodyReader:
+def make_body_reader(expected_size: int | None) -> TBodyReader:
     if expected_size is None:
         return ChunkedReader()
     elif expected_size == -1:

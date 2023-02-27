@@ -1,7 +1,6 @@
 import time
 from enum import auto
 from enum import Enum
-from typing import Optional
 from typing import Union
 
 from mitmproxy import connection
@@ -31,7 +30,7 @@ class TunnelLayer(layer.Layer):
     conn: connection.Connection
     """The 'inner' connection which provides data I/O"""
     tunnel_state: TunnelState = TunnelState.INACTIVE
-    command_to_reply_to: Optional[commands.OpenConnection] = None
+    command_to_reply_to: commands.OpenConnection | None = None
     _event_queue: list[events.Event]
     """
     If the connection already exists when we receive the start event,
@@ -98,7 +97,7 @@ class TunnelLayer(layer.Layer):
         else:
             yield from self.event_to_child(event)
 
-    def _handshake_finished(self, err: Optional[str]):
+    def _handshake_finished(self, err: str | None):
         if err:
             self.tunnel_state = TunnelState.CLOSED
         else:
@@ -159,7 +158,7 @@ class TunnelLayer(layer.Layer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         """returns a (done, err) tuple"""
         yield from ()
         return True, None

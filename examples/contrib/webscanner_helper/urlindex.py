@@ -3,8 +3,6 @@ import datetime
 import json
 import logging
 from pathlib import Path
-from typing import Optional
-from typing import Union
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow
@@ -118,7 +116,7 @@ class UrlIndexAddon:
     The injection can be done using the URLInjection Add-on.
     """
 
-    index_filter: Optional[Union[str, flowfilter.TFilter]]
+    index_filter: str | flowfilter.TFilter | None
     writer: UrlIndexWriter
 
     OPT_FILEPATH = "URLINDEX_FILEPATH"
@@ -127,9 +125,9 @@ class UrlIndexAddon:
 
     def __init__(
         self,
-        file_path: Union[str, Path],
+        file_path: str | Path,
         append: bool = True,
-        index_filter: Union[str, flowfilter.TFilter] = filter_404,
+        index_filter: str | flowfilter.TFilter = filter_404,
         index_format: str = "json",
     ):
         """Initializes the urlindex add-on.

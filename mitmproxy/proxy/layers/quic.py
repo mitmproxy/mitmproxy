@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from dataclasses import field
 from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
-from typing import Callable
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode

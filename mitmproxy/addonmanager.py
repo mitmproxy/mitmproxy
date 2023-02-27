@@ -9,7 +9,6 @@ from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
-from typing import Optional
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -71,7 +70,7 @@ class Loader:
         typespec: type,
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]] = None,
+        choices: Sequence[str] | None = None,
     ) -> None:
         """
         Add an option to mitmproxy.

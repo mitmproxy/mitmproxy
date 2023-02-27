@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from mitmproxy import flow
 from mitmproxy import udp
@@ -63,7 +62,7 @@ class UDPLayer(layer.Layer):
     Simple UDP layer that just relays messages right now.
     """
 
-    flow: Optional[udp.UDPFlow]
+    flow: udp.UDPFlow | None
 
     def __init__(self, context: Context, ignore: bool = False):
         super().__init__(context)

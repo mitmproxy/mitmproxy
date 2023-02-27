@@ -11,8 +11,6 @@ from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar
-from typing import Optional
-from typing import Union
 
 import tornado.escape
 import tornado.web
@@ -40,7 +38,7 @@ from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
 
 
-def cert_to_json(certs: Sequence[certs.Cert]) -> Optional[dict]:
+def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
         return None
     cert = certs[0]
@@ -111,8 +109,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         f["error"] = flow.error.get_state()
 
     if isinstance(flow, HTTPFlow):
-        content_length: Optional[int]
-        content_hash: Optional[str]
+        content_length: int | None
+        content_hash: str | None
 
         if flow.request.raw_content is not None:
             content_length = len(flow.request.raw_content)
@@ -201,7 +199,7 @@ class APIError(tornado.web.HTTPError):
 class RequestHandler(tornado.web.RequestHandler):
     application: Application
 
-    def write(self, chunk: Union[str, bytes, dict, list]):
+    def write(self, chunk: str | bytes | dict | list):
         # Writing arrays on the top level is ok nowadays.
         # http://flask.pocoo.org/docs/0.11/security/#json-security
         if isinstance(chunk, list):
@@ -509,9 +507,9 @@ class FlowContentView(RequestHandler):
     def message_to_json(
         self,
         viewname: str,
-        message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
-        flow: Union[HTTPFlow, TCPFlow, UDPFlow],
-        max_lines: Optional[int] = None,
+        message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+        flow: HTTPFlow | TCPFlow | UDPFlow,
+        max_lines: int | None = None,
     ):
         description, lines, error = contentviews.get_message_content_view(
             viewname, message, flow

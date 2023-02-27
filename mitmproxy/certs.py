@@ -131,14 +131,14 @@ class Cert(serializable.Serializable):
         )  # pragma: no cover
 
     @property
-    def cn(self) -> Optional[str]:
+    def cn(self) -> str | None:
         attrs = self._cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
         if attrs:
             return attrs[0].value
         return None
 
     @property
-    def organization(self) -> Optional[str]:
+    def organization(self) -> str | None:
         attrs = self._cert.subject.get_attributes_for_oid(
             x509.NameOID.ORGANIZATION_NAME
         )
@@ -231,9 +231,9 @@ def create_ca(
 def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
-    commonname: Optional[str],
+    commonname: str | None,
     sans: list[str],
-    organization: Optional[str] = None,
+    organization: str | None = None,
 ) -> Cert:
     """
     Generates a dummy certificate.
@@ -288,7 +288,7 @@ def dummy_cert(
 class CertStoreEntry:
     cert: Cert
     privatekey: rsa.RSAPrivateKey
-    chain_file: Optional[Path]
+    chain_file: Path | None
     chain_certs: list[Cert]
 
 
@@ -312,7 +312,7 @@ class CertStore:
         self,
         default_privatekey: rsa.RSAPrivateKey,
         default_ca: Cert,
-        default_chain_file: Optional[Path],
+        default_chain_file: Path | None,
         dhparams: DHParams,
     ):
         self.default_privatekey = default_privatekey
@@ -365,10 +365,10 @@ class CertStore:
     @classmethod
     def from_store(
         cls,
-        path: Union[Path, str],
+        path: Path | str,
         basename: str,
         key_size: int,
-        passphrase: Optional[bytes] = None,
+        passphrase: bytes | None = None,
     ) -> "CertStore":
         path = Path(path)
         ca_file = path / f"{basename}-ca.pem"
@@ -379,7 +379,7 @@ class CertStore:
 
     @classmethod
     def from_files(
-        cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None
+        cls, ca_file: Path, dhparam_file: Path, passphrase: bytes | None = None
     ) -> "CertStore":
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
@@ -387,7 +387,7 @@ class CertStore:
         certs = re.split(rb"(?=-----BEGIN CERTIFICATE-----)", raw)
         ca = Cert.from_pem(certs[1])
         if len(certs) > 2:
-            chain_file: Optional[Path] = ca_file
+            chain_file: Path | None = ca_file
         else:
             chain_file = None
         return cls(key, ca, chain_file, dh)
@@ -463,7 +463,7 @@ class CertStore:
         (path / f"{basename}-dhparam.pem").write_bytes(DEFAULT_DHPARAM)
 
     def add_cert_file(
-        self, spec: str, path: Path, passphrase: Optional[bytes] = None
+        self, spec: str, path: Path, passphrase: bytes | None = None
     ) -> None:
         raw = path.read_bytes()
         cert = Cert.from_pem(raw)
@@ -500,9 +500,9 @@ class CertStore:
 
     def get_cert(
         self,
-        commonname: Optional[str],
+        commonname: str | None,
         sans: list[str],
-        organization: Optional[str] = None,
+        organization: str | None = None,
     ) -> CertStoreEntry:
         """
         commonname: Common name for the generated certificate. Must be a
@@ -543,7 +543,7 @@ class CertStore:
         return entry
 
 
-def load_pem_private_key(data: bytes, password: Optional[bytes]) -> rsa.RSAPrivateKey:
+def load_pem_private_key(data: bytes, password: bytes | None) -> rsa.RSAPrivateKey:
     """
     like cryptography's load_pem_private_key, but silently falls back to not using a password
     if the private key is unencrypted.

@@ -1,7 +1,6 @@
 import logging
 import os
 from collections.abc import Sequence
-from typing import Union
 
 import mitmproxy.types
 from mitmproxy import command
@@ -135,7 +134,7 @@ class Core:
         """
         Quickly set a number of common values on flows.
         """
-        val: Union[int, str] = value
+        val: int | str = value
         if attr == "status_code":
             try:
                 val = int(val)  # type: ignore

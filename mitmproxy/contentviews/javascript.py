@@ -1,6 +1,5 @@
 import io
 import re
-from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import strutils
@@ -55,6 +54,6 @@ class ViewJavaScript(base.View):
         return "JavaScript", base.format_text(res)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type in self.__content_types)

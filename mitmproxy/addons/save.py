@@ -41,10 +41,10 @@ def _mode(path: str) -> Literal["ab", "wb"]:
 
 class Save:
     def __init__(self) -> None:
-        self.stream: Optional[io.FilteredFlowWriter] = None
-        self.filt: Optional[flowfilter.TFilter] = None
+        self.stream: io.FilteredFlowWriter | None = None
+        self.filt: flowfilter.TFilter | None = None
         self.active_flows: set[flow.Flow] = set()
-        self.current_path: Optional[str] = None
+        self.current_path: str | None = None
 
     def load(self, loader):
         loader.add_option(

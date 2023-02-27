@@ -4,7 +4,6 @@ import os
 import ssl
 from pathlib import Path
 from typing import Any
-from typing import Optional
 from typing import TypedDict
 
 from aioquic.h3.connection import H3_ALPN
@@ -64,8 +63,8 @@ DEFAULT_HOSTFLAGS = (
 
 
 class AppData(TypedDict):
-    client_alpn: Optional[bytes]
-    server_alpn: Optional[bytes]
+    client_alpn: bytes | None
+    server_alpn: bytes | None
     http2: bool
 
 
@@ -200,7 +199,7 @@ class TlsConfig:
         if len(tls_start.context.layers) == 2 and isinstance(
             tls_start.context.layers[0], modes.HttpProxy
         ):
-            client_alpn: Optional[bytes] = b"http/1.1"
+            client_alpn: bytes | None = b"http/1.1"
         else:
             client_alpn = client.alpn
 
@@ -257,7 +256,7 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
-        client_cert: Optional[str] = None
+        client_cert: str | None = None
         if ctx.options.client_certs:
             client_certs = os.path.expanduser(ctx.options.client_certs)
             if os.path.isfile(client_certs):
@@ -455,7 +454,7 @@ class TlsConfig:
         our certificate should have and then fetches a matching cert from the certstore.
         """
         altnames: list[str] = []
-        organization: Optional[str] = None
+        organization: str | None = None
 
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:

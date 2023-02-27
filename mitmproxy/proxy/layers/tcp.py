@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from mitmproxy import flow
 from mitmproxy import tcp
@@ -64,7 +63,7 @@ class TCPLayer(layer.Layer):
     Simple TCP layer that just relays messages right now.
     """
 
-    flow: Optional[tcp.TCPFlow]
+    flow: tcp.TCPFlow | None
 
     def __init__(self, context: Context, ignore: bool = False):
         super().__init__(context)

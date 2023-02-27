@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from enum import Flag
 from typing import Literal
-from typing import Optional
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
@@ -35,10 +34,7 @@ TransportProtocol = Literal["tcp", "udp"]
 # this version at least provides useful type checking messages.
 Address = tuple[str, int]
 
-if sys.version_info < (3, 10):  # pragma: no cover
-    kw_only = {}
-else:
-    kw_only = {"kw_only": True}
+kw_only = {"kw_only": True}
 
 
 # noinspection PyDataclass
@@ -51,9 +47,9 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     This is intentional, all I/O should be handled by `mitmproxy.proxy.server` exclusively.
     """
 
-    peername: Optional[Address]
+    peername: Address | None
     """The remote's `(ip, port)` tuple for this connection."""
-    sockname: Optional[Address]
+    sockname: Address | None
     """Our local `(ip, port)` tuple for this connection."""
 
     state: ConnectionState = field(
@@ -68,7 +64,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """A unique UUID to identify the connection."""
     transport_protocol: TransportProtocol = field(default="tcp")
     """The connection protocol in use."""
-    error: Optional[str] = None
+    error: str | None = None
     """
     A string describing a general error with connections to this address.
 
@@ -99,27 +95,27 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     > TLS version, with the exception of the end-entity certificate which
     > MUST be first.
     """
-    alpn: Optional[bytes] = None
+    alpn: bytes | None = None
     """The application-layer protocol as negotiated using
     [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation)."""
     alpn_offers: Sequence[bytes] = ()
     """The ALPN offers as sent in the ClientHello."""
     # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
-    cipher: Optional[str] = None
+    cipher: str | None = None
     """The active cipher name as returned by OpenSSL's `SSL_CIPHER_get_name`."""
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
-    tls_version: Optional[str] = None
+    tls_version: str | None = None
     """The active TLS version."""
-    sni: Optional[str] = None
+    sni: str | None = None
     """
     The [Server Name Indication (SNI)](https://en.wikipedia.org/wiki/Server_Name_Indication) sent in the ClientHello.
     """
 
-    timestamp_start: Optional[float] = None
-    timestamp_end: Optional[float] = None
+    timestamp_start: float | None = None
+    timestamp_end: float | None = None
     """*Timestamp:* Connection has been closed."""
-    timestamp_tls_setup: Optional[float] = None
+    timestamp_tls_setup: float | None = None
     """*Timestamp:* TLS handshake has been completed successfully."""
 
     @property
@@ -157,7 +153,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
         return f"{type(self).__name__}({attrs!r})"
 
     @property
-    def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
+    def alpn_proto_negotiated(self) -> bytes | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.alpn."""
         warnings.warn(
             "Connection.alpn_proto_negotiated is deprecated, use Connection.alpn instead.",
@@ -177,7 +173,7 @@ class Client(Connection):
     sockname: Address
     """The local address we received this connection on."""
 
-    mitmcert: Optional[certs.Cert] = None
+    mitmcert: certs.Cert | None = None
     """
     The certificate used by mitmproxy to establish TLS with the client.
     """
@@ -221,7 +217,7 @@ class Client(Connection):
         self.peername = x
 
     @property
-    def cipher_name(self) -> Optional[str]:  # pragma: no cover
+    def cipher_name(self) -> str | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.cipher."""
         warnings.warn(
             "Client.cipher_name is deprecated, use Client.cipher instead.",
@@ -231,7 +227,7 @@ class Client(Connection):
         return self.cipher
 
     @property
-    def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
+    def clientcert(self) -> certs.Cert | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.certificate_list[0]."""
         warnings.warn(
             "Client.clientcert is deprecated, use Client.certificate_list instead.",
@@ -261,30 +257,30 @@ class Client(Connection):
 class Server(Connection):
     """A connection between mitmproxy and an upstream server."""
 
-    address: Optional[Address]  # type: ignore
+    address: Address | None  # type: ignore
     """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
 
     if sys.version_info < (3, 10):  # pragma: no cover
         # no keyword-only arguments here.
-        address: Optional[Address] = None
+        address: Address | None = None
 
-    peername: Optional[Address] = None
+    peername: Address | None = None
     """
     The server's resolved `(ip, port)` tuple. Will be set during connection establishment.
     May be `None` in upstream proxy mode when the address is resolved by the upstream proxy only.
     """
-    sockname: Optional[Address] = None
+    sockname: Address | None = None
 
-    timestamp_start: Optional[float] = None
+    timestamp_start: float | None = None
     """
     *Timestamp:* Connection establishment started.
 
     For IP addresses, this corresponds to sending a TCP SYN; for domains, this corresponds to starting a DNS lookup.
     """
-    timestamp_tcp_setup: Optional[float] = None
+    timestamp_tcp_setup: float | None = None
     """*Timestamp:* TCP ACK received."""
 
-    via: Optional[server_spec.ServerSpec] = None
+    via: server_spec.ServerSpec | None = None
     """An optional proxy server specification via which the connection should be established."""
 
     def __str__(self):
@@ -315,7 +311,7 @@ class Server(Connection):
         return super().__setattr__(name, value)
 
     @property
-    def ip_address(self) -> Optional[Address]:  # pragma: no cover
+    def ip_address(self) -> Address | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for `Server.peername`."""
         warnings.warn(
             "Server.ip_address is deprecated, use Server.peername instead.",
@@ -325,7 +321,7 @@ class Server(Connection):
         return self.peername
 
     @property
-    def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
+    def cert(self) -> certs.Cert | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for `Connection.certificate_list[0]`."""
         warnings.warn(
             "Server.cert is deprecated, use Server.certificate_list instead.",

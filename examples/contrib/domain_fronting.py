@@ -1,7 +1,5 @@
 import json
 from dataclasses import dataclass
-from typing import Optional
-from typing import Union
 
 from mitmproxy import ctx
 from mitmproxy.addonmanager import Loader
@@ -55,8 +53,8 @@ In the following example, we override the HTTP host header:
 
 @dataclass
 class Mapping:
-    server: Union[str, None]
-    host: Union[str, None]
+    server: str | None
+    host: str | None
 
 
 class HttpsDomainFronting:
@@ -70,7 +68,7 @@ class HttpsDomainFronting:
         self.strict_mappings = {}
         self.star_mappings = {}
 
-    def _resolve_addresses(self, host: str) -> Optional[Mapping]:
+    def _resolve_addresses(self, host: str) -> Mapping | None:
         mapping = self.strict_mappings.get(host)
         if mapping is not None:
             return mapping

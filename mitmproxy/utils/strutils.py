@@ -3,7 +3,6 @@ import io
 import re
 from collections.abc import Iterable
 from typing import overload
-from typing import Union
 
 
 # https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading
@@ -15,13 +14,11 @@ def always_bytes(str_or_bytes: None, *encode_args) -> None:
 
 
 @overload
-def always_bytes(str_or_bytes: Union[str, bytes], *encode_args) -> bytes:
+def always_bytes(str_or_bytes: str | bytes, *encode_args) -> bytes:
     ...
 
 
-def always_bytes(
-    str_or_bytes: Union[None, str, bytes], *encode_args
-) -> Union[None, bytes]:
+def always_bytes(str_or_bytes: None | str | bytes, *encode_args) -> None | bytes:
     if str_or_bytes is None or isinstance(str_or_bytes, bytes):
         return str_or_bytes
     elif isinstance(str_or_bytes, str):
@@ -38,11 +35,11 @@ def always_str(str_or_bytes: None, *encode_args) -> None:
 
 
 @overload
-def always_str(str_or_bytes: Union[str, bytes], *encode_args) -> str:
+def always_str(str_or_bytes: str | bytes, *encode_args) -> str:
     ...
 
 
-def always_str(str_or_bytes: Union[None, str, bytes], *decode_args) -> Union[None, str]:
+def always_str(str_or_bytes: None | str | bytes, *decode_args) -> None | str:
     """
     Returns,
         str_or_bytes unmodified, if

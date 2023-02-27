@@ -4,7 +4,6 @@ from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from typing import Literal
-from typing import Optional
 from typing import TypeVar
 from unittest.mock import MagicMock
 
@@ -40,7 +39,7 @@ T = TypeVar("T", bound=layer.Layer)
 
 
 class DummyLayer(layer.Layer):
-    child_layer: Optional[layer.Layer]
+    child_layer: layer.Layer | None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.child_layer
@@ -48,8 +47,8 @@ class DummyLayer(layer.Layer):
 
 
 class TlsEchoLayer(tutils.EchoLayer):
-    err: Optional[str] = None
-    closed: Optional[quic.QuicConnectionClosed] = None
+    err: str | None = None
+    closed: quic.QuicConnectionClosed | None = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
@@ -452,7 +451,7 @@ class MockQuic(QuicConnection):
 
 def make_mock_quic(
     tctx: context.Context,
-    event: Optional[quic_events.QuicEvent] = None,
+    event: quic_events.QuicEvent | None = None,
     established: bool = True,
 ) -> tuple[tutils.Playbook, MockQuic]:
     tctx.client.state = connection.ConnectionState.CLOSED
@@ -554,10 +553,10 @@ class SSLTest:
     def __init__(
         self,
         server_side: bool = False,
-        alpn: Optional[list[str]] = None,
-        sni: Optional[str] = "example.mitmproxy.org",
-        version: Optional[int] = None,
-        settings: Optional[quic.QuicTlsSettings] = None,
+        alpn: list[str] | None = None,
+        sni: str | None = "example.mitmproxy.org",
+        version: int | None = None,
+        settings: quic.QuicTlsSettings | None = None,
     ):
         if settings is None:
             self.ctx = QuicConfiguration(
@@ -663,7 +662,7 @@ def finish_handshake(
     tssl: SSLTest,
     child_layer: type[T],
 ) -> T:
-    result: Optional[T] = None
+    result: T | None = None
 
     def set_layer(next_layer: layer.NextLayer) -> None:
         nonlocal result
@@ -692,7 +691,7 @@ def finish_handshake(
     return result
 
 
-def reply_tls_start_client(alpn: Optional[str] = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_client(alpn: str | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for quic_start_client hooks.
     """
@@ -714,7 +713,7 @@ def reply_tls_start_client(alpn: Optional[str] = None, *args, **kwargs) -> tutil
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(alpn: Optional[str] = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_server(alpn: str | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for quic_start_server hooks.
     """

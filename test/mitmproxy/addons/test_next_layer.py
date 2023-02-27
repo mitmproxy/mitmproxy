@@ -1,4 +1,3 @@
-from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -199,13 +198,13 @@ class TestNextLayer:
         client_layer: layer.Layer,
         server_layer: layer.Layer,
     ):
-        def is_ignored_udp(layer: Optional[layer.Layer]):
+        def is_ignored_udp(layer: layer.Layer | None):
             return isinstance(layer, layers.UDPLayer) and layer.flow is None
 
-        def is_intercepted_udp(layer: Optional[layer.Layer]):
+        def is_intercepted_udp(layer: layer.Layer | None):
             return isinstance(layer, layers.UDPLayer) and layer.flow is not None
 
-        def is_http(layer: Optional[layer.Layer], mode: HTTPMode):
+        def is_http(layer: layer.Layer | None, mode: HTTPMode):
             return isinstance(layer, layers.HttpLayer) and layer.mode is mode
 
         client_hello = {

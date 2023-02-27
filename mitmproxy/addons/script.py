@@ -7,7 +7,6 @@ import sys
 import traceback
 import types
 from collections.abc import Sequence
-from typing import Optional
 
 import mitmproxy.types as mtypes
 from mitmproxy import addonmanager
@@ -22,7 +21,7 @@ from mitmproxy.utils import asyncio_utils
 logger = logging.getLogger(__name__)
 
 
-def load_script(path: str) -> Optional[types.ModuleType]:
+def load_script(path: str) -> types.ModuleType | None:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )

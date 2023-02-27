@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from typing import Any
 from typing import ClassVar
-from typing import Optional
 
 from mitmproxy import connection
 from mitmproxy import exceptions
@@ -66,7 +65,7 @@ class Flow(serializable.Serializable):
     with a `timestamp_start` set to `None`.
     """
 
-    error: Optional[Error] = None
+    error: Error | None = None
     """A connection or protocol error affecting this flow."""
 
     intercepted: bool
@@ -89,7 +88,7 @@ class Flow(serializable.Serializable):
     The default marker for the view will be used if the Unicode emoji name can not be interpreted.
     """
 
-    is_replay: Optional[str]
+    is_replay: str | None
     """
     This attribute indicates if this flow has been replayed in either direction.
 
@@ -123,10 +122,10 @@ class Flow(serializable.Serializable):
         self.timestamp_created = time.time()
 
         self.intercepted: bool = False
-        self._resume_event: Optional[asyncio.Event] = None
-        self._backup: Optional[Flow] = None
+        self._resume_event: asyncio.Event | None = None
+        self._backup: Flow | None = None
         self.marked: str = ""
-        self.is_replay: Optional[str] = None
+        self.is_replay: str | None = None
         self.metadata: dict[str, Any] = dict()
         self.comment: str = ""
 

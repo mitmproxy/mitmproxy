@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from typing import Any
 from typing import Optional
 from typing import TextIO
-from typing import Union
 
 import ruamel.yaml
 
@@ -34,10 +33,10 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: Union[type, object],  # object for Optional[x], which is not a type.
+        typespec: type | object,  # object for Optional[x], which is not a type.
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]],
+        choices: Sequence[str] | None,
     ) -> None:
         typecheck.check_option_type(name, default, typespec)
         self.name = name
@@ -123,10 +122,10 @@ class OptManager:
     def add_option(
         self,
         name: str,
-        typespec: Union[type, object],
+        typespec: type | object,
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]] = None,
+        choices: Sequence[str] | None = None,
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
         self.changed.send(updated={name})
@@ -373,7 +372,7 @@ class OptManager:
                 f"Received multiple values for {o.name}: {values}"
             )
 
-        optstr: Optional[str]
+        optstr: str | None
         if values:
             optstr = values[0]
         else:

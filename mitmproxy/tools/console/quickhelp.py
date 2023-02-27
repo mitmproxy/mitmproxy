@@ -2,7 +2,6 @@
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
 from dataclasses import dataclass
-from typing import Optional
 from typing import Union
 
 import urwid
@@ -51,7 +50,7 @@ class QuickHelp:
 
 def make(
     widget: type[urwid.Widget],
-    focused_flow: Optional[flow.Flow],
+    focused_flow: flow.Flow | None,
     is_root_widget: bool,
 ) -> QuickHelp:
     top_label = ""

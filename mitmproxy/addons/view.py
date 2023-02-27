@@ -235,7 +235,7 @@ class View(collections.abc.Sequence):
         return self._rev(v - 1) + 1
 
     def index(
-        self, f: mitmproxy.flow.Flow, start: int = 0, stop: Optional[int] = None
+        self, f: mitmproxy.flow.Flow, start: int = 0, stop: int | None = None
     ) -> int:
         return self._rev(self._view.index(f, start, stop))
 
@@ -353,7 +353,7 @@ class View(collections.abc.Sequence):
                 raise exceptions.CommandError(str(e)) from e
         self.set_filter(filt)
 
-    def set_filter(self, flt: Optional[flowfilter.TFilter]):
+    def set_filter(self, flt: flowfilter.TFilter | None):
         self.filter = flt or flowfilter.match_all
         self._refilter()
 
@@ -524,7 +524,7 @@ class View(collections.abc.Sequence):
                         self.focus.flow = f
                     self.sig_view_add.send(flow=f)
 
-    def get_by_id(self, flow_id: str) -> Optional[mitmproxy.flow.Flow]:
+    def get_by_id(self, flow_id: str) -> mitmproxy.flow.Flow | None:
         """
         Get flow with the given id from the store.
         Returns None if the flow is not found.
@@ -669,7 +669,7 @@ class Focus:
 
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: Optional[mitmproxy.flow.Flow] = None
+        self._flow: mitmproxy.flow.Flow | None = None
         self.sig_change = signals.SyncSignal(lambda: None)
         if len(self.view):
             self.flow = self.view[0]
@@ -678,18 +678,18 @@ class Focus:
         v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
-    def flow(self) -> Optional[mitmproxy.flow.Flow]:
+    def flow(self) -> mitmproxy.flow.Flow | None:
         return self._flow
 
     @flow.setter
-    def flow(self, f: Optional[mitmproxy.flow.Flow]):
+    def flow(self, f: mitmproxy.flow.Flow | None):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
         self.sig_change.send()
 
     @property
-    def index(self) -> Optional[int]:
+    def index(self) -> int | None:
         if self.flow:
             return self.view.index(self.flow)
         return None

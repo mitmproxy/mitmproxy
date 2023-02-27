@@ -3,7 +3,6 @@ import re
 from collections.abc import Iterator
 from functools import lru_cache
 from typing import Any
-from typing import Optional
 
 from mitmproxy.contentviews import base
 
@@ -55,7 +54,7 @@ class ViewJSON(base.View):
             return "JSON", format_json(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if not data:
             return 0

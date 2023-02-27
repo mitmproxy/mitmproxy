@@ -2,7 +2,6 @@ import logging
 import os
 from collections.abc import Sequence
 from functools import cache
-from typing import Optional
 
 import ruamel.yaml.error
 
@@ -136,13 +135,13 @@ class Keymap:
             self.bindings = [b for b in self.bindings if b != binding]
         self._on_change()
 
-    def get(self, context: str, key: str) -> Optional[Binding]:
+    def get(self, context: str, key: str) -> Binding | None:
         if context in self.keys:
             return self.keys[context].get(key, None)
         return None
 
     @cache
-    def binding_for_help(self, help: str) -> Optional[Binding]:
+    def binding_for_help(self, help: str) -> Binding | None:
         for b in self.bindings:
             if b.help == help:
                 return b
@@ -156,7 +155,7 @@ class Keymap:
         multi.sort(key=lambda x: x.sortkey())
         return single + multi
 
-    def handle(self, context: str, key: str) -> Optional[str]:
+    def handle(self, context: str, key: str) -> str | None:
         """
         Returns the key if it has not been handled, or None.
         """
@@ -166,7 +165,7 @@ class Keymap:
             return None
         return key
 
-    def handle_only(self, context: str, key: str) -> Optional[str]:
+    def handle_only(self, context: str, key: str) -> str | None:
         """
         Like handle, but ignores global bindings. Returns the key if it has
         not been handled, or None.

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import traceback
-from typing import Optional
 
 from . import ctx as mitmproxy_ctx
 from .proxy.mode_specs import ReverseMode
@@ -26,7 +25,7 @@ class Master:
     def __init__(
         self,
         opts: options.Options,
-        event_loop: Optional[asyncio.AbstractEventLoop] = None,
+        event_loop: asyncio.AbstractEventLoop | None = None,
     ):
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)

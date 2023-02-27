@@ -112,8 +112,8 @@ class Proxyserver(ServerManager):
     servers: Servers
 
     is_running: bool
-    _connect_addr: Optional[Address] = None
-    _update_task: Optional[asyncio.Task] = None
+    _connect_addr: Address | None = None
+    _update_task: asyncio.Task | None = None
 
     def __init__(self):
         self.connections = {}

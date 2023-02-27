@@ -11,7 +11,6 @@ from logging import DEBUG
 from typing import Any
 from typing import ClassVar
 from typing import NamedTuple
-from typing import Optional
 from typing import TypeVar
 
 from mitmproxy.connection import Connection
@@ -60,7 +59,7 @@ class Layer:
 
     __last_debug_message: ClassVar[str] = ""
     context: Context
-    _paused: Optional[Paused]
+    _paused: Paused | None
     """
     If execution is currently paused, this attribute stores the paused coroutine
     and the command for which we are expecting a reply.
@@ -70,7 +69,7 @@ class Layer:
     All events that have occurred since execution was paused.
     These will be replayed to ._child_layer once we resume.
     """
-    debug: Optional[str] = None
+    debug: str | None = None
     """
     Enable debug logging by assigning a prefix string for log messages.
     Different amounts of whitespace for different layers work well.
@@ -242,7 +241,7 @@ mevents = (
 
 
 class NextLayer(Layer):
-    layer: Optional[Layer]
+    layer: Layer | None
     """The next layer. To be set by an addon."""
 
     events: list[mevents.Event]

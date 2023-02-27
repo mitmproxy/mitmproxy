@@ -8,10 +8,9 @@ Modifying streamed responses is tricky and brittle:
       where one chunk ends with [...]foo" and the next starts with "bar[...].
 """
 from collections.abc import Iterable
-from typing import Union
 
 
-def modify(data: bytes) -> Union[bytes, Iterable[bytes]]:
+def modify(data: bytes) -> bytes | Iterable[bytes]:
     """
     This function will be called for each chunk of request/response body data that arrives at the proxy,
     and once at the end of the message with an empty bytes argument (b"").

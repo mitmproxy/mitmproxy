@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from dataclasses import is_dataclass
 from typing import Any
 from typing import Generic
-from typing import Optional
 from typing import TypeVar
 
 from mitmproxy import flow
@@ -106,7 +105,7 @@ command_reply_subclasses: dict[commands.Command, type[CommandCompleted]] = {}
 @dataclass(repr=False)
 class OpenConnectionCompleted(CommandCompleted):
     command: commands.OpenConnection
-    reply: Optional[str]
+    reply: str | None
     """error message"""
 
 

@@ -1,5 +1,3 @@
-from typing import Optional
-
 import urwid
 
 import mitmproxy.flow
@@ -27,8 +25,8 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
 
     sc = flow.server_conn
     cc = flow.client_conn
-    req: Optional[http.Request]
-    resp: Optional[http.Response]
+    req: http.Request | None
+    resp: http.Response | None
     if isinstance(flow, http.HTTPFlow):
         req = flow.request
         resp = flow.response

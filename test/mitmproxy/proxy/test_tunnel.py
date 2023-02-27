@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pytest
 
 from mitmproxy.connection import ConnectionState
@@ -21,7 +19,7 @@ from test.mitmproxy.proxy.tutils import reply
 
 
 class TChildLayer(layer.Layer):
-    child_layer: Optional[layer.Layer] = None
+    child_layer: layer.Layer | None = None
 
     def _handle_event(self, event: Event) -> layer.CommandGenerator[None]:
         if isinstance(event, Start):
@@ -48,7 +46,7 @@ class TTunnelLayer(tunnel.TunnelLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         yield SendData(self.tunnel_connection, data)
         if data == b"handshake-success":
             return True, None

@@ -6,7 +6,6 @@ import enum
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
-from typing import Optional
 
 import pytest
 
@@ -50,13 +49,13 @@ class TestSerializable:
 @dataclass
 class Simple(SerializableDataclass):
     x: int
-    y: Optional[str]
+    y: str | None
 
 
 @dataclass
 class SerializableChild(SerializableDataclass):
     foo: Simple
-    maybe_foo: Optional[Simple]
+    maybe_foo: Simple | None
 
 
 @dataclass
@@ -76,16 +75,16 @@ class TLiteral(SerializableDataclass):
 
 @dataclass
 class BuiltinChildren(SerializableDataclass):
-    a: Optional[list[int]]
-    b: Optional[dict[str, int]]
-    c: Optional[tuple[int, int]]
+    a: list[int] | None
+    b: dict[str, int] | None
+    c: tuple[int, int] | None
     d: list[Simple]
-    e: Optional[TEnum]
+    e: TEnum | None
 
 
 @dataclass
 class Defaults(SerializableDataclass):
-    z: Optional[int] = 42
+    z: int | None = 42
 
 
 @dataclass
