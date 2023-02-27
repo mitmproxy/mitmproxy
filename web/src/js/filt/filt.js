@@ -2084,7 +2084,7 @@ export default (function() {
         function bodyFilter(flow){
             return true;
         }
-        bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
         return bodyFilter;
     }
 
@@ -2094,7 +2094,7 @@ export default (function() {
         function requestBodyFilter(flow){
             return true;
         }
-        requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
         return requestBodyFilter;
     }
 
@@ -2104,7 +2104,7 @@ export default (function() {
         function responseBodyFilter(flow){
             return true;
         }
-        responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
         return responseBodyFilter;
     }
 
