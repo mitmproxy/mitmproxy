@@ -49,8 +49,6 @@ jobs:
             py: "3.11"
           - os: ubuntu-latest
             py: "3.10"
-          - os: ubuntu-latest
-            py: "3.9"
     runs-on: ${{ matrix.os }}
     steps:
       - run: printenv

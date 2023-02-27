@@ -40,10 +40,7 @@ class Master:
         # may want to spawn tasks during the initial configuration phase,
         # which happens before run().
         self.event_loop = event_loop or asyncio.get_running_loop()
-        try:
-            self.should_exit = asyncio.Event()
-        except RuntimeError:  # python 3.9 and below
-            self.should_exit = asyncio.Event(loop=self.event_loop)  # type: ignore
+        self.should_exit = asyncio.Event()
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = self.log  # deprecated, do not use.
         mitmproxy_ctx.options = self.options

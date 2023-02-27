@@ -2,6 +2,7 @@
 import contextlib
 import inspect
 import textwrap
+import typing
 from pathlib import Path
 
 from mitmproxy import addonmanager
@@ -33,15 +34,9 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     for params in all_params:
         for param in params:
             try:
-                mod = inspect.getmodule(param.annotation).__name__
-                if mod == "typing":
-                    # this is ugly, but can be removed once we are on Python 3.9+ only
-                    imports.add(
-                        inspect.getmodule(param.annotation.__args__[0]).__name__
-                    )
-                    types.add(param.annotation._name)
-                else:
-                    imports.add(mod)
+                imports.add(inspect.getmodule(param.annotation).__name__)
+                for t in typing.get_args(param.annotation):
+                    imports.add(inspect.getmodule(t).__name__)
             except AttributeError:
                 raise ValueError(f"Missing type annotation: {params}")
     imports.discard("builtins")
