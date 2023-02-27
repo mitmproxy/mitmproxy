@@ -4,12 +4,11 @@ import asyncio
 import socket
 import ssl
 from collections.abc import AsyncGenerator
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
-from typing import Callable
 from typing import ClassVar
-from typing import Optional
 from typing import TypeVar
 from unittest.mock import Mock
 
@@ -391,7 +390,7 @@ class H3EchoServer(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._seen_headers: set[int] = set()
-        self.http: Optional[H3Connection] = None
+        self.http: H3Connection | None = None
 
     def http_headers_received(self, event: h3_events.HeadersReceived) -> None:
         assert event.push_id is None
@@ -498,7 +497,7 @@ class QuicClient(QuicConnectionProtocol):
             elif isinstance(event, quic_events.HandshakeCompleted):
                 self._waiter.set_result(None)
 
-    def connection_lost(self, exc: Optional[Exception]) -> None:
+    def connection_lost(self, exc: Exception | None) -> None:
         if not self._waiter.done():
             self._waiter.set_exception(exc)
         return super().connection_lost(exc)
@@ -536,10 +535,10 @@ class QuicDatagramClient(QuicClient):
 class H3Response:
     waiter: asyncio.Future[H3Response]
     stream_id: int
-    headers: Optional[h3_events.H3Event] = None
-    data: Optional[bytes] = None
-    trailers: Optional[h3_events.H3Event] = None
-    callback: Optional[Callable[[str], None]] = None
+    headers: h3_events.H3Event | None = None
+    data: bytes | None = None
+    trailers: h3_events.H3Event | None = None
+    callback: Callable[[str], None] | None = None
 
     async def wait_result(self) -> H3Response:
         return await asyncio.wait_for(self.waiter, timeout=QuicClient.TIMEOUT)
@@ -607,8 +606,8 @@ class H3Client(QuicClient):
     def request(
         self,
         headers: h3_events.H3Event,
-        data: Optional[bytes] = None,
-        trailers: Optional[h3_events.H3Event] = None,
+        data: bytes | None = None,
+        trailers: h3_events.H3Event | None = None,
         end_stream: bool = True,
     ) -> H3Response:
         stream_id = self._quic.get_next_available_stream_id()

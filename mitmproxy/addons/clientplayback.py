@@ -6,7 +6,6 @@ import time
 import traceback
 from collections.abc import Sequence
 from typing import cast
-from typing import Optional
 
 import mitmproxy.types
 from mitmproxy import command
@@ -134,8 +133,8 @@ class ReplayHandler(server.ConnectionHandler):
 
 
 class ClientPlayback:
-    playback_task: Optional[asyncio.Task] = None
-    inflight: Optional[http.HTTPFlow]
+    playback_task: asyncio.Task | None = None
+    inflight: http.HTTPFlow | None
     queue: asyncio.Queue
     options: Options
     replay_tasks: set[asyncio.Task]
@@ -176,7 +175,7 @@ class ClientPlayback:
             self.queue.task_done()
             self.inflight = None
 
-    def check(self, f: flow.Flow) -> Optional[str]:
+    def check(self, f: flow.Flow) -> str | None:
         if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:

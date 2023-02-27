@@ -7,7 +7,7 @@ from mitmproxy import flowfilter
 
 
 class Intercept:
-    filt: Optional[flowfilter.TFilter] = None
+    filt: flowfilter.TFilter | None = None
 
     def load(self, loader):
         loader.add_option("intercept_active", bool, False, "Intercept toggle")

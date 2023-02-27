@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from collections.abc import Sequence
-from typing import Optional
 
 
 class Palette:
@@ -92,7 +91,7 @@ class Palette:
         "commander_hint",
     ]
     _fields.extend(["gradient_%02d" % i for i in range(100)])
-    high: Optional[Mapping[str, Sequence[str]]] = None
+    high: Mapping[str, Sequence[str]] | None = None
     low: Mapping[str, Sequence[str]]
 
     def palette(self, transparent: bool):

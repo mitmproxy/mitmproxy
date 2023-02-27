@@ -2,7 +2,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 # Security: No third-party dependencies here!
 
@@ -10,8 +9,8 @@ root = Path(__file__).absolute().parent.parent
 
 if __name__ == "__main__":
     ref = os.environ["GITHUB_REF"]
-    branch: Optional[str] = None
-    tag: Optional[str] = None
+    branch: str | None = None
+    tag: str | None = None
     if ref.startswith("refs/heads/"):
         branch = ref.replace("refs/heads/", "")
     elif ref.startswith("refs/tags/"):

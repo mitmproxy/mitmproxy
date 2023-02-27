@@ -4,7 +4,6 @@ import logging
 import os.path
 from collections.abc import Sequence
 from typing import Any
-from typing import Union
 
 import pyperclip
 
@@ -28,7 +27,7 @@ def is_addr(v):
     return isinstance(v, tuple) and len(v) > 1
 
 
-def extract(cut: str, f: flow.Flow) -> Union[str, bytes]:
+def extract(cut: str, f: flow.Flow) -> str | bytes:
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):
@@ -86,7 +85,7 @@ class Cut:
         or "false", "bytes" are preserved, and all other values are
         converted to strings.
         """
-        ret: list[list[Union[str, bytes]]] = []
+        ret: list[list[str | bytes]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore
@@ -148,7 +147,7 @@ class Cut:
         format is UTF-8 encoded CSV. If there is exactly one row and one
         column, the data is written to file as-is, with raw bytes preserved.
         """
-        v: Union[str, bytes]
+        v: str | bytes
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
             v = extract_str(cuts[0], flows[0])

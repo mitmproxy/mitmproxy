@@ -3,7 +3,6 @@ import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
 from typing import Any
-from typing import Union
 
 import pyperclip
 
@@ -142,7 +141,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats: dict[str, Callable[[flow.Flow], Union[str, bytes]]] = dict(
+formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,

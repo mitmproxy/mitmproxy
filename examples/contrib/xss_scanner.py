@@ -40,7 +40,6 @@ import socket
 from html.parser import HTMLParser
 from typing import NamedTuple
 from typing import Optional
-from typing import Union
 from urllib.parse import urlparse
 
 import requests
@@ -93,7 +92,7 @@ def get_cookies(flow: http.HTTPFlow) -> Cookies:
 def find_unclaimed_URLs(body, requestUrl):
     """Look for unclaimed URLs in script tags and log them if found"""
 
-    def getValue(attrs: list[tuple[str, str]], attrName: str) -> Optional[str]:
+    def getValue(attrs: list[tuple[str, str]], attrName: str) -> str | None:
         for name, value in attrs:
             if attrName == name:
                 return value
@@ -188,7 +187,7 @@ def test_query_injection(original_body: str, request_URL: str, cookies: Cookies)
     return xss_info, sqli_info
 
 
-def log_XSS_data(xss_info: Optional[XSSData]) -> None:
+def log_XSS_data(xss_info: XSSData | None) -> None:
     """Log information about the given XSS to mitmproxy"""
     # If it is None, then there is no info to log
     if not xss_info:
@@ -200,7 +199,7 @@ def log_XSS_data(xss_info: Optional[XSSData]) -> None:
     logging.error("Line: %s" % xss_info.line)
 
 
-def log_SQLi_data(sqli_info: Optional[SQLiData]) -> None:
+def log_SQLi_data(sqli_info: SQLiData | None) -> None:
     """Log information about the given SQLi to mitmproxy"""
     if not sqli_info:
         return
@@ -214,7 +213,7 @@ def log_SQLi_data(sqli_info: Optional[SQLiData]) -> None:
 
 def get_SQLi_data(
     new_body: str, original_body: str, request_URL: str, injection_point: str
-) -> Optional[SQLiData]:
+) -> SQLiData | None:
     """Return a SQLiDict if there is a SQLi otherwise return None
     String String URL String -> (SQLiDict or None)"""
     # Regexes taken from Damn Small SQLi Scanner: https://github.com/stamparm/DSSS/blob/master/dsss.py#L17
@@ -337,8 +336,8 @@ def paths_to_text(html: str, string: str) -> list[str]:
 
 
 def get_XSS_data(
-    body: Union[str, bytes], request_URL: str, injection_point: str
-) -> Optional[XSSData]:
+    body: str | bytes, request_URL: str, injection_point: str
+) -> XSSData | None:
     """Return a XSSDict if there is a XSS otherwise return None"""
 
     def in_script(text, index, body) -> bool:

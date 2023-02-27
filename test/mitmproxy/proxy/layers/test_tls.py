@@ -2,7 +2,6 @@ import ssl
 import time
 from logging import DEBUG
 from logging import WARNING
-from typing import Optional
 
 import pytest
 from OpenSSL import SSL
@@ -99,9 +98,9 @@ class SSLTest:
     def __init__(
         self,
         server_side: bool = False,
-        alpn: Optional[list[str]] = None,
-        sni: Optional[bytes] = b"example.mitmproxy.org",
-        max_ver: Optional[ssl.TLSVersion] = None,
+        alpn: list[str] | None = None,
+        sni: bytes | None = b"example.mitmproxy.org",
+        max_ver: ssl.TLSVersion | None = None,
     ):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
@@ -164,7 +163,7 @@ def _test_echo(
 
 
 class TlsEchoLayer(tutils.EchoLayer):
-    err: Optional[str] = None
+    err: str | None = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
@@ -197,9 +196,7 @@ def finish_handshake(
     tssl.bio_write(data())
 
 
-def reply_tls_start_client(
-    alpn: Optional[bytes] = None, *args, **kwargs
-) -> tutils.reply:
+def reply_tls_start_client(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_client hooks.
     """
@@ -226,9 +223,7 @@ def reply_tls_start_client(
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(
-    alpn: Optional[bytes] = None, *args, **kwargs
-) -> tutils.reply:
+def reply_tls_start_server(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_server hooks.
     """

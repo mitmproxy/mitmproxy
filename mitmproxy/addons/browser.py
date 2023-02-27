@@ -2,14 +2,13 @@ import logging
 import shutil
 import subprocess
 import tempfile
-from typing import Optional
 
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy.log import ALERT
 
 
-def get_chrome_executable() -> Optional[str]:
+def get_chrome_executable() -> str | None:
     for browser in (
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
@@ -29,7 +28,7 @@ def get_chrome_executable() -> Optional[str]:
     return None
 
 
-def get_chrome_flatpak() -> Optional[str]:
+def get_chrome_flatpak() -> str | None:
     if shutil.which("flatpak"):
         for browser in (
             "com.google.Chrome",
@@ -50,7 +49,7 @@ def get_chrome_flatpak() -> Optional[str]:
     return None
 
 
-def get_browser_cmd() -> Optional[list[str]]:
+def get_browser_cmd() -> list[str] | None:
     if browser := get_chrome_executable():
         return [browser]
     elif browser := get_chrome_flatpak():

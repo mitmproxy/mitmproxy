@@ -15,7 +15,6 @@ Note:
 
 """
 import json
-from typing import Union
 
 from mitmproxy import http
 
@@ -29,7 +28,7 @@ FILTER_COOKIES = {
 
 
 # -- Helper functions --
-def load_json_cookies() -> list[dict[str, Union[str, None]]]:
+def load_json_cookies() -> list[dict[str, str | None]]:
     """
     Load a particular json file containing a list of cookies.
     """
@@ -40,7 +39,7 @@ def load_json_cookies() -> list[dict[str, Union[str, None]]]:
 # NOTE: or just hardcode the cookies as [{"name": "", "value": ""}]
 
 
-def stringify_cookies(cookies: list[dict[str, Union[str, None]]]) -> str:
+def stringify_cookies(cookies: list[dict[str, str | None]]) -> str:
     """
     Creates a cookie string from a list of cookie dicts.
     """
@@ -54,7 +53,7 @@ def stringify_cookies(cookies: list[dict[str, Union[str, None]]]) -> str:
     )
 
 
-def parse_cookies(cookie_string: str) -> list[dict[str, Union[str, None]]]:
+def parse_cookies(cookie_string: str) -> list[dict[str, str | None]]:
     """
     Parses a cookie string into a list of cookie dicts.
     """

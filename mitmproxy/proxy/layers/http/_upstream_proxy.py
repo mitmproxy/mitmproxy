@@ -1,6 +1,5 @@
 import time
 from logging import DEBUG
-from typing import Optional
 
 from h11._receivebuffer import ReceiveBuffer
 
@@ -74,7 +73,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data

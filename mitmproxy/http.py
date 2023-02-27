@@ -5,6 +5,7 @@ import re
 import time
 import urllib.parse
 import warnings
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
 from collections.abc import Mapping
@@ -15,10 +16,7 @@ from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
 from typing import Any
-from typing import Callable
 from typing import cast
-from typing import Optional
-from typing import Union
 
 from mitmproxy import flow
 from mitmproxy.coretypes import multidict
@@ -43,7 +41,7 @@ def _native(x: bytes) -> str:
     return x.decode("utf-8", "surrogateescape")
 
 
-def _always_bytes(x: Union[str, bytes]) -> bytes:
+def _always_bytes(x: str | bytes) -> bytes:
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
@@ -136,7 +134,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         else:
             return b""
 
-    def __delitem__(self, key: Union[str, bytes]) -> None:
+    def __delitem__(self, key: str | bytes) -> None:
         key = _always_bytes(key)
         super().__delitem__(key)
 
@@ -144,7 +142,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         for x in super().__iter__():
             yield _native(x)
 
-    def get_all(self, name: Union[str, bytes]) -> list[str]:
+    def get_all(self, name: str | bytes) -> list[str]:
         """
         Like `Headers.get`, but does not fold multiple headers into a single one.
         This is useful for Set-Cookie and Cookie headers, which do not support folding.
@@ -157,7 +155,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         name = _always_bytes(name)
         return [_native(x) for x in super().get_all(name)]
 
-    def set_all(self, name: Union[str, bytes], values: Iterable[Union[str, bytes]]):
+    def set_all(self, name: str | bytes, values: Iterable[str | bytes]):
         """
         Explicitly set multiple headers for the given key.
         See `Headers.get_all`.
@@ -166,7 +164,7 @@ class Headers(multidict.MultiDict):  # type: ignore
         values = [_always_bytes(x) for x in values]
         return super().set_all(name, values)
 
-    def insert(self, index: int, key: Union[str, bytes], value: Union[str, bytes]):
+    def insert(self, index: int, key: str | bytes, value: str | bytes):
         key = _always_bytes(key)
         value = _always_bytes(value)
         super().insert(index, key, value)
@@ -182,10 +180,10 @@ class Headers(multidict.MultiDict):  # type: ignore
 class MessageData(serializable.Serializable):
     http_version: bytes
     headers: Headers
-    content: Optional[bytes]
-    trailers: Optional[Headers]
+    content: bytes | None
+    trailers: Headers | None
     timestamp_start: float
-    timestamp_end: Optional[float]
+    timestamp_end: float | None
 
     # noinspection PyUnreachableCode
     if __debug__:
@@ -246,7 +244,7 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Union[Callable[[bytes], Union[Iterable[bytes], bytes]], bool] = False
+    stream: Callable[[bytes], Iterable[bytes] | bytes] | bool = False
     """
     This attribute controls if the message body should be streamed.
 
@@ -269,7 +267,7 @@ class Message(serializable.Serializable):
         return self.data.http_version.decode("utf-8", "surrogateescape")
 
     @http_version.setter
-    def http_version(self, http_version: Union[str, bytes]) -> None:
+    def http_version(self, http_version: str | bytes) -> None:
         self.data.http_version = strutils.always_bytes(
             http_version, "utf-8", "surrogateescape"
         )
@@ -302,18 +300,18 @@ class Message(serializable.Serializable):
         self.data.headers = h
 
     @property
-    def trailers(self) -> Optional[Headers]:
+    def trailers(self) -> Headers | None:
         """
         The [HTTP trailers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer).
         """
         return self.data.trailers
 
     @trailers.setter
-    def trailers(self, h: Optional[Headers]) -> None:
+    def trailers(self, h: Headers | None) -> None:
         self.data.trailers = h
 
     @property
-    def raw_content(self) -> Optional[bytes]:
+    def raw_content(self) -> bytes | None:
         """
         The raw (potentially compressed) HTTP message body.
 
@@ -324,11 +322,11 @@ class Message(serializable.Serializable):
         return self.data.content
 
     @raw_content.setter
-    def raw_content(self, content: Optional[bytes]) -> None:
+    def raw_content(self, content: bytes | None) -> None:
         self.data.content = content
 
     @property
-    def content(self) -> Optional[bytes]:
+    def content(self) -> bytes | None:
         """
         The uncompressed HTTP message body as bytes.
 
@@ -339,11 +337,11 @@ class Message(serializable.Serializable):
         return self.get_content()
 
     @content.setter
-    def content(self, value: Optional[bytes]) -> None:
+    def content(self, value: bytes | None) -> None:
         self.set_content(value)
 
     @property
-    def text(self) -> Optional[str]:
+    def text(self) -> str | None:
         """
         The uncompressed and decoded HTTP message body as text.
 
@@ -354,10 +352,10 @@ class Message(serializable.Serializable):
         return self.get_text()
 
     @text.setter
-    def text(self, value: Optional[str]) -> None:
+    def text(self, value: str | None) -> None:
         self.set_text(value)
 
-    def set_content(self, value: Optional[bytes]) -> None:
+    def set_content(self, value: bytes | None) -> None:
         if value is None:
             self.raw_content = None
             return
@@ -382,7 +380,7 @@ class Message(serializable.Serializable):
         else:
             self.headers["content-length"] = str(len(self.raw_content))
 
-    def get_content(self, strict: bool = True) -> Optional[bytes]:
+    def get_content(self, strict: bool = True) -> bytes | None:
         """
         Similar to `Message.content`, but does not raise if `strict` is `False`.
         Instead, the compressed message body is returned as-is.
@@ -404,7 +402,7 @@ class Message(serializable.Serializable):
         else:
             return self.raw_content
 
-    def _get_content_type_charset(self) -> Optional[str]:
+    def _get_content_type_charset(self) -> str | None:
         ct = parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
@@ -438,7 +436,7 @@ class Message(serializable.Serializable):
 
         return enc
 
-    def set_text(self, text: Optional[str]) -> None:
+    def set_text(self, text: str | None) -> None:
         if text is None:
             self.content = None
             return
@@ -458,7 +456,7 @@ class Message(serializable.Serializable):
             enc = "utf8"
             self.content = text.encode(enc, "surrogateescape")
 
-    def get_text(self, strict: bool = True) -> Optional[str]:
+    def get_text(self, strict: bool = True) -> str | None:
         """
         Similar to `Message.text`, but does not raise if `strict` is `False`.
         Instead, the message body is returned as surrogate-escaped UTF-8.
@@ -486,14 +484,14 @@ class Message(serializable.Serializable):
         self.data.timestamp_start = timestamp_start
 
     @property
-    def timestamp_end(self) -> Optional[float]:
+    def timestamp_end(self) -> float | None:
         """
         *Timestamp:* Last byte received.
         """
         return self.data.timestamp_end
 
     @timestamp_end.setter
-    def timestamp_end(self, timestamp_end: Optional[float]):
+    def timestamp_end(self, timestamp_end: float | None):
         self.data.timestamp_end = timestamp_end
 
     def decode(self, strict: bool = True) -> None:
@@ -558,11 +556,11 @@ class Request(Message):
         authority: bytes,
         path: bytes,
         http_version: bytes,
-        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
-        content: Optional[bytes],
-        trailers: Union[Headers, tuple[tuple[bytes, bytes], ...], None],
+        headers: Headers | tuple[tuple[bytes, bytes], ...],
+        content: bytes | None,
+        trailers: Headers | tuple[tuple[bytes, bytes], ...] | None,
         timestamp_start: float,
-        timestamp_end: Optional[float],
+        timestamp_end: float | None,
     ):
         # auto-convert invalid types to retain compatibility with older code.
         if isinstance(host, bytes):
@@ -613,12 +611,10 @@ class Request(Message):
         cls,
         method: str,
         url: str,
-        content: Union[bytes, str] = "",
-        headers: Union[
-            Headers,
-            dict[Union[str, bytes], Union[str, bytes]],
-            Iterable[tuple[bytes, bytes]],
-        ] = (),
+        content: bytes | str = "",
+        headers: (
+            Headers | dict[str | bytes, str | bytes] | Iterable[tuple[bytes, bytes]]
+        ) = (),
     ) -> "Request":
         """
         Simplified API for creating request objects.
@@ -693,7 +689,7 @@ class Request(Message):
         return self.data.method.decode("utf-8", "surrogateescape").upper()
 
     @method.setter
-    def method(self, val: Union[str, bytes]) -> None:
+    def method(self, val: str | bytes) -> None:
         self.data.method = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
@@ -704,7 +700,7 @@ class Request(Message):
         return self.data.scheme.decode("utf-8", "surrogateescape")
 
     @scheme.setter
-    def scheme(self, val: Union[str, bytes]) -> None:
+    def scheme(self, val: str | bytes) -> None:
         self.data.scheme = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
@@ -726,7 +722,7 @@ class Request(Message):
             return self.data.authority.decode("utf8", "surrogateescape")
 
     @authority.setter
-    def authority(self, val: Union[str, bytes]) -> None:
+    def authority(self, val: str | bytes) -> None:
         if isinstance(val, str):
             try:
                 val = val.encode("idna", "strict")
@@ -748,12 +744,12 @@ class Request(Message):
         return self.data.host
 
     @host.setter
-    def host(self, val: Union[str, bytes]) -> None:
+    def host(self, val: str | bytes) -> None:
         self.data.host = always_str(val, "idna", "strict")
         self._update_host_and_authority()
 
     @property
-    def host_header(self) -> Optional[str]:
+    def host_header(self) -> str | None:
         """
         The request's host/authority header.
 
@@ -768,7 +764,7 @@ class Request(Message):
             return self.data.headers.get("Host", None)
 
     @host_header.setter
-    def host_header(self, val: Union[None, str, bytes]) -> None:
+    def host_header(self, val: None | str | bytes) -> None:
         if val is None:
             if self.is_http2 or self.is_http3:
                 self.data.authority = b""
@@ -814,7 +810,7 @@ class Request(Message):
         return self.data.path.decode("utf-8", "surrogateescape")
 
     @path.setter
-    def path(self, val: Union[str, bytes]) -> None:
+    def path(self, val: str | bytes) -> None:
         self.data.path = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
@@ -829,7 +825,7 @@ class Request(Message):
         return url.unparse(self.scheme, self.host, self.port, self.path)
 
     @url.setter
-    def url(self, val: Union[str, bytes]) -> None:
+    def url(self, val: str | bytes) -> None:
         val = always_str(val, "utf-8", "surrogateescape")
         self.scheme, self.host, self.port, self.path = url.parse(val)
 
@@ -1050,11 +1046,11 @@ class Response(Message):
         http_version: bytes,
         status_code: int,
         reason: bytes,
-        headers: Union[Headers, tuple[tuple[bytes, bytes], ...]],
-        content: Optional[bytes],
-        trailers: Union[None, Headers, tuple[tuple[bytes, bytes], ...]],
+        headers: Headers | tuple[tuple[bytes, bytes], ...],
+        content: bytes | None,
+        trailers: None | Headers | tuple[tuple[bytes, bytes], ...],
         timestamp_start: float,
-        timestamp_end: Optional[float],
+        timestamp_end: float | None,
     ):
         # auto-convert invalid types to retain compatibility with older code.
         if isinstance(http_version, str):
@@ -1093,10 +1089,10 @@ class Response(Message):
     def make(
         cls,
         status_code: int = 200,
-        content: Union[bytes, str] = b"",
-        headers: Union[
-            Headers, Mapping[str, Union[str, bytes]], Iterable[tuple[bytes, bytes]]
-        ] = (),
+        content: bytes | str = b"",
+        headers: (
+            Headers | Mapping[str, str | bytes] | Iterable[tuple[bytes, bytes]]
+        ) = (),
     ) -> "Response":
         """
         Simplified API for creating response objects.
@@ -1165,7 +1161,7 @@ class Response(Message):
         return self.data.reason.decode("ISO-8859-1")
 
     @reason.setter
-    def reason(self, reason: Union[str, bytes]) -> None:
+    def reason(self, reason: str | bytes) -> None:
         self.data.reason = strutils.always_bytes(reason, "ISO-8859-1")
 
     def _get_cookies(self):
@@ -1183,9 +1179,7 @@ class Response(Message):
     @property
     def cookies(
         self,
-    ) -> multidict.MultiDictView[
-        str, tuple[str, multidict.MultiDict[str, Optional[str]]]
-    ]:
+    ) -> multidict.MultiDictView[str, tuple[str, multidict.MultiDict[str, str | None]]]:
         """
         The response cookies. A possibly empty `MultiDictView`, where the keys are cookie
         name strings, and values are `(cookie value, attributes)` tuples. Within
@@ -1245,9 +1239,9 @@ class HTTPFlow(flow.Flow):
 
     request: Request
     """The client's HTTP request."""
-    response: Optional[Response] = None
+    response: Response | None = None
     """The server's HTTP response."""
-    error: Optional[flow.Error] = None
+    error: flow.Error | None = None
     """
     A connection or protocol error affecting this flow.
 
@@ -1256,7 +1250,7 @@ class HTTPFlow(flow.Flow):
     from the server, but there was an error sending it back to the client.
     """
 
-    websocket: Optional[WebSocketData] = None
+    websocket: WebSocketData | None = None
     """
     If this HTTP flow initiated a WebSocket connection, this attribute contains all associated WebSocket data.
     """

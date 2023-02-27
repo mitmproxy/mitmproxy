@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional
 
 import urwid
 
@@ -70,7 +69,7 @@ class FlowListWalker(urwid.ListWalker):
             self.master.view.focus.index = index
 
     @lru_cache(maxsize=None)
-    def _get(self, pos: int) -> tuple[Optional[FlowItem], Optional[int]]:
+    def _get(self, pos: int) -> tuple[FlowItem | None, int | None]:
         if not self.master.view.inbounds(pos):
             return None, None
         return FlowItem(self.master, self.master.view[pos]), pos

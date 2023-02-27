@@ -2,7 +2,6 @@ import asyncio
 import collections
 import logging
 from collections.abc import Callable
-from typing import Optional
 
 from mitmproxy import command
 from mitmproxy import log
@@ -27,7 +26,7 @@ class EventStore:
         self.sig_add.send(entry)
 
     @property
-    def size(self) -> Optional[int]:
+    def size(self) -> int | None:
         return self.data.maxlen
 
     @command.command("eventstore.clear")

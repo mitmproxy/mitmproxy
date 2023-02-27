@@ -38,7 +38,6 @@ import sys
 from collections.abc import Sequence
 from typing import ClassVar
 from typing import Protocol
-from typing import Union
 
 import pyparsing as pp
 
@@ -662,7 +661,7 @@ def parse(s: str) -> TFilter:
         raise ValueError(f"Invalid filter expression: {s!r}") from e
 
 
-def match(flt: Union[str, TFilter], flow: flow.Flow) -> bool:
+def match(flt: str | TFilter, flow: flow.Flow) -> bool:
     """
     Matches a flow against a compiled filter expression.
     Returns True if matched, False if not.

@@ -9,8 +9,6 @@ import time
 import warnings
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Optional
-from typing import Union
 
 from wsproto.frame_protocol import Opcode
 
@@ -54,10 +52,10 @@ class WebSocketMessage(serializable.Serializable):
 
     def __init__(
         self,
-        type: Union[int, Opcode],
+        type: int | Opcode,
         from_client: bool,
         content: bytes,
-        timestamp: Optional[float] = None,
+        timestamp: float | None = None,
         dropped: bool = False,
         injected: bool = False,
     ) -> None:
@@ -156,18 +154,18 @@ class WebSocketData(serializable.SerializableDataclass):
     messages: list[WebSocketMessage] = field(default_factory=list)
     """All `WebSocketMessage`s transferred over this connection."""
 
-    closed_by_client: Optional[bool] = None
+    closed_by_client: bool | None = None
     """
     `True` if the client closed the connection,
     `False` if the server closed the connection,
     `None` if the connection is active.
     """
-    close_code: Optional[int] = None
+    close_code: int | None = None
     """[Close Code](https://tools.ietf.org/html/rfc6455#section-7.1.5)"""
-    close_reason: Optional[str] = None
+    close_reason: str | None = None
     """[Close Reason](https://tools.ietf.org/html/rfc6455#section-7.1.6)"""
 
-    timestamp_end: Optional[float] = None
+    timestamp_end: float | None = None
     """*Timestamp:* WebSocket connection closed."""
 
     def __repr__(self):

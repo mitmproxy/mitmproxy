@@ -3,9 +3,8 @@ from __future__ import annotations
 import socket
 import struct
 from abc import ABCMeta
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
-from typing import Optional
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands
@@ -39,7 +38,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 
     child_layer: layer.Layer
 
-    def finish_start(self) -> layer.CommandGenerator[Optional[str]]:
+    def finish_start(self) -> layer.CommandGenerator[str | None]:
         if (
             self.context.options.connection_strategy == "eager"
             and self.context.server.address
@@ -134,7 +133,7 @@ class Socks5Proxy(DestinationKnown):
     def socks_err(
         self,
         message: str,
-        reply_code: Optional[int] = None,
+        reply_code: int | None = None,
     ) -> layer.CommandGenerator[None]:
         if reply_code is not None:
             yield commands.SendData(

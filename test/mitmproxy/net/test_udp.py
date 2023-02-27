@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional
 
 import pytest
 
@@ -13,7 +12,7 @@ from mitmproxy.net.udp import start_server
 
 async def test_client_server():
     server_reader = DatagramReader()
-    server_writer: Optional[DatagramWriter] = None
+    server_writer: DatagramWriter | None = None
 
     def handle_datagram(
         transport: asyncio.DatagramTransport,

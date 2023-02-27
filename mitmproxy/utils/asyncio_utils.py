@@ -1,7 +1,6 @@
 import asyncio
 import time
 from collections.abc import Coroutine
-from typing import Optional
 
 from mitmproxy.utils import human
 
@@ -10,7 +9,7 @@ def create_task(
     coro: Coroutine,
     *,
     name: str,
-    client: Optional[tuple] = None,
+    client: tuple | None = None,
 ) -> asyncio.Task:
     """
     Like asyncio.create_task, but also store some debug info on the task object.
@@ -24,7 +23,7 @@ def set_task_debug_info(
     task: asyncio.Task,
     *,
     name: str,
-    client: Optional[tuple] = None,
+    client: tuple | None = None,
 ) -> None:
     """Set debug info for an externally-spawned task."""
     task.created = time.time()  # type: ignore
@@ -36,7 +35,7 @@ def set_task_debug_info(
 def set_current_task_debug_info(
     *,
     name: str,
-    client: Optional[tuple] = None,
+    client: tuple | None = None,
 ) -> None:
     """Set debug info for the current task."""
     task = asyncio.current_task()

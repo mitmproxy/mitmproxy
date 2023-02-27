@@ -1,5 +1,3 @@
-from typing import Optional
-
 from . import base
 from .. import http
 
@@ -8,7 +6,7 @@ class ViewQuery(base.View):
     name = "Query"
 
     def __call__(
-        self, data: bytes, http_message: Optional[http.Message] = None, **metadata
+        self, data: bytes, http_message: http.Message | None = None, **metadata
     ):
         query = getattr(http_message, "query", None)
         if query:
@@ -17,6 +15,6 @@ class ViewQuery(base.View):
             return "Query", base.format_text("")
 
     def render_priority(
-        self, data: bytes, *, http_message: Optional[http.Message] = None, **metadata
+        self, data: bytes, *, http_message: http.Message | None = None, **metadata
     ) -> float:
         return 0.3 * float(bool(getattr(http_message, "query", False) and not data))

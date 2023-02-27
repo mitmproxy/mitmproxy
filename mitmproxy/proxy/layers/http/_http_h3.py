@@ -1,6 +1,5 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional
 
 from aioquic.h3.connection import FrameUnexpected
 from aioquic.h3.connection import H3Connection
@@ -41,7 +40,7 @@ class TrailersReceived(H3Event):
     stream_ended: bool
     "Whether the STREAM frame had the FIN bit set."
 
-    push_id: Optional[int] = None
+    push_id: int | None = None
     "The Push ID or `None` if this is not a push."
 
 
@@ -57,7 +56,7 @@ class StreamReset(H3Event):
     error_code: int
     """The error code indicating why the stream was reset."""
 
-    push_id: Optional[int] = None
+    push_id: int | None = None
     "The Push ID or `None` if this is not a push."
 
 
@@ -81,7 +80,7 @@ class MockQuic:
     def close(
         self,
         error_code: int = QuicErrorCode.NO_ERROR,
-        frame_type: Optional[int] = None,
+        frame_type: int | None = None,
         reason_phrase: str = "",
     ) -> None:
         # we'll get closed if a protocol error occurs in `H3Connection.handle_event`
@@ -134,7 +133,7 @@ class LayeredH3Connection(H3Connection):
     def _handle_request_or_push_frame(
         self,
         frame_type: int,
-        frame_data: Optional[bytes],
+        frame_data: bytes | None,
         stream: H3Stream,
         stream_ended: bool,
     ) -> list[H3Event]:
@@ -156,7 +155,7 @@ class LayeredH3Connection(H3Connection):
     def close_connection(
         self,
         error_code: int = QuicErrorCode.NO_ERROR,
-        frame_type: Optional[int] = None,
+        frame_type: int | None = None,
         reason_phrase: str = "",
     ) -> None:
         """Closes the underlying QUIC connection and ignores any incoming events."""
@@ -177,7 +176,7 @@ class LayeredH3Connection(H3Connection):
 
         return self._quic.get_next_available_stream_id(is_unidirectional)
 
-    def get_open_stream_ids(self, push_id: Optional[int]) -> Iterable[int]:
+    def get_open_stream_ids(self, push_id: int | None) -> Iterable[int]:
         """Iterates over all non-special open streams, optionally for a given push id."""
 
         return (

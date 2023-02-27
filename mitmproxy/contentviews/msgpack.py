@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 import msgpack
 
@@ -95,6 +94,6 @@ class ViewMsgPack(base.View):
             return "MsgPack", format_msgpack(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type in self.__content_types)

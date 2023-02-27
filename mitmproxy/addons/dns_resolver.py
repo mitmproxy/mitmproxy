@@ -1,9 +1,8 @@
 import asyncio
 import ipaddress
 import socket
+from collections.abc import Callable
 from collections.abc import Iterable
-from typing import Callable
-from typing import Union
 
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
@@ -24,7 +23,7 @@ async def resolve_question_by_name(
     question: dns.Question,
     loop: asyncio.AbstractEventLoop,
     family: socket.AddressFamily,
-    ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]],
+    ip: Callable[[str], ipaddress.IPv4Address | ipaddress.IPv6Address],
 ) -> Iterable[dns.ResourceRecord]:
     try:
         addrinfos = await loop.getaddrinfo(host=question.name, port=0, family=family)
@@ -51,7 +50,7 @@ async def resolve_question_by_addr(
     question: dns.Question,
     loop: asyncio.AbstractEventLoop,
     suffix: str,
-    sockaddr: Callable[[list[str]], Union[tuple[str, int], tuple[str, int, int, int]]],
+    sockaddr: Callable[[list[str]], tuple[str, int] | tuple[str, int, int, int]],
 ) -> Iterable[dns.ResourceRecord]:
     try:
         addr = sockaddr(question.name[: -len(suffix)].split(".")[::-1])

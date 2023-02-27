@@ -1,6 +1,5 @@
 import time
 from abc import abstractmethod
-from typing import Union
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected
@@ -47,10 +46,10 @@ from mitmproxy.proxy.utils import expect
 class Http3Connection(HttpConnection):
     h3_conn: LayeredH3Connection
 
-    ReceiveData: type[Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
-    ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveTrailers: type[Union[RequestTrailers, ResponseTrailers]]
+    ReceiveData: type[RequestData | ResponseData]
+    ReceiveEndOfMessage: type[RequestEndOfMessage | ResponseEndOfMessage]
+    ReceiveProtocolError: type[RequestProtocolError | ResponseProtocolError]
+    ReceiveTrailers: type[RequestTrailers | ResponseTrailers]
 
     def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(context, conn)
@@ -205,9 +204,7 @@ class Http3Connection(HttpConnection):
         yield from ()
 
     @abstractmethod
-    def parse_headers(
-        self, event: HeadersReceived
-    ) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(self, event: HeadersReceived) -> RequestHeaders | ResponseHeaders:
         pass  # pragma: no cover
 
 
@@ -220,9 +217,7 @@ class Http3Server(Http3Connection):
     def __init__(self, context: context.Context):
         super().__init__(context, context.client)
 
-    def parse_headers(
-        self, event: HeadersReceived
-    ) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(self, event: HeadersReceived) -> RequestHeaders | ResponseHeaders:
         # same as HTTP/2
         (
             host,
@@ -281,9 +276,7 @@ class Http3Client(Http3Connection):
                 cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
             yield cmd
 
-    def parse_headers(
-        self, event: HeadersReceived
-    ) -> Union[RequestHeaders, ResponseHeaders]:
+    def parse_headers(self, event: HeadersReceived) -> RequestHeaders | ResponseHeaders:
         # same as HTTP/2
         status_code, headers = parse_h2_response_headers(event.headers)
         response = http.Response(

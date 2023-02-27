@@ -37,7 +37,7 @@ class StickyCookie:
         self.jar: collections.defaultdict[
             TOrigin, dict[str, str]
         ] = collections.defaultdict(dict)
-        self.flt: Optional[flowfilter.TFilter] = None
+        self.flt: flowfilter.TFilter | None = None
 
     def load(self, loader):
         loader.add_option(

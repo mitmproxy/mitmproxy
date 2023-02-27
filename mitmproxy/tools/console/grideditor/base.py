@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from typing import Any
 from typing import AnyStr
 from typing import ClassVar
-from typing import Optional
 
 import urwid
 
@@ -65,21 +64,21 @@ class Column(metaclass=abc.ABCMeta):
     def blank(self) -> Any:
         pass
 
-    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
+    def keypress(self, key: str, editor: "GridEditor") -> str | None:
         return key
 
 
 class GridRow(urwid.WidgetWrap):
     def __init__(
         self,
-        focused: Optional[int],
+        focused: int | None,
         editing: bool,
         editor: "GridEditor",
         values: tuple[Iterable[bytes], Container[int]],
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col: Optional[Cell] = None
+        self.edit_col: Cell | None = None
 
         errors = values[1]
         self.fields: Sequence[Any] = []
@@ -128,7 +127,7 @@ class GridWalker(urwid.ListWalker):
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row: Optional[GridRow] = None
+        self.edit_row: GridRow | None = None
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -360,7 +359,7 @@ class BaseGridEditor(urwid.WidgetWrap):
         """
         return data
 
-    def is_error(self, col: int, val: Any) -> Optional[str]:
+    def is_error(self, col: int, val: Any) -> str | None:
         """
         Return None, or a string error message.
         """

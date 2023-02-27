@@ -9,7 +9,6 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from typing import Any
-from typing import Optional
 from typing import TypeVar
 
 from mitmproxy import exceptions
@@ -128,14 +127,14 @@ def run(
     return asyncio.run(main())
 
 
-def mitmproxy(args=None) -> Optional[int]:  # pragma: no cover
+def mitmproxy(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import console
 
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None
 
 
-def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
+def mitmdump(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import dump
 
     def extra(args):
@@ -152,7 +151,7 @@ def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
     return None
 
 
-def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
+def mitmweb(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import web
 
     run(web.master.WebMaster, cmdline.mitmweb, args)

@@ -1,7 +1,6 @@
 import itertools
 from collections.abc import Iterable
 from collections.abc import Iterator
-from typing import Optional
 from typing import TypeVar
 
 T = TypeVar("T")
@@ -9,7 +8,7 @@ T = TypeVar("T")
 
 def window(
     iterator: Iterable[T], behind: int = 0, ahead: int = 0
-) -> Iterator[tuple[Optional[T], ...]]:
+) -> Iterator[tuple[T | None, ...]]:
     """
     Sliding window for an iterator.
 
@@ -23,9 +22,7 @@ def window(
         2 3 None
     """
     # TODO: move into utils
-    iters: list[Iterator[Optional[T]]] = list(
-        itertools.tee(iterator, behind + 1 + ahead)
-    )
+    iters: list[Iterator[T | None]] = list(itertools.tee(iterator, behind + 1 + ahead))
     for i in range(behind):
         iters[i] = itertools.chain((behind - i) * [None], iters[i])
     for i in range(ahead):

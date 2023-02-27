@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from functools import cached_property
 from logging import DEBUG
 from logging import WARNING
-from typing import Optional
-from typing import Union
 
 import wsproto.handshake
 
@@ -71,7 +69,7 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
+def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
@@ -82,7 +80,7 @@ def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
     return None
 
 
-def is_h3_alpn(alpn: Optional[bytes]) -> bool:
+def is_h3_alpn(alpn: bytes | None) -> bool:
     return alpn == b"h3" or (alpn is not None and alpn.startswith(b"h3-"))
 
 
@@ -95,7 +93,7 @@ class GetHttpConnection(HttpCommand):
     blocking = True
     address: tuple[str, int]
     tls: bool
-    via: Optional[server_spec.ServerSpec]
+    via: server_spec.ServerSpec | None
     transport_protocol: TransportProtocol = "tcp"
 
     def __hash__(self):
@@ -114,7 +112,7 @@ class GetHttpConnection(HttpCommand):
 @dataclass
 class GetHttpConnectionCompleted(events.CommandCompleted):
     command: GetHttpConnection
-    reply: Union[tuple[None, str], tuple[Connection, None]]
+    reply: tuple[None, str] | tuple[Connection, None]
     """connection object, error message"""
 
 
@@ -125,7 +123,7 @@ class RegisterHttpConnection(HttpCommand):
     """
 
     connection: Connection
-    err: Optional[str]
+    err: str | None
 
 
 @dataclass
@@ -149,7 +147,7 @@ class HttpStream(layer.Layer):
     response_body_buf: bytes
     flow: http.HTTPFlow
     stream_id: StreamId
-    child_layer: Optional[layer.Layer] = None
+    child_layer: layer.Layer | None = None
 
     @cached_property
     def mode(self) -> HTTPMode:
@@ -301,7 +299,7 @@ class HttpStream(layer.Layer):
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
     def state_stream_request_body(
-        self, event: Union[RequestData, RequestEndOfMessage]
+        self, event: RequestData | RequestEndOfMessage
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
@@ -554,7 +552,7 @@ class HttpStream(layer.Layer):
         # Step 1: Determine the expected body size. This can either come from a known content-length header,
         # or from the amount of currently buffered bytes (e.g. for chunked encoding).
         response = not request
-        expected_size: Optional[int]
+        expected_size: int | None
         # the 'late' case: we already started consuming the body
         if request and self.request_body_buf:
             expected_size = len(self.request_body_buf)
@@ -652,7 +650,7 @@ class HttpStream(layer.Layer):
         return False
 
     def handle_protocol_error(
-        self, event: Union[RequestProtocolError, ResponseProtocolError]
+        self, event: RequestProtocolError | ResponseProtocolError
     ) -> layer.CommandGenerator[None]:
         is_client_error_but_we_already_talk_upstream = (
             isinstance(event, RequestProtocolError)
@@ -930,7 +928,7 @@ class HttpLayer(layer.Layer):
 
     def event_to_child(
         self,
-        child: Union[layer.Layer, HttpStream],
+        child: layer.Layer | HttpStream,
         event: events.Event,
     ) -> layer.CommandGenerator[None]:
         for command in child.handle_event(event):
@@ -1068,7 +1066,7 @@ class HttpLayer(layer.Layer):
     ) -> layer.CommandGenerator[None]:
         waiting = self.waiting_for_establishment.pop(command.connection)
 
-        reply: Union[tuple[None, str], tuple[Connection, None]]
+        reply: tuple[None, str] | tuple[Connection, None]
         if command.err:
             reply = (None, command.err)
         else:
@@ -1098,7 +1096,7 @@ class HttpClient(layer.Layer):
 
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        err: Optional[str]
+        err: str | None
         if self.context.server.connected:
             err = None
         else:

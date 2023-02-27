@@ -2,8 +2,6 @@ from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Optional
-from typing import Union
 
 import pylsqpack
 from aioquic.buffer import Buffer
@@ -74,7 +72,7 @@ class StreamType:
 @dataclass
 class ConnectionState:
     message_count: int = 0
-    frames: dict[int, list[Union[Frame, StreamType]]] = field(default_factory=dict)
+    frames: dict[int, list[Frame | StreamType]] = field(default_factory=dict)
     client_buf: bytearray = field(default_factory=bytearray)
     server_buf: bytearray = field(default_factory=bytearray)
 
@@ -90,8 +88,8 @@ class ViewHttp3(base.View):
     def __call__(
         self,
         data,
-        flow: Optional[flow.Flow] = None,
-        tcp_message: Optional[tcp.TCPMessage] = None,
+        flow: flow.Flow | None = None,
+        tcp_message: tcp.TCPMessage | None = None,
         **metadata,
     ):
         assert isinstance(flow, tcp.TCPFlow)
@@ -146,7 +144,7 @@ class ViewHttp3(base.View):
             return "HTTP/3", fmt_frames(frames)
 
     def render_priority(
-        self, data: bytes, flow: Optional[flow.Flow] = None, **metadata
+        self, data: bytes, flow: flow.Flow | None = None, **metadata
     ) -> float:
         return (
             2
@@ -155,7 +153,7 @@ class ViewHttp3(base.View):
         )
 
 
-def fmt_frames(frames: list[Union[Frame, StreamType]]) -> Iterator[base.TViewLine]:
+def fmt_frames(frames: list[Frame | StreamType]) -> Iterator[base.TViewLine]:
     for i, frame in enumerate(frames):
         if i > 0:
             yield [("text", "")]

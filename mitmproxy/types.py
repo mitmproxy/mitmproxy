@@ -4,7 +4,6 @@ import os
 import re
 from collections.abc import Sequence
 from typing import Any
-from typing import Optional
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -474,7 +473,7 @@ class TypeManager:
         for t in types:
             self.typemap[t.typ] = t()
 
-    def get(self, t: Optional[type], default=None) -> Optional[_BaseType]:
+    def get(self, t: type | None, default=None) -> _BaseType | None:
         if type(t) in self.typemap:
             return self.typemap[type(t)]
         return self.typemap.get(t, default)

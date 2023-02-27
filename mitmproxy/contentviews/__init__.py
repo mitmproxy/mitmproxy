@@ -12,8 +12,6 @@ metadata depend on the protocol in use. Known attributes can be found in
 `base.View`.
 """
 import traceback
-from typing import Optional
-from typing import Union
 
 from . import auto
 from . import css
@@ -61,7 +59,7 @@ on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
 
-def get(name: str) -> Optional[View]:
+def get(name: str) -> View | None:
     for i in views:
         if i.name.lower() == name.lower():
             return i
@@ -99,7 +97,7 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
     flow: flow.Flow,
 ):
     """
@@ -110,7 +108,7 @@ def get_message_content_view(
         viewmode = get("auto")
     assert viewmode
 
-    content: Optional[bytes]
+    content: bytes | None
     try:
         content = message.content
     except ValueError:
@@ -162,11 +160,11 @@ def get_content_view(
     viewmode: View,
     data: bytes,
     *,
-    content_type: Optional[str] = None,
-    flow: Optional[flow.Flow] = None,
-    http_message: Optional[http.Message] = None,
-    tcp_message: Optional[tcp.TCPMessage] = None,
-    udp_message: Optional[udp.UDPMessage] = None,
+    content_type: str | None = None,
+    flow: flow.Flow | None = None,
+    http_message: http.Message | None = None,
+    tcp_message: tcp.TCPMessage | None = None,
+    udp_message: udp.UDPMessage | None = None,
 ):
     """
     Args:

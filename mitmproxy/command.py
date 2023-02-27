@@ -12,7 +12,6 @@ from collections.abc import Iterable
 from collections.abc import Sequence
 from typing import Any
 from typing import NamedTuple
-from typing import Optional
 
 import pyparsing
 
@@ -66,7 +65,7 @@ class Command:
     name: str
     manager: "CommandManager"
     signature: inspect.Signature
-    help: Optional[str]
+    help: str | None
 
     def __init__(self, manager: "CommandManager", name: str, func: Callable) -> None:
         self.name = name
@@ -95,7 +94,7 @@ class Command:
             )
 
     @property
-    def return_type(self) -> Optional[type]:
+    def return_type(self) -> type | None:
         return _empty_as_none(self.signature.return_annotation)
 
     @property
@@ -209,7 +208,7 @@ class CommandManager:
             CommandParameter("", mitmproxy.types.Cmd),
             CommandParameter("", mitmproxy.types.CmdArgs),
         ]
-        expected: Optional[CommandParameter] = None
+        expected: CommandParameter | None = None
         for part in parts:
             if part.isspace():
                 parsed.append(
@@ -314,7 +313,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> Any:
         raise exceptions.CommandError(str(e)) from e
 
 
-def command(name: Optional[str] = None):
+def command(name: str | None = None):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):

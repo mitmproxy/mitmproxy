@@ -1,7 +1,6 @@
 import ssl
 import time
 from pathlib import Path
-from typing import Union
 
 import pytest
 from cryptography import x509
@@ -154,8 +153,8 @@ class TestTlsConfig:
 
     def do_handshake(
         self,
-        tssl_client: Union[test_tls.SSLTest, SSL.Connection],
-        tssl_server: Union[test_tls.SSLTest, SSL.Connection],
+        tssl_client: test_tls.SSLTest | SSL.Connection,
+        tssl_server: test_tls.SSLTest | SSL.Connection,
     ) -> bool:
         # ClientHello
         with pytest.raises((ssl.SSLWantReadError, SSL.WantReadError)):

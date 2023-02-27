@@ -17,8 +17,6 @@ from collections.abc import Callable
 from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional
-from typing import Union
 
 import mitmproxy_rs
 from OpenSSL import SSL
@@ -91,13 +89,13 @@ class TimeoutWatchdog:
 
 @dataclass
 class ConnectionIO:
-    handler: Optional[asyncio.Task] = None
-    reader: Optional[
-        Union[asyncio.StreamReader, udp.DatagramReader, mitmproxy_rs.TcpStream]
-    ] = None
-    writer: Optional[
-        Union[asyncio.StreamWriter, udp.DatagramWriter, mitmproxy_rs.TcpStream]
-    ] = None
+    handler: asyncio.Task | None = None
+    reader: None | (
+        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.TcpStream
+    ) = None
+    writer: None | (
+        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.TcpStream
+    ) = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -201,8 +199,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: Union[asyncio.StreamReader, udp.DatagramReader]
-            writer: Union[asyncio.StreamWriter, udp.DatagramWriter]
+            reader: asyncio.StreamReader | udp.DatagramReader
+            writer: asyncio.StreamWriter | udp.DatagramWriter
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -434,8 +432,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: Union[asyncio.StreamReader, mitmproxy_rs.TcpStream],
-        writer: Union[asyncio.StreamWriter, mitmproxy_rs.TcpStream],
+        reader: asyncio.StreamReader | mitmproxy_rs.TcpStream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.TcpStream,
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:

@@ -1,7 +1,6 @@
 import collections.abc
+from collections.abc import Callable
 from collections.abc import Iterable
-from typing import Callable
-from typing import Optional
 
 import pylsqpack
 import pytest
@@ -110,10 +109,10 @@ class FrameFactory:
         )
         self.decoder_placeholders: list[tutils.Placeholder[bytes]] = []
         self.encoder = pylsqpack.Encoder()
-        self.encoder_placeholder: Optional[tutils.Placeholder[bytes]] = None
+        self.encoder_placeholder: tutils.Placeholder[bytes] | None = None
         self.peer_stream_id: dict[StreamType, int] = {}
         self.local_stream_id: dict[StreamType, int] = {}
-        self.max_push_id: Optional[int] = None
+        self.max_push_id: int | None = None
 
     def get_default_stream_id(self, stream_type: StreamType, for_local: bool) -> int:
         if stream_type == StreamType.CONTROL:
@@ -131,7 +130,7 @@ class FrameFactory:
     def send_stream_type(
         self,
         stream_type: StreamType,
-        stream_id: Optional[int] = None,
+        stream_id: int | None = None,
     ) -> quic.SendQuicStreamData:
         assert stream_type not in self.peer_stream_id
         if stream_id is None:
@@ -147,7 +146,7 @@ class FrameFactory:
     def receive_stream_type(
         self,
         stream_type: StreamType,
-        stream_id: Optional[int] = None,
+        stream_id: int | None = None,
     ) -> quic.QuicStreamDataReceived:
         assert stream_type not in self.local_stream_id
         if stream_id is None:

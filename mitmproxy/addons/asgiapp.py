@@ -2,7 +2,6 @@ import asyncio
 import logging
 import traceback
 import urllib.parse
-from typing import Optional
 
 import asgiref.compatibility
 import asgiref.wsgi
@@ -22,7 +21,7 @@ class ASGIApp:
         - It currently only implements the HTTP protocol (Lifespan and WebSocket are unimplemented).
     """
 
-    def __init__(self, asgi_app, host: str, port: Optional[int]):
+    def __init__(self, asgi_app, host: str, port: int | None):
         asgi_app = asgiref.compatibility.guarantee_single_callable(asgi_app)
         self.asgi_app, self.host, self.port = asgi_app, host, port
 
@@ -45,7 +44,7 @@ class ASGIApp:
 
 
 class WSGIApp(ASGIApp):
-    def __init__(self, wsgi_app, host: str, port: Optional[int]):
+    def __init__(self, wsgi_app, host: str, port: int | None):
         asgi_app = asgiref.wsgi.WsgiToAsgi(wsgi_app)
         super().__init__(asgi_app, host, port)
 

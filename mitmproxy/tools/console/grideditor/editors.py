@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Union
 
 import urwid
 
@@ -191,11 +190,7 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
     def __init__(
         self,
         master,
-        vals: Union[
-            list[list[Any]],
-            list[Any],
-            Any,
-        ],
+        vals: (list[list[Any]] | list[Any] | Any),
     ) -> None:
         if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.

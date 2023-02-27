@@ -1,13 +1,12 @@
 import os
 import threading
+from collections.abc import Callable
 from collections.abc import Iterable
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from typing import BinaryIO
-from typing import Callable
-from typing import Optional
 
 import certifi
 from OpenSSL import SSL
@@ -55,7 +54,7 @@ DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 class MasterSecretLogger:
     def __init__(self, filename: Path):
         self.filename = filename.expanduser()
-        self.f: Optional[BinaryIO] = None
+        self.f: BinaryIO | None = None
         self.lock = threading.Lock()
 
     # required for functools.wraps, which pyOpenSSL uses.
@@ -76,7 +75,7 @@ class MasterSecretLogger:
                 self.f.close()
 
 
-def make_master_secret_logger(filename: Optional[str]) -> Optional[MasterSecretLogger]:
+def make_master_secret_logger(filename: str | None) -> MasterSecretLogger | None:
     if filename:
         return MasterSecretLogger(Path(filename))
     return None
@@ -92,7 +91,7 @@ def _create_ssl_context(
     method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[Iterable[str]],
+    cipher_list: Iterable[str] | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -127,11 +126,11 @@ def create_proxy_server_context(
     method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[tuple[str, ...]],
+    cipher_list: tuple[str, ...] | None,
     verify: Verify,
-    ca_path: Optional[str],
-    ca_pemfile: Optional[str],
-    client_cert: Optional[str],
+    ca_path: str | None,
+    ca_pemfile: str | None,
+    client_cert: str | None,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -167,9 +166,9 @@ def create_client_proxy_context(
     method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[tuple[str, ...]],
-    chain_file: Optional[Path],
-    alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
+    cipher_list: tuple[str, ...] | None,
+    chain_file: Path | None,
+    alpn_select_callback: Callable[[SSL.Connection, list[bytes]], Any] | None,
     request_client_cert: bool,
     extra_chain_certs: tuple[certs.Cert, ...],
     dhparams: certs.DHParams,

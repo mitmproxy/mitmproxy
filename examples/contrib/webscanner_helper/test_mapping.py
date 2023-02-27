@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 from typing import TextIO
 from unittest import mock
 from unittest.mock import MagicMock

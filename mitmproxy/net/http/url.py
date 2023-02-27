@@ -4,7 +4,6 @@ import re
 import urllib.parse
 from collections.abc import Sequence
 from typing import AnyStr
-from typing import Optional
 
 from mitmproxy.net import check
 from mitmproxy.net.check import is_valid_host
@@ -147,7 +146,7 @@ def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
             return "%s:%d" % (host, port)
 
 
-def default_port(scheme: AnyStr) -> Optional[int]:
+def default_port(scheme: AnyStr) -> int | None:
     return {
         "http": 80,
         b"http": 80,
@@ -156,7 +155,7 @@ def default_port(scheme: AnyStr) -> Optional[int]:
     }.get(scheme, None)
 
 
-def parse_authority(authority: AnyStr, check: bool) -> tuple[str, Optional[int]]:
+def parse_authority(authority: AnyStr, check: bool) -> tuple[str, int | None]:
     """Extract the host and port from host header/authority information
 
     Raises:

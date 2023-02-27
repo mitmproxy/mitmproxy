@@ -16,12 +16,11 @@ that sets nextlayer.layer works just as well.
 """
 import re
 import struct
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Sequence
 from typing import Any
-from typing import Callable
 from typing import cast
-from typing import Optional
 from typing import Union
 
 from mitmproxy import connection
@@ -51,7 +50,7 @@ ServerSecurityLayerCls = Union[
 
 
 def stack_match(
-    context: context.Context, layers: Sequence[Union[LayerCls, tuple[LayerCls, ...]]]
+    context: context.Context, layers: Sequence[LayerCls | tuple[LayerCls, ...]]
 ) -> bool:
     if len(context.layers) != len(layers):
         return False
@@ -90,12 +89,12 @@ class NextLayer:
 
     def ignore_connection(
         self,
-        server_address: Optional[connection.Address],
+        server_address: connection.Address | None,
         data_client: bytes,
         *,
         is_tls: Callable[[bytes], bool] = is_tls_record_magic,
-        client_hello: Callable[[bytes], Optional[ClientHello]] = parse_client_hello,
-    ) -> Optional[bool]:
+        client_hello: Callable[[bytes], ClientHello | None] = parse_client_hello,
+    ) -> bool | None:
         """
         Returns:
             True, if the connection should be ignored.
@@ -174,7 +173,7 @@ class NextLayer:
             for rex in hosts
         )
 
-    def get_http_layer(self, context: context.Context) -> Optional[layers.HttpLayer]:
+    def get_http_layer(self, context: context.Context) -> layers.HttpLayer | None:
         def s(*layers):
             return stack_match(context, layers)
 
@@ -195,7 +194,7 @@ class NextLayer:
 
     def detect_udp_tls(
         self, data_client: bytes
-    ) -> Optional[tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls]]:
+    ) -> tuple[ClientHello, ClientSecurityLayerCls, ServerSecurityLayerCls] | None:
         if len(data_client) == 0:
             return None
 
@@ -257,7 +256,7 @@ class NextLayer:
 
     def _next_layer(
         self, context: context.Context, data_client: bytes, data_server: bytes
-    ) -> Optional[layer.Layer]:
+    ) -> layer.Layer | None:
         assert context.layers
 
         if context.client.transport_protocol == "tcp":

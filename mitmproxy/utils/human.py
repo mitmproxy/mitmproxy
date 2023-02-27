@@ -2,7 +2,6 @@ import datetime
 import functools
 import ipaddress
 import time
-from typing import Optional
 
 SIZE_UNITS = {
     "b": 1024**0,
@@ -31,7 +30,7 @@ def pretty_size(size: int) -> str:
 
 
 @functools.lru_cache
-def parse_size(s: Optional[str]) -> Optional[int]:
+def parse_size(s: str | None) -> int | None:
     """
     Parse a size with an optional k/m/... suffix.
     Invalid values raise a ValueError. For added convenience, passing `None` returns `None`.
@@ -51,7 +50,7 @@ def parse_size(s: Optional[str]) -> Optional[int]:
     raise ValueError("Invalid size specification.")
 
 
-def pretty_duration(secs: Optional[float]) -> str:
+def pretty_duration(secs: float | None) -> str:
     formatters = [
         (100, "{:.0f}s"),
         (10, "{:2.1f}s"),
@@ -79,7 +78,7 @@ def format_timestamp_with_milli(s):
 
 
 @functools.lru_cache
-def format_address(address: Optional[tuple]) -> str:
+def format_address(address: tuple | None) -> str:
     """
     This function accepts IPv4/IPv6 tuples and
     returns the formatted address string with port number

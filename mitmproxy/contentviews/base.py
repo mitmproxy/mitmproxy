@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 from collections.abc import Mapping
 from typing import ClassVar
-from typing import Optional
 from typing import Union
 
 from mitmproxy import flow
@@ -26,9 +25,9 @@ class View(ABC):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> TViewResult:
         """
@@ -52,9 +51,9 @@ class View(ABC):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
         """

@@ -4,7 +4,6 @@ import subprocess
 import threading
 import time
 from typing import NamedTuple
-from typing import Optional
 
 import libtmux
 
@@ -74,7 +73,7 @@ class CliDirector:
         self.tmux_session.kill_session()
 
     def press_key(
-        self, keys: str, count=1, pause: Optional[float] = None, target=None
+        self, keys: str, count=1, pause: float | None = None, target=None
     ) -> None:
         if pause is None:
             pause = self.pause_between_keys
@@ -97,7 +96,7 @@ class CliDirector:
                 real_pause += 2 * pause
             self.pause(real_pause)
 
-    def type(self, keys: str, pause: Optional[float] = None, target=None) -> None:
+    def type(self, keys: str, pause: float | None = None, target=None) -> None:
         if pause is None:
             pause = self.pause_between_keys
         if target is None:
@@ -128,7 +127,7 @@ class CliDirector:
     def message(
         self,
         msg: str,
-        duration: Optional[int] = None,
+        duration: int | None = None,
         add_instruction: bool = True,
         instruction_html: str = "",
     ) -> None:
@@ -161,7 +160,7 @@ class CliDirector:
         self.tmux_pane.cmd("display-popup", "-C")
 
     def instruction(
-        self, instruction: str, duration: float = 3, time_from: Optional[float] = None
+        self, instruction: str, duration: float = 3, time_from: float | None = None
     ) -> None:
         if time_from is None:
             time_from = self.current_time

@@ -6,7 +6,6 @@ from logging import DEBUG
 from logging import ERROR
 from logging import INFO
 from logging import WARNING
-from typing import Optional
 
 from OpenSSL import SSL
 
@@ -63,7 +62,7 @@ def handshake_record_contents(data: bytes) -> Iterator[bytes]:
         offset += record_size
 
 
-def get_client_hello(data: bytes) -> Optional[bytes]:
+def get_client_hello(data: bytes) -> bytes | None:
     """
     Read all TLS records that contain the initial ClientHello.
     Returns the raw handshake packet bytes, without TLS record headers.
@@ -78,7 +77,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def parse_client_hello(data: bytes) -> Optional[ClientHello]:
+def parse_client_hello(data: bytes) -> ClientHello | None:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -136,7 +135,7 @@ def dtls_handshake_record_contents(data: bytes) -> Iterator[bytes]:
         offset += record_size
 
 
-def get_dtls_client_hello(data: bytes) -> Optional[bytes]:
+def get_dtls_client_hello(data: bytes) -> bytes | None:
     """
     Read all DTLS records that contain the initial ClientHello.
     Returns the raw handshake packet bytes, without TLS record headers.
@@ -154,7 +153,7 @@ def get_dtls_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def dtls_parse_client_hello(data: bytes) -> Optional[ClientHello]:
+def dtls_parse_client_hello(data: bytes) -> ClientHello | None:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -309,7 +308,7 @@ class TLSLayer(tunnel.TunnelLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         # bio_write errors for b"", so we need to check first if we actually received something.
         if data:
             self.tls.bio_write(data)
@@ -466,9 +465,7 @@ class ServerTLSLayer(TLSLayer):
 
     wait_for_clienthello: bool = False
 
-    def __init__(
-        self, context: context.Context, conn: Optional[connection.Server] = None
-    ):
+    def __init__(self, context: context.Context, conn: connection.Server | None = None):
         super().__init__(context, conn or context.server)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
@@ -558,7 +555,7 @@ class ClientTLSLayer(TLSLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         if self.client_hello_parsed:
             return (yield from super().receive_handshake_data(data))
         self.recv_buffer.extend(data)
@@ -621,7 +618,7 @@ class ClientTLSLayer(TLSLayer):
         self.recv_buffer.clear()
         return ret
 
-    def start_server_tls(self) -> layer.CommandGenerator[Optional[str]]:
+    def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         """
         We often need information from the upstream connection to establish TLS with the client.
         For example, we need to check if the client does ALPN or not.

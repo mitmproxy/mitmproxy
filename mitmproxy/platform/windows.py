@@ -15,7 +15,6 @@ from typing import Any
 from typing import cast
 from typing import ClassVar
 from typing import IO
-from typing import Optional
 
 import pydivert.consts
 
@@ -294,7 +293,7 @@ class Redirect(threading.Thread):
     def shutdown(self):
         self.windivert.close()
 
-    def recv(self) -> Optional[pydivert.Packet]:
+    def recv(self) -> pydivert.Packet | None:
         """
         Convenience function that receives a packet from the passed handler and handles error codes.
         If the process has been shut down, None is returned.
@@ -402,9 +401,9 @@ class TransparentProxy:
     which mitmproxy sees, but this would remove the correct client info from mitmproxy.
     """
 
-    local: Optional[RedirectLocal] = None
+    local: RedirectLocal | None = None
     # really weird linting error here.
-    forward: Optional[Redirect] = None
+    forward: Redirect | None = None
     response: Redirect
     icmp: Redirect
 
@@ -418,7 +417,7 @@ class TransparentProxy:
         local: bool = True,
         forward: bool = True,
         proxy_port: int = 8080,
-        filter: Optional[str] = "tcp.DstPort == 80 or tcp.DstPort == 443",
+        filter: str | None = "tcp.DstPort == 80 or tcp.DstPort == 443",
     ) -> None:
         self.proxy_port = proxy_port
         self.filter = (

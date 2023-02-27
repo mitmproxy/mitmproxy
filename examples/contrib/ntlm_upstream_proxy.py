@@ -115,7 +115,7 @@ class NTLMUpstreamAuth:
 
         def patched_receive_handshake_data(
             self, data
-        ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+        ) -> layer.CommandGenerator[tuple[bool, str | None]]:
             self.buf += data
             response_head = self.buf.maybe_extract_lines()
             if response_head:

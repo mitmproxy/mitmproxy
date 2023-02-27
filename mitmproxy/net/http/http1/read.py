@@ -1,7 +1,6 @@
 import re
 import time
 from collections.abc import Iterable
-from typing import Optional
 
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
@@ -78,8 +77,8 @@ def validate_headers(headers: Headers) -> None:
 
 
 def expected_http_body_size(
-    request: Request, response: Optional[Response] = None
-) -> Optional[int]:
+    request: Request, response: Response | None = None
+) -> int | None:
     """
     Returns:
         The expected body length:
@@ -226,7 +225,7 @@ def _read_request_line(
 ) -> tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
-        port: Optional[int]
+        port: int | None
 
         if target == b"*" or target.startswith(b"/"):
             scheme, authority, path = b"", b"", target

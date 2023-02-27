@@ -5,8 +5,6 @@ from enum import Enum
 from logging import DEBUG
 from logging import ERROR
 from typing import ClassVar
-from typing import Optional
-from typing import Union
 
 import h2.config
 import h2.connection
@@ -74,10 +72,10 @@ class Http2Connection(HttpConnection):
     streams: dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
-    ReceiveProtocolError: type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: type[Union[RequestData, ResponseData]]
-    ReceiveTrailers: type[Union[RequestTrailers, ResponseTrailers]]
-    ReceiveEndOfMessage: type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: type[RequestProtocolError | ResponseProtocolError]
+    ReceiveData: type[RequestData | ResponseData]
+    ReceiveTrailers: type[RequestTrailers | ResponseTrailers]
+    ReceiveEndOfMessage: type[RequestEndOfMessage | ResponseEndOfMessage]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
@@ -454,7 +452,7 @@ class Http2Client(Http2Connection):
     their_stream_id: dict[int, int]
     stream_queue: collections.defaultdict[int, list[Event]]
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
-    provisional_max_concurrency: Optional[int] = 10
+    provisional_max_concurrency: int | None = 10
     """A provisional currency limit before we get the server's first settings frame."""
     last_activity: float
     """Timestamp of when we've last seen network activity on this connection."""
@@ -583,7 +581,7 @@ class Http2Client(Http2Connection):
             # - 102 Processing is WebDAV only and also ignorable.
             # - 103 Early Hints is not mission-critical.
             headers = http.Headers(event.headers)
-            status: Union[str, int] = "<unknown status>"
+            status: str | int = "<unknown status>"
             try:
                 status = int(headers[":status"])
                 reason = status_codes.RESPONSES.get(status, "")

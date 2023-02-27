@@ -7,7 +7,6 @@ import gzip
 import zlib
 from io import BytesIO
 from typing import overload
-from typing import Union
 
 import brotli
 import zstandard as zstd
@@ -31,13 +30,13 @@ def decode(encoded: str, encoding: str, errors: str = "strict") -> str:
 
 
 @overload
-def decode(encoded: bytes, encoding: str, errors: str = "strict") -> Union[str, bytes]:
+def decode(encoded: bytes, encoding: str, errors: str = "strict") -> str | bytes:
     ...
 
 
 def decode(
-    encoded: Union[None, str, bytes], encoding: str, errors: str = "strict"
-) -> Union[None, str, bytes]:
+    encoded: None | str | bytes, encoding: str, errors: str = "strict"
+) -> None | str | bytes:
     """
     Decode the given input object
 
@@ -87,7 +86,7 @@ def encode(decoded: None, encoding: str, errors: str = "strict") -> None:
 
 
 @overload
-def encode(decoded: str, encoding: str, errors: str = "strict") -> Union[str, bytes]:
+def encode(decoded: str, encoding: str, errors: str = "strict") -> str | bytes:
     ...
 
 
@@ -97,8 +96,8 @@ def encode(decoded: bytes, encoding: str, errors: str = "strict") -> bytes:
 
 
 def encode(
-    decoded: Union[None, str, bytes], encoding, errors="strict"
-) -> Union[None, str, bytes]:
+    decoded: None | str | bytes, encoding, errors="strict"
+) -> None | str | bytes:
     """
     Encode the given input object
 

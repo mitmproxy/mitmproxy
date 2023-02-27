@@ -1,6 +1,4 @@
 import uuid
-from typing import Optional
-from typing import Union
 
 from wsproto.frame_protocol import Opcode
 
@@ -123,11 +121,11 @@ def twebsocketflow(
 
 def tdnsflow(
     *,
-    client_conn: Optional[connection.Client] = None,
-    server_conn: Optional[connection.Server] = None,
-    req: Optional[dns.Message] = None,
-    resp: Union[bool, dns.Message] = False,
-    err: Union[bool, flow.Error] = False,
+    client_conn: connection.Client | None = None,
+    server_conn: connection.Server | None = None,
+    req: dns.Message | None = None,
+    resp: bool | dns.Message = False,
+    err: bool | flow.Error = False,
     live: bool = True,
 ) -> dns.DNSFlow:
     """Create a DNS flow for testing."""
@@ -160,12 +158,12 @@ def tdnsflow(
 
 def tflow(
     *,
-    client_conn: Optional[connection.Client] = None,
-    server_conn: Optional[connection.Server] = None,
-    req: Optional[http.Request] = None,
-    resp: Union[bool, http.Response] = False,
-    err: Union[bool, flow.Error] = False,
-    ws: Union[bool, websocket.WebSocketData] = False,
+    client_conn: connection.Client | None = None,
+    server_conn: connection.Server | None = None,
+    req: http.Request | None = None,
+    resp: bool | http.Response = False,
+    err: bool | flow.Error = False,
+    ws: bool | websocket.WebSocketData = False,
     live: bool = True,
 ) -> http.HTTPFlow:
     """Create a flow for testing."""
