@@ -209,7 +209,7 @@ jobs:
           name: binaries.linux
           path: release/dist
       - uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
-      - uses: docker/setup-buildx-action@11e8a2e2910826a92412015c515187a2d6750279 # v1.6.0
+      - uses: docker/setup-buildx-action@a19c1710881d7ce3cf668865cc8459bba5b912aa # v1.6.0
       - run: python release/build-and-deploy-docker.py
 
   deploy:
