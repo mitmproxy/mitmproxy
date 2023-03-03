@@ -147,6 +147,14 @@ class HarManagerMixin():
     def add_error_to_har(self, error_dict):
         self.add_custom_value_to_har('_errors', error_dict)
 
+    def add_page_info_to_har(self, page_info):
+        page = self.get_or_create_current_page()
+        if 'title' in page_info:
+            page['title'] = page_info['title']
+            del page_info['title']
+        page['pageTimings'] = page['pageTimings'] | page_info
+        # print(self.har)
+
     def add_custom_value_to_har(self, item_type, item):
         page = self.get_or_create_current_page()
         page.setdefault(item_type, [])
@@ -292,6 +300,7 @@ class HarManagerMixin():
             file.write(raw)
             file.flush()
             file.close()
+
 
     def format_request_cookies(self, fields):
         return self.format_cookies(cookies.group_cookies(fields))

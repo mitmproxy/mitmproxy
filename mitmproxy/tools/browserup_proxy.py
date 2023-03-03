@@ -7,7 +7,7 @@ from mitmproxy import master
 
 from mitmproxy.addons import dumper, termlog, keepserving, readfile
 from mitmproxy.addons.browserup import har_capture_addon, \
-    browserup_addons_manager, latency_addon
+    browserup_addons_manager, latency_addon, page_perf_script_addon
 
 from mitmproxy.addons.errorcheck import ErrorCheck, ErrorCheckHandler
 
@@ -27,7 +27,7 @@ class BrowserupProxyMaster(master.Master):
 
         self.addons.add(dumper.Dumper())
 
-        self.addons.add(browserup_addons_manager.BrowserUpAddonsManagerAddOn(),
+        self.addons.add(browserup_addons_manager.BrowserUpAddonsManagerAddOn(), page_perf_script_addon.PagePerfScriptAddOn(),
                         har_capture_addon.HarCaptureAddOn(), latency_addon.LatencyAddOn())
         self.addons.add(
             keepserving.KeepServing(),

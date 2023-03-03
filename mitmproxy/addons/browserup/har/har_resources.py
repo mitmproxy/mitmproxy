@@ -6,7 +6,7 @@ import falcon
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
-from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema, CounterSchema, MatchCriteriaSchema
+from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema, CounterSchema, MatchCriteriaSchema, PageTimingSchema
 from marshmallow import ValidationError
 
 
@@ -37,7 +37,7 @@ class RespondWithHarMixin:
     def respond_with_har(self, resp, har, har_file):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.body = json.dumps(har, ensure_ascii=False)
+        resp.text = json.dumps(har, ensure_ascii=False)
 
 
 class ValidateMatchCriteriaMixin:
@@ -130,7 +130,6 @@ class HarResource(RespondWithHarMixin):
 
 
 class HarPageResource(RespondWithHarMixin):
-
     def __init__(self, HarCaptureAddon):
         self.HarCaptureAddon = HarCaptureAddon
 
@@ -211,6 +210,34 @@ class HarCaptureTypesResource():
         self.HarCaptureAddon.har_capture_types = capture_types_parsed
         resp.status = falcon.HTTP_200
 
+# decorates har with _page_timings gathered from injected JS script
+class PageTimingsResource():
+    def __init__(self, HarCaptureAddon):
+        self.name = "harcapture"
+        self.HarCaptureAddon = HarCaptureAddon
+
+    def addon_path(self):
+        return "har/page_timings"
+
+    def apispec(self, spec):
+        return
+
+    # This is a standard form post style, which we expect from navigator.sendbeacon.
+    # By accepting regular form posts, rather than application/json, we get out of some
+    # CORS headaches.
+    def on_post(self, req, resp):
+        try:
+            form = req.get_media()
+            page_timings = {}
+            for part in form:
+                page_timings = json.loads(part.text)
+            self.HarCaptureAddon.add_page_info_to_har(page_timings)
+        except ValidationError as err:
+            resp.status = falcon.HTTP_422
+            resp.content_type = falcon.MEDIA_JSON
+            resp.body = json.dumps({'error': err.messages}, ensure_ascii=False)
+        else:
+            resp.status = falcon.HTTP_204
 
 class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):

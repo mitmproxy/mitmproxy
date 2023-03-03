@@ -21,6 +21,22 @@ class CounterSchema(Schema):
     name = fields.Str(required=True, description="Name of Custom Counter value you are adding to the page under _counters")
     value = fields.Number(required=True, format="double", description="Value for the counter")
 
+class PageTimingSchema(Schema):
+    onContentLoad = fields.Number(required=True, description="onContentLoad per the browser")
+    onLoad = fields.Number(required=True, description="onLoad per the browser")
+    name = fields.Str(required=False, description="Name of Custom Counter value you are adding to the page under counters")
+    value = fields.Number(required=False, format="double", description="Value for the counter")
+    _firstInputDelay = fields.Number(required=False, description="firstInputDelay from the browser")
+    _firstPaint = fields.Number(required=False, description="firstPaint from the browser")
+    _cumulativeLayoutShift = fields.Number(required=False, description="cumulativeLayoutShift metric from the browser")
+    _largestContentFullPaint = fields.Number(required=False, description="largestContentFullPaint from the browser")
+    _domInteractive = fields.Number(required=False, description="domInteractive from the browser")
+    _firstContentfulPaint = fields.Number(required=False, description="firstContentfulPaint from the browser")
+    _dns = fields.Number(required=False, description="dns lookup time from the browser")
+    _ssl = fields.Number(required=False, description="Ssl connect time from the browser")
+    _ttfb = fields.Number(required=False, description="Time to first byte of the page's first request per the browser")
+    _href =  fields.Str(required=False, description="Top level href, including hashtag, etc per the browser")
+
 
 class MatchCriteriaSchema(Schema):
     url = fields.Str(optional=True, description="Request URL regexp to match", externalDocs={
