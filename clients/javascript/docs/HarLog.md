@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **creator** | [**HarLogCreator**](HarLogCreator.md) |  | 
 **browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] 
 **pages** | [**[Page]**](Page.md) |  | 
-**entries** | [**[Entry]**](Entry.md) |  | 
+**entries** | [**[HarEntry]**](HarEntry.md) |  | 
 **comment** | **String** |  | [optional] 
 
 

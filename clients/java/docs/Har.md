@@ -5,9 +5,9 @@
 
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**log** | [**HarLog**](HarLog.md) |  | 
+| Name | Type | Description | Notes |
+|------------ | ------------- | ------------- | -------------|
+|**log** | [**HarLog**](HarLog.md) |  |  |
 
 
 

@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **time** | **Number** |  | 
 **request** | [**EntryRequest**](EntryRequest.md) |  | 
 **response** | [**EntryResponse**](EntryResponse.md) |  | 
-**cache** | **Object** |  | 
+**cache** | [**EntryCache**](EntryCache.md) |  | 
 **timings** | [**EntryTimings**](EntryTimings.md) |  | 
 **serverIPAddress** | **String** |  | [optional] 
 **webSocketMessages** | [**[WebSocketMessage]**](WebSocketMessage.md) |  | [optional] 

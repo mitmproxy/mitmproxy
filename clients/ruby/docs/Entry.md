@@ -9,7 +9,7 @@
 | **time** | **Integer** |  |  |
 | **request** | [**EntryRequest**](EntryRequest.md) |  |  |
 | **response** | [**EntryResponse**](EntryResponse.md) |  |  |
-| **cache** | **Object** |  |  |
+| **cache** | [**EntryCache**](EntryCache.md) |  |  |
 | **timings** | [**EntryTimings**](EntryTimings.md) |  |  |
 | **server_ip_address** | **String** |  | [optional] |
 | **_web_socket_messages** | [**Array&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  | [optional] |

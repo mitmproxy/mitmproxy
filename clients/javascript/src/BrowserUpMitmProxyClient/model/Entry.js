@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import EntryCache from './EntryCache';
 import EntryRequest from './EntryRequest';
 import EntryResponse from './EntryResponse';
 import EntryTimings from './EntryTimings';
@@ -30,7 +31,7 @@ class Entry {
      * @param time {Number} 
      * @param request {module:BrowserUpMitmProxyClient/model/EntryRequest} 
      * @param response {module:BrowserUpMitmProxyClient/model/EntryResponse} 
-     * @param cache {Object} 
+     * @param cache {module:BrowserUpMitmProxyClient/model/EntryCache} 
      * @param timings {module:BrowserUpMitmProxyClient/model/EntryTimings} 
      */
     constructor(startedDateTime, time, request, response, cache, timings) { 
@@ -79,7 +80,7 @@ class Entry {
                 obj['response'] = EntryResponse.constructFromObject(data['response']);
             }
             if (data.hasOwnProperty('cache')) {
-                obj['cache'] = ApiClient.convertToType(data['cache'], Object);
+                obj['cache'] = EntryCache.constructFromObject(data['cache']);
             }
             if (data.hasOwnProperty('timings')) {
                 obj['timings'] = EntryTimings.constructFromObject(data['timings']);
@@ -100,8 +101,68 @@ class Entry {
         return obj;
     }
 
+    /**
+     * Validates the JSON data with respect to <code>Entry</code>.
+     * @param {Object} data The plain JavaScript object bearing properties of interest.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>Entry</code>.
+     */
+    static validateJSON(data) {
+        // check to make sure all required properties are present in the JSON string
+        for (const property of Entry.RequiredProperties) {
+            if (!data[property]) {
+                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
+            }
+        }
+        // ensure the json data is a string
+        if (data['pageref'] && !(typeof data['pageref'] === 'string' || data['pageref'] instanceof String)) {
+            throw new Error("Expected the field `pageref` to be a primitive type in the JSON string but got " + data['pageref']);
+        }
+        // validate the optional field `request`
+        if (data['request']) { // data not null
+          EntryRequest.validateJSON(data['request']);
+        }
+        // validate the optional field `response`
+        if (data['response']) { // data not null
+          EntryResponse.validateJSON(data['response']);
+        }
+        // validate the optional field `cache`
+        if (data['cache']) { // data not null
+          EntryCache.validateJSON(data['cache']);
+        }
+        // validate the optional field `timings`
+        if (data['timings']) { // data not null
+          EntryTimings.validateJSON(data['timings']);
+        }
+        // ensure the json data is a string
+        if (data['serverIPAddress'] && !(typeof data['serverIPAddress'] === 'string' || data['serverIPAddress'] instanceof String)) {
+            throw new Error("Expected the field `serverIPAddress` to be a primitive type in the JSON string but got " + data['serverIPAddress']);
+        }
+        if (data['_webSocketMessages']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_webSocketMessages'])) {
+                throw new Error("Expected the field `_webSocketMessages` to be an array in the JSON data but got " + data['_webSocketMessages']);
+            }
+            // validate the optional field `_webSocketMessages` (array)
+            for (const item of data['_webSocketMessages']) {
+                WebSocketMessage.validateJSON(item);
+            };
+        }
+        // ensure the json data is a string
+        if (data['connection'] && !(typeof data['connection'] === 'string' || data['connection'] instanceof String)) {
+            throw new Error("Expected the field `connection` to be a primitive type in the JSON string but got " + data['connection']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
+
+        return true;
+    }
+
 
 }
+
+Entry.RequiredProperties = ["startedDateTime", "time", "request", "response", "cache", "timings"];
 
 /**
  * @member {String} pageref
@@ -129,7 +190,7 @@ Entry.prototype['request'] = undefined;
 Entry.prototype['response'] = undefined;
 
 /**
- * @member {Object} cache
+ * @member {module:BrowserUpMitmProxyClient/model/EntryCache} cache
  */
 Entry.prototype['cache'] = undefined;
 

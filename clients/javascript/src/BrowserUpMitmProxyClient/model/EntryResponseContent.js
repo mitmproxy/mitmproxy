@@ -73,8 +73,42 @@ class EntryResponseContent {
         return obj;
     }
 
+    /**
+     * Validates the JSON data with respect to <code>EntryResponseContent</code>.
+     * @param {Object} data The plain JavaScript object bearing properties of interest.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>EntryResponseContent</code>.
+     */
+    static validateJSON(data) {
+        // check to make sure all required properties are present in the JSON string
+        for (const property of EntryResponseContent.RequiredProperties) {
+            if (!data[property]) {
+                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
+            }
+        }
+        // ensure the json data is a string
+        if (data['mimeType'] && !(typeof data['mimeType'] === 'string' || data['mimeType'] instanceof String)) {
+            throw new Error("Expected the field `mimeType` to be a primitive type in the JSON string but got " + data['mimeType']);
+        }
+        // ensure the json data is a string
+        if (data['text'] && !(typeof data['text'] === 'string' || data['text'] instanceof String)) {
+            throw new Error("Expected the field `text` to be a primitive type in the JSON string but got " + data['text']);
+        }
+        // ensure the json data is a string
+        if (data['encoding'] && !(typeof data['encoding'] === 'string' || data['encoding'] instanceof String)) {
+            throw new Error("Expected the field `encoding` to be a primitive type in the JSON string but got " + data['encoding']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
+
+        return true;
+    }
+
 
 }
+
+EntryResponseContent.RequiredProperties = ["size", "mimeType"];
 
 /**
  * @member {Number} size

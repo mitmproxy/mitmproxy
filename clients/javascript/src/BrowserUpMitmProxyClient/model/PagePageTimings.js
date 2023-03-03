@@ -57,6 +57,30 @@ class PagePageTimings {
             if (data.hasOwnProperty('onLoad')) {
                 obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
             }
+            if (data.hasOwnProperty('_dns')) {
+                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
+            }
+            if (data.hasOwnProperty('_ssl')) {
+                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
+            }
+            if (data.hasOwnProperty('_ttfb')) {
+                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], 'Number');
+            }
+            if (data.hasOwnProperty('_cumulativeLayoutShift')) {
+                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
+            }
+            if (data.hasOwnProperty('_largestContentFullPaint')) {
+                obj['_largestContentFullPaint'] = ApiClient.convertToType(data['_largestContentFullPaint'], 'Number');
+            }
+            if (data.hasOwnProperty('_firstPaint')) {
+                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
+            }
+            if (data.hasOwnProperty('_domInteractive')) {
+                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
+            }
+            if (data.hasOwnProperty('_firstContentfulPaint')) {
+                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
+            }
             if (data.hasOwnProperty('comment')) {
                 obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
@@ -64,8 +88,30 @@ class PagePageTimings {
         return obj;
     }
 
+    /**
+     * Validates the JSON data with respect to <code>PagePageTimings</code>.
+     * @param {Object} data The plain JavaScript object bearing properties of interest.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>PagePageTimings</code>.
+     */
+    static validateJSON(data) {
+        // check to make sure all required properties are present in the JSON string
+        for (const property of PagePageTimings.RequiredProperties) {
+            if (!data[property]) {
+                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
+            }
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
+
+        return true;
+    }
+
 
 }
+
+PagePageTimings.RequiredProperties = ["onContentLoad", "onLoad"];
 
 /**
  * @member {Number} onContentLoad
@@ -78,6 +124,54 @@ PagePageTimings.prototype['onContentLoad'] = -1;
  * @default -1
  */
 PagePageTimings.prototype['onLoad'] = -1;
+
+/**
+ * @member {Number} _dns
+ * @default -1
+ */
+PagePageTimings.prototype['_dns'] = -1;
+
+/**
+ * @member {Number} _ssl
+ * @default -1
+ */
+PagePageTimings.prototype['_ssl'] = -1;
+
+/**
+ * @member {Number} _ttfb
+ * @default -1
+ */
+PagePageTimings.prototype['_ttfb'] = -1;
+
+/**
+ * @member {Number} _cumulativeLayoutShift
+ * @default -1
+ */
+PagePageTimings.prototype['_cumulativeLayoutShift'] = -1;
+
+/**
+ * @member {Number} _largestContentFullPaint
+ * @default -1
+ */
+PagePageTimings.prototype['_largestContentFullPaint'] = -1;
+
+/**
+ * @member {Number} _firstPaint
+ * @default -1
+ */
+PagePageTimings.prototype['_firstPaint'] = -1;
+
+/**
+ * @member {Number} _domInteractive
+ * @default -1
+ */
+PagePageTimings.prototype['_domInteractive'] = -1;
+
+/**
+ * @member {Number} _firstContentfulPaint
+ * @default -1
+ */
+PagePageTimings.prototype['_firstContentfulPaint'] = -1;
 
 /**
  * @member {String} comment

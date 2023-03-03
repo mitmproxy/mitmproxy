@@ -27,6 +27,7 @@ BrowserUpMitmProxyClient/model/match_criteria.py
 BrowserUpMitmProxyClient/model/name_value_pair.py
 BrowserUpMitmProxyClient/model/page.py
 BrowserUpMitmProxyClient/model/page_page_timings.py
+BrowserUpMitmProxyClient/model/page_timing.py
 BrowserUpMitmProxyClient/model/verify_result.py
 BrowserUpMitmProxyClient/model/web_socket_message.py
 BrowserUpMitmProxyClient/model_utils.py
@@ -53,6 +54,7 @@ docs/MatchCriteria.md
 docs/NameValuePair.md
 docs/Page.md
 docs/PagePageTimings.md
+docs/PageTiming.md
 docs/VerifyResult.md
 docs/WebSocketMessage.md
 git_push.sh

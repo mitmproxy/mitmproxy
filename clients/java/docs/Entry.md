@@ -5,19 +5,19 @@
 
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**pageref** | **String** |  |  [optional]
-**startedDateTime** | **OffsetDateTime** |  | 
-**time** | **Long** |  | 
-**request** | [**EntryRequest**](EntryRequest.md) |  | 
-**response** | [**EntryResponse**](EntryResponse.md) |  | 
-**cache** | [**Object**](Object.md) |  | 
-**timings** | [**EntryTimings**](EntryTimings.md) |  | 
-**serverIPAddress** | **String** |  |  [optional]
-**webSocketMessages** | [**List&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  |  [optional]
-**connection** | **String** |  |  [optional]
-**comment** | **String** |  |  [optional]
+| Name | Type | Description | Notes |
+|------------ | ------------- | ------------- | -------------|
+|**pageref** | **String** |  |  [optional] |
+|**startedDateTime** | **OffsetDateTime** |  |  |
+|**time** | **Long** |  |  |
+|**request** | [**EntryRequest**](EntryRequest.md) |  |  |
+|**response** | [**EntryResponse**](EntryResponse.md) |  |  |
+|**cache** | [**EntryCache**](EntryCache.md) |  |  |
+|**timings** | [**EntryTimings**](EntryTimings.md) |  |  |
+|**serverIPAddress** | **String** |  |  [optional] |
+|**webSocketMessages** | [**List&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  |  [optional] |
+|**connection** | **String** |  |  [optional] |
+|**comment** | **String** |  |  [optional] |
 
 
 

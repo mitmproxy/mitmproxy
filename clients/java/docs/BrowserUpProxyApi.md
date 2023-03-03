@@ -2,18 +2,18 @@
 
 All URIs are relative to *http://localhost:8088*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
-[**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
-[**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
-[**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
-[**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
-[**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
-[**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
-[**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
-[**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters |  |
+| [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors |  |
+| [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har |  |
+| [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
+| [**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page |  |
+| [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har |  |
+| [**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} |  |
+| [**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} |  |
+| [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} |  |
+| [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} |  |
 
 
 <a name="addCounter"></a>
@@ -55,9 +55,9 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | |
 
 ### Return type
 
@@ -75,8 +75,8 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** | The counter was added. |  -  |
-**422** | The counter was invalid. |  -  |
+| **204** | The counter was added. |  -  |
+| **422** | The counter was invalid. |  -  |
 
 <a name="addError"></a>
 # **addError**
@@ -117,9 +117,9 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key | |
 
 ### Return type
 
@@ -137,8 +137,8 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** | The Error was added. |  -  |
-**422** | The Error was invalid. |  -  |
+| **204** | The Error was added. |  -  |
+| **422** | The Error was invalid. |  -  |
 
 <a name="getHarLog"></a>
 # **getHarLog**
@@ -196,7 +196,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
+| **200** | The current Har file. |  -  |
 
 <a name="healthcheck"></a>
 # **healthcheck**
@@ -253,7 +253,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | OK means all is well. |  -  |
+| **200** | OK means all is well. |  -  |
 
 <a name="newPage"></a>
 # **newPage**
@@ -295,9 +295,9 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **title** | **String**| The unique title for this har page/step. |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **title** | **String**| The unique title for this har page/step. | |
 
 ### Return type
 
@@ -315,7 +315,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
+| **200** | The current Har file. |  -  |
 
 <a name="resetHarLog"></a>
 # **resetHarLog**
@@ -373,7 +373,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The current Har file. |  -  |
+| **200** | The current Har file. |  -  |
 
 <a name="verifyNotPresent"></a>
 # **verifyNotPresent**
@@ -416,10 +416,10 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **name** | **String**| The unique name for this verification operation |
- **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **name** | **String**| The unique name for this verification operation | |
+| **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
 
@@ -437,8 +437,8 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The traffic had no matching items |  -  |
-**422** | The MatchCriteria are invalid. |  -  |
+| **200** | The traffic had no matching items |  -  |
+| **422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifyPresent"></a>
 # **verifyPresent**
@@ -481,10 +481,10 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **name** | **String**| The unique name for this verification operation |
- **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **name** | **String**| The unique name for this verification operation | |
+| **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
 
@@ -502,8 +502,8 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The traffic conformed to the time criteria. |  -  |
-**422** | The MatchCriteria are invalid. |  -  |
+| **200** | The traffic conformed to the time criteria. |  -  |
+| **422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySLA"></a>
 # **verifySLA**
@@ -547,11 +547,11 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **time** | **Integer**| The time used for comparison |
- **name** | **String**| The unique name for this verification operation |
- **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **time** | **Integer**| The time used for comparison | |
+| **name** | **String**| The unique name for this verification operation | |
+| **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
 
@@ -569,8 +569,8 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The traffic conformed to the time criteria. |  -  |
-**422** | The MatchCriteria are invalid. |  -  |
+| **200** | The traffic conformed to the time criteria. |  -  |
+| **422** | The MatchCriteria are invalid. |  -  |
 
 <a name="verifySize"></a>
 # **verifySize**
@@ -614,11 +614,11 @@ public class Example {
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **size** | **Integer**| The size used for comparison, in kilobytes |
- **name** | **String**| The unique name for this verification operation |
- **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **size** | **Integer**| The size used for comparison, in kilobytes | |
+| **name** | **String**| The unique name for this verification operation | |
+| **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
 
@@ -636,6 +636,6 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | The traffic conformed to the size criteria. |  -  |
-**422** | The MatchCriteria are invalid. |  -  |
+| **200** | The traffic conformed to the size criteria. |  -  |
+| **422** | The MatchCriteria are invalid. |  -  |
 

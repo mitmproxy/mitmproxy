@@ -89,8 +89,72 @@ class Page {
         return obj;
     }
 
+    /**
+     * Validates the JSON data with respect to <code>Page</code>.
+     * @param {Object} data The plain JavaScript object bearing properties of interest.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>Page</code>.
+     */
+    static validateJSON(data) {
+        // check to make sure all required properties are present in the JSON string
+        for (const property of Page.RequiredProperties) {
+            if (!data[property]) {
+                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
+            }
+        }
+        // ensure the json data is a string
+        if (data['id'] && !(typeof data['id'] === 'string' || data['id'] instanceof String)) {
+            throw new Error("Expected the field `id` to be a primitive type in the JSON string but got " + data['id']);
+        }
+        // ensure the json data is a string
+        if (data['title'] && !(typeof data['title'] === 'string' || data['title'] instanceof String)) {
+            throw new Error("Expected the field `title` to be a primitive type in the JSON string but got " + data['title']);
+        }
+        if (data['_verifications']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_verifications'])) {
+                throw new Error("Expected the field `_verifications` to be an array in the JSON data but got " + data['_verifications']);
+            }
+            // validate the optional field `_verifications` (array)
+            for (const item of data['_verifications']) {
+                VerifyResult.validateJSON(item);
+            };
+        }
+        if (data['_counters']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_counters'])) {
+                throw new Error("Expected the field `_counters` to be an array in the JSON data but got " + data['_counters']);
+            }
+            // validate the optional field `_counters` (array)
+            for (const item of data['_counters']) {
+                Counter.validateJSON(item);
+            };
+        }
+        if (data['_errors']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_errors'])) {
+                throw new Error("Expected the field `_errors` to be an array in the JSON data but got " + data['_errors']);
+            }
+            // validate the optional field `_errors` (array)
+            for (const item of data['_errors']) {
+                Error.validateJSON(item);
+            };
+        }
+        // validate the optional field `pageTimings`
+        if (data['pageTimings']) { // data not null
+          PagePageTimings.validateJSON(data['pageTimings']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
+
+        return true;
+    }
+
 
 }
+
+Page.RequiredProperties = ["startedDateTime", "id", "title", "_verifications", "pageTimings"];
 
 /**
  * @member {Date} startedDateTime

@@ -65,6 +65,30 @@ class PagePageTimings(ModelNormal):
         ('on_load',): {
             'inclusive_minimum': -1,
         },
+        ('dns',): {
+            'inclusive_minimum': -1,
+        },
+        ('ssl',): {
+            'inclusive_minimum': -1,
+        },
+        ('ttfb',): {
+            'inclusive_minimum': -1,
+        },
+        ('cumulative_layout_shift',): {
+            'inclusive_minimum': -1,
+        },
+        ('largest_content_full_paint',): {
+            'inclusive_minimum': -1,
+        },
+        ('first_paint',): {
+            'inclusive_minimum': -1,
+        },
+        ('dom_interactive',): {
+            'inclusive_minimum': -1,
+        },
+        ('first_contentful_paint',): {
+            'inclusive_minimum': -1,
+        },
     }
 
     @cached_property
@@ -90,6 +114,14 @@ class PagePageTimings(ModelNormal):
         return {
             'on_content_load': (int,),  # noqa: E501
             'on_load': (int,),  # noqa: E501
+            'dns': (int,),  # noqa: E501
+            'ssl': (int,),  # noqa: E501
+            'ttfb': (int,),  # noqa: E501
+            'cumulative_layout_shift': (int,),  # noqa: E501
+            'largest_content_full_paint': (int,),  # noqa: E501
+            'first_paint': (int,),  # noqa: E501
+            'dom_interactive': (int,),  # noqa: E501
+            'first_contentful_paint': (int,),  # noqa: E501
             'comment': (str,),  # noqa: E501
         }
 
@@ -101,6 +133,14 @@ class PagePageTimings(ModelNormal):
     attribute_map = {
         'on_content_load': 'onContentLoad',  # noqa: E501
         'on_load': 'onLoad',  # noqa: E501
+        'dns': '_dns',  # noqa: E501
+        'ssl': '_ssl',  # noqa: E501
+        'ttfb': '_ttfb',  # noqa: E501
+        'cumulative_layout_shift': '_cumulativeLayoutShift',  # noqa: E501
+        'largest_content_full_paint': '_largestContentFullPaint',  # noqa: E501
+        'first_paint': '_firstPaint',  # noqa: E501
+        'dom_interactive': '_domInteractive',  # noqa: E501
+        'first_contentful_paint': '_firstContentfulPaint',  # noqa: E501
         'comment': 'comment',  # noqa: E501
     }
 
@@ -149,6 +189,14 @@ class PagePageTimings(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            dns (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            ssl (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            ttfb (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            cumulative_layout_shift (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            largest_content_full_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            first_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            dom_interactive (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            first_contentful_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
             comment (str): [optional]  # noqa: E501
         """
 
@@ -239,6 +287,14 @@ class PagePageTimings(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            dns (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            ssl (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            ttfb (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            cumulative_layout_shift (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            largest_content_full_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            first_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            dom_interactive (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
+            first_contentful_paint (int): [optional] if omitted the server will use the default value of -1  # noqa: E501
             comment (str): [optional]  # noqa: E501
         """
 

@@ -12,7 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import Entry from './Entry';
+import HarEntry from './HarEntry';
 import HarLogCreator from './HarLogCreator';
 import Page from './Page';
 
@@ -28,7 +28,7 @@ class HarLog {
      * @param version {String} 
      * @param creator {module:BrowserUpMitmProxyClient/model/HarLogCreator} 
      * @param pages {Array.<module:BrowserUpMitmProxyClient/model/Page>} 
-     * @param entries {Array.<module:BrowserUpMitmProxyClient/model/Entry>} 
+     * @param entries {Array.<module:BrowserUpMitmProxyClient/model/HarEntry>} 
      */
     constructor(version, creator, pages, entries) { 
         
@@ -71,7 +71,7 @@ class HarLog {
                 obj['pages'] = ApiClient.convertToType(data['pages'], [Page]);
             }
             if (data.hasOwnProperty('entries')) {
-                obj['entries'] = ApiClient.convertToType(data['entries'], [Entry]);
+                obj['entries'] = ApiClient.convertToType(data['entries'], [HarEntry]);
             }
             if (data.hasOwnProperty('comment')) {
                 obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
@@ -80,8 +80,62 @@ class HarLog {
         return obj;
     }
 
+    /**
+     * Validates the JSON data with respect to <code>HarLog</code>.
+     * @param {Object} data The plain JavaScript object bearing properties of interest.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>HarLog</code>.
+     */
+    static validateJSON(data) {
+        // check to make sure all required properties are present in the JSON string
+        for (const property of HarLog.RequiredProperties) {
+            if (!data[property]) {
+                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
+            }
+        }
+        // ensure the json data is a string
+        if (data['version'] && !(typeof data['version'] === 'string' || data['version'] instanceof String)) {
+            throw new Error("Expected the field `version` to be a primitive type in the JSON string but got " + data['version']);
+        }
+        // validate the optional field `creator`
+        if (data['creator']) { // data not null
+          HarLogCreator.validateJSON(data['creator']);
+        }
+        // validate the optional field `browser`
+        if (data['browser']) { // data not null
+          HarLogCreator.validateJSON(data['browser']);
+        }
+        if (data['pages']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['pages'])) {
+                throw new Error("Expected the field `pages` to be an array in the JSON data but got " + data['pages']);
+            }
+            // validate the optional field `pages` (array)
+            for (const item of data['pages']) {
+                Page.validateJSON(item);
+            };
+        }
+        if (data['entries']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['entries'])) {
+                throw new Error("Expected the field `entries` to be an array in the JSON data but got " + data['entries']);
+            }
+            // validate the optional field `entries` (array)
+            for (const item of data['entries']) {
+                HarEntry.validateJSON(item);
+            };
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
+
+        return true;
+    }
+
 
 }
+
+HarLog.RequiredProperties = ["version", "creator", "pages", "entries"];
 
 /**
  * @member {String} version
@@ -104,7 +158,7 @@ HarLog.prototype['browser'] = undefined;
 HarLog.prototype['pages'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/Entry>} entries
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntry>} entries
  */
 HarLog.prototype['entries'] = undefined;
 

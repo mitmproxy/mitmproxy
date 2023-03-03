@@ -1,0 +1,26 @@
+.ruby: &ruby
+  variables:
+    LANG: "C.UTF-8"
+  before_script:
+    - ruby -v
+    - bundle config set --local deployment true
+    - bundle install -j $(nproc)
+  parallel:
+    matrix:
+      - RUBY_VERSION: ['2.7', '3.0', '3.1']
+  image: "ruby:$RUBY_VERSION"
+  cache:
+    paths:
+      - vendor/ruby
+    key: 'ruby-$RUBY_VERSION'
+
+gem:
+  extends: .ruby
+  script:
+    - bundle exec rspec
+    - bundle exec rake build
+    - bundle exec rake install
+  artifacts:
+    paths:
+      - pkg/*.gem
+

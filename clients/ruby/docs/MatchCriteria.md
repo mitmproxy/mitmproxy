@@ -10,10 +10,10 @@
 | **content** | **String** | Body content regexp content to match | [optional] |
 | **content_type** | **String** | Content type | [optional] |
 | **websocket_message** | **String** | Websocket message text to match | [optional] |
-| **request_header** | [**NameValuePair**](NameValuePair.md) |  | [optional] |
-| **request_cookie** | [**NameValuePair**](NameValuePair.md) |  | [optional] |
-| **response_header** | [**NameValuePair**](NameValuePair.md) |  | [optional] |
-| **response_cookie** | [**NameValuePair**](NameValuePair.md) |  | [optional] |
+| **request_header** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **request_cookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **response_header** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **response_cookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
 | **json_valid** | **Boolean** | Is valid JSON | [optional] |
 | **json_path** | **String** | Has JSON path | [optional] |
 | **json_schema** | **String** | Validates against passed JSON schema | [optional] |

@@ -82,8 +82,8 @@ class NameValuePair(ModelNormal):
                 and the value is attribute type.
         """
         return {
-            'value': (str,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'value': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -92,8 +92,8 @@ class NameValuePair(ModelNormal):
 
 
     attribute_map = {
-        'value': 'value',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'value': 'value',  # noqa: E501
     }
 
     read_only_vars = {
@@ -137,8 +137,8 @@ class NameValuePair(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            value (str): Value to match. [optional]  # noqa: E501
             name (str): Name to match. [optional]  # noqa: E501
+            value (str): Value to match. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -220,8 +220,8 @@ class NameValuePair(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            value (str): Value to match. [optional]  # noqa: E501
             name (str): Name to match. [optional]  # noqa: E501
+            value (str): Value to match. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

@@ -24,12 +24,31 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.browserup.proxy_client.JSON;
 
 /**
  * Page
@@ -50,7 +69,7 @@ public class Page {
 
   public static final String SERIALIZED_NAME_VERIFICATIONS = "_verifications";
   @SerializedName(SERIALIZED_NAME_VERIFICATIONS)
-  private List<VerifyResult> verifications = new ArrayList<>();
+  private List<VerifyResult> verifications = null;
 
   public static final String SERIALIZED_NAME_COUNTERS = "_counters";
   @SerializedName(SERIALIZED_NAME_COUNTERS)
@@ -68,6 +87,8 @@ public class Page {
   @SerializedName(SERIALIZED_NAME_COMMENT)
   private String comment;
 
+  public Page() {
+  }
 
   public Page startedDateTime(OffsetDateTime startedDateTime) {
     
@@ -79,7 +100,7 @@ public class Page {
    * Get startedDateTime
    * @return startedDateTime
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
@@ -101,7 +122,7 @@ public class Page {
    * Get id
    * @return id
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public String getId() {
     return id;
@@ -123,7 +144,7 @@ public class Page {
    * Get title
    * @return title
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public String getTitle() {
     return title;
@@ -150,7 +171,7 @@ public class Page {
    * Get verifications
    * @return verifications
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public List<VerifyResult> getVerifications() {
     return verifications;
@@ -170,7 +191,7 @@ public class Page {
 
   public Page addCountersItem(Counter countersItem) {
     if (this.counters == null) {
-      this.counters = new ArrayList<>();
+      this.counters = null;
     }
     this.counters.add(countersItem);
     return this;
@@ -181,7 +202,6 @@ public class Page {
    * @return counters
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
   public List<Counter> getCounters() {
     return counters;
@@ -201,7 +221,7 @@ public class Page {
 
   public Page addErrorsItem(Error errorsItem) {
     if (this.errors == null) {
-      this.errors = new ArrayList<>();
+      this.errors = null;
     }
     this.errors.add(errorsItem);
     return this;
@@ -212,7 +232,6 @@ public class Page {
    * @return errors
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
   public List<Error> getErrors() {
     return errors;
@@ -234,7 +253,7 @@ public class Page {
    * Get pageTimings
    * @return pageTimings
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public PagePageTimings getPageTimings() {
     return pageTimings;
@@ -257,7 +276,6 @@ public class Page {
    * @return comment
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
   public String getComment() {
     return comment;
@@ -267,6 +285,7 @@ public class Page {
   public void setComment(String comment) {
     this.comment = comment;
   }
+
 
 
   @Override
@@ -320,5 +339,156 @@ public class Page {
     return o.toString().replace("\n", "\n    ");
   }
 
+
+  public static HashSet<String> openapiFields;
+  public static HashSet<String> openapiRequiredFields;
+
+  static {
+    // a set of all properties/fields (JSON key names)
+    openapiFields = new HashSet<String>();
+    openapiFields.add("startedDateTime");
+    openapiFields.add("id");
+    openapiFields.add("title");
+    openapiFields.add("_verifications");
+    openapiFields.add("_counters");
+    openapiFields.add("_errors");
+    openapiFields.add("pageTimings");
+    openapiFields.add("comment");
+
+    // a set of required properties/fields (JSON key names)
+    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields.add("startedDateTime");
+    openapiRequiredFields.add("id");
+    openapiRequiredFields.add("title");
+    openapiRequiredFields.add("_verifications");
+    openapiRequiredFields.add("pageTimings");
+  }
+
+ /**
+  * Validates the JSON Object and throws an exception if issues found
+  *
+  * @param jsonObj JSON Object
+  * @throws IOException if the JSON Object is invalid with respect to Page
+  */
+  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
+      if (jsonObj == null) {
+        if (!Page.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+          throw new IllegalArgumentException(String.format("The required field(s) %s in Page is not found in the empty JSON string", Page.openapiRequiredFields.toString()));
+        }
+      }
+
+      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      // check to see if the JSON string contains additional fields
+      for (Entry<String, JsonElement> entry : entries) {
+        if (!Page.openapiFields.contains(entry.getKey())) {
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Page` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+        }
+      }
+
+      // check to make sure all required properties/fields are present in the JSON string
+      for (String requiredField : Page.openapiRequiredFields) {
+        if (jsonObj.get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        }
+      }
+      if (!jsonObj.get("id").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `id` to be a primitive type in the JSON string but got `%s`", jsonObj.get("id").toString()));
+      }
+      if (!jsonObj.get("title").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `title` to be a primitive type in the JSON string but got `%s`", jsonObj.get("title").toString()));
+      }
+      // ensure the json data is an array
+      if (!jsonObj.get("_verifications").isJsonArray()) {
+        throw new IllegalArgumentException(String.format("Expected the field `_verifications` to be an array in the JSON string but got `%s`", jsonObj.get("_verifications").toString()));
+      }
+
+      JsonArray jsonArrayverifications = jsonObj.getAsJsonArray("_verifications");
+      // validate the required field `_verifications` (array)
+      for (int i = 0; i < jsonArrayverifications.size(); i++) {
+        VerifyResult.validateJsonObject(jsonArrayverifications.get(i).getAsJsonObject());
+      };
+      if (jsonObj.get("_counters") != null && !jsonObj.get("_counters").isJsonNull()) {
+        JsonArray jsonArraycounters = jsonObj.getAsJsonArray("_counters");
+        if (jsonArraycounters != null) {
+          // ensure the json data is an array
+          if (!jsonObj.get("_counters").isJsonArray()) {
+            throw new IllegalArgumentException(String.format("Expected the field `_counters` to be an array in the JSON string but got `%s`", jsonObj.get("_counters").toString()));
+          }
+
+          // validate the optional field `_counters` (array)
+          for (int i = 0; i < jsonArraycounters.size(); i++) {
+            Counter.validateJsonObject(jsonArraycounters.get(i).getAsJsonObject());
+          };
+        }
+      }
+      if (jsonObj.get("_errors") != null && !jsonObj.get("_errors").isJsonNull()) {
+        JsonArray jsonArrayerrors = jsonObj.getAsJsonArray("_errors");
+        if (jsonArrayerrors != null) {
+          // ensure the json data is an array
+          if (!jsonObj.get("_errors").isJsonArray()) {
+            throw new IllegalArgumentException(String.format("Expected the field `_errors` to be an array in the JSON string but got `%s`", jsonObj.get("_errors").toString()));
+          }
+
+          // validate the optional field `_errors` (array)
+          for (int i = 0; i < jsonArrayerrors.size(); i++) {
+            Error.validateJsonObject(jsonArrayerrors.get(i).getAsJsonObject());
+          };
+        }
+      }
+      // validate the required field `pageTimings`
+      PagePageTimings.validateJsonObject(jsonObj.getAsJsonObject("pageTimings"));
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
+      }
+  }
+
+  public static class CustomTypeAdapterFactory implements TypeAdapterFactory {
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+       if (!Page.class.isAssignableFrom(type.getRawType())) {
+         return null; // this class only serializes 'Page' and its subtypes
+       }
+       final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
+       final TypeAdapter<Page> thisAdapter
+                        = gson.getDelegateAdapter(this, TypeToken.get(Page.class));
+
+       return (TypeAdapter<T>) new TypeAdapter<Page>() {
+           @Override
+           public void write(JsonWriter out, Page value) throws IOException {
+             JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
+             elementAdapter.write(out, obj);
+           }
+
+           @Override
+           public Page read(JsonReader in) throws IOException {
+             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
+             validateJsonObject(jsonObj);
+             return thisAdapter.fromJsonTree(jsonObj);
+           }
+
+       }.nullSafe();
+    }
+  }
+
+ /**
+  * Create an instance of Page given an JSON string
+  *
+  * @param jsonString JSON string
+  * @return An instance of Page
+  * @throws IOException if the JSON string is invalid with respect to Page
+  */
+  public static Page fromJson(String jsonString) throws IOException {
+    return JSON.getGson().fromJson(jsonString, Page.class);
+  }
+
+ /**
+  * Convert an instance of Page to an JSON string
+  *
+  * @return JSON string
+  */
+  public String toJson() {
+    return JSON.getGson().toJson(this);
+  }
 }
 

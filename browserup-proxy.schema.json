@@ -641,7 +641,7 @@
           "value"
         ]
       },
-      "Entry": {
+      "HarEntry": {
         "type": "object",
         "required": [
           "startedDateTime",
@@ -1160,7 +1160,7 @@
               "entries": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/Entry"
+                  "$ref": "#/components/schemas/HarEntry"
                 }
               },
               "comment": {
