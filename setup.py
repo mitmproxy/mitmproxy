@@ -97,15 +97,15 @@ setup(
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.3",
         "publicsuffix2>=2.20190812,<3",
-        "falcon>=3.0.0",
+        "falcon>=3.1.0",
         "marshmallow>=3.0.0",
-        "falcon-apispec>=0.3.0",
+        "falcon-apispec@git+https://github.com/browserup/falcon-apispec#egg=falcon-apispec",
         "python-dateutil>=2.8.1",
         "glom>=20.11.0",
         "jsonschema>=3.2.0",
         "jsonpath_ng>=1.5.3",
         "zstandard>=0.11,<0.20",
-        "typing-extensions>=4.3,<4.5; python_version<'3.10'",
+        "typing-extensions>=4.3,<4.5; python_version<'3.12'",
     ],
     extras_require={
         ':sys_platform == "win32"': [
