@@ -11,12 +11,15 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
+from mitmproxy.net.tls import starts_like_dtls_record
+from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
 from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.commands import StartHook
+from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers import udp
 from mitmproxy.tls import ClientHello
@@ -526,7 +529,7 @@ class ClientTLSLayer(TLSLayer):
             context.client.cipher_list = []
 
         super().__init__(context, context.client)
-        self.server_tls_available = isinstance(self.context.layers[-2], ServerTLSLayer)
+        self.server_tls_available = len(self.context.layers) > 1 and isinstance(self.context.layers[-2], ServerTLSLayer)
         self.recv_buffer = bytearray()
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
@@ -652,6 +655,64 @@ class ClientTLSLayer(TLSLayer):
             yield commands.Log(
                 f"{self.debug}[tls] Swallowing {event} as handshake failed.", DEBUG
             )
+
+
+class MaybeClientTLSLayer(ClientTLSLayer):
+    """
+    This layer is used in places where the client connection may optionally be wrapped in TLS.
+    For example, when mitmproxy is running as a reverse proxy to https://example.com, a client may
+    issue a plaintext request to mitmproxy, or may already use TLS for the client <-> proxy connection as well.
+    Of course, in both cases the proxy <-> server connection would be HTTPS.
+    """
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
+        received = bytes(self.recv_buffer + data)
+        if len(received) < 3:
+            self.recv_buffer.extend(data)
+            return False, None
+
+        is_tls = (
+            starts_like_dtls_record(received)
+            if self.is_dtls else
+            starts_like_tls_record(received)
+        )
+        if is_tls:
+            self.receive_handshake_data = super().receive_handshake_data
+            self.on_handshake_error = super().on_handshake_error
+            self._handshake_finished = super()._handshake_finished
+            self.event_to_child = super().event_to_child
+            return (yield from super().receive_handshake_data(data))
+        else:
+            self._event_queue.append(events.DataReceived(self.context.client, received))
+            return True, None
+
+    def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
+        yield commands.CloseConnection(self.tunnel_connection)
+
+    def _handshake_finished(self, err: str | None) -> layer.CommandGenerator[None]:
+        # only invoked for non-TLS connections.
+        # We're not doing TLS, so we assign fake connection objects for the tunnel.
+        self.conn = self.tunnel_connection = connection.Client(
+            peername=("ignore-conn", 0), sockname=("ignore-conn", 0)
+        )
+        self.tunnel_state = tunnel.TunnelState.INACTIVE
+
+        assert not self.command_to_reply_to
+        for evt in self._event_queue:
+            yield from self.event_to_child(evt)
+        self._event_queue.clear()
+
+    def event_to_child(self, event: events.Event) -> CommandGenerator[None]:
+        received_server_data_while_waiting_for_client_hello = (
+           self.tunnel_state is tunnel.TunnelState.ESTABLISHING
+           and isinstance(event, events.DataReceived)
+           and event.connection != self.conn
+        )
+        if received_server_data_while_waiting_for_client_hello:
+            yield from self._handshake_finished(None)
+
+        yield from super().event_to_child(event)
 
 
 class MockTLSLayer(TLSLayer):
