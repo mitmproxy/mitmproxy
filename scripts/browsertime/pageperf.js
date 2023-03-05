@@ -5,25 +5,6 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
 // were consolidated here for a JSON summary payload with core vitals data.
 // https://web.dev/vitals/
 
-function firstPaint() {
-    let p = window.performance,
-        timing = p.timing,
-        entries = p.getEntriesByType('paint');
-
-    if (entries.length > 0) {
-        for (let entry of entries) {
-            if (entry.name === 'first-paint')
-                return Number(entry.startTime.toFixed(0));
-        }
-    }
-    if (timing.timeToNonBlankPaint) {
-        return Number(
-            (timing.timeToNonBlankPaint - timing.navigationStart).toFixed(0)
-        );
-    }
-    return undefined;
-}
-
 function cumulativeLayoutShift() {
     let supported = PerformanceObserver.supportedEntryTypes;
     if (!supported || supported.indexOf('layout-shift') === -1) {
@@ -53,8 +34,31 @@ function cumulativeLayoutShift() {
     return max;
 }
 
+function observeAndReportFirstInputDelay() {
+// note, may need updating for iframes, can use code here:  https://github.com/GoogleChrome/web-vitals
+    const supported = PerformanceObserver.supportedEntryTypes;
+    if (!supported || supported.indexOf("first-input") === -1) {
+        return
+    }
+    new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+            console.log('Observin')
+            const delay = Number((entry.processingStart - entry.startTime).toFixed(1));
 
-function largestContentFullPaint() {
+            var paint = {};
+            performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
+
+            let _firstContentfulPaint = paint["first-contentful-paint"];
+            page_timings = {
+                "_firstInputDelay": delay
+            };
+            console.log("--->" + page_timings);
+            sendTimings(page_timings);
+        }
+    }).observe({type: 'first-input', buffered: true});
+}
+
+function largestContentfulPaint() {
     // https://gist.github.com/karlgroves/7544592
     function getDomPath(el) {
         let stack = [];
@@ -174,7 +178,6 @@ function postPerf(){
     if (inIframe()) { return };
     var paint = {};
     performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
-
     var perf = performance.getEntriesByType('navigation')[0];
 
     n = navTimings()
@@ -184,24 +187,13 @@ function postPerf(){
     let onLoad = n.pageLoadTime;
 
     let _ttfb = n.ttfb
-
     let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]);
     let _domInteractive = n.domInteractiveTime;
-
-    // not working properly yet:
-    // total blocking time: https://web.dev/tbt/
-   // let _totalBlockingTime = _firstContentfulPaint - n.domInteractiveTime;
-
     let _firstPaint = firstPaint();
-
-    // core web vitals
-    //let _firstInputDelay = firstInputDelay();
-    let _largestContentFullPaint = largestContentFullPaint();
+    let _largestContentfulPaint = largestContentfulPaint();
     let _cumulativeLayoutShift = cumulativeLayoutShift();
-
     let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart);
     let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart);
-    let data = new FormData();
 
     var page_timings = {
         "title": window.document.title,
@@ -212,12 +204,16 @@ function postPerf(){
         "_ssl": _ssl,
         "_timeToFirstByte": _ttfb,
         "_cumulativeLayoutShift": _cumulativeLayoutShift,
-        "_largestContentFullPaint": _largestContentFullPaint,
+        "_largestContentfulPaint": _largestContentfulPaint,
         "_firstPaint": _firstPaint,
         "_domInteractive": _domInteractive,
         "_firstContentfulPaint": _firstContentfulPaint
    }
+   sendTimings(page_timings);
+}
 
+function sendTimings(page_timings){
+    let data = new FormData();
     Object.keys(page_timings).forEach(key => page_timings[key] === undefined ? delete page_timings[key] : {});
     console.log(page_timings);
     data.append("pageTimings", JSON.stringify(page_timings));
@@ -228,7 +224,10 @@ function postPerf(){
     }
 }
 
+observeAndReportFirstInputDelay();
+
 window.addEventListener('load', postPerf);
+
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') {
         console.log("----> Page change---")
