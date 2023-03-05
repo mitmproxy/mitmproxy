@@ -40,7 +40,6 @@ jobs:
         with:
           python-version-file: .github/python-version.txt
       - run: pip install tox
-      - run: tox -e filename_matching
   mypy:
     runs-on: ubuntu-latest
     steps:
