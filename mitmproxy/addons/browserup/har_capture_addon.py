@@ -1,5 +1,4 @@
 import mitmproxy.http
-from mitmproxy import ctx
 import logging
 
 from mitmproxy.addons.browserup.har.har_resources import HarResource, HarPageResource, HarCaptureTypesResource, \

@@ -6,7 +6,7 @@ import falcon
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
-from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema, CounterSchema, MatchCriteriaSchema, PageTimingSchema
+from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema, CounterSchema, MatchCriteriaSchema
 from marshmallow import ValidationError
 
 
@@ -211,6 +211,8 @@ class HarCaptureTypesResource():
         resp.status = falcon.HTTP_200
 
 # decorates har with _page_timings gathered from injected JS script
+
+
 class PageTimingsResource():
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
@@ -238,6 +240,7 @@ class PageTimingsResource():
             resp.text = json.dumps({'error': err.messages}, ensure_ascii=False)
         else:
             resp.status = falcon.HTTP_204
+
 
 class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
     def __init__(self, HarCaptureAddon):

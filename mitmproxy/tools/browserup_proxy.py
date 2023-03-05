@@ -9,7 +9,8 @@ from mitmproxy.addons import dumper, termlog, keepserving, readfile
 from mitmproxy.addons.browserup import har_capture_addon, \
     browserup_addons_manager, latency_addon, page_perf_script_addon
 
-from mitmproxy.addons.errorcheck import ErrorCheck, ErrorCheckHandler
+from mitmproxy.addons.errorcheck import ErrorCheck
+
 
 class BrowserupProxyMaster(master.Master):
 

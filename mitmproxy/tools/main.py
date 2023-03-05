@@ -150,6 +150,7 @@ def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
     run(web.master.WebMaster, cmdline.mitmweb, args)
     return None
 
+
 def browserupproxy(args=None) -> Optional[int]:  # pragma: no cover
     from mitmproxy.tools import browserup_proxy
 

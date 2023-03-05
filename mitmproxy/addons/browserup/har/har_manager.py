@@ -1,4 +1,3 @@
-from mitmproxy import ctx
 from datetime import datetime
 from datetime import timezone
 from mitmproxy.net.http import cookies
@@ -300,7 +299,6 @@ class HarManagerMixin():
             file.write(raw)
             file.flush()
             file.close()
-
 
     def format_request_cookies(self, fields):
         return self.format_cookies(cookies.group_cookies(fields))

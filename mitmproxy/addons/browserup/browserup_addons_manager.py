@@ -1,7 +1,6 @@
 import _thread
 import asyncio
 import json
-import sys
 import logging
 
 import falcon
@@ -9,12 +8,10 @@ import os
 
 
 from wsgiref.simple_server import make_server
-from pathlib import Path
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
 from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema, PageTimingSchema
-from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
 from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
 from mitmproxy.addons.browserup.page_perf_script_addon import PagePerfScriptAddOn
 from mitmproxy import ctx
@@ -96,12 +93,9 @@ ___
                     resources.append(resource)
         return resources
 
-
     def get_app(self):
-        app = application = falcon.App()
+        app = falcon.App()
         static_path = self.get_project_root() + "/scripts/browsertime"
-
-        #app.add_static_route('/browser/scripts', '/Users/ebeland/apps/mitmproxy/scripts/browsertime')
         print("===static path " + static_path)
         app.add_static_route('/browser/scripts', static_path)
 
@@ -131,7 +125,6 @@ ___
 
     def get_project_root(self):
         return str(Path(__file__).parent.parent.parent.parent)
-
 
     def start_falcon(self):
         app = self.get_app()
