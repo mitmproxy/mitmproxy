@@ -1119,7 +1119,9 @@ class ClientQuicLayer(QuicLayer):
             context.client.cipher_list = []
 
         super().__init__(context, context.client, time)
-        self.server_tls_available = isinstance(self.context.layers[-2], ServerQuicLayer)
+        self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
+            self.context.layers[-2], ServerQuicLayer
+        )
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
@@ -1127,6 +1129,12 @@ class ClientQuicLayer(QuicLayer):
     def receive_handshake_data(
         self, data: bytes
     ) -> layer.CommandGenerator[tuple[bool, str | None]]:
+        if not self.context.options.http3:
+            yield commands.Log(
+                f"Swallowing QUIC handshake because HTTP/3 is disabled.", DEBUG
+            )
+            return False, None
+
         # if we already had a valid client hello, don't process further packets
         if self.tls:
             return (yield from super().receive_handshake_data(data))

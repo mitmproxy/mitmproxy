@@ -1,28 +1,35 @@
+from __future__ import annotations
+
+import dataclasses
+import logging
+from collections.abc import Sequence
+from dataclasses import dataclass
+from functools import partial
 from unittest.mock import MagicMock
 
 import pytest
 
-from mitmproxy import connection
+from mitmproxy.addons.next_layer import NeedsMoreData
 from mitmproxy.addons.next_layer import NextLayer
-from mitmproxy.proxy import context
-from mitmproxy.proxy import layer
-from mitmproxy.proxy import layers
+from mitmproxy.addons.next_layer import stack_match
+from mitmproxy.connection import Client
+from mitmproxy.connection import TransportProtocol
+from mitmproxy.proxy.context import Context
+from mitmproxy.proxy.layer import Layer
+from mitmproxy.proxy.layers import ClientQuicLayer
+from mitmproxy.proxy.layers import ClientTLSLayer
+from mitmproxy.proxy.layers import DNSLayer
+from mitmproxy.proxy.layers import HttpLayer
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import RawQuicLayer
+from mitmproxy.proxy.layers import ServerQuicLayer
+from mitmproxy.proxy.layers import ServerTLSLayer
+from mitmproxy.proxy.layers import TCPLayer
+from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.http import HttpStream
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
-from mitmproxy.test import tflow
-
-
-@pytest.fixture
-def tctx():
-    context.Context(
-        connection.Client(
-            peername=("client", 1234),
-            sockname=("127.0.0.1", 8080),
-            timestamp_start=1605699329,
-        ),
-        tctx.options,
-    )
-
 
 client_hello_no_extensions = bytes.fromhex(
     "1603030065"  # record header
@@ -41,7 +48,6 @@ client_hello_with_extensions = bytes.fromhex(
     "170018"
 )
 
-
 dtls_client_hello_with_extensions = bytes.fromhex(
     "16fefd00000000000000000085"  # record layer
     "010000790000000000000079"  # handshake layer
@@ -49,7 +55,6 @@ dtls_client_hello_with_extensions = bytes.fromhex(
     "3001000043000d0010000e0403050306030401050106010807ff01000100000a00080006001d00170018000b00020100001"
     "7000000000010000e00000b6578616d706c652e636f6d"
 )
-
 
 quic_client_hello = bytes.fromhex(
     "ca0000000108c0618c84b54541320823fcce946c38d8210044e6a93bbb283593f75ffb6f2696b16cfdcb5b1255"
@@ -83,6 +88,8 @@ quic_client_hello = bytes.fromhex(
     "297c0013924e88248684fe8f2098326ce51aa6e5"
 )
 
+dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
+
 
 class TestNextLayer:
     def test_configure(self):
@@ -93,325 +100,510 @@ class TestNextLayer:
                     nl, allow_hosts=["example.org"], ignore_hosts=["example.com"]
                 )
 
-    def test_ignore_connection(self):
-        nl = NextLayer()
-        with taddons.context(nl) as tctx:
-            assert not nl.ignore_connection(("example.com", 443), b"")
-
-            tctx.configure(nl, ignore_hosts=["example.com"])
-            assert nl.ignore_connection(("example.com", 443), b"")
-            assert nl.ignore_connection(("example.com", 1234), b"")
-            assert nl.ignore_connection(("com", 443), b"") is False
-            assert nl.ignore_connection(None, b"") is False
-            assert nl.ignore_connection(None, client_hello_no_extensions) is False
-            assert nl.ignore_connection(None, client_hello_with_extensions)
-            assert nl.ignore_connection(None, client_hello_with_extensions[:-5]) is None
-            # invalid clienthello
-            assert (
-                nl.ignore_connection(
-                    None, client_hello_no_extensions[:9] + b"\x00" * 200
-                )
-                is False
-            )
-            # different server name and SNI
-            assert nl.ignore_connection(("decoy", 1234), client_hello_with_extensions)
-
-            tctx.configure(nl, ignore_hosts=[], allow_hosts=["example.com"])
-            assert nl.ignore_connection(("example.com", 443), b"") is False
-            assert nl.ignore_connection(("example.org", 443), b"")
-            # different server name and SNI
-            assert (
-                nl.ignore_connection(("decoy", 1234), client_hello_with_extensions)
-                is False
-            )
-
-    def test_next_layer(self, monkeypatch):
-        ctx = MagicMock()
-        ctx.client.transport_protocol = "tcp"
-        nl_layer = layer.NextLayer(ctx)
-        monkeypatch.setattr(nl_layer, "data_client", lambda: b"\x16\x03\x03")
-        nl = NextLayer()
-
-        with taddons.context(nl):
-            nl.next_layer(nl_layer)
-            assert nl_layer.layer
-
-    def test_next_layer2(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "tcp"
-        with taddons.context(nl) as tctx:
-            ctx.layers = [layers.modes.HttpProxy(ctx)]
-
-            assert nl._next_layer(ctx, b"", b"") is None
-
-            tctx.configure(nl, ignore_hosts=["example.com"])
-            assert isinstance(nl._next_layer(ctx, b"123", b""), layers.TCPLayer)
-            assert nl._next_layer(ctx, client_hello_no_extensions[:10], b"") is None
-
-            tctx.configure(nl, ignore_hosts=[])
-            assert isinstance(
-                nl._next_layer(ctx, client_hello_no_extensions, b""),
-                layers.ServerTLSLayer,
-            )
-            assert isinstance(ctx.layers[-1], layers.ClientTLSLayer)
-
-            ctx.layers = [layers.modes.HttpProxy(ctx)]
-            assert isinstance(
-                nl._next_layer(ctx, client_hello_no_extensions, b""),
-                layers.ClientTLSLayer,
-            )
-
-            ctx.layers = [layers.modes.HttpProxy(ctx)]
-            assert isinstance(
-                nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
-                layers.HttpLayer,
-            )
-            assert ctx.layers[-1].mode == HTTPMode.regular
-
-            ctx.layers = [layers.modes.HttpUpstreamProxy(ctx)]
-            assert isinstance(
-                nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
-                layers.HttpLayer,
-            )
-            assert ctx.layers[-1].mode == HTTPMode.upstream
-
-            tctx.configure(nl, tcp_hosts=["example.com"])
-            assert isinstance(nl._next_layer(ctx, b"123", b""), layers.TCPLayer)
-
-            tctx.configure(nl, tcp_hosts=[])
-            assert isinstance(nl._next_layer(ctx, b"GET /foo", b""), layers.HttpLayer)
-            assert isinstance(nl._next_layer(ctx, b"", b"hello"), layers.TCPLayer)
-
     @pytest.mark.parametrize(
-        ("protocol", "client_layer", "server_layer"),
+        "ignore, allow, transport_protocol, server_address, data_client, result",
         [
-            ("dtls", layers.ClientTLSLayer, layers.ServerTLSLayer),
-            ("quic", layers.ClientQuicLayer, layers.ServerQuicLayer),
+            # ignore
+            pytest.param(
+                [], [], "example.com", "tcp", b"", False, id="nothing ignored"
+            ),
+            pytest.param(
+                ["example.com"], [], "tcp", "example.com", b"", True, id="address"
+            ),
+            pytest.param(
+                ["1.2.3.4"], [], "tcp", "example.com", b"", True, id="ip address"
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                "com",
+                b"",
+                False,
+                id="partial address match",
+            ),
+            pytest.param(
+                ["example.com"], [], "tcp", None, b"", False, id="no destination info"
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                client_hello_no_extensions,
+                False,
+                id="no sni",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                client_hello_with_extensions,
+                True,
+                id="sni",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                client_hello_with_extensions[:-5],
+                NeedsMoreData,
+                id="incomplete client hello",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                client_hello_no_extensions[:9] + b"\x00" * 200,
+                False,
+                id="invalid client hello",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                "decoy",
+                client_hello_with_extensions,
+                True,
+                id="sni mismatch",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                None,
+                dtls_client_hello_with_extensions,
+                True,
+                id="dtls sni",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                None,
+                dtls_client_hello_with_extensions[:-5],
+                NeedsMoreData,
+                id="incomplete dtls client hello",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                None,
+                dtls_client_hello_with_extensions[:9] + b"\x00" * 200,
+                False,
+                id="invalid dtls client hello",
+            ),
+            pytest.param(
+                ["example.com"], [], "udp", None, quic_client_hello, True, id="quic sni"
+            ),
+            # allow
+            pytest.param(
+                [], ["example.com"], "tcp", "example.com", b"", False, id="allow: allow"
+            ),
+            pytest.param(
+                [], ["example.com"], "tcp", "example.org", b"", True, id="allow: ignore"
+            ),
+            pytest.param(
+                [],
+                ["example.com"],
+                "tcp",
+                "decoy",
+                client_hello_with_extensions,
+                False,
+                id="allow: sni mismatch",
+            ),
         ],
     )
-    def test_next_layer_udp(
+    def test_ignore_connection(
         self,
-        protocol: str,
-        client_layer: layer.Layer,
-        server_layer: layer.Layer,
+        ignore: list[str],
+        allow: list[str],
+        transport_protocol: TransportProtocol,
+        server_address: str,
+        data_client: bytes,
+        result: bool | type[NeedsMoreData],
     ):
-        def is_ignored_udp(layer: layer.Layer | None):
-            return isinstance(layer, layers.UDPLayer) and layer.flow is None
-
-        def is_intercepted_udp(layer: layer.Layer | None):
-            return isinstance(layer, layers.UDPLayer) and layer.flow is not None
-
-        def is_http(layer: layer.Layer | None, mode: HTTPMode):
-            return isinstance(layer, layers.HttpLayer) and layer.mode is mode
-
-        client_hello = {
-            "dtls": dtls_client_hello_with_extensions,
-            "quic": quic_client_hello,
-        }[protocol]
         nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
         with taddons.context(nl) as tctx:
-            ctx.layers = [layers.modes.HttpProxy(ctx), client_layer(ctx)]
-            assert is_http(nl._next_layer(ctx, b"", b""), HTTPMode.regular)
+            if ignore:
+                tctx.configure(nl, ignore_hosts=ignore)
+            if allow:
+                tctx.configure(nl, allow_hosts=allow)
 
-            ctx.layers = [layers.modes.HttpUpstreamProxy(ctx), client_layer(ctx)]
-            assert is_http(nl._next_layer(ctx, b"", b""), HTTPMode.upstream)
+            ctx = Context(
+                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+                tctx.options,
+            )
+            ctx.client.transport_protocol = transport_protocol
+            if server_address:
+                ctx.server.address = (server_address, 443)
+                ctx.server.peername = ("1.2.3.4", 443)
 
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            is_intercepted_udp(nl._next_layer(ctx, b"", b""))
+            if result is NeedsMoreData:
+                with pytest.raises(NeedsMoreData):
+                    nl._ignore_connection(ctx, data_client)
+            else:
+                assert nl._ignore_connection(ctx, data_client) is result
 
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            ctx.server.address = ("nomatch.com", 443)
+    def test_next_layer(self, monkeypatch, caplog):
+        caplog.set_level(logging.INFO)
+        nl = NextLayer()
+
+        with taddons.context(nl) as tctx:
+            m = MagicMock()
+            m.context = Context(
+                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+                tctx.options,
+            )
+            m.context.layers = [modes.TransparentProxy(m.context)]
+            m.context.server.address = ("example.com", 42)
             tctx.configure(nl, ignore_hosts=["example.com"])
-            assert is_intercepted_udp(nl._next_layer(ctx, client_hello[:50], b""))
-            assert is_ignored_udp(nl._next_layer(ctx, client_hello, b""))
 
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            ctx.server.address = ("example.com", 443)
-            assert is_ignored_udp(nl._next_layer(ctx, client_hello[:50], b""))
+            m.layer = preexisting = object()
+            nl.next_layer(m)
+            assert m.layer is preexisting
 
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            tctx.configure(nl, ignore_hosts=[])
-            decision = nl._next_layer(ctx, client_hello, b"")
-            assert isinstance(decision, server_layer)
-            assert isinstance(decision.child_layer, client_layer)
+            m.layer = None
+            nl.next_layer(m)
+            assert m.layer
 
-            ctx.layers = [layers.modes.ReverseProxy(ctx), server_layer(ctx)]
-            tctx.configure(nl, ignore_hosts=[])
-            assert isinstance(nl._next_layer(ctx, client_hello, b""), client_layer)
-
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            tctx.configure(nl, udp_hosts=["example.com"])
-            assert isinstance(
-                nl._next_layer(ctx, tflow.tdnsreq().packed, b""), layers.UDPLayer
+            m.layer = None
+            monkeypatch.setattr(
+                m, "data_client", lambda: client_hello_with_extensions[:-5]
             )
+            nl.next_layer(m)
+            assert not m.layer
+            assert "Deferring layer decision" in caplog.text
 
-            ctx.layers = [layers.modes.TransparentProxy(ctx)]
-            tctx.configure(nl, udp_hosts=[])
-            assert isinstance(
-                nl._next_layer(ctx, tflow.tdnsreq().packed, b""), layers.DNSLayer
-            )
 
-    def test_next_layer_reverse_raw(self):
-        nl = NextLayer()
-        with taddons.context(nl):
-            ctx = MagicMock()
-            ctx.client.alpn = None
-            ctx.server.address = ("example.com", 443)
-            ctx.client.transport_protocol = "udp"
-            with taddons.context(nl) as tctx:
-                tctx.configure(nl, ignore_hosts=["example.com"])
+@dataclass
+class TestConf:
+    before: list[type[Layer]]
+    after: list[type[Layer]]
+    proxy_mode: str = "regular"
+    transport_protocol: TransportProtocol = "tcp"
+    data_client: bytes = b""
+    data_server: bytes = b""
+    ignore_hosts: Sequence[str] = ()
+    tcp_hosts: Sequence[str] = ()
+    udp_hosts: Sequence[str] = ()
+    ignore_conn: bool = False
 
-                ctx.layers = [
-                    layers.modes.HttpProxy(ctx),
-                    layers.ClientQuicLayer(ctx),
-                ]
-                decision = nl._next_layer(ctx, b"", b"")
-                assert isinstance(decision, layers.ServerQuicLayer)
-                assert isinstance(decision.child_layer, layers.RawQuicLayer)
 
-                ctx.layers = [
-                    layers.modes.ReverseProxy(ctx),
-                    layers.ServerQuicLayer(ctx),
-                    layers.ClientQuicLayer(
-                        ctx,
-                    ),
-                ]
-                assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
+explicit_proxy_configs = [
+    pytest.param(
+        TestConf(
+            before=[modes.HttpProxy],
+            after=[modes.HttpProxy, HttpLayer],
+        ),
+        id=f"explicit proxy: regular http",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.HttpProxy],
+            after=[modes.HttpProxy, ClientTLSLayer, HttpLayer],
+            data_client=client_hello_no_extensions,
+        ),
+        id=f"explicit proxy: secure web proxy",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.HttpUpstreamProxy],
+            after=[modes.HttpUpstreamProxy, HttpLayer],
+        ),
+        id=f"explicit proxy: upstream proxy",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.HttpUpstreamProxy],
+            after=[modes.HttpUpstreamProxy, ClientQuicLayer, HttpLayer],
+            transport_protocol="udp",
+        ),
+        id=f"explicit proxy: experimental http3",
+    ),
+    pytest.param(
+        TestConf(
+            before=[
+                modes.HttpProxy,
+                partial(HttpLayer, mode=HTTPMode.regular),
+                partial(HttpStream, stream_id=1),
+            ],
+            after=[modes.HttpProxy, HttpLayer, HttpStream, HttpLayer],
+            data_client=b"GET / HTTP/1.1\r\n",
+        ),
+        id=f"explicit proxy: HTTP over regular proxy",
+    ),
+    pytest.param(
+        TestConf(
+            before=[
+                modes.HttpProxy,
+                partial(HttpLayer, mode=HTTPMode.regular),
+                partial(HttpStream, stream_id=1),
+            ],
+            after=[
+                modes.HttpProxy,
+                HttpLayer,
+                HttpStream,
+                ServerTLSLayer,
+                ClientTLSLayer,
+            ],
+            data_client=client_hello_with_extensions,
+        ),
+        id=f"explicit proxy: TLS over regular proxy",
+    ),
+    pytest.param(
+        TestConf(
+            before=[
+                modes.HttpProxy,
+                partial(HttpLayer, mode=HTTPMode.regular),
+                partial(HttpStream, stream_id=1),
+                ServerTLSLayer,
+                ClientTLSLayer,
+            ],
+            after=[
+                modes.HttpProxy,
+                HttpLayer,
+                HttpStream,
+                ServerTLSLayer,
+                ClientTLSLayer,
+                HttpLayer,
+            ],
+            data_client=b"GET / HTTP/1.1\r\n",
+        ),
+        id=f"explicit proxy: HTTPS over regular proxy",
+    ),
+    pytest.param(
+        TestConf(
+            before=[
+                modes.HttpProxy,
+                partial(HttpLayer, mode=HTTPMode.regular),
+                partial(HttpStream, stream_id=1),
+            ],
+            after=[modes.HttpProxy, HttpLayer, HttpStream, TCPLayer],
+            data_client=b"\xFF",
+        ),
+        id=f"explicit proxy: TCP over regular proxy",
+    ),
+]
 
-                ctx.layers = [
-                    layers.modes.ReverseProxy(ctx),
-                    layers.ServerQuicLayer(ctx),
-                ]
-                decision = nl._next_layer(ctx, b"", b"")
-                assert isinstance(decision, layers.ClientQuicLayer)
-                assert isinstance(decision.child_layer, layers.RawQuicLayer)
+reverse_proxy_configs = []
+for proto_plain, proto_enc, app_layer in [
+    ("udp", "dtls", UDPLayer),
+    ("tcp", "tls", TCPLayer),
+    ("http", "https", HttpLayer),
+]:
+    if proto_plain == "udp":
+        data_client = dtls_client_hello_with_extensions
+    else:
+        data_client = client_hello_with_extensions
 
-                tctx.configure(nl, ignore_hosts=[])
+    reverse_proxy_configs.extend(
+        [
+            pytest.param(
+                TestConf(
+                    before=[modes.ReverseProxy],
+                    after=[modes.ReverseProxy, app_layer],
+                    proxy_mode=f"reverse:{proto_plain}://example.com:42",
+                ),
+                id=f"reverse proxy: {proto_plain} -> {proto_plain}",
+            ),
+            pytest.param(
+                TestConf(
+                    before=[modes.ReverseProxy],
+                    after=[
+                        modes.ReverseProxy,
+                        ServerTLSLayer,
+                        ClientTLSLayer,
+                        app_layer,
+                    ],
+                    proxy_mode=f"reverse:{proto_enc}://example.com:42",
+                    data_client=data_client,
+                ),
+                id=f"reverse proxy: {proto_enc} -> {proto_enc}",
+            ),
+            pytest.param(
+                TestConf(
+                    before=[modes.ReverseProxy],
+                    after=[modes.ReverseProxy, ClientTLSLayer, app_layer],
+                    proxy_mode=f"reverse:{proto_plain}://example.com:42",
+                    data_client=data_client,
+                ),
+                id=f"reverse proxy: {proto_enc} -> {proto_plain}",
+            ),
+            pytest.param(
+                TestConf(
+                    before=[modes.ReverseProxy],
+                    after=[modes.ReverseProxy, ServerTLSLayer, app_layer],
+                    proxy_mode=f"reverse:{proto_enc}://example.com:42",
+                ),
+                id=f"reverse proxy: {proto_plain} -> {proto_enc}",
+            ),
+        ]
+    )
 
-    def test_next_layer_reverse_quic_mode(self):
-        nl = NextLayer()
-        with taddons.context(nl):
-            ctx = MagicMock()
-            ctx.client.alpn = None
-            ctx.server.address = ("example.com", 443)
-            ctx.client.transport_protocol = "udp"
-            ctx.client.proxy_mode.scheme = "quic"
-            ctx.layers = [
-                layers.modes.ReverseProxy(ctx),
-                layers.ServerQuicLayer(ctx),
-                layers.ClientQuicLayer(ctx),
-            ]
-            assert isinstance(nl._next_layer(ctx, b"", b""), layers.RawQuicLayer)
-            ctx.layers = [
-                layers.modes.ReverseProxy(ctx),
-                layers.ServerQuicLayer(ctx),
-            ]
-            assert nl._next_layer(ctx, b"", b"") is None
-            assert isinstance(
-                nl._next_layer(ctx, b"notahandshake", b""), layers.UDPLayer
-            )
-            ctx.layers = [
-                layers.modes.ReverseProxy(ctx),
-                layers.ServerQuicLayer(ctx),
-            ]
-            assert isinstance(
-                nl._next_layer(ctx, quic_client_hello, b""), layers.ClientQuicLayer
-            )
+reverse_proxy_configs.extend(
+    [
+        pytest.param(
+            TestConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, DNSLayer],
+                proxy_mode="reverse:dns://example.com:53",
+            ),
+            id="reverse proxy: dns",
+        ),
+        pytest.param(
+            TestConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
+                proxy_mode="reverse:http3://example.com",
+            ),
+            id="reverse proxy: http3",
+        ),
+        pytest.param(
+            TestConf(
+                before=[modes.ReverseProxy],
+                after=[
+                    modes.ReverseProxy,
+                    ServerQuicLayer,
+                    ClientQuicLayer,
+                    RawQuicLayer,
+                ],
+                proxy_mode="reverse:quic://example.com",
+            ),
+            id="reverse proxy: quic",
+        ),
+    ]
+)
 
-    def test_next_layer_reverse_http3_mode(self):
-        nl = NextLayer()
-        with taddons.context(nl):
-            ctx = MagicMock()
-            ctx.client.alpn = None
-            ctx.server.address = ("example.com", 443)
-            ctx.client.transport_protocol = "udp"
-            ctx.client.proxy_mode.scheme = "http3"
-            ctx.layers = [
-                layers.modes.ReverseProxy(ctx),
-                layers.ServerQuicLayer(ctx),
-            ]
-            assert isinstance(
-                nl._next_layer(ctx, b"notahandshakebutignore", b""),
-                layers.ClientQuicLayer,
-            )
-            assert len(ctx.layers) == 3
-            decision = nl._next_layer(ctx, b"", b"")
-            assert isinstance(decision, layers.HttpLayer)
-            assert decision.mode is HTTPMode.transparent
+transparent_proxy_configs = [
+    pytest.param(
+        TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
+            data_client=client_hello_no_extensions,
+        ),
+        id=f"transparent proxy: tls",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
+            data_client=dtls_client_hello_with_extensions,
+            transport_protocol="udp",
+        ),
+        id=f"transparent proxy: dtls",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
+            data_client=quic_client_hello,
+            transport_protocol="udp",
+        ),
+        id="transparent proxy: quic",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, TCPLayer],
+            data_server=b"220 service ready",
+        ),
+        id="transparent proxy: raw tcp",
+    ),
+    pytest.param(
+        http := TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, HttpLayer],
+            data_client=b"GET / HTTP/1.1\r\n",
+        ),
+        id="transparent proxy: http",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            http,
+            tcp_hosts=["example.com"],
+            after=[modes.TransparentProxy, TCPLayer],
+        ),
+        id="transparent proxy: tcp_hosts",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            http,
+            ignore_hosts=["example.com"],
+            after=[modes.TransparentProxy, TCPLayer],
+            ignore_conn=True,
+        ),
+        id="transparent proxy: ignore_hosts",
+    ),
+    pytest.param(
+        dns := TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, DNSLayer],
+            transport_protocol="udp",
+            data_client=dns_query,
+        ),
+        id="transparent proxy: dns",
+    ),
+    pytest.param(
+        TestConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, UDPLayer],
+            transport_protocol="udp",
+            data_client=b"\xFF",
+        ),
+        id="transparent proxy: raw udp",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            dns,
+            udp_hosts=["example.com"],
+            after=[modes.TransparentProxy, UDPLayer],
+        ),
+        id="transparent proxy: udp_hosts",
+    ),
+]
 
-    def test_next_layer_reverse_invalid_mode(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "invalidscheme"
-        ctx.layers = [layers.modes.ReverseProxy(ctx)]
-        with pytest.raises(AssertionError, match="invalidscheme"):
-            nl._next_layer(ctx, b"", b"")
 
-    def test_next_layer_reverse_dtls_mode(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "dtls"
-        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerTLSLayer(ctx)]
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx), layers.ServerTLSLayer(ctx)]
-        assert isinstance(
-            nl._next_layer(ctx, dtls_client_hello_with_extensions, b""),
-            layers.ClientTLSLayer,
+@pytest.mark.parametrize(
+    "test_conf",
+    [
+        *explicit_proxy_configs,
+        *reverse_proxy_configs,
+        *transparent_proxy_configs,
+    ],
+)
+def test_next_layer(
+    test_conf: TestConf,
+):
+    nl = NextLayer()
+    with taddons.context(nl) as tctx:
+        tctx.configure(
+            nl,
+            ignore_hosts=test_conf.ignore_hosts,
+            tcp_hosts=test_conf.tcp_hosts,
+            udp_hosts=test_conf.udp_hosts,
         )
-        assert len(ctx.layers) == 3
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
 
-    def test_next_layer_reverse_udp_mode(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "udp"
-        ctx.layers = [layers.modes.ReverseProxy(ctx)]
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx)]
-        assert isinstance(
-            nl._next_layer(ctx, dtls_client_hello_with_extensions, b""),
-            layers.ClientTLSLayer,
+        ctx = Context(
+            Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+            tctx.options,
         )
-        assert len(ctx.layers) == 2
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.UDPLayer)
-
-    def test_next_layer_reverse_dns_mode(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.alpn = None
-        ctx.server.address = ("example.com", 443)
-        ctx.client.transport_protocol = "udp"
-        ctx.client.proxy_mode.scheme = "dns"
-        ctx.layers = [layers.modes.ReverseProxy(ctx)]
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.DNSLayer)
-        ctx.layers = [layers.modes.ReverseProxy(ctx)]
-        assert isinstance(
-            nl._next_layer(ctx, dtls_client_hello_with_extensions, b""),
-            layers.ClientTLSLayer,
+        ctx.server.address = ("example.com", 42)
+        # these aren't properly set up, but this does not matter here.
+        ctx.client.transport_protocol = test_conf.transport_protocol
+        ctx.client.proxy_mode = ProxyMode.parse(test_conf.proxy_mode)
+        ctx.layers = [x(ctx) for x in test_conf.before]
+        nl._next_layer(
+            ctx,
+            data_client=test_conf.data_client,
+            data_server=test_conf.data_server,
         )
-        assert len(ctx.layers) == 2
-        assert isinstance(nl._next_layer(ctx, b"", b""), layers.DNSLayer)
+        assert stack_match(ctx, test_conf.after)
 
-    def test_next_layer_invalid_proto(self):
-        nl = NextLayer()
-        ctx = MagicMock()
-        ctx.client.transport_protocol = "invalid"
-        with taddons.context(nl):
-            with pytest.raises(AssertionError):
-                nl._next_layer(ctx, b"", b"")
+        last_layer = ctx.layers[-1]
+        if isinstance(last_layer, (UDPLayer, TCPLayer)):
+            assert bool(last_layer.flow) ^ test_conf.ignore_conn

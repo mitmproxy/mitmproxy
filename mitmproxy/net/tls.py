@@ -224,15 +224,28 @@ def accept_all(
     return True
 
 
-def is_tls_record_magic(d):
+def starts_like_tls_record(d: bytes) -> bool:
     """
     Returns:
-        True, if the passed bytes start with the TLS record magic bytes.
+        True, if the passed bytes could be the start of a TLS record
         False, otherwise.
     """
-    d = d[:3]
-
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     # https://tls13.ulfheim.net/
-    return len(d) == 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03
+    # We assume that a client sending less than 3 bytes initially is not a TLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0x03 and 0x00 <= d[2] <= 0x03
+
+
+def starts_like_dtls_record(d: bytes) -> bool:
+    """
+    Returns:
+        True, if the passed bytes could be the start of a DTLS record
+        False, otherwise.
+    """
+    # TLS ClientHello magic, works for DTLS 1.1, DTLS 1.2, and DTLS 1.3.
+    # https://www.rfc-editor.org/rfc/rfc4347#section-4.1
+    # https://www.rfc-editor.org/rfc/rfc6347#section-4.1
+    # https://www.rfc-editor.org/rfc/rfc9147#section-4-6.2
+    # We assume that a client sending less than 3 bytes initially is not a DTLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0xFE and 0xFD <= d[2] <= 0xFE

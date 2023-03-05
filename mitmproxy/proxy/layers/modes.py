@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import socket
 import struct
+import sys
 from abc import ABCMeta
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -11,10 +12,13 @@ from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import quic
-from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
+
+if sys.version_info < (3, 11):
+    from typing_extensions import assert_never
+else:
+    from typing import assert_never
 
 
 class HttpProxy(layer.Layer):
@@ -65,18 +69,17 @@ class ReverseProxy(DestinationKnown):
         assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme in ("http3", "quic"):
-            if not self.context.options.keep_host_header:
-                self.context.server.sni = spec.address[0]
-            self.child_layer = quic.ServerQuicLayer(self.context)
-        elif spec.scheme in ("https", "tls", "dtls"):
-            if not self.context.options.keep_host_header:
-                self.context.server.sni = spec.address[0]
-            self.child_layer = tls.ServerTLSLayer(self.context)
-        elif spec.scheme in ("tcp", "http", "udp", "dns"):
-            self.child_layer = layer.NextLayer(self.context)
-        else:
-            raise AssertionError(spec.scheme)  # pragma: no cover
+        self.child_layer = layer.NextLayer(self.context)
+
+        # For secure protocols, set SNI if keep_host_header is false
+        match spec.scheme:
+            case "http3" | "quic" | "https" | "tls" | "dtls":
+                if not self.context.options.keep_host_header:
+                    self.context.server.sni = spec.address[0]
+            case "tcp" | "http" | "udp" | "dns":
+                pass
+            case _:  # pragma: no cover
+                assert_never(spec.scheme)
 
         err = yield from self.finish_start()
         if err:

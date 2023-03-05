@@ -24,17 +24,6 @@ from test.mitmproxy.proxy.tutils import StrMatching
 tlsdata = data.Data(__name__)
 
 
-def test_is_tls_handshake_record():
-    assert tls.is_tls_handshake_record(bytes.fromhex("160300"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160301"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160302"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160303"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("ffffff"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex(""))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("160304"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("150301"))
-
-
 def test_record_contents():
     data = bytes.fromhex("1603010002beef" "1603010001ff")
     assert list(tls.handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
@@ -774,15 +763,6 @@ class TestClientTLS:
             << commands.CloseConnection(tctx.client)
         )
         assert tls_hook_data().conn.error
-
-
-def test_is_dtls_handshake_record():
-    assert tls.is_dtls_handshake_record(bytes.fromhex("16fefd"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("160300"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("16fefe"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex(""))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("160304"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("150301"))
 
 
 def test_dtls_record_contents():

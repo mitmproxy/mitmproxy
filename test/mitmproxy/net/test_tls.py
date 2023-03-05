@@ -70,10 +70,24 @@ def test_sslkeylogfile(tdata, monkeypatch):
 
 
 def test_is_record_magic():
-    assert not tls.is_tls_record_magic(b"POST /")
-    assert not tls.is_tls_record_magic(b"\x16\x03")
-    assert not tls.is_tls_record_magic(b"\x16\x03\x04")
-    assert tls.is_tls_record_magic(b"\x16\x03\x00")
-    assert tls.is_tls_record_magic(b"\x16\x03\x01")
-    assert tls.is_tls_record_magic(b"\x16\x03\x02")
-    assert tls.is_tls_record_magic(b"\x16\x03\x03")
+    assert not tls.starts_like_tls_record(b"POST /")
+    assert not tls.starts_like_tls_record(b"\x16\x03\x04")
+    assert not tls.starts_like_tls_record(b"")
+    assert not tls.starts_like_tls_record(b"\x16")
+    assert not tls.starts_like_tls_record(b"\x16\x03")
+    assert tls.starts_like_tls_record(b"\x16\x03\x00")
+    assert tls.starts_like_tls_record(b"\x16\x03\x01")
+    assert tls.starts_like_tls_record(b"\x16\x03\x02")
+    assert tls.starts_like_tls_record(b"\x16\x03\x03")
+    assert not tls.starts_like_tls_record(bytes.fromhex("16fefe"))
+
+
+def test_is_dtls_record_magic():
+    assert not tls.starts_like_dtls_record(bytes.fromhex(""))
+    assert not tls.starts_like_dtls_record(bytes.fromhex("16"))
+    assert not tls.starts_like_dtls_record(bytes.fromhex("16fe"))
+    assert tls.starts_like_dtls_record(bytes.fromhex("16fefd"))
+    assert tls.starts_like_dtls_record(bytes.fromhex("16fefe"))
+    assert not tls.starts_like_dtls_record(bytes.fromhex("160300"))
+    assert not tls.starts_like_dtls_record(bytes.fromhex("160304"))
+    assert not tls.starts_like_dtls_record(bytes.fromhex("150301"))

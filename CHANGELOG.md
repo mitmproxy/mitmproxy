@@ -2,15 +2,12 @@
 
 ## Unreleased: mitmproxy next
 
-* mitmproxy now requires Python 3.10 or above.
-  ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
-* Fix a bug where the direction indicator in the message stream view would be in the wrong direction.
-  ([#5921](https://github.com/mitmproxy/mitmproxy/issues/5921), @konradh)
-* Fix a bug where peername would be None in tls_passthrough script, which would make it not working.
-  ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
 
-* Add experimental QUIC support.
+* Add experimental support for HTTP/3 and QUIC.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
+* You can now set the `http3` to false to block all QUIC and HTTP/3 traffic
+  in transparent modes.
+  ([#5967](https://github.com/mitmproxy/mitmproxy/pull/5967), @mhils)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
   This makes it simpler to accept both HTTP and HTTPS.
   ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
@@ -25,6 +22,12 @@
   ([#5148](https://github.com/mitmproxy/mitmproxy/issues/5148), @mhils)
 * Added documentation on using Magisk module for intercepting traffic in Android production builds.
   ([#5924](https://github.com/mitmproxy/mitmproxy/pull/5924), @Jurrie)
+* Fix a bug where the direction indicator in the message stream view would be in the wrong direction.
+  ([#5921](https://github.com/mitmproxy/mitmproxy/issues/5921), @konradh)
+* Fix a bug where peername would be None in tls_passthrough script, which would make it not working.
+  ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
+* mitmproxy now requires Python 3.10 or above.
+  ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
 
 ### Breaking Changes
 

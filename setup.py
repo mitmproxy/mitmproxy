@@ -98,7 +98,7 @@ setup(
         "wsproto>=1.0,<1.3",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.21",
-        "typing-extensions>=4.3,<4.5; python_version<'3.10'",
+        "typing-extensions>=4.3,<4.6; python_version<'3.11'",
     ],
     extras_require={
         ':sys_platform == "win32"': [

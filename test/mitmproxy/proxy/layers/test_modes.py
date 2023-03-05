@@ -207,6 +207,9 @@ def test_quic(tctx: Context, keep_host_header: bool):
             Playbook(modes.ReverseProxy(tctx))
             << OpenConnection(tctx.server)
             >> reply(None)
+            >> DataReceived(tctx.client, b"\x00")
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(layers.ServerQuicLayer)
             << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
             >> reply(side_effect=set_settings)
             << SendData(tctx.server, client_hello)
@@ -250,9 +253,6 @@ def test_reverse_proxy_tcp_over_tls(
     reverse proxying.
     """
 
-    if patch:
-        monkeypatch.setattr(tls, "ServerTLSLayer", tls.MockTLSLayer)
-
     flow = Placeholder(TCPFlow)
     data = Placeholder(bytes)
     tctx.client.proxy_mode = ProxyMode.parse("reverse:https://localhost:8000")
@@ -287,6 +287,11 @@ def test_reverse_proxy_tcp_over_tls(
         )
         assert data() == b"\x01\x02\x03"
     else:
+        (
+            playbook
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(tls.ServerTLSLayer)
+        )
         if connection_strategy == "lazy":
             (
                 playbook

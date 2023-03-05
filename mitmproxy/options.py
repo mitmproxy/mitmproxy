@@ -131,7 +131,7 @@ class Options(optmanager.OptManager):
             "http2",
             bool,
             True,
-            "Enable/disable HTTP/2 support. " "HTTP/2 support is enabled by default.",
+            "Enable/disable HTTP/2 support. HTTP/2 support is enabled by default.",
         )
         self.add_option(
             "http2_ping_keepalive",
@@ -142,6 +142,12 @@ class Options(optmanager.OptManager):
             the specified number of seconds to prevent the remote site from closing it.
             Set to 0 to disable this feature.
             """,
+        )
+        self.add_option(
+            "http3",
+            bool,
+            True,
+            "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
         )
         self.add_option(
             "websocket",
