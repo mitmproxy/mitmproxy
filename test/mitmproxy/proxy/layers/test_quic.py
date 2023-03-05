@@ -889,6 +889,18 @@ def make_client_tls_layer(
 
 
 class TestClientTLS:
+    def test_http3_disabled(self, tctx: context.Context):
+        """Test that we swallow QUIC packets if QUIC and HTTP/3 are disabled."""
+        tctx.options.http3 = False
+        assert (
+            tutils.Playbook(quic.ClientQuicLayer(tctx, time=time.time), logs=True)
+            >> events.DataReceived(tctx.client, client_hello)
+            << commands.Log(
+                "Swallowing QUIC handshake because HTTP/3 is disabled.", DEBUG
+            )
+            << None
+        )
+
     def test_client_only(self, tctx: context.Context):
         """Test TLS with client only"""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx)

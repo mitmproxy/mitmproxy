@@ -144,6 +144,12 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option(
+            "http3",
+            bool,
+            True,
+            "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
+        )
+        self.add_option(
             "websocket",
             bool,
             True,
