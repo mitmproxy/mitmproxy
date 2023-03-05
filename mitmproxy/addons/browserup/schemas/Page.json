@@ -4,8 +4,7 @@
     "startedDateTime",
     "id",
     "title",
-    "pageTimings",
-    "_verifications"
+    "pageTimings"
   ],
   "properties": {
     "startedDateTime": {
@@ -82,7 +81,7 @@
           "minimum": -1,
           "default": -1
         },
-        "_largestContentFullPaint": {
+        "_largestContentfulPaint": {
           "type": "integer",
           "format": "int64",
           "minimum": -1,
