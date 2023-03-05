@@ -1,5 +1,6 @@
 import base64
 import typing
+import logging
 
 from mitmproxy import connection
 from mitmproxy.utils import strutils
@@ -23,7 +24,7 @@ class FlowCaptureMixin(object):
 
     def capture_request(self, flow):
         full_url = self.get_full_url(flow.request)
-        ctx.log.debug('Populating har entry for request: {}'.format(full_url))
+        logging.debug('Populating har entry for request: {}'.format(full_url))
 
         har_entry = flow.get_har_entry()
         har_entry['pageref'] = self.get_current_page_ref()
@@ -42,7 +43,7 @@ class FlowCaptureMixin(object):
         if flow.request is not None:
             req_url = flow.request.url
 
-        ctx.log.debug('Incoming request, url: {}'.format(req_url))
+        logging.debug('Incoming request, url: {}'.format(req_url))
 
         if HarCaptureTypes.REQUEST_COOKIES in self.har_capture_types:
             har_entry['request']['cookies'] = self.format_request_cookies(flow.request.cookies.fields)
@@ -65,7 +66,7 @@ class FlowCaptureMixin(object):
         flow.set_har_entry(har_entry)
 
     def capture_response(self, flow):
-        ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
+        logging.debug('Incoming response for request to url: {}'.format(flow.request.url))
 
         t = HarBuilder.entry_timings()
         t['send'] = self.diff_millis(flow.request.timestamp_end, flow.request.timestamp_start)
@@ -134,7 +135,7 @@ class FlowCaptureMixin(object):
                 flow.server_conn.ip_address[0])
 
         flow.set_har_entry(har_entry)
-        ctx.log.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
+        logging.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
 
     def capture_websocket_message(self, flow):
         if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:

@@ -2,6 +2,7 @@ import _thread
 import asyncio
 import json
 import sys
+import logging
 
 import falcon
 import os
@@ -24,17 +25,17 @@ class BrowserUpAddonsManagerAddOn:
     initialized = False
 
     def load(self, l):
-        ctx.log.info('Loading BrowserUpAddonsManagerAddOn')
+        logging.info('Loading BrowserUpAddonsManagerAddOn')
         l.add_option(
             "addons_management_port", int, 8088, "REST api management port.",
         )
 
     def running(self):
-        ctx.log.info('Scanning for custom add-ons resources...')
+        logging.info('Scanning for custom add-ons resources...')
         global initialized
         if not self.initialized and self.is_script_loader_initialized():
-            ctx.log.info('Scanning for custom add-ons resources...')
-            ctx.log.info('Starting falcon REST service...')
+            logging.info('Scanning for custom add-ons resources...')
+            logging.info('Starting falcon REST service...')
             _thread.start_new_thread(self.start_falcon, ())
             initialized = True
 

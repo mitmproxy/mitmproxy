@@ -1,5 +1,6 @@
 import mitmproxy.http
 from mitmproxy import ctx
+import logging
 
 import re
 
@@ -9,7 +10,7 @@ import re
 
 class PagePerfScriptAddOn:
     def load(self, l):
-        ctx.log.info('Loading PagePerfScriptAddon')
+        logging.info('Loading PagePerfScriptAddon')
 
     def get_url(self):
         url = "http://{0}:{1}".format(
@@ -41,6 +42,7 @@ class PagePerfScriptAddOn:
 
             html = flow.response.content.decode('utf-8')
             html = re.sub('</body', script + '</body', html)
+
             # <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
             html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
 
