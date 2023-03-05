@@ -765,69 +765,13 @@ class TestClientTLS:
         assert tls_hook_data().conn.error
 
 
-class TestMaybeClientTLS:
-    @pytest.mark.parametrize("trickle", ["trickle", "full"])
-    def test_no_tls(self, tctx: context.Context, trickle: bool):
-        layer = tls.MaybeClientTLSLayer(tctx)
-        layer.child_layer = tutils.EchoLayer(tctx)
-        playbook = tutils.Playbook(layer)
-
-        if trickle == "trickle":
-            playbook >> events.DataReceived(tctx.client, b"ABC")
-        else:
-            playbook >> events.DataReceived(tctx.client, b"A")
-            playbook >> events.DataReceived(tctx.client, b"B")
-            playbook >> events.DataReceived(tctx.client, b"C")
-
-        assert (
-            playbook
-            << commands.SendData(tctx.client, b'abc')
-            >> events.ConnectionClosed(tctx.client)
-            << commands.CloseConnection(tctx.client)
-        )
-
-    @pytest.mark.parametrize("trickle", ["trickle", "full"])
-    def test_tls(self, tctx: context.Context, trickle):
-        layer = tls.MaybeClientTLSLayer(tctx)
-        layer.child_layer = tutils.EchoLayer(tctx)
-        data = tutils.Placeholder(bytes)
-        playbook = tutils.Playbook(layer)
-
-        if trickle == "trickle":
-            for d in client_hello_tls_1_3:
-                playbook >> events.DataReceived(tctx.client, bytes([d]))
-        else:
-            playbook >> events.DataReceived(tctx.client, client_hello_tls_1_3)
-        assert (
-            playbook
-            << tls.TlsClienthelloHook(tutils.Placeholder())
-            >> tutils.reply()
-            << tls.TlsStartClientHook(tutils.Placeholder())
-            >> reply_tls_start_client()
-            << commands.SendData(tctx.client, data)
-        )
-        assert data().startswith(b"\x16\x03\x03")
-
-    def test_close_early(self, tctx: context.Context):
-        layer = tls.MaybeClientTLSLayer(tctx)
-        layer.child_layer = tutils.EchoLayer(tctx)
-
-        assert (
-            tutils.Playbook(layer)
-            >> events.DataReceived(tctx.client, b"A")
-            >> events.ConnectionClosed(tctx.client)
-            << commands.CloseConnection(tctx.client)
-        )
-
-    def test_no_side_effects(self, tctx: context.Context):
-        layer = tls.MaybeClientTLSLayer(tctx)
-        layer.child_layer = tutils.EchoLayer(tctx)
-
-        assert (
-            tutils.Playbook(layer)
-            >> events.DataReceived(tctx.server, b"A")
-            << commands.SendData(tctx.server, b"a")
-        )
+def test_is_dtls_handshake_record():
+    assert tls.is_dtls_handshake_record(bytes.fromhex("16fefd"))
+    assert not tls.is_dtls_handshake_record(bytes.fromhex("160300"))
+    assert not tls.is_dtls_handshake_record(bytes.fromhex("16fefe"))
+    assert not tls.is_dtls_handshake_record(bytes.fromhex(""))
+    assert not tls.is_dtls_handshake_record(bytes.fromhex("160304"))
+    assert not tls.is_dtls_handshake_record(bytes.fromhex("150301"))
 
 
 def test_dtls_record_contents():
