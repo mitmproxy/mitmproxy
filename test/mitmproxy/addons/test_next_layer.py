@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Sequence
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,12 +20,12 @@ from mitmproxy.proxy.layers import ClientQuicLayer
 from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
+from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
 from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import UDPLayer
-from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import HttpStream
 from mitmproxy.proxy.mode_specs import ProxyMode

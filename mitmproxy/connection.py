@@ -1,5 +1,4 @@
 import dataclasses
-import sys
 import time
 import uuid
 import warnings
@@ -259,10 +258,6 @@ class Server(Connection):
 
     address: Address | None  # type: ignore
     """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
-
-    if sys.version_info < (3, 10):  # pragma: no cover
-        # no keyword-only arguments here.
-        address: Address | None = None
 
     peername: Address | None = None
     """

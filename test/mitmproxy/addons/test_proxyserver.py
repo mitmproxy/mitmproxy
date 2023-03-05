@@ -27,7 +27,6 @@ import mitmproxy.platform
 from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver
-from mitmproxy.addons import next_layer
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
@@ -35,8 +34,6 @@ from mitmproxy.connection import Address
 from mitmproxy.net import udp
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
-from mitmproxy.proxy.layers import tls
-from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import tclient_conn

@@ -19,10 +19,10 @@ from __future__ import annotations
 import logging
 import re
 import struct
+import sys
 from collections.abc import Iterable
 from collections.abc import Sequence
 from typing import Any
-from typing import assert_never
 from typing import cast
 
 from mitmproxy import ctx
@@ -40,18 +40,23 @@ from mitmproxy.proxy.layers import ClientQuicLayer
 from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
+from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
 from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import UDPLayer
-from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello
-from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
+from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
+
+if sys.version_info < (3, 11):
+    from typing_extensions import assert_never
+else:
+    from typing import assert_never
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +278,7 @@ class NextLayer:
                         raise NeedsMoreData
                     return ch
                 return None
-            case _:
+            case _:  # pragma: no cover
                 assert_never(context.client.transport_protocol)
 
     def _setup_reverse_proxy(self, context: Context, data_client: bytes) -> Layer:
@@ -331,7 +336,7 @@ class NextLayer:
                 stack /= ClientQuicLayer(context)
                 stack /= RawQuicLayer(context)
 
-            case _:
+            case _:  # pragma: no cover
                 assert_never(spec.scheme)
 
         return stack[0]
