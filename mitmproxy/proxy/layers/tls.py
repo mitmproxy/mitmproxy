@@ -11,6 +11,8 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
+from mitmproxy.net.tls import starts_like_dtls_record
+from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events

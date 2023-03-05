@@ -233,15 +233,8 @@ def starts_like_tls_record(d: bytes) -> bool:
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     # https://tls13.ulfheim.net/
-    match len(d):
-        case 0:
-            return True
-        case 1:
-            return d[0] == 0x16
-        case 2:
-            return d[0] == 0x16 and d[1] == 0x03
-        case _:
-            return d[0] == 0x16 and d[1] == 0x03 and 0x00 <= d[2] <= 0x03
+    # We assume that a client sending less than 3 bytes initially is not a TLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0x03 and 0x00 <= d[2] <= 0x03
 
 
 def starts_like_dtls_record(d: bytes) -> bool:
@@ -254,12 +247,5 @@ def starts_like_dtls_record(d: bytes) -> bool:
     # https://www.rfc-editor.org/rfc/rfc4347#section-4.1
     # https://www.rfc-editor.org/rfc/rfc6347#section-4.1
     # https://www.rfc-editor.org/rfc/rfc9147#section-4-6.2
-    match len(d):
-        case 0:
-            return True
-        case 1:
-            return d[0] == 0x16
-        case 2:
-            return d[0] == 0x16 and d[1] == 0xfe
-        case _:
-            return d[0] == 0x16 and d[1] == 0xfe and 0xfd <= d[2] <= 0xfe
+    # We assume that a client sending less than 3 bytes initially is not a DTLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0xFE and 0xFD <= d[2] <= 0xFE

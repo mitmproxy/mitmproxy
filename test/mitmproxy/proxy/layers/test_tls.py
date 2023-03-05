@@ -765,15 +765,6 @@ class TestClientTLS:
         assert tls_hook_data().conn.error
 
 
-def test_is_dtls_handshake_record():
-    assert tls.is_dtls_handshake_record(bytes.fromhex("16fefd"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("160300"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("16fefe"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex(""))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("160304"))
-    assert not tls.is_dtls_handshake_record(bytes.fromhex("150301"))
-
-
 def test_dtls_record_contents():
     data = bytes.fromhex(
         "16fefd00000000000000000002beef" "16fefd00000000000000000001ff"

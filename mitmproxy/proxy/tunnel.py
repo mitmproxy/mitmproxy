@@ -97,7 +97,7 @@ class TunnelLayer(layer.Layer):
         else:
             yield from self.event_to_child(event)
 
-    def _handshake_finished(self, err: str | None):
+    def _handshake_finished(self, err: str | None) -> layer.CommandGenerator[None]:
         if err:
             self.tunnel_state = TunnelState.CLOSED
         else:

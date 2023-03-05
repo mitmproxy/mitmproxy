@@ -5,9 +5,6 @@ from mitmproxy.contentviews import http3
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.test import tflow
 
-if http3 is None:
-    pytest.skip("HTTP/3 not available.", allow_module_level=True)
-
 
 @pytest.mark.parametrize(
     "data",

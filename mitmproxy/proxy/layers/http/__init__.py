@@ -852,22 +852,23 @@ class HttpLayer(layer.Layer):
         self.waiting_for_establishment = collections.defaultdict(list)
         self.streams = {}
         self.command_sources = {}
-
-        http_conn: HttpConnection
-        if is_h3_alpn(self.context.client.alpn):
-            http_conn = Http3Server(context.fork())
-        elif self.context.client.alpn == b"h2":
-            http_conn = Http2Server(context.fork())
-        else:
-            http_conn = Http1Server(context.fork())
-
-        self.connections = {context.client: http_conn}
+        self.connections = {}
 
     def __repr__(self):
         return f"HttpLayer({self.mode.name}, conns: {len(self.connections)})"
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
+            http_conn: HttpConnection
+            if is_h3_alpn(self.context.client.alpn):
+                http_conn = Http3Server(self.context.fork())
+            elif self.context.client.alpn == b"h2":
+                http_conn = Http2Server(self.context.fork())
+            else:
+                http_conn = Http1Server(self.context.fork())
+
+            # may have been set by client playback.
+            self.connections.setdefault(self.context.client, http_conn)
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
                 proxy_mode = self.context.client.proxy_mode

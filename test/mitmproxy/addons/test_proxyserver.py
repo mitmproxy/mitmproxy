@@ -27,6 +27,7 @@ import mitmproxy.platform
 from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver
+from mitmproxy.addons import next_layer
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
@@ -50,19 +51,12 @@ tlsdata = data.Data(__name__)
 class HelperAddon:
     def __init__(self):
         self.flows = []
-        self.layers = [
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
-            lambda ctx: layers.TCPLayer(ctx),
-        ]
 
     def request(self, f):
         self.flows.append(f)
 
     def tcp_start(self, f):
         self.flows.append(f)
-
-    def next_layer(self, nl):
-        nl.layer = self.layers.pop(0)(nl.context)
 
 
 @asynccontextmanager
@@ -87,9 +81,10 @@ async def test_start_stop(caplog_async):
         writer.close()
 
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        state = HelperAddon()
-        tctx.master.addons.add(state)
+    nl = NextLayer()
+    state = HelperAddon()
+
+    with taddons.context(ps, nl, state) as tctx:
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert not ps.servers
@@ -142,9 +137,10 @@ async def test_inject() -> None:
             writer.write(s.upper())
 
     ps = Proxyserver()
-    with taddons.context(ps) as tctx:
-        state = HelperAddon()
-        tctx.master.addons.add(state)
+    nl = NextLayer()
+    state = HelperAddon()
+
+    with taddons.context(ps, nl, state) as tctx:
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert await ps.setup_servers()
@@ -347,7 +343,7 @@ async def udp_server(handle_conn) -> Address:
         server.close()
 
 
-async def test_dtls(monkeypatch, caplog_async) -> None:
+async def test_udp(caplog_async) -> None:
     caplog_async.set_level("INFO")
 
     def server_handler(
@@ -360,20 +356,16 @@ async def test_dtls(monkeypatch, caplog_async) -> None:
         transport.sendto(b"\x01", remote_addr)
 
     ps = Proxyserver()
+    nl = NextLayer()
 
-    # We just want to relay the messages and skip the handshake.
-    monkeypatch.setattr(tls, "ServerTLSLayer", layers.UDPLayer)
-
-    with taddons.context(ps) as tctx:
-        state = HelperAddon()
-        tctx.master.addons.add(state)
+    with taddons.context(ps, nl) as tctx:
         async with udp_server(server_handler) as server_addr:
-            mode = f"reverse:dtls://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
             ps.running()
             await caplog_async.await_log(
-                f"reverse proxy to dtls://{server_addr[0]}:{server_addr[1]} listening"
+                f"reverse proxy to udp://{server_addr[0]}:{server_addr[1]} listening"
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
@@ -605,9 +597,9 @@ class H3Client(QuicClient):
 
     def request(
         self,
-        headers: h3_events.H3Event,
+        headers: h3_events.Headers,
         data: bytes | None = None,
-        trailers: h3_events.H3Event | None = None,
+        trailers: h3_events.Headers | None = None,
         end_stream: bool = True,
     ) -> H3Response:
         stream_id = self._quic.get_next_available_stream_id()
