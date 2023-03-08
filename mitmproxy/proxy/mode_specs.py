@@ -36,7 +36,7 @@ from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
 
 if sys.version_info < (3, 11):
-    from typing_extensions import Self
+    from typing_extensions import Self  # pragma: no cover
 else:
     from typing import Self
 

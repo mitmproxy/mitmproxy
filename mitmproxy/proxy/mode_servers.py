@@ -48,7 +48,7 @@ from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import human
 
 if sys.version_info < (3, 11):
-    from typing_extensions import Self
+    from typing_extensions import Self  # pragma: no cover
 else:
     from typing import Self
 
