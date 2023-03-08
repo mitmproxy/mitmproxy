@@ -22,21 +22,23 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
+import sys
 from abc import ABCMeta
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import cache
 from typing import ClassVar
 from typing import Literal
-from typing import TypeVar
 
 import mitmproxy_rs
 
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
 
-# Python 3.11: Use typing.Self
-Self = TypeVar("Self", bound="ProxyMode")
+if sys.version_info < (3, 11):
+    from typing_extensions import Self  # pragma: no cover
+else:
+    from typing import Self
 
 
 @dataclass(frozen=True)  # type: ignore
@@ -92,7 +94,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @classmethod
     @cache
-    def parse(cls: type[Self], spec: str) -> Self:
+    def parse(cls, spec: str) -> Self:
         """
         Parse a proxy mode specification and return the corresponding `ProxyMode` instance.
         """

@@ -6,6 +6,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
@@ -134,7 +135,7 @@ class Cert(serializable.Serializable):
     def cn(self) -> str | None:
         attrs = self._cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
         if attrs:
-            return attrs[0].value
+            return cast(str, attrs[0].value)
         return None
 
     @property
@@ -143,7 +144,7 @@ class Cert(serializable.Serializable):
             x509.NameOID.ORGANIZATION_NAME
         )
         if attrs:
-            return attrs[0].value
+            return cast(str, attrs[0].value)
         return None
 
     @property
@@ -166,12 +167,8 @@ class Cert(serializable.Serializable):
 def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
     parts = []
     for attr in name:
-        # pyca cryptography <35.0.0 backwards compatiblity
-        if hasattr(name, "rfc4514_attribute_name"):  # pragma: no cover
-            k = attr.rfc4514_attribute_name  # type: ignore
-        else:  # pragma: no cover
-            k = attr.rfc4514_string().partition("=")[0]
-        v = attr.value
+        k = attr.rfc4514_string().partition("=")[0]
+        v = cast(str, attr.value)
         parts.append((k, v))
     return parts
 
