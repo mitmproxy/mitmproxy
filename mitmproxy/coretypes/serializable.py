@@ -69,7 +69,7 @@ class SerializableDataclass(Serializable):
         hints = typing.get_type_hints(cls)
         fields = []
         # noinspection PyDataclass
-        for field in dataclasses.fields(cls):
+        for field in dataclasses.fields(cls):  # type: ignore[arg-type]
             if field.metadata.get("serialize", True) is False:
                 continue
             if isinstance(field.type, str):

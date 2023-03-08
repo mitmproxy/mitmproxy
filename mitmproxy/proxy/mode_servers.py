@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import socket
+import sys
 import textwrap
 import typing
 from abc import ABCMeta
@@ -45,6 +46,11 @@ from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import human
+
+if sys.version_info < (3, 11):
+    from typing_extensions import Self
+else:
+    from typing import Self
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +85,6 @@ class ServerManager(typing.Protocol):
         ...  # pragma: no cover
 
 
-# Python 3.11: Use typing.Self
-Self = TypeVar("Self", bound="ServerInstance")
-
-
 class ServerInstance(Generic[M], metaclass=ABCMeta):
     __modes: ClassVar[dict[str, type[ServerInstance]]] = {}
 
@@ -103,7 +105,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     @classmethod
     def make(
-        cls: type[Self],
+        cls,
         mode: mode_specs.ProxyMode | str,
         manager: ServerManager,
     ) -> Self:

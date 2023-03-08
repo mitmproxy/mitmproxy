@@ -20,7 +20,7 @@ class Hook:
 
     def args(self) -> list[Any]:
         args = []
-        for field in fields(self):
+        for field in fields(self):  # type: ignore[arg-type]
             args.append(getattr(self, field.name))
         return args
 
