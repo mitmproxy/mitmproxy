@@ -349,7 +349,10 @@ class NextLayer:
         elif starts_like_tls_record(data_client):
             stack /= layers.ClientTLSLayer(context)
 
-        stack /= layers.HttpLayer(context, HTTPMode.regular)
+        if isinstance(context.layers[0], modes.HttpUpstreamProxy):
+            stack /= layers.HttpLayer(context, HTTPMode.upstream)
+        else:
+            stack /= layers.HttpLayer(context, HTTPMode.regular)
 
         return stack[0]
 
