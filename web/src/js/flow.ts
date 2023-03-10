@@ -10,6 +10,7 @@ interface _Flow {
     marked: string
     comment: string
     timestamp_created: number
+    metadata: { [key: string]: any }
     client_conn: Client
     server_conn?: Server
     error?: Error
@@ -109,9 +110,9 @@ export interface HTTPResponse extends HTTPMessage {
 }
 
 export interface MessagesMeta {
-        contentLength: number,
-        count: number,
-        timestamp_last?: number
+    contentLength: number,
+    count: number,
+    timestamp_last?: number
 }
 
 export interface WebSocketData {
