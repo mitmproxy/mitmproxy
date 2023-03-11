@@ -54,7 +54,7 @@ export function tabsForFlow(flow: Flow): string[] {
         tabs.push("error")
     tabs.push("connection")
     tabs.push("timing")
-    if (Object.keys(flow.metadata).length !== 0) tabs.push("metadata");
+    if (Object.keys(flow.metadata ?? {}).length !== 0) tabs.push("metadata");
     return tabs;
 }
 
