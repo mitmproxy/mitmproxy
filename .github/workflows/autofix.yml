@@ -36,6 +36,9 @@ jobs:
            export GLOBIGNORE='mitmproxy/contrib/**'
            yesqa **/*.py || true
 
+      - name: Run prettier
+        run: npx prettier --ignore-path web/.prettierignore --check web/
+
       - uses: install-pinned/autoflake@dfa39c5f136f5b885c175734a719dc6ad1f11fc7
       - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
 
