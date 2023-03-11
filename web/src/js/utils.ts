@@ -1,13 +1,12 @@
-import _ from 'lodash'
-import * as React from 'react'
+import _ from "lodash";
+import * as React from "react";
 
 // @ts-ignore
 window._ = _;
 window.React = React;
 
 export var formatSize = function (bytes) {
-    if (bytes === 0)
-        return "0";
+    if (bytes === 0) return "0";
     var prefix = ["b", "kb", "mb", "gb", "tb"];
     for (var i = 0; i < prefix.length; i++) {
         if (Math.pow(1024, i + 1) > bytes) {
@@ -15,13 +14,10 @@ export var formatSize = function (bytes) {
         }
     }
     var precision;
-    if (bytes % Math.pow(1024, i) === 0)
-        precision = 0;
-    else
-        precision = 1;
+    if (bytes % Math.pow(1024, i) === 0) precision = 0;
+    else precision = 1;
     return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
-
 
 export var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
@@ -35,27 +31,23 @@ export var formatTimeDelta = function (milliseconds) {
     return Math.round(time) + prefix[i];
 };
 
-
 export var formatTimeStamp = function (
     seconds: number,
-    {milliseconds = true} = {}
+    { milliseconds = true } = {}
 ) {
     let utc = new Date(seconds * 1000);
     let ts = utc.toISOString().replace("T", " ").replace("Z", "");
-    if (!milliseconds)
-        ts = ts.slice(0, -4);
+    if (!milliseconds) ts = ts.slice(0, -4);
     return ts;
 };
 
-
 export function formatAddress(address: [string, number]): string {
-    if(address[0].includes(":")) {
-        return `[${address[0]}]:${address[1]}`
+    if (address[0].includes(":")) {
+        return `[${address[0]}]:${address[1]}`;
     } else {
-        return `${address[0]}:${address[1]}`
+        return `${address[0]}:${address[1]}`;
     }
 }
-
 
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
@@ -63,11 +55,14 @@ export function formatAddress(address: [string, number]): string {
 var end = String.fromCharCode(0xffff);
 
 export function reverseString(s) {
-    return String.fromCharCode.apply(String,
-        _.map(s.split(""), function (c) {
-            return 0xffff - c.charCodeAt(0);
-        })
-    ) + end;
+    return (
+        String.fromCharCode.apply(
+            String,
+            _.map(s.split(""), function (c) {
+                return 0xffff - c.charCodeAt(0);
+            })
+        ) + end
+    );
 }
 
 function getCookie(name) {
@@ -77,7 +72,10 @@ function getCookie(name) {
 
 const xsrf = getCookie("_xsrf");
 
-export function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
+export function fetchApi(
+    url: string,
+    options: RequestInit = {}
+): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
         options.headers["X-XSRFToken"] = xsrf;
@@ -87,56 +85,53 @@ export function fetchApi(url: string, options: RequestInit = {}): Promise<Respon
     }
 
     return fetch(url, {
-        credentials: 'same-origin',
-        ...options
+        credentials: "same-origin",
+        ...options,
     });
 }
 
-fetchApi.put = (url: string, json: any, options: RequestInit = {}) => fetchApi(
-    url,
-    {
+fetchApi.put = (url: string, json: any, options: RequestInit = {}) =>
+    fetchApi(url, {
         method: "PUT",
         headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
         },
         body: JSON.stringify(json),
-        ...options
-    }
-)
+        ...options,
+    });
 
-
-fetchApi.post = (url: string, json: any, options: RequestInit = {}) => fetchApi(
-    url,
-    {
+fetchApi.post = (url: string, json: any, options: RequestInit = {}) =>
+    fetchApi(url, {
         method: "POST",
         headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
         },
         body: JSON.stringify(json),
-        ...options
-    }
-)
+        ...options,
+    });
 
 export async function runCommand(command: string, ...args): Promise<any> {
     let response = await fetchApi(`/commands/${command}`, {
-        method: 'POST', headers: {
-            'Content-Type': 'application/json'
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
         },
-        body: JSON.stringify({"arguments": args})
+        body: JSON.stringify({ arguments: args }),
     });
-    return await response.json()
+    return await response.json();
 }
 
 // deep comparison of two json objects (dicts). arrays are handeled as a single value.
 // return: json object including only the changed keys value pairs.
 export function getDiff(obj1, obj2) {
-    let result = {...obj2};
+    let result = { ...obj2 };
     for (let key in obj1) {
-        if (_.isEqual(obj2[key], obj1[key]))
-            result[key] = undefined
-        else if (Object.prototype.toString.call(obj2[key]) === '[object Object]' &&
-            Object.prototype.toString.call(obj1[key]) === '[object Object]')
-            result[key] = getDiff(obj1[key], obj2[key])
+        if (_.isEqual(obj2[key], obj1[key])) result[key] = undefined;
+        else if (
+            Object.prototype.toString.call(obj2[key]) === "[object Object]" &&
+            Object.prototype.toString.call(obj1[key]) === "[object Object]"
+        )
+            result[key] = getDiff(obj1[key], obj2[key]);
     }
-    return result
+    return result;
 }

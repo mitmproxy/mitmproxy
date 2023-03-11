@@ -1,14 +1,14 @@
-import React, {Component} from 'react'
-import classnames from 'classnames'
+import React, { Component } from "react";
+import classnames from "classnames";
 
 export interface ValueEditorProps {
-    content: string
-    onEditDone: (newVal: string) => void
-    onEditStart?: () => void
-    className?: string
-    onInput?: (newVal: string) => void
-    onKeyDown?: (e: React.KeyboardEvent<HTMLSpanElement>) => void
-    placeholder?: string
+    content: string;
+    onEditDone: (newVal: string) => void;
+    onEditStart?: () => void;
+    className?: string;
+    onInput?: (newVal: string) => void;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLSpanElement>) => void;
+    placeholder?: string;
 }
 
 /** "plaintext-only" for browsers which support it, "true" for everyone else */
@@ -21,14 +21,10 @@ const plaintextOnly: string = (() => {
 const EVENT_DEBUG = false;
 
 export default class ValueEditor extends Component<ValueEditorProps> {
-
     input = React.createRef<HTMLSpanElement>();
 
     render() {
-        const className = classnames(
-            "inline-input",
-            this.props.className
-        )
+        const className = classnames("inline-input", this.props.className);
 
         return (
             <span
@@ -43,8 +39,10 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 onPaste={this.onPaste}
                 onMouseDown={this.onMouseDown}
                 onClick={this.onClick}
-            >{this.props.content}</span>
-        )
+            >
+                {this.props.content}
+            </span>
+        );
     }
 
     componentDidUpdate(prevProps: Readonly<ValueEditorProps>) {
@@ -54,12 +52,11 @@ export default class ValueEditor extends Component<ValueEditorProps> {
 
     isEditing = (): boolean => {
         return this.input.current?.contentEditable === plaintextOnly;
-    }
+    };
 
     startEditing = () => {
         if (!this.input.current) return console.error("unreachable");
-        if (this.isEditing())
-            return
+        if (this.isEditing()) return;
 
         // For Firefox, we need to blur() and then focus() with a pause in between,
         // otherwise we run into a bunch of weird bugs.
@@ -67,8 +64,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
         this.input.current.blur();
         this.input.current.contentEditable = plaintextOnly;
         window.requestAnimationFrame(() => {
-            if (!this.input.current)
-                return
+            if (!this.input.current) return;
             this.input.current.focus();
             this.suppress_events = false;
 
@@ -80,28 +76,27 @@ export default class ValueEditor extends Component<ValueEditorProps> {
 
             this.props.onEditStart?.();
         });
-
-    }
+    };
     resetValue = () => {
         if (!this.input.current) return console.error("unreachable");
 
         this.input.current.textContent = this.props.content;
         this.props.onInput?.(this.props.content);
-    }
+    };
     finishEditing = () => {
         if (!this.input.current) return console.error("unreachable");
 
-        this.props.onEditDone(this.input.current.textContent || "")
+        this.props.onEditDone(this.input.current.textContent || "");
 
-        this.input.current.blur()
+        this.input.current.blur();
         this.input.current.contentEditable = "inherit";
-    }
+    };
 
     onPaste = (e: React.ClipboardEvent<HTMLSpanElement>) => {
-        e.preventDefault()
-        let content = e.clipboardData.getData("text/plain")
-        document.execCommand("insertHTML", false, content)
-    }
+        e.preventDefault();
+        let content = e.clipboardData.getData("text/plain");
+        document.execCommand("insertHTML", false, content);
+    };
 
     /*
     We can't always keep inputs as contenteditable as that breaks text selection big time.
@@ -112,64 +107,70 @@ export default class ValueEditor extends Component<ValueEditorProps> {
      */
     private suppress_events = false;
     onMouseDown = (e: React.MouseEvent) => {
-        EVENT_DEBUG && console.debug("onMouseDown", this.suppress_events)
+        EVENT_DEBUG && console.debug("onMouseDown", this.suppress_events);
         this.suppress_events = true;
-        window.addEventListener("mouseup", this.onMouseUp, {once: true});
-    }
+        window.addEventListener("mouseup", this.onMouseUp, { once: true });
+    };
 
     onMouseUp = (e: MouseEvent) => {
         const still_on_elem = e.target === this.input.current;
         const has_not_selected_text = !window.getSelection()?.toString();
 
-        EVENT_DEBUG && console.warn("mouseUp", this.suppress_events, still_on_elem, has_not_selected_text);
+        EVENT_DEBUG &&
+            console.warn(
+                "mouseUp",
+                this.suppress_events,
+                still_on_elem,
+                has_not_selected_text
+            );
 
         if (still_on_elem && has_not_selected_text) {
             this.startEditing();
         }
         this.suppress_events = false;
-    }
+    };
 
     onClick = (e: React.MouseEvent) => {
-        EVENT_DEBUG && console.debug("onClick", this.suppress_events)
-    }
+        EVENT_DEBUG && console.debug("onClick", this.suppress_events);
+    };
 
     onFocus = (e: React.FocusEvent) => {
-        EVENT_DEBUG && console.debug("onFocus", this.props.content, this.suppress_events)
+        EVENT_DEBUG &&
+            console.debug("onFocus", this.props.content, this.suppress_events);
         if (!this.input.current) throw "unreachable";
-        if (this.suppress_events)
-            return
+        if (this.suppress_events) return;
         this.startEditing();
-    }
+    };
 
     onInput = (e: React.FormEvent) => {
-        this.props.onInput?.(this.input.current?.textContent || "")
-    }
+        this.props.onInput?.(this.input.current?.textContent || "");
+    };
 
     onBlur = (e: React.FocusEvent<HTMLSpanElement>) => {
-        EVENT_DEBUG && console.debug("onBlur", this.props.content, this.suppress_events)
-        if (this.suppress_events)
-            return
+        EVENT_DEBUG &&
+            console.debug("onBlur", this.props.content, this.suppress_events);
+        if (this.suppress_events) return;
         this.finishEditing();
-    }
+    };
 
     onKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
-        EVENT_DEBUG && console.debug("keydown", e)
-        e.stopPropagation()
+        EVENT_DEBUG && console.debug("keydown", e);
+        e.stopPropagation();
         switch (e.key) {
             case "Escape":
-                e.preventDefault()
-                this.resetValue()
-                this.finishEditing()
-                break
+                e.preventDefault();
+                this.resetValue();
+                this.finishEditing();
+                break;
             case "Enter":
                 if (!e.shiftKey) {
-                    e.preventDefault()
-                    this.finishEditing()
+                    e.preventDefault();
+                    this.finishEditing();
                 }
-                break
+                break;
             default:
-                break
+                break;
         }
         this.props.onKeyDown?.(e);
-    }
+    };
 }

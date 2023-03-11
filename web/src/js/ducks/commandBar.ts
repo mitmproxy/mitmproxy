@@ -1,7 +1,7 @@
-export const TOGGLE_VISIBILITY = 'COMMANDBAR_TOGGLE_VISIBILITY'
+export const TOGGLE_VISIBILITY = "COMMANDBAR_TOGGLE_VISIBILITY";
 
 interface CommandBarState {
-    visible: boolean
+    visible: boolean;
 }
 
 export const defaultState: CommandBarState = {
@@ -13,14 +13,14 @@ export default function reducer(state = defaultState, action): CommandBarState {
         case TOGGLE_VISIBILITY:
             return {
                 ...state,
-                visible: !state.visible
-            }
+                visible: !state.visible,
+            };
 
         default:
-            return state
+            return state;
     }
 }
 
 export function toggleVisibility() {
-    return {type: TOGGLE_VISIBILITY}
+    return { type: TOGGLE_VISIBILITY };
 }
