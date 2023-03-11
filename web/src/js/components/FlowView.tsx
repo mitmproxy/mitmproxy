@@ -13,6 +13,7 @@ import {Flow} from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
+import Metadata from "./FlowView/Metadata";
 
 type TabProps = {
     flow: Flow
@@ -29,6 +30,7 @@ export const allTabs: { [name: string]: FunctionComponent<TabProps> & { displayN
     udpmessages: UdpMessages,
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
+    metadata: Metadata,
 }
 
 export function tabsForFlow(flow: Flow): string[] {
@@ -52,6 +54,7 @@ export function tabsForFlow(flow: Flow): string[] {
         tabs.push("error")
     tabs.push("connection")
     tabs.push("timing")
+    if (Object.keys(flow.metadata).length !== 0) tabs.push("metadata");
     return tabs;
 }
 
