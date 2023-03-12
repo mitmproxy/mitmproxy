@@ -4,7 +4,7 @@ import * as eventLogActions from "../../ducks/eventLog"
 import * as commandBarActions from "../../ducks/commandBar"
 import {useAppDispatch, useAppSelector} from "../../ducks"
 import * as optionsActions from "../../ducks/options"
-
+import { toggleFlowViewType } from "../../ducks/ui/flow";
 
 type MenuToggleProps = {
     value: boolean
@@ -69,6 +69,19 @@ export function CommandBarToggle() {
             onChange={() => dispatch(commandBarActions.toggleVisibility())}
         >
             Display Command Bar
+        </MenuToggle>
+    )
+}
+
+export function TreeViewToggle() {
+    const visible = useAppSelector(state => state.ui.flow.isTreeView);
+    const dispatch = useDispatch()
+    return (
+        <MenuToggle
+            value={visible}
+            onChange={() => dispatch(toggleFlowViewType())}
+        >
+            Tree View
         </MenuToggle>
     )
 }
