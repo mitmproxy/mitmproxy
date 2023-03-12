@@ -135,10 +135,10 @@ async def test_generate_options_js():
 
         print("export interface OptionsState {")
         for _, opt in sorted(m.options.items()):
-            print(f"    {opt.name}: {ts_type(opt.typespec)}")
+            print(f"    {opt.name}: {ts_type(opt.typespec)};")
         print("}")
         print("")
-        print("export type Option = keyof OptionsState")
+        print("export type Option = keyof OptionsState;")
         print("")
         print("export const defaultState: OptionsState = {")
         for _, opt in sorted(m.options.items()):
@@ -147,7 +147,7 @@ async def test_generate_options_js():
                     ": null", ": undefined"
                 )
             )
-        print("}")
+        print("};")
 
     (
         Path(__file__).parent / "../../../../web/src/js/ducks/_options_gen.ts"

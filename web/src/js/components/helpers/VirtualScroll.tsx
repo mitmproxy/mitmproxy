@@ -1,24 +1,27 @@
 type VScrollArgs = {
-    itemCount: number
-    rowHeight: number
-    viewportTop: number
-    viewportHeight: number
-    itemHeights?: number[]
-}
+    itemCount: number;
+    rowHeight: number;
+    viewportTop: number;
+    viewportHeight: number;
+    itemHeights?: number[];
+};
 
 export type VScroll = {
-    start: number
-    end: number
-    paddingTop: number
-    paddingBottom: number
-}
+    start: number;
+    end: number;
+    paddingTop: number;
+    paddingBottom: number;
+};
 
-export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll {
+export function calcVScroll(
+    opts: VScrollArgs | undefined = undefined
+): VScroll {
     if (!opts) {
-        return {start: 0, end: 0, paddingTop: 0, paddingBottom: 0};
+        return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
     }
 
-    const {itemCount, rowHeight, viewportTop, viewportHeight, itemHeights} = opts;
+    const { itemCount, rowHeight, viewportTop, viewportHeight, itemHeights } =
+        opts;
     const viewportBottom = viewportTop + viewportHeight;
 
     let start = 0;
@@ -28,7 +31,6 @@ export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll 
     let paddingBottom = 0;
 
     if (itemHeights) {
-
         let pos = 0;
         for (let i = 0; i < itemCount; i++) {
             const height = itemHeights[i] || rowHeight;
@@ -49,9 +51,14 @@ export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll 
         // viewportTop + viewportHeight is larger than our total table height.
         // this means that rows have been freshly removed and we need to calculate with
         // an updated (smaller) viewportTop.
-        if(viewportTop > 0 && pos < viewportTop + viewportHeight)
-            return calcVScroll({itemCount, rowHeight, viewportTop: pos - viewportHeight, viewportHeight, itemHeights});
-
+        if (viewportTop > 0 && pos < viewportTop + viewportHeight)
+            return calcVScroll({
+                itemCount,
+                rowHeight,
+                viewportTop: pos - viewportHeight,
+                viewportHeight,
+                itemHeights,
+            });
     } else {
         // We may have removed a lot of rows since the last render,
         // which means viewportTop will move up.
@@ -71,5 +78,5 @@ export function calcVScroll(opts: VScrollArgs | undefined = undefined): VScroll 
         paddingBottom = (itemCount - end) * rowHeight;
     }
 
-    return {start, end, paddingTop, paddingBottom};
+    return { start, end, paddingTop, paddingBottom };
 }

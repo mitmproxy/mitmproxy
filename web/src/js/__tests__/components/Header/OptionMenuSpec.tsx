@@ -1,18 +1,18 @@
-import * as React from "react"
-import renderer from 'react-test-renderer'
-import { Provider } from 'react-redux'
-import OptionMenu from '../../../components/Header/OptionMenu'
-import { TStore } from '../../ducks/tutils'
+import * as React from "react";
+import renderer from "react-test-renderer";
+import { Provider } from "react-redux";
+import OptionMenu from "../../../components/Header/OptionMenu";
+import { TStore } from "../../ducks/tutils";
 
-describe('OptionMenu Component', () => {
-    it('should render correctly', () => {
+describe("OptionMenu Component", () => {
+    it("should render correctly", () => {
         let store = TStore(),
             provider = renderer.create(
                 <Provider store={store}>
-                    <OptionMenu/>
+                    <OptionMenu />
                 </Provider>
             ),
-            tree = provider.toJSON()
-        expect(tree).toMatchSnapshot()
-    })
-})
+            tree = provider.toJSON();
+        expect(tree).toMatchSnapshot();
+    });
+});

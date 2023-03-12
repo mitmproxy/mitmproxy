@@ -3,24 +3,24 @@
  * e.g. the list of available content views or the current version.
  */
 
-export const RECEIVE = 'STATE_RECEIVE'
-export const UPDATE = 'STATE_UPDATE'
+export const RECEIVE = "STATE_RECEIVE";
+export const UPDATE = "STATE_UPDATE";
 
 export interface ServerInfo {
-    description: string
-    full_spec: string
-    is_running: boolean
-    last_exception: string | null
-    listen_addrs: [string, number][]
-    type: string
-    wireguard_conf?: string
+    description: string;
+    full_spec: string;
+    is_running: boolean;
+    last_exception: string | null;
+    listen_addrs: [string, number][];
+    type: string;
+    wireguard_conf?: string;
 }
 
 export interface BackendState {
-    available: boolean
-    version: string
-    contentViews: string[]
-    servers: ServerInfo[]
+    available: boolean;
+    version: string;
+    contentViews: string[];
+    servers: ServerInfo[];
 }
 
 export const defaultState: BackendState = {
@@ -37,9 +37,9 @@ export default function reducer(state = defaultState, action): BackendState {
             return {
                 ...state,
                 available: true,
-                ...action.data
-            }
+                ...action.data,
+            };
         default:
-            return state
+            return state;
     }
 }

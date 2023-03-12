@@ -42,6 +42,12 @@ jobs:
       - uses: install-pinned/black@eb57934f28e8d533bbcb4caa88d00b613b6ddd00
       - run: black --extend-exclude mitmproxy/contrib .
 
+      - name: Run prettier
+        run: |
+          npm ci
+          npx prettier --write .
+        working-directory: web
+
       - uses: mhils/add-pr-ref-in-changelog@main
 
       - uses: autofix-ci/action@8bc06253bec489732e5f9c52884c7cace15c0160
