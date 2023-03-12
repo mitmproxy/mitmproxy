@@ -3,5 +3,5 @@ coverage
 *.md
 .tox
 src/js/filt/*.js
-web/src/js/__tests__/ducks/_tflow.ts
-web/src/js/__tests__/ducks/_tbackendstate.ts
+src/js/__tests__/ducks/_tflow.ts
+src/js/__tests__/ducks/_tbackendstate.ts
