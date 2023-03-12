@@ -1,7 +1,7 @@
 import * as React from "react";
-import { CommandBarToggle, EventlogToggle, OptionsToggle, TreeViewToggle } from "./MenuToggle"
-import Button from "../common/Button"
-import DocsLink from "../common/DocsLink"
+import { CommandBarToggle, EventlogToggle, OptionsToggle } from "./MenuToggle";
+import Button from "../common/Button";
+import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal";
 import { useAppDispatch } from "../../ducks";
