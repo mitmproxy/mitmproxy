@@ -13,6 +13,9 @@
 
 - Run `npm test` to run the test suite.
 
+## Linting
+- Run `npx prettier --write .` to lint your code.
+
 ## Architecture
 
 There are two components:

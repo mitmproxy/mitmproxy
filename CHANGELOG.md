@@ -3,6 +3,8 @@
 ## Unreleased: mitmproxy next
 
 
+* Add "Prettier" code linting tool to mitmweb.
+  ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
 * Add experimental support for HTTP/3 and QUIC.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * You can now set the `http3` to false to block all QUIC and HTTP/3 traffic
