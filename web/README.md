@@ -13,8 +13,9 @@
 
 - Run `npm test` to run the test suite.
 
-## Linting
-- Run `npx prettier --write .` to lint your code.
+## Code formatting
+
+- Run `npm run prettier` to format your code. You can also integrate prettier into your editor, see https://prettier.io/docs/en/editors.html
 
 ## Architecture
 
