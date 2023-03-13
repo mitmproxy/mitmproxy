@@ -34,7 +34,7 @@ export const allTabs: { [name: string]: FunctionComponent<TabProps> & { displayN
 }
 
 export function tabsForFlow(flow: Flow): string[] {
-    let tabs;
+    let tabs: string[];
     switch (flow.type) {
         case "http":
             tabs = ['request', 'response', 'websocket'].filter(k => flow[k])
@@ -52,9 +52,9 @@ export function tabsForFlow(flow: Flow): string[] {
 
     if (flow.error)
         tabs.push("error")
+    if (flow.metadata !== null) tabs.push("metadata");
     tabs.push("connection")
     tabs.push("timing")
-    if (Object.keys(flow.metadata ?? {}).length !== 0) tabs.push("metadata");
     return tabs;
 }
 

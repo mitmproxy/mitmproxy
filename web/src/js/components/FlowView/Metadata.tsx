@@ -8,7 +8,7 @@ export default function Metadata() {
 
     return (
         <section>
-            <pre>{JSON.stringify(flow.metadata)}</pre>
+            <pre>{JSON.stringify(flow.metadata,null,4)}</pre>
         </section>
     );
 }

@@ -10,7 +10,7 @@ interface _Flow {
     marked: string
     comment: string
     timestamp_created: number
-    metadata: { [key: string]: any }
+    metadata: any
     client_conn: Client
     server_conn?: Server
     error?: Error
