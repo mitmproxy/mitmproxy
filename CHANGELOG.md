@@ -30,7 +30,8 @@
   ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
 * mitmproxy now requires Python 3.10 or above.
   ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
-
+* Added metadata view in mitm web.
+  [#5704](https://github.com/mitmproxy/mitmproxy/issues/5704)
 ### Breaking Changes
 
 * The `onboarding_port` option has been removed. The onboarding app now responds

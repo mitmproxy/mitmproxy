@@ -16,6 +16,7 @@ import { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
+import Metadata from "./FlowView/Metadata";
 
 type TabProps = {
     flow: Flow;
@@ -34,10 +35,11 @@ export const allTabs: {
     udpmessages: UdpMessages,
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
+    metadata: Metadata,
 };
 
 export function tabsForFlow(flow: Flow): string[] {
-    let tabs;
+    let tabs: string[];
     switch (flow.type) {
         case "http":
             tabs = ["request", "response", "websocket"].filter((k) => flow[k]);
@@ -56,6 +58,7 @@ export function tabsForFlow(flow: Flow): string[] {
     }
 
     if (flow.error) tabs.push("error");
+    if (flow.metadata !== null) tabs.push("metadata");
     tabs.push("connection");
     tabs.push("timing");
     return tabs;
