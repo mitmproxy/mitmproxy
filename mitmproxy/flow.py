@@ -126,7 +126,7 @@ class Flow(serializable.Serializable):
         self._backup: Flow | None = None
         self.marked: str = ""
         self.is_replay: str | None = None
-        self.metadata: Any = None
+        self.metadata: Any = {}
         self.comment: str = ""
 
     __types: dict[str, type[Flow]] = {}
