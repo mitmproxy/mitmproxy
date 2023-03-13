@@ -4,7 +4,8 @@
     "scripts": {
         "test": "tsc --noEmit && jest --coverage",
         "build": "gulp prod",
-        "start": "gulp"
+        "start": "gulp",
+        "prettier": "prettier --write ."
     },
     "dependencies": {
         "@popperjs/core": "^2.9.3",

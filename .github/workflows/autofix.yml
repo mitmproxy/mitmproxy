@@ -45,7 +45,7 @@ jobs:
       - name: Run prettier
         run: |
           npm ci
-          npx prettier --write .
+          npm run prettier
         working-directory: web
 
       - uses: mhils/add-pr-ref-in-changelog@main
