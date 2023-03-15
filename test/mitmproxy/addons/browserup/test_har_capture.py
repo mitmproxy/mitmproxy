@@ -32,9 +32,7 @@ class TestHARCapture:
     def test_simple(self, hc, path):
         # is invoked if there are exceptions
         # check script is read without errors
-        with taddons.context(hc) as tctx:
-            assert tctx.master.logs == []
-
+        with taddons.context(hc):
             hc.response(self.flow())
 
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -95,43 +93,43 @@ class TestHARCapture:
         f.request.headers["cookie"] = "foo=bar"
         hc.har_capture_types = [HarCaptureTypes.REQUEST_COOKIES, HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT]
         hc.request(f)
-        assert(hc.har['log']['entries'][0]['request']['cookies'][0]['name'] == 'foo')
-        assert(hc.har['log']['entries'][0]['request']['cookies'][0]['value'] == 'bar')
+        assert (hc.har['log']['entries'][0]['request']['cookies'][0]['name'] == 'foo')
+        assert (hc.har['log']['entries'][0]['request']['cookies'][0]['value'] == 'bar')
 
     def test_capture_cookies_off(self, hc):
         f = self.flow()
         f.request.headers["cookie"] = "foo=bar"
         hc.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT]
         hc.request(f)
-        assert(hc.har['log']['entries'][0]['request']['cookies'] == [])
+        assert (hc.har['log']['entries'][0]['request']['cookies'] == [])
 
     def test_capture_request_headers_on(self, hc):
         f = self.flow()
         f.request.headers["boo"] = "baz"
         hc.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_HEADERS]
         hc.request(f)
-        assert(hc.har['log']['entries'][0]['request']['headers'][2]['name'] == 'boo')
+        assert (hc.har['log']['entries'][0]['request']['headers'][2]['name'] == 'boo')
 
     def test_capture_request_headers_off(self, hc):
         f = self.flow()
         f.request.headers["cookie"] = "foo=bar"
         hc.har_capture_types = []
         hc.request(f)
-        assert(hc.har['log']['entries'][0]['request']['headers'] == [])
+        assert (hc.har['log']['entries'][0]['request']['headers'] == [])
 
     def test_capture_response_headers_on(self, hc):
         f = self.flow()
         f.response.headers["bee"] = "bazl"
         hc.har_capture_types = [HarCaptureTypes.RESPONSE_HEADERS]
         hc.response(f)
-        assert(hc.har['log']['entries'][0]['response']['headers'][2]['name'] == 'bee')
+        assert (hc.har['log']['entries'][0]['response']['headers'][2]['name'] == 'bee')
 
     def test_capture_response_headers_off(self, hc):
         f = self.flow()
         f.response.headers["bee"] = "bazl"
         hc.har_capture_types = []
         hc.response(f)
-        assert(hc.har['log']['entries'][0]['response']['headers'] == [])
+        assert (hc.har['log']['entries'][0]['response']['headers'] == [])
 
     def test_websocket_messages_capture_off(self, hc):
         f = twebsocketflow()
@@ -139,7 +137,7 @@ class TestHARCapture:
         hc.response(f)
         hc.websocket_message(f)
 
-        assert(len(hc.har['log']['entries'][0]['_webSocketMessages']) == 0)
+        assert (len(hc.har['log']['entries'][0]['_webSocketMessages']) == 0)
 
     def test_websocket_messages_capture_on(self, hc):
         f = twebsocketflow()
@@ -155,19 +153,19 @@ class TestHARCapture:
         ]
         hc.websocket_message(f)
 
-        assert(hc.har['log']['entries'][0]['_webSocketMessages'])
+        assert (hc.har['log']['entries'][0]['_webSocketMessages'])
 
     def test_capture_response_on(self, hc):
         f = self.flow()
         hc.har_capture_types = [HarCaptureTypes.RESPONSE_CONTENT]
         hc.response(f)
-        assert(hc.har['log']['entries'][0]['response']['content']['text'] != "")
+        assert (hc.har['log']['entries'][0]['response']['content']['text'] != "")
 
     def test_capture_response_off(self, hc):
         f = self.flow()
         hc.har_capture_types = []
         hc.response(f)
-        assert(hc.har['log']['entries'][0]['response']['content']['text'] == "")
+        assert (hc.har['log']['entries'][0]['response']['content']['text'] == "")
 
     # if har is cleared, where do existing flow har_entries point?
     def test_new_har_clears_har(self, hc):
@@ -175,25 +173,25 @@ class TestHARCapture:
         hc.har_capture_types = []
         hc.response(f)
         hc.new_har('', '')
-        assert(len(hc.har['log']['entries']) == 0)
+        assert (len(hc.har['log']['entries']) == 0)
         f = tflow.tflow(
             req=tutils.treq(method=b'GET'),
             resp=tutils.tresp()
         )
         hc.request(f)
-        assert(len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['pages']) == 1)
 
     def test_default_page(self, hc):
         f = self.flow()
         hc.request(f)
-        assert(hc.har['log']['pages'][0]['id'] == "Default")
+        assert (hc.har['log']['pages'][0]['id'] == "Default")
         hc.new_har()
-        assert(len(hc.har['log']['pages']) == 0)
+        assert (len(hc.har['log']['pages']) == 0)
 
     def test_har_entries_timings(self, hc):
         f = self.flow()
         hc.request(f)
-        assert(hc.har['log']['pages'][0]['id'] == "Default")
+        assert (hc.har['log']['pages'][0]['id'] == "Default")
 
 
 # def test_servers_seen_resettable:

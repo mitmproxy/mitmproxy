@@ -27,8 +27,8 @@ const Questions: React.FC<{
             </tr>
             </thead>
             <tbody>
-            {message.questions.map(question => (
-                <tr key={question.name}>
+            {message.questions.map((question, index) => (
+                <tr key={index}>
                     <td>{question.name}</td>
                     <td>{question.type}</td>
                     <td>{question.class}</td>
@@ -57,8 +57,8 @@ const ResourceRecords: React.FC<{
                 </tr>
                 </thead>
                 <tbody>
-                {values.map(rr => (
-                    <tr key={rr.name}>
+                {values.map((rr, index) => (
+                    <tr key={index}>
                         <td>{rr.name}</td>
                         <td>{rr.type}</td>
                         <td>{rr.class}</td>

@@ -15,11 +15,9 @@ import traceback
 from typing import Union
 from typing import Optional
 
-import blinker
-
-from mitmproxy import flow
+from mitmproxy import flow, tcp, udp
 from mitmproxy import http
-from mitmproxy.utils import strutils
+from mitmproxy.utils import signals, strutils
 from . import (
     auto,
     raw,
@@ -37,17 +35,30 @@ from . import (
     msgpack,
     graphql,
     grpc,
+    mqtt,
 )
+
+try:
+    from . import http3
+except ImportError:
+    # FIXME: Remove once QUIC is merged.
+    http3 = None  # type: ignore
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
+from ..udp import UDPMessage, UDPFlow
 from ..websocket import WebSocketMessage
 
 views: list[View] = []
 
-on_add = blinker.Signal()
+
+def _update(view: View) -> None:
+    ...
+
+
+on_add = signals.SyncSignal(_update)
 """A new contentview has been added."""
-on_remove = blinker.Signal()
+on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
 
@@ -89,8 +100,8 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[http.Message, TCPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow],
+    message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+    flow: Union[HTTPFlow, TCPFlow, UDPFlow],
 ):
     """
     Like get_content_view, but also handles message encoding.
@@ -124,33 +135,26 @@ def get_message_content_view(
             if ct := http.parse_content_type(ctype):
                 content_type = f"{ct[0]}/{ct[1]}"
 
+    tcp_message = None
+    if isinstance(message, TCPMessage):
+        tcp_message = message
+
+    udp_message = None
+    if isinstance(message, UDPMessage):
+        udp_message = message
+
     description, lines, error = get_content_view(
         viewmode,
         content,
         content_type=content_type,
         flow=flow,
         http_message=http_message,
+        tcp_message=tcp_message,
+        udp_message=udp_message,
     )
 
     if enc:
         description = f"{enc} {description}"
-
-    return description, lines, error
-
-
-def get_tcp_content_view(
-    viewname: str,
-    data: bytes,
-    flow: TCPFlow,
-):
-    viewmode = get(viewname)
-    if not viewmode:
-        viewmode = get("auto")
-
-    # https://github.com/mitmproxy/mitmproxy/pull/3970#issuecomment-623024447
-    assert viewmode
-
-    description, lines, error = get_content_view(viewmode, data, flow=flow)
 
     return description, lines, error
 
@@ -162,6 +166,8 @@ def get_content_view(
     content_type: Optional[str] = None,
     flow: Optional[flow.Flow] = None,
     http_message: Optional[http.Message] = None,
+    tcp_message: Optional[tcp.TCPMessage] = None,
+    udp_message: Optional[udp.UDPMessage] = None,
 ):
     """
     Args:
@@ -176,7 +182,12 @@ def get_content_view(
     """
     try:
         ret = viewmode(
-            data, content_type=content_type, flow=flow, http_message=http_message
+            data,
+            content_type=content_type,
+            flow=flow,
+            http_message=http_message,
+            tcp_message=tcp_message,
+            udp_message=udp_message,
         )
         if ret is None:
             ret = (
@@ -186,6 +197,8 @@ def get_content_view(
                     content_type=content_type,
                     flow=flow,
                     http_message=http_message,
+                    tcp_message=tcp_message,
+                    udp_message=udp_message,
                 )[1],
             )
         desc, content = ret
@@ -196,7 +209,12 @@ def get_content_view(
         raw = get("Raw")
         assert raw
         content = raw(
-            data, content_type=content_type, flow=flow, http_message=http_message
+            data,
+            content_type=content_type,
+            flow=flow,
+            http_message=http_message,
+            tcp_message=tcp_message,
+            udp_message=udp_message,
         )[1]
         error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
@@ -220,6 +238,9 @@ add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
+add(mqtt.ViewMQTT())
+if http3 is not None:
+    add(http3.ViewHttp3())
 
 __all__ = [
     "View",

@@ -15,11 +15,8 @@ def test_invalid_and_dummy_end(tctx):
         << Log(
             "Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99"
         )
+        << CloseConnection(tctx.client)
         >> ConnectionClosed(tctx.client)
-        >> DataReceived(tctx.client, b"You still there?")
-        >> DataReceived(tctx.client, tdnsreq().packed)
-        >> DataReceived(tctx.client, b"Hello?")
-        << None
     )
 
 

@@ -105,5 +105,5 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
     def view_changed(self):
         self.body.view_changed()
 
-    def set_flowlist_layout(self, opts, updated):
+    def set_flowlist_layout(self, *_) -> None:
         self.master.ui.clear()

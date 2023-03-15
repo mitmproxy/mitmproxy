@@ -73,8 +73,8 @@ with BrowserUpMitmProxyClient.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     counter = Counter(
-        value=3.14,
         name="name_example",
+        value=3.14,
     ) # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
 
     try:
@@ -121,6 +121,7 @@ Class | Method | HTTP request | Description
  - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
  - [PagePageTimings](docs/PagePageTimings.md)
+ - [PageTiming](docs/PageTiming.md)
  - [VerifyResult](docs/VerifyResult.md)
  - [WebSocketMessage](docs/WebSocketMessage.md)
 

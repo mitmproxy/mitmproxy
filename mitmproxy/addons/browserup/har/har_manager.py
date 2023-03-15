@@ -1,4 +1,3 @@
-from mitmproxy import ctx
 from datetime import datetime
 from datetime import timezone
 from mitmproxy.net.http import cookies
@@ -7,7 +6,7 @@ from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 import json
 import copy
 import tempfile
-
+import logging
 
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
@@ -60,7 +59,7 @@ class HarManagerMixin():
         return self.har
 
     def new_page(self, page_title, page_ref=None):
-        ctx.log.info(
+        logging.info(
             'Creating new page with initial page ref: {}, title: {}'.
             format(page_ref, page_title))
 
@@ -120,11 +119,11 @@ class HarManagerMixin():
     def new_har(self, initial_page_ref=DEFAULT_PAGE_REF, initial_page_title=DEFAULT_PAGE_TITLE, create_page=False):
 
         if create_page:
-            ctx.log.info(
+            logging.info(
                 'Creating new har with initial page ref: {}, title: {}'.
                 format(initial_page_ref, initial_page_title))
         else:
-            ctx.log.info('Creating new har without initial page')
+            logging.info('Creating new har without initial page')
 
         old_har = self.end_har()
 
@@ -147,6 +146,14 @@ class HarManagerMixin():
     def add_error_to_har(self, error_dict):
         self.add_custom_value_to_har('_errors', error_dict)
 
+    def add_page_info_to_har(self, page_info):
+        page = self.get_or_create_current_page()
+        if 'title' in page_info:
+            page['title'] = page_info['title']
+            del page_info['title']
+        page['pageTimings'] = page['pageTimings'] | page_info
+        # print(self.har)
+
     def add_custom_value_to_har(self, item_type, item):
         page = self.get_or_create_current_page()
         page.setdefault(item_type, [])
@@ -154,7 +161,7 @@ class HarManagerMixin():
         items.append(item)
 
     def end_har(self):
-        ctx.log.info('Ending current har...')
+        logging.info('Ending current har...')
         old_har = self.har
         if old_har is None:
             return
@@ -171,13 +178,13 @@ class HarManagerMixin():
                     self.har['log']['entries'].append(entry)
 
     def add_har_page(self, pageRef, pageTitle):
-        ctx.log.debug('Adding har page with ref: {} and title: {}'.format(pageRef, pageTitle))
+        logging.debug('Adding har page with ref: {} and title: {}'.format(pageRef, pageTitle))
         har_page = HarBuilder.page(id=pageRef, title=pageTitle)
         self.har['log']['pages'].append(har_page)
         return har_page
 
     def end_page(self):
-        ctx.log.info('Ending current page...')
+        logging.info('Ending current page...')
 
         previous_har_page = self.current_har_page
         self.current_har_page = None

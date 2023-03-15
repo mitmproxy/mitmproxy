@@ -49,6 +49,9 @@ class Intercept:
     def tcp_message(self, f):
         self.process_flow(f)
 
+    def udp_message(self, f):
+        self.process_flow(f)
+
     def dns_request(self, f):
         self.process_flow(f)
 

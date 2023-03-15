@@ -9,11 +9,11 @@ The View:
   removed from the store.
 """
 import collections
+import logging
 import re
 from collections.abc import Iterator, MutableMapping, Sequence
 from typing import Any, Optional
 
-import blinker
 import sortedcontainers
 
 import mitmproxy.flow
@@ -27,7 +27,9 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
-from mitmproxy.utils import human
+from mitmproxy import udp
+from mitmproxy.log import ALERT
+from mitmproxy.utils import human, signals
 
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -56,7 +58,7 @@ class _OrderKey:
             self.view._view.remove(f)
             self.view.settings[f][k] = new
             self.view._view.add(f)
-            self.view.sig_view_refresh.send(self.view)
+            self.view.sig_view_refresh.send()
 
     def _key(self):
         return "_order_%s" % id(self)
@@ -83,8 +85,8 @@ class OrderRequestMethod(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.method
-        elif isinstance(f, tcp.TCPFlow):
-            return "TCP"
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
+            return f.type.upper()
         elif isinstance(f, dns.DNSFlow):
             return dns.op_codes.to_str(f.request.op_code)
         else:
@@ -95,7 +97,7 @@ class OrderRequestURL(_OrderKey):
     def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.url
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             return human.format_address(f.server_conn.address)
         elif isinstance(f, dns.DNSFlow):
             return f.request.questions[0].name if f.request.questions else ""
@@ -112,7 +114,7 @@ class OrderKeySize(_OrderKey):
             if f.response and f.response.raw_content:
                 size += len(f.response.raw_content)
             return size
-        elif isinstance(f, tcp.TCPFlow):
+        elif isinstance(f, (tcp.TCPFlow, udp.UDPFlow)):
             size = 0
             for message in f.messages:
                 size += len(message.content)
@@ -129,6 +131,14 @@ orders = [
     ("u", "url"),
     ("z", "size"),
 ]
+
+
+def _signal_with_flow(flow: mitmproxy.flow.Flow) -> None:
+    ...
+
+
+def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None:
+    ...
 
 
 class View(collections.abc.Sequence):
@@ -155,19 +165,19 @@ class View(collections.abc.Sequence):
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
         # a signal. All signals are called after the view has been updated.
-        self.sig_view_update = blinker.Signal()
-        self.sig_view_add = blinker.Signal()
-        self.sig_view_remove = blinker.Signal()
+        self.sig_view_update = signals.SyncSignal(_signal_with_flow)
+        self.sig_view_add = signals.SyncSignal(_signal_with_flow)
+        self.sig_view_remove = signals.SyncSignal(_sig_view_remove)
         # Signals that the view should be refreshed completely
-        self.sig_view_refresh = blinker.Signal()
+        self.sig_view_refresh = signals.SyncSignal(lambda: None)
 
         # The sig_store* signals broadcast events that affect the underlying
         # store. If a flow is removed from just the view, sig_view_remove is
         # triggered. If it is removed from the store while it is also in the
         # view, both sig_store_remove and sig_view_remove are triggered.
-        self.sig_store_remove = blinker.Signal()
+        self.sig_store_remove = signals.SyncSignal(_signal_with_flow)
         # Signals that the store should be refreshed completely
-        self.sig_store_refresh = blinker.Signal()
+        self.sig_store_refresh = signals.SyncSignal(lambda: None)
 
         self.focus = Focus(self)
         self.settings = Settings(self)
@@ -240,7 +250,7 @@ class View(collections.abc.Sequence):
                 continue
             if self.filter(i):
                 self._base_add(i)
-        self.sig_view_refresh.send(self)
+        self.sig_view_refresh.send()
 
     """ View API """
 
@@ -297,7 +307,7 @@ class View(collections.abc.Sequence):
     @command.command("view.order.reverse")
     def set_reversed(self, boolean: bool) -> None:
         self.order_reversed = boolean
-        self.sig_view_refresh.send(self)
+        self.sig_view_refresh.send()
 
     @command.command("view.order.set")
     def set_order(self, order_key: str) -> None:
@@ -349,8 +359,8 @@ class View(collections.abc.Sequence):
         """
         self._store.clear()
         self._view.clear()
-        self.sig_view_refresh.send(self)
-        self.sig_store_refresh.send(self)
+        self.sig_view_refresh.send()
+        self.sig_store_refresh.send()
 
     @command.command("view.clear_unmarked")
     def clear_not_marked(self) -> None:
@@ -362,7 +372,7 @@ class View(collections.abc.Sequence):
                 self._store.pop(flow.id)
 
         self._refilter()
-        self.sig_store_refresh.send(self)
+        self.sig_store_refresh.send()
 
     # View Settings
     @command.command("view.settings.getval")
@@ -409,7 +419,7 @@ class View(collections.abc.Sequence):
         if dups:
             self.add(dups)
             self.focus.flow = dups[0]
-            ctx.log.alert("Duplicated %s flows" % len(dups))
+            logging.log(ALERT, "Duplicated %s flows" % len(dups))
 
     @command.command("view.flows.remove")
     def remove(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
@@ -425,11 +435,11 @@ class View(collections.abc.Sequence):
                     # sorting key, and we cannot reconstruct the index from that.
                     idx = self._view.index(f)
                     self._view.remove(f)
-                    self.sig_view_remove.send(self, flow=f, index=idx)
+                    self.sig_view_remove.send(flow=f, index=idx)
                 del self._store[f.id]
-                self.sig_store_remove.send(self, flow=f)
+                self.sig_store_remove.send(flow=f)
         if len(flows) > 1:
-            ctx.log.alert("Removed %s flows" % len(flows))
+            logging.log(ALERT, "Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
     def resolve(self, flow_spec: str) -> Sequence[mitmproxy.flow.Flow]:
@@ -486,9 +496,9 @@ class View(collections.abc.Sequence):
                     # .newid() method or something.
                     self.add([i.copy()])
         except OSError as e:
-            ctx.log.error(e.strerror)
+            logging.error(e.strerror)
         except exceptions.FlowReadException as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     def add(self, flows: Sequence[mitmproxy.flow.Flow]) -> None:
         """
@@ -502,7 +512,7 @@ class View(collections.abc.Sequence):
                     self._base_add(f)
                     if self.focus_follow:
                         self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
+                    self.sig_view_add.send(flow=f)
 
     def get_by_id(self, flow_id: str) -> Optional[mitmproxy.flow.Flow]:
         """
@@ -592,6 +602,18 @@ class View(collections.abc.Sequence):
     def tcp_end(self, f):
         self.update([f])
 
+    def udp_start(self, f):
+        self.add([f])
+
+    def udp_message(self, f):
+        self.update([f])
+
+    def udp_error(self, f):
+        self.update([f])
+
+    def udp_end(self, f):
+        self.update([f])
+
     def dns_request(self, f):
         self.add([f])
 
@@ -612,14 +634,14 @@ class View(collections.abc.Sequence):
                         self._base_add(f)
                         if self.focus_follow:
                             self.focus.flow = f
-                        self.sig_view_add.send(self, flow=f)
+                        self.sig_view_add.send(flow=f)
                     else:
                         # This is a tad complicated. The sortedcontainers
                         # implementation assumes that the order key is stable. If
                         # it changes mid-way Very Bad Things happen. We detect when
                         # this happens, and re-fresh the item.
                         self.order_key.refresh(f)
-                        self.sig_view_update.send(self, flow=f)
+                        self.sig_view_update.send(flow=f)
                 else:
                     try:
                         idx = self._view.index(f)
@@ -627,7 +649,7 @@ class View(collections.abc.Sequence):
                         pass  # The value was not in the view
                     else:
                         self._view.remove(f)
-                        self.sig_view_remove.send(self, flow=f, index=idx)
+                        self.sig_view_remove.send(flow=f, index=idx)
 
 
 class Focus:
@@ -638,7 +660,7 @@ class Focus:
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow: Optional[mitmproxy.flow.Flow] = None
-        self.sig_change = blinker.Signal()
+        self.sig_change = signals.SyncSignal(lambda: None)
         if len(self.view):
             self.flow = self.view[0]
         v.sig_view_add.connect(self._sig_view_add)
@@ -654,7 +676,7 @@ class Focus:
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
-        self.sig_change.send(self)
+        self.sig_change.send()
 
     @property
     def index(self) -> Optional[int]:
@@ -671,21 +693,21 @@ class Focus:
     def _nearest(self, f, v):
         return min(v._bisect(f), len(v) - 1)
 
-    def _sig_view_remove(self, view, flow, index):
-        if len(view) == 0:
+    def _sig_view_remove(self, flow, index):
+        if len(self.view) == 0:
             self.flow = None
         elif flow is self.flow:
             self.index = min(index, len(self.view) - 1)
 
-    def _sig_view_refresh(self, view):
-        if len(view) == 0:
+    def _sig_view_refresh(self):
+        if len(self.view) == 0:
             self.flow = None
         elif self.flow is None:
-            self.flow = view[0]
-        elif self.flow not in view:
-            self.flow = view[self._nearest(self.flow, view)]
+            self.flow = self.view[0]
+        elif self.flow not in self.view:
+            self.flow = self.view[self._nearest(self.flow, self.view)]
 
-    def _sig_view_add(self, view, flow):
+    def _sig_view_add(self, flow):
         # We only have to act if we don't have a focus element
         if not self.flow:
             self.flow = flow
@@ -709,11 +731,11 @@ class Settings(collections.abc.Mapping):
             raise KeyError
         return self._values.setdefault(f.id, {})
 
-    def _sig_store_remove(self, view, flow):
+    def _sig_store_remove(self, flow):
         if flow.id in self._values:
             del self._values[flow.id]
 
-    def _sig_store_refresh(self, view):
+    def _sig_store_refresh(self):
         for fid in list(self._values.keys()):
-            if fid not in view._store:
+            if fid not in self.view._store:
                 del self._values[fid]

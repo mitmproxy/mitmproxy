@@ -7,7 +7,7 @@
 | **status** | **Integer** |  |  |
 | **status_text** | **String** |  |  |
 | **http_version** | **String** |  |  |
-| **cookies** | [**Array&lt;EntryRequestCookies&gt;**](EntryRequestCookies.md) |  |  |
+| **cookies** | [**Array&lt;EntryRequestCookiesInner&gt;**](EntryRequestCookiesInner.md) |  |  |
 | **headers** | [**Array&lt;Header&gt;**](Header.md) |  |  |
 | **content** | [**EntryResponseContent**](EntryResponseContent.md) |  |  |
 | **redirect_url** | **String** |  |  |

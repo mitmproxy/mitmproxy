@@ -15,20 +15,38 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
-import com.browserup.proxy_client.NameValuePair;
+import com.browserup.proxy_client.MatchCriteriaRequestHeader;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.browserup.proxy_client.JSON;
 
 /**
  * A set of criteria for filtering HTTP Requests and Responses.                          Criteria are AND based, and use python regular expressions for string comparison
  */
-@ApiModel(description = "A set of criteria for filtering HTTP Requests and Responses.                          Criteria are AND based, and use python regular expressions for string comparison")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class MatchCriteria {
   public static final String SERIALIZED_NAME_URL = "url";
@@ -57,19 +75,19 @@ public class MatchCriteria {
 
   public static final String SERIALIZED_NAME_REQUEST_HEADER = "request_header";
   @SerializedName(SERIALIZED_NAME_REQUEST_HEADER)
-  private NameValuePair requestHeader;
+  private MatchCriteriaRequestHeader requestHeader;
 
   public static final String SERIALIZED_NAME_REQUEST_COOKIE = "request_cookie";
   @SerializedName(SERIALIZED_NAME_REQUEST_COOKIE)
-  private NameValuePair requestCookie;
+  private MatchCriteriaRequestHeader requestCookie;
 
   public static final String SERIALIZED_NAME_RESPONSE_HEADER = "response_header";
   @SerializedName(SERIALIZED_NAME_RESPONSE_HEADER)
-  private NameValuePair responseHeader;
+  private MatchCriteriaRequestHeader responseHeader;
 
   public static final String SERIALIZED_NAME_RESPONSE_COOKIE = "response_cookie";
   @SerializedName(SERIALIZED_NAME_RESPONSE_COOKIE)
-  private NameValuePair responseCookie;
+  private MatchCriteriaRequestHeader responseCookie;
 
   public static final String SERIALIZED_NAME_JSON_VALID = "json_valid";
   @SerializedName(SERIALIZED_NAME_JSON_VALID)
@@ -87,6 +105,8 @@ public class MatchCriteria {
   @SerializedName(SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC)
   private Boolean errorIfNoTraffic;
 
+  public MatchCriteria() {
+  }
 
   public MatchCriteria url(String url) {
     
@@ -99,7 +119,6 @@ public class MatchCriteria {
    * @return url
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Request URL regexp to match")
 
   public String getUrl() {
     return url;
@@ -122,7 +141,6 @@ public class MatchCriteria {
    * @return page
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "current|all")
 
   public String getPage() {
     return page;
@@ -145,7 +163,6 @@ public class MatchCriteria {
    * @return status
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "HTTP Status code to match.")
 
   public String getStatus() {
     return status;
@@ -168,7 +185,6 @@ public class MatchCriteria {
    * @return content
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Body content regexp content to match")
 
   public String getContent() {
     return content;
@@ -191,7 +207,6 @@ public class MatchCriteria {
    * @return contentType
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Content type")
 
   public String getContentType() {
     return contentType;
@@ -214,7 +229,6 @@ public class MatchCriteria {
    * @return websocketMessage
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Websocket message text to match")
 
   public String getWebsocketMessage() {
     return websocketMessage;
@@ -226,7 +240,7 @@ public class MatchCriteria {
   }
 
 
-  public MatchCriteria requestHeader(NameValuePair requestHeader) {
+  public MatchCriteria requestHeader(MatchCriteriaRequestHeader requestHeader) {
     
     this.requestHeader = requestHeader;
     return this;
@@ -237,19 +251,18 @@ public class MatchCriteria {
    * @return requestHeader
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
-  public NameValuePair getRequestHeader() {
+  public MatchCriteriaRequestHeader getRequestHeader() {
     return requestHeader;
   }
 
 
-  public void setRequestHeader(NameValuePair requestHeader) {
+  public void setRequestHeader(MatchCriteriaRequestHeader requestHeader) {
     this.requestHeader = requestHeader;
   }
 
 
-  public MatchCriteria requestCookie(NameValuePair requestCookie) {
+  public MatchCriteria requestCookie(MatchCriteriaRequestHeader requestCookie) {
     
     this.requestCookie = requestCookie;
     return this;
@@ -260,19 +273,18 @@ public class MatchCriteria {
    * @return requestCookie
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
-  public NameValuePair getRequestCookie() {
+  public MatchCriteriaRequestHeader getRequestCookie() {
     return requestCookie;
   }
 
 
-  public void setRequestCookie(NameValuePair requestCookie) {
+  public void setRequestCookie(MatchCriteriaRequestHeader requestCookie) {
     this.requestCookie = requestCookie;
   }
 
 
-  public MatchCriteria responseHeader(NameValuePair responseHeader) {
+  public MatchCriteria responseHeader(MatchCriteriaRequestHeader responseHeader) {
     
     this.responseHeader = responseHeader;
     return this;
@@ -283,19 +295,18 @@ public class MatchCriteria {
    * @return responseHeader
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
-  public NameValuePair getResponseHeader() {
+  public MatchCriteriaRequestHeader getResponseHeader() {
     return responseHeader;
   }
 
 
-  public void setResponseHeader(NameValuePair responseHeader) {
+  public void setResponseHeader(MatchCriteriaRequestHeader responseHeader) {
     this.responseHeader = responseHeader;
   }
 
 
-  public MatchCriteria responseCookie(NameValuePair responseCookie) {
+  public MatchCriteria responseCookie(MatchCriteriaRequestHeader responseCookie) {
     
     this.responseCookie = responseCookie;
     return this;
@@ -306,14 +317,13 @@ public class MatchCriteria {
    * @return responseCookie
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
-  public NameValuePair getResponseCookie() {
+  public MatchCriteriaRequestHeader getResponseCookie() {
     return responseCookie;
   }
 
 
-  public void setResponseCookie(NameValuePair responseCookie) {
+  public void setResponseCookie(MatchCriteriaRequestHeader responseCookie) {
     this.responseCookie = responseCookie;
   }
 
@@ -329,7 +339,6 @@ public class MatchCriteria {
    * @return jsonValid
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Is valid JSON")
 
   public Boolean getJsonValid() {
     return jsonValid;
@@ -352,7 +361,6 @@ public class MatchCriteria {
    * @return jsonPath
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Has JSON path")
 
   public String getJsonPath() {
     return jsonPath;
@@ -375,7 +383,6 @@ public class MatchCriteria {
    * @return jsonSchema
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "Validates against passed JSON schema")
 
   public String getJsonSchema() {
     return jsonSchema;
@@ -398,7 +405,6 @@ public class MatchCriteria {
    * @return errorIfNoTraffic
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "If the proxy has NO traffic at all, return error")
 
   public Boolean getErrorIfNoTraffic() {
     return errorIfNoTraffic;
@@ -408,6 +414,7 @@ public class MatchCriteria {
   public void setErrorIfNoTraffic(Boolean errorIfNoTraffic) {
     this.errorIfNoTraffic = errorIfNoTraffic;
   }
+
 
 
   @Override
@@ -473,5 +480,141 @@ public class MatchCriteria {
     return o.toString().replace("\n", "\n    ");
   }
 
+
+  public static HashSet<String> openapiFields;
+  public static HashSet<String> openapiRequiredFields;
+
+  static {
+    // a set of all properties/fields (JSON key names)
+    openapiFields = new HashSet<String>();
+    openapiFields.add("url");
+    openapiFields.add("page");
+    openapiFields.add("status");
+    openapiFields.add("content");
+    openapiFields.add("content_type");
+    openapiFields.add("websocket_message");
+    openapiFields.add("request_header");
+    openapiFields.add("request_cookie");
+    openapiFields.add("response_header");
+    openapiFields.add("response_cookie");
+    openapiFields.add("json_valid");
+    openapiFields.add("json_path");
+    openapiFields.add("json_schema");
+    openapiFields.add("error_if_no_traffic");
+
+    // a set of required properties/fields (JSON key names)
+    openapiRequiredFields = new HashSet<String>();
+  }
+
+ /**
+  * Validates the JSON Object and throws an exception if issues found
+  *
+  * @param jsonObj JSON Object
+  * @throws IOException if the JSON Object is invalid with respect to MatchCriteria
+  */
+  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
+      if (jsonObj == null) {
+        if (!MatchCriteria.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+          throw new IllegalArgumentException(String.format("The required field(s) %s in MatchCriteria is not found in the empty JSON string", MatchCriteria.openapiRequiredFields.toString()));
+        }
+      }
+
+      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      // check to see if the JSON string contains additional fields
+      for (Entry<String, JsonElement> entry : entries) {
+        if (!MatchCriteria.openapiFields.contains(entry.getKey())) {
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `MatchCriteria` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+        }
+      }
+      if ((jsonObj.get("url") != null && !jsonObj.get("url").isJsonNull()) && !jsonObj.get("url").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `url` to be a primitive type in the JSON string but got `%s`", jsonObj.get("url").toString()));
+      }
+      if ((jsonObj.get("page") != null && !jsonObj.get("page").isJsonNull()) && !jsonObj.get("page").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `page` to be a primitive type in the JSON string but got `%s`", jsonObj.get("page").toString()));
+      }
+      if ((jsonObj.get("status") != null && !jsonObj.get("status").isJsonNull()) && !jsonObj.get("status").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `status` to be a primitive type in the JSON string but got `%s`", jsonObj.get("status").toString()));
+      }
+      if ((jsonObj.get("content") != null && !jsonObj.get("content").isJsonNull()) && !jsonObj.get("content").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `content` to be a primitive type in the JSON string but got `%s`", jsonObj.get("content").toString()));
+      }
+      if ((jsonObj.get("content_type") != null && !jsonObj.get("content_type").isJsonNull()) && !jsonObj.get("content_type").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `content_type` to be a primitive type in the JSON string but got `%s`", jsonObj.get("content_type").toString()));
+      }
+      if ((jsonObj.get("websocket_message") != null && !jsonObj.get("websocket_message").isJsonNull()) && !jsonObj.get("websocket_message").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `websocket_message` to be a primitive type in the JSON string but got `%s`", jsonObj.get("websocket_message").toString()));
+      }
+      // validate the optional field `request_header`
+      if (jsonObj.get("request_header") != null && !jsonObj.get("request_header").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_header"));
+      }
+      // validate the optional field `request_cookie`
+      if (jsonObj.get("request_cookie") != null && !jsonObj.get("request_cookie").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_cookie"));
+      }
+      // validate the optional field `response_header`
+      if (jsonObj.get("response_header") != null && !jsonObj.get("response_header").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_header"));
+      }
+      // validate the optional field `response_cookie`
+      if (jsonObj.get("response_cookie") != null && !jsonObj.get("response_cookie").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_cookie"));
+      }
+      if ((jsonObj.get("json_path") != null && !jsonObj.get("json_path").isJsonNull()) && !jsonObj.get("json_path").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `json_path` to be a primitive type in the JSON string but got `%s`", jsonObj.get("json_path").toString()));
+      }
+      if ((jsonObj.get("json_schema") != null && !jsonObj.get("json_schema").isJsonNull()) && !jsonObj.get("json_schema").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `json_schema` to be a primitive type in the JSON string but got `%s`", jsonObj.get("json_schema").toString()));
+      }
+  }
+
+  public static class CustomTypeAdapterFactory implements TypeAdapterFactory {
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+       if (!MatchCriteria.class.isAssignableFrom(type.getRawType())) {
+         return null; // this class only serializes 'MatchCriteria' and its subtypes
+       }
+       final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
+       final TypeAdapter<MatchCriteria> thisAdapter
+                        = gson.getDelegateAdapter(this, TypeToken.get(MatchCriteria.class));
+
+       return (TypeAdapter<T>) new TypeAdapter<MatchCriteria>() {
+           @Override
+           public void write(JsonWriter out, MatchCriteria value) throws IOException {
+             JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
+             elementAdapter.write(out, obj);
+           }
+
+           @Override
+           public MatchCriteria read(JsonReader in) throws IOException {
+             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
+             validateJsonObject(jsonObj);
+             return thisAdapter.fromJsonTree(jsonObj);
+           }
+
+       }.nullSafe();
+    }
+  }
+
+ /**
+  * Create an instance of MatchCriteria given an JSON string
+  *
+  * @param jsonString JSON string
+  * @return An instance of MatchCriteria
+  * @throws IOException if the JSON string is invalid with respect to MatchCriteria
+  */
+  public static MatchCriteria fromJson(String jsonString) throws IOException {
+    return JSON.getGson().fromJson(jsonString, MatchCriteria.class);
+  }
+
+ /**
+  * Convert an instance of MatchCriteria to an JSON string
+  *
+  * @return JSON string
+  */
+  public String toJson() {
+    return JSON.getGson().toJson(this);
+  }
 }
 

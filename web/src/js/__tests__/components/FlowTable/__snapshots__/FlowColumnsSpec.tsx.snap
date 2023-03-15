@@ -214,9 +214,7 @@ exports[`should render columns: quickactions 1`] = `
       <tr>
         <td
           class="col-quickactions"
-        >
-          <div />
-        </td>
+        />
       </tr>
     </tbody>
   </table>

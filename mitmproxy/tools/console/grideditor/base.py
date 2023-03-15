@@ -135,11 +135,11 @@ class GridWalker(urwid.ListWalker):
         if self.lst:
             return self.lst[self.focus][0][self.focus_col]
 
-    def set_current_value(self, val):
+    def set_current_value(self, val) -> None:
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
-            signals.status_message.send(message=emsg, expire=5)
+            signals.status_message.send(message=emsg)
             errors.add(self.focus_col)
         else:
             errors.discard(self.focus_col)
@@ -430,9 +430,9 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         """
         raise NotImplementedError
 
-    def set_data_update(self, vals, flow):
+    def set_data_update(self, vals, flow) -> None:
         self.set_data(vals, flow)
-        signals.flow_change.send(self, flow=flow)
+        signals.flow_change.send(flow=flow)
 
     def key_responder(self):
         return self._w

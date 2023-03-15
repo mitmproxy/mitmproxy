@@ -34,8 +34,10 @@ the repository maintainers directly for issues with native packages.
 
 ## Windows
 
-To install mitmproxy on Windows, download the installer from [mitmproxy.org](https://mitmproxy.org/). After
-installation, mitmproxy, mitmdump and mitmweb are also added to your PATH and can be invoked from the command line.
+To install mitmproxy on Windows, download the installer from [mitmproxy.org](https://mitmproxy.org/). 
+We also provide standalone binaries, they take significantly longer to start
+as some files need to be extracted to temporary directories first.
+After installation, mitmproxy, mitmdump and mitmweb are also added to your PATH and can be invoked from the command line.
 
 We highly recommend to [install Windows Terminal](https://aka.ms/terminal) to improve the rendering of the console interface.
 

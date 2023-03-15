@@ -3,6 +3,9 @@
 """
 import functools
 import inspect
+import logging
+
+import pyparsing
 import sys
 import textwrap
 import types
@@ -177,7 +180,7 @@ class CommandManager:
                         try:
                             self.add(o.command_name, o)
                         except exceptions.CommandError as e:
-                            self.master.log.warn(
+                            logging.warning(
                                 f"Could not load command {o.command_name}: {e}"
                             )
 
@@ -192,7 +195,7 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: list[str] = command_lexer.expr.parseString(cmdstr, parseAll=True)
+        parts: pyparsing.ParseResults = command_lexer.expr.parseString(cmdstr, parseAll=True)
 
         parsed: list[ParseResult] = []
         next_params: list[CommandParameter] = [
@@ -237,7 +240,7 @@ class CommandManager:
             if to:
                 try:
                     to.parse(self, expected.type, part)
-                except exceptions.TypeError:
+                except ValueError:
                     valid = False
                 else:
                     valid = True
@@ -300,7 +303,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> Any:
         raise exceptions.CommandError(f"Unsupported argument type: {argtype}")
     try:
         return t.parse(manager, argtype, spec)
-    except exceptions.TypeError as e:
+    except ValueError as e:
         raise exceptions.CommandError(str(e)) from e
 
 

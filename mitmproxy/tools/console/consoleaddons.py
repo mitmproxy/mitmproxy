@@ -1,4 +1,5 @@
 import csv
+import logging
 from collections.abc import Sequence
 
 import mitmproxy.types
@@ -11,10 +12,15 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.utils import strutils
+
+logger = logging.getLogger(__name__)
+
 
 console_palettes = [
     "lowlight",
@@ -62,7 +68,7 @@ class ConsoleAddon:
             str,
             "info",
             "EventLog verbosity.",
-            choices=log.LogTierOrder,
+            choices=log.LogLevels,
         )
         loader.add_option(
             "console_layout",
@@ -130,6 +136,13 @@ class ConsoleAddon:
         Go to the next layout pane.
         """
         self.master.window.switch()
+
+    @command.command("console.panes.prev")
+    def panes_prev(self) -> None:
+        """
+        Go to the previous layout pane.
+        """
+        return self.panes_next()
 
     @command.command("console.options.reset.focus")
     def options_reset_current(self) -> None:
@@ -231,7 +244,7 @@ class ConsoleAddon:
             try:
                 self.master.commands.call_strings(cmd, repl)
             except exceptions.CommandError as e:
-                ctx.log.error(str(e))
+                logger.error(str(e))
 
         self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
 
@@ -256,7 +269,7 @@ class ConsoleAddon:
             try:
                 self.master.commands.call_strings(subcmd, repl)
             except exceptions.CommandError as e:
-                ctx.log.error(str(e))
+                logger.error(str(e))
 
         self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
 
@@ -297,7 +310,7 @@ class ConsoleAddon:
 
     @command.command("console.view.eventlog")
     def view_eventlog(self) -> None:
-        """View the options editor."""
+        """View the event log."""
         self.master.switch_view("eventlog")
 
     @command.command("console.view.help")
@@ -308,10 +321,10 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow, dns.DNSFlow)):
+        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)):
             self.master.switch_view("flowview")
         else:
-            ctx.log.warn(f"No detail view for {type(flow).__name__}.")
+            logger.warning(f"No detail view for {type(flow).__name__}.")
 
     @command.command("console.exit")
     def exit(self) -> None:
@@ -324,7 +337,7 @@ class ConsoleAddon:
         Pop a view off the console stack. At the top level, this prompts the
         user to exit mitmproxy.
         """
-        signals.pop_view_state.send(self)
+        signals.pop_view_state.send()
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
@@ -363,6 +376,8 @@ class ConsoleAddon:
 
         if isinstance(flow, tcp.TCPFlow):
             focus_options = ["tcp-message"]
+        elif isinstance(flow, udp.UDPFlow):
+            focus_options = ["udp-message"]
         elif isinstance(flow, http.HTTPFlow):
             focus_options = [
                 "cookies",
@@ -447,7 +462,7 @@ class ConsoleAddon:
             self.master.commands.call_strings(
                 "console.command", ["flow.set", "@focus", flow_part]
             )
-        elif flow_part == "tcp-message":
+        elif flow_part in ["tcp-message", "udp-message"]:
             message = flow.messages[-1]
             c = self.master.spawn_editor(message.content or b"")
             message.content = c.rstrip(b"\n")
@@ -507,9 +522,9 @@ class ConsoleAddon:
                     writer.writerow(
                         [strutils.always_str(x) or "" for x in row]  # type: ignore
                     )
-            ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
+            logger.log(ALERT, "Saved %s rows as CSV." % (len(rows)))
         except OSError as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))
 
     @command.command("console.grideditor.editor")
     def grideditor_editor(self) -> None:
@@ -539,7 +554,7 @@ class ConsoleAddon:
                 "view.settings.setval", ["@focus", f"flowview_mode_{idx}", mode]
             )
         except exceptions.CommandError as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))
 
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> Sequence[str]:
@@ -644,8 +659,8 @@ class ConsoleAddon:
     def running(self):
         self.started = True
 
-    def update(self, flows):
+    def update(self, flows) -> None:
         if not flows:
-            signals.update_settings.send(self)
+            signals.update_settings.send()
         for f in flows:
-            signals.flow_change.send(self, flow=f)
+            signals.flow_change.send(flow=f)

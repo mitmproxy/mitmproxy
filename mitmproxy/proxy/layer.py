@@ -5,6 +5,7 @@ import collections
 import textwrap
 from abc import abstractmethod
 from dataclasses import dataclass
+from logging import DEBUG
 from typing import Any, ClassVar, Generator, NamedTuple, Optional, TypeVar
 
 from mitmproxy.connection import Connection
@@ -97,7 +98,7 @@ class Layer:
                 message = message[:256] + "…"
         else:
             Layer.__last_debug_message = message
-        return commands.Log(textwrap.indent(message, self.debug), "debug")
+        return commands.Log(textwrap.indent(message, self.debug), DEBUG)
 
     @property
     def stack_pos(self) -> str:
@@ -284,7 +285,7 @@ class NextLayer(Layer):
         # Has an addon decided on the next layer yet?
         if self.layer:
             if self.debug:
-                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", "debug")
+                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", DEBUG)
             for e in self.events:
                 yield from self.layer.handle_event(e)
             self.events.clear()

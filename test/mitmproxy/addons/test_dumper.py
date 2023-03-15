@@ -173,7 +173,8 @@ def test_echo_request_line():
         sio.truncate(0)
 
 
-async def test_contentview():
+async def test_contentview(caplog):
+    caplog.set_level("DEBUG")
     with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
         va.side_effect = ValueError("")
         sio = io.StringIO()
@@ -181,7 +182,7 @@ async def test_contentview():
         with taddons.context(d) as tctx:
             tctx.configure(d, flow_detail=4)
             d.response(tflow.tflow())
-            await tctx.master.await_log("content viewer failed")
+            assert "content viewer failed" in caplog.text
 
 
 def test_tcp():
@@ -197,6 +198,21 @@ def test_tcp():
         f = tflow.ttcpflow(client_conn=True, err=True)
         d.tcp_error(f)
         assert "Error in TCP" in sio.getvalue()
+
+
+def test_udp():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3, showhost=True)
+        f = tflow.tudpflow()
+        d.udp_message(f)
+        assert "it's me" in sio.getvalue()
+        sio.truncate(0)
+
+        f = tflow.tudpflow(client_conn=True, err=True)
+        d.udp_error(f)
+        assert "Error in UDP" in sio.getvalue()
 
 
 def test_dns():

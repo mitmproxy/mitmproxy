@@ -5,18 +5,18 @@
 
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**method** | **String** |  | 
-**url** | **URI** |  | 
-**httpVersion** | **String** |  | 
-**cookies** | [**List&lt;EntryRequestCookies&gt;**](EntryRequestCookies.md) |  | 
-**headers** | [**List&lt;Header&gt;**](Header.md) |  | 
-**queryString** | [**List&lt;EntryRequestQueryString&gt;**](EntryRequestQueryString.md) |  | 
-**postData** | [**Object**](Object.md) | Posted data info. |  [optional]
-**headersSize** | **Integer** |  | 
-**bodySize** | **Integer** |  | 
-**comment** | **String** |  |  [optional]
+| Name | Type | Description | Notes |
+|------------ | ------------- | ------------- | -------------|
+|**method** | **String** |  |  |
+|**url** | **URI** |  |  |
+|**httpVersion** | **String** |  |  |
+|**cookies** | [**List&lt;EntryRequestCookiesInner&gt;**](EntryRequestCookiesInner.md) |  |  |
+|**headers** | [**List&lt;Header&gt;**](Header.md) |  |  |
+|**queryString** | [**List&lt;EntryRequestQueryStringInner&gt;**](EntryRequestQueryStringInner.md) |  |  |
+|**postData** | [**EntryRequestPostData**](EntryRequestPostData.md) |  |  [optional] |
+|**headersSize** | **Integer** |  |  |
+|**bodySize** | **Integer** |  |  |
+|**comment** | **String** |  |  [optional] |
 
 
 

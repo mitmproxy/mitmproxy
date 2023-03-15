@@ -37,6 +37,7 @@ class Palette:
         "scheme_ws",
         "scheme_wss",
         "scheme_tcp",
+        "scheme_udp",
         "scheme_dns",
         "scheme_other",
         "url_punctuation",
@@ -68,10 +69,11 @@ class Palette:
         "mark",
         # Hex view
         "offset",
-        # JSON view
-        "json_string",
-        "json_number",
-        "json_boolean",
+        # JSON/msgpack view
+        "Token_Name_Tag",
+        "Token_Literal_String",
+        "Token_Literal_Number",
+        "Token_Keyword_Constant",
         # TCP flow details
         "from_client",
         "to_client",
@@ -174,6 +176,7 @@ class LowDark(Palette):
         scheme_ws=("brown", "default"),
         scheme_wss=("dark magenta", "default"),
         scheme_tcp=("dark magenta", "default"),
+        scheme_udp=("dark magenta", "default"),
         scheme_dns=("dark blue", "default"),
         scheme_other=("dark magenta", "default"),
         url_punctuation=("light gray", "default"),
@@ -205,10 +208,11 @@ class LowDark(Palette):
         mark=("light red", "default"),
         # Hex view
         offset=("dark cyan", "default"),
-        # JSON view
-        json_string=("dark blue", "default"),
-        json_number=("light magenta", "default"),
-        json_boolean=("dark magenta", "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=("dark green", "default"),
+        Token_Literal_String=("dark blue", "default"),
+        Token_Literal_Number=("light magenta", "default"),
+        Token_Keyword_Constant=("dark magenta", "default"),
         # TCP flow details
         from_client=("light blue", "default"),
         to_client=("light red", "default"),
@@ -272,6 +276,7 @@ class LowLight(Palette):
         scheme_ws=("brown", "default"),
         scheme_wss=("light magenta", "default"),
         scheme_tcp=("light magenta", "default"),
+        scheme_udp=("light magenta", "default"),
         scheme_dns=("light blue", "default"),
         scheme_other=("light magenta", "default"),
         url_punctuation=("dark gray", "default"),
@@ -303,10 +308,11 @@ class LowLight(Palette):
         mark=("dark red", "default"),
         # Hex view
         offset=("dark blue", "default"),
-        # JSON view
-        json_string=("dark blue", "default"),
-        json_number=("light magenta", "default"),
-        json_boolean=("dark magenta", "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=("dark green", "default"),
+        Token_Literal_String=("dark blue", "default"),
+        Token_Literal_Number=("light magenta", "default"),
+        Token_Keyword_Constant=("dark magenta", "default"),
         # TCP flow details
         from_client=("dark blue", "default"),
         to_client=("dark red", "default"),
@@ -391,6 +397,7 @@ class SolarizedLight(LowLight):
         scheme_ws=(sol_orange, "default"),
         scheme_wss=("light magenta", "default"),
         scheme_tcp=("light magenta", "default"),
+        scheme_udp=("light magenta", "default"),
         scheme_dns=("light blue", "default"),
         scheme_other=("light magenta", "default"),
         url_punctuation=("dark gray", "default"),
@@ -423,10 +430,11 @@ class SolarizedLight(LowLight):
         ),
         # Hex view
         offset=(sol_cyan, "default"),
-        # JSON view
-        json_string=(sol_cyan, "default"),
-        json_number=(sol_blue, "default"),
-        json_boolean=(sol_magenta, "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=(sol_green, "default"),
+        Token_Literal_String=(sol_cyan, "default"),
+        Token_Literal_Number=(sol_blue, "default"),
+        Token_Keyword_Constant=(sol_magenta, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),
@@ -502,10 +510,11 @@ class SolarizedDark(LowDark):
         ),
         # Hex view
         offset=(sol_cyan, "default"),
-        # JSON view
-        json_string=(sol_cyan, "default"),
-        json_number=(sol_blue, "default"),
-        json_boolean=(sol_magenta, "default"),
+        # JSON/msgpack view
+        Token_Name_Tag=(sol_green, "default"),
+        Token_Literal_String=(sol_cyan, "default"),
+        Token_Literal_Number=(sol_blue, "default"),
+        Token_Keyword_Constant=(sol_magenta, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),

@@ -1,7 +1,9 @@
 import struct
+from logging import DEBUG, ERROR, INFO, WARNING
+
 import time
 from dataclasses import dataclass
-from typing import Iterator, Literal, Optional
+from typing import Iterator, Optional
 
 from OpenSSL import SSL
 
@@ -9,7 +11,7 @@ from mitmproxy import certs, connection
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tcp, udp
 from mitmproxy.tls import ClientHello, ClientHelloData, TlsData
 from mitmproxy.utils import human
 
@@ -83,6 +85,80 @@ def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     if client_hello:
         try:
             return ClientHello(client_hello[4:])
+        except EOFError as e:
+            raise ValueError("Invalid ClientHello") from e
+    return None
+
+
+def is_dtls_handshake_record(d: bytes) -> bool:
+    """
+    Returns:
+        True, if the passed bytes start with the DTLS record magic bytes
+        False, otherwise.
+    """
+    return len(d) >= 3 and d[0] == 0x16 and d[1] == 0xfe and d[2] == 0xfd
+
+
+def dtls_handshake_record_contents(data: bytes) -> Iterator[bytes]:
+    """
+    Returns a generator that yields the bytes contained in each handshake record.
+    This will raise an error on the first non-handshake record, so fully exhausting this
+    generator is a bad idea.
+    """
+    offset = 0
+    while True:
+        # DTLS includes two new fields, totaling 8 bytes, between Version and Length
+        if len(data) < offset + 13:
+            return
+        record_header = data[offset : offset + 13]
+        if not is_dtls_handshake_record(record_header):
+            raise ValueError(f"Expected DTLS record, got {record_header!r} instead.")
+        # Length fields starts at 11
+        record_size = struct.unpack("!H", record_header[11:])[0]
+        if record_size == 0:
+            raise ValueError("Record must not be empty.")
+        offset += 13
+
+        if len(data) < offset + record_size:
+            return
+        record_body = data[offset : offset + record_size]
+        yield record_body
+        offset += record_size
+
+
+def get_dtls_client_hello(data: bytes) -> Optional[bytes]:
+    """
+    Read all DTLS records that contain the initial ClientHello.
+    Returns the raw handshake packet bytes, without TLS record headers.
+    """
+    client_hello = b""
+    for d in dtls_handshake_record_contents(data):
+        client_hello += d
+        if len(client_hello) >= 13:
+            # comment about slicing: we skip the epoch and sequence number
+            client_hello_size = struct.unpack("!I", b"\x00" + client_hello[9:12])[0] + 12
+            if len(client_hello) >= client_hello_size:
+                return client_hello[:client_hello_size]
+    return None
+
+
+def dtls_parse_client_hello(data: bytes) -> Optional[ClientHello]:
+    """
+    Check if the supplied bytes contain a full ClientHello message,
+    and if so, parse it.
+
+    Returns:
+        - A ClientHello object on success
+        - None, if the TLS record is not complete
+
+    Raises:
+        - A ValueError, if the passed ClientHello is invalid
+    """
+    # Check if ClientHello is complete
+    client_hello = get_dtls_client_hello(data)
+    if client_hello:
+        try:
+            return ClientHello(client_hello[12:], dtls=True)
         except EOFError as e:
             raise ValueError("Invalid ClientHello") from e
     return None
@@ -167,7 +243,7 @@ class TlsFailedServerHook(StartHook):
     data: TlsData
 
 
-class _TLSLayer(tunnel.TunnelLayer):
+class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
     """The OpenSSL connection object"""
 
@@ -183,17 +259,25 @@ class _TLSLayer(tunnel.TunnelLayer):
     def __repr__(self):
         return super().__repr__().replace(")", f" {self.conn.sni} {self.conn.alpn})")
 
+    @property
+    def is_dtls(self):
+        return self.conn.transport_protocol == "udp"
+
+    @property
+    def proto_name(self):
+        return 'DTLS' if self.is_dtls else 'TLS'
+
     def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
-        tls_start = TlsData(self.conn, self.context)
+        tls_start = TlsData(self.conn, self.context, is_dtls=self.is_dtls)
         if self.conn == self.context.client:
             yield TlsStartClientHook(tls_start)
         else:
             yield TlsStartServerHook(tls_start)
         if not tls_start.ssl_conn:
             yield commands.Log(
-                "No TLS context was provided, failing connection.", "error"
+                f"No {self.proto_name} context was provided, failing connection.", ERROR
             )
             yield commands.CloseConnection(self.conn)
             return
@@ -286,7 +370,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[tls] tls established: {self.conn}", "debug"
+                    f"{self.debug}[tls] tls established: {self.conn}", DEBUG
                 )
             if self.conn == self.context.client:
                 yield TlsEstablishedClientHook(
@@ -328,9 +412,8 @@ class _TLSLayer(tunnel.TunnelLayer):
                 # which upon mistrusting a certificate still completes the handshake
                 # and then sends an alert in the next packet. At this point we have unfortunately
                 # already fired out `tls_established_client` hook.
-                yield commands.Log(f"TLS Error: {e}", "warn")
+                yield commands.Log(f"TLS Error: {e}", WARNING)
                 break
-
         if plaintext:
             yield from self.event_to_child(
                 events.DataReceived(self.conn, bytes(plaintext))
@@ -339,7 +422,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.state &= ~connection.ConnectionState.CAN_READ
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[tls] close_notify {self.conn}", level="debug"
+                    f"{self.debug}[tls] close_notify {self.conn}", DEBUG
                 )
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
@@ -362,7 +445,7 @@ class _TLSLayer(tunnel.TunnelLayer):
         yield from super().send_close(half_close)
 
 
-class ServerTLSLayer(_TLSLayer):
+class ServerTLSLayer(TLSLayer):
     """
     This layer establishes TLS for a single server connection.
     """
@@ -408,11 +491,11 @@ class ServerTLSLayer(_TLSLayer):
             yield from super().event_to_child(event)
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
-        yield commands.Log(f"Server TLS handshake failed. {err}", level="warn")
+        yield commands.Log(f"Server TLS handshake failed. {err}", level=WARNING)
         yield from super().on_handshake_error(err)
 
 
-class ClientTLSLayer(_TLSLayer):
+class ClientTLSLayer(TLSLayer):
     """
     This layer establishes TLS on a single client connection.
 
@@ -466,7 +549,10 @@ class ClientTLSLayer(_TLSLayer):
             return (yield from super().receive_handshake_data(data))
         self.recv_buffer.extend(data)
         try:
-            client_hello = parse_client_hello(self.recv_buffer)
+            if self.is_dtls:
+                client_hello = dtls_parse_client_hello(self.recv_buffer)
+            else:
+                client_hello = parse_client_hello(self.recv_buffer)
         except ValueError:
             return False, f"Cannot parse ClientHello: {self.recv_buffer.hex()}"
 
@@ -491,7 +577,10 @@ class ClientTLSLayer(_TLSLayer):
                 parent_layer.conn = parent_layer.tunnel_connection = connection.Server(
                     None
                 )
-            self.child_layer = tcp.TCPLayer(self.context, ignore=True)
+            if self.is_dtls:
+                self.child_layer = udp.UDPLayer(self.context, ignore=True)
+            else:
+                self.child_layer = tcp.TCPLayer(self.context, ignore=True)
             yield from self.event_to_child(
                 events.DataReceived(self.context.client, bytes(self.recv_buffer))
             )
@@ -504,8 +593,10 @@ class ClientTLSLayer(_TLSLayer):
             err = yield from self.start_server_tls()
             if err:
                 yield commands.Log(
-                    f"Unable to establish TLS connection with server ({err}). "
-                    f"Trying to establish TLS with client anyway."
+                    f"Unable to establish {self.proto_name} connection with server ({err}). "
+                    f"Trying to establish {self.proto_name} with client anyway. "
+                    f"If you plan to redirect requests away from this server, "
+                    f"consider setting `connection_strategy` to `lazy` to suppress early connections."
                 )
 
         yield from self.start_tls()
@@ -522,7 +613,7 @@ class ClientTLSLayer(_TLSLayer):
         For example, we need to check if the client does ALPN or not.
         """
         if not self.server_tls_available:
-            return "No server TLS available."
+            return f"No server {self.proto_name} available."
         err = yield commands.OpenConnection(self.context.server)
         return err
 
@@ -531,7 +622,7 @@ class ClientTLSLayer(_TLSLayer):
             dest = self.conn.sni
         else:
             dest = human.format_address(self.context.server.address)
-        level: Literal["warn", "info"] = "warn"
+        level: int = WARNING
         if err.startswith("Cannot parse ClientHello"):
             pass
         elif (
@@ -556,7 +647,7 @@ class ClientTLSLayer(_TLSLayer):
                 f"The client disconnected during the handshake. If this happens consistently for {dest}, "
                 f"this may indicate that the client does not trust the proxy's certificate."
             )
-            level = "info"
+            level = INFO
         elif err == "connection closed early":
             pass
         else:
@@ -568,10 +659,10 @@ class ClientTLSLayer(_TLSLayer):
 
     def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
         if self.debug is not None:
-            yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
+            yield commands.Log(f"Swallowing {event} as handshake failed.", DEBUG)
 
 
-class MockTLSLayer(_TLSLayer):
+class MockTLSLayer(TLSLayer):
     """Mock layer to disable actual TLS and use cleartext in tests.
 
     Use like so:

@@ -18,12 +18,9 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -54,6 +51,70 @@ public class PagePageTimingsTest {
     @Test
     public void onLoadTest() {
         // TODO: test onLoad
+    }
+
+    /**
+     * Test the property 'dns'
+     */
+    @Test
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'ttfb'
+     */
+    @Test
+    public void ttfbTest() {
+        // TODO: test ttfb
+    }
+
+    /**
+     * Test the property 'cumulativeLayoutShift'
+     */
+    @Test
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
+    }
+
+    /**
+     * Test the property 'largestContentFullPaint'
+     */
+    @Test
+    public void largestContentFullPaintTest() {
+        // TODO: test largestContentFullPaint
+    }
+
+    /**
+     * Test the property 'firstPaint'
+     */
+    @Test
+    public void firstPaintTest() {
+        // TODO: test firstPaint
+    }
+
+    /**
+     * Test the property 'domInteractive'
+     */
+    @Test
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
+    }
+
+    /**
+     * Test the property 'firstContentfulPaint'
+     */
+    @Test
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
     /**

@@ -52,10 +52,6 @@ public class Pair {
             return false;
         }
 
-        if (arg.trim().isEmpty()) {
-            return false;
-        }
-
         return true;
     }
 }

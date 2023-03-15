@@ -17,6 +17,8 @@ from typing import Any, ClassVar, Optional
 import pydivert
 import pydivert.consts
 
+from mitmproxy.net.local_ip import get_local_ip, get_local_ip6
+
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
 
@@ -249,32 +251,6 @@ class TcpConnectionTable(collections.abc.Mapping):
             )
 
 
-def get_local_ip() -> Optional[str]:
-    # Auto-Detect local IP. This is required as re-injecting to 127.0.0.1 does not work.
-    # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
-    except OSError:
-        return None
-    finally:
-        s.close()
-
-
-def get_local_ip6(reachable: str) -> Optional[str]:
-    # The same goes for IPv6, with the added difficulty that .connect() fails if
-    # the target network is not reachable.
-    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    try:
-        s.connect((reachable, 80))
-        return s.getsockname()[0]
-    except OSError:
-        return None
-    finally:
-        s.close()
-
-
 class Redirect(threading.Thread):
     daemon = True
     windivert: pydivert.WinDivert
@@ -442,7 +418,7 @@ class TransparentProxy:
         )
 
         self.ipv4_address = get_local_ip()
-        self.ipv6_address = get_local_ip6("2001:4860:4860::8888")
+        self.ipv6_address = get_local_ip6()
         # print(f"IPv4: {self.ipv4_address}, IPv6: {self.ipv6_address}")
         self.client_server_map = ClientServerMap()
 

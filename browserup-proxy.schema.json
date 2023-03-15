@@ -383,6 +383,71 @@
   "openapi": "3.0.3",
   "components": {
     "schemas": {
+      "PageTiming": {
+        "type": "object",
+        "properties": {
+          "_dns": {
+            "type": "number",
+            "required": false,
+            "description": "dns lookup time from the browser"
+          },
+          "_cumulativeLayoutShift": {
+            "type": "number",
+            "required": false,
+            "description": "cumulativeLayoutShift metric from the browser"
+          },
+          "_domInteractive": {
+            "type": "number",
+            "required": false,
+            "description": "domInteractive from the browser"
+          },
+          "_firstContentfulPaint": {
+            "type": "number",
+            "required": false,
+            "description": "firstContentfulPaint from the browser"
+          },
+          "_href": {
+            "type": "string",
+            "required": false,
+            "description": "Top level href, including hashtag, etc per the browser"
+          },
+          "onLoad": {
+            "type": "number",
+            "required": true,
+            "description": "onLoad per the browser"
+          },
+          "_firstInputDelay": {
+            "type": "number",
+            "required": false,
+            "description": "firstInputDelay from the browser"
+          },
+          "_ttfb": {
+            "type": "number",
+            "required": false,
+            "description": "Time to first byte of the page's first request per the browser"
+          },
+          "_firstPaint": {
+            "type": "number",
+            "required": false,
+            "description": "firstPaint from the browser"
+          },
+          "onContentLoad": {
+            "type": "number",
+            "required": true,
+            "description": "onContentLoad per the browser"
+          },
+          "_ssl": {
+            "type": "number",
+            "required": false,
+            "description": "Ssl connect time from the browser"
+          },
+          "_largestContentfulPaint": {
+            "type": "number",
+            "required": false,
+            "description": "largestContentfulPaint from the browser"
+          }
+        }
+      },
       "NameValuePair": {
         "type": "object",
         "properties": {
@@ -505,6 +570,7 @@
           },
           "error_if_no_traffic": {
             "type": "boolean",
+            "default": true,
             "description": "If the proxy has NO traffic at all, return error"
           }
         },
@@ -513,24 +579,22 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
+          "name": {
+            "type": "string",
+            "required": true,
+            "description": "Name"
+          },
           "result": {
             "type": "boolean",
+            "required": true,
             "description": "Result True / False"
           },
           "type": {
             "type": "string",
+            "required": true,
             "description": "Type"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name"
           }
-        },
-        "required": [
-          "name",
-          "result",
-          "type"
-        ]
+        }
       },
       "Error": {
         "type": "object",
@@ -550,20 +614,18 @@
         "properties": {
           "value": {
             "type": "number",
+            "required": true,
             "format": "double",
             "description": "Value for the counter"
           },
           "name": {
             "type": "string",
+            "required": true,
             "description": "Name of Custom Counter value you are adding to the page under _counters"
           }
-        },
-        "required": [
-          "name",
-          "value"
-        ]
+        }
       },
-      "Entry": {
+      "HarEntry": {
         "type": "object",
         "required": [
           "startedDateTime",
@@ -1082,7 +1144,7 @@
               "entries": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/Entry"
+                  "$ref": "#/components/schemas/HarEntry"
                 }
               },
               "comment": {
@@ -1102,8 +1164,7 @@
           "startedDateTime",
           "id",
           "title",
-          "pageTimings",
-          "_verifications"
+          "pageTimings"
         ],
         "properties": {
           "startedDateTime": {
@@ -1151,6 +1212,54 @@
                 "default": -1
               },
               "onLoad": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_dns": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_ssl": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_ttfb": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_cumulativeLayoutShift": {
+                "type": "integer",
+                "format": "float",
+                "minimum": -1,
+                "default": -1
+              },
+              "_largestContentfulPaint": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_firstPaint": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_domInteractive": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": -1,
+                "default": -1
+              },
+              "_firstContentfulPaint": {
                 "type": "integer",
                 "format": "int64",
                 "minimum": -1,

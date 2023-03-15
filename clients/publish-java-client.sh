@@ -1,3 +1,6 @@
+## IMPORTANT ##
+# In generated java client's `build.gradle` file replace `publishing` by content of file `publishing.overlay.build.gradle`
+
 export GPG_TTY=$(tty)
 echo "-----BEGIN PGP PRIVATE KEY BLOCK-----" >> private-key.asc
 echo "" >> private-key.asc
@@ -10,6 +13,6 @@ gpg --pinentry-mode loopback --passphrase=$GPG_PASSPHRASE --export-secret-key $G
 
 cd java && chmod +x ./gradlew;
 
-./gradlew --project-prop "ossrhUsername=${OSSRH_JIRA_USERNAME}" --project-prop "ossrhPassword=${OSSRH_JIRA_PASSWORD}" --project-prop "signing.keyId=${GPG_PUBLIC_KEY_SIGN}" --project-prop "signing.password=${GPG_PASSPHRASE}" --project-prop "signing.secretKeyRingFile=/tmp/secring.gpg" --project-prop "sign=true" build uploadArchives --info; cd ../;
+./gradlew --project-prop "ossrhUsername=${OSSRH_JIRA_USERNAME}" --project-prop "ossrhPassword=${OSSRH_JIRA_PASSWORD}" --project-prop "signing.keyId=${GPG_PUBLIC_KEY_SIGN}" --project-prop "signing.password=${GPG_PASSPHRASE}" --project-prop "signing.secretKeyRingFile=/tmp/secring.gpg" --project-prop "sign=true" build publishPubToSonatypePublicationToMavenRepository --info; cd ../;
 
 rm private-key.asc

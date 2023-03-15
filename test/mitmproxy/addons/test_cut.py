@@ -72,7 +72,7 @@ def qr(f):
         return fp.read()
 
 
-async def test_cut_clip():
+async def test_cut_clip(caplog):
     v = view.View()
     c = cut.Cut()
     with taddons.context() as tctx:
@@ -97,7 +97,7 @@ async def test_cut_clip():
             )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
-            await tctx.master.await_log(log_message, level="error")
+            assert log_message in caplog.text
 
 
 def test_cut_save(tmpdir):
@@ -130,7 +130,7 @@ def test_cut_save(tmpdir):
         (FileNotFoundError, "No such file or directory"),
     ],
 )
-async def test_cut_save_open(exception, log_message, tmpdir):
+async def test_cut_save_open(exception, log_message, tmpdir, caplog):
     f = str(tmpdir.join("path"))
     v = view.View()
     c = cut.Cut()
@@ -141,7 +141,7 @@ async def test_cut_save_open(exception, log_message, tmpdir):
         with mock.patch("mitmproxy.addons.cut.open") as m:
             m.side_effect = exception(log_message)
             tctx.command(c.save, "@all", "request.method", f)
-            await tctx.master.await_log(log_message, level="error")
+            assert log_message in caplog.text
 
 
 def test_cut():
@@ -171,8 +171,9 @@ def test_cut():
         assert c.cut(tflows, ["response.reason"]) == [[""]]
         assert c.cut(tflows, ["response.header[key]"]) == [[""]]
 
-    c = cut.Cut()
-    with taddons.context():
-        tflows = [tflow.ttcpflow()]
-        assert c.cut(tflows, ["request.method"]) == [[""]]
-        assert c.cut(tflows, ["response.status"]) == [[""]]
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        c = cut.Cut()
+        with taddons.context():
+            tflows = [f]
+            assert c.cut(tflows, ["request.method"]) == [[""]]
+            assert c.cut(tflows, ["response.status"]) == [[""]]

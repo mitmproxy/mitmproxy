@@ -1,35 +1,38 @@
 import _thread
 import asyncio
 import json
+import logging
 
 import falcon
 import os
 
+
 from wsgiref.simple_server import make_server
-from pathlib import Path
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema
+from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema, PageTimingSchema
 from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
+from mitmproxy.addons.browserup.page_perf_script_addon import PagePerfScriptAddOn
 from mitmproxy import ctx
+from pathlib import Path
 
 
 class BrowserUpAddonsManagerAddOn:
     initialized = False
 
     def load(self, l):
-        ctx.log.info('Loading BrowserUpAddonsManagerAddOn')
+        logging.info('Loading BrowserUpAddonsManagerAddOn')
         l.add_option(
             "addons_management_port", int, 8088, "REST api management port.",
         )
 
     def running(self):
-        ctx.log.info('Scanning for custom add-ons resources...')
+        logging.info('Scanning for custom add-ons resources...')
         global initialized
         if not self.initialized and self.is_script_loader_initialized():
-            ctx.log.info('Scanning for custom add-ons resources...')
-            ctx.log.info('Starting falcon REST service...')
+            logging.info('Scanning for custom add-ons resources...')
+            logging.info('Starting falcon REST service...')
             _thread.start_new_thread(self.start_falcon, ())
             initialized = True
 
@@ -91,8 +94,15 @@ ___
         return resources
 
     def get_app(self):
-        app = falcon.API()
+        app = falcon.App()
+        static_path = self.get_project_root() + "/scripts/browsertime"
+        print("===static path " + static_path)
+        app.add_static_route('/browser/scripts', static_path)
+
+        app.req_options.auto_parse_form_urlencoded = True
+
         spec = self.basic_spec(app)
+        spec.components.schema('PageTiming', schema=PageTimingSchema)
         spec.components.schema('MatchCriteria', schema=MatchCriteriaSchema)
         spec.components.schema('VerifyResult', schema=VerifyResultSchema)
         spec.components.schema('Error', schema=ErrorSchema)
@@ -113,6 +123,9 @@ ___
         [get_children(node) for node in app._router._roots]
         return routes_list
 
+    def get_project_root(self):
+        return str(Path(__file__).parent.parent.parent.parent)
+
     def start_falcon(self):
         app = self.get_app()
         print("Routes: ")
@@ -128,5 +141,6 @@ ___
 
 addons = [
     HarCaptureAddOn(),
+    PagePerfScriptAddOn(),
     BrowserUpAddonsManagerAddOn()
 ]

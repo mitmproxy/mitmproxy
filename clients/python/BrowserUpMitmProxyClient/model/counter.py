@@ -82,8 +82,8 @@ class Counter(ModelNormal):
                 and the value is attribute type.
         """
         return {
-            'value': (float,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'value': (float,),  # noqa: E501
         }
 
     @cached_property
@@ -92,8 +92,8 @@ class Counter(ModelNormal):
 
 
     attribute_map = {
-        'value': 'value',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'value': 'value',  # noqa: E501
     }
 
     read_only_vars = {
@@ -103,12 +103,12 @@ class Counter(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, value, name, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, name, value, *args, **kwargs):  # noqa: E501
         """Counter - a model defined in OpenAPI
 
         Args:
-            value (float): Value for the counter
             name (str): Name of Custom Counter value you are adding to the page under _counters
+            value (float): Value for the counter
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -168,8 +168,8 @@ class Counter(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.value = value
         self.name = name
+        self.value = value
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \
@@ -190,12 +190,12 @@ class Counter(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, value, name, *args, **kwargs):  # noqa: E501
+    def __init__(self, name, value, *args, **kwargs):  # noqa: E501
         """Counter - a model defined in OpenAPI
 
         Args:
-            value (float): Value for the counter
             name (str): Name of Custom Counter value you are adding to the page under _counters
+            value (float): Value for the counter
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -253,8 +253,8 @@ class Counter(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.value = value
         self.name = name
+        self.value = value
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \

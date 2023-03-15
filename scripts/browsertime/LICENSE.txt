@@ -1,0 +1,1 @@
+Some items in stats.js are sourced from Browsertime.

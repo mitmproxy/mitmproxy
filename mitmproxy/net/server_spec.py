@@ -1,17 +1,16 @@
 """
 Server specs are used to describe an upstream proxy or server.
 """
-import functools
 import re
-from typing import Literal, NamedTuple
+from functools import cache
+from typing import Literal
 
 from mitmproxy.net import check
 
-
-class ServerSpec(NamedTuple):
-    scheme: Literal["http", "https"]
-    address: tuple[str, int]
-
+ServerSpec = tuple[
+    Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns"],
+    tuple[str, int]
+]
 
 server_spec_re = re.compile(
     r"""
@@ -26,8 +25,8 @@ server_spec_re = re.compile(
 )
 
 
-@functools.lru_cache
-def parse(server_spec: str) -> ServerSpec:
+@cache
+def parse(server_spec: str, default_scheme: str) -> ServerSpec:
     """
     Parses a server mode specification, e.g.:
 
@@ -45,8 +44,8 @@ def parse(server_spec: str) -> ServerSpec:
     if m.group("scheme"):
         scheme = m.group("scheme")
     else:
-        scheme = "https" if m.group("port") in ("443", None) else "http"
-    if scheme not in ("http", "https"):
+        scheme = default_scheme
+    if scheme not in ("http", "https", "tls", "dtls", "tcp", "udp", "dns"):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")
@@ -59,19 +58,15 @@ def parse(server_spec: str) -> ServerSpec:
     if m.group("port"):
         port = int(m.group("port"))
     else:
-        port = {"http": 80, "https": 443}[scheme]
+        try:
+            port = {
+                "http": 80,
+                "https": 443,
+                "dns": 53,
+            }[scheme]
+        except KeyError:
+            raise ValueError(f"Port specification missing.")
     if not check.is_valid_port(port):
         raise ValueError(f"Invalid port: {port}")
 
-    return ServerSpec(scheme, (host, port))  # type: ignore
-
-
-def parse_with_mode(mode: str) -> tuple[str, ServerSpec]:
-    """
-    Parse a proxy mode specification, which is usually just `(reverse|upstream):server-spec`.
-
-    *Raises:*
-     - ValueError, if the specification is invalid.
-    """
-    mode, server_spec = mode.split(":", maxsplit=1)
-    return mode, parse(server_spec)
+    return scheme, (host, port)  # type: ignore

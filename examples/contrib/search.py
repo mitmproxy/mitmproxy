@@ -1,10 +1,9 @@
+import logging
 import re
 from collections.abc import Sequence
-
 from json import dumps
 
-from mitmproxy import command, ctx, flow
-
+from mitmproxy import command, flow
 
 MARKER = ':mag:'
 RESULTS_STR = 'Search Results: '
@@ -44,7 +43,7 @@ class Search:
         try:
             self.exp = re.compile(regex)
         except re.error as e:
-            ctx.log.error(e)
+            logging.error(e)
             return
 
         for _flow in flows:

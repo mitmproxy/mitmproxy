@@ -28,13 +28,18 @@ import querystring from "querystring";
 * @class
 */
 class ApiClient {
-    constructor() {
+    /**
+     * The base URL against which to resolve every API call's (relative) path.
+     * Overrides the default value set in spec file if present
+     * @param {String} basePath
+     */
+    constructor(basePath = 'http://localhost:8088') {
         /**
          * The base URL against which to resolve every API call's (relative) path.
          * @type {String}
          * @default http://localhost:8088
          */
-        this.basePath = 'http://localhost:8088'.replace(/\/+$/, '');
+        this.basePath = basePath.replace(/\/+$/, '');
 
         /**
          * The authentication methods to be included for all API calls.
@@ -466,7 +471,7 @@ class ApiClient {
         if (returnType === 'Blob') {
           request.responseType('blob');
         } else if (returnType === 'String') {
-          request.responseType('string');
+          request.responseType('text');
         }
 
         // Attach previously saved cookies, if enabled

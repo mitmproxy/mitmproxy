@@ -380,6 +380,12 @@ def convert_16_17(data):
     return data
 
 
+def convert_17_18(data):
+    data["version"] = 18
+    data["client_conn"]["proxy_mode"] = "regular"
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -441,6 +447,7 @@ converters = {
     14: convert_14_15,
     15: convert_15_16,
     16: convert_16_17,
+    17: convert_17_18,
 }
 
 

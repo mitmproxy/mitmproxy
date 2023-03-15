@@ -8,9 +8,8 @@ from typing import Any, BinaryIO, Callable, Iterable, Optional
 import certifi
 
 from OpenSSL.crypto import X509
-from cryptography.hazmat.primitives.asymmetric import rsa
 
-from OpenSSL import SSL, crypto
+from OpenSSL import SSL
 from mitmproxy import certs
 
 
@@ -18,6 +17,9 @@ from mitmproxy import certs
 class Method(Enum):
     TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
     TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
+    # Type-pyopenssl does not know about these DTLS constants.
+    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD   # type: ignore
+    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD   # type: ignore
 
 
 try:
@@ -119,6 +121,7 @@ def _create_ssl_context(
 @lru_cache(256)
 def create_proxy_server_context(
     *,
+    method: Method,
     min_version: Version,
     max_version: Version,
     cipher_list: Optional[tuple[str, ...]],
@@ -128,7 +131,7 @@ def create_proxy_server_context(
     client_cert: Optional[str],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_CLIENT_METHOD,
+        method=method,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
@@ -158,11 +161,10 @@ def create_proxy_server_context(
 @lru_cache(256)
 def create_client_proxy_context(
     *,
+    method: Method,
     min_version: Version,
     max_version: Version,
     cipher_list: Optional[tuple[str, ...]],
-    cert: certs.Cert,
-    key: rsa.RSAPrivateKey,
     chain_file: Optional[Path],
     alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
     request_client_cert: bool,
@@ -170,14 +172,12 @@ def create_client_proxy_context(
     dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_SERVER_METHOD,
+        method=method,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
     )
 
-    context.use_certificate(cert.to_pyopenssl())
-    context.use_privatekey(crypto.PKey.from_cryptography_key(key))
     if chain_file is not None:
         try:
             context.load_verify_locations(str(chain_file), None)

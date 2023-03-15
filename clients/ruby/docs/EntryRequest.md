@@ -7,10 +7,10 @@
 | **method** | **String** |  |  |
 | **url** | **String** |  |  |
 | **http_version** | **String** |  |  |
-| **cookies** | [**Array&lt;EntryRequestCookies&gt;**](EntryRequestCookies.md) |  |  |
+| **cookies** | [**Array&lt;EntryRequestCookiesInner&gt;**](EntryRequestCookiesInner.md) |  |  |
 | **headers** | [**Array&lt;Header&gt;**](Header.md) |  |  |
-| **query_string** | [**Array&lt;EntryRequestQueryString&gt;**](EntryRequestQueryString.md) |  |  |
-| **post_data** | **Object** | Posted data info. | [optional] |
+| **query_string** | [**Array&lt;EntryRequestQueryStringInner&gt;**](EntryRequestQueryStringInner.md) |  |  |
+| **post_data** | [**EntryRequestPostData**](EntryRequestPostData.md) |  | [optional] |
 | **headers_size** | **Integer** |  |  |
 | **body_size** | **Integer** |  |  |
 | **comment** | **String** |  | [optional] |

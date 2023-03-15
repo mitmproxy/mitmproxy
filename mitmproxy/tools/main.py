@@ -1,10 +1,9 @@
 import argparse
 import asyncio
+import logging
 import os
 import signal
 import sys
-import typing
-
 from collections.abc import Callable, Sequence
 from typing import Any, Optional, TypeVar
 
@@ -28,11 +27,12 @@ def process_options(parser, opts, args):
         args.termlog_verbosity = "debug"
         args.flow_detail = 2
 
-    adict = {}
-    for n in dir(args):
-        if n in opts:
-            adict[n] = getattr(args, n)
-    opts.merge(adict)
+    adict = {
+        key: val
+        for key, val in vars(args).items()
+        if key in opts and val is not None
+    }
+    opts.update(**adict)
 
 
 T = TypeVar("T", bound=master.Master)
@@ -50,6 +50,10 @@ def run(
     """
 
     async def main() -> T:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("tornado").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("hpack").setLevel(logging.WARNING)
         debug.register_info_dumpers()
 
         opts = options.Options()
@@ -73,9 +77,8 @@ def run(
             opts.set(*args.setoptions, defer=True)
             optmanager.load_paths(
                 opts,
-                os.path.join(opts.confdir, "config-ruby.yaml"),
-                os.path.join(opts.confdir, "config.yml"),
                 os.path.join(opts.confdir, "config.yaml"),
+                os.path.join(opts.confdir, "config.yml"),
             )
             process_options(parser, opts, args)
 
@@ -87,7 +90,7 @@ def run(
                 sys.exit(0)
             if extra:
                 if args.filter_args:
-                    master.log.info(
+                    logging.info(
                         f"Only processing flows that match \"{' & '.join(args.filter_args)}\""
                     )
                 opts.update(**extra(args))
@@ -148,7 +151,7 @@ def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
     return None
 
 
-def browserupproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
+def browserupproxy(args=None) -> Optional[int]:  # pragma: no cover
     from mitmproxy.tools import browserup_proxy
 
     def extra(args):
@@ -162,6 +165,6 @@ def browserupproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
         return {}
 
     m = run(browserup_proxy.BrowserupProxyMaster, cmdline.mitmdump, args, extra)
-    if m and m.errorcheck.has_errored:  # type: ignore
+    if m and m.errorcheck.logger.has_errored:  # type: ignore
         return 1
     return None

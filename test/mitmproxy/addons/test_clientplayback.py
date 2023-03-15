@@ -52,7 +52,7 @@ async def test_playback(mode, concurrency):
             flow = tflow.tflow(live=False)
             flow.request.content = b"data"
             if mode == "upstream":
-                tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+                tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
                 flow.request.authority = f"{addr[0]}:{addr[1]}"
                 flow.request.host, flow.request.port = "address", 22
             else:
@@ -86,7 +86,7 @@ async def test_playback_https_upstream():
             flow = tflow.tflow(live=False)
             flow.request.scheme = b"https"
             flow.request.content = b"data"
-            tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+            tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
@@ -99,16 +99,16 @@ async def test_playback_https_upstream():
             )
 
 
-async def test_playback_crash(monkeypatch):
+async def test_playback_crash(monkeypatch, caplog_async):
     async def raise_err():
         raise ValueError("oops")
 
     monkeypatch.setattr(ReplayHandler, "replay", raise_err)
     cp = ClientPlayback()
-    with taddons.context(cp) as tctx:
+    with taddons.context(cp):
         cp.running()
         cp.start_replay([tflow.tflow(live=False)])
-        await tctx.master.await_log("Client replay has crashed!", level="error")
+        await caplog_async.await_log("Client replay has crashed!")
         assert cp.count() == 0
         cp.done()
 
@@ -131,21 +131,21 @@ def test_check():
     f.request.raw_content = None
     assert "missing content" in cp.check(f)
 
-    f = tflow.ttcpflow()
-    f.live = False
-    assert "Can only replay HTTP" in cp.check(f)
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        f.live = False
+        assert "Can only replay HTTP" in cp.check(f)
 
 
-async def test_start_stop(tdata):
+async def test_start_stop(tdata, caplog_async):
     cp = ClientPlayback()
-    with taddons.context(cp) as tctx:
+    with taddons.context(cp):
         cp.start_replay([tflow.tflow(live=False)])
         assert cp.count() == 1
 
         ws_flow = tflow.twebsocketflow()
         ws_flow.live = False
         cp.start_replay([ws_flow])
-        await tctx.master.await_log("Can't replay WebSocket flows.", level="warn")
+        await caplog_async.await_log("Can't replay WebSocket flows.")
         assert cp.count() == 1
 
         cp.stop_replay()

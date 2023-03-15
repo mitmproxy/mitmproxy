@@ -176,7 +176,7 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
         self.name = name
         super().__init__(master, [[i] for i in vals], self.callback)
 
-    def callback(self, vals):
+    def callback(self, vals) -> None:
         try:
             setattr(self.master.options, self.name, [i[0] for i in vals])
         except exceptions.OptionsError as v:

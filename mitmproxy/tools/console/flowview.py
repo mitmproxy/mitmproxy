@@ -1,3 +1,5 @@
+import logging
+
 import math
 import sys
 from functools import lru_cache
@@ -12,6 +14,7 @@ from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import layoutwidget
@@ -87,7 +90,12 @@ class FlowDetails(tabs.Tabs):
                     ]
             elif isinstance(f, tcp.TCPFlow):
                 self.tabs = [
-                    (self.tab_tcp_stream, self.view_tcp_stream),
+                    (self.tab_tcp_stream, self.view_message_stream),
+                    (self.tab_details, self.view_details),
+                ]
+            elif isinstance(f, udp.UDPFlow):
+                self.tabs = [
+                    (self.tab_udp_stream, self.view_message_stream),
                     (self.tab_details, self.view_details),
                 ]
             elif isinstance(f, dns.DNSFlow):
@@ -134,6 +142,9 @@ class FlowDetails(tabs.Tabs):
 
     def tab_tcp_stream(self):
         return "TCP Stream"
+
+    def tab_udp_stream(self):
+        return "UDP Stream"
 
     def tab_websocket_messages(self):
         return "WebSocket Messages"
@@ -235,31 +246,20 @@ class FlowDetails(tabs.Tabs):
 
         return searchable.Searchable(widget_lines)
 
-    def view_tcp_stream(self) -> urwid.Widget:
+    def view_message_stream(self) -> urwid.Widget:
         flow = self.flow
-        assert isinstance(flow, tcp.TCPFlow)
+        assert isinstance(flow, (tcp.TCPFlow, udp.UDPFlow))
 
         if not flow.messages:
             return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
-        # Merge adjacent TCP "messages". For detailed explanation of this code block see:
-        # https://github.com/mitmproxy/mitmproxy/pull/3970/files/469bd32582f764f9a29607efa4f5b04bd87961fb#r418670880
-        from_client = None
-        messages = []
-        for message in flow.messages:
-            if message.from_client is not from_client:
-                messages.append(message.content)
-                from_client = message.from_client
-            else:
-                messages[-1] += message.content
-
         widget_lines = []
 
         from_client = flow.messages[0].from_client
-        for m in messages:
-            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m, flow)
+        for m in flow.messages:
+            _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
 
             for line in lines:
                 if from_client:
@@ -318,7 +318,7 @@ class FlowDetails(tabs.Tabs):
             viewmode, message, self.flow
         )
         if error:
-            self.master.log.debug(error)
+            logging.debug(error)
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.Request):
             description = "No request content"

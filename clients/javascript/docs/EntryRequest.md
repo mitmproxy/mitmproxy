@@ -7,10 +7,10 @@ Name | Type | Description | Notes
 **method** | **String** |  | 
 **url** | **String** |  | 
 **httpVersion** | **String** |  | 
-**cookies** | [**[EntryRequestCookies]**](EntryRequestCookies.md) |  | 
+**cookies** | [**[EntryRequestCookiesInner]**](EntryRequestCookiesInner.md) |  | 
 **headers** | [**[Header]**](Header.md) |  | 
-**queryString** | [**[EntryRequestQueryString]**](EntryRequestQueryString.md) |  | 
-**postData** | **Object** | Posted data info. | [optional] 
+**queryString** | [**[EntryRequestQueryStringInner]**](EntryRequestQueryStringInner.md) |  | 
+**postData** | [**EntryRequestPostData**](EntryRequestPostData.md) |  | [optional] 
 **headersSize** | **Number** |  | 
 **bodySize** | **Number** |  | 
 **comment** | **String** |  | [optional] 

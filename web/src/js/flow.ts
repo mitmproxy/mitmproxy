@@ -15,7 +15,7 @@ interface _Flow {
     error?: Error
 }
 
-export type Flow = HTTPFlow | TCPFlow | DNSFlow;
+export type Flow = HTTPFlow | TCPFlow | UDPFlow | DNSFlow;
 
 export interface HTTPFlow extends _Flow {
     type: "http"
@@ -26,6 +26,11 @@ export interface HTTPFlow extends _Flow {
 
 export interface TCPFlow extends _Flow {
     type: "tcp"
+    messages_meta: MessagesMeta,
+}
+
+export interface UDPFlow extends _Flow {
+    type: "udp"
     messages_meta: MessagesMeta,
 }
 

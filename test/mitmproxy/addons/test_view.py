@@ -74,21 +74,27 @@ def test_order_generators_dns():
     assert sz.generate(tf) == 0
 
 
-def test_order_generators_tcp():
+def order_generators_proto(tf, name):
     v = view.View()
-    tf = tflow.ttcpflow()
-
     rs = view.OrderRequestStart(v)
     assert rs.generate(tf) == 946681200
 
     rm = view.OrderRequestMethod(v)
-    assert rm.generate(tf) == "TCP"
+    assert rm.generate(tf) == name
 
     ru = view.OrderRequestURL(v)
     assert ru.generate(tf) == "address:22"
 
     sz = view.OrderKeySize(v)
     assert sz.generate(tf) == sum(len(m.content) for m in tf.messages)
+
+
+def test_order_generators_tcp():
+    order_generators_proto(tflow.ttcpflow(), "TCP")
+
+
+def test_order_generators_udp():
+    order_generators_proto(tflow.tudpflow(), "UDP")
 
 
 def test_simple():
@@ -155,6 +161,21 @@ def test_simple_tcp():
     v.tcp_message(f)
     v.tcp_error(f)
     v.tcp_end(f)
+    assert list(v) == [f]
+
+
+def test_simple_udp():
+    v = view.View()
+    f = tflow.tudpflow()
+    assert v.store_count() == 0
+    v.udp_start(f)
+    assert list(v) == [f]
+
+    # These all just call update
+    v.udp_start(f)
+    v.udp_message(f)
+    v.udp_error(f)
+    v.udp_end(f)
     assert list(v) == [f]
 
 
@@ -228,24 +249,22 @@ def test_orders():
         assert v.order_options()
 
 
-async def test_load(tmpdir):
+async def test_load(tmpdir, caplog):
     path = str(tmpdir.join("path"))
     v = view.View()
-    with taddons.context() as tctx:
-        tctx.master.addons.add(v)
-        tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
-        v.load_file(path)
-        assert len(v) == 2
-        v.load_file(path)
-        assert len(v) == 4
-        try:
-            v.load_file("nonexistent_file_path")
-        except OSError:
-            assert False
-        with open(path, "wb") as f:
-            f.write(b"invalidflows")
-        v.load_file(path)
-        await tctx.master.await_log("Invalid data format.")
+    tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
+    v.load_file(path)
+    assert len(v) == 2
+    v.load_file(path)
+    assert len(v) == 4
+    try:
+        v.load_file("nonexistent_file_path")
+    except OSError:
+        assert False
+    with open(path, "wb") as f:
+        f.write(b"invalidflows")
+    v.load_file(path)
+    assert "Invalid data format." in caplog.text
 
 
 def test_resolve():
@@ -328,6 +347,12 @@ def test_movement():
         assert v.focus.index == 1
         v.focus_prev()
         assert v.focus.index == 0
+
+        v.clear()
+        v.focus_next()
+        assert v.focus.index is None
+        v.focus_prev()
+        assert v.focus.index is None
 
 
 def test_duplicate():

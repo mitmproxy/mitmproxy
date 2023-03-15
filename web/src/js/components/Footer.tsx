@@ -4,16 +4,16 @@ import HideInStatic from '../components/common/HideInStatic'
 import {useAppSelector} from "../ducks";
 
 export default function Footer() {
-    const version = useAppSelector(state => state.conf.version);
+    const version = useAppSelector(state => state.backendState.version);
     let {
-        mode, intercept, showhost, upstream_cert, rawtcp, dns_server, http2, websocket, anticache, anticomp,
+        mode, intercept, showhost, upstream_cert, rawtcp, http2, websocket, anticache, anticomp,
         stickyauth, stickycookie, stream_large_bodies, listen_host, listen_port, server, ssl_insecure
     } = useAppSelector(state => state.options);
 
     return (
         <footer>
-            {mode && mode !== "regular" && (
-                <span className="label label-success">{mode} mode</span>
+            {mode && (mode.length !== 1 || mode[0] !== "regular") && (
+                <span className="label label-success">{mode.join(",")}</span>
             )}
             {intercept && (
                 <span className="label label-success">Intercept: {intercept}</span>
@@ -29,9 +29,6 @@ export default function Footer() {
             )}
             {!rawtcp && (
                 <span className="label label-success">no-raw-tcp</span>
-            )}
-            {dns_server && (
-                <span className="label label-success">dns-server</span>
             )}
             {!http2 && (
                 <span className="label label-success">no-http2</span>
@@ -59,7 +56,7 @@ export default function Footer() {
                     {
                         server && (
                             <span className="label label-primary" title="HTTP Proxy Server Address">
-                        {listen_host || "*"}:{listen_port}
+                        {listen_host || "*"}:{listen_port || 8080}
                     </span>)
                     }
                 </HideInStatic>

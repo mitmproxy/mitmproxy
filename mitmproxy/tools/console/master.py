@@ -10,6 +10,7 @@ import sys
 import tempfile
 import contextlib
 import threading
+from typing import TypeVar
 
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
@@ -29,6 +30,9 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
+
+
+T = TypeVar("T", str, bytes)
 
 
 class ConsoleMaster(master.Master):
@@ -61,23 +65,22 @@ class ConsoleMaster(master.Master):
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
-        signals.update_settings.send(self)
+        signals.update_settings.send()
 
-    def options_error(self, opts, exc):
+    def options_error(self, exc) -> None:
         signals.status_message.send(message=str(exc), expire=1)
 
-    def prompt_for_exit(self):
+    def prompt_for_exit(self) -> None:
         signals.status_prompt_onekey.send(
-            self,
             prompt="Quit",
-            keys=(
+            keys=[
                 ("yes", "y"),
                 ("no", "n"),
-            ),
+            ],
             callback=self.quit,
         )
 
-    def sig_add_log(self, event_store, entry: log.LogEntry):
+    def sig_add_log(self, entry: log.LogEntry):
         if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(
             entry.level
         ):
@@ -91,9 +94,9 @@ class ConsoleMaster(master.Master):
                 expire=5,
             )
 
-    def sig_call_in(self, sender, seconds, callback, args=()):
+    def sig_call_in(self, seconds, callback):
         def cb(*_):
-            return callback(*args)
+            return callback()
 
         self.loop.set_alarm_in(seconds, cb)
 
@@ -121,7 +124,7 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
-    def spawn_editor(self, data):
+    def spawn_editor(self, data: T) -> T:
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
@@ -175,10 +178,10 @@ class ConsoleMaster(master.Master):
         t = threading.Timer(1.0, os.unlink, args=[name])
         t.start()
 
-    def set_palette(self, opts, updated):
+    def set_palette(self, *_) -> None:
         self.ui.register_palette(
-            palettes.palettes[opts.console_palette].palette(
-                opts.console_palette_transparent
+            palettes.palettes[self.options.console_palette].palette(
+                self.options.console_palette_transparent
             )
         )
         self.ui.clear()
@@ -195,7 +198,8 @@ class ConsoleMaster(master.Master):
             )
             sys.exit(1)
 
-        if os.name != "nt" and "utf" not in urwid.detected_encoding.lower():
+        detected_encoding = urwid.detected_encoding.lower()
+        if os.name != "nt" and detected_encoding and "utf" not in detected_encoding:
             print(
                 f"mitmproxy expects a UTF-8 console environment, not {urwid.detected_encoding!r}. "
                 f"Set your LANG environment variable to something like en_US.UTF-8.",
@@ -208,7 +212,7 @@ class ConsoleMaster(master.Master):
         signals.call_in.connect(self.sig_call_in)
         self.ui = window.Screen()
         self.ui.set_terminal_properties(256)
-        self.set_palette(self.options, None)
+        self.set_palette(None)
         self.options.subscribe(
             self.set_palette, ["console_palette", "console_palette_transparent"]
         )

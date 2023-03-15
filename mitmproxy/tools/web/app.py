@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import hashlib
 import json
@@ -25,6 +26,7 @@ from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow, TCPMessage
+from mitmproxy.udp import UDPFlow, UDPMessage
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
@@ -162,7 +164,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "close_reason": flow.websocket.close_reason,
                 "timestamp_end": flow.websocket.timestamp_end,
             }
-    elif isinstance(flow, TCPFlow):
+    elif isinstance(flow, (TCPFlow, UDPFlow)):
         f["messages_meta"] = {
             "contentLength": sum(len(x.content) for x in flow.messages),
             "count": len(flow.messages),
@@ -273,13 +275,23 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections: ClassVar[set]
+    connections: ClassVar[set[WebSocketEventBroadcaster]]
 
     def open(self):
         self.connections.add(self)
 
     def on_close(self):
-        self.connections.remove(self)
+        self.connections.discard(self)
+
+    @classmethod
+    def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
+        async def wrapper():
+            try:
+                await conn.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                cls.connections.discard(conn)
+
+        asyncio.ensure_future(wrapper())
 
     @classmethod
     def broadcast(cls, **kwargs):
@@ -288,10 +300,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         )
 
         for conn in cls.connections:
-            try:
-                conn.write_message(message)
-            except Exception:  # pragma: no cover
-                logging.error("Error sending message", exc_info=True)
+            cls.send(conn, message)
 
 
 class ClientConnection(WebSocketEventBroadcaster):
@@ -308,13 +317,19 @@ class DumpFlows(RequestHandler):
         self.set_header("Content-Disposition", "attachment; filename=flows")
         self.set_header("Content-Type", "application/octet-stream")
 
-        bio = BytesIO()
-        fw = io.FlowWriter(bio)
-        for f in self.view:
-            fw.add(f)
+        try:
+            match = flowfilter.parse(self.request.arguments["filter"][0].decode())
+        except ValueError:  # thrown py flowfilter.parse if filter is invalid
+            raise APIError(400, f"Invalid filter argument / regex")
+        except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
+            match = bool  # returns always true
 
-        self.write(bio.getvalue())
-        bio.close()
+        with BytesIO() as bio:
+            fw = io.FlowWriter(bio)
+            for f in self.view:
+                if match(f):
+                    fw.add(f)
+            self.write(bio.getvalue())
 
     def post(self):
         self.view.clear()
@@ -477,15 +492,15 @@ class FlowContentView(RequestHandler):
     def message_to_json(
         self,
         viewname: str,
-        message: Union[http.Message, TCPMessage, WebSocketMessage],
-        flow: Union[HTTPFlow, TCPFlow],
+        message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
+        flow: Union[HTTPFlow, TCPFlow, UDPFlow],
         max_lines: Optional[int] = None,
     ):
         description, lines, error = contentviews.get_message_content_view(
             viewname, message, flow
         )
         if error:
-            self.master.log.error(error)
+            logging.error(error)
         if max_lines:
             lines = islice(lines, max_lines)
 
@@ -496,7 +511,7 @@ class FlowContentView(RequestHandler):
 
     def get(self, flow_id, message, content_view):
         flow = self.flow
-        assert isinstance(flow, (HTTPFlow, TCPFlow))
+        assert isinstance(flow, (HTTPFlow, TCPFlow, UDPFlow))
 
         if self.request.arguments.get("lines"):
             max_lines = int(self.request.arguments["lines"][0])
@@ -506,7 +521,7 @@ class FlowContentView(RequestHandler):
         if message == "messages":
             if isinstance(flow, HTTPFlow) and flow.websocket:
                 messages = flow.websocket.messages
-            elif isinstance(flow, TCPFlow):
+            elif isinstance(flow, (TCPFlow, UDPFlow)):
                 messages = flow.messages
             else:
                 raise APIError(400, f"This flow has no messages.")
@@ -599,19 +614,24 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
+                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
-class Conf(RequestHandler):
+class State(RequestHandler):
     def get(self):
-        conf = {
-            "static": False,
+        self.write({
             "version": version.VERSION,
             "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
-        }
-        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
-        self.set_header("content-type", "application/javascript")
+            "servers": [s.to_json() for s in self.master.proxyserver.servers]
+        })
+
+
+class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
+    CONTENT_TYPES = {
+        "application/octet-stream",
+        *tornado.web.GZipContentEncoding.CONTENT_TYPES
+    }
 
 
 class Application(tornado.web.Application):
@@ -629,6 +649,7 @@ class Application(tornado.web.Application):
             cookie_secret=os.urandom(256),
             debug=debug,
             autoreload=False,
+            transforms=[GZipContentAndFlowFiles],
         )
 
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
@@ -664,6 +685,6 @@ class Application(tornado.web.Application):
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
-                (r"/conf\.js", Conf),
+                (r"/state(?:\.json)?", State),
             ],
         )

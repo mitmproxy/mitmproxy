@@ -2,7 +2,7 @@ import React, {useCallback, useMemo, useRef, useState} from "react";
 import {HTTPFlow, HTTPMessage} from "../../flow";
 import {useAppDispatch, useAppSelector} from "../../ducks";
 import {setContentViewFor} from "../../ducks/ui/flow";
-import {ContentViewData, SHOW_MAX_LINES, useContent} from "./useContent";
+import {ContentViewData, useContent} from "./useContent";
 import {MessageUtils} from "../../flow/utils";
 import FileChooser from "../common/FileChooser";
 import * as flowActions from "../../ducks/flows";
@@ -23,7 +23,7 @@ export default function HttpMessage({flow, message}: HttpMessageProps) {
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(state => state.ui.flow.contentViewFor[flow.id + part] || "Auto");
     const editorRef = useRef<CodeEditor>(null);
-    const [maxLines, setMaxLines] = useState<number>(SHOW_MAX_LINES);
+    const [maxLines, setMaxLines] = useState<number>(useAppSelector(state => state.options.content_view_lines_cutoff));
     const showMore = useCallback(() => setMaxLines(Math.max(1024, maxLines * 2)), [maxLines]);
     const [edit, setEdit] = useState<boolean>(false);
     let url;

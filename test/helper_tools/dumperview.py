@@ -41,6 +41,13 @@ def tcp(level):
 
 @cli.command()
 @click.option("--level", default=1, help="Detail level")
+def udp(level):
+    f1 = tflow.tudpflow()
+    show(level, [f1])
+
+
+@cli.command()
+@click.option("--level", default=1, help="Detail level")
 def large(level):
     f1 = tflow.tflow(resp=True)
     f1.response.headers["content-type"] = "text/html"

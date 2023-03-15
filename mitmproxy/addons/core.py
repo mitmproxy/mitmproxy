@@ -1,18 +1,20 @@
+import logging
 import os
 from collections.abc import Sequence
 from typing import Union
 
+from mitmproxy.log import ALERT
 from mitmproxy.utils import emoji
 from mitmproxy import ctx, hooks
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import optmanager
-from mitmproxy import platform
-from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 import mitmproxy.types
 
+
+logger = logging.getLogger(__name__)
 
 CONF_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
@@ -25,20 +27,6 @@ class Core:
             raise exceptions.OptionsError(
                 "add_upstream_certs_to_client_chain requires the upstream_cert option to be enabled."
             )
-        if "mode" in updated:
-            mode = opts.mode
-            if mode.startswith("reverse:") or mode.startswith("upstream:"):
-                try:
-                    server_spec.parse_with_mode(mode)
-                except ValueError as e:
-                    raise exceptions.OptionsError(str(e)) from e
-            elif mode == "transparent":
-                if not platform.original_addr:
-                    raise exceptions.OptionsError(
-                        "Transparent mode not supported on this platform."
-                    )
-            elif mode not in ["regular", "socks5"]:
-                raise exceptions.OptionsError("Invalid mode specification: %s" % mode)
         if "client_certs" in updated:
             if opts.client_certs:
                 client_certs = os.path.expanduser(opts.client_certs)
@@ -112,7 +100,7 @@ class Core:
             if f.killable:
                 f.kill()
                 updated.append(f)
-        ctx.log.alert("Killed %s flows." % len(updated))
+        logger.log(ALERT, "Killed %s flows." % len(updated))
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     # FIXME: this will become view.revert later
@@ -126,7 +114,7 @@ class Core:
             if f.modified():
                 f.revert()
                 updated.append(f)
-        ctx.log.alert("Reverted %s flows." % len(updated))
+        logger.log(ALERT, "Reverted %s flows." % len(updated))
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     @command.command("flow.set.options")
@@ -192,7 +180,7 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert(f"Set {attr} on  {len(updated)} flows.")
+        logger.log(ALERT, f"Set {attr} on  {len(updated)} flows.")
 
     @command.command("flow.decode")
     def decode(self, flows: Sequence[flow.Flow], part: str) -> None:
@@ -207,7 +195,7 @@ class Core:
                 p.decode()
                 updated.append(f)
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Decoded %s flows." % len(updated))
+        logger.log(ALERT, "Decoded %s flows." % len(updated))
 
     @command.command("flow.encode.toggle")
     def encode_toggle(self, flows: Sequence[flow.Flow], part: str) -> None:
@@ -226,7 +214,7 @@ class Core:
                     p.decode()
                 updated.append(f)
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Toggled encoding on %s flows." % len(updated))
+        logger.log(ALERT, "Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
     @command.argument("encoding", type=mitmproxy.types.Choice("flow.encode.options"))
@@ -249,7 +237,7 @@ class Core:
                     p.encode(encoding)
                     updated.append(f)
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
-        ctx.log.alert("Encoded %s flows." % len(updated))
+        logger.log(ALERT, "Encoded %s flows." % len(updated))
 
     @command.command("flow.encode.options")
     def encode_options(self) -> Sequence[str]:

@@ -1,5 +1,6 @@
 import io
 import csv
+import logging
 import os.path
 from collections.abc import Sequence
 from typing import Any, Union
@@ -7,11 +8,14 @@ from typing import Any, Union
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import ctx
 from mitmproxy import certs
 import mitmproxy.types
 
 import pyperclip
+
+from mitmproxy.log import ALERT
+
+logger = logging.getLogger(__name__)
 
 
 def headername(spec: str):
@@ -117,7 +121,7 @@ class Cut:
                         fp.write(v)
                     else:
                         fp.write(v.encode("utf8"))
-                ctx.log.alert("Saved single cut.")
+                logger.log(ALERT, "Saved single cut.")
             else:
                 with open(
                     path, "a" if append else "w", newline="", encoding="utf8"
@@ -126,11 +130,12 @@ class Cut:
                     for f in flows:
                         vals = [extract_str(c, f) for c in cuts]
                         writer.writerow(vals)
-                ctx.log.alert(
+                logger.log(
+                    ALERT,
                     "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows))
                 )
         except OSError as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))
 
     @command.command("cut.clip")
     def clip(
@@ -148,14 +153,14 @@ class Cut:
         if len(cuts) == 1 and len(flows) == 1:
             v = extract_str(cuts[0], flows[0])
             fp.write(v)
-            ctx.log.alert("Clipped single cut.")
+            logger.log(ALERT, "Clipped single cut.")
         else:
             writer = csv.writer(fp)
             for f in flows:
                 vals = [extract_str(c, f) for c in cuts]
                 writer.writerow(vals)
-            ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
+            logger.log(ALERT, "Clipped %s cuts as CSV." % len(cuts))
         try:
             pyperclip.copy(fp.getvalue())
         except pyperclip.PyperclipException as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))

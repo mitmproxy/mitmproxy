@@ -12,7 +12,7 @@ info:
     url: logo.png
 servers:
 - description: The development API server
-  url: http://localhost:{port}/
+  url: "http://localhost:{port}/"
   variables:
     port:
       default: "8088"
@@ -61,7 +61,7 @@ paths:
         name: title
         required: true
         schema:
-          pattern: /[a-zA-Z-_]{4,25}/
+          pattern: "/[a-zA-Z-_]{4,25}/"
           type: string
         style: simple
       responses:
@@ -85,7 +85,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z-_]{4,25}/
+          pattern: "/[a-zA-Z-_]{4,25}/"
           type: string
         style: simple
       requestBody:
@@ -106,7 +106,7 @@ paths:
           description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /verify/not_present/{name}:
     post:
@@ -119,7 +119,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z-_]{4,25}/
+          pattern: "/[a-zA-Z-_]{4,25}/"
           type: string
         style: simple
       requestBody:
@@ -140,14 +140,14 @@ paths:
           description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /verify/size/{size}/{name}:
     post:
       description: Verify matching items in the captured traffic meet the size criteria
       operationId: verifySize
       parameters:
-      - description: The size used for comparison, in kilobytes
+      - description: "The size used for comparison, in kilobytes"
         explode: false
         in: path
         name: size
@@ -162,7 +162,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z-_]{4,25}/
+          pattern: "/[a-zA-Z-_]{4,25}/"
           type: string
         style: simple
       requestBody:
@@ -183,7 +183,7 @@ paths:
           description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /verify/sla/{time}/{name}:
     post:
@@ -206,7 +206,7 @@ paths:
         name: name
         required: true
         schema:
-          pattern: /[a-zA-Z-_]{4,25}/
+          pattern: "/[a-zA-Z-_]{4,25}/"
           type: string
         style: simple
       requestBody:
@@ -227,7 +227,7 @@ paths:
           description: The MatchCriteria are invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /har/errors:
     post:
@@ -238,8 +238,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
-        description: Receives an error to track. Internally, the error is stored in
-          an array in the har under the _errors key
+        description: "Receives an error to track. Internally, the error is stored\
+          \ in an array in the har under the _errors key"
         required: true
       responses:
         "204":
@@ -248,7 +248,7 @@ paths:
           description: The Error was invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /har/counters:
     post:
@@ -259,8 +259,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Counter'
-        description: Receives a new counter to add. The counter is stored, under the
-          hood, in an array in the har under the _counters key
+        description: "Receives a new counter to add. The counter is stored, under\
+          \ the hood, in an array in the har under the _counters key"
         required: true
       responses:
         "204":
@@ -269,7 +269,7 @@ paths:
           description: The counter was invalid.
       tags:
       - BrowserUpProxy
-      x-contentType: application/json
+      x-content-type: application/json
       x-accepts: application/json
   /healthcheck:
     get:
@@ -283,13 +283,75 @@ paths:
       x-accepts: application/json
 components:
   schemas:
+    PageTiming:
+      properties:
+        name:
+          description: Name of Custom Counter value you are adding to the page under
+            counters
+          type: string
+        onContentLoad:
+          description: onContentLoad per the browser
+          type: number
+        _firstPaint:
+          description: firstPaint from the browser
+          type: number
+        _dns:
+          description: dns lookup time from the browser
+          type: number
+        _ssl:
+          description: Ssl connect time from the browser
+          type: number
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
+          type: number
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
+          type: number
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
+          type: number
+        value:
+          description: Value for the counter
+          format: double
+          type: number
+        _firstInputDelay:
+          description: firstInputDelay from the browser
+          type: number
+        _largestContentFullPaint:
+          description: largestContentFullPaint from the browser
+          type: number
+        onLoad:
+          description: onLoad per the browser
+          type: number
+        _domInteractive:
+          description: domInteractive from the browser
+          type: number
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
+          type: string
+      required:
+      - _cumulativeLayoutShift
+      - _dns
+      - _domInteractive
+      - _firstContentfulPaint
+      - _firstInputDelay
+      - _firstPaint
+      - _href
+      - _largestContentFullPaint
+      - _ssl
+      - _ttfb
+      - name
+      - onContentLoad
+      - onLoad
+      - value
+      type: object
     NameValuePair:
       properties:
-        value:
-          description: Value to match
-          type: string
         name:
           description: Name to match
+          type: string
+        value:
+          description: Value to match
           type: string
       type: object
     MatchCriteria:
@@ -297,15 +359,15 @@ components:
         A set of criteria for filtering HTTP Requests and Responses.
                                  Criteria are AND based, and use python regular expressions for string comparison
       example:
-        request_cookie: ""
-        response_cookie: ""
+        request_cookie: null
+        response_cookie: null
         json_path: json_path
         error_if_no_traffic: true
         url: url
         content: content
-        response_header: ""
+        response_header: null
         content_type: content_type
-        request_header: ""
+        request_header: null
         json_schema: json_schema
         json_valid: true
         page: page
@@ -349,29 +411,13 @@ components:
             url: https://docs.python.org/3/howto/regex.html
           type: string
         request_header:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         request_cookie:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         response_header:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         response_cookie:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         json_valid:
           description: Is valid JSON
           type: boolean
@@ -382,7 +428,7 @@ components:
           description: Validates against passed JSON schema
           type: string
         error_if_no_traffic:
-          description: If the proxy has NO traffic at all, return error
+          description: "If the proxy has NO traffic at all, return error"
           type: boolean
       type: object
     VerifyResult:
@@ -422,24 +468,181 @@ components:
         name: name
         value: 0.8008281904610115
       properties:
-        value:
-          description: Value for the counter
-          format: double
-          type: number
         name:
           description: Name of Custom Counter value you are adding to the page under
             _counters
           type: string
+        value:
+          description: Value for the counter
+          format: double
+          type: number
       required:
       - name
       - value
       type: object
+    HarEntry:
+      example:
+        startedDateTime: 2000-01-23T04:56:07.000+00:00
+        request:
+          headers:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          httpVersion: httpVersion
+          method: method
+          headersSize: 1
+          bodySize: 1
+          comment: comment
+          queryString:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          postData:
+            mimeType: mimeType
+            text: text
+            params:
+            - fileName: fileName
+              name: name
+              comment: comment
+              value: value
+              contentType: contentType
+            - fileName: fileName
+              name: name
+              comment: comment
+              value: value
+              contentType: contentType
+          url: https://openapi-generator.tech
+          cookies:
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+        cache:
+          afterRequest: null
+          comment: comment
+          beforeRequest: null
+        _webSocketMessages:
+        - data: data
+          time: 6.965117697638846
+          type: type
+          opcode: 3.5571952270680973
+        - data: data
+          time: 6.965117697638846
+          type: type
+          opcode: 3.5571952270680973
+        response:
+          headers:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          httpVersion: httpVersion
+          redirectURL: redirectURL
+          statusText: statusText
+          headersSize: 1
+          bodySize: 4
+          comment: comment
+          cookies:
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          content:
+            size: 6
+            comment: comment
+            mimeType: mimeType
+            text: text
+            compression: 7
+            encoding: encoding
+          status: 1
+        serverIPAddress: serverIPAddress
+        timings:
+          receive: 0
+          wait: 0
+          blocked: 0
+          dns: 0
+          comment: comment
+          send: 0
+          ssl: 0
+          connect: 0
+        connection: connection
+        comment: comment
+        time: 0
+        pageref: pageref
+      properties:
+        pageref:
+          type: string
+        startedDateTime:
+          format: date-time
+          type: string
+        time:
+          format: int64
+          minimum: 0
+          type: integer
+        request:
+          $ref: '#/components/schemas/HarEntry_request'
+        response:
+          $ref: '#/components/schemas/HarEntry_response'
+        cache:
+          $ref: '#/components/schemas/HarEntry_cache'
+        timings:
+          $ref: '#/components/schemas/HarEntry_timings'
+        serverIPAddress:
+          type: string
+        _webSocketMessages:
+          items:
+            $ref: '#/components/schemas/WebSocketMessage'
+          type: array
+        connection:
+          type: string
+        comment:
+          type: string
+      required:
+      - cache
+      - request
+      - response
+      - startedDateTime
+      - time
+      - timings
+      type: object
     WebSocketMessage:
       example:
         data: data
-        time: 5.025004791520295
+        time: 6.965117697638846
         type: type
-        opcode: 4.965218492984954
+        opcode: 3.5571952270680973
       properties:
         type:
           type: string
@@ -454,6 +657,22 @@ components:
       - opcode
       - time
       - type
+      type: object
+    Header:
+      example:
+        name: name
+        comment: comment
+        value: value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        comment:
+          type: string
+      required:
+      - name
+      - value
       type: object
     Har:
       example:
@@ -474,8 +693,8 @@ components:
                 value: value
               httpVersion: httpVersion
               method: method
-              headersSize: 5
-              bodySize: 2
+              headersSize: 1
+              bodySize: 1
               comment: comment
               queryString:
               - name: name
@@ -484,7 +703,20 @@ components:
               - name: name
                 comment: comment
                 value: value
-              postData: '{}'
+              postData:
+                mimeType: mimeType
+                text: text
+                params:
+                - fileName: fileName
+                  name: name
+                  comment: comment
+                  value: value
+                  contentType: contentType
+                - fileName: fileName
+                  name: name
+                  comment: comment
+                  value: value
+                  contentType: contentType
               url: https://openapi-generator.tech
               cookies:
               - path: path
@@ -503,16 +735,19 @@ components:
                 httpOnly: true
                 secure: true
                 value: value
-            cache: '{}'
+            cache:
+              afterRequest: null
+              comment: comment
+              beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 5.025004791520295
+              time: 6.965117697638846
               type: type
-              opcode: 4.965218492984954
+              opcode: 3.5571952270680973
             - data: data
-              time: 5.025004791520295
+              time: 6.965117697638846
               type: type
-              opcode: 4.965218492984954
+              opcode: 3.5571952270680973
             response:
               headers:
               - name: name
@@ -524,7 +759,7 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 2
+              headersSize: 1
               bodySize: 4
               comment: comment
               cookies:
@@ -545,13 +780,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 9
+                size: 6
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 3
+                compression: 7
                 encoding: encoding
-              status: 7
+              status: 1
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -577,8 +812,8 @@ components:
                 value: value
               httpVersion: httpVersion
               method: method
-              headersSize: 5
-              bodySize: 2
+              headersSize: 1
+              bodySize: 1
               comment: comment
               queryString:
               - name: name
@@ -587,7 +822,20 @@ components:
               - name: name
                 comment: comment
                 value: value
-              postData: '{}'
+              postData:
+                mimeType: mimeType
+                text: text
+                params:
+                - fileName: fileName
+                  name: name
+                  comment: comment
+                  value: value
+                  contentType: contentType
+                - fileName: fileName
+                  name: name
+                  comment: comment
+                  value: value
+                  contentType: contentType
               url: https://openapi-generator.tech
               cookies:
               - path: path
@@ -606,16 +854,19 @@ components:
                 httpOnly: true
                 secure: true
                 value: value
-            cache: '{}'
+            cache:
+              afterRequest: null
+              comment: comment
+              beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 5.025004791520295
+              time: 6.965117697638846
               type: type
-              opcode: 4.965218492984954
+              opcode: 3.5571952270680973
             - data: data
-              time: 5.025004791520295
+              time: 6.965117697638846
               type: type
-              opcode: 4.965218492984954
+              opcode: 3.5571952270680973
             response:
               headers:
               - name: name
@@ -627,7 +878,7 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 2
+              headersSize: 1
               bodySize: 4
               comment: comment
               cookies:
@@ -648,13 +899,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 9
+                size: 6
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 3
+                compression: 7
                 encoding: encoding
-              status: 7
+              status: 1
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -672,8 +923,16 @@ components:
           pages:
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
+              _ssl: 0
+              _firstPaint: 0
+              _cumulativeLayoutShift: 0
+              _largestContentFullPaint: 0
+              _dns: 0
+              _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
+              _domInteractive: 0
+              _ttfb: 0
               comment: comment
             comment: comment
             id: id
@@ -697,8 +956,16 @@ components:
               details: details
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
+              _ssl: 0
+              _firstPaint: 0
+              _cumulativeLayoutShift: 0
+              _largestContentFullPaint: 0
+              _dns: 0
+              _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
+              _domInteractive: 0
+              _ttfb: 0
               comment: comment
             comment: comment
             id: id
@@ -732,28 +999,23 @@ components:
       required:
       - log
       type: object
-    Header:
-      example:
-        name: name
-        comment: comment
-        value: value
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-        comment:
-          type: string
-      required:
-      - name
-      - value
+    CustomHarData:
+      minProperties: 1
       type: object
     Page:
       example:
         startedDateTime: 2000-01-23T04:56:07.000+00:00
         pageTimings:
+          _ssl: 0
+          _firstPaint: 0
+          _cumulativeLayoutShift: 0
+          _largestContentFullPaint: 0
+          _dns: 0
+          _firstContentfulPaint: 0
           onContentLoad: 0
           onLoad: 0
+          _domInteractive: 0
+          _ttfb: 0
           comment: comment
         comment: comment
         id: id
@@ -809,526 +1071,13 @@ components:
       - startedDateTime
       - title
       type: object
-    CustomHarData:
-      minProperties: 1
-      type: object
-    Entry:
-      example:
-        startedDateTime: 2000-01-23T04:56:07.000+00:00
-        request:
-          headers:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          httpVersion: httpVersion
-          method: method
-          headersSize: 5
-          bodySize: 2
-          comment: comment
-          queryString:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          postData: '{}'
-          url: https://openapi-generator.tech
-          cookies:
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-        cache: '{}'
-        _webSocketMessages:
-        - data: data
-          time: 5.025004791520295
-          type: type
-          opcode: 4.965218492984954
-        - data: data
-          time: 5.025004791520295
-          type: type
-          opcode: 4.965218492984954
-        response:
-          headers:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          httpVersion: httpVersion
-          redirectURL: redirectURL
-          statusText: statusText
-          headersSize: 2
-          bodySize: 4
-          comment: comment
-          cookies:
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          content:
-            size: 9
-            comment: comment
-            mimeType: mimeType
-            text: text
-            compression: 3
-            encoding: encoding
-          status: 7
-        serverIPAddress: serverIPAddress
-        timings:
-          receive: 0
-          wait: 0
-          blocked: 0
-          dns: 0
-          comment: comment
-          send: 0
-          ssl: 0
-          connect: 0
-        connection: connection
-        comment: comment
-        time: 0
-        pageref: pageref
-      properties:
-        pageref:
-          type: string
-        startedDateTime:
-          format: date-time
-          type: string
-        time:
-          format: int64
-          minimum: 0
-          type: integer
-        request:
-          $ref: '#/components/schemas/Entry_request'
-        response:
-          $ref: '#/components/schemas/Entry_response'
-        cache:
-          properties:
-            beforeRequest:
-              oneOf:
-              - type: "null"
-              - properties:
-                  expires:
-                    type: string
-                  lastAccess:
-                    type: string
-                  eTag:
-                    type: string
-                  hitCount:
-                    type: integer
-                  comment:
-                    type: string
-                required:
-                - eTag
-                - hitCount
-                - lastAccess
-                type: object
-            afterRequest:
-              oneOf:
-              - type: "null"
-              - properties:
-                  expires:
-                    type: string
-                  lastAccess:
-                    type: string
-                  eTag:
-                    type: string
-                  hitCount:
-                    type: integer
-                  comment:
-                    type: string
-                required:
-                - eTag
-                - hitCount
-                - lastAccess
-                type: object
-            comment:
-              type: string
-        timings:
-          $ref: '#/components/schemas/Entry_timings'
-        serverIPAddress:
-          type: string
-        _webSocketMessages:
-          items:
-            $ref: '#/components/schemas/WebSocketMessage'
-          type: array
-        connection:
-          type: string
-        comment:
-          type: string
-      required:
-      - cache
-      - request
-      - response
-      - startedDateTime
-      - time
-      - timings
-      type: object
-    Har_log_creator:
-      example:
-        name: name
-        comment: comment
-        version: version
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        comment:
-          type: string
-      required:
-      - name
-      - version
-      type: object
-    Har_log:
-      example:
-        creator:
-          name: name
-          comment: comment
-          version: version
-        entries:
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          request:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            method: method
-            headersSize: 5
-            bodySize: 2
-            comment: comment
-            queryString:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            postData: '{}'
-            url: https://openapi-generator.tech
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-          cache: '{}'
-          _webSocketMessages:
-          - data: data
-            time: 5.025004791520295
-            type: type
-            opcode: 4.965218492984954
-          - data: data
-            time: 5.025004791520295
-            type: type
-            opcode: 4.965218492984954
-          response:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            redirectURL: redirectURL
-            statusText: statusText
-            headersSize: 2
-            bodySize: 4
-            comment: comment
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            content:
-              size: 9
-              comment: comment
-              mimeType: mimeType
-              text: text
-              compression: 3
-              encoding: encoding
-            status: 7
-          serverIPAddress: serverIPAddress
-          timings:
-            receive: 0
-            wait: 0
-            blocked: 0
-            dns: 0
-            comment: comment
-            send: 0
-            ssl: 0
-            connect: 0
-          connection: connection
-          comment: comment
-          time: 0
-          pageref: pageref
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          request:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            method: method
-            headersSize: 5
-            bodySize: 2
-            comment: comment
-            queryString:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            postData: '{}'
-            url: https://openapi-generator.tech
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-          cache: '{}'
-          _webSocketMessages:
-          - data: data
-            time: 5.025004791520295
-            type: type
-            opcode: 4.965218492984954
-          - data: data
-            time: 5.025004791520295
-            type: type
-            opcode: 4.965218492984954
-          response:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            redirectURL: redirectURL
-            statusText: statusText
-            headersSize: 2
-            bodySize: 4
-            comment: comment
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            content:
-              size: 9
-              comment: comment
-              mimeType: mimeType
-              text: text
-              compression: 3
-              encoding: encoding
-            status: 7
-          serverIPAddress: serverIPAddress
-          timings:
-            receive: 0
-            wait: 0
-            blocked: 0
-            dns: 0
-            comment: comment
-            send: 0
-            ssl: 0
-            connect: 0
-          connection: connection
-          comment: comment
-          time: 0
-          pageref: pageref
-        pages:
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          pageTimings:
-            onContentLoad: 0
-            onLoad: 0
-            comment: comment
-          comment: comment
-          id: id
-          _verifications:
-          - result: true
-            name: name
-            type: type
-          - result: true
-            name: name
-            type: type
-          title: title
-          _counters:
-          - name: name
-            value: 0.8008281904610115
-          - name: name
-            value: 0.8008281904610115
-          _errors:
-          - name: name
-            details: details
-          - name: name
-            details: details
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          pageTimings:
-            onContentLoad: 0
-            onLoad: 0
-            comment: comment
-          comment: comment
-          id: id
-          _verifications:
-          - result: true
-            name: name
-            type: type
-          - result: true
-            name: name
-            type: type
-          title: title
-          _counters:
-          - name: name
-            value: 0.8008281904610115
-          - name: name
-            value: 0.8008281904610115
-          _errors:
-          - name: name
-            details: details
-          - name: name
-            details: details
-        browser:
-          name: name
-          comment: comment
-          version: version
-        comment: comment
-        version: version
+    MatchCriteria_request_header:
+      allOf:
+      - $ref: '#/components/schemas/NameValuePair'
       externalDocs:
-        description: HAR (HTTP Archive) Log Format
-        url: http://www.softwareishard.com/blog/har-12-spec/
-      properties:
-        version:
-          type: string
-        creator:
-          $ref: '#/components/schemas/Har_log_creator'
-        browser:
-          $ref: '#/components/schemas/Har_log_creator'
-        pages:
-          default: []
-          items:
-            $ref: '#/components/schemas/Page'
-          type: array
-        entries:
-          items:
-            $ref: '#/components/schemas/Entry'
-          type: array
-        comment:
-          type: string
-      required:
-      - creator
-      - entries
-      - pages
-      - version
-      type: object
-    Page_pageTimings:
-      example:
-        onContentLoad: 0
-        onLoad: 0
-        comment: comment
-      properties:
-        onContentLoad:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        onLoad:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        comment:
-          type: string
-      required:
-      - onContentLoad
-      - onLoad
-      type: object
-    Entry_request_cookies:
+        description: Python Regex
+        url: https://docs.python.org/3/howto/regex.html
+    HarEntry_request_cookies_inner:
       example:
         path: path
         expires: expires
@@ -1359,7 +1108,7 @@ components:
       - name
       - value
       type: object
-    Entry_request_queryString:
+    HarEntry_request_queryString_inner:
       example:
         name: name
         comment: comment
@@ -1375,7 +1124,53 @@ components:
       - name
       - value
       type: object
-    Entry_request:
+    HarEntry_request_postData_params_inner:
+      example:
+        fileName: fileName
+        name: name
+        comment: comment
+        value: value
+        contentType: contentType
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        fileName:
+          type: string
+        contentType:
+          type: string
+        comment:
+          type: string
+      type: object
+    HarEntry_request_postData:
+      description: Posted data info.
+      example:
+        mimeType: mimeType
+        text: text
+        params:
+        - fileName: fileName
+          name: name
+          comment: comment
+          value: value
+          contentType: contentType
+        - fileName: fileName
+          name: name
+          comment: comment
+          value: value
+          contentType: contentType
+      properties:
+        mimeType:
+          type: string
+        text:
+          type: string
+        params:
+          items:
+            $ref: '#/components/schemas/HarEntry_request_postData_params_inner'
+          type: array
+      required:
+      - mimeType
+    HarEntry_request:
       example:
         headers:
         - name: name
@@ -1386,8 +1181,8 @@ components:
           value: value
         httpVersion: httpVersion
         method: method
-        headersSize: 5
-        bodySize: 2
+        headersSize: 1
+        bodySize: 1
         comment: comment
         queryString:
         - name: name
@@ -1396,7 +1191,20 @@ components:
         - name: name
           comment: comment
           value: value
-        postData: '{}'
+        postData:
+          mimeType: mimeType
+          text: text
+          params:
+          - fileName: fileName
+            name: name
+            comment: comment
+            value: value
+            contentType: contentType
+          - fileName: fileName
+            name: name
+            comment: comment
+            value: value
+            contentType: contentType
         url: https://openapi-generator.tech
         cookies:
         - path: path
@@ -1425,7 +1233,7 @@ components:
           type: string
         cookies:
           items:
-            $ref: '#/components/schemas/Entry_request_cookies'
+            $ref: '#/components/schemas/HarEntry_request_cookies_inner'
           type: array
         headers:
           items:
@@ -1433,32 +1241,10 @@ components:
           type: array
         queryString:
           items:
-            $ref: '#/components/schemas/Entry_request_queryString'
+            $ref: '#/components/schemas/HarEntry_request_queryString_inner'
           type: array
         postData:
-          description: Posted data info.
-          properties:
-            mimeType:
-              type: string
-            text:
-              type: string
-            params:
-              items:
-                properties:
-                  name:
-                    type: string
-                  value:
-                    type: string
-                  fileName:
-                    type: string
-                  contentType:
-                    type: string
-                  comment:
-                    type: string
-                type: object
-              type: array
-          required:
-          - mimeType
+          $ref: '#/components/schemas/HarEntry_request_postData'
         headersSize:
           type: integer
         bodySize:
@@ -1475,13 +1261,13 @@ components:
       - queryString
       - url
       type: object
-    Entry_response_content:
+    HarEntry_response_content:
       example:
-        size: 9
+        size: 6
         comment: comment
         mimeType: mimeType
         text: text
-        compression: 3
+        compression: 7
         encoding: encoding
       properties:
         size:
@@ -1500,7 +1286,7 @@ components:
       - mimeType
       - size
       type: object
-    Entry_response:
+    HarEntry_response:
       example:
         headers:
         - name: name
@@ -1512,7 +1298,7 @@ components:
         httpVersion: httpVersion
         redirectURL: redirectURL
         statusText: statusText
-        headersSize: 2
+        headersSize: 1
         bodySize: 4
         comment: comment
         cookies:
@@ -1533,13 +1319,13 @@ components:
           secure: true
           value: value
         content:
-          size: 9
+          size: 6
           comment: comment
           mimeType: mimeType
           text: text
-          compression: 3
+          compression: 7
           encoding: encoding
-        status: 7
+        status: 1
       properties:
         status:
           type: integer
@@ -1549,14 +1335,14 @@ components:
           type: string
         cookies:
           items:
-            $ref: '#/components/schemas/Entry_request_cookies'
+            $ref: '#/components/schemas/HarEntry_request_cookies_inner'
           type: array
         headers:
           items:
             $ref: '#/components/schemas/Header'
           type: array
         content:
-          $ref: '#/components/schemas/Entry_response_content'
+          $ref: '#/components/schemas/HarEntry_response_content'
         redirectURL:
           type: string
         headersSize:
@@ -1576,7 +1362,40 @@ components:
       - status
       - statusText
       type: object
-    Entry_timings:
+    HarEntry_cache_beforeRequest_oneOf:
+      properties:
+        expires:
+          type: string
+        lastAccess:
+          type: string
+        eTag:
+          type: string
+        hitCount:
+          type: integer
+        comment:
+          type: string
+      required:
+      - eTag
+      - hitCount
+      - lastAccess
+      type: object
+    HarEntry_cache_beforeRequest:
+      oneOf:
+      - type: "null"
+      - $ref: '#/components/schemas/HarEntry_cache_beforeRequest_oneOf'
+    HarEntry_cache:
+      example:
+        afterRequest: null
+        comment: comment
+        beforeRequest: null
+      properties:
+        beforeRequest:
+          $ref: '#/components/schemas/HarEntry_cache_beforeRequest'
+        afterRequest:
+          $ref: '#/components/schemas/HarEntry_cache_beforeRequest'
+        comment:
+          type: string
+    HarEntry_timings:
       example:
         receive: 0
         wait: 0
@@ -1632,5 +1451,436 @@ components:
       - send
       - ssl
       - wait
+      type: object
+    Har_log_creator:
+      example:
+        name: name
+        comment: comment
+        version: version
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        comment:
+          type: string
+      required:
+      - name
+      - version
+      type: object
+    Har_log:
+      example:
+        creator:
+          name: name
+          comment: comment
+          version: version
+        entries:
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          request:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            method: method
+            headersSize: 1
+            bodySize: 1
+            comment: comment
+            queryString:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            postData:
+              mimeType: mimeType
+              text: text
+              params:
+              - fileName: fileName
+                name: name
+                comment: comment
+                value: value
+                contentType: contentType
+              - fileName: fileName
+                name: name
+                comment: comment
+                value: value
+                contentType: contentType
+            url: https://openapi-generator.tech
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+          cache:
+            afterRequest: null
+            comment: comment
+            beforeRequest: null
+          _webSocketMessages:
+          - data: data
+            time: 6.965117697638846
+            type: type
+            opcode: 3.5571952270680973
+          - data: data
+            time: 6.965117697638846
+            type: type
+            opcode: 3.5571952270680973
+          response:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            redirectURL: redirectURL
+            statusText: statusText
+            headersSize: 1
+            bodySize: 4
+            comment: comment
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            content:
+              size: 6
+              comment: comment
+              mimeType: mimeType
+              text: text
+              compression: 7
+              encoding: encoding
+            status: 1
+          serverIPAddress: serverIPAddress
+          timings:
+            receive: 0
+            wait: 0
+            blocked: 0
+            dns: 0
+            comment: comment
+            send: 0
+            ssl: 0
+            connect: 0
+          connection: connection
+          comment: comment
+          time: 0
+          pageref: pageref
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          request:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            method: method
+            headersSize: 1
+            bodySize: 1
+            comment: comment
+            queryString:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            postData:
+              mimeType: mimeType
+              text: text
+              params:
+              - fileName: fileName
+                name: name
+                comment: comment
+                value: value
+                contentType: contentType
+              - fileName: fileName
+                name: name
+                comment: comment
+                value: value
+                contentType: contentType
+            url: https://openapi-generator.tech
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+          cache:
+            afterRequest: null
+            comment: comment
+            beforeRequest: null
+          _webSocketMessages:
+          - data: data
+            time: 6.965117697638846
+            type: type
+            opcode: 3.5571952270680973
+          - data: data
+            time: 6.965117697638846
+            type: type
+            opcode: 3.5571952270680973
+          response:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            redirectURL: redirectURL
+            statusText: statusText
+            headersSize: 1
+            bodySize: 4
+            comment: comment
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            content:
+              size: 6
+              comment: comment
+              mimeType: mimeType
+              text: text
+              compression: 7
+              encoding: encoding
+            status: 1
+          serverIPAddress: serverIPAddress
+          timings:
+            receive: 0
+            wait: 0
+            blocked: 0
+            dns: 0
+            comment: comment
+            send: 0
+            ssl: 0
+            connect: 0
+          connection: connection
+          comment: comment
+          time: 0
+          pageref: pageref
+        pages:
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          pageTimings:
+            _ssl: 0
+            _firstPaint: 0
+            _cumulativeLayoutShift: 0
+            _largestContentFullPaint: 0
+            _dns: 0
+            _firstContentfulPaint: 0
+            onContentLoad: 0
+            onLoad: 0
+            _domInteractive: 0
+            _ttfb: 0
+            comment: comment
+          comment: comment
+          id: id
+          _verifications:
+          - result: true
+            name: name
+            type: type
+          - result: true
+            name: name
+            type: type
+          title: title
+          _counters:
+          - name: name
+            value: 0.8008281904610115
+          - name: name
+            value: 0.8008281904610115
+          _errors:
+          - name: name
+            details: details
+          - name: name
+            details: details
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          pageTimings:
+            _ssl: 0
+            _firstPaint: 0
+            _cumulativeLayoutShift: 0
+            _largestContentFullPaint: 0
+            _dns: 0
+            _firstContentfulPaint: 0
+            onContentLoad: 0
+            onLoad: 0
+            _domInteractive: 0
+            _ttfb: 0
+            comment: comment
+          comment: comment
+          id: id
+          _verifications:
+          - result: true
+            name: name
+            type: type
+          - result: true
+            name: name
+            type: type
+          title: title
+          _counters:
+          - name: name
+            value: 0.8008281904610115
+          - name: name
+            value: 0.8008281904610115
+          _errors:
+          - name: name
+            details: details
+          - name: name
+            details: details
+        browser:
+          name: name
+          comment: comment
+          version: version
+        comment: comment
+        version: version
+      externalDocs:
+        description: HAR (HTTP Archive) Log Format
+        url: http://www.softwareishard.com/blog/har-12-spec/
+      properties:
+        version:
+          type: string
+        creator:
+          $ref: '#/components/schemas/Har_log_creator'
+        browser:
+          $ref: '#/components/schemas/Har_log_creator'
+        pages:
+          default: []
+          items:
+            $ref: '#/components/schemas/Page'
+          type: array
+        entries:
+          items:
+            $ref: '#/components/schemas/HarEntry'
+          type: array
+        comment:
+          type: string
+      required:
+      - creator
+      - entries
+      - pages
+      - version
+      type: object
+    Page_pageTimings:
+      example:
+        _ssl: 0
+        _firstPaint: 0
+        _cumulativeLayoutShift: 0
+        _largestContentFullPaint: 0
+        _dns: 0
+        _firstContentfulPaint: 0
+        onContentLoad: 0
+        onLoad: 0
+        _domInteractive: 0
+        _ttfb: 0
+        comment: comment
+      properties:
+        onContentLoad:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        onLoad:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _dns:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _ssl:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _ttfb:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _cumulativeLayoutShift:
+          default: -1
+          format: number
+          minimum: -1
+          type: integer
+        _largestContentFullPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _firstPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _domInteractive:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _firstContentfulPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        comment:
+          type: string
+      required:
+      - onContentLoad
+      - onLoad
       type: object
 

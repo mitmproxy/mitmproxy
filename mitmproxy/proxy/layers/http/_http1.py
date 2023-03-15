@@ -141,7 +141,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     def make_pipe(self) -> layer.CommandGenerator[None]:
         self.state = self.passthrough
         if self.buf:
-            already_received = self.buf.maybe_extract_at_most(len(self.buf))
+            already_received = self.buf.maybe_extract_at_most(len(self.buf)) or b""
             # Some clients send superfluous newlines after CONNECT, we want to eat those.
             already_received = already_received.lstrip(b"\r\n")
             if already_received:
@@ -243,8 +243,9 @@ class Http1Server(Http1Connection):
             if raw:
                 yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseEndOfMessage):
+            assert self.request
             assert self.response
-            if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
+            if self.request.method.upper() != "HEAD" and "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
@@ -263,11 +264,10 @@ class Http1Server(Http1Connection):
         if isinstance(event, events.DataReceived):
             request_head = self.buf.maybe_extract_lines()
             if request_head:
-                request_head = [
-                    bytes(x) for x in request_head
-                ]  # TODO: Make url.parse compatible with bytearrays
                 try:
-                    self.request = http1.read_request_head(request_head)
+                    self.request = http1.read_request_head(
+                        [bytes(x) for x in request_head]
+                    )
                     if self.context.options.validate_inbound_headers:
                         http1.validate_headers(self.request.headers)
                     expected_body_size = http1.expected_http_body_size(self.request)
@@ -387,11 +387,10 @@ class Http1Client(Http1Connection):
 
             response_head = self.buf.maybe_extract_lines()
             if response_head:
-                response_head = [
-                    bytes(x) for x in response_head
-                ]  # TODO: Make url.parse compatible with bytearrays
                 try:
-                    self.response = http1.read_response_head(response_head)
+                    self.response = http1.read_response_head(
+                        [bytes(x) for x in response_head]
+                    )
                     if self.context.options.validate_inbound_headers:
                         http1.validate_headers(self.response.headers)
                     expected_size = http1.expected_http_body_size(

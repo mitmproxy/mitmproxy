@@ -4,15 +4,23 @@ from abc import ABCMeta
 from dataclasses import dataclass
 from typing import Optional
 
-from mitmproxy import connection, platform
-from mitmproxy.net import server_spec
+from mitmproxy import connection
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import dns, tls
+from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
 
 
 class HttpProxy(layer.Layer):
+    @expect(events.Start)
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        child_layer = layer.NextLayer(self.context)
+        self._handle_event = child_layer.handle_event
+        yield from child_layer.handle_event(event)
+
+
+class HttpUpstreamProxy(layer.Layer):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         child_layer = layer.NextLayer(self.context)
@@ -29,6 +37,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
         if (
             self.context.options.connection_strategy == "eager"
             and self.context.server.address
+            and self.context.server.transport_protocol == "tcp"
         ):
             err = yield commands.OpenConnection(self.context.server)
             if err:
@@ -47,15 +56,20 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 class ReverseProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        spec = server_spec.parse_with_mode(self.context.options.mode)[1]
+        spec = self.context.client.proxy_mode
+        assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme not in ("http", "tcp"):
+        if spec.scheme == "https" or spec.scheme == "tls" or spec.scheme == "dtls":
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0]
             self.child_layer = tls.ServerTLSLayer(self.context)
-        else:
+        elif spec.scheme == "http" or spec.scheme == "tcp" or spec.scheme == "udp":
             self.child_layer = layer.NextLayer(self.context)
+        elif spec.scheme == "dns":
+            self.child_layer = dns.DNSLayer(self.context)
+        else:
+            raise AssertionError(self.context.client.transport_protocol)  # pragma: no cover
 
         err = yield from self.finish_start()
         if err:
@@ -65,15 +79,8 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert platform.original_addr is not None
-        socket = yield commands.GetSocket(self.context.client)
-        try:
-            self.context.server.address = platform.original_addr(socket)
-        except Exception as e:
-            yield commands.Log(f"Transparent mode failure: {e!r}")
-
+        assert self.context.server.address
         self.child_layer = layer.NextLayer(self.context)
-
         err = yield from self.finish_start()
         if err:
             yield commands.CloseConnection(self.context.client)

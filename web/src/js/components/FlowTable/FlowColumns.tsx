@@ -37,7 +37,7 @@ icon.headerName = ''
 icon.sortKey = flow => getIcon(flow)
 
 const getIcon = (flow: Flow): string => {
-    if (flow.type === "tcp" || flow.type === "dns") {
+    if (flow.type !== "http") {
         return `resource-icon-${flow.type}`
     }
     if (flow.websocket) {
@@ -76,6 +76,7 @@ const mainPath = (flow: Flow): string => {
         case "http":
             return RequestUtils.pretty_url(flow.request)
         case "tcp":
+        case "udp":
             return `${flow.client_conn.peername.join(':')} ↔ ${flow.server_conn?.address?.join(':')}`
         case "dns":
             return `${flow.request.questions.map(q => `${q.name} ${q.type}`).join(", ")} = ${(flow.response?.answers.map(q => q.data).join(", ") ?? "...") || "?"}`
@@ -218,9 +219,7 @@ export const quickactions: FlowColumn = ({flow}) => {
 
     return (
         <td className={classnames("col-quickactions", {hover: open})} onClick={() => 0}>
-            <div>
-                {resume_or_replay}
-            </div>
+            {resume_or_replay ? <div>{resume_or_replay}</div> : <></>}
         </td>
     )
 }

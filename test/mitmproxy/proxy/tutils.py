@@ -1,5 +1,7 @@
 import collections.abc
 import difflib
+import logging
+
 import itertools
 import re
 import textwrap
@@ -230,7 +232,7 @@ class Playbook:
                     elif isinstance(cmd, commands.Log):
                         need_to_emulate_log = (
                             not self.logs
-                            and cmd.level in ("debug", "info")
+                            and cmd.level in (logging.DEBUG, logging.INFO)
                             and (
                                 pos >= len(self.expected)
                                 or not isinstance(self.expected[pos], commands.Log)

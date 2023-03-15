@@ -2,10 +2,109 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 02 November 2022: mitmproxy 9.0.1
+
+* The precompiled binaries now ship with OpenSSL 3.0.7, which resolves CVE-2022-3602 and CVE-2022-3786.
+* Performance and stability improvements for WireGuard mode.
+  ([#5694](https://github.com/mitmproxy/mitmproxy/issues/5694), @mhils, @decathorpe)
+* Fix a bug where the standalone Linux binaries would require libffi to be installed.
+  ([#5699](https://github.com/mitmproxy/mitmproxy/issues/5699), @mhils)
+* Hard exit when mitmproxy cannot write logs, fixes endless loop when parent process exits.
+  ([#4669](https://github.com/mitmproxy/mitmproxy/issues/4669), @Prinzhorn)
+* Fix a permission error affecting the Docker images.
+  ([#5700](https://github.com/mitmproxy/mitmproxy/issues/5700), @mhils)
+
+
+## 28 October 2022: mitmproxy 9.0.0
+
+### Major Features
+
+* Add Raw UDP support.
+  ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
+* Add WireGuard mode to enable transparent proxying via WireGuard.
+  ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
+* Add DTLS support. 
+  ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
+* Add a quick help bar to mitmproxy.
+  ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
+
+### Deprecations
+
+* Deprecate `add_log` event hook. Users should use the builtin `logging` module instead.
+  See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+* Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
+  See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
+  ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
+
+### Full Changelog
+
+* Mitmproxy binaries now ship with Python 3.11.
+  ([#5678](https://github.com/mitmproxy/mitmproxy/issues/5678), @mhils)
+* One mitmproxy instance can now spawn multiple proxy servers.
+  ([#5393](https://github.com/mitmproxy/mitmproxy/pull/5393), @mhils)
+* Add syntax highlighting to JSON and msgpack content view.
+  ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
+* Add MQTT content view.
+  ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
+* Setting `connection_strategy` to `lazy` now also disables early 
+  upstream connections to fetch TLS certificate details.
+  ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
+* Fix order of event hooks on startup.
+  ([#5376](https://github.com/mitmproxy/mitmproxy/issues/5376), @meitinger)
+* Include server information in bind/listen errors.
+  ([#5495](https://github.com/mitmproxy/mitmproxy/pull/5495), @meitinger)
+* Include information about lazy connection_strategy in related errors.
+  ([#5465](https://github.com/mitmproxy/mitmproxy/pull/5465), @meitinger, @mhils)
+* Fix `tls_version_server_min` and `tls_version_server_max` options.
+  ([#5546](https://github.com/mitmproxy/mitmproxy/issues/5546), @mhils)
+* Added Magisk module generation for Android onboarding.
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants)
+* Update Linux binary builder to Ubuntu 20.04, bumping the minimum glibc version to 2.31.
+  ([#5547](https://github.com/mitmproxy/mitmproxy/pull/5547), @jorants)
+* Add "Save filtered" button in mitmweb.
+  ([#5531](https://github.com/mitmproxy/mitmproxy/pull/5531), @rnbwdsh, @mhils)
+* Render application/prpc content as gRPC/Protocol Buffers
+  ([#5568](https://github.com/mitmproxy/mitmproxy/pull/5568), @selfisekai)
+* Mitmweb now supports `content_view_lines_cutoff`.
+  ([#5548](https://github.com/mitmproxy/mitmproxy/pull/5548), @sanlengjingvv)
+* Fix a mitmweb crash when scrolling down the flow list.
+  ([#5507](https://github.com/mitmproxy/mitmproxy/pull/5507), @LIU-shuyi)
+* Add HTTP/3 binary frame content view.
+  ([#5582](https://github.com/mitmproxy/mitmproxy/pull/5582), @mhils)
+* Fix mitmweb not properly opening a browser and being stuck on some Linux.
+  ([#5522](https://github.com/mitmproxy/mitmproxy/issues/5522), @Prinzhorn)
+* Fix race condition when updating mitmweb WebSocket connections that are closing.
+  ([#5405](https://github.com/mitmproxy/mitmproxy/issues/5405), [#5686](https://github.com/mitmproxy/mitmproxy/issues/5686), @mhils)
+* Fix mitmweb crash when using filters.
+  ([#5658](https://github.com/mitmproxy/mitmproxy/issues/5658), [#5661](https://github.com/mitmproxy/mitmproxy/issues/5661), @LIU-shuyi, @mhils)
+* Fix missing default port when starting a browser.
+  ([#5687](https://github.com/mitmproxy/mitmproxy/issues/5687), @rbdixon)
+* Add docs for transparent mode on Windows.
+  ([#5402](https://github.com/mitmproxy/mitmproxy/issues/5402), @stephenspol)
+
+## 28 June 2022: mitmproxy 8.1.1
+
+* Support specifying the local address for outgoing connections
+  ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
+* Fix a bug where an excess empty chunk has been sent for chunked HEAD request.
+  ([#5372](https://github.com/mitmproxy/mitmproxy/discussions/5372), @jixunmoe)
+* Drop pkg_resources dependency.
+  ([#5401](https://github.com/mitmproxy/mitmproxy/issues/5401), @PavelICS)
+* Fix huge (>65kb) http2 responses corrupted.
+  ([#5428](https://github.com/mitmproxy/mitmproxy/issues/5428), @dhabensky)
+* Remove overambitious assertions in the HTTP state machine,
+  fix some error handling.
+  ([#5383](https://github.com/mitmproxy/mitmproxy/issues/5383), @mhils)
+* Use default_factory for parser_options.
+  ([#5474](https://github.com/mitmproxy/mitmproxy/issues/5474), @rathann)
+
 ## 15 May 2022: mitmproxy 8.1.0
 
 * DNS support
-  ([#5232](https://github.com/mitmproxy/mitmproxy/issues/5227), @meitinger)
+  ([#5232](https://github.com/mitmproxy/mitmproxy/pull/5232), @meitinger)
 * Mitmproxy now requires Python 3.9 or above.
   ([#5233](https://github.com/mitmproxy/mitmproxy/issues/5233), @mhils)
 * Fix a memory leak in mitmdump where flows were kept in memory.
@@ -49,6 +148,8 @@
   ([#5339](https://github.com/mitmproxy/mitmproxy/issues/5339), @mhils)
 * Fix handling of multiple Cookie headers when proxying HTTP/2 to HTTP/1
   ([#5337](https://github.com/mitmproxy/mitmproxy/issues/5337), @rinsuki)
+* Improve http_manipulate_cookies.py example.
+  ([#5578](https://github.com/mitmproxy/mitmproxy/issues/5578), @insilications)
 
 ## 19 March 2022: mitmproxy 8.0.0
 

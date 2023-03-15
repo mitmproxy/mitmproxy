@@ -1,3 +1,4 @@
+import logging
 import os.path
 import sys
 from collections.abc import Sequence
@@ -7,7 +8,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import mitmproxy.types
-from mitmproxy import command, tcp
+from mitmproxy import command, tcp, udp
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -15,6 +16,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy.log import ALERT
 
 
 @lru_cache
@@ -136,7 +138,7 @@ class Save:
                     stream.add(i)
         except OSError as e:
             raise exceptions.CommandError(e) from e
-        ctx.log.alert(f"Saved {len(flows)} flows.")
+        logging.log(ALERT, f"Saved {len(flows)} flows.")
 
     def tcp_start(self, flow: tcp.TCPFlow):
         if self.stream:
@@ -147,6 +149,16 @@ class Save:
 
     def tcp_error(self, flow: tcp.TCPFlow):
         self.tcp_end(flow)
+
+    def udp_start(self, flow: udp.UDPFlow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def udp_end(self, flow: udp.UDPFlow):
+        self.save_flow(flow)
+
+    def udp_error(self, flow: udp.UDPFlow):
+        self.udp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
         self.save_flow(flow)

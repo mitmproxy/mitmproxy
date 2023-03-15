@@ -172,11 +172,6 @@ describe('flows actions', () => {
         expect(fetchApi).toBeCalledWith('/clear', {method: 'POST'})
     })
 
-    it('should handle download action', () => {
-        let state = reduceFlows(undefined, {})
-        expect(reduceFlows(state, flowActions.download())).toEqual(state)
-    })
-
     it('should handle upload action', () => {
         let body = new FormData()
         body.append('file', 'foo')

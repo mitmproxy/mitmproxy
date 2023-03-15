@@ -27,5 +27,6 @@ from BrowserUpMitmProxyClient.model.match_criteria import MatchCriteria
 from BrowserUpMitmProxyClient.model.name_value_pair import NameValuePair
 from BrowserUpMitmProxyClient.model.page import Page
 from BrowserUpMitmProxyClient.model.page_page_timings import PagePageTimings
+from BrowserUpMitmProxyClient.model.page_timing import PageTiming
 from BrowserUpMitmProxyClient.model.verify_result import VerifyResult
 from BrowserUpMitmProxyClient.model.web_socket_message import WebSocketMessage

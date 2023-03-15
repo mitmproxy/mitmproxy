@@ -68,5 +68,3 @@ public class ProgressResponseBody extends ResponseBody {
         };
     }
 }
-
-

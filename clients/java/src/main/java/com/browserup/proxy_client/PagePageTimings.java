@@ -20,9 +20,28 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.browserup.proxy_client.JSON;
 
 /**
  * PagePageTimings
@@ -37,10 +56,44 @@ public class PagePageTimings {
   @SerializedName(SERIALIZED_NAME_ON_LOAD)
   private Long onLoad = -1l;
 
+  public static final String SERIALIZED_NAME_DNS = "_dns";
+  @SerializedName(SERIALIZED_NAME_DNS)
+  private Long dns = -1l;
+
+  public static final String SERIALIZED_NAME_SSL = "_ssl";
+  @SerializedName(SERIALIZED_NAME_SSL)
+  private Long ssl = -1l;
+
+  public static final String SERIALIZED_NAME_TTFB = "_ttfb";
+  @SerializedName(SERIALIZED_NAME_TTFB)
+  private Long ttfb = -1l;
+
+  public static final String SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT = "_cumulativeLayoutShift";
+  @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
+  private Integer cumulativeLayoutShift = -1;
+
+  public static final String SERIALIZED_NAME_LARGEST_CONTENT_FULL_PAINT = "_largestContentFullPaint";
+  @SerializedName(SERIALIZED_NAME_LARGEST_CONTENT_FULL_PAINT)
+  private Long largestContentFullPaint = -1l;
+
+  public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
+  @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
+  private Long firstPaint = -1l;
+
+  public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
+  @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
+  private Long domInteractive = -1l;
+
+  public static final String SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT = "_firstContentfulPaint";
+  @SerializedName(SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT)
+  private Long firstContentfulPaint = -1l;
+
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
   private String comment;
 
+  public PagePageTimings() {
+  }
 
   public PagePageTimings onContentLoad(Long onContentLoad) {
     
@@ -53,7 +106,7 @@ public class PagePageTimings {
    * minimum: -1
    * @return onContentLoad
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public Long getOnContentLoad() {
     return onContentLoad;
@@ -76,7 +129,7 @@ public class PagePageTimings {
    * minimum: -1
    * @return onLoad
   **/
-  @ApiModelProperty(required = true, value = "")
+  @javax.annotation.Nonnull
 
   public Long getOnLoad() {
     return onLoad;
@@ -85,6 +138,190 @@ public class PagePageTimings {
 
   public void setOnLoad(Long onLoad) {
     this.onLoad = onLoad;
+  }
+
+
+  public PagePageTimings dns(Long dns) {
+    
+    this.dns = dns;
+    return this;
+  }
+
+   /**
+   * Get dns
+   * minimum: -1
+   * @return dns
+  **/
+  @javax.annotation.Nullable
+
+  public Long getDns() {
+    return dns;
+  }
+
+
+  public void setDns(Long dns) {
+    this.dns = dns;
+  }
+
+
+  public PagePageTimings ssl(Long ssl) {
+    
+    this.ssl = ssl;
+    return this;
+  }
+
+   /**
+   * Get ssl
+   * minimum: -1
+   * @return ssl
+  **/
+  @javax.annotation.Nullable
+
+  public Long getSsl() {
+    return ssl;
+  }
+
+
+  public void setSsl(Long ssl) {
+    this.ssl = ssl;
+  }
+
+
+  public PagePageTimings ttfb(Long ttfb) {
+    
+    this.ttfb = ttfb;
+    return this;
+  }
+
+   /**
+   * Get ttfb
+   * minimum: -1
+   * @return ttfb
+  **/
+  @javax.annotation.Nullable
+
+  public Long getTtfb() {
+    return ttfb;
+  }
+
+
+  public void setTtfb(Long ttfb) {
+    this.ttfb = ttfb;
+  }
+
+
+  public PagePageTimings cumulativeLayoutShift(Integer cumulativeLayoutShift) {
+    
+    this.cumulativeLayoutShift = cumulativeLayoutShift;
+    return this;
+  }
+
+   /**
+   * Get cumulativeLayoutShift
+   * minimum: -1
+   * @return cumulativeLayoutShift
+  **/
+  @javax.annotation.Nullable
+
+  public Integer getCumulativeLayoutShift() {
+    return cumulativeLayoutShift;
+  }
+
+
+  public void setCumulativeLayoutShift(Integer cumulativeLayoutShift) {
+    this.cumulativeLayoutShift = cumulativeLayoutShift;
+  }
+
+
+  public PagePageTimings largestContentFullPaint(Long largestContentFullPaint) {
+    
+    this.largestContentFullPaint = largestContentFullPaint;
+    return this;
+  }
+
+   /**
+   * Get largestContentFullPaint
+   * minimum: -1
+   * @return largestContentFullPaint
+  **/
+  @javax.annotation.Nullable
+
+  public Long getLargestContentFullPaint() {
+    return largestContentFullPaint;
+  }
+
+
+  public void setLargestContentFullPaint(Long largestContentFullPaint) {
+    this.largestContentFullPaint = largestContentFullPaint;
+  }
+
+
+  public PagePageTimings firstPaint(Long firstPaint) {
+    
+    this.firstPaint = firstPaint;
+    return this;
+  }
+
+   /**
+   * Get firstPaint
+   * minimum: -1
+   * @return firstPaint
+  **/
+  @javax.annotation.Nullable
+
+  public Long getFirstPaint() {
+    return firstPaint;
+  }
+
+
+  public void setFirstPaint(Long firstPaint) {
+    this.firstPaint = firstPaint;
+  }
+
+
+  public PagePageTimings domInteractive(Long domInteractive) {
+    
+    this.domInteractive = domInteractive;
+    return this;
+  }
+
+   /**
+   * Get domInteractive
+   * minimum: -1
+   * @return domInteractive
+  **/
+  @javax.annotation.Nullable
+
+  public Long getDomInteractive() {
+    return domInteractive;
+  }
+
+
+  public void setDomInteractive(Long domInteractive) {
+    this.domInteractive = domInteractive;
+  }
+
+
+  public PagePageTimings firstContentfulPaint(Long firstContentfulPaint) {
+    
+    this.firstContentfulPaint = firstContentfulPaint;
+    return this;
+  }
+
+   /**
+   * Get firstContentfulPaint
+   * minimum: -1
+   * @return firstContentfulPaint
+  **/
+  @javax.annotation.Nullable
+
+  public Long getFirstContentfulPaint() {
+    return firstContentfulPaint;
+  }
+
+
+  public void setFirstContentfulPaint(Long firstContentfulPaint) {
+    this.firstContentfulPaint = firstContentfulPaint;
   }
 
 
@@ -99,7 +336,6 @@ public class PagePageTimings {
    * @return comment
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(value = "")
 
   public String getComment() {
     return comment;
@@ -109,6 +345,7 @@ public class PagePageTimings {
   public void setComment(String comment) {
     this.comment = comment;
   }
+
 
 
   @Override
@@ -122,12 +359,20 @@ public class PagePageTimings {
     PagePageTimings pagePageTimings = (PagePageTimings) o;
     return Objects.equals(this.onContentLoad, pagePageTimings.onContentLoad) &&
         Objects.equals(this.onLoad, pagePageTimings.onLoad) &&
+        Objects.equals(this.dns, pagePageTimings.dns) &&
+        Objects.equals(this.ssl, pagePageTimings.ssl) &&
+        Objects.equals(this.ttfb, pagePageTimings.ttfb) &&
+        Objects.equals(this.cumulativeLayoutShift, pagePageTimings.cumulativeLayoutShift) &&
+        Objects.equals(this.largestContentFullPaint, pagePageTimings.largestContentFullPaint) &&
+        Objects.equals(this.firstPaint, pagePageTimings.firstPaint) &&
+        Objects.equals(this.domInteractive, pagePageTimings.domInteractive) &&
+        Objects.equals(this.firstContentfulPaint, pagePageTimings.firstContentfulPaint) &&
         Objects.equals(this.comment, pagePageTimings.comment);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(onContentLoad, onLoad, comment);
+    return Objects.hash(onContentLoad, onLoad, dns, ssl, ttfb, cumulativeLayoutShift, largestContentFullPaint, firstPaint, domInteractive, firstContentfulPaint, comment);
   }
 
   @Override
@@ -136,6 +381,14 @@ public class PagePageTimings {
     sb.append("class PagePageTimings {\n");
     sb.append("    onContentLoad: ").append(toIndentedString(onContentLoad)).append("\n");
     sb.append("    onLoad: ").append(toIndentedString(onLoad)).append("\n");
+    sb.append("    dns: ").append(toIndentedString(dns)).append("\n");
+    sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
+    sb.append("    ttfb: ").append(toIndentedString(ttfb)).append("\n");
+    sb.append("    cumulativeLayoutShift: ").append(toIndentedString(cumulativeLayoutShift)).append("\n");
+    sb.append("    largestContentFullPaint: ").append(toIndentedString(largestContentFullPaint)).append("\n");
+    sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
+    sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
+    sb.append("    firstContentfulPaint: ").append(toIndentedString(firstContentfulPaint)).append("\n");
     sb.append("    comment: ").append(toIndentedString(comment)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -152,5 +405,110 @@ public class PagePageTimings {
     return o.toString().replace("\n", "\n    ");
   }
 
+
+  public static HashSet<String> openapiFields;
+  public static HashSet<String> openapiRequiredFields;
+
+  static {
+    // a set of all properties/fields (JSON key names)
+    openapiFields = new HashSet<String>();
+    openapiFields.add("onContentLoad");
+    openapiFields.add("onLoad");
+    openapiFields.add("_dns");
+    openapiFields.add("_ssl");
+    openapiFields.add("_ttfb");
+    openapiFields.add("_cumulativeLayoutShift");
+    openapiFields.add("_largestContentFullPaint");
+    openapiFields.add("_firstPaint");
+    openapiFields.add("_domInteractive");
+    openapiFields.add("_firstContentfulPaint");
+    openapiFields.add("comment");
+
+    // a set of required properties/fields (JSON key names)
+    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields.add("onContentLoad");
+    openapiRequiredFields.add("onLoad");
+  }
+
+ /**
+  * Validates the JSON Object and throws an exception if issues found
+  *
+  * @param jsonObj JSON Object
+  * @throws IOException if the JSON Object is invalid with respect to PagePageTimings
+  */
+  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
+      if (jsonObj == null) {
+        if (!PagePageTimings.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+          throw new IllegalArgumentException(String.format("The required field(s) %s in PagePageTimings is not found in the empty JSON string", PagePageTimings.openapiRequiredFields.toString()));
+        }
+      }
+
+      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      // check to see if the JSON string contains additional fields
+      for (Entry<String, JsonElement> entry : entries) {
+        if (!PagePageTimings.openapiFields.contains(entry.getKey())) {
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `PagePageTimings` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+        }
+      }
+
+      // check to make sure all required properties/fields are present in the JSON string
+      for (String requiredField : PagePageTimings.openapiRequiredFields) {
+        if (jsonObj.get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        }
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
+      }
+  }
+
+  public static class CustomTypeAdapterFactory implements TypeAdapterFactory {
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+       if (!PagePageTimings.class.isAssignableFrom(type.getRawType())) {
+         return null; // this class only serializes 'PagePageTimings' and its subtypes
+       }
+       final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
+       final TypeAdapter<PagePageTimings> thisAdapter
+                        = gson.getDelegateAdapter(this, TypeToken.get(PagePageTimings.class));
+
+       return (TypeAdapter<T>) new TypeAdapter<PagePageTimings>() {
+           @Override
+           public void write(JsonWriter out, PagePageTimings value) throws IOException {
+             JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
+             elementAdapter.write(out, obj);
+           }
+
+           @Override
+           public PagePageTimings read(JsonReader in) throws IOException {
+             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
+             validateJsonObject(jsonObj);
+             return thisAdapter.fromJsonTree(jsonObj);
+           }
+
+       }.nullSafe();
+    }
+  }
+
+ /**
+  * Create an instance of PagePageTimings given an JSON string
+  *
+  * @param jsonString JSON string
+  * @return An instance of PagePageTimings
+  * @throws IOException if the JSON string is invalid with respect to PagePageTimings
+  */
+  public static PagePageTimings fromJson(String jsonString) throws IOException {
+    return JSON.getGson().fromJson(jsonString, PagePageTimings.class);
+  }
+
+ /**
+  * Convert an instance of PagePageTimings to an JSON string
+  *
+  * @return JSON string
+  */
+  public String toJson() {
+    return JSON.getGson().toJson(this);
+  }
 }
 

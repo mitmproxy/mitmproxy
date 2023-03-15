@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **value** | **Float** | Value for the counter |  |
 | **name** | **String** | Name of Custom Counter value you are adding to the page under _counters |  |
+| **value** | **Float** | Value for the counter |  |
 
 ## Example
 
@@ -13,8 +13,8 @@
 require 'browserup_mitmproxy_client'
 
 instance = BrowserupMitmProxy::Counter.new(
-  value: null,
-  name: null
+  name: null,
+  value: null
 )
 ```
 
