@@ -249,6 +249,29 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         with self.manager.register_connection(connection_id, handler):
             await handler.handle_client()
 
+    def handle_icmp_echo_request(
+        self,
+        transport: mitmproxy_rs.IcmpTransport,
+        ident: int,
+        seq_no: int,
+        data: bytes,
+        src_addr: str,
+        dst_addr: str,
+    ) -> None:
+
+        # Some apps check network connectivity by sending ICMP pings. ICMP traffic is currently
+        # swallowed by mitmproxy_rs, which makes them believe that there is no network connectivity.
+        # Generating fake ICMP replies as a temporary workaround.
+        # TODO: implement full ICMP forwarding
+        transport.send_fake_echo_reply(
+            ident,
+            seq_no,
+            data,
+        )
+
+        # TODO: update self.manager to display ICMP flow in the UI,
+        # possibly using (src_addr, dst_addr, ident) as a flow key
+
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     _server: asyncio.Server | udp.UdpServer | None = None
@@ -381,6 +404,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             [p],
             self.wg_handle_tcp_connection,
             self.handle_udp_datagram,
+            self.handle_icmp_echo_request,
         )
 
         conf = self.client_conf()
