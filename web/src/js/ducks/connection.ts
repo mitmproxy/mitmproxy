@@ -6,16 +6,15 @@ export enum ConnectionState {
     OFFLINE = "CONNECTION_OFFLINE", // indicates that there is no live (websocket) backend.
 }
 
-
 interface ConnState {
-    state: ConnectionState,
-    message?: string
+    state: ConnectionState;
+    message?: string;
 }
 
 const defaultState: ConnState = {
     state: ConnectionState.INIT,
     message: undefined,
-}
+};
 
 export default function reducer(state = defaultState, action): ConnState {
     switch (action.type) {
@@ -25,26 +24,26 @@ export default function reducer(state = defaultState, action): ConnState {
         case ConnectionState.OFFLINE:
             return {
                 state: action.type,
-                message: action.message
-            }
+                message: action.message,
+            };
 
         default:
-            return state
+            return state;
     }
 }
 
 export function startFetching() {
-    return {type: ConnectionState.FETCHING}
+    return { type: ConnectionState.FETCHING };
 }
 
 export function connectionEstablished() {
-    return {type: ConnectionState.ESTABLISHED}
+    return { type: ConnectionState.ESTABLISHED };
 }
 
 export function connectionError(message) {
-    return {type: ConnectionState.ERROR, message}
+    return { type: ConnectionState.ERROR, message };
 }
 
 export function setOffline() {
-    return {type: ConnectionState.OFFLINE}
+    return { type: ConnectionState.OFFLINE };
 }

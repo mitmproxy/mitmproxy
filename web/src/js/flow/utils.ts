@@ -1,8 +1,8 @@
-import {Flow, HTTPMessage, HTTPRequest} from "../flow";
+import { Flow, HTTPMessage, HTTPRequest } from "../flow";
 
 const defaultPorts = {
-    "http": 80,
-    "https": 443
+    http: 80,
+    https: 443,
 };
 
 export class MessageUtils {
@@ -19,13 +19,15 @@ export class MessageUtils {
     ): string | undefined {
         //FIXME: Cache Invalidation.
         // @ts-ignore
-        const msg: HTTPMessage & { _headerLookups: { [regex: string]: string | undefined } } = message;
+        const msg: HTTPMessage & {
+            _headerLookups: { [regex: string]: string | undefined };
+        } = message;
         if (!msg._headerLookups)
             Object.defineProperty(msg, "_headerLookups", {
                 value: {},
                 configurable: false,
                 enumerable: false,
-                writable: false
+                writable: false,
             });
         let regexStr = regex.toString();
         if (!(regexStr in msg._headerLookups)) {
@@ -64,7 +66,12 @@ export class MessageUtils {
             part = "response";
         }
         const lineStr = lines ? `?lines=${lines}` : "";
-        return `./flows/${flow.id}/${part}/` + (view ? `content/${encodeURIComponent(view)}.json${lineStr}` : 'content.data');
+        return (
+            `./flows/${flow.id}/${part}/` +
+            (view
+                ? `content/${encodeURIComponent(view)}.json${lineStr}`
+                : "content.data")
+        );
     }
 }
 
@@ -74,20 +81,20 @@ export class RequestUtils extends MessageUtils {
         if (defaultPorts[request.scheme] !== request.port) {
             port = ":" + request.port;
         }
-        return request.scheme + "://" + request.pretty_host + port + request.path;
+        return (
+            request.scheme + "://" + request.pretty_host + port + request.path
+        );
     }
 }
 
-export class ResponseUtils extends MessageUtils {
-
-}
+export class ResponseUtils extends MessageUtils {}
 
 type ParsedUrl = {
-    scheme?: string
-    host?: string
-    port?: number
-    path?: string
-}
+    scheme?: string;
+    host?: string;
+    port?: number;
+    path?: string;
+};
 
 var parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
 export var parseUrl = function (url): ParsedUrl | undefined {
@@ -121,22 +128,20 @@ export var parseUrl = function (url): ParsedUrl | undefined {
     return ret;
 };
 
-
 const isValidHttpVersion_regex = /^HTTP\/\d+(\.\d+)*$/i;
 export var isValidHttpVersion = function (httpVersion: string): boolean {
     return isValidHttpVersion_regex.test(httpVersion);
 };
 
-
 export function startTime(flow: Flow): number | undefined {
     switch (flow.type) {
         case "http":
-            return flow.request.timestamp_start
+            return flow.request.timestamp_start;
         case "tcp":
         case "udp":
-            return flow.client_conn.timestamp_start
+            return flow.client_conn.timestamp_start;
         case "dns":
-            return flow.request.timestamp
+            return flow.request.timestamp;
     }
 }
 
@@ -145,46 +150,44 @@ export function endTime(flow: Flow): number | undefined {
         case "http":
             if (flow.websocket) {
                 if (flow.websocket.timestamp_end)
-                    return flow.websocket.timestamp_end
+                    return flow.websocket.timestamp_end;
                 if (flow.websocket.messages_meta.timestamp_last)
-                    return flow.websocket.messages_meta.timestamp_last
+                    return flow.websocket.messages_meta.timestamp_last;
             }
             if (flow.response) {
-                return flow.response.timestamp_end
+                return flow.response.timestamp_end;
             }
-            return undefined
+            return undefined;
         case "tcp":
-            return flow.server_conn?.timestamp_end
+            return flow.server_conn?.timestamp_end;
         case "udp":
             // there is no formal close here and server_conn.timestamp_end usually represents the timeout timestamp,
             // which is not quite what we want.
-            return flow.messages_meta.timestamp_last
+            return flow.messages_meta.timestamp_last;
         case "dns":
-            return flow.response?.timestamp
+            return flow.response?.timestamp;
     }
-
 }
 
 export const getTotalSize = (flow: Flow): number => {
     switch (flow.type) {
         case "http":
-            let total = flow.request.contentLength || 0
+            let total = flow.request.contentLength || 0;
             if (flow.response) {
-                total += flow.response.contentLength || 0
+                total += flow.response.contentLength || 0;
             }
             if (flow.websocket) {
-                total += flow.websocket.messages_meta.contentLength || 0
+                total += flow.websocket.messages_meta.contentLength || 0;
             }
-            return total
+            return total;
         case "tcp":
         case "udp":
-            return flow.messages_meta.contentLength || 0
+            return flow.messages_meta.contentLength || 0;
         case "dns":
-            return flow.response?.size ?? 0
+            return flow.response?.size ?? 0;
     }
-}
-
+};
 
 export const canReplay = (flow: Flow): boolean => {
-    return (flow.type === "http" && !flow.websocket)
-}
+    return flow.type === "http" && !flow.websocket;
+};

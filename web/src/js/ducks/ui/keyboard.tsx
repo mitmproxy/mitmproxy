@@ -1,143 +1,150 @@
-import {selectTab} from "./flow"
-import * as flowsActions from "../flows"
-import * as modalActions from "./modal"
-import {tabsForFlow} from "../../components/FlowView";
-import {runCommand} from "../../utils"
-
+import { selectTab } from "./flow";
+import * as flowsActions from "../flows";
+import * as modalActions from "./modal";
+import { tabsForFlow } from "../../components/FlowView";
+import { runCommand } from "../../utils";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
     if (e.ctrlKey || e.metaKey) {
-        return () => {
-        }
+        return () => {};
     }
     const key = e.key;
-    e.preventDefault()
+    e.preventDefault();
     return (dispatch, getState) => {
-
         const flows = getState().flows,
-            flow = flows.byId[getState().flows.selected[0]]
+            flow = flows.byId[getState().flows.selected[0]];
 
         switch (key) {
             case "k":
             case "ArrowUp":
-                dispatch(flowsActions.selectRelative(flows, -1))
-                break
+                dispatch(flowsActions.selectRelative(flows, -1));
+                break;
 
             case "j":
             case "ArrowDown":
-                dispatch(flowsActions.selectRelative(flows, +1))
-                break
+                dispatch(flowsActions.selectRelative(flows, +1));
+                break;
 
             case " ":
             case "PageDown":
-                dispatch(flowsActions.selectRelative(flows, +10))
-                break
+                dispatch(flowsActions.selectRelative(flows, +10));
+                break;
 
             case "PageUp":
-                dispatch(flowsActions.selectRelative(flows, -10))
-                break
+                dispatch(flowsActions.selectRelative(flows, -10));
+                break;
 
             case "End":
-                dispatch(flowsActions.selectRelative(flows, +1e10))
-                break
+                dispatch(flowsActions.selectRelative(flows, +1e10));
+                break;
 
             case "Home":
-                dispatch(flowsActions.selectRelative(flows, -1e10))
-                break
+                dispatch(flowsActions.selectRelative(flows, -1e10));
+                break;
 
             case "Escape":
                 if (getState().ui.modal.activeModal) {
-                    dispatch(modalActions.hideModal())
+                    dispatch(modalActions.hideModal());
                 } else {
-                    dispatch(flowsActions.select(undefined))
+                    dispatch(flowsActions.select(undefined));
                 }
-                break
+                break;
 
             case "ArrowLeft": {
-                if (!flow) break
+                if (!flow) break;
                 let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab = tabs[(Math.max(0, tabs.indexOf(currentTab)) - 1 + tabs.length) % tabs.length]
-                dispatch(selectTab(nextTab))
-                break
+                    nextTab =
+                        tabs[
+                            (Math.max(0, tabs.indexOf(currentTab)) -
+                                1 +
+                                tabs.length) %
+                                tabs.length
+                        ];
+                dispatch(selectTab(nextTab));
+                break;
             }
 
             case "Tab":
             case "ArrowRight": {
-                if (!flow) break
+                if (!flow) break;
                 let tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
-                    nextTab = tabs[(Math.max(0, tabs.indexOf(currentTab)) + 1) % tabs.length]
-                dispatch(selectTab(nextTab))
-                break
+                    nextTab =
+                        tabs[
+                            (Math.max(0, tabs.indexOf(currentTab)) + 1) %
+                                tabs.length
+                        ];
+                dispatch(selectTab(nextTab));
+                break;
             }
 
             case "Delete":
             case "d": {
                 if (!flow) {
-                    return
+                    return;
                 }
-                dispatch(flowsActions.remove(flow))
-                break
+                dispatch(flowsActions.remove(flow));
+                break;
             }
 
             case "n": {
-                runCommand("view.flows.create", "get", "https://example.com/")
-                break
+                runCommand("view.flows.create", "get", "https://example.com/");
+                break;
             }
 
             case "D": {
                 if (!flow) {
-                    return
+                    return;
                 }
-                dispatch(flowsActions.duplicate(flow))
-                break
+                dispatch(flowsActions.duplicate(flow));
+                break;
             }
             case "a": {
                 if (flow && flow.intercepted) {
-                    dispatch(flowsActions.resume(flow))
+                    dispatch(flowsActions.resume(flow));
                 }
-                break
+                break;
             }
             case "A": {
-                dispatch(flowsActions.resumeAll())
-                break
+                dispatch(flowsActions.resumeAll());
+                break;
             }
 
             case "r": {
                 if (flow) {
-                    dispatch(flowsActions.replay(flow))
+                    dispatch(flowsActions.replay(flow));
                 }
-                break
+                break;
             }
 
             case "v": {
                 if (flow && flow.modified) {
-                    dispatch(flowsActions.revert(flow))
+                    dispatch(flowsActions.revert(flow));
                 }
-                break
+                break;
             }
 
             case "x": {
                 if (flow && flow.intercepted) {
-                    dispatch(flowsActions.kill(flow))
+                    dispatch(flowsActions.kill(flow));
                 }
-                break
+                break;
             }
 
             case "X": {
-                dispatch(flowsActions.killAll())
-                break
+                dispatch(flowsActions.killAll());
+                break;
             }
 
             case "z": {
-                dispatch(flowsActions.clear())
-                break
+                dispatch(flowsActions.clear());
+                break;
             }
 
             default:
-                return
+                return;
         }
-    }
+    };
 }

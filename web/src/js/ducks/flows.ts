@@ -1,43 +1,42 @@
-import {fetchApi} from "../utils"
-import * as store from "./utils/store"
-import Filt from "../filt/filt"
-import {Flow} from "../flow";
+import { fetchApi } from "../utils";
+import * as store from "./utils/store";
+import Filt from "../filt/filt";
+import { Flow } from "../flow";
 import FlowColumns from "../components/FlowTable/FlowColumns";
 
-export const ADD = 'FLOWS_ADD'
-export const UPDATE = 'FLOWS_UPDATE'
-export const REMOVE = 'FLOWS_REMOVE'
-export const RECEIVE = 'FLOWS_RECEIVE'
-export const SELECT = 'FLOWS_SELECT'
-export const SET_FILTER = 'FLOWS_SET_FILTER'
-export const SET_SORT = 'FLOWS_SET_SORT'
-export const SET_HIGHLIGHT = 'FLOWS_SET_HIGHLIGHT'
+export const ADD = "FLOWS_ADD";
+export const UPDATE = "FLOWS_UPDATE";
+export const REMOVE = "FLOWS_REMOVE";
+export const RECEIVE = "FLOWS_RECEIVE";
+export const SELECT = "FLOWS_SELECT";
+export const SET_FILTER = "FLOWS_SET_FILTER";
+export const SET_SORT = "FLOWS_SET_SORT";
+export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
 
-interface FlowSortFn extends store.SortFn<Flow> {
-}
+interface FlowSortFn extends store.SortFn<Flow> {}
 
-interface FlowFilterFn extends store.FilterFn<Flow> {
-}
-
+interface FlowFilterFn extends store.FilterFn<Flow> {}
 
 export interface FlowsState extends store.State<Flow> {
-    highlight?: string,
-    filter?: string,
-    sort: { column?: keyof typeof FlowColumns, desc: boolean },
-    selected: string[],
+    highlight?: string;
+    filter?: string;
+    sort: { column?: keyof typeof FlowColumns; desc: boolean };
+    selected: string[];
 }
 
 export const defaultState: FlowsState = {
     highlight: undefined,
     filter: undefined,
-    sort: {column: undefined, desc: false},
+    sort: { column: undefined, desc: false },
     selected: [],
-    ...store.defaultState
-}
+    ...store.defaultState,
+};
 
-export default function reducer(state: FlowsState = defaultState, action): FlowsState {
+export default function reducer(
+    state: FlowsState = defaultState,
+    action
+): FlowsState {
     switch (action.type) {
-
         case ADD:
         case UPDATE:
         case REMOVE:
@@ -46,23 +45,30 @@ export default function reducer(state: FlowsState = defaultState, action): Flows
                 action.data,
                 makeFilter(state.filter),
                 makeSort(state.sort)
-            )
+            );
 
-            let selected = state.selected
-            if (action.type === REMOVE && state.selected.includes(action.data)) {
+            let selected = state.selected;
+            if (
+                action.type === REMOVE &&
+                state.selected.includes(action.data)
+            ) {
                 if (state.selected.length > 1) {
-                    selected = selected.filter(x => x !== action.data)
+                    selected = selected.filter((x) => x !== action.data);
                 } else {
-                    selected = []
-                    if (action.data in state.viewIndex && state.view.length > 1) {
+                    selected = [];
+                    if (
+                        action.data in state.viewIndex &&
+                        state.view.length > 1
+                    ) {
                         let currentIndex = state.viewIndex[action.data],
-                            nextSelection
-                        if (currentIndex === state.view.length - 1) { // last row
-                            nextSelection = state.view[currentIndex - 1]
+                            nextSelection;
+                        if (currentIndex === state.view.length - 1) {
+                            // last row
+                            nextSelection = state.view[currentIndex - 1];
                         } else {
-                            nextSelection = state.view[currentIndex + 1]
+                            nextSelection = state.view[currentIndex + 1];
                         }
-                        selected.push(nextSelection.id)
+                        selected.push(nextSelection.id);
                     }
                 }
             }
@@ -70,153 +76,169 @@ export default function reducer(state: FlowsState = defaultState, action): Flows
             return {
                 ...state,
                 selected,
-                ...store.reduce(state, storeAction)
-            }
+                ...store.reduce(state, storeAction),
+            };
 
         case SET_FILTER:
             return {
                 ...state,
                 filter: action.filter,
-                ...store.reduce(state, store.setFilter(makeFilter(action.filter), makeSort(state.sort)))
-            }
+                ...store.reduce(
+                    state,
+                    store.setFilter(
+                        makeFilter(action.filter),
+                        makeSort(state.sort)
+                    )
+                ),
+            };
 
         case SET_HIGHLIGHT:
             return {
                 ...state,
-                highlight: action.highlight
-            }
+                highlight: action.highlight,
+            };
 
         case SET_SORT:
             return {
                 ...state,
                 sort: action.sort,
-                ...store.reduce(state, store.setSort(makeSort(action.sort)))
-            }
+                ...store.reduce(state, store.setSort(makeSort(action.sort))),
+            };
 
         case SELECT:
             return {
                 ...state,
-                selected: action.flowIds
-            }
+                selected: action.flowIds,
+            };
 
         default:
-            return state
+            return state;
     }
 }
 
 export function makeFilter(filter?: string): FlowFilterFn | undefined {
     if (!filter) {
-        return
+        return;
     }
-    return Filt.parse(filter)
+    return Filt.parse(filter);
 }
 
-export function makeSort({column, desc}: { column?: keyof typeof FlowColumns, desc: boolean }): FlowSortFn {
+export function makeSort({
+    column,
+    desc,
+}: {
+    column?: keyof typeof FlowColumns;
+    desc: boolean;
+}): FlowSortFn {
     if (!column) {
-        return (a,b) => 0;
+        return (a, b) => 0;
     }
-    const sortKeyFun = FlowColumns[column].sortKey
+    const sortKeyFun = FlowColumns[column].sortKey;
     return (a, b) => {
-        const ka = sortKeyFun(a)
-        const kb = sortKeyFun(b)
+        const ka = sortKeyFun(a);
+        const kb = sortKeyFun(b);
         if (ka > kb) {
-            return desc ? -1 : 1
+            return desc ? -1 : 1;
         }
         if (ka < kb) {
-            return desc ? 1 : -1
+            return desc ? 1 : -1;
         }
-        return 0
-    }
+        return 0;
+    };
 }
 
 export function setFilter(filter: string) {
-    return {type: SET_FILTER, filter}
+    return { type: SET_FILTER, filter };
 }
 
 export function setHighlight(highlight: string) {
-    return {type: SET_HIGHLIGHT, highlight}
+    return { type: SET_HIGHLIGHT, highlight };
 }
 
 export function setSort(column: string, desc: boolean) {
-    return {type: SET_SORT, sort: {column, desc}}
+    return { type: SET_SORT, sort: { column, desc } };
 }
 
 export function selectRelative(flows, shift) {
-    let currentSelectionIndex = flows.viewIndex[flows.selected[0]]
-    let minIndex = 0
-    let maxIndex = flows.view.length - 1
-    let newIndex
+    let currentSelectionIndex = flows.viewIndex[flows.selected[0]];
+    let minIndex = 0;
+    let maxIndex = flows.view.length - 1;
+    let newIndex;
     if (currentSelectionIndex === undefined) {
-        newIndex = (shift < 0) ? minIndex : maxIndex
+        newIndex = shift < 0 ? minIndex : maxIndex;
     } else {
-        newIndex = currentSelectionIndex + shift
-        newIndex = window.Math.max(newIndex, minIndex)
-        newIndex = window.Math.min(newIndex, maxIndex)
+        newIndex = currentSelectionIndex + shift;
+        newIndex = window.Math.max(newIndex, minIndex);
+        newIndex = window.Math.min(newIndex, maxIndex);
     }
-    let flow = flows.view[newIndex]
-    return select(flow ? flow.id : undefined)
+    let flow = flows.view[newIndex];
+    return select(flow ? flow.id : undefined);
 }
 
-
 export function resume(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/resume`, {method: 'POST'})
+    return (dispatch) =>
+        fetchApi(`/flows/${flow.id}/resume`, { method: "POST" });
 }
 
 export function resumeAll() {
-    return dispatch => fetchApi('/flows/resume', {method: 'POST'})
+    return (dispatch) => fetchApi("/flows/resume", { method: "POST" });
 }
 
 export function kill(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/kill`, {method: 'POST'})
+    return (dispatch) => fetchApi(`/flows/${flow.id}/kill`, { method: "POST" });
 }
 
 export function killAll() {
-    return dispatch => fetchApi('/flows/kill', {method: 'POST'})
+    return (dispatch) => fetchApi("/flows/kill", { method: "POST" });
 }
 
-
 export function remove(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}`, {method: 'DELETE'})
+    return (dispatch) => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 
 export function duplicate(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/duplicate`, {method: 'POST'})
+    return (dispatch) =>
+        fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
 }
 
 export function replay(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/replay`, {method: 'POST'})
+    return (dispatch) =>
+        fetchApi(`/flows/${flow.id}/replay`, { method: "POST" });
 }
 
 export function revert(flow: Flow) {
-    return dispatch => fetchApi(`/flows/${flow.id}/revert`, {method: 'POST'})
+    return (dispatch) =>
+        fetchApi(`/flows/${flow.id}/revert`, { method: "POST" });
 }
 
 export function update(flow: Flow, data) {
-    return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
+    return (dispatch) => fetchApi.put(`/flows/${flow.id}`, data);
 }
 
 export function uploadContent(flow: Flow, file, type) {
-    const body = new FormData()
-    file = new window.Blob([file], {type: 'plain/text'})
-    body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content.data`, {method: 'POST', body})
+    const body = new FormData();
+    file = new window.Blob([file], { type: "plain/text" });
+    body.append("file", file);
+    return (dispatch) =>
+        fetchApi(`/flows/${flow.id}/${type}/content.data`, {
+            method: "POST",
+            body,
+        });
 }
 
-
 export function clear() {
-    return dispatch => fetchApi('/clear', {method: 'POST'})
+    return (dispatch) => fetchApi("/clear", { method: "POST" });
 }
 
 export function upload(file) {
-    const body = new FormData()
-    body.append('file', file)
-    return dispatch => fetchApi('/flows/dump', {method: 'POST', body})
+    const body = new FormData();
+    body.append("file", file);
+    return (dispatch) => fetchApi("/flows/dump", { method: "POST", body });
 }
-
 
 export function select(id?: string) {
     return {
         type: SELECT,
-        flowIds: id ? [id] : []
-    }
+        flowIds: id ? [id] : [],
+    };
 }

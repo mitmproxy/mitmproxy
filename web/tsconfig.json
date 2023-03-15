@@ -4,6 +4,6 @@
         "moduleResolution": "node",
         "esModuleInterop": true,
         "jsx": "react",
-        "strictNullChecks": true,
+        "strictNullChecks": true
     }
 }

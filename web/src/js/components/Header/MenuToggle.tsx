@@ -1,38 +1,36 @@
 import * as React from "react";
-import {useDispatch} from "react-redux"
+import { useDispatch } from "react-redux"
 import * as eventLogActions from "../../ducks/eventLog"
 import * as commandBarActions from "../../ducks/commandBar"
-import {useAppDispatch, useAppSelector} from "../../ducks"
+import { useAppDispatch, useAppSelector } from "../../ducks"
 import * as optionsActions from "../../ducks/options"
 import { toggleFlowViewType } from "../../ducks/ui/flow";
 
 type MenuToggleProps = {
-    value: boolean
-    onChange: (e: React.ChangeEvent) => void
-    children: React.ReactNode
-}
+    value: boolean;
+    onChange: (e: React.ChangeEvent) => void;
+    children: React.ReactNode;
+};
 
-export function MenuToggle({value, onChange, children}: MenuToggleProps) {
+export function MenuToggle({ value, onChange, children }: MenuToggleProps) {
     return (
         <div className="menu-entry">
             <label>
-                <input type="checkbox"
-                       checked={value}
-                       onChange={onChange}/>
+                <input type="checkbox" checked={value} onChange={onChange} />
                 {children}
             </label>
         </div>
-    )
+    );
 }
 
 type OptionsToggleProps = {
-    name: optionsActions.Option,
-    children: React.ReactNode
-}
+    name: optionsActions.Option;
+    children: React.ReactNode;
+};
 
-export function OptionsToggle({name, children}: OptionsToggleProps) {
+export function OptionsToggle({ name, children }: OptionsToggleProps) {
     const dispatch = useAppDispatch(),
-        value = useAppSelector(state => state.options[name]);
+        value = useAppSelector((state) => state.options[name]);
 
     return (
         <MenuToggle
@@ -41,13 +39,12 @@ export function OptionsToggle({name, children}: OptionsToggleProps) {
         >
             {children}
         </MenuToggle>
-    )
+    );
 }
-
 
 export function EventlogToggle() {
     const dispatch = useDispatch(),
-        visible = useAppSelector(state => state.eventLog.visible);
+        visible = useAppSelector((state) => state.eventLog.visible);
 
     return (
         <MenuToggle
@@ -56,12 +53,12 @@ export function EventlogToggle() {
         >
             Display Event Log
         </MenuToggle>
-    )
+    );
 }
 
 export function CommandBarToggle() {
     const dispatch = useDispatch(),
-        visible = useAppSelector(state => state.commandBar.visible);
+        visible = useAppSelector((state) => state.commandBar.visible);
 
     return (
         <MenuToggle
@@ -70,7 +67,7 @@ export function CommandBarToggle() {
         >
             Display Command Bar
         </MenuToggle>
-    )
+    );
 }
 
 export function TreeViewToggle() {
