@@ -258,7 +258,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         src_addr: str,
         dst_addr: str,
     ) -> None:
-
         # Some apps check network connectivity by sending ICMP pings. ICMP traffic is currently
         # swallowed by mitmproxy_rs, which makes them believe that there is no network connectivity.
         # Generating fake ICMP replies as a temporary workaround.
