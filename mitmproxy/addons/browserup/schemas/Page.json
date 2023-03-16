@@ -57,6 +57,10 @@
           "minimum": -1,
           "default": -1
         },
+        "_href": {
+          "type": "string",
+          "default": ""
+        },
         "_dns": {
           "type": "integer",
           "format": "int64",
@@ -88,6 +92,12 @@
           "default": -1
         },
         "_firstPaint": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": -1,
+          "default": -1
+        },
+        "_firstInputDelay": {
           "type": "integer",
           "format": "int64",
           "minimum": -1,
