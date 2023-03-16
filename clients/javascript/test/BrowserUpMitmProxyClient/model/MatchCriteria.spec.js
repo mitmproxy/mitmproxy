@@ -50,7 +50,7 @@
   describe('MatchCriteria', function() {
     it('should create an instance of MatchCriteria', function() {
       // uncomment below and update the code to test MatchCriteria
-      //var instane = new BrowserUpMitmProxyClient.MatchCriteria();
+      //var instance = new BrowserUpMitmProxyClient.MatchCriteria();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.MatchCriteria);
     });
 

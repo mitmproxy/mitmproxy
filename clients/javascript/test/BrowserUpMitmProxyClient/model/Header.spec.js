@@ -50,7 +50,7 @@
   describe('Header', function() {
     it('should create an instance of Header', function() {
       // uncomment below and update the code to test Header
-      //var instane = new BrowserUpMitmProxyClient.Header();
+      //var instance = new BrowserUpMitmProxyClient.Header();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.Header);
     });
 

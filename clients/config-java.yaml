@@ -10,7 +10,7 @@ artifactId: browserup-mitmproxy-client
 # artifactUrl
 
 # artifact version in generated pom.xml. This also becomes part of the generated library's filename (Default: 1.0.0)
-artifactVersion: 1.0.1-SNAPSHOT
+artifactVersion: 1.0.2-SNAPSHOT
 
 #  package for generated models (Default: org.openapitools.client.model)
 modelPackage: com.browserup.proxy-client
@@ -66,7 +66,6 @@ licenseName: MIT
 #    microprofileFramework
 #    Framework for microprofile. Possible values "kumuluzee"
 
-templateDir: java-overlay
 
 
 

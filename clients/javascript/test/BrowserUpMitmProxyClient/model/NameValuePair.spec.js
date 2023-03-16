@@ -50,7 +50,7 @@
   describe('NameValuePair', function() {
     it('should create an instance of NameValuePair', function() {
       // uncomment below and update the code to test NameValuePair
-      //var instane = new BrowserUpMitmProxyClient.NameValuePair();
+      //var instance = new BrowserUpMitmProxyClient.NameValuePair();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.NameValuePair);
     });
 

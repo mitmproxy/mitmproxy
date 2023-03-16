@@ -140,10 +140,6 @@ module BrowserupMitmProxy
         invalid_properties.push('invalid value for "title", title cannot be nil.')
       end
 
-      if @_verifications.nil?
-        invalid_properties.push('invalid value for "_verifications", _verifications cannot be nil.')
-      end
-
       if @page_timings.nil?
         invalid_properties.push('invalid value for "page_timings", page_timings cannot be nil.')
       end
@@ -157,7 +153,6 @@ module BrowserupMitmProxy
       return false if @started_date_time.nil?
       return false if @id.nil?
       return false if @title.nil?
-      return false if @_verifications.nil?
       return false if @page_timings.nil?
       true
     end

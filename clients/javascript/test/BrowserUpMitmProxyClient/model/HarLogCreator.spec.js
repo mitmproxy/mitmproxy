@@ -50,7 +50,7 @@
   describe('HarLogCreator', function() {
     it('should create an instance of HarLogCreator', function() {
       // uncomment below and update the code to test HarLogCreator
-      //var instane = new BrowserUpMitmProxyClient.HarLogCreator();
+      //var instance = new BrowserUpMitmProxyClient.HarLogCreator();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.HarLogCreator);
     });
 

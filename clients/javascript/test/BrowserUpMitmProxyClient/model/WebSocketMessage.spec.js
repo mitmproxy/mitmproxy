@@ -50,7 +50,7 @@
   describe('WebSocketMessage', function() {
     it('should create an instance of WebSocketMessage', function() {
       // uncomment below and update the code to test WebSocketMessage
-      //var instane = new BrowserUpMitmProxyClient.WebSocketMessage();
+      //var instance = new BrowserUpMitmProxyClient.WebSocketMessage();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.WebSocketMessage);
     });
 

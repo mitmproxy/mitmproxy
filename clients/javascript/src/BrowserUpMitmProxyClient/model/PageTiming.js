@@ -22,24 +22,10 @@ class PageTiming {
     /**
      * Constructs a new <code>PageTiming</code>.
      * @alias module:BrowserUpMitmProxyClient/model/PageTiming
-     * @param name {String} Name of Custom Counter value you are adding to the page under counters
-     * @param onContentLoad {Number} onContentLoad per the browser
-     * @param firstPaint {Number} firstPaint from the browser
-     * @param dns {Number} dns lookup time from the browser
-     * @param ssl {Number} Ssl connect time from the browser
-     * @param firstContentfulPaint {Number} firstContentfulPaint from the browser
-     * @param cumulativeLayoutShift {Number} cumulativeLayoutShift metric from the browser
-     * @param ttfb {Number} Time to first byte of the page's first request per the browser
-     * @param value {Number} Value for the counter
-     * @param firstInputDelay {Number} firstInputDelay from the browser
-     * @param largestContentFullPaint {Number} largestContentFullPaint from the browser
-     * @param onLoad {Number} onLoad per the browser
-     * @param domInteractive {Number} domInteractive from the browser
-     * @param href {String} Top level href, including hashtag, etc per the browser
      */
-    constructor(name, onContentLoad, firstPaint, dns, ssl, firstContentfulPaint, cumulativeLayoutShift, ttfb, value, firstInputDelay, largestContentFullPaint, onLoad, domInteractive, href) { 
+    constructor() { 
         
-        PageTiming.initialize(this, name, onContentLoad, firstPaint, dns, ssl, firstContentfulPaint, cumulativeLayoutShift, ttfb, value, firstInputDelay, largestContentFullPaint, onLoad, domInteractive, href);
+        PageTiming.initialize(this);
     }
 
     /**
@@ -47,21 +33,7 @@ class PageTiming {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, name, onContentLoad, firstPaint, dns, ssl, firstContentfulPaint, cumulativeLayoutShift, ttfb, value, firstInputDelay, largestContentFullPaint, onLoad, domInteractive, href) { 
-        obj['name'] = name;
-        obj['onContentLoad'] = onContentLoad;
-        obj['_firstPaint'] = firstPaint;
-        obj['_dns'] = dns;
-        obj['_ssl'] = ssl;
-        obj['_firstContentfulPaint'] = firstContentfulPaint;
-        obj['_cumulativeLayoutShift'] = cumulativeLayoutShift;
-        obj['_ttfb'] = ttfb;
-        obj['value'] = value;
-        obj['_firstInputDelay'] = firstInputDelay;
-        obj['_largestContentFullPaint'] = largestContentFullPaint;
-        obj['onLoad'] = onLoad;
-        obj['_domInteractive'] = domInteractive;
-        obj['_href'] = href;
+    static initialize(obj) { 
     }
 
     /**
@@ -75,47 +47,41 @@ class PageTiming {
         if (data) {
             obj = obj || new PageTiming();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
+            if (data.hasOwnProperty('_firstPaint')) {
+                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
             }
             if (data.hasOwnProperty('onContentLoad')) {
                 obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], 'Number');
             }
-            if (data.hasOwnProperty('_firstPaint')) {
-                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
-            }
-            if (data.hasOwnProperty('_dns')) {
-                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
-            }
-            if (data.hasOwnProperty('_ssl')) {
-                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
-            }
-            if (data.hasOwnProperty('_firstContentfulPaint')) {
-                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
-            }
-            if (data.hasOwnProperty('_cumulativeLayoutShift')) {
-                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
-            }
             if (data.hasOwnProperty('_ttfb')) {
                 obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], 'Number');
-            }
-            if (data.hasOwnProperty('value')) {
-                obj['value'] = ApiClient.convertToType(data['value'], 'Number');
-            }
-            if (data.hasOwnProperty('_firstInputDelay')) {
-                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], 'Number');
-            }
-            if (data.hasOwnProperty('_largestContentFullPaint')) {
-                obj['_largestContentFullPaint'] = ApiClient.convertToType(data['_largestContentFullPaint'], 'Number');
-            }
-            if (data.hasOwnProperty('onLoad')) {
-                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
             }
             if (data.hasOwnProperty('_domInteractive')) {
                 obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
             }
+            if (data.hasOwnProperty('_ssl')) {
+                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
+            }
             if (data.hasOwnProperty('_href')) {
                 obj['_href'] = ApiClient.convertToType(data['_href'], 'String');
+            }
+            if (data.hasOwnProperty('_firstContentfulPaint')) {
+                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
+            }
+            if (data.hasOwnProperty('_firstInputDelay')) {
+                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], 'Number');
+            }
+            if (data.hasOwnProperty('onLoad')) {
+                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
+            }
+            if (data.hasOwnProperty('_largestContentfulPaint')) {
+                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+            }
+            if (data.hasOwnProperty('_dns')) {
+                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
+            }
+            if (data.hasOwnProperty('_cumulativeLayoutShift')) {
+                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
             }
         }
         return obj;
@@ -127,16 +93,6 @@ class PageTiming {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>PageTiming</code>.
      */
     static validateJSON(data) {
-        // check to make sure all required properties are present in the JSON string
-        for (const property of PageTiming.RequiredProperties) {
-            if (!data[property]) {
-                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
-            }
-        }
-        // ensure the json data is a string
-        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
-            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
-        }
         // ensure the json data is a string
         if (data['_href'] && !(typeof data['_href'] === 'string' || data['_href'] instanceof String)) {
             throw new Error("Expected the field `_href` to be a primitive type in the JSON string but got " + data['_href']);
@@ -148,19 +104,7 @@ class PageTiming {
 
 }
 
-PageTiming.RequiredProperties = ["name", "onContentLoad", "_firstPaint", "_dns", "_ssl", "_firstContentfulPaint", "_cumulativeLayoutShift", "_ttfb", "value", "_firstInputDelay", "_largestContentFullPaint", "onLoad", "_domInteractive", "_href"];
 
-/**
- * Name of Custom Counter value you are adding to the page under counters
- * @member {String} name
- */
-PageTiming.prototype['name'] = undefined;
-
-/**
- * onContentLoad per the browser
- * @member {Number} onContentLoad
- */
-PageTiming.prototype['onContentLoad'] = undefined;
 
 /**
  * firstPaint from the browser
@@ -169,28 +113,10 @@ PageTiming.prototype['onContentLoad'] = undefined;
 PageTiming.prototype['_firstPaint'] = undefined;
 
 /**
- * dns lookup time from the browser
- * @member {Number} _dns
+ * onContentLoad per the browser
+ * @member {Number} onContentLoad
  */
-PageTiming.prototype['_dns'] = undefined;
-
-/**
- * Ssl connect time from the browser
- * @member {Number} _ssl
- */
-PageTiming.prototype['_ssl'] = undefined;
-
-/**
- * firstContentfulPaint from the browser
- * @member {Number} _firstContentfulPaint
- */
-PageTiming.prototype['_firstContentfulPaint'] = undefined;
-
-/**
- * cumulativeLayoutShift metric from the browser
- * @member {Number} _cumulativeLayoutShift
- */
-PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
+PageTiming.prototype['onContentLoad'] = undefined;
 
 /**
  * Time to first byte of the page's first request per the browser
@@ -199,10 +125,28 @@ PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
 PageTiming.prototype['_ttfb'] = undefined;
 
 /**
- * Value for the counter
- * @member {Number} value
+ * domInteractive from the browser
+ * @member {Number} _domInteractive
  */
-PageTiming.prototype['value'] = undefined;
+PageTiming.prototype['_domInteractive'] = undefined;
+
+/**
+ * Ssl connect time from the browser
+ * @member {Number} _ssl
+ */
+PageTiming.prototype['_ssl'] = undefined;
+
+/**
+ * Top level href, including hashtag, etc per the browser
+ * @member {String} _href
+ */
+PageTiming.prototype['_href'] = undefined;
+
+/**
+ * firstContentfulPaint from the browser
+ * @member {Number} _firstContentfulPaint
+ */
+PageTiming.prototype['_firstContentfulPaint'] = undefined;
 
 /**
  * firstInputDelay from the browser
@@ -211,28 +155,28 @@ PageTiming.prototype['value'] = undefined;
 PageTiming.prototype['_firstInputDelay'] = undefined;
 
 /**
- * largestContentFullPaint from the browser
- * @member {Number} _largestContentFullPaint
- */
-PageTiming.prototype['_largestContentFullPaint'] = undefined;
-
-/**
  * onLoad per the browser
  * @member {Number} onLoad
  */
 PageTiming.prototype['onLoad'] = undefined;
 
 /**
- * domInteractive from the browser
- * @member {Number} _domInteractive
+ * largestContentfulPaint from the browser
+ * @member {Number} _largestContentfulPaint
  */
-PageTiming.prototype['_domInteractive'] = undefined;
+PageTiming.prototype['_largestContentfulPaint'] = undefined;
 
 /**
- * Top level href, including hashtag, etc per the browser
- * @member {String} _href
+ * dns lookup time from the browser
+ * @member {Number} _dns
  */
-PageTiming.prototype['_href'] = undefined;
+PageTiming.prototype['_dns'] = undefined;
+
+/**
+ * cumulativeLayoutShift metric from the browser
+ * @member {Number} _cumulativeLayoutShift
+ */
+PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
 
 
 

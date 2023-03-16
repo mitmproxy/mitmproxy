@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **ssl** | **Number** |  | [optional] [default to -1]
 **ttfb** | **Number** |  | [optional] [default to -1]
 **cumulativeLayoutShift** | **Number** |  | [optional] [default to -1]
-**largestContentFullPaint** | **Number** |  | [optional] [default to -1]
+**largestContentfulPaint** | **Number** |  | [optional] [default to -1]
 **firstPaint** | **Number** |  | [optional] [default to -1]
 **domInteractive** | **Number** |  | [optional] [default to -1]
 **firstContentfulPaint** | **Number** |  | [optional] [default to -1]

@@ -22,13 +22,10 @@ class VerifyResult {
     /**
      * Constructs a new <code>VerifyResult</code>.
      * @alias module:BrowserUpMitmProxyClient/model/VerifyResult
-     * @param type {String} Type
-     * @param name {String} Name
-     * @param result {Boolean} Result True / False
      */
-    constructor(type, name, result) { 
+    constructor() { 
         
-        VerifyResult.initialize(this, type, name, result);
+        VerifyResult.initialize(this);
     }
 
     /**
@@ -36,10 +33,7 @@ class VerifyResult {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, type, name, result) { 
-        obj['type'] = type;
-        obj['name'] = name;
-        obj['result'] = result;
+    static initialize(obj) { 
     }
 
     /**
@@ -56,11 +50,11 @@ class VerifyResult {
             if (data.hasOwnProperty('type')) {
                 obj['type'] = ApiClient.convertToType(data['type'], 'String');
             }
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('result')) {
                 obj['result'] = ApiClient.convertToType(data['result'], 'Boolean');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -72,12 +66,6 @@ class VerifyResult {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>VerifyResult</code>.
      */
     static validateJSON(data) {
-        // check to make sure all required properties are present in the JSON string
-        for (const property of VerifyResult.RequiredProperties) {
-            if (!data[property]) {
-                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
-            }
-        }
         // ensure the json data is a string
         if (data['type'] && !(typeof data['type'] === 'string' || data['type'] instanceof String)) {
             throw new Error("Expected the field `type` to be a primitive type in the JSON string but got " + data['type']);
@@ -93,7 +81,7 @@ class VerifyResult {
 
 }
 
-VerifyResult.RequiredProperties = ["type", "name", "result"];
+
 
 /**
  * Type
@@ -102,16 +90,16 @@ VerifyResult.RequiredProperties = ["type", "name", "result"];
 VerifyResult.prototype['type'] = undefined;
 
 /**
- * Name
- * @member {String} name
- */
-VerifyResult.prototype['name'] = undefined;
-
-/**
  * Result True / False
  * @member {Boolean} result
  */
 VerifyResult.prototype['result'] = undefined;
+
+/**
+ * Name
+ * @member {String} name
+ */
+VerifyResult.prototype['name'] = undefined;
 
 
 

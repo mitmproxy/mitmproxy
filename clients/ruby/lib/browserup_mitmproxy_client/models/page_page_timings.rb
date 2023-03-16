@@ -27,7 +27,7 @@ module BrowserupMitmProxy
 
     attr_accessor :_cumulative_layout_shift
 
-    attr_accessor :_largest_content_full_paint
+    attr_accessor :_largest_contentful_paint
 
     attr_accessor :_first_paint
 
@@ -46,7 +46,7 @@ module BrowserupMitmProxy
         :'_ssl' => :'_ssl',
         :'_ttfb' => :'_ttfb',
         :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
-        :'_largest_content_full_paint' => :'_largestContentFullPaint',
+        :'_largest_contentful_paint' => :'_largestContentfulPaint',
         :'_first_paint' => :'_firstPaint',
         :'_dom_interactive' => :'_domInteractive',
         :'_first_contentful_paint' => :'_firstContentfulPaint',
@@ -68,7 +68,7 @@ module BrowserupMitmProxy
         :'_ssl' => :'Integer',
         :'_ttfb' => :'Integer',
         :'_cumulative_layout_shift' => :'Integer',
-        :'_largest_content_full_paint' => :'Integer',
+        :'_largest_contentful_paint' => :'Integer',
         :'_first_paint' => :'Integer',
         :'_dom_interactive' => :'Integer',
         :'_first_contentful_paint' => :'Integer',
@@ -133,10 +133,10 @@ module BrowserupMitmProxy
         self._cumulative_layout_shift = -1
       end
 
-      if attributes.key?(:'_largest_content_full_paint')
-        self._largest_content_full_paint = attributes[:'_largest_content_full_paint']
+      if attributes.key?(:'_largest_contentful_paint')
+        self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
       else
-        self._largest_content_full_paint = -1
+        self._largest_contentful_paint = -1
       end
 
       if attributes.key?(:'_first_paint')
@@ -198,8 +198,8 @@ module BrowserupMitmProxy
         invalid_properties.push('invalid value for "_cumulative_layout_shift", must be greater than or equal to -1.')
       end
 
-      if !@_largest_content_full_paint.nil? && @_largest_content_full_paint < -1
-        invalid_properties.push('invalid value for "_largest_content_full_paint", must be greater than or equal to -1.')
+      if !@_largest_contentful_paint.nil? && @_largest_contentful_paint < -1
+        invalid_properties.push('invalid value for "_largest_contentful_paint", must be greater than or equal to -1.')
       end
 
       if !@_first_paint.nil? && @_first_paint < -1
@@ -228,7 +228,7 @@ module BrowserupMitmProxy
       return false if !@_ssl.nil? && @_ssl < -1
       return false if !@_ttfb.nil? && @_ttfb < -1
       return false if !@_cumulative_layout_shift.nil? && @_cumulative_layout_shift < -1
-      return false if !@_largest_content_full_paint.nil? && @_largest_content_full_paint < -1
+      return false if !@_largest_contentful_paint.nil? && @_largest_contentful_paint < -1
       return false if !@_first_paint.nil? && @_first_paint < -1
       return false if !@_dom_interactive.nil? && @_dom_interactive < -1
       return false if !@_first_contentful_paint.nil? && @_first_contentful_paint < -1
@@ -304,13 +304,13 @@ module BrowserupMitmProxy
     end
 
     # Custom attribute writer method with validation
-    # @param [Object] _largest_content_full_paint Value to be assigned
-    def _largest_content_full_paint=(_largest_content_full_paint)
-      if !_largest_content_full_paint.nil? && _largest_content_full_paint < -1
-        fail ArgumentError, 'invalid value for "_largest_content_full_paint", must be greater than or equal to -1.'
+    # @param [Object] _largest_contentful_paint Value to be assigned
+    def _largest_contentful_paint=(_largest_contentful_paint)
+      if !_largest_contentful_paint.nil? && _largest_contentful_paint < -1
+        fail ArgumentError, 'invalid value for "_largest_contentful_paint", must be greater than or equal to -1.'
       end
 
-      @_largest_content_full_paint = _largest_content_full_paint
+      @_largest_contentful_paint = _largest_contentful_paint
     end
 
     # Custom attribute writer method with validation
@@ -354,7 +354,7 @@ module BrowserupMitmProxy
           _ssl == o._ssl &&
           _ttfb == o._ttfb &&
           _cumulative_layout_shift == o._cumulative_layout_shift &&
-          _largest_content_full_paint == o._largest_content_full_paint &&
+          _largest_contentful_paint == o._largest_contentful_paint &&
           _first_paint == o._first_paint &&
           _dom_interactive == o._dom_interactive &&
           _first_contentful_paint == o._first_contentful_paint &&
@@ -370,7 +370,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [on_content_load, on_load, _dns, _ssl, _ttfb, _cumulative_layout_shift, _largest_content_full_paint, _first_paint, _dom_interactive, _first_contentful_paint, comment].hash
+      [on_content_load, on_load, _dns, _ssl, _ttfb, _cumulative_layout_shift, _largest_contentful_paint, _first_paint, _dom_interactive, _first_contentful_paint, comment].hash
     end
 
     # Builds the object from hash

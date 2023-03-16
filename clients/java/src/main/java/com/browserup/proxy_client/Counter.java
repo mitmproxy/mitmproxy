@@ -48,38 +48,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Counter {
-  public static final String SERIALIZED_NAME_NAME = "name";
-  @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
-
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
   private Double value;
 
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private String name;
+
   public Counter() {
   }
-
-  public Counter name(String name) {
-    
-    this.name = name;
-    return this;
-  }
-
-   /**
-   * Name of Custom Counter value you are adding to the page under _counters
-   * @return name
-  **/
-  @javax.annotation.Nonnull
-
-  public String getName() {
-    return name;
-  }
-
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
 
   public Counter value(Double value) {
     
@@ -91,7 +69,7 @@ public class Counter {
    * Value for the counter
    * @return value
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
   public Double getValue() {
     return value;
@@ -100,6 +78,28 @@ public class Counter {
 
   public void setValue(Double value) {
     this.value = value;
+  }
+
+
+  public Counter name(String name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name of Custom Counter value you are adding to the page under _counters
+   * @return name
+  **/
+  @javax.annotation.Nullable
+
+  public String getName() {
+    return name;
+  }
+
+
+  public void setName(String name) {
+    this.name = name;
   }
 
 
@@ -113,21 +113,21 @@ public class Counter {
       return false;
     }
     Counter counter = (Counter) o;
-    return Objects.equals(this.name, counter.name) &&
-        Objects.equals(this.value, counter.value);
+    return Objects.equals(this.value, counter.value) &&
+        Objects.equals(this.name, counter.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, value);
+    return Objects.hash(value, name);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Counter {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    value: ").append(toIndentedString(value)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -150,13 +150,11 @@ public class Counter {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("name");
     openapiFields.add("value");
+    openapiFields.add("name");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("name");
-    openapiRequiredFields.add("value");
   }
 
  /**
@@ -179,14 +177,7 @@ public class Counter {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Counter` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
       }
-
-      // check to make sure all required properties/fields are present in the JSON string
-      for (String requiredField : Counter.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
-        }
-      }
-      if (!jsonObj.get("name").isJsonPrimitive()) {
+      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
       }
   }

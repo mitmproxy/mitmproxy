@@ -50,7 +50,7 @@
   describe('Page', function() {
     it('should create an instance of Page', function() {
       // uncomment below and update the code to test Page
-      //var instane = new BrowserUpMitmProxyClient.Page();
+      //var instance = new BrowserUpMitmProxyClient.Page();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.Page);
     });
 

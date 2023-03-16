@@ -235,8 +235,9 @@ MatchCriteria.prototype['json_schema'] = undefined;
 /**
  * If the proxy has NO traffic at all, return error
  * @member {Boolean} error_if_no_traffic
+ * @default true
  */
-MatchCriteria.prototype['error_if_no_traffic'] = undefined;
+MatchCriteria.prototype['error_if_no_traffic'] = true;
 
 
 

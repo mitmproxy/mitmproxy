@@ -86,11 +86,11 @@ public class PagePageTimingsTest {
     }
 
     /**
-     * Test the property 'largestContentFullPaint'
+     * Test the property 'largestContentfulPaint'
      */
     @Test
-    public void largestContentFullPaintTest() {
-        // TODO: test largestContentFullPaint
+    public void largestContentfulPaintTest() {
+        // TODO: test largestContentfulPaint
     }
 
     /**

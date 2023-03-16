@@ -163,6 +163,9 @@ public class Page {
   }
 
   public Page addVerificationsItem(VerifyResult verificationsItem) {
+    if (this.verifications == null) {
+      this.verifications = null;
+    }
     this.verifications.add(verificationsItem);
     return this;
   }
@@ -171,7 +174,7 @@ public class Page {
    * Get verifications
    * @return verifications
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
   public List<VerifyResult> getVerifications() {
     return verifications;
@@ -360,7 +363,6 @@ public class Page {
     openapiRequiredFields.add("startedDateTime");
     openapiRequiredFields.add("id");
     openapiRequiredFields.add("title");
-    openapiRequiredFields.add("_verifications");
     openapiRequiredFields.add("pageTimings");
   }
 
@@ -397,16 +399,20 @@ public class Page {
       if (!jsonObj.get("title").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `title` to be a primitive type in the JSON string but got `%s`", jsonObj.get("title").toString()));
       }
-      // ensure the json data is an array
-      if (!jsonObj.get("_verifications").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `_verifications` to be an array in the JSON string but got `%s`", jsonObj.get("_verifications").toString()));
-      }
+      if (jsonObj.get("_verifications") != null && !jsonObj.get("_verifications").isJsonNull()) {
+        JsonArray jsonArrayverifications = jsonObj.getAsJsonArray("_verifications");
+        if (jsonArrayverifications != null) {
+          // ensure the json data is an array
+          if (!jsonObj.get("_verifications").isJsonArray()) {
+            throw new IllegalArgumentException(String.format("Expected the field `_verifications` to be an array in the JSON string but got `%s`", jsonObj.get("_verifications").toString()));
+          }
 
-      JsonArray jsonArrayverifications = jsonObj.getAsJsonArray("_verifications");
-      // validate the required field `_verifications` (array)
-      for (int i = 0; i < jsonArrayverifications.size(); i++) {
-        VerifyResult.validateJsonObject(jsonArrayverifications.get(i).getAsJsonObject());
-      };
+          // validate the optional field `_verifications` (array)
+          for (int i = 0; i < jsonArrayverifications.size(); i++) {
+            VerifyResult.validateJsonObject(jsonArrayverifications.get(i).getAsJsonObject());
+          };
+        }
+      }
       if (jsonObj.get("_counters") != null && !jsonObj.get("_counters").isJsonNull()) {
         JsonArray jsonArraycounters = jsonObj.getAsJsonArray("_counters");
         if (jsonArraycounters != null) {

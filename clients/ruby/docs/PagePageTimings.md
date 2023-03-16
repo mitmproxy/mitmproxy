@@ -10,7 +10,7 @@
 | **_ssl** | **Integer** |  | [optional][default to -1] |
 | **_ttfb** | **Integer** |  | [optional][default to -1] |
 | **_cumulative_layout_shift** | **Integer** |  | [optional][default to -1] |
-| **_largest_content_full_paint** | **Integer** |  | [optional][default to -1] |
+| **_largest_contentful_paint** | **Integer** |  | [optional][default to -1] |
 | **_first_paint** | **Integer** |  | [optional][default to -1] |
 | **_dom_interactive** | **Integer** |  | [optional][default to -1] |
 | **_first_contentful_paint** | **Integer** |  | [optional][default to -1] |
@@ -28,7 +28,7 @@ instance = BrowserupMitmProxy::PagePageTimings.new(
   _ssl: null,
   _ttfb: null,
   _cumulative_layout_shift: null,
-  _largest_content_full_paint: null,
+  _largest_contentful_paint: null,
   _first_paint: null,
   _dom_interactive: null,
   _first_contentful_paint: null,

@@ -22,12 +22,10 @@ class Counter {
     /**
      * Constructs a new <code>Counter</code>.
      * @alias module:BrowserUpMitmProxyClient/model/Counter
-     * @param name {String} Name of Custom Counter value you are adding to the page under _counters
-     * @param value {Number} Value for the counter
      */
-    constructor(name, value) { 
+    constructor() { 
         
-        Counter.initialize(this, name, value);
+        Counter.initialize(this);
     }
 
     /**
@@ -35,9 +33,7 @@ class Counter {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, name, value) { 
-        obj['name'] = name;
-        obj['value'] = value;
+    static initialize(obj) { 
     }
 
     /**
@@ -51,11 +47,11 @@ class Counter {
         if (data) {
             obj = obj || new Counter();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('value')) {
                 obj['value'] = ApiClient.convertToType(data['value'], 'Number');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -67,12 +63,6 @@ class Counter {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>Counter</code>.
      */
     static validateJSON(data) {
-        // check to make sure all required properties are present in the JSON string
-        for (const property of Counter.RequiredProperties) {
-            if (!data[property]) {
-                throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
-            }
-        }
         // ensure the json data is a string
         if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
             throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
@@ -84,19 +74,19 @@ class Counter {
 
 }
 
-Counter.RequiredProperties = ["name", "value"];
 
-/**
- * Name of Custom Counter value you are adding to the page under _counters
- * @member {String} name
- */
-Counter.prototype['name'] = undefined;
 
 /**
  * Value for the counter
  * @member {Number} value
  */
 Counter.prototype['value'] = undefined;
+
+/**
+ * Name of Custom Counter value you are adding to the page under _counters
+ * @member {String} name
+ */
+Counter.prototype['name'] = undefined;
 
 
 

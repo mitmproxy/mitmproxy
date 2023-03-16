@@ -13,7 +13,7 @@
 |**ssl** | **Long** |  |  [optional] |
 |**ttfb** | **Long** |  |  [optional] |
 |**cumulativeLayoutShift** | **Integer** |  |  [optional] |
-|**largestContentFullPaint** | **Long** |  |  [optional] |
+|**largestContentfulPaint** | **Long** |  |  [optional] |
 |**firstPaint** | **Long** |  |  [optional] |
 |**domInteractive** | **Long** |  |  [optional] |
 |**firstContentfulPaint** | **Long** |  |  [optional] |

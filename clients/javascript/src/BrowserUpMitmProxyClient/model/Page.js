@@ -29,12 +29,11 @@ class Page {
      * @param startedDateTime {Date} 
      * @param id {String} 
      * @param title {String} 
-     * @param verifications {Array.<module:BrowserUpMitmProxyClient/model/VerifyResult>} 
      * @param pageTimings {module:BrowserUpMitmProxyClient/model/PagePageTimings} 
      */
-    constructor(startedDateTime, id, title, verifications, pageTimings) { 
+    constructor(startedDateTime, id, title, pageTimings) { 
         
-        Page.initialize(this, startedDateTime, id, title, verifications, pageTimings);
+        Page.initialize(this, startedDateTime, id, title, pageTimings);
     }
 
     /**
@@ -42,11 +41,10 @@ class Page {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, startedDateTime, id, title, verifications, pageTimings) { 
+    static initialize(obj, startedDateTime, id, title, pageTimings) { 
         obj['startedDateTime'] = startedDateTime;
         obj['id'] = id;
         obj['title'] = title;
-        obj['_verifications'] = verifications;
         obj['pageTimings'] = pageTimings;
     }
 
@@ -154,7 +152,7 @@ class Page {
 
 }
 
-Page.RequiredProperties = ["startedDateTime", "id", "title", "_verifications", "pageTimings"];
+Page.RequiredProperties = ["startedDateTime", "id", "title", "pageTimings"];
 
 /**
  * @member {Date} startedDateTime

@@ -174,6 +174,8 @@ module BrowserupMitmProxy
 
       if attributes.key?(:'error_if_no_traffic')
         self.error_if_no_traffic = attributes[:'error_if_no_traffic']
+      else
+        self.error_if_no_traffic = true
       end
     end
 

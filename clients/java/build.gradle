@@ -4,7 +4,7 @@ apply plugin: 'java'
 apply plugin: 'com.diffplug.spotless'
 
 group = 'com.browserup'
-version = '1.0.1-SNAPSHOT'
+version = '1.0.2-SNAPSHOT'
 
 buildscript {
     repositories {
@@ -91,7 +91,7 @@ if(hasProperty('target') && target == 'android') {
             PubToSonatype(MavenPublication) {
                 groupId = 'com.browserup'
                 artifactId = 'browserup-mitmproxy-client'
-                version = '1.0.1-SNAPSHOT'
+                version = project.version
                 from components.java
 
                 pom {
@@ -101,8 +101,8 @@ if(hasProperty('target') && target == 'android') {
                     packaging = 'jar'
 
                     scm {
-                        connection = 'scm:git:git@github.com:browserup/mitmproxy.git'
-                        developerConnection = 'scm:git:git@github.com:browserup/mitmproxy.git'
+                        connection = 'scm:git:git.com:browserup/mitmproxy.git'
+                        developerConnection = 'scm:git:git.com:browserup/mitmproxy.git'
                         url = 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
                     }
                     licenses {
@@ -116,7 +116,7 @@ if(hasProperty('target') && target == 'android') {
                         developer {
                             id = 'browserup'
                             name = 'BrowserUp, Inc.'
-                            email = 'developers@browserup.com'
+                            email = 'developers.com'
                         }
                     }
                 }
@@ -131,7 +131,7 @@ if(hasProperty('target') && target == 'android') {
                     }
                     def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
                     def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
-                    url =  version.endsWith('SNAPSHOT')  ? snapshotRepository : releaseRepository
+                    url = version.endsWith('SNAPSHOT') ? snapshotRepository : releaseRepository
                 }
             }
         }
@@ -162,7 +162,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
     testImplementation 'org.mockito:mockito-core:3.12.4'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
-
 }
 
 javadoc {

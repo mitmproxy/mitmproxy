@@ -69,8 +69,8 @@ class PagePageTimings {
             if (data.hasOwnProperty('_cumulativeLayoutShift')) {
                 obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
             }
-            if (data.hasOwnProperty('_largestContentFullPaint')) {
-                obj['_largestContentFullPaint'] = ApiClient.convertToType(data['_largestContentFullPaint'], 'Number');
+            if (data.hasOwnProperty('_largestContentfulPaint')) {
+                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
             }
             if (data.hasOwnProperty('_firstPaint')) {
                 obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
@@ -150,10 +150,10 @@ PagePageTimings.prototype['_ttfb'] = -1;
 PagePageTimings.prototype['_cumulativeLayoutShift'] = -1;
 
 /**
- * @member {Number} _largestContentFullPaint
+ * @member {Number} _largestContentfulPaint
  * @default -1
  */
-PagePageTimings.prototype['_largestContentFullPaint'] = -1;
+PagePageTimings.prototype['_largestContentfulPaint'] = -1;
 
 /**
  * @member {Number} _firstPaint

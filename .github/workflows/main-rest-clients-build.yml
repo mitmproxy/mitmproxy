@@ -1,0 +1,30 @@
+name: Rest Clients build
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build-clients:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install openapi generator
+        run: npm install @openapitools/openapi-generator-cli
+      - name: Build clients
+        working-directory: clients
+        run: ./build-clients.sh
+      - name: Java client tests
+        working-directory: clients/java
+        run: ./gradlew clean build
+      - name: Publish java client
+        working-directory: clients
+        run: ./publish-java-client.sh

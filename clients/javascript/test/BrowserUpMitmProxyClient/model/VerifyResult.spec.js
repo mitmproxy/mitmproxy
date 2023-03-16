@@ -50,7 +50,7 @@
   describe('VerifyResult', function() {
     it('should create an instance of VerifyResult', function() {
       // uncomment below and update the code to test VerifyResult
-      //var instane = new BrowserUpMitmProxyClient.VerifyResult();
+      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.VerifyResult);
     });
 
@@ -60,14 +60,14 @@
       //expect(instance).to.be();
     });
 
-    it('should have the property name (base name: "name")', function() {
-      // uncomment below and update the code to test the property name
+    it('should have the property result (base name: "result")', function() {
+      // uncomment below and update the code to test the property result
       //var instance = new BrowserUpMitmProxyClient.VerifyResult();
       //expect(instance).to.be();
     });
 
-    it('should have the property result (base name: "result")', function() {
-      // uncomment below and update the code to test the property result
+    it('should have the property name (base name: "name")', function() {
+      // uncomment below and update the code to test the property name
       //var instance = new BrowserUpMitmProxyClient.VerifyResult();
       //expect(instance).to.be();
     });

@@ -18,18 +18,18 @@ module BrowserupMitmProxy
     # Type
     attr_accessor :type
 
-    # Name
-    attr_accessor :name
-
     # Result True / False
     attr_accessor :result
+
+    # Name
+    attr_accessor :name
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
         :'type' => :'type',
-        :'name' => :'name',
-        :'result' => :'result'
+        :'result' => :'result',
+        :'name' => :'name'
       }
     end
 
@@ -42,8 +42,8 @@ module BrowserupMitmProxy
     def self.openapi_types
       {
         :'type' => :'String',
-        :'name' => :'String',
-        :'result' => :'Boolean'
+        :'result' => :'Boolean',
+        :'name' => :'String'
       }
     end
 
@@ -72,12 +72,12 @@ module BrowserupMitmProxy
         self.type = attributes[:'type']
       end
 
-      if attributes.key?(:'name')
-        self.name = attributes[:'name']
-      end
-
       if attributes.key?(:'result')
         self.result = attributes[:'result']
+      end
+
+      if attributes.key?(:'name')
+        self.name = attributes[:'name']
       end
     end
 
@@ -85,27 +85,12 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @type.nil?
-        invalid_properties.push('invalid value for "type", type cannot be nil.')
-      end
-
-      if @name.nil?
-        invalid_properties.push('invalid value for "name", name cannot be nil.')
-      end
-
-      if @result.nil?
-        invalid_properties.push('invalid value for "result", result cannot be nil.')
-      end
-
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @type.nil?
-      return false if @name.nil?
-      return false if @result.nil?
       true
     end
 
@@ -115,8 +100,8 @@ module BrowserupMitmProxy
       return true if self.equal?(o)
       self.class == o.class &&
           type == o.type &&
-          name == o.name &&
-          result == o.result
+          result == o.result &&
+          name == o.name
     end
 
     # @see the `==` method
@@ -128,7 +113,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [type, name, result].hash
+      [type, result, name].hash
     end
 
     # Builds the object from hash

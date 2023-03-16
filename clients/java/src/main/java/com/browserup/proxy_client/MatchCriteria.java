@@ -103,7 +103,7 @@ public class MatchCriteria {
 
   public static final String SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC = "error_if_no_traffic";
   @SerializedName(SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC)
-  private Boolean errorIfNoTraffic;
+  private Boolean errorIfNoTraffic = true;
 
   public MatchCriteria() {
   }

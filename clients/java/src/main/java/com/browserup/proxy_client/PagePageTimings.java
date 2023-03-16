@@ -72,9 +72,9 @@ public class PagePageTimings {
   @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
   private Integer cumulativeLayoutShift = -1;
 
-  public static final String SERIALIZED_NAME_LARGEST_CONTENT_FULL_PAINT = "_largestContentFullPaint";
-  @SerializedName(SERIALIZED_NAME_LARGEST_CONTENT_FULL_PAINT)
-  private Long largestContentFullPaint = -1l;
+  public static final String SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT = "_largestContentfulPaint";
+  @SerializedName(SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT)
+  private Long largestContentfulPaint = -1l;
 
   public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
   @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
@@ -233,26 +233,26 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings largestContentFullPaint(Long largestContentFullPaint) {
+  public PagePageTimings largestContentfulPaint(Long largestContentfulPaint) {
     
-    this.largestContentFullPaint = largestContentFullPaint;
+    this.largestContentfulPaint = largestContentfulPaint;
     return this;
   }
 
    /**
-   * Get largestContentFullPaint
+   * Get largestContentfulPaint
    * minimum: -1
-   * @return largestContentFullPaint
+   * @return largestContentfulPaint
   **/
   @javax.annotation.Nullable
 
-  public Long getLargestContentFullPaint() {
-    return largestContentFullPaint;
+  public Long getLargestContentfulPaint() {
+    return largestContentfulPaint;
   }
 
 
-  public void setLargestContentFullPaint(Long largestContentFullPaint) {
-    this.largestContentFullPaint = largestContentFullPaint;
+  public void setLargestContentfulPaint(Long largestContentfulPaint) {
+    this.largestContentfulPaint = largestContentfulPaint;
   }
 
 
@@ -363,7 +363,7 @@ public class PagePageTimings {
         Objects.equals(this.ssl, pagePageTimings.ssl) &&
         Objects.equals(this.ttfb, pagePageTimings.ttfb) &&
         Objects.equals(this.cumulativeLayoutShift, pagePageTimings.cumulativeLayoutShift) &&
-        Objects.equals(this.largestContentFullPaint, pagePageTimings.largestContentFullPaint) &&
+        Objects.equals(this.largestContentfulPaint, pagePageTimings.largestContentfulPaint) &&
         Objects.equals(this.firstPaint, pagePageTimings.firstPaint) &&
         Objects.equals(this.domInteractive, pagePageTimings.domInteractive) &&
         Objects.equals(this.firstContentfulPaint, pagePageTimings.firstContentfulPaint) &&
@@ -372,7 +372,7 @@ public class PagePageTimings {
 
   @Override
   public int hashCode() {
-    return Objects.hash(onContentLoad, onLoad, dns, ssl, ttfb, cumulativeLayoutShift, largestContentFullPaint, firstPaint, domInteractive, firstContentfulPaint, comment);
+    return Objects.hash(onContentLoad, onLoad, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, domInteractive, firstContentfulPaint, comment);
   }
 
   @Override
@@ -385,7 +385,7 @@ public class PagePageTimings {
     sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
     sb.append("    ttfb: ").append(toIndentedString(ttfb)).append("\n");
     sb.append("    cumulativeLayoutShift: ").append(toIndentedString(cumulativeLayoutShift)).append("\n");
-    sb.append("    largestContentFullPaint: ").append(toIndentedString(largestContentFullPaint)).append("\n");
+    sb.append("    largestContentfulPaint: ").append(toIndentedString(largestContentfulPaint)).append("\n");
     sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
     sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
     sb.append("    firstContentfulPaint: ").append(toIndentedString(firstContentfulPaint)).append("\n");
@@ -418,7 +418,7 @@ public class PagePageTimings {
     openapiFields.add("_ssl");
     openapiFields.add("_ttfb");
     openapiFields.add("_cumulativeLayoutShift");
-    openapiFields.add("_largestContentFullPaint");
+    openapiFields.add("_largestContentfulPaint");
     openapiFields.add("_firstPaint");
     openapiFields.add("_domInteractive");
     openapiFields.add("_firstContentfulPaint");

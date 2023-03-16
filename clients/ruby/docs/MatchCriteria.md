@@ -17,7 +17,7 @@
 | **json_valid** | **Boolean** | Is valid JSON | [optional] |
 | **json_path** | **String** | Has JSON path | [optional] |
 | **json_schema** | **String** | Validates against passed JSON schema | [optional] |
-| **error_if_no_traffic** | **Boolean** | If the proxy has NO traffic at all, return error | [optional] |
+| **error_if_no_traffic** | **Boolean** | If the proxy has NO traffic at all, return error | [optional][default to true] |
 
 ## Example
 

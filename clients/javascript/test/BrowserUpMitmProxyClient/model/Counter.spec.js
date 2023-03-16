@@ -50,7 +50,7 @@
   describe('Counter', function() {
     it('should create an instance of Counter', function() {
       // uncomment below and update the code to test Counter
-      //var instane = new BrowserUpMitmProxyClient.Counter();
+      //var instance = new BrowserUpMitmProxyClient.Counter();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.Counter);
     });
 

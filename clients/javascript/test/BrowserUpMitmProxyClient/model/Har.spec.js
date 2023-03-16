@@ -50,7 +50,7 @@
   describe('Har', function() {
     it('should create an instance of Har', function() {
       // uncomment below and update the code to test Har
-      //var instane = new BrowserUpMitmProxyClient.Har();
+      //var instance = new BrowserUpMitmProxyClient.Har();
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.Har);
     });
 

@@ -1,6 +1,3 @@
-## IMPORTANT ##
-# In generated java client's `build.gradle` file replace `publishing` by content of file `publishing.overlay.build.gradle`
-
 export GPG_TTY=$(tty)
 echo "-----BEGIN PGP PRIVATE KEY BLOCK-----" >> private-key.asc
 echo "" >> private-key.asc
