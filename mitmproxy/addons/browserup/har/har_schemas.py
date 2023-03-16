@@ -18,7 +18,7 @@ class ErrorSchema(Schema):
 
 
 class CounterSchema(Schema):
-    name = fields.Str(metadata={"optional": False, "description": "Name of Custom Counter value you are adding to the page under _counters"})
+    name = fields.Str(metadata={"optional": False, "description": "Name of Custom Counter to add to the page under _counters"})
     value = fields.Number(metadata={"optional": False, "format": "double", "description": "Value for the counter"})
 
 
