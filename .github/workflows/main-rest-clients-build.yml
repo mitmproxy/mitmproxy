@@ -26,5 +26,8 @@ jobs:
         working-directory: clients/java
         run: ./gradlew clean build
       - name: Publish java client
+        env:
+          OSSRH_JIRA_USERNAME: ${{ secrets.OSSRH_JIRA_USERNAME }}
+          OSSRH_JIRA_PASSWORD: ${{ secrets.OSSRH_JIRA_PASSWORD }}
         working-directory: clients
         run: ./publish-java-client.sh
