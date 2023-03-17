@@ -212,6 +212,8 @@ function postPerf(){
    sendTimings(page_timings);
 }
 
+function proxyMgmtURL(){ window.bupURL }
+
 function sendTimings(page_timings){
     let data = new FormData();
     Object.keys(page_timings).forEach(key => page_timings[key] === undefined ? delete page_timings[key] : {});
@@ -219,20 +221,19 @@ function sendTimings(page_timings){
     data.append("pageTimings", JSON.stringify(page_timings));
     if ('sendBeacon' in navigator) {
         console.log("----> Sendbeacon---")
-        if (navigator.sendBeacon("http://localhost:8088/har/page_timings", data)) {}
+        if (navigator.sendBeacon(proxyMgmtURL() + "/har/page_timings", data)) {}
         else { console.error("BrowserUpProxy sendbeacon page_timings error") }
     }
 }
 
 observeAndReportFirstInputDelay();
-
 window.addEventListener('load', postPerf);
 
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') {
         console.log("----> Page change---")
         if ('sendBeacon' in navigator) {
-            navigator.sendBeacon("http://localhost:8088/har/page?title=", {});
+            navigator.sendBeacon(proxyMgmtURL() + "/har/page?title=", {});
         }
     }
 });

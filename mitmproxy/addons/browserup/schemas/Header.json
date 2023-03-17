@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "required": [
     "name",
     "value"

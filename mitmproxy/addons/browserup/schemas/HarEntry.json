@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "required": [
     "startedDateTime",
     "time",
@@ -23,6 +24,7 @@
     },
     "request": {
       "type": "object",
+      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
       "required": [
         "method",
         "url",
@@ -155,6 +157,7 @@
     },
     "response": {
       "type": "object",
+      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
       "required": [
         "status",
         "statusText",
