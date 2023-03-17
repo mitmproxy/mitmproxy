@@ -88,51 +88,9 @@ if(hasProperty('target') && target == 'android') {
 
     publishing {
         publications {
-            PubToSonatype(MavenPublication) {
-                groupId = 'com.browserup'
-                artifactId = 'browserup-mitmproxy-client'
-                version = project.version
-                from components.java
-
-                pom {
-                    name = 'browserup-mitmproxy-client'
-                    description = 'BrowserUp Proxy Client'
-                    url = 'https://github.com/browserup/mitmproxy'
-                    packaging = 'jar'
-
-                    scm {
-                        connection = 'scm:git:git.com:browserup/mitmproxy.git'
-                        developerConnection = 'scm:git:git.com:browserup/mitmproxy.git'
-                        url = 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
-                    }
-                    licenses {
-                        license {
-                            name = 'The Apache Software License, Version 2.0'
-                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution = 'repo'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = 'browserup'
-                            name = 'BrowserUp, Inc.'
-                            email = 'developers.com'
-                        }
-                    }
-                }
-            }
-        }
-        repositories {
-            maven {
-                if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
-                    credentials {
-                        username = ossrhUsername
-                        password = ossrhPassword
-                    }
-                    def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-                    def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
-                    url = version.endsWith('SNAPSHOT') ? snapshotRepository : releaseRepository
-                }
+            maven(MavenPublication) {
+               artifactId = 'browserup-mitmproxy-client'
+               from components.java
             }
         }
     }
