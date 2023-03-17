@@ -49,6 +49,10 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class VerifyResult {
+  public static final String SERIALIZED_NAME_RESULT = "result";
+  @SerializedName(SERIALIZED_NAME_RESULT)
+  private Object result = null;
+
   public static final String SERIALIZED_NAME_TYPE = "type";
   @SerializedName(SERIALIZED_NAME_TYPE)
   private Object type = null;
@@ -57,12 +61,30 @@ public class VerifyResult {
   @SerializedName(SERIALIZED_NAME_NAME)
   private Object name = null;
 
-  public static final String SERIALIZED_NAME_RESULT = "result";
-  @SerializedName(SERIALIZED_NAME_RESULT)
-  private Object result = null;
-
   public VerifyResult() {
   }
+
+  public VerifyResult result(Object result) {
+    
+    this.result = result;
+    return this;
+  }
+
+   /**
+   * Result True / False
+   * @return result
+  **/
+  @javax.annotation.Nullable
+
+  public Object getResult() {
+    return result;
+  }
+
+
+  public void setResult(Object result) {
+    this.result = result;
+  }
+
 
   public VerifyResult type(Object type) {
     
@@ -108,28 +130,6 @@ public class VerifyResult {
   }
 
 
-  public VerifyResult result(Object result) {
-    
-    this.result = result;
-    return this;
-  }
-
-   /**
-   * Result True / False
-   * @return result
-  **/
-  @javax.annotation.Nullable
-
-  public Object getResult() {
-    return result;
-  }
-
-
-  public void setResult(Object result) {
-    this.result = result;
-  }
-
-
 
   @Override
   public boolean equals(Object o) {
@@ -140,9 +140,9 @@ public class VerifyResult {
       return false;
     }
     VerifyResult verifyResult = (VerifyResult) o;
-    return Objects.equals(this.type, verifyResult.type) &&
-        Objects.equals(this.name, verifyResult.name) &&
-        Objects.equals(this.result, verifyResult.result);
+    return Objects.equals(this.result, verifyResult.result) &&
+        Objects.equals(this.type, verifyResult.type) &&
+        Objects.equals(this.name, verifyResult.name);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -151,7 +151,7 @@ public class VerifyResult {
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, name, result);
+    return Objects.hash(result, type, name);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -165,9 +165,9 @@ public class VerifyResult {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class VerifyResult {\n");
+    sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -190,9 +190,9 @@ public class VerifyResult {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
+    openapiFields.add("result");
     openapiFields.add("type");
     openapiFields.add("name");
-    openapiFields.add("result");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();

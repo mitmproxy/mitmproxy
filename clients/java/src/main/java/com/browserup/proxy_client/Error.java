@@ -49,38 +49,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Error {
-  public static final String SERIALIZED_NAME_NAME = "name";
-  @SerializedName(SERIALIZED_NAME_NAME)
-  private Object name = null;
-
   public static final String SERIALIZED_NAME_DETAILS = "details";
   @SerializedName(SERIALIZED_NAME_DETAILS)
   private Object details = null;
 
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private Object name = null;
+
   public Error() {
   }
-
-  public Error name(Object name) {
-    
-    this.name = name;
-    return this;
-  }
-
-   /**
-   * Name of the Error to add. Stored in har under _errors
-   * @return name
-  **/
-  @javax.annotation.Nullable
-
-  public Object getName() {
-    return name;
-  }
-
-
-  public void setName(Object name) {
-    this.name = name;
-  }
-
 
   public Error details(Object details) {
     
@@ -104,6 +82,28 @@ public class Error {
   }
 
 
+  public Error name(Object name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name of the Error to add. Stored in har under _errors
+   * @return name
+  **/
+  @javax.annotation.Nullable
+
+  public Object getName() {
+    return name;
+  }
+
+
+  public void setName(Object name) {
+    this.name = name;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -114,8 +114,8 @@ public class Error {
       return false;
     }
     Error error = (Error) o;
-    return Objects.equals(this.name, error.name) &&
-        Objects.equals(this.details, error.details);
+    return Objects.equals(this.details, error.details) &&
+        Objects.equals(this.name, error.name);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -124,7 +124,7 @@ public class Error {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, details);
+    return Objects.hash(details, name);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -138,8 +138,8 @@ public class Error {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Error {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    details: ").append(toIndentedString(details)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -162,8 +162,8 @@ public class Error {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("name");
     openapiFields.add("details");
+    openapiFields.add("name");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();

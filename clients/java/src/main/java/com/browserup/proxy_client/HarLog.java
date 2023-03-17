@@ -64,7 +64,7 @@ public class HarLog {
 
   public static final String SERIALIZED_NAME_PAGES = "pages";
   @SerializedName(SERIALIZED_NAME_PAGES)
-  private Object pages = [];
+  private Object pages = null;
 
   public static final String SERIALIZED_NAME_ENTRIES = "entries";
   @SerializedName(SERIALIZED_NAME_ENTRIES)

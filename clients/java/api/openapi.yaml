@@ -278,36 +278,36 @@ components:
   schemas:
     PageTiming:
       properties:
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
         _largestContentfulPaint:
           description: largestContentfulPaint from the browser
-        _href:
-          description: "Top level href, including hashtag, etc per the browser"
-        onLoad:
-          description: onLoad per the browser
         _dns:
           description: dns lookup time from the browser
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
-        _ssl:
-          description: Ssl connect time from the browser
-        _firstPaint:
-          description: firstPaint from the browser
-        onContentLoad:
-          description: onContentLoad per the browser
-        _domInteractive:
-          description: domInteractive from the browser
         _firstInputDelay:
           description: firstInputDelay from the browser
+        onContentLoad:
+          description: onContentLoad per the browser
+        _ssl:
+          description: Ssl connect time from the browser
+        _domInteractive:
+          description: domInteractive from the browser
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
+        onLoad:
+          description: onLoad per the browser
+        _firstPaint:
+          description: firstPaint from the browser
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
     NameValuePair:
       properties:
-        name:
-          description: Name to match
         value:
           description: Value to match
+        name:
+          description: Name to match
     MatchCriteria:
       description: |-
         A set of criteria for filtering HTTP Requests and Responses.
@@ -397,31 +397,31 @@ components:
         name: ""
         type: ""
       properties:
+        result:
+          description: Result True / False
         type:
           description: Type
         name:
           description: Name
-        result:
-          description: Result True / False
     Error:
       example:
         name: ""
         details: ""
       properties:
-        name:
-          description: Name of the Error to add. Stored in har under _errors
         details:
           description: Short details of the error
+        name:
+          description: Name of the Error to add. Stored in har under _errors
     Counter:
       example:
         name: ""
         value: ""
       properties:
-        name:
-          description: Name of Custom Counter to add to the page under _counters
         value:
           description: Value for the counter
           format: double
+        name:
+          description: Name of Custom Counter to add to the page under _counters
     WebSocketMessage:
       properties:
         type: {}
@@ -452,8 +452,7 @@ components:
           default: -1
           format: int64
           minimum: -1
-        _href:
-          default: ""
+        _href: {}
         _dns:
           default: -1
           format: int64
@@ -552,15 +551,12 @@ components:
         id: {}
         title: {}
         _verifications:
-          default: []
           items:
             $ref: '#/components/schemas/VerifyResult'
         _counters:
-          default: []
           items:
             $ref: '#/components/schemas/Counter'
         _errors:
-          default: []
           items:
             $ref: '#/components/schemas/Error'
         pageTimings:
@@ -607,7 +603,6 @@ components:
         browser:
           $ref: '#/components/schemas/Har_log_creator'
         pages:
-          default: []
           items:
             $ref: '#/components/schemas/Page'
         entries:

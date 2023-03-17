@@ -20,8 +20,7 @@
       "default": -1
     },
     "_href": {
-      "type": "string",
-      "default": ""
+      "type": "string"
     },
     "_dns": {
       "type": "integer",

@@ -49,38 +49,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Counter {
-  public static final String SERIALIZED_NAME_NAME = "name";
-  @SerializedName(SERIALIZED_NAME_NAME)
-  private Object name = null;
-
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
   private Object value = null;
 
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private Object name = null;
+
   public Counter() {
   }
-
-  public Counter name(Object name) {
-    
-    this.name = name;
-    return this;
-  }
-
-   /**
-   * Name of Custom Counter to add to the page under _counters
-   * @return name
-  **/
-  @javax.annotation.Nullable
-
-  public Object getName() {
-    return name;
-  }
-
-
-  public void setName(Object name) {
-    this.name = name;
-  }
-
 
   public Counter value(Object value) {
     
@@ -104,6 +82,28 @@ public class Counter {
   }
 
 
+  public Counter name(Object name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name of Custom Counter to add to the page under _counters
+   * @return name
+  **/
+  @javax.annotation.Nullable
+
+  public Object getName() {
+    return name;
+  }
+
+
+  public void setName(Object name) {
+    this.name = name;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -114,8 +114,8 @@ public class Counter {
       return false;
     }
     Counter counter = (Counter) o;
-    return Objects.equals(this.name, counter.name) &&
-        Objects.equals(this.value, counter.value);
+    return Objects.equals(this.value, counter.value) &&
+        Objects.equals(this.name, counter.name);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -124,7 +124,7 @@ public class Counter {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, value);
+    return Objects.hash(value, name);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -138,8 +138,8 @@ public class Counter {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Counter {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    value: ").append(toIndentedString(value)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -162,8 +162,8 @@ public class Counter {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("name");
     openapiFields.add("value");
+    openapiFields.add("name");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();

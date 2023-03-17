@@ -61,8 +61,7 @@
           "type": "array",
           "items": {
             "$ref": "#/components/schemas/Page"
-          },
-          "default": []
+          }
         },
         "entries": {
           "type": "array",

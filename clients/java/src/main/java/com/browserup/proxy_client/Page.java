@@ -64,15 +64,15 @@ public class Page {
 
   public static final String SERIALIZED_NAME_VERIFICATIONS = "_verifications";
   @SerializedName(SERIALIZED_NAME_VERIFICATIONS)
-  private Object verifications = [];
+  private Object verifications = null;
 
   public static final String SERIALIZED_NAME_COUNTERS = "_counters";
   @SerializedName(SERIALIZED_NAME_COUNTERS)
-  private Object counters = [];
+  private Object counters = null;
 
   public static final String SERIALIZED_NAME_ERRORS = "_errors";
   @SerializedName(SERIALIZED_NAME_ERRORS)
-  private Object errors = [];
+  private Object errors = null;
 
   public static final String SERIALIZED_NAME_PAGE_TIMINGS = "pageTimings";
   @SerializedName(SERIALIZED_NAME_PAGE_TIMINGS)

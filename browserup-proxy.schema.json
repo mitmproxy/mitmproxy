@@ -386,66 +386,66 @@
       "PageTiming": {
         "type": "object",
         "properties": {
-          "_cumulativeLayoutShift": {
-            "type": "number",
-            "description": "cumulativeLayoutShift metric from the browser"
-          },
-          "_firstContentfulPaint": {
-            "type": "number",
-            "description": "firstContentfulPaint from the browser"
-          },
           "_largestContentfulPaint": {
             "type": "number",
             "description": "largestContentfulPaint from the browser"
-          },
-          "_href": {
-            "type": "string",
-            "description": "Top level href, including hashtag, etc per the browser"
-          },
-          "onLoad": {
-            "type": "number",
-            "description": "onLoad per the browser"
           },
           "_dns": {
             "type": "number",
             "description": "dns lookup time from the browser"
           },
-          "_ttfb": {
+          "_firstInputDelay": {
             "type": "number",
-            "description": "Time to first byte of the page's first request per the browser"
-          },
-          "_ssl": {
-            "type": "number",
-            "description": "Ssl connect time from the browser"
-          },
-          "_firstPaint": {
-            "type": "number",
-            "description": "firstPaint from the browser"
+            "description": "firstInputDelay from the browser"
           },
           "onContentLoad": {
             "type": "number",
             "description": "onContentLoad per the browser"
           },
+          "_ssl": {
+            "type": "number",
+            "description": "Ssl connect time from the browser"
+          },
           "_domInteractive": {
             "type": "number",
             "description": "domInteractive from the browser"
           },
-          "_firstInputDelay": {
+          "_cumulativeLayoutShift": {
             "type": "number",
-            "description": "firstInputDelay from the browser"
+            "description": "cumulativeLayoutShift metric from the browser"
+          },
+          "onLoad": {
+            "type": "number",
+            "description": "onLoad per the browser"
+          },
+          "_firstPaint": {
+            "type": "number",
+            "description": "firstPaint from the browser"
+          },
+          "_ttfb": {
+            "type": "number",
+            "description": "Time to first byte of the page's first request per the browser"
+          },
+          "_firstContentfulPaint": {
+            "type": "number",
+            "description": "firstContentfulPaint from the browser"
+          },
+          "_href": {
+            "type": "string",
+            "description": "Top level href, including hashtag, etc per the browser"
           }
         }
       },
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name to match"
-          },
           "value": {
             "type": "string",
             "description": "Value to match"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to match"
           }
         }
       },
@@ -567,6 +567,10 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
+          "result": {
+            "type": "boolean",
+            "description": "Result True / False"
+          },
           "type": {
             "type": "string",
             "description": "Type"
@@ -574,37 +578,33 @@
           "name": {
             "type": "string",
             "description": "Name"
-          },
-          "result": {
-            "type": "boolean",
-            "description": "Result True / False"
           }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the Error to add. Stored in har under _errors"
-          },
           "details": {
             "type": "string",
             "description": "Short details of the error"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Error to add. Stored in har under _errors"
           }
         }
       },
       "Counter": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of Custom Counter to add to the page under _counters"
-          },
           "value": {
             "type": "number",
             "format": "double",
             "description": "Value for the counter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of Custom Counter to add to the page under _counters"
           }
         }
       },
@@ -686,8 +686,7 @@
             "default": -1
           },
           "_href": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "_dns": {
             "type": "integer",
@@ -818,8 +817,7 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/Page"
-                },
-                "default": []
+                }
               },
               "entries": {
                 "type": "array",
@@ -1303,22 +1301,19 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/VerifyResult"
-            },
-            "default": []
+            }
           },
           "_counters": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Counter"
-            },
-            "default": []
+            }
           },
           "_errors": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Error"
-            },
-            "default": []
+            }
           },
           "pageTimings": {
             "$ref": "#/components/schemas/PageTimings"

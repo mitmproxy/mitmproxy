@@ -59,7 +59,7 @@ public class PageTimings {
 
   public static final String SERIALIZED_NAME_HREF = "_href";
   @SerializedName(SERIALIZED_NAME_HREF)
-  private Object href = ;
+  private Object href = null;
 
   public static final String SERIALIZED_NAME_DNS = "_dns";
   @SerializedName(SERIALIZED_NAME_DNS)
