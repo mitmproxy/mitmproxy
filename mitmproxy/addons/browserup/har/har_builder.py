@@ -61,8 +61,7 @@ class HarBuilder():
             "queryString": [],
             "headersSize": 0,
             "bodySize": 0,
-            "comment": "",
-            "additional": {}
+            "comment": ""
         }
 
     @staticmethod

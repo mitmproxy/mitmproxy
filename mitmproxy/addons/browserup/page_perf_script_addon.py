@@ -23,17 +23,17 @@ class PagePerfScriptAddOn:
     def request(self, flow: mitmproxy.http.HTTPFlow):
         # Hijack CORS OPTIONS request
         if flow.request.method == "OPTIONS":
-            flow.response = mitmproxy.http.Response.make(200, b"", {"Access-Control-Allow-Origin": "*",
-                                                                    "Access-Control-Allow-Methods": "GET,POST",
-                                                                    "Access-Control-Allow-Headers": "Authorization",
-                                                                    "Access-Control-Max-Age": "1728000"})
+            flow.response = mitmproxy.http.Response.make(200, b"", {"access-control-allow-origin": "*",
+                                                                    "access-control-allow-methods": "GET,POST",
+                                                                    "access-control-allow-headers": "Authorization",
+                                                                    "access-control-max-age": "1728000"})
 
     def response(self, flow: mitmproxy.http.HTTPFlow):
         if flow.response is not None and "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
             src_url = self.get_url() + "/browser/scripts/pageperf.js"
 
-            flow.response.headers["Access-Control-Allow-Origin"] = "*"
-            flow.response.headers["Access-Control-Allow-Methods"] = "POST,GET,OPTIONS,PUT,DELETE"
+            flow.response.headers["access-control-allow-origin"] = "*"
+            flow.response.headers["access-control-allow-methods"] = "POST,GET,OPTIONS,PUT,DELETE"
 
             script = f'''
                 <script>if (!window.bupLoaded){{let s=document.createElement("script");s.setAttribute("src", "{src_url}");
@@ -48,8 +48,8 @@ class PagePerfScriptAddOn:
                 html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
 
                 # if we don't delete this, customer pages may be cranky about the script
-                if 'Content-Security-Policy' in flow.response.headers:
-                    del flow.response.headers['Content-Security-Policy']
+                if 'content-security-policy' in flow.response.headers:
+                    del flow.response.headers['content-security-policy']
 
                 flow.response.text = html
 
