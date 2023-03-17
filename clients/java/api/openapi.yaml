@@ -285,50 +285,50 @@ components:
   schemas:
     PageTiming:
       properties:
-        _largestContentfulPaint:
-          description: largestContentfulPaint from the browser
-          type: number
-        onContentLoad:
-          description: onContentLoad per the browser
-          type: number
-        _dns:
-          description: dns lookup time from the browser
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
         _domInteractive:
           description: domInteractive from the browser
           type: number
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
-          type: number
-        _href:
-          description: "Top level href, including hashtag, etc per the browser"
-          type: string
-        _firstInputDelay:
-          description: firstInputDelay from the browser
-          type: number
-        _ssl:
-          description: Ssl connect time from the browser
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
           type: number
         _firstPaint:
           description: firstPaint from the browser
           type: number
+        _ssl:
+          description: Ssl connect time from the browser
+          type: number
+        _largestContentfulPaint:
+          description: largestContentfulPaint from the browser
+          type: number
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
+          type: string
+        _dns:
+          description: dns lookup time from the browser
+          type: number
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
+          type: number
+        onContentLoad:
+          description: onContentLoad per the browser
+          type: number
+        _firstInputDelay:
+          description: firstInputDelay from the browser
+          type: number
         onLoad:
           description: onLoad per the browser
-          type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
-          type: number
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
           type: number
       type: object
     NameValuePair:
       properties:
-        value:
-          description: Value to match
-          type: string
         name:
           description: Name to match
+          type: string
+        value:
+          description: Value to match
           type: string
       type: object
     MatchCriteria:
@@ -418,11 +418,11 @@ components:
         result:
           description: Result True / False
           type: boolean
-        type:
-          description: Type
-          type: string
         name:
           description: Name
+          type: string
+        type:
+          description: Type
           type: string
       type: object
     Error:
@@ -442,13 +442,13 @@ components:
         name: name
         value: 0.8008281904610115
       properties:
+        name:
+          description: Name of Custom Counter to add to the page under _counters
+          type: string
         value:
           description: Value for the counter
           format: double
           type: number
-        name:
-          description: Name of Custom Counter to add to the page under _counters
-          type: string
       type: object
     WebSocketMessage:
       example:
