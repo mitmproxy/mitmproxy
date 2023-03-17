@@ -8,20 +8,20 @@ A set of criteria for filtering HTTP Requests and Responses.                    
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**url** | **Object** | Request URL regexp to match |  [optional] |
-|**page** | **Object** | current|all |  [optional] |
-|**status** | **Object** | HTTP Status code to match. |  [optional] |
-|**content** | **Object** | Body content regexp content to match |  [optional] |
-|**contentType** | **Object** | Content type |  [optional] |
-|**websocketMessage** | **Object** | Websocket message text to match |  [optional] |
-|**requestHeader** | **Object** |  |  [optional] |
-|**requestCookie** | **Object** |  |  [optional] |
-|**responseHeader** | **Object** |  |  [optional] |
-|**responseCookie** | **Object** |  |  [optional] |
-|**jsonValid** | **Object** | Is valid JSON |  [optional] |
-|**jsonPath** | **Object** | Has JSON path |  [optional] |
-|**jsonSchema** | **Object** | Validates against passed JSON schema |  [optional] |
-|**errorIfNoTraffic** | **Object** | If the proxy has NO traffic at all, return error |  [optional] |
+|**url** | **String** | Request URL regexp to match |  [optional] |
+|**page** | **String** | current|all |  [optional] |
+|**status** | **String** | HTTP Status code to match. |  [optional] |
+|**content** | **String** | Body content regexp content to match |  [optional] |
+|**contentType** | **String** | Content type |  [optional] |
+|**websocketMessage** | **String** | Websocket message text to match |  [optional] |
+|**requestHeader** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
+|**requestCookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
+|**responseHeader** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
+|**responseCookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
+|**jsonValid** | **Boolean** | Is valid JSON |  [optional] |
+|**jsonPath** | **String** | Has JSON path |  [optional] |
+|**jsonSchema** | **String** | Validates against passed JSON schema |  [optional] |
+|**errorIfNoTraffic** | **Boolean** | If the proxy has NO traffic at all, return error |  [optional] |
 
 
 

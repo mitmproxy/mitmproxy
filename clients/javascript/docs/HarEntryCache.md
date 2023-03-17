@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**beforeRequest** | **Object** |  | [optional] 
-**afterRequest** | **Object** |  | [optional] 
-**comment** | **Object** |  | [optional] 
+**beforeRequest** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  | [optional] 
+**afterRequest** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  | [optional] 
+**comment** | **String** |  | [optional] 
 
 

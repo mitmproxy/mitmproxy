@@ -4,16 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**pageref** | **Object** |  | [optional] 
-**startedDateTime** | **Object** |  | 
-**time** | **Object** |  | 
+**pageref** | **String** |  | [optional] 
+**startedDateTime** | **Date** |  | 
+**time** | **Number** |  | 
 **request** | [**HarEntryRequest**](HarEntryRequest.md) |  | 
 **response** | [**HarEntryResponse**](HarEntryResponse.md) |  | 
 **cache** | [**HarEntryCache**](HarEntryCache.md) |  | 
 **timings** | [**HarEntryTimings**](HarEntryTimings.md) |  | 
-**serverIPAddress** | **Object** |  | [optional] 
-**webSocketMessages** | **Object** |  | [optional] 
-**connection** | **Object** |  | [optional] 
-**comment** | **Object** |  | [optional] 
+**serverIPAddress** | **String** |  | [optional] 
+**webSocketMessages** | [**[WebSocketMessage]**](WebSocketMessage.md) |  | [optional] 
+**connection** | **String** |  | [optional] 
+**comment** | **String** |  | [optional] 
 
 

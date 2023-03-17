@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,16 +50,16 @@ import com.browserup.proxy_client.JSON;
 public class Error {
   public static final String SERIALIZED_NAME_DETAILS = "details";
   @SerializedName(SERIALIZED_NAME_DETAILS)
-  private Object details = null;
+  private String details;
 
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private Object name = null;
+  private String name;
 
   public Error() {
   }
 
-  public Error details(Object details) {
+  public Error details(String details) {
     
     this.details = details;
     return this;
@@ -72,17 +71,17 @@ public class Error {
   **/
   @javax.annotation.Nullable
 
-  public Object getDetails() {
+  public String getDetails() {
     return details;
   }
 
 
-  public void setDetails(Object details) {
+  public void setDetails(String details) {
     this.details = details;
   }
 
 
-  public Error name(Object name) {
+  public Error name(String name) {
     
     this.name = name;
     return this;
@@ -94,12 +93,12 @@ public class Error {
   **/
   @javax.annotation.Nullable
 
-  public Object getName() {
+  public String getName() {
     return name;
   }
 
 
-  public void setName(Object name) {
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -118,20 +117,9 @@ public class Error {
         Objects.equals(this.name, error.name);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(details, name);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -188,6 +176,12 @@ public class Error {
         if (!Error.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Error` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("details") != null && !jsonObj.get("details").isJsonNull()) && !jsonObj.get("details").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `details` to be a primitive type in the JSON string but got `%s`", jsonObj.get("details").toString()));
+      }
+      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
       }
   }
 

@@ -47,14 +47,14 @@ class VerifyResult {
         if (data) {
             obj = obj || new VerifyResult();
 
-            if (data.hasOwnProperty('type')) {
-                obj['type'] = ApiClient.convertToType(data['type'], Object);
+            if (data.hasOwnProperty('result')) {
+                obj['result'] = ApiClient.convertToType(data['result'], 'Boolean');
             }
             if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
-            if (data.hasOwnProperty('result')) {
-                obj['result'] = ApiClient.convertToType(data['result'], Object);
+            if (data.hasOwnProperty('type')) {
+                obj['type'] = ApiClient.convertToType(data['type'], 'String');
             }
         }
         return obj;
@@ -66,6 +66,14 @@ class VerifyResult {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>VerifyResult</code>.
      */
     static validateJSON(data) {
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
+        // ensure the json data is a string
+        if (data['type'] && !(typeof data['type'] === 'string' || data['type'] instanceof String)) {
+            throw new Error("Expected the field `type` to be a primitive type in the JSON string but got " + data['type']);
+        }
 
         return true;
     }
@@ -76,22 +84,22 @@ class VerifyResult {
 
 
 /**
- * Type
- * @member {Object} type
+ * Result True / False
+ * @member {Boolean} result
  */
-VerifyResult.prototype['type'] = undefined;
+VerifyResult.prototype['result'] = undefined;
 
 /**
  * Name
- * @member {Object} name
+ * @member {String} name
  */
 VerifyResult.prototype['name'] = undefined;
 
 /**
- * Result True / False
- * @member {Object} result
+ * Type
+ * @member {String} type
  */
-VerifyResult.prototype['result'] = undefined;
+VerifyResult.prototype['type'] = undefined;
 
 
 

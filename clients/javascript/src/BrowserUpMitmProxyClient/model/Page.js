@@ -12,7 +12,10 @@
  */
 
 import ApiClient from '../ApiClient';
+import Counter from './Counter';
+import Error from './Error';
 import PageTimings from './PageTimings';
+import VerifyResult from './VerifyResult';
 
 /**
  * The Page model module.
@@ -23,9 +26,10 @@ class Page {
     /**
      * Constructs a new <code>Page</code>.
      * @alias module:BrowserUpMitmProxyClient/model/Page
-     * @param startedDateTime {Object} 
-     * @param id {Object} 
-     * @param title {Object} 
+     * @extends Object
+     * @param startedDateTime {Date} 
+     * @param id {String} 
+     * @param title {String} 
      * @param pageTimings {module:BrowserUpMitmProxyClient/model/PageTimings} 
      */
     constructor(startedDateTime, id, title, pageTimings) { 
@@ -56,29 +60,32 @@ class Page {
         if (data) {
             obj = obj || new Page();
 
+            ApiClient.constructFromObject(data, obj, 'Object');
+            
+
             if (data.hasOwnProperty('startedDateTime')) {
-                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], Object);
+                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'Date');
             }
             if (data.hasOwnProperty('id')) {
-                obj['id'] = ApiClient.convertToType(data['id'], Object);
+                obj['id'] = ApiClient.convertToType(data['id'], 'String');
             }
             if (data.hasOwnProperty('title')) {
-                obj['title'] = ApiClient.convertToType(data['title'], Object);
+                obj['title'] = ApiClient.convertToType(data['title'], 'String');
             }
             if (data.hasOwnProperty('_verifications')) {
-                obj['_verifications'] = ApiClient.convertToType(data['_verifications'], Object);
+                obj['_verifications'] = ApiClient.convertToType(data['_verifications'], [VerifyResult]);
             }
             if (data.hasOwnProperty('_counters')) {
-                obj['_counters'] = ApiClient.convertToType(data['_counters'], Object);
+                obj['_counters'] = ApiClient.convertToType(data['_counters'], [Counter]);
             }
             if (data.hasOwnProperty('_errors')) {
-                obj['_errors'] = ApiClient.convertToType(data['_errors'], Object);
+                obj['_errors'] = ApiClient.convertToType(data['_errors'], [Error]);
             }
             if (data.hasOwnProperty('pageTimings')) {
                 obj['pageTimings'] = PageTimings.constructFromObject(data['pageTimings']);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -96,9 +103,47 @@ class Page {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // validate the optional field `pageTimings`
-        if (data['pageTimings']) { // data not null
-          PageTimings.validateJSON(data['pageTimings']);
+        // ensure the json data is a string
+        if (data['id'] && !(typeof data['id'] === 'string' || data['id'] instanceof String)) {
+            throw new Error("Expected the field `id` to be a primitive type in the JSON string but got " + data['id']);
+        }
+        // ensure the json data is a string
+        if (data['title'] && !(typeof data['title'] === 'string' || data['title'] instanceof String)) {
+            throw new Error("Expected the field `title` to be a primitive type in the JSON string but got " + data['title']);
+        }
+        if (data['_verifications']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_verifications'])) {
+                throw new Error("Expected the field `_verifications` to be an array in the JSON data but got " + data['_verifications']);
+            }
+            // validate the optional field `_verifications` (array)
+            for (const item of data['_verifications']) {
+                VerifyResult.validateJSON(item);
+            };
+        }
+        if (data['_counters']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_counters'])) {
+                throw new Error("Expected the field `_counters` to be an array in the JSON data but got " + data['_counters']);
+            }
+            // validate the optional field `_counters` (array)
+            for (const item of data['_counters']) {
+                Counter.validateJSON(item);
+            };
+        }
+        if (data['_errors']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_errors'])) {
+                throw new Error("Expected the field `_errors` to be an array in the JSON data but got " + data['_errors']);
+            }
+            // validate the optional field `_errors` (array)
+            for (const item of data['_errors']) {
+                Error.validateJSON(item);
+            };
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -110,32 +155,32 @@ class Page {
 Page.RequiredProperties = ["startedDateTime", "id", "title", "pageTimings"];
 
 /**
- * @member {Object} startedDateTime
+ * @member {Date} startedDateTime
  */
 Page.prototype['startedDateTime'] = undefined;
 
 /**
- * @member {Object} id
+ * @member {String} id
  */
 Page.prototype['id'] = undefined;
 
 /**
- * @member {Object} title
+ * @member {String} title
  */
 Page.prototype['title'] = undefined;
 
 /**
- * @member {Object} _verifications
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/VerifyResult>} _verifications
  */
 Page.prototype['_verifications'] = undefined;
 
 /**
- * @member {Object} _counters
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/Counter>} _counters
  */
 Page.prototype['_counters'] = undefined;
 
 /**
- * @member {Object} _errors
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/Error>} _errors
  */
 Page.prototype['_errors'] = undefined;
 
@@ -145,7 +190,7 @@ Page.prototype['_errors'] = undefined;
 Page.prototype['pageTimings'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 Page.prototype['comment'] = undefined;
 

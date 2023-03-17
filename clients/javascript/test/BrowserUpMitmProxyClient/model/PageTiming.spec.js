@@ -54,56 +54,8 @@
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.PageTiming);
     });
 
-    it('should have the property cumulativeLayoutShift (base name: "_cumulativeLayoutShift")', function() {
-      // uncomment below and update the code to test the property cumulativeLayoutShift
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
     it('should have the property firstContentfulPaint (base name: "_firstContentfulPaint")', function() {
       // uncomment below and update the code to test the property firstContentfulPaint
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property largestContentfulPaint (base name: "_largestContentfulPaint")', function() {
-      // uncomment below and update the code to test the property largestContentfulPaint
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property href (base name: "_href")', function() {
-      // uncomment below and update the code to test the property href
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property onLoad (base name: "onLoad")', function() {
-      // uncomment below and update the code to test the property onLoad
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property dns (base name: "_dns")', function() {
-      // uncomment below and update the code to test the property dns
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property ttfb (base name: "_ttfb")', function() {
-      // uncomment below and update the code to test the property ttfb
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property ssl (base name: "_ssl")', function() {
-      // uncomment below and update the code to test the property ssl
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property firstPaint (base name: "_firstPaint")', function() {
-      // uncomment below and update the code to test the property firstPaint
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });
@@ -114,14 +66,62 @@
       //expect(instance).to.be();
     });
 
-    it('should have the property domInteractive (base name: "_domInteractive")', function() {
-      // uncomment below and update the code to test the property domInteractive
+    it('should have the property dns (base name: "_dns")', function() {
+      // uncomment below and update the code to test the property dns
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property largestContentfulPaint (base name: "_largestContentfulPaint")', function() {
+      // uncomment below and update the code to test the property largestContentfulPaint
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property firstPaint (base name: "_firstPaint")', function() {
+      // uncomment below and update the code to test the property firstPaint
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });
 
     it('should have the property firstInputDelay (base name: "_firstInputDelay")', function() {
       // uncomment below and update the code to test the property firstInputDelay
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property ttfb (base name: "_ttfb")', function() {
+      // uncomment below and update the code to test the property ttfb
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property onLoad (base name: "onLoad")', function() {
+      // uncomment below and update the code to test the property onLoad
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property ssl (base name: "_ssl")', function() {
+      // uncomment below and update the code to test the property ssl
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property href (base name: "_href")', function() {
+      // uncomment below and update the code to test the property href
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property cumulativeLayoutShift (base name: "_cumulativeLayoutShift")', function() {
+      // uncomment below and update the code to test the property cumulativeLayoutShift
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property domInteractive (base name: "_domInteractive")', function() {
+      // uncomment below and update the code to test the property domInteractive
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });

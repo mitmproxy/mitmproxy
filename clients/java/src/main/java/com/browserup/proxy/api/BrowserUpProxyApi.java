@@ -554,7 +554,7 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call newPageCall(Object title, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call newPageCall(String title, final ApiCallback _callback) throws ApiException {
         String basePath = null;
         // Operation Servers
         String[] localBasePaths = new String[] {  };
@@ -600,7 +600,7 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call newPageValidateBeforeCall(Object title, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call newPageValidateBeforeCall(String title, final ApiCallback _callback) throws ApiException {
         // verify the required parameter 'title' is set
         if (title == null) {
             throw new ApiException("Missing the required parameter 'title' when calling newPage(Async)");
@@ -622,7 +622,7 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
      </table>
      */
-    public Har newPage(Object title) throws ApiException {
+    public Har newPage(String title) throws ApiException {
         ApiResponse<Har> localVarResp = newPageWithHttpInfo(title);
         return localVarResp.getData();
     }
@@ -639,7 +639,7 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<Har> newPageWithHttpInfo(Object title) throws ApiException {
+    public ApiResponse<Har> newPageWithHttpInfo(String title) throws ApiException {
         okhttp3.Call localVarCall = newPageValidateBeforeCall(title, null);
         Type localVarReturnType = new TypeToken<Har>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
@@ -658,7 +658,7 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The current Har file. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call newPageAsync(Object title, final ApiCallback<Har> _callback) throws ApiException {
+    public okhttp3.Call newPageAsync(String title, final ApiCallback<Har> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = newPageValidateBeforeCall(title, _callback);
         Type localVarReturnType = new TypeToken<Har>(){}.getType();
@@ -792,7 +792,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyNotPresentCall(Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifyNotPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         String basePath = null;
         // Operation Servers
         String[] localBasePaths = new String[] {  };
@@ -839,7 +839,7 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifyNotPresentValidateBeforeCall(Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifyNotPresentValidateBeforeCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         // verify the required parameter 'name' is set
         if (name == null) {
             throw new ApiException("Missing the required parameter 'name' when calling verifyNotPresent(Async)");
@@ -868,7 +868,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifyNotPresent(Object name, MatchCriteria matchCriteria) throws ApiException {
+    public VerifyResult verifyNotPresent(String name, MatchCriteria matchCriteria) throws ApiException {
         ApiResponse<VerifyResult> localVarResp = verifyNotPresentWithHttpInfo(name, matchCriteria);
         return localVarResp.getData();
     }
@@ -887,7 +887,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(Object name, MatchCriteria matchCriteria) throws ApiException {
+    public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
         okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
@@ -908,7 +908,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyNotPresentAsync(Object name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifyNotPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
@@ -929,7 +929,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyPresentCall(Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifyPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         String basePath = null;
         // Operation Servers
         String[] localBasePaths = new String[] {  };
@@ -976,7 +976,7 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifyPresentValidateBeforeCall(Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifyPresentValidateBeforeCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         // verify the required parameter 'name' is set
         if (name == null) {
             throw new ApiException("Missing the required parameter 'name' when calling verifyPresent(Async)");
@@ -1005,7 +1005,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifyPresent(Object name, MatchCriteria matchCriteria) throws ApiException {
+    public VerifyResult verifyPresent(String name, MatchCriteria matchCriteria) throws ApiException {
         ApiResponse<VerifyResult> localVarResp = verifyPresentWithHttpInfo(name, matchCriteria);
         return localVarResp.getData();
     }
@@ -1024,7 +1024,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(Object name, MatchCriteria matchCriteria) throws ApiException {
+    public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
         okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
@@ -1045,7 +1045,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyPresentAsync(Object name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifyPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
@@ -1067,7 +1067,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySLACall(Object time, Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifySLACall(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         String basePath = null;
         // Operation Servers
         String[] localBasePaths = new String[] {  };
@@ -1115,7 +1115,7 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifySLAValidateBeforeCall(Object time, Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifySLAValidateBeforeCall(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         // verify the required parameter 'time' is set
         if (time == null) {
             throw new ApiException("Missing the required parameter 'time' when calling verifySLA(Async)");
@@ -1150,7 +1150,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifySLA(Object time, Object name, MatchCriteria matchCriteria) throws ApiException {
+    public VerifyResult verifySLA(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
         ApiResponse<VerifyResult> localVarResp = verifySLAWithHttpInfo(time, name, matchCriteria);
         return localVarResp.getData();
     }
@@ -1170,7 +1170,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Object time, Object name, MatchCriteria matchCriteria) throws ApiException {
+    public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
         okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
@@ -1192,7 +1192,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySLAAsync(Object time, Object name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifySLAAsync(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
@@ -1214,7 +1214,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySizeCall(Object size, Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifySizeCall(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         String basePath = null;
         // Operation Servers
         String[] localBasePaths = new String[] {  };
@@ -1262,7 +1262,7 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifySizeValidateBeforeCall(Object size, Object name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifySizeValidateBeforeCall(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         // verify the required parameter 'size' is set
         if (size == null) {
             throw new ApiException("Missing the required parameter 'size' when calling verifySize(Async)");
@@ -1297,7 +1297,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifySize(Object size, Object name, MatchCriteria matchCriteria) throws ApiException {
+    public VerifyResult verifySize(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
         ApiResponse<VerifyResult> localVarResp = verifySizeWithHttpInfo(size, name, matchCriteria);
         return localVarResp.getData();
     }
@@ -1317,7 +1317,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Object size, Object name, MatchCriteria matchCriteria) throws ApiException {
+    public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
         okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
@@ -1339,7 +1339,7 @@ public class BrowserUpProxyApi {
         <tr><td> 422 </td><td> The MatchCriteria are invalid. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySizeAsync(Object size, Object name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifySizeAsync(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
         okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();

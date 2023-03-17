@@ -4,10 +4,10 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **type** | **Object** |  |  |
-| **opcode** | **Object** |  |  |
-| **data** | **Object** |  |  |
-| **time** | **Object** |  |  |
+| **type** | **String** |  |  |
+| **opcode** | **Float** |  |  |
+| **data** | **String** |  |  |
+| **time** | **Float** |  |  |
 
 ## Example
 

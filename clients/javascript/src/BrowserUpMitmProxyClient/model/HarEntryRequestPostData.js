@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import HarEntryRequestPostDataParamsInner from './HarEntryRequestPostDataParamsInner';
 
 /**
  * The HarEntryRequestPostData model module.
@@ -23,7 +24,7 @@ class HarEntryRequestPostData {
      * Constructs a new <code>HarEntryRequestPostData</code>.
      * Posted data info.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryRequestPostData
-     * @param mimeType {Object} 
+     * @param mimeType {String} 
      */
     constructor(mimeType) { 
         
@@ -51,13 +52,13 @@ class HarEntryRequestPostData {
             obj = obj || new HarEntryRequestPostData();
 
             if (data.hasOwnProperty('mimeType')) {
-                obj['mimeType'] = ApiClient.convertToType(data['mimeType'], Object);
+                obj['mimeType'] = ApiClient.convertToType(data['mimeType'], 'String');
             }
             if (data.hasOwnProperty('text')) {
-                obj['text'] = ApiClient.convertToType(data['text'], Object);
+                obj['text'] = ApiClient.convertToType(data['text'], 'String');
             }
             if (data.hasOwnProperty('params')) {
-                obj['params'] = ApiClient.convertToType(data['params'], Object);
+                obj['params'] = ApiClient.convertToType(data['params'], [HarEntryRequestPostDataParamsInner]);
             }
         }
         return obj;
@@ -75,6 +76,24 @@ class HarEntryRequestPostData {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['mimeType'] && !(typeof data['mimeType'] === 'string' || data['mimeType'] instanceof String)) {
+            throw new Error("Expected the field `mimeType` to be a primitive type in the JSON string but got " + data['mimeType']);
+        }
+        // ensure the json data is a string
+        if (data['text'] && !(typeof data['text'] === 'string' || data['text'] instanceof String)) {
+            throw new Error("Expected the field `text` to be a primitive type in the JSON string but got " + data['text']);
+        }
+        if (data['params']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['params'])) {
+                throw new Error("Expected the field `params` to be an array in the JSON data but got " + data['params']);
+            }
+            // validate the optional field `params` (array)
+            for (const item of data['params']) {
+                HarEntryRequestPostDataParamsInner.validateJSON(item);
+            };
+        }
 
         return true;
     }
@@ -85,17 +104,17 @@ class HarEntryRequestPostData {
 HarEntryRequestPostData.RequiredProperties = ["mimeType"];
 
 /**
- * @member {Object} mimeType
+ * @member {String} mimeType
  */
 HarEntryRequestPostData.prototype['mimeType'] = undefined;
 
 /**
- * @member {Object} text
+ * @member {String} text
  */
 HarEntryRequestPostData.prototype['text'] = undefined;
 
 /**
- * @member {Object} params
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestPostDataParamsInner>} params
  */
 HarEntryRequestPostData.prototype['params'] = undefined;
 

@@ -53,28 +53,20 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'dns' => :'Object',
-        :'connect' => :'Object',
-        :'blocked' => :'Object',
-        :'_send' => :'Object',
-        :'wait' => :'Object',
-        :'receive' => :'Object',
-        :'ssl' => :'Object',
-        :'comment' => :'Object'
+        :'dns' => :'Integer',
+        :'connect' => :'Integer',
+        :'blocked' => :'Integer',
+        :'_send' => :'Integer',
+        :'wait' => :'Integer',
+        :'receive' => :'Integer',
+        :'ssl' => :'Integer',
+        :'comment' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'dns',
-        :'connect',
-        :'blocked',
-        :'_send',
-        :'wait',
-        :'receive',
-        :'ssl',
-        :'comment'
       ])
     end
 
@@ -95,30 +87,44 @@ module BrowserupMitmProxy
 
       if attributes.key?(:'dns')
         self.dns = attributes[:'dns']
+      else
+        self.dns = -1
       end
 
       if attributes.key?(:'connect')
         self.connect = attributes[:'connect']
+      else
+        self.connect = -1
       end
 
       if attributes.key?(:'blocked')
         self.blocked = attributes[:'blocked']
+      else
+        self.blocked = -1
       end
 
       if attributes.key?(:'_send')
         self._send = attributes[:'_send']
+      else
+        self._send = -1
       end
 
       if attributes.key?(:'wait')
         self.wait = attributes[:'wait']
+      else
+        self.wait = -1
       end
 
       if attributes.key?(:'receive')
         self.receive = attributes[:'receive']
+      else
+        self.receive = -1
       end
 
       if attributes.key?(:'ssl')
         self.ssl = attributes[:'ssl']
+      else
+        self.ssl = -1
       end
 
       if attributes.key?(:'comment')
@@ -130,28 +136,56 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @dns.nil?
+        invalid_properties.push('invalid value for "dns", dns cannot be nil.')
+      end
+
       if @dns < -1
         invalid_properties.push('invalid value for "dns", must be greater than or equal to -1.')
+      end
+
+      if @connect.nil?
+        invalid_properties.push('invalid value for "connect", connect cannot be nil.')
       end
 
       if @connect < -1
         invalid_properties.push('invalid value for "connect", must be greater than or equal to -1.')
       end
 
+      if @blocked.nil?
+        invalid_properties.push('invalid value for "blocked", blocked cannot be nil.')
+      end
+
       if @blocked < -1
         invalid_properties.push('invalid value for "blocked", must be greater than or equal to -1.')
+      end
+
+      if @_send.nil?
+        invalid_properties.push('invalid value for "_send", _send cannot be nil.')
       end
 
       if @_send < -1
         invalid_properties.push('invalid value for "_send", must be greater than or equal to -1.')
       end
 
+      if @wait.nil?
+        invalid_properties.push('invalid value for "wait", wait cannot be nil.')
+      end
+
       if @wait < -1
         invalid_properties.push('invalid value for "wait", must be greater than or equal to -1.')
       end
 
+      if @receive.nil?
+        invalid_properties.push('invalid value for "receive", receive cannot be nil.')
+      end
+
       if @receive < -1
         invalid_properties.push('invalid value for "receive", must be greater than or equal to -1.')
+      end
+
+      if @ssl.nil?
+        invalid_properties.push('invalid value for "ssl", ssl cannot be nil.')
       end
 
       if @ssl < -1
@@ -164,12 +198,19 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @dns.nil?
       return false if @dns < -1
+      return false if @connect.nil?
       return false if @connect < -1
+      return false if @blocked.nil?
       return false if @blocked < -1
+      return false if @_send.nil?
       return false if @_send < -1
+      return false if @wait.nil?
       return false if @wait < -1
+      return false if @receive.nil?
       return false if @receive < -1
+      return false if @ssl.nil?
       return false if @ssl < -1
       true
     end
@@ -177,6 +218,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] dns Value to be assigned
     def dns=(dns)
+      if dns.nil?
+        fail ArgumentError, 'dns cannot be nil'
+      end
+
       if dns < -1
         fail ArgumentError, 'invalid value for "dns", must be greater than or equal to -1.'
       end
@@ -187,6 +232,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] connect Value to be assigned
     def connect=(connect)
+      if connect.nil?
+        fail ArgumentError, 'connect cannot be nil'
+      end
+
       if connect < -1
         fail ArgumentError, 'invalid value for "connect", must be greater than or equal to -1.'
       end
@@ -197,6 +246,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] blocked Value to be assigned
     def blocked=(blocked)
+      if blocked.nil?
+        fail ArgumentError, 'blocked cannot be nil'
+      end
+
       if blocked < -1
         fail ArgumentError, 'invalid value for "blocked", must be greater than or equal to -1.'
       end
@@ -207,6 +260,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] _send Value to be assigned
     def _send=(_send)
+      if _send.nil?
+        fail ArgumentError, '_send cannot be nil'
+      end
+
       if _send < -1
         fail ArgumentError, 'invalid value for "_send", must be greater than or equal to -1.'
       end
@@ -217,6 +274,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] wait Value to be assigned
     def wait=(wait)
+      if wait.nil?
+        fail ArgumentError, 'wait cannot be nil'
+      end
+
       if wait < -1
         fail ArgumentError, 'invalid value for "wait", must be greater than or equal to -1.'
       end
@@ -227,6 +288,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] receive Value to be assigned
     def receive=(receive)
+      if receive.nil?
+        fail ArgumentError, 'receive cannot be nil'
+      end
+
       if receive < -1
         fail ArgumentError, 'invalid value for "receive", must be greater than or equal to -1.'
       end
@@ -237,6 +302,10 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] ssl Value to be assigned
     def ssl=(ssl)
+      if ssl.nil?
+        fail ArgumentError, 'ssl cannot be nil'
+      end
+
       if ssl < -1
         fail ArgumentError, 'invalid value for "ssl", must be greater than or equal to -1.'
       end

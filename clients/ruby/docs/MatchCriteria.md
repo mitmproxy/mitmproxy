@@ -4,20 +4,20 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **url** | **Object** | Request URL regexp to match | [optional] |
-| **page** | **Object** | current|all | [optional] |
-| **status** | **Object** | HTTP Status code to match. | [optional] |
-| **content** | **Object** | Body content regexp content to match | [optional] |
-| **content_type** | **Object** | Content type | [optional] |
-| **websocket_message** | **Object** | Websocket message text to match | [optional] |
-| **request_header** | **Object** |  | [optional] |
-| **request_cookie** | **Object** |  | [optional] |
-| **response_header** | **Object** |  | [optional] |
-| **response_cookie** | **Object** |  | [optional] |
-| **json_valid** | **Object** | Is valid JSON | [optional] |
-| **json_path** | **Object** | Has JSON path | [optional] |
-| **json_schema** | **Object** | Validates against passed JSON schema | [optional] |
-| **error_if_no_traffic** | **Object** | If the proxy has NO traffic at all, return error | [optional] |
+| **url** | **String** | Request URL regexp to match | [optional] |
+| **page** | **String** | current|all | [optional] |
+| **status** | **String** | HTTP Status code to match. | [optional] |
+| **content** | **String** | Body content regexp content to match | [optional] |
+| **content_type** | **String** | Content type | [optional] |
+| **websocket_message** | **String** | Websocket message text to match | [optional] |
+| **request_header** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **request_cookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **response_header** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **response_cookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  | [optional] |
+| **json_valid** | **Boolean** | Is valid JSON | [optional] |
+| **json_path** | **String** | Has JSON path | [optional] |
+| **json_schema** | **String** | Validates against passed JSON schema | [optional] |
+| **error_if_no_traffic** | **Boolean** | If the proxy has NO traffic at all, return error | [optional][default to true] |
 
 ## Example
 

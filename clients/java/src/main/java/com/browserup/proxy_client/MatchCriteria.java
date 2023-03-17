@@ -15,13 +15,13 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
+import com.browserup.proxy_client.MatchCriteriaRequestHeader;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,64 +51,64 @@ import com.browserup.proxy_client.JSON;
 public class MatchCriteria {
   public static final String SERIALIZED_NAME_URL = "url";
   @SerializedName(SERIALIZED_NAME_URL)
-  private Object url = null;
+  private String url;
 
   public static final String SERIALIZED_NAME_PAGE = "page";
   @SerializedName(SERIALIZED_NAME_PAGE)
-  private Object page = null;
+  private String page;
 
   public static final String SERIALIZED_NAME_STATUS = "status";
   @SerializedName(SERIALIZED_NAME_STATUS)
-  private Object status = null;
+  private String status;
 
   public static final String SERIALIZED_NAME_CONTENT = "content";
   @SerializedName(SERIALIZED_NAME_CONTENT)
-  private Object content = null;
+  private String content;
 
   public static final String SERIALIZED_NAME_CONTENT_TYPE = "content_type";
   @SerializedName(SERIALIZED_NAME_CONTENT_TYPE)
-  private Object contentType = null;
+  private String contentType;
 
   public static final String SERIALIZED_NAME_WEBSOCKET_MESSAGE = "websocket_message";
   @SerializedName(SERIALIZED_NAME_WEBSOCKET_MESSAGE)
-  private Object websocketMessage = null;
+  private String websocketMessage;
 
   public static final String SERIALIZED_NAME_REQUEST_HEADER = "request_header";
   @SerializedName(SERIALIZED_NAME_REQUEST_HEADER)
-  private Object requestHeader = null;
+  private MatchCriteriaRequestHeader requestHeader;
 
   public static final String SERIALIZED_NAME_REQUEST_COOKIE = "request_cookie";
   @SerializedName(SERIALIZED_NAME_REQUEST_COOKIE)
-  private Object requestCookie = null;
+  private MatchCriteriaRequestHeader requestCookie;
 
   public static final String SERIALIZED_NAME_RESPONSE_HEADER = "response_header";
   @SerializedName(SERIALIZED_NAME_RESPONSE_HEADER)
-  private Object responseHeader = null;
+  private MatchCriteriaRequestHeader responseHeader;
 
   public static final String SERIALIZED_NAME_RESPONSE_COOKIE = "response_cookie";
   @SerializedName(SERIALIZED_NAME_RESPONSE_COOKIE)
-  private Object responseCookie = null;
+  private MatchCriteriaRequestHeader responseCookie;
 
   public static final String SERIALIZED_NAME_JSON_VALID = "json_valid";
   @SerializedName(SERIALIZED_NAME_JSON_VALID)
-  private Object jsonValid = null;
+  private Boolean jsonValid;
 
   public static final String SERIALIZED_NAME_JSON_PATH = "json_path";
   @SerializedName(SERIALIZED_NAME_JSON_PATH)
-  private Object jsonPath = null;
+  private String jsonPath;
 
   public static final String SERIALIZED_NAME_JSON_SCHEMA = "json_schema";
   @SerializedName(SERIALIZED_NAME_JSON_SCHEMA)
-  private Object jsonSchema = null;
+  private String jsonSchema;
 
   public static final String SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC = "error_if_no_traffic";
   @SerializedName(SERIALIZED_NAME_ERROR_IF_NO_TRAFFIC)
-  private Object errorIfNoTraffic = true;
+  private Boolean errorIfNoTraffic = true;
 
   public MatchCriteria() {
   }
 
-  public MatchCriteria url(Object url) {
+  public MatchCriteria url(String url) {
     
     this.url = url;
     return this;
@@ -120,17 +120,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getUrl() {
+  public String getUrl() {
     return url;
   }
 
 
-  public void setUrl(Object url) {
+  public void setUrl(String url) {
     this.url = url;
   }
 
 
-  public MatchCriteria page(Object page) {
+  public MatchCriteria page(String page) {
     
     this.page = page;
     return this;
@@ -142,17 +142,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getPage() {
+  public String getPage() {
     return page;
   }
 
 
-  public void setPage(Object page) {
+  public void setPage(String page) {
     this.page = page;
   }
 
 
-  public MatchCriteria status(Object status) {
+  public MatchCriteria status(String status) {
     
     this.status = status;
     return this;
@@ -164,17 +164,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getStatus() {
+  public String getStatus() {
     return status;
   }
 
 
-  public void setStatus(Object status) {
+  public void setStatus(String status) {
     this.status = status;
   }
 
 
-  public MatchCriteria content(Object content) {
+  public MatchCriteria content(String content) {
     
     this.content = content;
     return this;
@@ -186,17 +186,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getContent() {
+  public String getContent() {
     return content;
   }
 
 
-  public void setContent(Object content) {
+  public void setContent(String content) {
     this.content = content;
   }
 
 
-  public MatchCriteria contentType(Object contentType) {
+  public MatchCriteria contentType(String contentType) {
     
     this.contentType = contentType;
     return this;
@@ -208,17 +208,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getContentType() {
+  public String getContentType() {
     return contentType;
   }
 
 
-  public void setContentType(Object contentType) {
+  public void setContentType(String contentType) {
     this.contentType = contentType;
   }
 
 
-  public MatchCriteria websocketMessage(Object websocketMessage) {
+  public MatchCriteria websocketMessage(String websocketMessage) {
     
     this.websocketMessage = websocketMessage;
     return this;
@@ -230,17 +230,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getWebsocketMessage() {
+  public String getWebsocketMessage() {
     return websocketMessage;
   }
 
 
-  public void setWebsocketMessage(Object websocketMessage) {
+  public void setWebsocketMessage(String websocketMessage) {
     this.websocketMessage = websocketMessage;
   }
 
 
-  public MatchCriteria requestHeader(Object requestHeader) {
+  public MatchCriteria requestHeader(MatchCriteriaRequestHeader requestHeader) {
     
     this.requestHeader = requestHeader;
     return this;
@@ -252,17 +252,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getRequestHeader() {
+  public MatchCriteriaRequestHeader getRequestHeader() {
     return requestHeader;
   }
 
 
-  public void setRequestHeader(Object requestHeader) {
+  public void setRequestHeader(MatchCriteriaRequestHeader requestHeader) {
     this.requestHeader = requestHeader;
   }
 
 
-  public MatchCriteria requestCookie(Object requestCookie) {
+  public MatchCriteria requestCookie(MatchCriteriaRequestHeader requestCookie) {
     
     this.requestCookie = requestCookie;
     return this;
@@ -274,17 +274,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getRequestCookie() {
+  public MatchCriteriaRequestHeader getRequestCookie() {
     return requestCookie;
   }
 
 
-  public void setRequestCookie(Object requestCookie) {
+  public void setRequestCookie(MatchCriteriaRequestHeader requestCookie) {
     this.requestCookie = requestCookie;
   }
 
 
-  public MatchCriteria responseHeader(Object responseHeader) {
+  public MatchCriteria responseHeader(MatchCriteriaRequestHeader responseHeader) {
     
     this.responseHeader = responseHeader;
     return this;
@@ -296,17 +296,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getResponseHeader() {
+  public MatchCriteriaRequestHeader getResponseHeader() {
     return responseHeader;
   }
 
 
-  public void setResponseHeader(Object responseHeader) {
+  public void setResponseHeader(MatchCriteriaRequestHeader responseHeader) {
     this.responseHeader = responseHeader;
   }
 
 
-  public MatchCriteria responseCookie(Object responseCookie) {
+  public MatchCriteria responseCookie(MatchCriteriaRequestHeader responseCookie) {
     
     this.responseCookie = responseCookie;
     return this;
@@ -318,17 +318,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getResponseCookie() {
+  public MatchCriteriaRequestHeader getResponseCookie() {
     return responseCookie;
   }
 
 
-  public void setResponseCookie(Object responseCookie) {
+  public void setResponseCookie(MatchCriteriaRequestHeader responseCookie) {
     this.responseCookie = responseCookie;
   }
 
 
-  public MatchCriteria jsonValid(Object jsonValid) {
+  public MatchCriteria jsonValid(Boolean jsonValid) {
     
     this.jsonValid = jsonValid;
     return this;
@@ -340,17 +340,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getJsonValid() {
+  public Boolean getJsonValid() {
     return jsonValid;
   }
 
 
-  public void setJsonValid(Object jsonValid) {
+  public void setJsonValid(Boolean jsonValid) {
     this.jsonValid = jsonValid;
   }
 
 
-  public MatchCriteria jsonPath(Object jsonPath) {
+  public MatchCriteria jsonPath(String jsonPath) {
     
     this.jsonPath = jsonPath;
     return this;
@@ -362,17 +362,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getJsonPath() {
+  public String getJsonPath() {
     return jsonPath;
   }
 
 
-  public void setJsonPath(Object jsonPath) {
+  public void setJsonPath(String jsonPath) {
     this.jsonPath = jsonPath;
   }
 
 
-  public MatchCriteria jsonSchema(Object jsonSchema) {
+  public MatchCriteria jsonSchema(String jsonSchema) {
     
     this.jsonSchema = jsonSchema;
     return this;
@@ -384,17 +384,17 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getJsonSchema() {
+  public String getJsonSchema() {
     return jsonSchema;
   }
 
 
-  public void setJsonSchema(Object jsonSchema) {
+  public void setJsonSchema(String jsonSchema) {
     this.jsonSchema = jsonSchema;
   }
 
 
-  public MatchCriteria errorIfNoTraffic(Object errorIfNoTraffic) {
+  public MatchCriteria errorIfNoTraffic(Boolean errorIfNoTraffic) {
     
     this.errorIfNoTraffic = errorIfNoTraffic;
     return this;
@@ -406,12 +406,12 @@ public class MatchCriteria {
   **/
   @javax.annotation.Nullable
 
-  public Object getErrorIfNoTraffic() {
+  public Boolean getErrorIfNoTraffic() {
     return errorIfNoTraffic;
   }
 
 
-  public void setErrorIfNoTraffic(Object errorIfNoTraffic) {
+  public void setErrorIfNoTraffic(Boolean errorIfNoTraffic) {
     this.errorIfNoTraffic = errorIfNoTraffic;
   }
 
@@ -442,20 +442,9 @@ public class MatchCriteria {
         Objects.equals(this.errorIfNoTraffic, matchCriteria.errorIfNoTraffic);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(url, page, status, content, contentType, websocketMessage, requestHeader, requestCookie, responseHeader, responseCookie, jsonValid, jsonPath, jsonSchema, errorIfNoTraffic);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -536,6 +525,46 @@ public class MatchCriteria {
         if (!MatchCriteria.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `MatchCriteria` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("url") != null && !jsonObj.get("url").isJsonNull()) && !jsonObj.get("url").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `url` to be a primitive type in the JSON string but got `%s`", jsonObj.get("url").toString()));
+      }
+      if ((jsonObj.get("page") != null && !jsonObj.get("page").isJsonNull()) && !jsonObj.get("page").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `page` to be a primitive type in the JSON string but got `%s`", jsonObj.get("page").toString()));
+      }
+      if ((jsonObj.get("status") != null && !jsonObj.get("status").isJsonNull()) && !jsonObj.get("status").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `status` to be a primitive type in the JSON string but got `%s`", jsonObj.get("status").toString()));
+      }
+      if ((jsonObj.get("content") != null && !jsonObj.get("content").isJsonNull()) && !jsonObj.get("content").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `content` to be a primitive type in the JSON string but got `%s`", jsonObj.get("content").toString()));
+      }
+      if ((jsonObj.get("content_type") != null && !jsonObj.get("content_type").isJsonNull()) && !jsonObj.get("content_type").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `content_type` to be a primitive type in the JSON string but got `%s`", jsonObj.get("content_type").toString()));
+      }
+      if ((jsonObj.get("websocket_message") != null && !jsonObj.get("websocket_message").isJsonNull()) && !jsonObj.get("websocket_message").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `websocket_message` to be a primitive type in the JSON string but got `%s`", jsonObj.get("websocket_message").toString()));
+      }
+      // validate the optional field `request_header`
+      if (jsonObj.get("request_header") != null && !jsonObj.get("request_header").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_header"));
+      }
+      // validate the optional field `request_cookie`
+      if (jsonObj.get("request_cookie") != null && !jsonObj.get("request_cookie").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_cookie"));
+      }
+      // validate the optional field `response_header`
+      if (jsonObj.get("response_header") != null && !jsonObj.get("response_header").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_header"));
+      }
+      // validate the optional field `response_cookie`
+      if (jsonObj.get("response_cookie") != null && !jsonObj.get("response_cookie").isJsonNull()) {
+        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_cookie"));
+      }
+      if ((jsonObj.get("json_path") != null && !jsonObj.get("json_path").isJsonNull()) && !jsonObj.get("json_path").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `json_path` to be a primitive type in the JSON string but got `%s`", jsonObj.get("json_path").toString()));
+      }
+      if ((jsonObj.get("json_schema") != null && !jsonObj.get("json_schema").isJsonNull()) && !jsonObj.get("json_schema").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `json_schema` to be a primitive type in the JSON string but got `%s`", jsonObj.get("json_schema").toString()));
       }
   }
 

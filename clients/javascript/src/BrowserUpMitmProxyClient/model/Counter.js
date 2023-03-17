@@ -48,10 +48,10 @@ class Counter {
             obj = obj || new Counter();
 
             if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
             if (data.hasOwnProperty('value')) {
-                obj['value'] = ApiClient.convertToType(data['value'], Object);
+                obj['value'] = ApiClient.convertToType(data['value'], 'Number');
             }
         }
         return obj;
@@ -63,6 +63,10 @@ class Counter {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>Counter</code>.
      */
     static validateJSON(data) {
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
 
         return true;
     }
@@ -74,13 +78,13 @@ class Counter {
 
 /**
  * Name of Custom Counter to add to the page under _counters
- * @member {Object} name
+ * @member {String} name
  */
 Counter.prototype['name'] = undefined;
 
 /**
  * Value for the counter
- * @member {Object} value
+ * @member {Number} value
  */
 Counter.prototype['value'] = undefined;
 

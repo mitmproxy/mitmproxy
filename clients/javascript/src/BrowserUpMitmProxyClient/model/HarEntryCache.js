@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import HarEntryCacheBeforeRequest from './HarEntryCacheBeforeRequest';
 
 /**
  * The HarEntryCache model module.
@@ -48,13 +49,13 @@ class HarEntryCache {
             obj = obj || new HarEntryCache();
 
             if (data.hasOwnProperty('beforeRequest')) {
-                obj['beforeRequest'] = ApiClient.convertToType(data['beforeRequest'], Object);
+                obj['beforeRequest'] = HarEntryCacheBeforeRequest.constructFromObject(data['beforeRequest']);
             }
             if (data.hasOwnProperty('afterRequest')) {
-                obj['afterRequest'] = ApiClient.convertToType(data['afterRequest'], Object);
+                obj['afterRequest'] = HarEntryCacheBeforeRequest.constructFromObject(data['afterRequest']);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -66,6 +67,18 @@ class HarEntryCache {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>HarEntryCache</code>.
      */
     static validateJSON(data) {
+        // validate the optional field `beforeRequest`
+        if (data['beforeRequest']) { // data not null
+          HarEntryCacheBeforeRequest.validateJSON(data['beforeRequest']);
+        }
+        // validate the optional field `afterRequest`
+        if (data['afterRequest']) { // data not null
+          HarEntryCacheBeforeRequest.validateJSON(data['afterRequest']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
 
         return true;
     }
@@ -76,17 +89,17 @@ class HarEntryCache {
 
 
 /**
- * @member {Object} beforeRequest
+ * @member {module:BrowserUpMitmProxyClient/model/HarEntryCacheBeforeRequest} beforeRequest
  */
 HarEntryCache.prototype['beforeRequest'] = undefined;
 
 /**
- * @member {Object} afterRequest
+ * @member {module:BrowserUpMitmProxyClient/model/HarEntryCacheBeforeRequest} afterRequest
  */
 HarEntryCache.prototype['afterRequest'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarEntryCache.prototype['comment'] = undefined;
 

@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,40 +50,40 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryTimings {
   public static final String SERIALIZED_NAME_DNS = "dns";
   @SerializedName(SERIALIZED_NAME_DNS)
-  private Object dns = -1;
+  private Long dns = -1l;
 
   public static final String SERIALIZED_NAME_CONNECT = "connect";
   @SerializedName(SERIALIZED_NAME_CONNECT)
-  private Object connect = -1;
+  private Long connect = -1l;
 
   public static final String SERIALIZED_NAME_BLOCKED = "blocked";
   @SerializedName(SERIALIZED_NAME_BLOCKED)
-  private Object blocked = -1;
+  private Long blocked = -1l;
 
   public static final String SERIALIZED_NAME_SEND = "send";
   @SerializedName(SERIALIZED_NAME_SEND)
-  private Object send = -1;
+  private Long send = -1l;
 
   public static final String SERIALIZED_NAME_WAIT = "wait";
   @SerializedName(SERIALIZED_NAME_WAIT)
-  private Object wait = -1;
+  private Long wait = -1l;
 
   public static final String SERIALIZED_NAME_RECEIVE = "receive";
   @SerializedName(SERIALIZED_NAME_RECEIVE)
-  private Object receive = -1;
+  private Long receive = -1l;
 
   public static final String SERIALIZED_NAME_SSL = "ssl";
   @SerializedName(SERIALIZED_NAME_SSL)
-  private Object ssl = -1;
+  private Long ssl = -1l;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private Object comment = null;
+  private String comment;
 
   public HarEntryTimings() {
   }
 
-  public HarEntryTimings dns(Object dns) {
+  public HarEntryTimings dns(Long dns) {
     
     this.dns = dns;
     return this;
@@ -95,19 +94,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return dns
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getDns() {
+  public Long getDns() {
     return dns;
   }
 
 
-  public void setDns(Object dns) {
+  public void setDns(Long dns) {
     this.dns = dns;
   }
 
 
-  public HarEntryTimings connect(Object connect) {
+  public HarEntryTimings connect(Long connect) {
     
     this.connect = connect;
     return this;
@@ -118,19 +117,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return connect
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getConnect() {
+  public Long getConnect() {
     return connect;
   }
 
 
-  public void setConnect(Object connect) {
+  public void setConnect(Long connect) {
     this.connect = connect;
   }
 
 
-  public HarEntryTimings blocked(Object blocked) {
+  public HarEntryTimings blocked(Long blocked) {
     
     this.blocked = blocked;
     return this;
@@ -141,19 +140,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return blocked
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getBlocked() {
+  public Long getBlocked() {
     return blocked;
   }
 
 
-  public void setBlocked(Object blocked) {
+  public void setBlocked(Long blocked) {
     this.blocked = blocked;
   }
 
 
-  public HarEntryTimings send(Object send) {
+  public HarEntryTimings send(Long send) {
     
     this.send = send;
     return this;
@@ -164,19 +163,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return send
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getSend() {
+  public Long getSend() {
     return send;
   }
 
 
-  public void setSend(Object send) {
+  public void setSend(Long send) {
     this.send = send;
   }
 
 
-  public HarEntryTimings wait(Object wait) {
+  public HarEntryTimings wait(Long wait) {
     
     this.wait = wait;
     return this;
@@ -187,19 +186,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return wait
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getWait() {
+  public Long getWait() {
     return wait;
   }
 
 
-  public void setWait(Object wait) {
+  public void setWait(Long wait) {
     this.wait = wait;
   }
 
 
-  public HarEntryTimings receive(Object receive) {
+  public HarEntryTimings receive(Long receive) {
     
     this.receive = receive;
     return this;
@@ -210,19 +209,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return receive
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getReceive() {
+  public Long getReceive() {
     return receive;
   }
 
 
-  public void setReceive(Object receive) {
+  public void setReceive(Long receive) {
     this.receive = receive;
   }
 
 
-  public HarEntryTimings ssl(Object ssl) {
+  public HarEntryTimings ssl(Long ssl) {
     
     this.ssl = ssl;
     return this;
@@ -233,19 +232,19 @@ public class HarEntryTimings {
    * minimum: -1
    * @return ssl
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getSsl() {
+  public Long getSsl() {
     return ssl;
   }
 
 
-  public void setSsl(Object ssl) {
+  public void setSsl(Long ssl) {
     this.ssl = ssl;
   }
 
 
-  public HarEntryTimings comment(Object comment) {
+  public HarEntryTimings comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -257,12 +256,12 @@ public class HarEntryTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getComment() {
+  public String getComment() {
     return comment;
   }
 
 
-  public void setComment(Object comment) {
+  public void setComment(String comment) {
     this.comment = comment;
   }
 
@@ -287,20 +286,9 @@ public class HarEntryTimings {
         Objects.equals(this.comment, harEntryTimings.comment);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(dns, connect, blocked, send, wait, receive, ssl, comment);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -383,6 +371,9 @@ public class HarEntryTimings {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

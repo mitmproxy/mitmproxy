@@ -37,16 +37,14 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'name' => :'Object',
-        :'value' => :'Object'
+        :'name' => :'String',
+        :'value' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'name',
-        :'value'
       ])
     end
 

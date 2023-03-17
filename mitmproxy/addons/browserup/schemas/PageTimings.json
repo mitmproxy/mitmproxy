@@ -5,7 +5,7 @@
     "onLoad",
     "onContentLoad"
   ],
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
+  "additionalProperties": true,
   "properties": {
     "onContentLoad": {
       "type": "integer",
@@ -20,7 +20,8 @@
       "default": -1
     },
     "_href": {
-      "type": "string"
+      "type": "string",
+      "default": ""
     },
     "_dns": {
       "type": "integer",

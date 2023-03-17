@@ -380,72 +380,72 @@
       }
     }
   },
-  "openapi": "3.1.0",
+  "openapi": "3.0.3",
   "components": {
     "schemas": {
       "PageTiming": {
         "type": "object",
         "properties": {
-          "_largestContentfulPaint": {
+          "_firstContentfulPaint": {
             "type": "number",
-            "description": "largestContentfulPaint from the browser"
-          },
-          "_dns": {
-            "type": "number",
-            "description": "dns lookup time from the browser"
-          },
-          "_firstInputDelay": {
-            "type": "number",
-            "description": "firstInputDelay from the browser"
+            "description": "firstContentfulPaint from the browser"
           },
           "onContentLoad": {
             "type": "number",
             "description": "onContentLoad per the browser"
           },
-          "_ssl": {
+          "_dns": {
             "type": "number",
-            "description": "Ssl connect time from the browser"
+            "description": "dns lookup time from the browser"
           },
-          "_domInteractive": {
+          "_largestContentfulPaint": {
             "type": "number",
-            "description": "domInteractive from the browser"
-          },
-          "_cumulativeLayoutShift": {
-            "type": "number",
-            "description": "cumulativeLayoutShift metric from the browser"
-          },
-          "onLoad": {
-            "type": "number",
-            "description": "onLoad per the browser"
+            "description": "largestContentfulPaint from the browser"
           },
           "_firstPaint": {
             "type": "number",
             "description": "firstPaint from the browser"
           },
+          "_firstInputDelay": {
+            "type": "number",
+            "description": "firstInputDelay from the browser"
+          },
           "_ttfb": {
             "type": "number",
             "description": "Time to first byte of the page's first request per the browser"
           },
-          "_firstContentfulPaint": {
+          "onLoad": {
             "type": "number",
-            "description": "firstContentfulPaint from the browser"
+            "description": "onLoad per the browser"
+          },
+          "_ssl": {
+            "type": "number",
+            "description": "Ssl connect time from the browser"
           },
           "_href": {
             "type": "string",
             "description": "Top level href, including hashtag, etc per the browser"
+          },
+          "_cumulativeLayoutShift": {
+            "type": "number",
+            "description": "cumulativeLayoutShift metric from the browser"
+          },
+          "_domInteractive": {
+            "type": "number",
+            "description": "domInteractive from the browser"
           }
         }
       },
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "value": {
-            "type": "string",
-            "description": "Value to match"
-          },
           "name": {
             "type": "string",
             "description": "Name to match"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to match"
           }
         }
       },
@@ -571,13 +571,13 @@
             "type": "boolean",
             "description": "Result True / False"
           },
-          "type": {
-            "type": "string",
-            "description": "Type"
-          },
           "name": {
             "type": "string",
             "description": "Name"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type"
           }
         }
       },
@@ -597,27 +597,19 @@
       "Counter": {
         "type": "object",
         "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of Custom Counter to add to the page under _counters"
+          },
           "value": {
             "type": "number",
             "format": "double",
             "description": "Value for the counter"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of Custom Counter to add to the page under _counters"
           }
         }
       },
       "WebSocketMessage": {
         "type": "object",
-        "patternProperties": {
-          "^_[^_]+": {
-            "type": [
-              "number",
-              "string"
-            ]
-          }
-        },
         "required": [
           "type",
           "opcode",
@@ -659,19 +651,11 @@
       },
       "PageTimings": {
         "type": "object",
-        "additionalProperties": false,
+        "additionalProperties": true,
         "required": [
           "onLoad",
           "onContentLoad"
         ],
-        "patternProperties": {
-          "^_[^_]+": {
-            "type": [
-              "number",
-              "string"
-            ]
-          }
-        },
         "properties": {
           "onContentLoad": {
             "type": "integer",
@@ -686,7 +670,8 @@
             "default": -1
           },
           "_href": {
-            "type": "string"
+            "type": "string",
+            "default": ""
           },
           "_dns": {
             "type": "integer",
@@ -752,14 +737,7 @@
         "required": [
           "log"
         ],
-        "patternProperties": {
-          "^_[^_]+": {
-            "type": [
-              "number",
-              "string"
-            ]
-          }
-        },
+        "additionalProperties": true,
         "properties": {
           "log": {
             "type": "object",
@@ -834,14 +812,6 @@
       },
       "HarEntry": {
         "type": "object",
-        "patternProperties": {
-          "^_[^_]+": {
-            "type": [
-              "number",
-              "string"
-            ]
-          }
-        },
         "required": [
           "startedDateTime",
           "time",
@@ -875,14 +845,7 @@
               "headersSize",
               "bodySize"
             ],
-            "patternProperties": {
-              "^_[^_]+": {
-                "type": [
-                  "number",
-                  "string"
-                ]
-              }
-            },
+            "additionalProperties": true,
             "properties": {
               "method": {
                 "type": "string"
@@ -1007,14 +970,6 @@
           },
           "response": {
             "type": "object",
-            "patternProperties": {
-              "^_[^_]+": {
-                "type": [
-                  "number",
-                  "string"
-                ]
-              }
-            },
             "required": [
               "status",
               "statusText",
@@ -1026,6 +981,7 @@
               "headersSize",
               "bodySize"
             ],
+            "additionalProperties": true,
             "properties": {
               "status": {
                 "type": "integer"
@@ -1278,14 +1234,7 @@
           "title",
           "pageTimings"
         ],
-        "patternProperties": {
-          "^_[^_]+": {
-            "type": [
-              "number",
-              "string"
-            ]
-          }
-        },
+        "additionalProperties": true,
         "properties": {
           "startedDateTime": {
             "type": "string",
@@ -1301,19 +1250,22 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/VerifyResult"
-            }
+            },
+            "default": []
           },
           "_counters": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Counter"
-            }
+            },
+            "default": []
           },
           "_errors": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Error"
-            }
+            },
+            "default": []
           },
           "pageTimings": {
             "$ref": "#/components/schemas/PageTimings"

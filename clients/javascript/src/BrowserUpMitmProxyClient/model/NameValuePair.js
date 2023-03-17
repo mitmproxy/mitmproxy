@@ -48,10 +48,10 @@ class NameValuePair {
             obj = obj || new NameValuePair();
 
             if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
             if (data.hasOwnProperty('value')) {
-                obj['value'] = ApiClient.convertToType(data['value'], Object);
+                obj['value'] = ApiClient.convertToType(data['value'], 'String');
             }
         }
         return obj;
@@ -63,6 +63,14 @@ class NameValuePair {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>NameValuePair</code>.
      */
     static validateJSON(data) {
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
+        // ensure the json data is a string
+        if (data['value'] && !(typeof data['value'] === 'string' || data['value'] instanceof String)) {
+            throw new Error("Expected the field `value` to be a primitive type in the JSON string but got " + data['value']);
+        }
 
         return true;
     }
@@ -74,13 +82,13 @@ class NameValuePair {
 
 /**
  * Name to match
- * @member {Object} name
+ * @member {String} name
  */
 NameValuePair.prototype['name'] = undefined;
 
 /**
  * Value to match
- * @member {Object} value
+ * @member {String} value
  */
 NameValuePair.prototype['value'] = undefined;
 

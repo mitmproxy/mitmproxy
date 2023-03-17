@@ -7,8 +7,8 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**value** | **Object** | Value for the counter |  [optional] |
-|**name** | **Object** | Name of Custom Counter to add to the page under _counters |  [optional] |
+|**name** | **String** | Name of Custom Counter to add to the page under _counters |  [optional] |
+|**value** | **Double** | Value for the counter |  [optional] |
 
 
 

@@ -4,11 +4,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**version** | **Object** |  | 
+**version** | **String** |  | 
 **creator** | [**HarLogCreator**](HarLogCreator.md) |  | 
 **browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] 
-**pages** | **Object** |  | 
-**entries** | **Object** |  | 
-**comment** | **Object** |  | [optional] 
+**pages** | [**[Page]**](Page.md) |  | 
+**entries** | [**[HarEntry]**](HarEntry.md) |  | 
+**comment** | **String** |  | [optional] 
 
 

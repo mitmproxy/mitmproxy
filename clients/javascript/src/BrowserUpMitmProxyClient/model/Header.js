@@ -22,8 +22,8 @@ class Header {
     /**
      * Constructs a new <code>Header</code>.
      * @alias module:BrowserUpMitmProxyClient/model/Header
-     * @param name {Object} 
-     * @param value {Object} 
+     * @param name {String} 
+     * @param value {String} 
      */
     constructor(name, value) { 
         
@@ -52,13 +52,13 @@ class Header {
             obj = obj || new Header();
 
             if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
             if (data.hasOwnProperty('value')) {
-                obj['value'] = ApiClient.convertToType(data['value'], Object);
+                obj['value'] = ApiClient.convertToType(data['value'], 'String');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -76,6 +76,18 @@ class Header {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
+        // ensure the json data is a string
+        if (data['value'] && !(typeof data['value'] === 'string' || data['value'] instanceof String)) {
+            throw new Error("Expected the field `value` to be a primitive type in the JSON string but got " + data['value']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
 
         return true;
     }
@@ -86,17 +98,17 @@ class Header {
 Header.RequiredProperties = ["name", "value"];
 
 /**
- * @member {Object} name
+ * @member {String} name
  */
 Header.prototype['name'] = undefined;
 
 /**
- * @member {Object} value
+ * @member {String} value
  */
 Header.prototype['value'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 Header.prototype['comment'] = undefined;
 

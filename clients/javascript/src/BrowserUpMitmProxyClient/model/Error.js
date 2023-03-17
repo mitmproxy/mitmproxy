@@ -47,11 +47,11 @@ class Error {
         if (data) {
             obj = obj || new Error();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
-            }
             if (data.hasOwnProperty('details')) {
-                obj['details'] = ApiClient.convertToType(data['details'], Object);
+                obj['details'] = ApiClient.convertToType(data['details'], 'String');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -63,6 +63,14 @@ class Error {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>Error</code>.
      */
     static validateJSON(data) {
+        // ensure the json data is a string
+        if (data['details'] && !(typeof data['details'] === 'string' || data['details'] instanceof String)) {
+            throw new Error("Expected the field `details` to be a primitive type in the JSON string but got " + data['details']);
+        }
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
 
         return true;
     }
@@ -73,16 +81,16 @@ class Error {
 
 
 /**
- * Name of the Error to add. Stored in har under _errors
- * @member {Object} name
- */
-Error.prototype['name'] = undefined;
-
-/**
  * Short details of the error
- * @member {Object} details
+ * @member {String} details
  */
 Error.prototype['details'] = undefined;
+
+/**
+ * Name of the Error to add. Stored in har under _errors
+ * @member {String} name
+ */
+Error.prototype['name'] = undefined;
 
 
 

@@ -17,13 +17,16 @@ import com.browserup.proxy_client.HarEntryCache;
 import com.browserup.proxy_client.HarEntryRequest;
 import com.browserup.proxy_client.HarEntryResponse;
 import com.browserup.proxy_client.HarEntryTimings;
+import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

@@ -54,14 +54,14 @@
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.Error);
     });
 
-    it('should have the property name (base name: "name")', function() {
-      // uncomment below and update the code to test the property name
+    it('should have the property details (base name: "details")', function() {
+      // uncomment below and update the code to test the property details
       //var instance = new BrowserUpMitmProxyClient.Error();
       //expect(instance).to.be();
     });
 
-    it('should have the property details (base name: "details")', function() {
-      // uncomment below and update the code to test the property details
+    it('should have the property name (base name: "name")', function() {
+      // uncomment below and update the code to test the property name
       //var instance = new BrowserUpMitmProxyClient.Error();
       //expect(instance).to.be();
     });

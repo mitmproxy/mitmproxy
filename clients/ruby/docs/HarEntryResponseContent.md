@@ -4,12 +4,12 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **size** | **Object** |  |  |
-| **compression** | **Object** |  | [optional] |
-| **mime_type** | **Object** |  |  |
-| **text** | **Object** |  | [optional] |
-| **encoding** | **Object** |  | [optional] |
-| **comment** | **Object** |  | [optional] |
+| **size** | **Integer** |  |  |
+| **compression** | **Integer** |  | [optional] |
+| **mime_type** | **String** |  |  |
+| **text** | **String** |  | [optional] |
+| **encoding** | **String** |  | [optional] |
+| **comment** | **String** |  | [optional] |
 
 ## Example
 

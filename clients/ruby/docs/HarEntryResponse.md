@@ -4,16 +4,16 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **status** | **Object** |  |  |
-| **status_text** | **Object** |  |  |
-| **http_version** | **Object** |  |  |
-| **cookies** | **Object** |  |  |
-| **headers** | **Object** |  |  |
+| **status** | **Integer** |  |  |
+| **status_text** | **String** |  |  |
+| **http_version** | **String** |  |  |
+| **cookies** | [**Array&lt;HarEntryRequestCookiesInner&gt;**](HarEntryRequestCookiesInner.md) |  |  |
+| **headers** | [**Array&lt;Header&gt;**](Header.md) |  |  |
 | **content** | [**HarEntryResponseContent**](HarEntryResponseContent.md) |  |  |
-| **redirect_url** | **Object** |  |  |
-| **headers_size** | **Object** |  |  |
-| **body_size** | **Object** |  |  |
-| **comment** | **Object** |  | [optional] |
+| **redirect_url** | **String** |  |  |
+| **headers_size** | **Integer** |  |  |
+| **body_size** | **Integer** |  |  |
+| **comment** | **String** |  | [optional] |
 
 ## Example
 

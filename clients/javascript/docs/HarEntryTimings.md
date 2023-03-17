@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**dns** | **Object** |  | 
-**connect** | **Object** |  | 
-**blocked** | **Object** |  | 
-**send** | **Object** |  | 
-**wait** | **Object** |  | 
-**receive** | **Object** |  | 
-**ssl** | **Object** |  | 
-**comment** | **Object** |  | [optional] 
+**dns** | **Number** |  | [default to -1]
+**connect** | **Number** |  | [default to -1]
+**blocked** | **Number** |  | [default to -1]
+**send** | **Number** |  | [default to -1]
+**wait** | **Number** |  | [default to -1]
+**receive** | **Number** |  | [default to -1]
+**ssl** | **Number** |  | [default to -1]
+**comment** | **String** |  | [optional] 
 
 

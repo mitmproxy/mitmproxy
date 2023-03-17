@@ -4,15 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **Object** |  | 
-**statusText** | **Object** |  | 
-**httpVersion** | **Object** |  | 
-**cookies** | **Object** |  | 
-**headers** | **Object** |  | 
+**status** | **Number** |  | 
+**statusText** | **String** |  | 
+**httpVersion** | **String** |  | 
+**cookies** | [**[HarEntryRequestCookiesInner]**](HarEntryRequestCookiesInner.md) |  | 
+**headers** | [**[Header]**](Header.md) |  | 
 **content** | [**HarEntryResponseContent**](HarEntryResponseContent.md) |  | 
-**redirectURL** | **Object** |  | 
-**headersSize** | **Object** |  | 
-**bodySize** | **Object** |  | 
-**comment** | **Object** |  | [optional] 
+**redirectURL** | **String** |  | 
+**headersSize** | **Number** |  | 
+**bodySize** | **Number** |  | 
+**comment** | **String** |  | [optional] 
 
 

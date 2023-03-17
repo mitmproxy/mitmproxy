@@ -4,9 +4,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**type** | **Object** |  | 
-**opcode** | **Object** |  | 
-**data** | **Object** |  | 
-**time** | **Object** |  | 
+**type** | **String** |  | 
+**opcode** | **Number** |  | 
+**data** | **String** |  | 
+**time** | **Number** |  | 
 
 

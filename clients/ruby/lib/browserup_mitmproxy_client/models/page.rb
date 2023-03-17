@@ -53,27 +53,20 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'started_date_time' => :'Object',
-        :'id' => :'Object',
-        :'title' => :'Object',
-        :'_verifications' => :'Object',
-        :'_counters' => :'Object',
-        :'_errors' => :'Object',
+        :'started_date_time' => :'Time',
+        :'id' => :'String',
+        :'title' => :'String',
+        :'_verifications' => :'Array<VerifyResult>',
+        :'_counters' => :'Array<Counter>',
+        :'_errors' => :'Array<Error>',
         :'page_timings' => :'PageTimings',
-        :'comment' => :'Object'
+        :'comment' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'started_date_time',
-        :'id',
-        :'title',
-        :'_verifications',
-        :'_counters',
-        :'_errors',
-        :'comment'
       ])
     end
 
@@ -105,15 +98,21 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'_verifications')
-        self._verifications = attributes[:'_verifications']
+        if (value = attributes[:'_verifications']).is_a?(Array)
+          self._verifications = value
+        end
       end
 
       if attributes.key?(:'_counters')
-        self._counters = attributes[:'_counters']
+        if (value = attributes[:'_counters']).is_a?(Array)
+          self._counters = value
+        end
       end
 
       if attributes.key?(:'_errors')
-        self._errors = attributes[:'_errors']
+        if (value = attributes[:'_errors']).is_a?(Array)
+          self._errors = value
+        end
       end
 
       if attributes.key?(:'page_timings')
@@ -129,6 +128,18 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @started_date_time.nil?
+        invalid_properties.push('invalid value for "started_date_time", started_date_time cannot be nil.')
+      end
+
+      if @id.nil?
+        invalid_properties.push('invalid value for "id", id cannot be nil.')
+      end
+
+      if @title.nil?
+        invalid_properties.push('invalid value for "title", title cannot be nil.')
+      end
+
       if @page_timings.nil?
         invalid_properties.push('invalid value for "page_timings", page_timings cannot be nil.')
       end
@@ -139,6 +150,9 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @started_date_time.nil?
+      return false if @id.nil?
+      return false if @title.nil?
       return false if @page_timings.nil?
       true
     end

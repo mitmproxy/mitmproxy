@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,40 +48,18 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Counter {
-  public static final String SERIALIZED_NAME_VALUE = "value";
-  @SerializedName(SERIALIZED_NAME_VALUE)
-  private Object value = null;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private Object name = null;
+  private String name;
+
+  public static final String SERIALIZED_NAME_VALUE = "value";
+  @SerializedName(SERIALIZED_NAME_VALUE)
+  private Double value;
 
   public Counter() {
   }
 
-  public Counter value(Object value) {
-    
-    this.value = value;
-    return this;
-  }
-
-   /**
-   * Value for the counter
-   * @return value
-  **/
-  @javax.annotation.Nullable
-
-  public Object getValue() {
-    return value;
-  }
-
-
-  public void setValue(Object value) {
-    this.value = value;
-  }
-
-
-  public Counter name(Object name) {
+  public Counter name(String name) {
     
     this.name = name;
     return this;
@@ -94,13 +71,35 @@ public class Counter {
   **/
   @javax.annotation.Nullable
 
-  public Object getName() {
+  public String getName() {
     return name;
   }
 
 
-  public void setName(Object name) {
+  public void setName(String name) {
     this.name = name;
+  }
+
+
+  public Counter value(Double value) {
+    
+    this.value = value;
+    return this;
+  }
+
+   /**
+   * Value for the counter
+   * @return value
+  **/
+  @javax.annotation.Nullable
+
+  public Double getValue() {
+    return value;
+  }
+
+
+  public void setValue(Double value) {
+    this.value = value;
   }
 
 
@@ -114,32 +113,21 @@ public class Counter {
       return false;
     }
     Counter counter = (Counter) o;
-    return Objects.equals(this.value, counter.value) &&
-        Objects.equals(this.name, counter.name);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    return Objects.equals(this.name, counter.name) &&
+        Objects.equals(this.value, counter.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, name);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(name, value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Counter {\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -162,8 +150,8 @@ public class Counter {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("value");
     openapiFields.add("name");
+    openapiFields.add("value");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -188,6 +176,9 @@ public class Counter {
         if (!Counter.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Counter` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
       }
   }
 

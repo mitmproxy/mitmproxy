@@ -41,20 +41,16 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'type' => :'Object',
-        :'opcode' => :'Object',
-        :'data' => :'Object',
-        :'time' => :'Object'
+        :'type' => :'String',
+        :'opcode' => :'Float',
+        :'data' => :'String',
+        :'time' => :'Float'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'type',
-        :'opcode',
-        :'data',
-        :'time'
       ])
     end
 
@@ -94,12 +90,32 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @type.nil?
+        invalid_properties.push('invalid value for "type", type cannot be nil.')
+      end
+
+      if @opcode.nil?
+        invalid_properties.push('invalid value for "opcode", opcode cannot be nil.')
+      end
+
+      if @data.nil?
+        invalid_properties.push('invalid value for "data", data cannot be nil.')
+      end
+
+      if @time.nil?
+        invalid_properties.push('invalid value for "time", time cannot be nil.')
+      end
+
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @type.nil?
+      return false if @opcode.nil?
+      return false if @data.nil?
+      return false if @time.nil?
       true
     end
 

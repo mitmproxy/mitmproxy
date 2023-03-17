@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**type** | **Object** | Type | [optional] 
-**name** | **Object** | Name | [optional] 
-**result** | **Object** | Result True / False | [optional] 
+**result** | **Boolean** | Result True / False | [optional] 
+**name** | **String** | Name | [optional] 
+**type** | **String** | Type | [optional] 
 
 

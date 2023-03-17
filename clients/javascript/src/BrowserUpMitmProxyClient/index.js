@@ -18,8 +18,13 @@ import Error from './model/Error';
 import Har from './model/Har';
 import HarEntry from './model/HarEntry';
 import HarEntryCache from './model/HarEntryCache';
+import HarEntryCacheBeforeRequest from './model/HarEntryCacheBeforeRequest';
+import HarEntryCacheBeforeRequestOneOf from './model/HarEntryCacheBeforeRequestOneOf';
 import HarEntryRequest from './model/HarEntryRequest';
+import HarEntryRequestCookiesInner from './model/HarEntryRequestCookiesInner';
 import HarEntryRequestPostData from './model/HarEntryRequestPostData';
+import HarEntryRequestPostDataParamsInner from './model/HarEntryRequestPostDataParamsInner';
+import HarEntryRequestQueryStringInner from './model/HarEntryRequestQueryStringInner';
 import HarEntryResponse from './model/HarEntryResponse';
 import HarEntryResponseContent from './model/HarEntryResponseContent';
 import HarEntryTimings from './model/HarEntryTimings';
@@ -27,6 +32,7 @@ import HarLog from './model/HarLog';
 import HarLogCreator from './model/HarLogCreator';
 import Header from './model/Header';
 import MatchCriteria from './model/MatchCriteria';
+import MatchCriteriaRequestHeader from './model/MatchCriteriaRequestHeader';
 import NameValuePair from './model/NameValuePair';
 import Page from './model/Page';
 import PageTiming from './model/PageTiming';
@@ -105,16 +111,46 @@ export {
     HarEntryCache,
 
     /**
+     * The HarEntryCacheBeforeRequest model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/HarEntryCacheBeforeRequest}
+     */
+    HarEntryCacheBeforeRequest,
+
+    /**
+     * The HarEntryCacheBeforeRequestOneOf model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/HarEntryCacheBeforeRequestOneOf}
+     */
+    HarEntryCacheBeforeRequestOneOf,
+
+    /**
      * The HarEntryRequest model constructor.
      * @property {module:BrowserUpMitmProxyClient/model/HarEntryRequest}
      */
     HarEntryRequest,
 
     /**
+     * The HarEntryRequestCookiesInner model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner}
+     */
+    HarEntryRequestCookiesInner,
+
+    /**
      * The HarEntryRequestPostData model constructor.
      * @property {module:BrowserUpMitmProxyClient/model/HarEntryRequestPostData}
      */
     HarEntryRequestPostData,
+
+    /**
+     * The HarEntryRequestPostDataParamsInner model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/HarEntryRequestPostDataParamsInner}
+     */
+    HarEntryRequestPostDataParamsInner,
+
+    /**
+     * The HarEntryRequestQueryStringInner model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/HarEntryRequestQueryStringInner}
+     */
+    HarEntryRequestQueryStringInner,
 
     /**
      * The HarEntryResponse model constructor.
@@ -157,6 +193,12 @@ export {
      * @property {module:BrowserUpMitmProxyClient/model/MatchCriteria}
      */
     MatchCriteria,
+
+    /**
+     * The MatchCriteriaRequestHeader model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader}
+     */
+    MatchCriteriaRequestHeader,
 
     /**
      * The NameValuePair model constructor.

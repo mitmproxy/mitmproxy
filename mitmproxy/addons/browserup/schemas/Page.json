@@ -6,7 +6,7 @@
     "title",
     "pageTimings"
   ],
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
+  "additionalProperties": true,
   "properties": {
     "startedDateTime": {
       "type": "string",
@@ -22,19 +22,22 @@
       "type": "array",
       "items": {
         "$ref": "#/components/schemas/VerifyResult"
-      }
+      },
+      "default": []
     },
     "_counters": {
       "type": "array",
       "items": {
         "$ref": "#/components/schemas/Counter"
-      }
+      },
+      "default": []
     },
     "_errors": {
       "type": "array",
       "items": {
         "$ref": "#/components/schemas/Error"
-      }
+      },
+      "default": []
     },
     "pageTimings": {
       "$ref": "#/components/schemas/PageTimings"

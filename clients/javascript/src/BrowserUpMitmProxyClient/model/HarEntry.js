@@ -16,6 +16,7 @@ import HarEntryCache from './HarEntryCache';
 import HarEntryRequest from './HarEntryRequest';
 import HarEntryResponse from './HarEntryResponse';
 import HarEntryTimings from './HarEntryTimings';
+import WebSocketMessage from './WebSocketMessage';
 
 /**
  * The HarEntry model module.
@@ -26,8 +27,8 @@ class HarEntry {
     /**
      * Constructs a new <code>HarEntry</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntry
-     * @param startedDateTime {Object} 
-     * @param time {Object} 
+     * @param startedDateTime {Date} 
+     * @param time {Number} 
      * @param request {module:BrowserUpMitmProxyClient/model/HarEntryRequest} 
      * @param response {module:BrowserUpMitmProxyClient/model/HarEntryResponse} 
      * @param cache {module:BrowserUpMitmProxyClient/model/HarEntryCache} 
@@ -64,13 +65,13 @@ class HarEntry {
             obj = obj || new HarEntry();
 
             if (data.hasOwnProperty('pageref')) {
-                obj['pageref'] = ApiClient.convertToType(data['pageref'], Object);
+                obj['pageref'] = ApiClient.convertToType(data['pageref'], 'String');
             }
             if (data.hasOwnProperty('startedDateTime')) {
-                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], Object);
+                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'Date');
             }
             if (data.hasOwnProperty('time')) {
-                obj['time'] = ApiClient.convertToType(data['time'], Object);
+                obj['time'] = ApiClient.convertToType(data['time'], 'Number');
             }
             if (data.hasOwnProperty('request')) {
                 obj['request'] = HarEntryRequest.constructFromObject(data['request']);
@@ -85,16 +86,16 @@ class HarEntry {
                 obj['timings'] = HarEntryTimings.constructFromObject(data['timings']);
             }
             if (data.hasOwnProperty('serverIPAddress')) {
-                obj['serverIPAddress'] = ApiClient.convertToType(data['serverIPAddress'], Object);
+                obj['serverIPAddress'] = ApiClient.convertToType(data['serverIPAddress'], 'String');
             }
             if (data.hasOwnProperty('_webSocketMessages')) {
-                obj['_webSocketMessages'] = ApiClient.convertToType(data['_webSocketMessages'], Object);
+                obj['_webSocketMessages'] = ApiClient.convertToType(data['_webSocketMessages'], [WebSocketMessage]);
             }
             if (data.hasOwnProperty('connection')) {
-                obj['connection'] = ApiClient.convertToType(data['connection'], Object);
+                obj['connection'] = ApiClient.convertToType(data['connection'], 'String');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -112,13 +113,9 @@ class HarEntry {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // validate the optional field `request`
-        if (data['request']) { // data not null
-          HarEntryRequest.validateJSON(data['request']);
-        }
-        // validate the optional field `response`
-        if (data['response']) { // data not null
-          HarEntryResponse.validateJSON(data['response']);
+        // ensure the json data is a string
+        if (data['pageref'] && !(typeof data['pageref'] === 'string' || data['pageref'] instanceof String)) {
+            throw new Error("Expected the field `pageref` to be a primitive type in the JSON string but got " + data['pageref']);
         }
         // validate the optional field `cache`
         if (data['cache']) { // data not null
@@ -127,6 +124,28 @@ class HarEntry {
         // validate the optional field `timings`
         if (data['timings']) { // data not null
           HarEntryTimings.validateJSON(data['timings']);
+        }
+        // ensure the json data is a string
+        if (data['serverIPAddress'] && !(typeof data['serverIPAddress'] === 'string' || data['serverIPAddress'] instanceof String)) {
+            throw new Error("Expected the field `serverIPAddress` to be a primitive type in the JSON string but got " + data['serverIPAddress']);
+        }
+        if (data['_webSocketMessages']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['_webSocketMessages'])) {
+                throw new Error("Expected the field `_webSocketMessages` to be an array in the JSON data but got " + data['_webSocketMessages']);
+            }
+            // validate the optional field `_webSocketMessages` (array)
+            for (const item of data['_webSocketMessages']) {
+                WebSocketMessage.validateJSON(item);
+            };
+        }
+        // ensure the json data is a string
+        if (data['connection'] && !(typeof data['connection'] === 'string' || data['connection'] instanceof String)) {
+            throw new Error("Expected the field `connection` to be a primitive type in the JSON string but got " + data['connection']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -138,17 +157,17 @@ class HarEntry {
 HarEntry.RequiredProperties = ["startedDateTime", "time", "request", "response", "cache", "timings"];
 
 /**
- * @member {Object} pageref
+ * @member {String} pageref
  */
 HarEntry.prototype['pageref'] = undefined;
 
 /**
- * @member {Object} startedDateTime
+ * @member {Date} startedDateTime
  */
 HarEntry.prototype['startedDateTime'] = undefined;
 
 /**
- * @member {Object} time
+ * @member {Number} time
  */
 HarEntry.prototype['time'] = undefined;
 
@@ -173,22 +192,22 @@ HarEntry.prototype['cache'] = undefined;
 HarEntry.prototype['timings'] = undefined;
 
 /**
- * @member {Object} serverIPAddress
+ * @member {String} serverIPAddress
  */
 HarEntry.prototype['serverIPAddress'] = undefined;
 
 /**
- * @member {Object} _webSocketMessages
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/WebSocketMessage>} _webSocketMessages
  */
 HarEntry.prototype['_webSocketMessages'] = undefined;
 
 /**
- * @member {Object} connection
+ * @member {String} connection
  */
 HarEntry.prototype['connection'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarEntry.prototype['comment'] = undefined;
 

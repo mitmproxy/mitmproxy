@@ -7,17 +7,17 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**pageref** | **Object** |  |  [optional] |
-|**startedDateTime** | **Object** |  |  |
-|**time** | **Object** |  |  |
-|**request** | [**HarEntryRequest**](HarEntryRequest.md) |  |  |
-|**response** | [**HarEntryResponse**](HarEntryResponse.md) |  |  |
+|**pageref** | **String** |  |  [optional] |
+|**startedDateTime** | **OffsetDateTime** |  |  |
+|**time** | **Long** |  |  |
+|**request** | **HarEntryRequest** |  |  |
+|**response** | **HarEntryResponse** |  |  |
 |**cache** | [**HarEntryCache**](HarEntryCache.md) |  |  |
 |**timings** | [**HarEntryTimings**](HarEntryTimings.md) |  |  |
-|**serverIPAddress** | **Object** |  |  [optional] |
-|**webSocketMessages** | **Object** |  |  [optional] |
-|**connection** | **Object** |  |  [optional] |
-|**comment** | **Object** |  |  [optional] |
+|**serverIPAddress** | **String** |  |  [optional] |
+|**webSocketMessages** | [**List&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  |  [optional] |
+|**connection** | **String** |  |  [optional] |
+|**comment** | **String** |  |  [optional] |
 
 
 

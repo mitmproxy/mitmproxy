@@ -4,9 +4,9 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **mime_type** | **Object** |  |  |
-| **text** | **Object** |  | [optional] |
-| **params** | **Object** |  | [optional] |
+| **mime_type** | **String** |  |  |
+| **text** | **String** |  | [optional] |
+| **params** | [**Array&lt;HarEntryRequestPostDataParamsInner&gt;**](HarEntryRequestPostDataParamsInner.md) |  | [optional] |
 
 ## Example
 

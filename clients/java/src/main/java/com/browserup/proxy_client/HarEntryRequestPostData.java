@@ -15,13 +15,15 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
+import com.browserup.proxy_client.HarEntryRequestPostDataParamsInner;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,20 +53,20 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryRequestPostData {
   public static final String SERIALIZED_NAME_MIME_TYPE = "mimeType";
   @SerializedName(SERIALIZED_NAME_MIME_TYPE)
-  private Object mimeType = null;
+  private String mimeType;
 
   public static final String SERIALIZED_NAME_TEXT = "text";
   @SerializedName(SERIALIZED_NAME_TEXT)
-  private Object text = null;
+  private String text;
 
   public static final String SERIALIZED_NAME_PARAMS = "params";
   @SerializedName(SERIALIZED_NAME_PARAMS)
-  private Object params = null;
+  private List<HarEntryRequestPostDataParamsInner> params = new ArrayList<>();
 
   public HarEntryRequestPostData() {
   }
 
-  public HarEntryRequestPostData mimeType(Object mimeType) {
+  public HarEntryRequestPostData mimeType(String mimeType) {
     
     this.mimeType = mimeType;
     return this;
@@ -74,19 +76,19 @@ public class HarEntryRequestPostData {
    * Get mimeType
    * @return mimeType
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getMimeType() {
+  public String getMimeType() {
     return mimeType;
   }
 
 
-  public void setMimeType(Object mimeType) {
+  public void setMimeType(String mimeType) {
     this.mimeType = mimeType;
   }
 
 
-  public HarEntryRequestPostData text(Object text) {
+  public HarEntryRequestPostData text(String text) {
     
     this.text = text;
     return this;
@@ -98,19 +100,27 @@ public class HarEntryRequestPostData {
   **/
   @javax.annotation.Nullable
 
-  public Object getText() {
+  public String getText() {
     return text;
   }
 
 
-  public void setText(Object text) {
+  public void setText(String text) {
     this.text = text;
   }
 
 
-  public HarEntryRequestPostData params(Object params) {
+  public HarEntryRequestPostData params(List<HarEntryRequestPostDataParamsInner> params) {
     
     this.params = params;
+    return this;
+  }
+
+  public HarEntryRequestPostData addParamsItem(HarEntryRequestPostDataParamsInner paramsItem) {
+    if (this.params == null) {
+      this.params = new ArrayList<>();
+    }
+    this.params.add(paramsItem);
     return this;
   }
 
@@ -120,12 +130,12 @@ public class HarEntryRequestPostData {
   **/
   @javax.annotation.Nullable
 
-  public Object getParams() {
+  public List<HarEntryRequestPostDataParamsInner> getParams() {
     return params;
   }
 
 
-  public void setParams(Object params) {
+  public void setParams(List<HarEntryRequestPostDataParamsInner> params) {
     this.params = params;
   }
 
@@ -145,20 +155,9 @@ public class HarEntryRequestPostData {
         Objects.equals(this.params, harEntryRequestPostData.params);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(mimeType, text, params);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -224,6 +223,26 @@ public class HarEntryRequestPostData {
       for (String requiredField : HarEntryRequestPostData.openapiRequiredFields) {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        }
+      }
+      if (!jsonObj.get("mimeType").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `mimeType` to be a primitive type in the JSON string but got `%s`", jsonObj.get("mimeType").toString()));
+      }
+      if ((jsonObj.get("text") != null && !jsonObj.get("text").isJsonNull()) && !jsonObj.get("text").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `text` to be a primitive type in the JSON string but got `%s`", jsonObj.get("text").toString()));
+      }
+      if (jsonObj.get("params") != null && !jsonObj.get("params").isJsonNull()) {
+        JsonArray jsonArrayparams = jsonObj.getAsJsonArray("params");
+        if (jsonArrayparams != null) {
+          // ensure the json data is an array
+          if (!jsonObj.get("params").isJsonArray()) {
+            throw new IllegalArgumentException(String.format("Expected the field `params` to be an array in the JSON string but got `%s`", jsonObj.get("params").toString()));
+          }
+
+          // validate the optional field `params` (array)
+          for (int i = 0; i < jsonArrayparams.size(); i++) {
+            HarEntryRequestPostDataParamsInner.validateJsonObject(jsonArrayparams.get(i).getAsJsonObject());
+          };
         }
       }
   }

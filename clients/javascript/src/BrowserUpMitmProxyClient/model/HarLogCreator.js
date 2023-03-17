@@ -22,8 +22,8 @@ class HarLogCreator {
     /**
      * Constructs a new <code>HarLogCreator</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarLogCreator
-     * @param name {Object} 
-     * @param version {Object} 
+     * @param name {String} 
+     * @param version {String} 
      */
     constructor(name, version) { 
         
@@ -52,13 +52,13 @@ class HarLogCreator {
             obj = obj || new HarLogCreator();
 
             if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], Object);
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
             if (data.hasOwnProperty('version')) {
-                obj['version'] = ApiClient.convertToType(data['version'], Object);
+                obj['version'] = ApiClient.convertToType(data['version'], 'String');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -76,6 +76,18 @@ class HarLogCreator {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
+        }
+        // ensure the json data is a string
+        if (data['version'] && !(typeof data['version'] === 'string' || data['version'] instanceof String)) {
+            throw new Error("Expected the field `version` to be a primitive type in the JSON string but got " + data['version']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
 
         return true;
     }
@@ -86,17 +98,17 @@ class HarLogCreator {
 HarLogCreator.RequiredProperties = ["name", "version"];
 
 /**
- * @member {Object} name
+ * @member {String} name
  */
 HarLogCreator.prototype['name'] = undefined;
 
 /**
- * @member {Object} version
+ * @member {String} version
  */
 HarLogCreator.prototype['version'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarLogCreator.prototype['comment'] = undefined;
 

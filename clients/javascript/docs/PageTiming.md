@@ -4,17 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**cumulativeLayoutShift** | **Object** | cumulativeLayoutShift metric from the browser | [optional] 
-**firstContentfulPaint** | **Object** | firstContentfulPaint from the browser | [optional] 
-**largestContentfulPaint** | **Object** | largestContentfulPaint from the browser | [optional] 
-**href** | **Object** | Top level href, including hashtag, etc per the browser | [optional] 
-**onLoad** | **Object** | onLoad per the browser | [optional] 
-**dns** | **Object** | dns lookup time from the browser | [optional] 
-**ttfb** | **Object** | Time to first byte of the page&#39;s first request per the browser | [optional] 
-**ssl** | **Object** | Ssl connect time from the browser | [optional] 
-**firstPaint** | **Object** | firstPaint from the browser | [optional] 
-**onContentLoad** | **Object** | onContentLoad per the browser | [optional] 
-**domInteractive** | **Object** | domInteractive from the browser | [optional] 
-**firstInputDelay** | **Object** | firstInputDelay from the browser | [optional] 
+**firstContentfulPaint** | **Number** | firstContentfulPaint from the browser | [optional] 
+**onContentLoad** | **Number** | onContentLoad per the browser | [optional] 
+**dns** | **Number** | dns lookup time from the browser | [optional] 
+**largestContentfulPaint** | **Number** | largestContentfulPaint from the browser | [optional] 
+**firstPaint** | **Number** | firstPaint from the browser | [optional] 
+**firstInputDelay** | **Number** | firstInputDelay from the browser | [optional] 
+**ttfb** | **Number** | Time to first byte of the page&#39;s first request per the browser | [optional] 
+**onLoad** | **Number** | onLoad per the browser | [optional] 
+**ssl** | **Number** | Ssl connect time from the browser | [optional] 
+**href** | **String** | Top level href, including hashtag, etc per the browser | [optional] 
+**cumulativeLayoutShift** | **Number** | cumulativeLayoutShift metric from the browser | [optional] 
+**domInteractive** | **Number** | domInteractive from the browser | [optional] 
 
 

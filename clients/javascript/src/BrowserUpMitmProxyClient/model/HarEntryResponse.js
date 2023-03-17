@@ -12,7 +12,9 @@
  */
 
 import ApiClient from '../ApiClient';
+import HarEntryRequestCookiesInner from './HarEntryRequestCookiesInner';
 import HarEntryResponseContent from './HarEntryResponseContent';
+import Header from './Header';
 
 /**
  * The HarEntryResponse model module.
@@ -23,15 +25,16 @@ class HarEntryResponse {
     /**
      * Constructs a new <code>HarEntryResponse</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryResponse
-     * @param status {Object} 
-     * @param statusText {Object} 
-     * @param httpVersion {Object} 
-     * @param cookies {Object} 
-     * @param headers {Object} 
+     * @extends Object
+     * @param status {Number} 
+     * @param statusText {String} 
+     * @param httpVersion {String} 
+     * @param cookies {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} 
+     * @param headers {Array.<module:BrowserUpMitmProxyClient/model/Header>} 
      * @param content {module:BrowserUpMitmProxyClient/model/HarEntryResponseContent} 
-     * @param redirectURL {Object} 
-     * @param headersSize {Object} 
-     * @param bodySize {Object} 
+     * @param redirectURL {String} 
+     * @param headersSize {Number} 
+     * @param bodySize {Number} 
      */
     constructor(status, statusText, httpVersion, cookies, headers, content, redirectURL, headersSize, bodySize) { 
         
@@ -66,35 +69,38 @@ class HarEntryResponse {
         if (data) {
             obj = obj || new HarEntryResponse();
 
+            ApiClient.constructFromObject(data, obj, 'Object');
+            
+
             if (data.hasOwnProperty('status')) {
-                obj['status'] = ApiClient.convertToType(data['status'], Object);
+                obj['status'] = ApiClient.convertToType(data['status'], 'Number');
             }
             if (data.hasOwnProperty('statusText')) {
-                obj['statusText'] = ApiClient.convertToType(data['statusText'], Object);
+                obj['statusText'] = ApiClient.convertToType(data['statusText'], 'String');
             }
             if (data.hasOwnProperty('httpVersion')) {
-                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], Object);
+                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], 'String');
             }
             if (data.hasOwnProperty('cookies')) {
-                obj['cookies'] = ApiClient.convertToType(data['cookies'], Object);
+                obj['cookies'] = ApiClient.convertToType(data['cookies'], [HarEntryRequestCookiesInner]);
             }
             if (data.hasOwnProperty('headers')) {
-                obj['headers'] = ApiClient.convertToType(data['headers'], Object);
+                obj['headers'] = ApiClient.convertToType(data['headers'], [Header]);
             }
             if (data.hasOwnProperty('content')) {
                 obj['content'] = HarEntryResponseContent.constructFromObject(data['content']);
             }
             if (data.hasOwnProperty('redirectURL')) {
-                obj['redirectURL'] = ApiClient.convertToType(data['redirectURL'], Object);
+                obj['redirectURL'] = ApiClient.convertToType(data['redirectURL'], 'String');
             }
             if (data.hasOwnProperty('headersSize')) {
-                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], Object);
+                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], 'Number');
             }
             if (data.hasOwnProperty('bodySize')) {
-                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], Object);
+                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], 'Number');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -112,9 +118,45 @@ class HarEntryResponse {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['statusText'] && !(typeof data['statusText'] === 'string' || data['statusText'] instanceof String)) {
+            throw new Error("Expected the field `statusText` to be a primitive type in the JSON string but got " + data['statusText']);
+        }
+        // ensure the json data is a string
+        if (data['httpVersion'] && !(typeof data['httpVersion'] === 'string' || data['httpVersion'] instanceof String)) {
+            throw new Error("Expected the field `httpVersion` to be a primitive type in the JSON string but got " + data['httpVersion']);
+        }
+        if (data['cookies']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['cookies'])) {
+                throw new Error("Expected the field `cookies` to be an array in the JSON data but got " + data['cookies']);
+            }
+            // validate the optional field `cookies` (array)
+            for (const item of data['cookies']) {
+                HarEntryRequestCookiesInner.validateJSON(item);
+            };
+        }
+        if (data['headers']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['headers'])) {
+                throw new Error("Expected the field `headers` to be an array in the JSON data but got " + data['headers']);
+            }
+            // validate the optional field `headers` (array)
+            for (const item of data['headers']) {
+                Header.validateJSON(item);
+            };
+        }
         // validate the optional field `content`
         if (data['content']) { // data not null
           HarEntryResponseContent.validateJSON(data['content']);
+        }
+        // ensure the json data is a string
+        if (data['redirectURL'] && !(typeof data['redirectURL'] === 'string' || data['redirectURL'] instanceof String)) {
+            throw new Error("Expected the field `redirectURL` to be a primitive type in the JSON string but got " + data['redirectURL']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -126,27 +168,27 @@ class HarEntryResponse {
 HarEntryResponse.RequiredProperties = ["status", "statusText", "httpVersion", "cookies", "headers", "content", "redirectURL", "headersSize", "bodySize"];
 
 /**
- * @member {Object} status
+ * @member {Number} status
  */
 HarEntryResponse.prototype['status'] = undefined;
 
 /**
- * @member {Object} statusText
+ * @member {String} statusText
  */
 HarEntryResponse.prototype['statusText'] = undefined;
 
 /**
- * @member {Object} httpVersion
+ * @member {String} httpVersion
  */
 HarEntryResponse.prototype['httpVersion'] = undefined;
 
 /**
- * @member {Object} cookies
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} cookies
  */
 HarEntryResponse.prototype['cookies'] = undefined;
 
 /**
- * @member {Object} headers
+ * @member {Array.<module:BrowserUpMitmProxyClient/model/Header>} headers
  */
 HarEntryResponse.prototype['headers'] = undefined;
 
@@ -156,22 +198,22 @@ HarEntryResponse.prototype['headers'] = undefined;
 HarEntryResponse.prototype['content'] = undefined;
 
 /**
- * @member {Object} redirectURL
+ * @member {String} redirectURL
  */
 HarEntryResponse.prototype['redirectURL'] = undefined;
 
 /**
- * @member {Object} headersSize
+ * @member {Number} headersSize
  */
 HarEntryResponse.prototype['headersSize'] = undefined;
 
 /**
- * @member {Object} bodySize
+ * @member {Number} bodySize
  */
 HarEntryResponse.prototype['bodySize'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarEntryResponse.prototype['comment'] = undefined;
 

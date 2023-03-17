@@ -23,6 +23,7 @@ class Har {
     /**
      * Constructs a new <code>Har</code>.
      * @alias module:BrowserUpMitmProxyClient/model/Har
+     * @extends Object
      * @param log {module:BrowserUpMitmProxyClient/model/HarLog} 
      */
     constructor(log) { 
@@ -49,6 +50,9 @@ class Har {
     static constructFromObject(data, obj) {
         if (data) {
             obj = obj || new Har();
+
+            ApiClient.constructFromObject(data, obj, 'Object');
+            
 
             if (data.hasOwnProperty('log')) {
                 obj['log'] = HarLog.constructFromObject(data['log']);

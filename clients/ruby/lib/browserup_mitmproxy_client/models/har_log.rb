@@ -47,22 +47,18 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'version' => :'Object',
+        :'version' => :'String',
         :'creator' => :'HarLogCreator',
         :'browser' => :'HarLogCreator',
-        :'pages' => :'Object',
-        :'entries' => :'Object',
-        :'comment' => :'Object'
+        :'pages' => :'Array<Page>',
+        :'entries' => :'Array<HarEntry>',
+        :'comment' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'version',
-        :'pages',
-        :'entries',
-        :'comment'
       ])
     end
 
@@ -94,11 +90,15 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'pages')
-        self.pages = attributes[:'pages']
+        if (value = attributes[:'pages']).is_a?(Array)
+          self.pages = value
+        end
       end
 
       if attributes.key?(:'entries')
-        self.entries = attributes[:'entries']
+        if (value = attributes[:'entries']).is_a?(Array)
+          self.entries = value
+        end
       end
 
       if attributes.key?(:'comment')
@@ -110,8 +110,20 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @version.nil?
+        invalid_properties.push('invalid value for "version", version cannot be nil.')
+      end
+
       if @creator.nil?
         invalid_properties.push('invalid value for "creator", creator cannot be nil.')
+      end
+
+      if @pages.nil?
+        invalid_properties.push('invalid value for "pages", pages cannot be nil.')
+      end
+
+      if @entries.nil?
+        invalid_properties.push('invalid value for "entries", entries cannot be nil.')
       end
 
       invalid_properties
@@ -120,7 +132,10 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @version.nil?
       return false if @creator.nil?
+      return false if @pages.nil?
+      return false if @entries.nil?
       true
     end
 

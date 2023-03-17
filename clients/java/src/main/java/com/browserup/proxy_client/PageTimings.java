@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,60 +50,60 @@ import com.browserup.proxy_client.JSON;
 public class PageTimings {
   public static final String SERIALIZED_NAME_ON_CONTENT_LOAD = "onContentLoad";
   @SerializedName(SERIALIZED_NAME_ON_CONTENT_LOAD)
-  private Object onContentLoad = -1;
+  private Long onContentLoad = -1l;
 
   public static final String SERIALIZED_NAME_ON_LOAD = "onLoad";
   @SerializedName(SERIALIZED_NAME_ON_LOAD)
-  private Object onLoad = -1;
+  private Long onLoad = -1l;
 
   public static final String SERIALIZED_NAME_HREF = "_href";
   @SerializedName(SERIALIZED_NAME_HREF)
-  private Object href = null;
+  private String href = "";
 
   public static final String SERIALIZED_NAME_DNS = "_dns";
   @SerializedName(SERIALIZED_NAME_DNS)
-  private Object dns = -1;
+  private Long dns = -1l;
 
   public static final String SERIALIZED_NAME_SSL = "_ssl";
   @SerializedName(SERIALIZED_NAME_SSL)
-  private Object ssl = -1;
+  private Long ssl = -1l;
 
   public static final String SERIALIZED_NAME_TTFB = "_ttfb";
   @SerializedName(SERIALIZED_NAME_TTFB)
-  private Object ttfb = -1;
+  private Long ttfb = -1l;
 
   public static final String SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT = "_cumulativeLayoutShift";
   @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
-  private Object cumulativeLayoutShift = -1;
+  private Integer cumulativeLayoutShift = -1;
 
   public static final String SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT = "_largestContentfulPaint";
   @SerializedName(SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT)
-  private Object largestContentfulPaint = -1;
+  private Long largestContentfulPaint = -1l;
 
   public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
   @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
-  private Object firstPaint = -1;
+  private Long firstPaint = -1l;
 
   public static final String SERIALIZED_NAME_FIRST_INPUT_DELAY = "_firstInputDelay";
   @SerializedName(SERIALIZED_NAME_FIRST_INPUT_DELAY)
-  private Object firstInputDelay = -1;
+  private Long firstInputDelay = -1l;
 
   public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
   @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
-  private Object domInteractive = -1;
+  private Long domInteractive = -1l;
 
   public static final String SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT = "_firstContentfulPaint";
   @SerializedName(SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT)
-  private Object firstContentfulPaint = -1;
+  private Long firstContentfulPaint = -1l;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private Object comment = null;
+  private String comment;
 
   public PageTimings() {
   }
 
-  public PageTimings onContentLoad(Object onContentLoad) {
+  public PageTimings onContentLoad(Long onContentLoad) {
     
     this.onContentLoad = onContentLoad;
     return this;
@@ -115,19 +114,19 @@ public class PageTimings {
    * minimum: -1
    * @return onContentLoad
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getOnContentLoad() {
+  public Long getOnContentLoad() {
     return onContentLoad;
   }
 
 
-  public void setOnContentLoad(Object onContentLoad) {
+  public void setOnContentLoad(Long onContentLoad) {
     this.onContentLoad = onContentLoad;
   }
 
 
-  public PageTimings onLoad(Object onLoad) {
+  public PageTimings onLoad(Long onLoad) {
     
     this.onLoad = onLoad;
     return this;
@@ -138,19 +137,19 @@ public class PageTimings {
    * minimum: -1
    * @return onLoad
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getOnLoad() {
+  public Long getOnLoad() {
     return onLoad;
   }
 
 
-  public void setOnLoad(Object onLoad) {
+  public void setOnLoad(Long onLoad) {
     this.onLoad = onLoad;
   }
 
 
-  public PageTimings href(Object href) {
+  public PageTimings href(String href) {
     
     this.href = href;
     return this;
@@ -162,17 +161,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getHref() {
+  public String getHref() {
     return href;
   }
 
 
-  public void setHref(Object href) {
+  public void setHref(String href) {
     this.href = href;
   }
 
 
-  public PageTimings dns(Object dns) {
+  public PageTimings dns(Long dns) {
     
     this.dns = dns;
     return this;
@@ -185,17 +184,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getDns() {
+  public Long getDns() {
     return dns;
   }
 
 
-  public void setDns(Object dns) {
+  public void setDns(Long dns) {
     this.dns = dns;
   }
 
 
-  public PageTimings ssl(Object ssl) {
+  public PageTimings ssl(Long ssl) {
     
     this.ssl = ssl;
     return this;
@@ -208,17 +207,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getSsl() {
+  public Long getSsl() {
     return ssl;
   }
 
 
-  public void setSsl(Object ssl) {
+  public void setSsl(Long ssl) {
     this.ssl = ssl;
   }
 
 
-  public PageTimings ttfb(Object ttfb) {
+  public PageTimings ttfb(Long ttfb) {
     
     this.ttfb = ttfb;
     return this;
@@ -231,17 +230,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getTtfb() {
+  public Long getTtfb() {
     return ttfb;
   }
 
 
-  public void setTtfb(Object ttfb) {
+  public void setTtfb(Long ttfb) {
     this.ttfb = ttfb;
   }
 
 
-  public PageTimings cumulativeLayoutShift(Object cumulativeLayoutShift) {
+  public PageTimings cumulativeLayoutShift(Integer cumulativeLayoutShift) {
     
     this.cumulativeLayoutShift = cumulativeLayoutShift;
     return this;
@@ -254,17 +253,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getCumulativeLayoutShift() {
+  public Integer getCumulativeLayoutShift() {
     return cumulativeLayoutShift;
   }
 
 
-  public void setCumulativeLayoutShift(Object cumulativeLayoutShift) {
+  public void setCumulativeLayoutShift(Integer cumulativeLayoutShift) {
     this.cumulativeLayoutShift = cumulativeLayoutShift;
   }
 
 
-  public PageTimings largestContentfulPaint(Object largestContentfulPaint) {
+  public PageTimings largestContentfulPaint(Long largestContentfulPaint) {
     
     this.largestContentfulPaint = largestContentfulPaint;
     return this;
@@ -277,17 +276,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getLargestContentfulPaint() {
+  public Long getLargestContentfulPaint() {
     return largestContentfulPaint;
   }
 
 
-  public void setLargestContentfulPaint(Object largestContentfulPaint) {
+  public void setLargestContentfulPaint(Long largestContentfulPaint) {
     this.largestContentfulPaint = largestContentfulPaint;
   }
 
 
-  public PageTimings firstPaint(Object firstPaint) {
+  public PageTimings firstPaint(Long firstPaint) {
     
     this.firstPaint = firstPaint;
     return this;
@@ -300,17 +299,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getFirstPaint() {
+  public Long getFirstPaint() {
     return firstPaint;
   }
 
 
-  public void setFirstPaint(Object firstPaint) {
+  public void setFirstPaint(Long firstPaint) {
     this.firstPaint = firstPaint;
   }
 
 
-  public PageTimings firstInputDelay(Object firstInputDelay) {
+  public PageTimings firstInputDelay(Long firstInputDelay) {
     
     this.firstInputDelay = firstInputDelay;
     return this;
@@ -323,17 +322,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getFirstInputDelay() {
+  public Long getFirstInputDelay() {
     return firstInputDelay;
   }
 
 
-  public void setFirstInputDelay(Object firstInputDelay) {
+  public void setFirstInputDelay(Long firstInputDelay) {
     this.firstInputDelay = firstInputDelay;
   }
 
 
-  public PageTimings domInteractive(Object domInteractive) {
+  public PageTimings domInteractive(Long domInteractive) {
     
     this.domInteractive = domInteractive;
     return this;
@@ -346,17 +345,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getDomInteractive() {
+  public Long getDomInteractive() {
     return domInteractive;
   }
 
 
-  public void setDomInteractive(Object domInteractive) {
+  public void setDomInteractive(Long domInteractive) {
     this.domInteractive = domInteractive;
   }
 
 
-  public PageTimings firstContentfulPaint(Object firstContentfulPaint) {
+  public PageTimings firstContentfulPaint(Long firstContentfulPaint) {
     
     this.firstContentfulPaint = firstContentfulPaint;
     return this;
@@ -369,17 +368,17 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getFirstContentfulPaint() {
+  public Long getFirstContentfulPaint() {
     return firstContentfulPaint;
   }
 
 
-  public void setFirstContentfulPaint(Object firstContentfulPaint) {
+  public void setFirstContentfulPaint(Long firstContentfulPaint) {
     this.firstContentfulPaint = firstContentfulPaint;
   }
 
 
-  public PageTimings comment(Object comment) {
+  public PageTimings comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -391,15 +390,59 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Object getComment() {
+  public String getComment() {
     return comment;
   }
 
 
-  public void setComment(Object comment) {
+  public void setComment(String comment) {
     this.comment = comment;
   }
 
+  /**
+   * A container for additional, undeclared properties.
+   * This is a holder for any undeclared properties as specified with
+   * the 'additionalProperties' keyword in the OAS document.
+   */
+  private Map<String, Object> additionalProperties;
+
+  /**
+   * Set the additional (undeclared) property with the specified name and value.
+   * If the property does not already exist, create it otherwise replace it.
+   *
+   * @param key name of the property
+   * @param value value of the property
+   * @return the PageTimings instance itself
+   */
+  public PageTimings putAdditionalProperty(String key, Object value) {
+    if (this.additionalProperties == null) {
+        this.additionalProperties = new HashMap<String, Object>();
+    }
+    this.additionalProperties.put(key, value);
+    return this;
+  }
+
+  /**
+   * Return the additional (undeclared) property.
+   *
+   * @return a map of objects
+   */
+  public Map<String, Object> getAdditionalProperties() {
+    return additionalProperties;
+  }
+
+  /**
+   * Return the additional (undeclared) property with the specified name.
+   *
+   * @param key name of the property
+   * @return an object
+   */
+  public Object getAdditionalProperty(String key) {
+    if (this.additionalProperties == null) {
+        return null;
+    }
+    return this.additionalProperties.get(key);
+  }
 
 
   @Override
@@ -423,23 +466,13 @@ public class PageTimings {
         Objects.equals(this.firstInputDelay, pageTimings.firstInputDelay) &&
         Objects.equals(this.domInteractive, pageTimings.domInteractive) &&
         Objects.equals(this.firstContentfulPaint, pageTimings.firstContentfulPaint) &&
-        Objects.equals(this.comment, pageTimings.comment);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+        Objects.equals(this.comment, pageTimings.comment)&&
+        Objects.equals(this.additionalProperties, pageTimings.additionalProperties);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(onContentLoad, onLoad, href, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, firstInputDelay, domInteractive, firstContentfulPaint, comment);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(onContentLoad, onLoad, href, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, firstInputDelay, domInteractive, firstContentfulPaint, comment, additionalProperties);
   }
 
   @Override
@@ -459,6 +492,7 @@ public class PageTimings {
     sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
     sb.append("    firstContentfulPaint: ").append(toIndentedString(firstContentfulPaint)).append("\n");
     sb.append("    comment: ").append(toIndentedString(comment)).append("\n");
+    sb.append("    additionalProperties: ").append(toIndentedString(additionalProperties)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -514,19 +548,17 @@ public class PageTimings {
         }
       }
 
-      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
-      // check to see if the JSON string contains additional fields
-      for (Entry<String, JsonElement> entry : entries) {
-        if (!PageTimings.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `PageTimings` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
-        }
-      }
-
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : PageTimings.openapiRequiredFields) {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("_href") != null && !jsonObj.get("_href").isJsonNull()) && !jsonObj.get("_href").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `_href` to be a primitive type in the JSON string but got `%s`", jsonObj.get("_href").toString()));
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 
@@ -545,6 +577,23 @@ public class PageTimings {
            @Override
            public void write(JsonWriter out, PageTimings value) throws IOException {
              JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
+             obj.remove("additionalProperties");
+             // serialize additional properties
+             if (value.getAdditionalProperties() != null) {
+               for (Map.Entry<String, Object> entry : value.getAdditionalProperties().entrySet()) {
+                 if (entry.getValue() instanceof String)
+                   obj.addProperty(entry.getKey(), (String) entry.getValue());
+                 else if (entry.getValue() instanceof Number)
+                   obj.addProperty(entry.getKey(), (Number) entry.getValue());
+                 else if (entry.getValue() instanceof Boolean)
+                   obj.addProperty(entry.getKey(), (Boolean) entry.getValue());
+                 else if (entry.getValue() instanceof Character)
+                   obj.addProperty(entry.getKey(), (Character) entry.getValue());
+                 else {
+                   obj.add(entry.getKey(), gson.toJsonTree(entry.getValue()).getAsJsonObject());
+                 }
+               }
+             }
              elementAdapter.write(out, obj);
            }
 
@@ -552,7 +601,27 @@ public class PageTimings {
            public PageTimings read(JsonReader in) throws IOException {
              JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
              validateJsonObject(jsonObj);
-             return thisAdapter.fromJsonTree(jsonObj);
+             // store additional fields in the deserialized instance
+             PageTimings instance = thisAdapter.fromJsonTree(jsonObj);
+             for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
+               if (!openapiFields.contains(entry.getKey())) {
+                 if (entry.getValue().isJsonPrimitive()) { // primitive type
+                   if (entry.getValue().getAsJsonPrimitive().isString())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsString());
+                   else if (entry.getValue().getAsJsonPrimitive().isNumber())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsNumber());
+                   else if (entry.getValue().getAsJsonPrimitive().isBoolean())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsBoolean());
+                   else
+                     throw new IllegalArgumentException(String.format("The field `%s` has unknown primitive type. Value: %s", entry.getKey(), entry.getValue().toString()));
+                 } else if (entry.getValue().isJsonArray()) {
+                     instance.putAdditionalProperty(entry.getKey(), gson.fromJson(entry.getValue(), List.class));
+                 } else { // JSON object
+                     instance.putAdditionalProperty(entry.getKey(), gson.fromJson(entry.getValue(), HashMap.class));
+                 }
+               }
+             }
+             return instance;
            }
 
        }.nullSafe();

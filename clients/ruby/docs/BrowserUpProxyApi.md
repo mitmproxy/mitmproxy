@@ -278,7 +278,7 @@ require 'time'
 require 'browserup_mitmproxy_client'
 
 api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-title = TODO # Object | The unique title for this har page/step.
+title = 'title_example' # String | The unique title for this har page/step.
 
 begin
   
@@ -311,7 +311,7 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **title** | [**Object**](.md) | The unique title for this har page/step. |  |
+| **title** | **String** | The unique title for this har page/step. |  |
 
 ### Return type
 
@@ -403,7 +403,7 @@ require 'time'
 require 'browserup_mitmproxy_client'
 
 api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-name = TODO # Object | The unique name for this verification operation
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupMitmProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
@@ -437,7 +437,7 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **name** | [**Object**](.md) | The unique name for this verification operation |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -469,7 +469,7 @@ require 'time'
 require 'browserup_mitmproxy_client'
 
 api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-name = TODO # Object | The unique name for this verification operation
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupMitmProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
@@ -503,7 +503,7 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **name** | [**Object**](.md) | The unique name for this verification operation |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -535,8 +535,8 @@ require 'time'
 require 'browserup_mitmproxy_client'
 
 api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-size = TODO # Object | The size used for comparison, in kilobytes
-name = TODO # Object | The unique name for this verification operation
+size = 56 # Integer | The size used for comparison, in kilobytes
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupMitmProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
@@ -570,8 +570,8 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **size** | [**Object**](.md) | The size used for comparison, in kilobytes |  |
-| **name** | [**Object**](.md) | The unique name for this verification operation |  |
+| **size** | **Integer** | The size used for comparison, in kilobytes |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -603,8 +603,8 @@ require 'time'
 require 'browserup_mitmproxy_client'
 
 api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-time = TODO # Object | The time used for comparison
-name = TODO # Object | The unique name for this verification operation
+time = 56 # Integer | The time used for comparison
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupMitmProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
@@ -638,8 +638,8 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **time** | [**Object**](.md) | The time used for comparison |  |
-| **name** | [**Object**](.md) | The unique name for this verification operation |  |
+| **time** | **Integer** | The time used for comparison |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type

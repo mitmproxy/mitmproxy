@@ -22,13 +22,13 @@ class HarEntryTimings {
     /**
      * Constructs a new <code>HarEntryTimings</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryTimings
-     * @param dns {Object} 
-     * @param connect {Object} 
-     * @param blocked {Object} 
-     * @param send {Object} 
-     * @param wait {Object} 
-     * @param receive {Object} 
-     * @param ssl {Object} 
+     * @param dns {Number} 
+     * @param connect {Number} 
+     * @param blocked {Number} 
+     * @param send {Number} 
+     * @param wait {Number} 
+     * @param receive {Number} 
+     * @param ssl {Number} 
      */
     constructor(dns, connect, blocked, send, wait, receive, ssl) { 
         
@@ -41,13 +41,13 @@ class HarEntryTimings {
      * Only for internal use.
      */
     static initialize(obj, dns, connect, blocked, send, wait, receive, ssl) { 
-        obj['dns'] = dns;
-        obj['connect'] = connect;
-        obj['blocked'] = blocked;
-        obj['send'] = send;
-        obj['wait'] = wait;
-        obj['receive'] = receive;
-        obj['ssl'] = ssl;
+        obj['dns'] = dns || -1;
+        obj['connect'] = connect || -1;
+        obj['blocked'] = blocked || -1;
+        obj['send'] = send || -1;
+        obj['wait'] = wait || -1;
+        obj['receive'] = receive || -1;
+        obj['ssl'] = ssl || -1;
     }
 
     /**
@@ -62,28 +62,28 @@ class HarEntryTimings {
             obj = obj || new HarEntryTimings();
 
             if (data.hasOwnProperty('dns')) {
-                obj['dns'] = ApiClient.convertToType(data['dns'], Object);
+                obj['dns'] = ApiClient.convertToType(data['dns'], 'Number');
             }
             if (data.hasOwnProperty('connect')) {
-                obj['connect'] = ApiClient.convertToType(data['connect'], Object);
+                obj['connect'] = ApiClient.convertToType(data['connect'], 'Number');
             }
             if (data.hasOwnProperty('blocked')) {
-                obj['blocked'] = ApiClient.convertToType(data['blocked'], Object);
+                obj['blocked'] = ApiClient.convertToType(data['blocked'], 'Number');
             }
             if (data.hasOwnProperty('send')) {
-                obj['send'] = ApiClient.convertToType(data['send'], Object);
+                obj['send'] = ApiClient.convertToType(data['send'], 'Number');
             }
             if (data.hasOwnProperty('wait')) {
-                obj['wait'] = ApiClient.convertToType(data['wait'], Object);
+                obj['wait'] = ApiClient.convertToType(data['wait'], 'Number');
             }
             if (data.hasOwnProperty('receive')) {
-                obj['receive'] = ApiClient.convertToType(data['receive'], Object);
+                obj['receive'] = ApiClient.convertToType(data['receive'], 'Number');
             }
             if (data.hasOwnProperty('ssl')) {
-                obj['ssl'] = ApiClient.convertToType(data['ssl'], Object);
+                obj['ssl'] = ApiClient.convertToType(data['ssl'], 'Number');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -101,6 +101,10 @@ class HarEntryTimings {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
 
         return true;
     }
@@ -111,42 +115,49 @@ class HarEntryTimings {
 HarEntryTimings.RequiredProperties = ["dns", "connect", "blocked", "send", "wait", "receive", "ssl"];
 
 /**
- * @member {Object} dns
+ * @member {Number} dns
+ * @default -1
  */
-HarEntryTimings.prototype['dns'] = undefined;
+HarEntryTimings.prototype['dns'] = -1;
 
 /**
- * @member {Object} connect
+ * @member {Number} connect
+ * @default -1
  */
-HarEntryTimings.prototype['connect'] = undefined;
+HarEntryTimings.prototype['connect'] = -1;
 
 /**
- * @member {Object} blocked
+ * @member {Number} blocked
+ * @default -1
  */
-HarEntryTimings.prototype['blocked'] = undefined;
+HarEntryTimings.prototype['blocked'] = -1;
 
 /**
- * @member {Object} send
+ * @member {Number} send
+ * @default -1
  */
-HarEntryTimings.prototype['send'] = undefined;
+HarEntryTimings.prototype['send'] = -1;
 
 /**
- * @member {Object} wait
+ * @member {Number} wait
+ * @default -1
  */
-HarEntryTimings.prototype['wait'] = undefined;
+HarEntryTimings.prototype['wait'] = -1;
 
 /**
- * @member {Object} receive
+ * @member {Number} receive
+ * @default -1
  */
-HarEntryTimings.prototype['receive'] = undefined;
+HarEntryTimings.prototype['receive'] = -1;
 
 /**
- * @member {Object} ssl
+ * @member {Number} ssl
+ * @default -1
  */
-HarEntryTimings.prototype['ssl'] = undefined;
+HarEntryTimings.prototype['ssl'] = -1;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarEntryTimings.prototype['comment'] = undefined;
 

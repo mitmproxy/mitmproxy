@@ -59,31 +59,22 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'method' => :'Object',
-        :'url' => :'Object',
-        :'http_version' => :'Object',
-        :'cookies' => :'Object',
-        :'headers' => :'Object',
-        :'query_string' => :'Object',
+        :'method' => :'String',
+        :'url' => :'String',
+        :'http_version' => :'String',
+        :'cookies' => :'Array<HarEntryRequestCookiesInner>',
+        :'headers' => :'Array<Header>',
+        :'query_string' => :'Array<HarEntryRequestQueryStringInner>',
         :'post_data' => :'HarEntryRequestPostData',
-        :'headers_size' => :'Object',
-        :'body_size' => :'Object',
-        :'comment' => :'Object'
+        :'headers_size' => :'Integer',
+        :'body_size' => :'Integer',
+        :'comment' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'method',
-        :'url',
-        :'http_version',
-        :'cookies',
-        :'headers',
-        :'query_string',
-        :'headers_size',
-        :'body_size',
-        :'comment'
       ])
     end
 
@@ -115,15 +106,21 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'cookies')
-        self.cookies = attributes[:'cookies']
+        if (value = attributes[:'cookies']).is_a?(Array)
+          self.cookies = value
+        end
       end
 
       if attributes.key?(:'headers')
-        self.headers = attributes[:'headers']
+        if (value = attributes[:'headers']).is_a?(Array)
+          self.headers = value
+        end
       end
 
       if attributes.key?(:'query_string')
-        self.query_string = attributes[:'query_string']
+        if (value = attributes[:'query_string']).is_a?(Array)
+          self.query_string = value
+        end
       end
 
       if attributes.key?(:'post_data')
@@ -147,12 +144,52 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @method.nil?
+        invalid_properties.push('invalid value for "method", method cannot be nil.')
+      end
+
+      if @url.nil?
+        invalid_properties.push('invalid value for "url", url cannot be nil.')
+      end
+
+      if @http_version.nil?
+        invalid_properties.push('invalid value for "http_version", http_version cannot be nil.')
+      end
+
+      if @cookies.nil?
+        invalid_properties.push('invalid value for "cookies", cookies cannot be nil.')
+      end
+
+      if @headers.nil?
+        invalid_properties.push('invalid value for "headers", headers cannot be nil.')
+      end
+
+      if @query_string.nil?
+        invalid_properties.push('invalid value for "query_string", query_string cannot be nil.')
+      end
+
+      if @headers_size.nil?
+        invalid_properties.push('invalid value for "headers_size", headers_size cannot be nil.')
+      end
+
+      if @body_size.nil?
+        invalid_properties.push('invalid value for "body_size", body_size cannot be nil.')
+      end
+
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @method.nil?
+      return false if @url.nil?
+      return false if @http_version.nil?
+      return false if @cookies.nil?
+      return false if @headers.nil?
+      return false if @query_string.nil?
+      return false if @headers_size.nil?
+      return false if @body_size.nil?
       true
     end
 

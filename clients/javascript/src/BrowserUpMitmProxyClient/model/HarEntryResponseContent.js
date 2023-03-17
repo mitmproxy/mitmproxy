@@ -22,8 +22,8 @@ class HarEntryResponseContent {
     /**
      * Constructs a new <code>HarEntryResponseContent</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryResponseContent
-     * @param size {Object} 
-     * @param mimeType {Object} 
+     * @param size {Number} 
+     * @param mimeType {String} 
      */
     constructor(size, mimeType) { 
         
@@ -52,22 +52,22 @@ class HarEntryResponseContent {
             obj = obj || new HarEntryResponseContent();
 
             if (data.hasOwnProperty('size')) {
-                obj['size'] = ApiClient.convertToType(data['size'], Object);
+                obj['size'] = ApiClient.convertToType(data['size'], 'Number');
             }
             if (data.hasOwnProperty('compression')) {
-                obj['compression'] = ApiClient.convertToType(data['compression'], Object);
+                obj['compression'] = ApiClient.convertToType(data['compression'], 'Number');
             }
             if (data.hasOwnProperty('mimeType')) {
-                obj['mimeType'] = ApiClient.convertToType(data['mimeType'], Object);
+                obj['mimeType'] = ApiClient.convertToType(data['mimeType'], 'String');
             }
             if (data.hasOwnProperty('text')) {
-                obj['text'] = ApiClient.convertToType(data['text'], Object);
+                obj['text'] = ApiClient.convertToType(data['text'], 'String');
             }
             if (data.hasOwnProperty('encoding')) {
-                obj['encoding'] = ApiClient.convertToType(data['encoding'], Object);
+                obj['encoding'] = ApiClient.convertToType(data['encoding'], 'String');
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
+                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
             }
         }
         return obj;
@@ -85,6 +85,22 @@ class HarEntryResponseContent {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
+        // ensure the json data is a string
+        if (data['mimeType'] && !(typeof data['mimeType'] === 'string' || data['mimeType'] instanceof String)) {
+            throw new Error("Expected the field `mimeType` to be a primitive type in the JSON string but got " + data['mimeType']);
+        }
+        // ensure the json data is a string
+        if (data['text'] && !(typeof data['text'] === 'string' || data['text'] instanceof String)) {
+            throw new Error("Expected the field `text` to be a primitive type in the JSON string but got " + data['text']);
+        }
+        // ensure the json data is a string
+        if (data['encoding'] && !(typeof data['encoding'] === 'string' || data['encoding'] instanceof String)) {
+            throw new Error("Expected the field `encoding` to be a primitive type in the JSON string but got " + data['encoding']);
+        }
+        // ensure the json data is a string
+        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
+            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
+        }
 
         return true;
     }
@@ -95,32 +111,32 @@ class HarEntryResponseContent {
 HarEntryResponseContent.RequiredProperties = ["size", "mimeType"];
 
 /**
- * @member {Object} size
+ * @member {Number} size
  */
 HarEntryResponseContent.prototype['size'] = undefined;
 
 /**
- * @member {Object} compression
+ * @member {Number} compression
  */
 HarEntryResponseContent.prototype['compression'] = undefined;
 
 /**
- * @member {Object} mimeType
+ * @member {String} mimeType
  */
 HarEntryResponseContent.prototype['mimeType'] = undefined;
 
 /**
- * @member {Object} text
+ * @member {String} text
  */
 HarEntryResponseContent.prototype['text'] = undefined;
 
 /**
- * @member {Object} encoding
+ * @member {String} encoding
  */
 HarEntryResponseContent.prototype['encoding'] = undefined;
 
 /**
- * @member {Object} comment
+ * @member {String} comment
  */
 HarEntryResponseContent.prototype['comment'] = undefined;
 

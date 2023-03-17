@@ -3,7 +3,7 @@
   "required": [
     "log"
   ],
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
+  "additionalProperties": true,
   "properties": {
     "log": {
       "type": "object",

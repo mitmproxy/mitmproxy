@@ -59,31 +59,22 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'status' => :'Object',
-        :'status_text' => :'Object',
-        :'http_version' => :'Object',
-        :'cookies' => :'Object',
-        :'headers' => :'Object',
+        :'status' => :'Integer',
+        :'status_text' => :'String',
+        :'http_version' => :'String',
+        :'cookies' => :'Array<HarEntryRequestCookiesInner>',
+        :'headers' => :'Array<Header>',
         :'content' => :'HarEntryResponseContent',
-        :'redirect_url' => :'Object',
-        :'headers_size' => :'Object',
-        :'body_size' => :'Object',
-        :'comment' => :'Object'
+        :'redirect_url' => :'String',
+        :'headers_size' => :'Integer',
+        :'body_size' => :'Integer',
+        :'comment' => :'String'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'status',
-        :'status_text',
-        :'http_version',
-        :'cookies',
-        :'headers',
-        :'redirect_url',
-        :'headers_size',
-        :'body_size',
-        :'comment'
       ])
     end
 
@@ -115,11 +106,15 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'cookies')
-        self.cookies = attributes[:'cookies']
+        if (value = attributes[:'cookies']).is_a?(Array)
+          self.cookies = value
+        end
       end
 
       if attributes.key?(:'headers')
-        self.headers = attributes[:'headers']
+        if (value = attributes[:'headers']).is_a?(Array)
+          self.headers = value
+        end
       end
 
       if attributes.key?(:'content')
@@ -147,8 +142,40 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @status.nil?
+        invalid_properties.push('invalid value for "status", status cannot be nil.')
+      end
+
+      if @status_text.nil?
+        invalid_properties.push('invalid value for "status_text", status_text cannot be nil.')
+      end
+
+      if @http_version.nil?
+        invalid_properties.push('invalid value for "http_version", http_version cannot be nil.')
+      end
+
+      if @cookies.nil?
+        invalid_properties.push('invalid value for "cookies", cookies cannot be nil.')
+      end
+
+      if @headers.nil?
+        invalid_properties.push('invalid value for "headers", headers cannot be nil.')
+      end
+
       if @content.nil?
         invalid_properties.push('invalid value for "content", content cannot be nil.')
+      end
+
+      if @redirect_url.nil?
+        invalid_properties.push('invalid value for "redirect_url", redirect_url cannot be nil.')
+      end
+
+      if @headers_size.nil?
+        invalid_properties.push('invalid value for "headers_size", headers_size cannot be nil.')
+      end
+
+      if @body_size.nil?
+        invalid_properties.push('invalid value for "body_size", body_size cannot be nil.')
       end
 
       invalid_properties
@@ -157,7 +184,15 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @status.nil?
+      return false if @status_text.nil?
+      return false if @http_version.nil?
+      return false if @cookies.nil?
+      return false if @headers.nil?
       return false if @content.nil?
+      return false if @redirect_url.nil?
+      return false if @headers_size.nil?
+      return false if @body_size.nil?
       true
     end
 

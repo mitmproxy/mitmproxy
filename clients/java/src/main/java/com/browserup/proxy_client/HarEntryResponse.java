@@ -15,14 +15,17 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
+import com.browserup.proxy_client.HarEntryRequestCookiesInner;
 import com.browserup.proxy_client.HarEntryResponseContent;
+import com.browserup.proxy_client.Header;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,23 +55,23 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryResponse {
   public static final String SERIALIZED_NAME_STATUS = "status";
   @SerializedName(SERIALIZED_NAME_STATUS)
-  private Object status = null;
+  private Integer status;
 
   public static final String SERIALIZED_NAME_STATUS_TEXT = "statusText";
   @SerializedName(SERIALIZED_NAME_STATUS_TEXT)
-  private Object statusText = null;
+  private String statusText;
 
   public static final String SERIALIZED_NAME_HTTP_VERSION = "httpVersion";
   @SerializedName(SERIALIZED_NAME_HTTP_VERSION)
-  private Object httpVersion = null;
+  private String httpVersion;
 
   public static final String SERIALIZED_NAME_COOKIES = "cookies";
   @SerializedName(SERIALIZED_NAME_COOKIES)
-  private Object cookies = null;
+  private List<HarEntryRequestCookiesInner> cookies = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_HEADERS = "headers";
   @SerializedName(SERIALIZED_NAME_HEADERS)
-  private Object headers = null;
+  private List<Header> headers = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_CONTENT = "content";
   @SerializedName(SERIALIZED_NAME_CONTENT)
@@ -76,24 +79,24 @@ public class HarEntryResponse {
 
   public static final String SERIALIZED_NAME_REDIRECT_U_R_L = "redirectURL";
   @SerializedName(SERIALIZED_NAME_REDIRECT_U_R_L)
-  private Object redirectURL = null;
+  private String redirectURL;
 
   public static final String SERIALIZED_NAME_HEADERS_SIZE = "headersSize";
   @SerializedName(SERIALIZED_NAME_HEADERS_SIZE)
-  private Object headersSize = null;
+  private Integer headersSize;
 
   public static final String SERIALIZED_NAME_BODY_SIZE = "bodySize";
   @SerializedName(SERIALIZED_NAME_BODY_SIZE)
-  private Object bodySize = null;
+  private Integer bodySize;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private Object comment = null;
+  private String comment;
 
   public HarEntryResponse() {
   }
 
-  public HarEntryResponse status(Object status) {
+  public HarEntryResponse status(Integer status) {
     
     this.status = status;
     return this;
@@ -103,19 +106,19 @@ public class HarEntryResponse {
    * Get status
    * @return status
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getStatus() {
+  public Integer getStatus() {
     return status;
   }
 
 
-  public void setStatus(Object status) {
+  public void setStatus(Integer status) {
     this.status = status;
   }
 
 
-  public HarEntryResponse statusText(Object statusText) {
+  public HarEntryResponse statusText(String statusText) {
     
     this.statusText = statusText;
     return this;
@@ -125,19 +128,19 @@ public class HarEntryResponse {
    * Get statusText
    * @return statusText
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getStatusText() {
+  public String getStatusText() {
     return statusText;
   }
 
 
-  public void setStatusText(Object statusText) {
+  public void setStatusText(String statusText) {
     this.statusText = statusText;
   }
 
 
-  public HarEntryResponse httpVersion(Object httpVersion) {
+  public HarEntryResponse httpVersion(String httpVersion) {
     
     this.httpVersion = httpVersion;
     return this;
@@ -147,21 +150,26 @@ public class HarEntryResponse {
    * Get httpVersion
    * @return httpVersion
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getHttpVersion() {
+  public String getHttpVersion() {
     return httpVersion;
   }
 
 
-  public void setHttpVersion(Object httpVersion) {
+  public void setHttpVersion(String httpVersion) {
     this.httpVersion = httpVersion;
   }
 
 
-  public HarEntryResponse cookies(Object cookies) {
+  public HarEntryResponse cookies(List<HarEntryRequestCookiesInner> cookies) {
     
     this.cookies = cookies;
+    return this;
+  }
+
+  public HarEntryResponse addCookiesItem(HarEntryRequestCookiesInner cookiesItem) {
+    this.cookies.add(cookiesItem);
     return this;
   }
 
@@ -169,21 +177,26 @@ public class HarEntryResponse {
    * Get cookies
    * @return cookies
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getCookies() {
+  public List<HarEntryRequestCookiesInner> getCookies() {
     return cookies;
   }
 
 
-  public void setCookies(Object cookies) {
+  public void setCookies(List<HarEntryRequestCookiesInner> cookies) {
     this.cookies = cookies;
   }
 
 
-  public HarEntryResponse headers(Object headers) {
+  public HarEntryResponse headers(List<Header> headers) {
     
     this.headers = headers;
+    return this;
+  }
+
+  public HarEntryResponse addHeadersItem(Header headersItem) {
+    this.headers.add(headersItem);
     return this;
   }
 
@@ -191,14 +204,14 @@ public class HarEntryResponse {
    * Get headers
    * @return headers
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getHeaders() {
+  public List<Header> getHeaders() {
     return headers;
   }
 
 
-  public void setHeaders(Object headers) {
+  public void setHeaders(List<Header> headers) {
     this.headers = headers;
   }
 
@@ -225,7 +238,7 @@ public class HarEntryResponse {
   }
 
 
-  public HarEntryResponse redirectURL(Object redirectURL) {
+  public HarEntryResponse redirectURL(String redirectURL) {
     
     this.redirectURL = redirectURL;
     return this;
@@ -235,19 +248,19 @@ public class HarEntryResponse {
    * Get redirectURL
    * @return redirectURL
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getRedirectURL() {
+  public String getRedirectURL() {
     return redirectURL;
   }
 
 
-  public void setRedirectURL(Object redirectURL) {
+  public void setRedirectURL(String redirectURL) {
     this.redirectURL = redirectURL;
   }
 
 
-  public HarEntryResponse headersSize(Object headersSize) {
+  public HarEntryResponse headersSize(Integer headersSize) {
     
     this.headersSize = headersSize;
     return this;
@@ -257,19 +270,19 @@ public class HarEntryResponse {
    * Get headersSize
    * @return headersSize
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getHeadersSize() {
+  public Integer getHeadersSize() {
     return headersSize;
   }
 
 
-  public void setHeadersSize(Object headersSize) {
+  public void setHeadersSize(Integer headersSize) {
     this.headersSize = headersSize;
   }
 
 
-  public HarEntryResponse bodySize(Object bodySize) {
+  public HarEntryResponse bodySize(Integer bodySize) {
     
     this.bodySize = bodySize;
     return this;
@@ -279,19 +292,19 @@ public class HarEntryResponse {
    * Get bodySize
    * @return bodySize
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getBodySize() {
+  public Integer getBodySize() {
     return bodySize;
   }
 
 
-  public void setBodySize(Object bodySize) {
+  public void setBodySize(Integer bodySize) {
     this.bodySize = bodySize;
   }
 
 
-  public HarEntryResponse comment(Object comment) {
+  public HarEntryResponse comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -303,15 +316,59 @@ public class HarEntryResponse {
   **/
   @javax.annotation.Nullable
 
-  public Object getComment() {
+  public String getComment() {
     return comment;
   }
 
 
-  public void setComment(Object comment) {
+  public void setComment(String comment) {
     this.comment = comment;
   }
 
+  /**
+   * A container for additional, undeclared properties.
+   * This is a holder for any undeclared properties as specified with
+   * the 'additionalProperties' keyword in the OAS document.
+   */
+  private Map<String, Object> additionalProperties;
+
+  /**
+   * Set the additional (undeclared) property with the specified name and value.
+   * If the property does not already exist, create it otherwise replace it.
+   *
+   * @param key name of the property
+   * @param value value of the property
+   * @return the HarEntryResponse instance itself
+   */
+  public HarEntryResponse putAdditionalProperty(String key, Object value) {
+    if (this.additionalProperties == null) {
+        this.additionalProperties = new HashMap<String, Object>();
+    }
+    this.additionalProperties.put(key, value);
+    return this;
+  }
+
+  /**
+   * Return the additional (undeclared) property.
+   *
+   * @return a map of objects
+   */
+  public Map<String, Object> getAdditionalProperties() {
+    return additionalProperties;
+  }
+
+  /**
+   * Return the additional (undeclared) property with the specified name.
+   *
+   * @param key name of the property
+   * @return an object
+   */
+  public Object getAdditionalProperty(String key) {
+    if (this.additionalProperties == null) {
+        return null;
+    }
+    return this.additionalProperties.get(key);
+  }
 
 
   @Override
@@ -332,23 +389,13 @@ public class HarEntryResponse {
         Objects.equals(this.redirectURL, harEntryResponse.redirectURL) &&
         Objects.equals(this.headersSize, harEntryResponse.headersSize) &&
         Objects.equals(this.bodySize, harEntryResponse.bodySize) &&
-        Objects.equals(this.comment, harEntryResponse.comment);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+        Objects.equals(this.comment, harEntryResponse.comment)&&
+        Objects.equals(this.additionalProperties, harEntryResponse.additionalProperties);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(status, statusText, httpVersion, cookies, headers, content, redirectURL, headersSize, bodySize, comment);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(status, statusText, httpVersion, cookies, headers, content, redirectURL, headersSize, bodySize, comment, additionalProperties);
   }
 
   @Override
@@ -365,6 +412,7 @@ public class HarEntryResponse {
     sb.append("    headersSize: ").append(toIndentedString(headersSize)).append("\n");
     sb.append("    bodySize: ").append(toIndentedString(bodySize)).append("\n");
     sb.append("    comment: ").append(toIndentedString(comment)).append("\n");
+    sb.append("    additionalProperties: ").append(toIndentedString(additionalProperties)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -424,22 +472,46 @@ public class HarEntryResponse {
         }
       }
 
-      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
-      // check to see if the JSON string contains additional fields
-      for (Entry<String, JsonElement> entry : entries) {
-        if (!HarEntryResponse.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarEntryResponse` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
-        }
-      }
-
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : HarEntryResponse.openapiRequiredFields) {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
+      if (!jsonObj.get("statusText").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `statusText` to be a primitive type in the JSON string but got `%s`", jsonObj.get("statusText").toString()));
+      }
+      if (!jsonObj.get("httpVersion").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `httpVersion` to be a primitive type in the JSON string but got `%s`", jsonObj.get("httpVersion").toString()));
+      }
+      // ensure the json data is an array
+      if (!jsonObj.get("cookies").isJsonArray()) {
+        throw new IllegalArgumentException(String.format("Expected the field `cookies` to be an array in the JSON string but got `%s`", jsonObj.get("cookies").toString()));
+      }
+
+      JsonArray jsonArraycookies = jsonObj.getAsJsonArray("cookies");
+      // validate the required field `cookies` (array)
+      for (int i = 0; i < jsonArraycookies.size(); i++) {
+        HarEntryRequestCookiesInner.validateJsonObject(jsonArraycookies.get(i).getAsJsonObject());
+      };
+      // ensure the json data is an array
+      if (!jsonObj.get("headers").isJsonArray()) {
+        throw new IllegalArgumentException(String.format("Expected the field `headers` to be an array in the JSON string but got `%s`", jsonObj.get("headers").toString()));
+      }
+
+      JsonArray jsonArrayheaders = jsonObj.getAsJsonArray("headers");
+      // validate the required field `headers` (array)
+      for (int i = 0; i < jsonArrayheaders.size(); i++) {
+        Header.validateJsonObject(jsonArrayheaders.get(i).getAsJsonObject());
+      };
       // validate the required field `content`
       HarEntryResponseContent.validateJsonObject(jsonObj.getAsJsonObject("content"));
+      if (!jsonObj.get("redirectURL").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `redirectURL` to be a primitive type in the JSON string but got `%s`", jsonObj.get("redirectURL").toString()));
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
+      }
   }
 
   public static class CustomTypeAdapterFactory implements TypeAdapterFactory {
@@ -457,6 +529,23 @@ public class HarEntryResponse {
            @Override
            public void write(JsonWriter out, HarEntryResponse value) throws IOException {
              JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
+             obj.remove("additionalProperties");
+             // serialize additional properties
+             if (value.getAdditionalProperties() != null) {
+               for (Map.Entry<String, Object> entry : value.getAdditionalProperties().entrySet()) {
+                 if (entry.getValue() instanceof String)
+                   obj.addProperty(entry.getKey(), (String) entry.getValue());
+                 else if (entry.getValue() instanceof Number)
+                   obj.addProperty(entry.getKey(), (Number) entry.getValue());
+                 else if (entry.getValue() instanceof Boolean)
+                   obj.addProperty(entry.getKey(), (Boolean) entry.getValue());
+                 else if (entry.getValue() instanceof Character)
+                   obj.addProperty(entry.getKey(), (Character) entry.getValue());
+                 else {
+                   obj.add(entry.getKey(), gson.toJsonTree(entry.getValue()).getAsJsonObject());
+                 }
+               }
+             }
              elementAdapter.write(out, obj);
            }
 
@@ -464,7 +553,27 @@ public class HarEntryResponse {
            public HarEntryResponse read(JsonReader in) throws IOException {
              JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
              validateJsonObject(jsonObj);
-             return thisAdapter.fromJsonTree(jsonObj);
+             // store additional fields in the deserialized instance
+             HarEntryResponse instance = thisAdapter.fromJsonTree(jsonObj);
+             for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
+               if (!openapiFields.contains(entry.getKey())) {
+                 if (entry.getValue().isJsonPrimitive()) { // primitive type
+                   if (entry.getValue().getAsJsonPrimitive().isString())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsString());
+                   else if (entry.getValue().getAsJsonPrimitive().isNumber())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsNumber());
+                   else if (entry.getValue().getAsJsonPrimitive().isBoolean())
+                     instance.putAdditionalProperty(entry.getKey(), entry.getValue().getAsBoolean());
+                   else
+                     throw new IllegalArgumentException(String.format("The field `%s` has unknown primitive type. Value: %s", entry.getKey(), entry.getValue().toString()));
+                 } else if (entry.getValue().isJsonArray()) {
+                     instance.putAdditionalProperty(entry.getKey(), gson.fromJson(entry.getValue(), List.class));
+                 } else { // JSON object
+                     instance.putAdditionalProperty(entry.getKey(), gson.fromJson(entry.getValue(), HashMap.class));
+                 }
+               }
+             }
+             return instance;
            }
 
        }.nullSafe();

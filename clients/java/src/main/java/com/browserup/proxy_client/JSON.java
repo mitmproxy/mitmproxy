@@ -99,8 +99,13 @@ public class JSON {
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.Har.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntry.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryCache.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryCacheBeforeRequest.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryCacheBeforeRequestOneOf.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryRequest.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryRequestCookiesInner.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryRequestPostData.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryRequestPostDataParamsInner.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryRequestQueryStringInner.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryResponse.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryResponseContent.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarEntryTimings.CustomTypeAdapterFactory());
@@ -108,6 +113,7 @@ public class JSON {
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarLogCreator.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.Header.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.MatchCriteria.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.MatchCriteriaRequestHeader.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.NameValuePair.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.Page.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.PageTiming.CustomTypeAdapterFactory());

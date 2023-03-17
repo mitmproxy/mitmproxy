@@ -15,13 +15,13 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
+import com.browserup.proxy_client.HarEntryCacheBeforeRequest;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,20 +51,20 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryCache {
   public static final String SERIALIZED_NAME_BEFORE_REQUEST = "beforeRequest";
   @SerializedName(SERIALIZED_NAME_BEFORE_REQUEST)
-  private Object beforeRequest = null;
+  private HarEntryCacheBeforeRequest beforeRequest;
 
   public static final String SERIALIZED_NAME_AFTER_REQUEST = "afterRequest";
   @SerializedName(SERIALIZED_NAME_AFTER_REQUEST)
-  private Object afterRequest = null;
+  private HarEntryCacheBeforeRequest afterRequest;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private Object comment = null;
+  private String comment;
 
   public HarEntryCache() {
   }
 
-  public HarEntryCache beforeRequest(Object beforeRequest) {
+  public HarEntryCache beforeRequest(HarEntryCacheBeforeRequest beforeRequest) {
     
     this.beforeRequest = beforeRequest;
     return this;
@@ -76,17 +76,17 @@ public class HarEntryCache {
   **/
   @javax.annotation.Nullable
 
-  public Object getBeforeRequest() {
+  public HarEntryCacheBeforeRequest getBeforeRequest() {
     return beforeRequest;
   }
 
 
-  public void setBeforeRequest(Object beforeRequest) {
+  public void setBeforeRequest(HarEntryCacheBeforeRequest beforeRequest) {
     this.beforeRequest = beforeRequest;
   }
 
 
-  public HarEntryCache afterRequest(Object afterRequest) {
+  public HarEntryCache afterRequest(HarEntryCacheBeforeRequest afterRequest) {
     
     this.afterRequest = afterRequest;
     return this;
@@ -98,17 +98,17 @@ public class HarEntryCache {
   **/
   @javax.annotation.Nullable
 
-  public Object getAfterRequest() {
+  public HarEntryCacheBeforeRequest getAfterRequest() {
     return afterRequest;
   }
 
 
-  public void setAfterRequest(Object afterRequest) {
+  public void setAfterRequest(HarEntryCacheBeforeRequest afterRequest) {
     this.afterRequest = afterRequest;
   }
 
 
-  public HarEntryCache comment(Object comment) {
+  public HarEntryCache comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -120,12 +120,12 @@ public class HarEntryCache {
   **/
   @javax.annotation.Nullable
 
-  public Object getComment() {
+  public String getComment() {
     return comment;
   }
 
 
-  public void setComment(Object comment) {
+  public void setComment(String comment) {
     this.comment = comment;
   }
 
@@ -145,20 +145,9 @@ public class HarEntryCache {
         Objects.equals(this.comment, harEntryCache.comment);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(beforeRequest, afterRequest, comment);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -217,6 +206,17 @@ public class HarEntryCache {
         if (!HarEntryCache.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarEntryCache` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
+      }
+      // validate the optional field `beforeRequest`
+      if (jsonObj.get("beforeRequest") != null && !jsonObj.get("beforeRequest").isJsonNull()) {
+        HarEntryCacheBeforeRequest.validateJsonObject(jsonObj.getAsJsonObject("beforeRequest"));
+      }
+      // validate the optional field `afterRequest`
+      if (jsonObj.get("afterRequest") != null && !jsonObj.get("afterRequest").isJsonNull()) {
+        HarEntryCacheBeforeRequest.validateJsonObject(jsonObj.getAsJsonObject("afterRequest"));
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

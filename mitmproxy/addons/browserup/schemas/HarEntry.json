@@ -1,6 +1,5 @@
 {
   "type": "object",
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "required": [
     "startedDateTime",
     "time",
@@ -34,7 +33,7 @@
         "headersSize",
         "bodySize"
       ],
-      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
+      "additionalProperties": true,
       "properties": {
         "method": {
           "type": "string"
@@ -157,7 +156,6 @@
     },
     "response": {
       "type": "object",
-      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
       "required": [
         "status",
         "statusText",
@@ -169,6 +167,7 @@
         "headersSize",
         "bodySize"
       ],
+      "additionalProperties": true,
       "properties": {
         "status": {
           "type": "integer"

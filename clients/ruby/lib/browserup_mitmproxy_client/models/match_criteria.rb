@@ -82,40 +82,26 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'url' => :'Object',
-        :'page' => :'Object',
-        :'status' => :'Object',
-        :'content' => :'Object',
-        :'content_type' => :'Object',
-        :'websocket_message' => :'Object',
-        :'request_header' => :'Object',
-        :'request_cookie' => :'Object',
-        :'response_header' => :'Object',
-        :'response_cookie' => :'Object',
-        :'json_valid' => :'Object',
-        :'json_path' => :'Object',
-        :'json_schema' => :'Object',
-        :'error_if_no_traffic' => :'Object'
+        :'url' => :'String',
+        :'page' => :'String',
+        :'status' => :'String',
+        :'content' => :'String',
+        :'content_type' => :'String',
+        :'websocket_message' => :'String',
+        :'request_header' => :'MatchCriteriaRequestHeader',
+        :'request_cookie' => :'MatchCriteriaRequestHeader',
+        :'response_header' => :'MatchCriteriaRequestHeader',
+        :'response_cookie' => :'MatchCriteriaRequestHeader',
+        :'json_valid' => :'Boolean',
+        :'json_path' => :'String',
+        :'json_schema' => :'String',
+        :'error_if_no_traffic' => :'Boolean'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
-        :'url',
-        :'page',
-        :'status',
-        :'content',
-        :'content_type',
-        :'websocket_message',
-        :'request_header',
-        :'request_cookie',
-        :'response_header',
-        :'response_cookie',
-        :'json_valid',
-        :'json_path',
-        :'json_schema',
-        :'error_if_no_traffic'
       ])
     end
 
@@ -188,6 +174,8 @@ module BrowserupMitmProxy
 
       if attributes.key?(:'error_if_no_traffic')
         self.error_if_no_traffic = attributes[:'error_if_no_traffic']
+      else
+        self.error_if_no_traffic = true
       end
     end
 

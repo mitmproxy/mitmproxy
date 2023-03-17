@@ -19,13 +19,16 @@ import com.browserup.proxy_client.HarEntryCache;
 import com.browserup.proxy_client.HarEntryRequest;
 import com.browserup.proxy_client.HarEntryResponse;
 import com.browserup.proxy_client.HarEntryTimings;
+import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,15 +58,15 @@ import com.browserup.proxy_client.JSON;
 public class HarEntry {
   public static final String SERIALIZED_NAME_PAGEREF = "pageref";
   @SerializedName(SERIALIZED_NAME_PAGEREF)
-  private Object pageref = null;
+  private String pageref;
 
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private Object startedDateTime = null;
+  private OffsetDateTime startedDateTime;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
-  private Object time = null;
+  private Long time;
 
   public static final String SERIALIZED_NAME_REQUEST = "request";
   @SerializedName(SERIALIZED_NAME_REQUEST)
@@ -83,24 +86,24 @@ public class HarEntry {
 
   public static final String SERIALIZED_NAME_SERVER_I_P_ADDRESS = "serverIPAddress";
   @SerializedName(SERIALIZED_NAME_SERVER_I_P_ADDRESS)
-  private Object serverIPAddress = null;
+  private String serverIPAddress;
 
   public static final String SERIALIZED_NAME_WEB_SOCKET_MESSAGES = "_webSocketMessages";
   @SerializedName(SERIALIZED_NAME_WEB_SOCKET_MESSAGES)
-  private Object webSocketMessages = null;
+  private List<WebSocketMessage> webSocketMessages = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_CONNECTION = "connection";
   @SerializedName(SERIALIZED_NAME_CONNECTION)
-  private Object connection = null;
+  private String connection;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private Object comment = null;
+  private String comment;
 
   public HarEntry() {
   }
 
-  public HarEntry pageref(Object pageref) {
+  public HarEntry pageref(String pageref) {
     
     this.pageref = pageref;
     return this;
@@ -112,17 +115,17 @@ public class HarEntry {
   **/
   @javax.annotation.Nullable
 
-  public Object getPageref() {
+  public String getPageref() {
     return pageref;
   }
 
 
-  public void setPageref(Object pageref) {
+  public void setPageref(String pageref) {
     this.pageref = pageref;
   }
 
 
-  public HarEntry startedDateTime(Object startedDateTime) {
+  public HarEntry startedDateTime(OffsetDateTime startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -132,19 +135,19 @@ public class HarEntry {
    * Get startedDateTime
    * @return startedDateTime
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getStartedDateTime() {
+  public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(Object startedDateTime) {
+  public void setStartedDateTime(OffsetDateTime startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 
 
-  public HarEntry time(Object time) {
+  public HarEntry time(Long time) {
     
     this.time = time;
     return this;
@@ -155,14 +158,14 @@ public class HarEntry {
    * minimum: 0
    * @return time
   **/
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
 
-  public Object getTime() {
+  public Long getTime() {
     return time;
   }
 
 
-  public void setTime(Object time) {
+  public void setTime(Long time) {
     this.time = time;
   }
 
@@ -255,7 +258,7 @@ public class HarEntry {
   }
 
 
-  public HarEntry serverIPAddress(Object serverIPAddress) {
+  public HarEntry serverIPAddress(String serverIPAddress) {
     
     this.serverIPAddress = serverIPAddress;
     return this;
@@ -267,19 +270,27 @@ public class HarEntry {
   **/
   @javax.annotation.Nullable
 
-  public Object getServerIPAddress() {
+  public String getServerIPAddress() {
     return serverIPAddress;
   }
 
 
-  public void setServerIPAddress(Object serverIPAddress) {
+  public void setServerIPAddress(String serverIPAddress) {
     this.serverIPAddress = serverIPAddress;
   }
 
 
-  public HarEntry webSocketMessages(Object webSocketMessages) {
+  public HarEntry webSocketMessages(List<WebSocketMessage> webSocketMessages) {
     
     this.webSocketMessages = webSocketMessages;
+    return this;
+  }
+
+  public HarEntry addWebSocketMessagesItem(WebSocketMessage webSocketMessagesItem) {
+    if (this.webSocketMessages == null) {
+      this.webSocketMessages = new ArrayList<>();
+    }
+    this.webSocketMessages.add(webSocketMessagesItem);
     return this;
   }
 
@@ -289,17 +300,17 @@ public class HarEntry {
   **/
   @javax.annotation.Nullable
 
-  public Object getWebSocketMessages() {
+  public List<WebSocketMessage> getWebSocketMessages() {
     return webSocketMessages;
   }
 
 
-  public void setWebSocketMessages(Object webSocketMessages) {
+  public void setWebSocketMessages(List<WebSocketMessage> webSocketMessages) {
     this.webSocketMessages = webSocketMessages;
   }
 
 
-  public HarEntry connection(Object connection) {
+  public HarEntry connection(String connection) {
     
     this.connection = connection;
     return this;
@@ -311,17 +322,17 @@ public class HarEntry {
   **/
   @javax.annotation.Nullable
 
-  public Object getConnection() {
+  public String getConnection() {
     return connection;
   }
 
 
-  public void setConnection(Object connection) {
+  public void setConnection(String connection) {
     this.connection = connection;
   }
 
 
-  public HarEntry comment(Object comment) {
+  public HarEntry comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -333,12 +344,12 @@ public class HarEntry {
   **/
   @javax.annotation.Nullable
 
-  public Object getComment() {
+  public String getComment() {
     return comment;
   }
 
 
-  public void setComment(Object comment) {
+  public void setComment(String comment) {
     this.comment = comment;
   }
 
@@ -366,20 +377,9 @@ public class HarEntry {
         Objects.equals(this.comment, harEntry.comment);
   }
 
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(pageref, startedDateTime, time, request, response, cache, timings, serverIPAddress, webSocketMessages, connection, comment);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -468,14 +468,36 @@ public class HarEntry {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
-      // validate the required field `request`
-      HarEntryRequest.validateJsonObject(jsonObj.getAsJsonObject("request"));
-      // validate the required field `response`
-      HarEntryResponse.validateJsonObject(jsonObj.getAsJsonObject("response"));
+      if ((jsonObj.get("pageref") != null && !jsonObj.get("pageref").isJsonNull()) && !jsonObj.get("pageref").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `pageref` to be a primitive type in the JSON string but got `%s`", jsonObj.get("pageref").toString()));
+      }
       // validate the required field `cache`
       HarEntryCache.validateJsonObject(jsonObj.getAsJsonObject("cache"));
       // validate the required field `timings`
       HarEntryTimings.validateJsonObject(jsonObj.getAsJsonObject("timings"));
+      if ((jsonObj.get("serverIPAddress") != null && !jsonObj.get("serverIPAddress").isJsonNull()) && !jsonObj.get("serverIPAddress").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `serverIPAddress` to be a primitive type in the JSON string but got `%s`", jsonObj.get("serverIPAddress").toString()));
+      }
+      if (jsonObj.get("_webSocketMessages") != null && !jsonObj.get("_webSocketMessages").isJsonNull()) {
+        JsonArray jsonArraywebSocketMessages = jsonObj.getAsJsonArray("_webSocketMessages");
+        if (jsonArraywebSocketMessages != null) {
+          // ensure the json data is an array
+          if (!jsonObj.get("_webSocketMessages").isJsonArray()) {
+            throw new IllegalArgumentException(String.format("Expected the field `_webSocketMessages` to be an array in the JSON string but got `%s`", jsonObj.get("_webSocketMessages").toString()));
+          }
+
+          // validate the optional field `_webSocketMessages` (array)
+          for (int i = 0; i < jsonArraywebSocketMessages.size(); i++) {
+            WebSocketMessage.validateJsonObject(jsonArraywebSocketMessages.get(i).getAsJsonObject());
+          };
+        }
+      }
+      if ((jsonObj.get("connection") != null && !jsonObj.get("connection").isJsonNull()) && !jsonObj.get("connection").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `connection` to be a primitive type in the JSON string but got `%s`", jsonObj.get("connection").toString()));
+      }
+      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
+      }
   }
 
   public static class CustomTypeAdapterFactory implements TypeAdapterFactory {

@@ -11,8 +11,13 @@ docs/Error.md
 docs/Har.md
 docs/HarEntry.md
 docs/HarEntryCache.md
+docs/HarEntryCacheBeforeRequest.md
+docs/HarEntryCacheBeforeRequestOneOf.md
 docs/HarEntryRequest.md
+docs/HarEntryRequestCookiesInner.md
 docs/HarEntryRequestPostData.md
+docs/HarEntryRequestPostDataParamsInner.md
+docs/HarEntryRequestQueryStringInner.md
 docs/HarEntryResponse.md
 docs/HarEntryResponseContent.md
 docs/HarEntryTimings.md
@@ -20,6 +25,7 @@ docs/HarLog.md
 docs/HarLogCreator.md
 docs/Header.md
 docs/MatchCriteria.md
+docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
 docs/Page.md
 docs/PageTiming.md
@@ -48,8 +54,13 @@ src/main/java/com/browserup/proxy_client/GzipRequestInterceptor.java
 src/main/java/com/browserup/proxy_client/Har.java
 src/main/java/com/browserup/proxy_client/HarEntry.java
 src/main/java/com/browserup/proxy_client/HarEntryCache.java
+src/main/java/com/browserup/proxy_client/HarEntryCacheBeforeRequest.java
+src/main/java/com/browserup/proxy_client/HarEntryCacheBeforeRequestOneOf.java
 src/main/java/com/browserup/proxy_client/HarEntryRequest.java
+src/main/java/com/browserup/proxy_client/HarEntryRequestCookiesInner.java
 src/main/java/com/browserup/proxy_client/HarEntryRequestPostData.java
+src/main/java/com/browserup/proxy_client/HarEntryRequestPostDataParamsInner.java
+src/main/java/com/browserup/proxy_client/HarEntryRequestQueryStringInner.java
 src/main/java/com/browserup/proxy_client/HarEntryResponse.java
 src/main/java/com/browserup/proxy_client/HarEntryResponseContent.java
 src/main/java/com/browserup/proxy_client/HarEntryTimings.java
@@ -58,6 +69,7 @@ src/main/java/com/browserup/proxy_client/HarLogCreator.java
 src/main/java/com/browserup/proxy_client/Header.java
 src/main/java/com/browserup/proxy_client/JSON.java
 src/main/java/com/browserup/proxy_client/MatchCriteria.java
+src/main/java/com/browserup/proxy_client/MatchCriteriaRequestHeader.java
 src/main/java/com/browserup/proxy_client/NameValuePair.java
 src/main/java/com/browserup/proxy_client/Page.java
 src/main/java/com/browserup/proxy_client/PageTiming.java
