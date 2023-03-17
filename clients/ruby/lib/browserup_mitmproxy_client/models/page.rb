@@ -59,7 +59,7 @@ module BrowserupMitmProxy
         :'_verifications' => :'Array<VerifyResult>',
         :'_counters' => :'Array<Counter>',
         :'_errors' => :'Array<Error>',
-        :'page_timings' => :'PagePageTimings',
+        :'page_timings' => :'PageTimings',
         :'comment' => :'String'
       }
     end

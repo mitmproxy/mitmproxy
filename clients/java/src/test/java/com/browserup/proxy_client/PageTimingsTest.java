@@ -24,17 +24,17 @@ import org.junit.jupiter.api.Test;
 
 
 /**
- * Model tests for PagePageTimings
+ * Model tests for PageTimings
  */
-public class PagePageTimingsTest {
-    private final PagePageTimings model = new PagePageTimings();
+public class PageTimingsTest {
+    private final PageTimings model = new PageTimings();
 
     /**
-     * Model tests for PagePageTimings
+     * Model tests for PageTimings
      */
     @Test
-    public void testPagePageTimings() {
-        // TODO: test PagePageTimings
+    public void testPageTimings() {
+        // TODO: test PageTimings
     }
 
     /**
@@ -51,6 +51,14 @@ public class PagePageTimingsTest {
     @Test
     public void onLoadTest() {
         // TODO: test onLoad
+    }
+
+    /**
+     * Test the property 'href'
+     */
+    @Test
+    public void hrefTest() {
+        // TODO: test href
     }
 
     /**
@@ -99,6 +107,14 @@ public class PagePageTimingsTest {
     @Test
     public void firstPaintTest() {
         // TODO: test firstPaint
+    }
+
+    /**
+     * Test the property 'firstInputDelay'
+     */
+    @Test
+    public void firstInputDelayTest() {
+        // TODO: test firstInputDelay
     }
 
     /**

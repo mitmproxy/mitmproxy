@@ -14,7 +14,7 @@
 import ApiClient from '../ApiClient';
 import Counter from './Counter';
 import Error from './Error';
-import PagePageTimings from './PagePageTimings';
+import PageTimings from './PageTimings';
 import VerifyResult from './VerifyResult';
 
 /**
@@ -29,7 +29,7 @@ class Page {
      * @param startedDateTime {Date} 
      * @param id {String} 
      * @param title {String} 
-     * @param pageTimings {module:BrowserUpMitmProxyClient/model/PagePageTimings} 
+     * @param pageTimings {module:BrowserUpMitmProxyClient/model/PageTimings} 
      */
     constructor(startedDateTime, id, title, pageTimings) { 
         
@@ -78,7 +78,7 @@ class Page {
                 obj['_errors'] = ApiClient.convertToType(data['_errors'], [Error]);
             }
             if (data.hasOwnProperty('pageTimings')) {
-                obj['pageTimings'] = PagePageTimings.constructFromObject(data['pageTimings']);
+                obj['pageTimings'] = PageTimings.constructFromObject(data['pageTimings']);
             }
             if (data.hasOwnProperty('comment')) {
                 obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
@@ -139,7 +139,7 @@ class Page {
         }
         // validate the optional field `pageTimings`
         if (data['pageTimings']) { // data not null
-          PagePageTimings.validateJSON(data['pageTimings']);
+          PageTimings.validateJSON(data['pageTimings']);
         }
         // ensure the json data is a string
         if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
@@ -185,7 +185,7 @@ Page.prototype['_counters'] = undefined;
 Page.prototype['_errors'] = undefined;
 
 /**
- * @member {module:BrowserUpMitmProxyClient/model/PagePageTimings} pageTimings
+ * @member {module:BrowserUpMitmProxyClient/model/PageTimings} pageTimings
  */
 Page.prototype['pageTimings'] = undefined;
 

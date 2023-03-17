@@ -116,8 +116,8 @@ public class JSON {
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.MatchCriteriaRequestHeader.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.NameValuePair.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.Page.CustomTypeAdapterFactory());
-        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.PagePageTimings.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.PageTiming.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.PageTimings.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.VerifyResult.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.WebSocketMessage.CustomTypeAdapterFactory());
         gson = gsonBuilder.create();

@@ -31,8 +31,8 @@ docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
 docs/Page.md
-docs/PagePageTimings.md
 docs/PageTiming.md
+docs/PageTimings.md
 docs/VerifyResult.md
 docs/WebSocketMessage.md
 git_push.sh
@@ -63,8 +63,8 @@ lib/browserup_mitmproxy_client/models/match_criteria.rb
 lib/browserup_mitmproxy_client/models/match_criteria_request_header.rb
 lib/browserup_mitmproxy_client/models/name_value_pair.rb
 lib/browserup_mitmproxy_client/models/page.rb
-lib/browserup_mitmproxy_client/models/page_page_timings.rb
 lib/browserup_mitmproxy_client/models/page_timing.rb
+lib/browserup_mitmproxy_client/models/page_timings.rb
 lib/browserup_mitmproxy_client/models/verify_result.rb
 lib/browserup_mitmproxy_client/models/web_socket_message.rb
 lib/browserup_mitmproxy_client/version.rb
@@ -92,9 +92,9 @@ spec/models/header_spec.rb
 spec/models/match_criteria_request_header_spec.rb
 spec/models/match_criteria_spec.rb
 spec/models/name_value_pair_spec.rb
-spec/models/page_page_timings_spec.rb
 spec/models/page_spec.rb
 spec/models/page_timing_spec.rb
+spec/models/page_timings_spec.rb
 spec/models/verify_result_spec.rb
 spec/models/web_socket_message_spec.rb
 spec/spec_helper.rb

@@ -114,8 +114,8 @@ Class | Method | HTTP request | Description
  - [BrowserupMitmProxy::MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [BrowserupMitmProxy::NameValuePair](docs/NameValuePair.md)
  - [BrowserupMitmProxy::Page](docs/Page.md)
- - [BrowserupMitmProxy::PagePageTimings](docs/PagePageTimings.md)
  - [BrowserupMitmProxy::PageTiming](docs/PageTiming.md)
+ - [BrowserupMitmProxy::PageTimings](docs/PageTimings.md)
  - [BrowserupMitmProxy::VerifyResult](docs/VerifyResult.md)
  - [BrowserupMitmProxy::WebSocketMessage](docs/WebSocketMessage.md)
 

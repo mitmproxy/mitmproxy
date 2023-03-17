@@ -1,0 +1,82 @@
+{
+  "type": "object",
+  "required": [
+    "onLoad",
+    "onContentLoad"
+  ],
+  "properties": {
+    "onContentLoad": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "onLoad": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_href": {
+      "type": "string",
+      "default": ""
+    },
+    "_dns": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_ssl": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_ttfb": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_cumulativeLayoutShift": {
+      "type": "integer",
+      "format": "float",
+      "minimum": -1,
+      "default": -1
+    },
+    "_largestContentfulPaint": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_firstPaint": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_firstInputDelay": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_domInteractive": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "_firstContentfulPaint": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

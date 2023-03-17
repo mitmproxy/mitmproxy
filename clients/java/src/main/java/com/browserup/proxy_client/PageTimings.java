@@ -44,10 +44,10 @@ import java.util.Set;
 import com.browserup.proxy_client.JSON;
 
 /**
- * PagePageTimings
+ * PageTimings
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
-public class PagePageTimings {
+public class PageTimings {
   public static final String SERIALIZED_NAME_ON_CONTENT_LOAD = "onContentLoad";
   @SerializedName(SERIALIZED_NAME_ON_CONTENT_LOAD)
   private Long onContentLoad = -1l;
@@ -55,6 +55,10 @@ public class PagePageTimings {
   public static final String SERIALIZED_NAME_ON_LOAD = "onLoad";
   @SerializedName(SERIALIZED_NAME_ON_LOAD)
   private Long onLoad = -1l;
+
+  public static final String SERIALIZED_NAME_HREF = "_href";
+  @SerializedName(SERIALIZED_NAME_HREF)
+  private String href = "";
 
   public static final String SERIALIZED_NAME_DNS = "_dns";
   @SerializedName(SERIALIZED_NAME_DNS)
@@ -80,6 +84,10 @@ public class PagePageTimings {
   @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
   private Long firstPaint = -1l;
 
+  public static final String SERIALIZED_NAME_FIRST_INPUT_DELAY = "_firstInputDelay";
+  @SerializedName(SERIALIZED_NAME_FIRST_INPUT_DELAY)
+  private Long firstInputDelay = -1l;
+
   public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
   @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
   private Long domInteractive = -1l;
@@ -92,10 +100,10 @@ public class PagePageTimings {
   @SerializedName(SERIALIZED_NAME_COMMENT)
   private String comment;
 
-  public PagePageTimings() {
+  public PageTimings() {
   }
 
-  public PagePageTimings onContentLoad(Long onContentLoad) {
+  public PageTimings onContentLoad(Long onContentLoad) {
     
     this.onContentLoad = onContentLoad;
     return this;
@@ -118,7 +126,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings onLoad(Long onLoad) {
+  public PageTimings onLoad(Long onLoad) {
     
     this.onLoad = onLoad;
     return this;
@@ -141,7 +149,29 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings dns(Long dns) {
+  public PageTimings href(String href) {
+    
+    this.href = href;
+    return this;
+  }
+
+   /**
+   * Get href
+   * @return href
+  **/
+  @javax.annotation.Nullable
+
+  public String getHref() {
+    return href;
+  }
+
+
+  public void setHref(String href) {
+    this.href = href;
+  }
+
+
+  public PageTimings dns(Long dns) {
     
     this.dns = dns;
     return this;
@@ -164,7 +194,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings ssl(Long ssl) {
+  public PageTimings ssl(Long ssl) {
     
     this.ssl = ssl;
     return this;
@@ -187,7 +217,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings ttfb(Long ttfb) {
+  public PageTimings ttfb(Long ttfb) {
     
     this.ttfb = ttfb;
     return this;
@@ -210,7 +240,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings cumulativeLayoutShift(Integer cumulativeLayoutShift) {
+  public PageTimings cumulativeLayoutShift(Integer cumulativeLayoutShift) {
     
     this.cumulativeLayoutShift = cumulativeLayoutShift;
     return this;
@@ -233,7 +263,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings largestContentfulPaint(Long largestContentfulPaint) {
+  public PageTimings largestContentfulPaint(Long largestContentfulPaint) {
     
     this.largestContentfulPaint = largestContentfulPaint;
     return this;
@@ -256,7 +286,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings firstPaint(Long firstPaint) {
+  public PageTimings firstPaint(Long firstPaint) {
     
     this.firstPaint = firstPaint;
     return this;
@@ -279,7 +309,30 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings domInteractive(Long domInteractive) {
+  public PageTimings firstInputDelay(Long firstInputDelay) {
+    
+    this.firstInputDelay = firstInputDelay;
+    return this;
+  }
+
+   /**
+   * Get firstInputDelay
+   * minimum: -1
+   * @return firstInputDelay
+  **/
+  @javax.annotation.Nullable
+
+  public Long getFirstInputDelay() {
+    return firstInputDelay;
+  }
+
+
+  public void setFirstInputDelay(Long firstInputDelay) {
+    this.firstInputDelay = firstInputDelay;
+  }
+
+
+  public PageTimings domInteractive(Long domInteractive) {
     
     this.domInteractive = domInteractive;
     return this;
@@ -302,7 +355,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings firstContentfulPaint(Long firstContentfulPaint) {
+  public PageTimings firstContentfulPaint(Long firstContentfulPaint) {
     
     this.firstContentfulPaint = firstContentfulPaint;
     return this;
@@ -325,7 +378,7 @@ public class PagePageTimings {
   }
 
 
-  public PagePageTimings comment(String comment) {
+  public PageTimings comment(String comment) {
     
     this.comment = comment;
     return this;
@@ -356,37 +409,41 @@ public class PagePageTimings {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PagePageTimings pagePageTimings = (PagePageTimings) o;
-    return Objects.equals(this.onContentLoad, pagePageTimings.onContentLoad) &&
-        Objects.equals(this.onLoad, pagePageTimings.onLoad) &&
-        Objects.equals(this.dns, pagePageTimings.dns) &&
-        Objects.equals(this.ssl, pagePageTimings.ssl) &&
-        Objects.equals(this.ttfb, pagePageTimings.ttfb) &&
-        Objects.equals(this.cumulativeLayoutShift, pagePageTimings.cumulativeLayoutShift) &&
-        Objects.equals(this.largestContentfulPaint, pagePageTimings.largestContentfulPaint) &&
-        Objects.equals(this.firstPaint, pagePageTimings.firstPaint) &&
-        Objects.equals(this.domInteractive, pagePageTimings.domInteractive) &&
-        Objects.equals(this.firstContentfulPaint, pagePageTimings.firstContentfulPaint) &&
-        Objects.equals(this.comment, pagePageTimings.comment);
+    PageTimings pageTimings = (PageTimings) o;
+    return Objects.equals(this.onContentLoad, pageTimings.onContentLoad) &&
+        Objects.equals(this.onLoad, pageTimings.onLoad) &&
+        Objects.equals(this.href, pageTimings.href) &&
+        Objects.equals(this.dns, pageTimings.dns) &&
+        Objects.equals(this.ssl, pageTimings.ssl) &&
+        Objects.equals(this.ttfb, pageTimings.ttfb) &&
+        Objects.equals(this.cumulativeLayoutShift, pageTimings.cumulativeLayoutShift) &&
+        Objects.equals(this.largestContentfulPaint, pageTimings.largestContentfulPaint) &&
+        Objects.equals(this.firstPaint, pageTimings.firstPaint) &&
+        Objects.equals(this.firstInputDelay, pageTimings.firstInputDelay) &&
+        Objects.equals(this.domInteractive, pageTimings.domInteractive) &&
+        Objects.equals(this.firstContentfulPaint, pageTimings.firstContentfulPaint) &&
+        Objects.equals(this.comment, pageTimings.comment);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(onContentLoad, onLoad, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, domInteractive, firstContentfulPaint, comment);
+    return Objects.hash(onContentLoad, onLoad, href, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, firstInputDelay, domInteractive, firstContentfulPaint, comment);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class PagePageTimings {\n");
+    sb.append("class PageTimings {\n");
     sb.append("    onContentLoad: ").append(toIndentedString(onContentLoad)).append("\n");
     sb.append("    onLoad: ").append(toIndentedString(onLoad)).append("\n");
+    sb.append("    href: ").append(toIndentedString(href)).append("\n");
     sb.append("    dns: ").append(toIndentedString(dns)).append("\n");
     sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
     sb.append("    ttfb: ").append(toIndentedString(ttfb)).append("\n");
     sb.append("    cumulativeLayoutShift: ").append(toIndentedString(cumulativeLayoutShift)).append("\n");
     sb.append("    largestContentfulPaint: ").append(toIndentedString(largestContentfulPaint)).append("\n");
     sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
+    sb.append("    firstInputDelay: ").append(toIndentedString(firstInputDelay)).append("\n");
     sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
     sb.append("    firstContentfulPaint: ").append(toIndentedString(firstContentfulPaint)).append("\n");
     sb.append("    comment: ").append(toIndentedString(comment)).append("\n");
@@ -414,12 +471,14 @@ public class PagePageTimings {
     openapiFields = new HashSet<String>();
     openapiFields.add("onContentLoad");
     openapiFields.add("onLoad");
+    openapiFields.add("_href");
     openapiFields.add("_dns");
     openapiFields.add("_ssl");
     openapiFields.add("_ttfb");
     openapiFields.add("_cumulativeLayoutShift");
     openapiFields.add("_largestContentfulPaint");
     openapiFields.add("_firstPaint");
+    openapiFields.add("_firstInputDelay");
     openapiFields.add("_domInteractive");
     openapiFields.add("_firstContentfulPaint");
     openapiFields.add("comment");
@@ -434,28 +493,31 @@ public class PagePageTimings {
   * Validates the JSON Object and throws an exception if issues found
   *
   * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to PagePageTimings
+  * @throws IOException if the JSON Object is invalid with respect to PageTimings
   */
   public static void validateJsonObject(JsonObject jsonObj) throws IOException {
       if (jsonObj == null) {
-        if (!PagePageTimings.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
-          throw new IllegalArgumentException(String.format("The required field(s) %s in PagePageTimings is not found in the empty JSON string", PagePageTimings.openapiRequiredFields.toString()));
+        if (!PageTimings.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+          throw new IllegalArgumentException(String.format("The required field(s) %s in PageTimings is not found in the empty JSON string", PageTimings.openapiRequiredFields.toString()));
         }
       }
 
       Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
       // check to see if the JSON string contains additional fields
       for (Entry<String, JsonElement> entry : entries) {
-        if (!PagePageTimings.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `PagePageTimings` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+        if (!PageTimings.openapiFields.contains(entry.getKey())) {
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `PageTimings` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
-      for (String requiredField : PagePageTimings.openapiRequiredFields) {
+      for (String requiredField : PageTimings.openapiRequiredFields) {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
+      }
+      if ((jsonObj.get("_href") != null && !jsonObj.get("_href").isJsonNull()) && !jsonObj.get("_href").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `_href` to be a primitive type in the JSON string but got `%s`", jsonObj.get("_href").toString()));
       }
       if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
@@ -466,22 +528,22 @@ public class PagePageTimings {
     @SuppressWarnings("unchecked")
     @Override
     public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-       if (!PagePageTimings.class.isAssignableFrom(type.getRawType())) {
-         return null; // this class only serializes 'PagePageTimings' and its subtypes
+       if (!PageTimings.class.isAssignableFrom(type.getRawType())) {
+         return null; // this class only serializes 'PageTimings' and its subtypes
        }
        final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
-       final TypeAdapter<PagePageTimings> thisAdapter
-                        = gson.getDelegateAdapter(this, TypeToken.get(PagePageTimings.class));
+       final TypeAdapter<PageTimings> thisAdapter
+                        = gson.getDelegateAdapter(this, TypeToken.get(PageTimings.class));
 
-       return (TypeAdapter<T>) new TypeAdapter<PagePageTimings>() {
+       return (TypeAdapter<T>) new TypeAdapter<PageTimings>() {
            @Override
-           public void write(JsonWriter out, PagePageTimings value) throws IOException {
+           public void write(JsonWriter out, PageTimings value) throws IOException {
              JsonObject obj = thisAdapter.toJsonTree(value).getAsJsonObject();
              elementAdapter.write(out, obj);
            }
 
            @Override
-           public PagePageTimings read(JsonReader in) throws IOException {
+           public PageTimings read(JsonReader in) throws IOException {
              JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
              validateJsonObject(jsonObj);
              return thisAdapter.fromJsonTree(jsonObj);
@@ -492,18 +554,18 @@ public class PagePageTimings {
   }
 
  /**
-  * Create an instance of PagePageTimings given an JSON string
+  * Create an instance of PageTimings given an JSON string
   *
   * @param jsonString JSON string
-  * @return An instance of PagePageTimings
-  * @throws IOException if the JSON string is invalid with respect to PagePageTimings
+  * @return An instance of PageTimings
+  * @throws IOException if the JSON string is invalid with respect to PageTimings
   */
-  public static PagePageTimings fromJson(String jsonString) throws IOException {
-    return JSON.getGson().fromJson(jsonString, PagePageTimings.class);
+  public static PageTimings fromJson(String jsonString) throws IOException {
+    return JSON.getGson().fromJson(jsonString, PageTimings.class);
   }
 
  /**
-  * Convert an instance of PagePageTimings to an JSON string
+  * Convert an instance of PageTimings to an JSON string
   *
   * @return JSON string
   */

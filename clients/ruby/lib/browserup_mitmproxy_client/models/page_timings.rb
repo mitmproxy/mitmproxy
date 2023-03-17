@@ -14,10 +14,12 @@ require 'date'
 require 'time'
 
 module BrowserupMitmProxy
-  class PagePageTimings
+  class PageTimings
     attr_accessor :on_content_load
 
     attr_accessor :on_load
+
+    attr_accessor :_href
 
     attr_accessor :_dns
 
@@ -31,6 +33,8 @@ module BrowserupMitmProxy
 
     attr_accessor :_first_paint
 
+    attr_accessor :_first_input_delay
+
     attr_accessor :_dom_interactive
 
     attr_accessor :_first_contentful_paint
@@ -42,12 +46,14 @@ module BrowserupMitmProxy
       {
         :'on_content_load' => :'onContentLoad',
         :'on_load' => :'onLoad',
+        :'_href' => :'_href',
         :'_dns' => :'_dns',
         :'_ssl' => :'_ssl',
         :'_ttfb' => :'_ttfb',
         :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
         :'_largest_contentful_paint' => :'_largestContentfulPaint',
         :'_first_paint' => :'_firstPaint',
+        :'_first_input_delay' => :'_firstInputDelay',
         :'_dom_interactive' => :'_domInteractive',
         :'_first_contentful_paint' => :'_firstContentfulPaint',
         :'comment' => :'comment'
@@ -64,12 +70,14 @@ module BrowserupMitmProxy
       {
         :'on_content_load' => :'Integer',
         :'on_load' => :'Integer',
+        :'_href' => :'String',
         :'_dns' => :'Integer',
         :'_ssl' => :'Integer',
         :'_ttfb' => :'Integer',
         :'_cumulative_layout_shift' => :'Integer',
         :'_largest_contentful_paint' => :'Integer',
         :'_first_paint' => :'Integer',
+        :'_first_input_delay' => :'Integer',
         :'_dom_interactive' => :'Integer',
         :'_first_contentful_paint' => :'Integer',
         :'comment' => :'String'
@@ -86,13 +94,13 @@ module BrowserupMitmProxy
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupMitmProxy::PagePageTimings` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupMitmProxy::PageTimings` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupMitmProxy::PagePageTimings`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupMitmProxy::PageTimings`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
@@ -107,6 +115,12 @@ module BrowserupMitmProxy
         self.on_load = attributes[:'on_load']
       else
         self.on_load = -1
+      end
+
+      if attributes.key?(:'_href')
+        self._href = attributes[:'_href']
+      else
+        self._href = ''
       end
 
       if attributes.key?(:'_dns')
@@ -143,6 +157,12 @@ module BrowserupMitmProxy
         self._first_paint = attributes[:'_first_paint']
       else
         self._first_paint = -1
+      end
+
+      if attributes.key?(:'_first_input_delay')
+        self._first_input_delay = attributes[:'_first_input_delay']
+      else
+        self._first_input_delay = -1
       end
 
       if attributes.key?(:'_dom_interactive')
@@ -206,6 +226,10 @@ module BrowserupMitmProxy
         invalid_properties.push('invalid value for "_first_paint", must be greater than or equal to -1.')
       end
 
+      if !@_first_input_delay.nil? && @_first_input_delay < -1
+        invalid_properties.push('invalid value for "_first_input_delay", must be greater than or equal to -1.')
+      end
+
       if !@_dom_interactive.nil? && @_dom_interactive < -1
         invalid_properties.push('invalid value for "_dom_interactive", must be greater than or equal to -1.')
       end
@@ -230,6 +254,7 @@ module BrowserupMitmProxy
       return false if !@_cumulative_layout_shift.nil? && @_cumulative_layout_shift < -1
       return false if !@_largest_contentful_paint.nil? && @_largest_contentful_paint < -1
       return false if !@_first_paint.nil? && @_first_paint < -1
+      return false if !@_first_input_delay.nil? && @_first_input_delay < -1
       return false if !@_dom_interactive.nil? && @_dom_interactive < -1
       return false if !@_first_contentful_paint.nil? && @_first_contentful_paint < -1
       true
@@ -324,6 +349,16 @@ module BrowserupMitmProxy
     end
 
     # Custom attribute writer method with validation
+    # @param [Object] _first_input_delay Value to be assigned
+    def _first_input_delay=(_first_input_delay)
+      if !_first_input_delay.nil? && _first_input_delay < -1
+        fail ArgumentError, 'invalid value for "_first_input_delay", must be greater than or equal to -1.'
+      end
+
+      @_first_input_delay = _first_input_delay
+    end
+
+    # Custom attribute writer method with validation
     # @param [Object] _dom_interactive Value to be assigned
     def _dom_interactive=(_dom_interactive)
       if !_dom_interactive.nil? && _dom_interactive < -1
@@ -350,12 +385,14 @@ module BrowserupMitmProxy
       self.class == o.class &&
           on_content_load == o.on_content_load &&
           on_load == o.on_load &&
+          _href == o._href &&
           _dns == o._dns &&
           _ssl == o._ssl &&
           _ttfb == o._ttfb &&
           _cumulative_layout_shift == o._cumulative_layout_shift &&
           _largest_contentful_paint == o._largest_contentful_paint &&
           _first_paint == o._first_paint &&
+          _first_input_delay == o._first_input_delay &&
           _dom_interactive == o._dom_interactive &&
           _first_contentful_paint == o._first_contentful_paint &&
           comment == o.comment
@@ -370,7 +407,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [on_content_load, on_load, _dns, _ssl, _ttfb, _cumulative_layout_shift, _largest_contentful_paint, _first_paint, _dom_interactive, _first_contentful_paint, comment].hash
+      [on_content_load, on_load, _href, _dns, _ssl, _ttfb, _cumulative_layout_shift, _largest_contentful_paint, _first_paint, _first_input_delay, _dom_interactive, _first_contentful_paint, comment].hash
     end
 
     # Builds the object from hash

@@ -18,7 +18,7 @@ module BrowserupMitmProxy
     # Value for the counter
     attr_accessor :value
 
-    # Name of Custom Counter value you are adding to the page under _counters
+    # Name of Custom Counter to add to the page under _counters
     attr_accessor :name
 
     # Attribute mapping from ruby-style variable name to JSON key.

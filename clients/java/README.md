@@ -44,7 +44,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.browserup</groupId>
   <artifactId>browserup-mitmproxy-client</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.0.4-SNAPSHOT</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -60,7 +60,7 @@ Add this dependency to your project's build file:
   }
 
   dependencies {
-     implementation "com.browserup:browserup-mitmproxy-client:1.0.2-SNAPSHOT"
+     implementation "com.browserup:browserup-mitmproxy-client:1.0.4-SNAPSHOT"
   }
 ```
 
@@ -74,7 +74,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/browserup-mitmproxy-client-1.0.2-SNAPSHOT.jar`
+* `target/browserup-mitmproxy-client-1.0.4-SNAPSHOT.jar`
 * `target/lib/*.jar`
 
 ## Getting Started
@@ -153,8 +153,8 @@ Class | Method | HTTP request | Description
  - [MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
- - [PagePageTimings](docs/PagePageTimings.md)
  - [PageTiming](docs/PageTiming.md)
+ - [PageTimings](docs/PageTimings.md)
  - [VerifyResult](docs/VerifyResult.md)
  - [WebSocketMessage](docs/WebSocketMessage.md)
 

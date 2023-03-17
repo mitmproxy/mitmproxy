@@ -30,16 +30,16 @@ different. So see them, follow this pattern:
 # Generating Clients
 
 ## Java
-`openapi-generator generate --package-name BrowserUpMitmProxyClient -g java -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o java -c config-java.yaml`
+`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient -g java -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o java -c config-java.yaml`
 
 ## JavaScript
-`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g javascript -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o javascript -c config-javascript.yaml`
+`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g javascript -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o javascript -c config-javascript.yaml`
 
 ## Ruby
-`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g ruby -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o ruby -c config-ruby.yaml`
+`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g ruby -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o ruby -c config-ruby.yaml`
 
 ## Python
-`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g python -i /Users/ebeland/apps/mitmproxynew/browserup-proxy.schema.json -o python -c config-python.yaml`
+`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g python -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o python -c config-python.yaml`
 
 
 Notes:

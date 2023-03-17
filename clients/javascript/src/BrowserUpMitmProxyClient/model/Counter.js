@@ -83,7 +83,7 @@ class Counter {
 Counter.prototype['value'] = undefined;
 
 /**
- * Name of Custom Counter value you are adding to the page under _counters
+ * Name of Custom Counter to add to the page under _counters
  * @member {String} name
  */
 Counter.prototype['name'] = undefined;

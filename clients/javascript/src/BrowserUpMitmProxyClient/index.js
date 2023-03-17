@@ -35,8 +35,8 @@ import MatchCriteria from './model/MatchCriteria';
 import MatchCriteriaRequestHeader from './model/MatchCriteriaRequestHeader';
 import NameValuePair from './model/NameValuePair';
 import Page from './model/Page';
-import PagePageTimings from './model/PagePageTimings';
 import PageTiming from './model/PageTiming';
+import PageTimings from './model/PageTimings';
 import VerifyResult from './model/VerifyResult';
 import WebSocketMessage from './model/WebSocketMessage';
 import BrowserUpProxyApi from './browserup-mitmproxy-client/BrowserUpProxyApi';
@@ -213,16 +213,16 @@ export {
     Page,
 
     /**
-     * The PagePageTimings model constructor.
-     * @property {module:BrowserUpMitmProxyClient/model/PagePageTimings}
-     */
-    PagePageTimings,
-
-    /**
      * The PageTiming model constructor.
      * @property {module:BrowserUpMitmProxyClient/model/PageTiming}
      */
     PageTiming,
+
+    /**
+     * The PageTimings model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/PageTimings}
+     */
+    PageTimings,
 
     /**
      * The VerifyResult model constructor.

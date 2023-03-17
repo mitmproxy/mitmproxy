@@ -161,8 +161,8 @@ Class | Method | HTTP request | Description
  - [BrowserUpMitmProxyClient.MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [BrowserUpMitmProxyClient.NameValuePair](docs/NameValuePair.md)
  - [BrowserUpMitmProxyClient.Page](docs/Page.md)
- - [BrowserUpMitmProxyClient.PagePageTimings](docs/PagePageTimings.md)
  - [BrowserUpMitmProxyClient.PageTiming](docs/PageTiming.md)
+ - [BrowserUpMitmProxyClient.PageTimings](docs/PageTimings.md)
  - [BrowserUpMitmProxyClient.VerifyResult](docs/VerifyResult.md)
  - [BrowserUpMitmProxyClient.WebSocketMessage](docs/WebSocketMessage.md)
 

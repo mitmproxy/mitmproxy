@@ -13,7 +13,7 @@
 |**verifications** | [**List&lt;VerifyResult&gt;**](VerifyResult.md) |  |  [optional] |
 |**counters** | [**List&lt;Counter&gt;**](Counter.md) |  |  [optional] |
 |**errors** | [**List&lt;Error&gt;**](Error.md) |  |  [optional] |
-|**pageTimings** | [**PagePageTimings**](PagePageTimings.md) |  |  |
+|**pageTimings** | [**PageTimings**](PageTimings.md) |  |  |
 |**comment** | **String** |  |  [optional] |
 
 

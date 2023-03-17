@@ -39,11 +39,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstPaint'
+     * Test the property 'largestContentfulPaint'
      */
     @Test
-    public void firstPaintTest() {
-        // TODO: test firstPaint
+    public void largestContentfulPaintTest() {
+        // TODO: test largestContentfulPaint
     }
 
     /**
@@ -55,11 +55,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'ttfb'
+     * Test the property 'dns'
      */
     @Test
-    public void ttfbTest() {
-        // TODO: test ttfb
+    public void dnsTest() {
+        // TODO: test dns
     }
 
     /**
@@ -71,11 +71,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'ssl'
+     * Test the property 'ttfb'
      */
     @Test
-    public void sslTest() {
-        // TODO: test ssl
+    public void ttfbTest() {
+        // TODO: test ttfb
     }
 
     /**
@@ -87,19 +87,27 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
      * Test the property 'firstInputDelay'
      */
     @Test
     public void firstInputDelayTest() {
         // TODO: test firstInputDelay
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'firstPaint'
+     */
+    @Test
+    public void firstPaintTest() {
+        // TODO: test firstPaint
     }
 
     /**
@@ -111,19 +119,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'largestContentfulPaint'
+     * Test the property 'firstContentfulPaint'
      */
     @Test
-    public void largestContentfulPaintTest() {
-        // TODO: test largestContentfulPaint
-    }
-
-    /**
-     * Test the property 'dns'
-     */
-    @Test
-    public void dnsTest() {
-        // TODO: test dns
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
     /**

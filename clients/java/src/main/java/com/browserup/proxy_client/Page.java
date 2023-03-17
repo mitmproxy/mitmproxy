@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Arrays;
 import com.browserup.proxy_client.Counter;
 import com.browserup.proxy_client.Error;
-import com.browserup.proxy_client.PagePageTimings;
+import com.browserup.proxy_client.PageTimings;
 import com.browserup.proxy_client.VerifyResult;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
@@ -81,7 +81,7 @@ public class Page {
 
   public static final String SERIALIZED_NAME_PAGE_TIMINGS = "pageTimings";
   @SerializedName(SERIALIZED_NAME_PAGE_TIMINGS)
-  private PagePageTimings pageTimings;
+  private PageTimings pageTimings;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
@@ -246,7 +246,7 @@ public class Page {
   }
 
 
-  public Page pageTimings(PagePageTimings pageTimings) {
+  public Page pageTimings(PageTimings pageTimings) {
     
     this.pageTimings = pageTimings;
     return this;
@@ -258,12 +258,12 @@ public class Page {
   **/
   @javax.annotation.Nonnull
 
-  public PagePageTimings getPageTimings() {
+  public PageTimings getPageTimings() {
     return pageTimings;
   }
 
 
-  public void setPageTimings(PagePageTimings pageTimings) {
+  public void setPageTimings(PageTimings pageTimings) {
     this.pageTimings = pageTimings;
   }
 
@@ -442,7 +442,7 @@ public class Page {
         }
       }
       // validate the required field `pageTimings`
-      PagePageTimings.validateJsonObject(jsonObj.getAsJsonObject("pageTimings"));
+      PageTimings.validateJsonObject(jsonObj.getAsJsonObject("pageTimings"));
       if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }

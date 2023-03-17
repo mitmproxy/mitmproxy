@@ -285,38 +285,38 @@ components:
   schemas:
     PageTiming:
       properties:
-        _firstPaint:
-          description: firstPaint from the browser
+        _largestContentfulPaint:
+          description: largestContentfulPaint from the browser
           type: number
         onContentLoad:
           description: onContentLoad per the browser
           type: number
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
+        _dns:
+          description: dns lookup time from the browser
           type: number
         _domInteractive:
           description: domInteractive from the browser
           type: number
-        _ssl:
-          description: Ssl connect time from the browser
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
           type: number
         _href:
           description: "Top level href, including hashtag, etc per the browser"
           type: string
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
-          type: number
         _firstInputDelay:
           description: firstInputDelay from the browser
+          type: number
+        _ssl:
+          description: Ssl connect time from the browser
+          type: number
+        _firstPaint:
+          description: firstPaint from the browser
           type: number
         onLoad:
           description: onLoad per the browser
           type: number
-        _largestContentfulPaint:
-          description: largestContentfulPaint from the browser
-          type: number
-        _dns:
-          description: dns lookup time from the browser
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
           type: number
         _cumulativeLayoutShift:
           description: cumulativeLayoutShift metric from the browser
@@ -415,12 +415,12 @@ components:
         name: name
         type: type
       properties:
-        type:
-          description: Type
-          type: string
         result:
           description: Result True / False
           type: boolean
+        type:
+          description: Type
+          type: string
         name:
           description: Name
           type: string
@@ -447,16 +447,15 @@ components:
           format: double
           type: number
         name:
-          description: Name of Custom Counter value you are adding to the page under
-            _counters
+          description: Name of Custom Counter to add to the page under _counters
           type: string
       type: object
     WebSocketMessage:
       example:
         data: data
-        time: 6.965117697638846
+        time: 1.284659006116532
         type: type
-        opcode: 3.5571952270680973
+        opcode: 6.965117697638846
       properties:
         type:
           type: string
@@ -471,6 +470,102 @@ components:
       - opcode
       - time
       - type
+      type: object
+    Header:
+      example:
+        name: name
+        comment: comment
+        value: value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        comment:
+          type: string
+      required:
+      - name
+      - value
+      type: object
+    PageTimings:
+      example:
+        _href: _href
+        _ssl: 0
+        _firstPaint: 0
+        _cumulativeLayoutShift: 0
+        _dns: 0
+        _largestContentfulPaint: 0
+        _firstInputDelay: 0
+        _domInteractive: 0
+        _ttfb: 0
+        _firstContentfulPaint: 0
+        onContentLoad: 0
+        onLoad: 0
+        comment: comment
+      properties:
+        onContentLoad:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        onLoad:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _href:
+          default: ""
+          type: string
+        _dns:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _ssl:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _ttfb:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _cumulativeLayoutShift:
+          default: -1
+          format: float
+          minimum: -1
+          type: integer
+        _largestContentfulPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _firstPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _firstInputDelay:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _domInteractive:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        _firstContentfulPaint:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        comment:
+          type: string
+      required:
+      - onContentLoad
+      - onLoad
       type: object
     Har:
       example:
@@ -539,13 +634,13 @@ components:
               beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 6.965117697638846
+              time: 1.284659006116532
               type: type
-              opcode: 3.5571952270680973
+              opcode: 6.965117697638846
             - data: data
-              time: 6.965117697638846
+              time: 1.284659006116532
               type: type
-              opcode: 3.5571952270680973
+              opcode: 6.965117697638846
             response:
               headers:
               - name: name
@@ -557,8 +652,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 1
-              bodySize: 4
+              headersSize: 4
+              bodySize: 5
               comment: comment
               cookies:
               - path: path
@@ -578,13 +673,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 6
+                size: 7
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 7
+                compression: 1
                 encoding: encoding
-              status: 1
+              status: 6
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -658,13 +753,13 @@ components:
               beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 6.965117697638846
+              time: 1.284659006116532
               type: type
-              opcode: 3.5571952270680973
+              opcode: 6.965117697638846
             - data: data
-              time: 6.965117697638846
+              time: 1.284659006116532
               type: type
-              opcode: 3.5571952270680973
+              opcode: 6.965117697638846
             response:
               headers:
               - name: name
@@ -676,8 +771,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 1
-              bodySize: 4
+              headersSize: 4
+              bodySize: 5
               comment: comment
               cookies:
               - path: path
@@ -697,13 +792,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 6
+                size: 7
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 7
+                compression: 1
                 encoding: encoding
-              status: 1
+              status: 6
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -721,16 +816,18 @@ components:
           pages:
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
+              _href: _href
               _ssl: 0
               _firstPaint: 0
               _cumulativeLayoutShift: 0
               _dns: 0
               _largestContentfulPaint: 0
+              _firstInputDelay: 0
+              _domInteractive: 0
+              _ttfb: 0
               _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
-              _domInteractive: 0
-              _ttfb: 0
               comment: comment
             comment: comment
             id: id
@@ -754,16 +851,18 @@ components:
               details: details
           - startedDateTime: 2000-01-23T04:56:07.000+00:00
             pageTimings:
+              _href: _href
               _ssl: 0
               _firstPaint: 0
               _cumulativeLayoutShift: 0
               _dns: 0
               _largestContentfulPaint: 0
+              _firstInputDelay: 0
+              _domInteractive: 0
+              _ttfb: 0
               _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
-              _domInteractive: 0
-              _ttfb: 0
               comment: comment
             comment: comment
             id: id
@@ -796,22 +895,6 @@ components:
           $ref: '#/components/schemas/Har_log'
       required:
       - log
-      type: object
-    Header:
-      example:
-        name: name
-        comment: comment
-        value: value
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-        comment:
-          type: string
-      required:
-      - name
-      - value
       type: object
     HarEntry:
       example:
@@ -874,13 +957,13 @@ components:
           beforeRequest: null
         _webSocketMessages:
         - data: data
-          time: 6.965117697638846
+          time: 1.284659006116532
           type: type
-          opcode: 3.5571952270680973
+          opcode: 6.965117697638846
         - data: data
-          time: 6.965117697638846
+          time: 1.284659006116532
           type: type
-          opcode: 3.5571952270680973
+          opcode: 6.965117697638846
         response:
           headers:
           - name: name
@@ -892,8 +975,8 @@ components:
           httpVersion: httpVersion
           redirectURL: redirectURL
           statusText: statusText
-          headersSize: 1
-          bodySize: 4
+          headersSize: 4
+          bodySize: 5
           comment: comment
           cookies:
           - path: path
@@ -913,13 +996,13 @@ components:
             secure: true
             value: value
           content:
-            size: 6
+            size: 7
             comment: comment
             mimeType: mimeType
             text: text
-            compression: 7
+            compression: 1
             encoding: encoding
-          status: 1
+          status: 6
         serverIPAddress: serverIPAddress
         timings:
           receive: 0
@@ -970,20 +1053,25 @@ components:
       - time
       - timings
       type: object
+    CustomHarData:
+      minProperties: 1
+      type: object
     Page:
       example:
         startedDateTime: 2000-01-23T04:56:07.000+00:00
         pageTimings:
+          _href: _href
           _ssl: 0
           _firstPaint: 0
           _cumulativeLayoutShift: 0
           _dns: 0
           _largestContentfulPaint: 0
+          _firstInputDelay: 0
+          _domInteractive: 0
+          _ttfb: 0
           _firstContentfulPaint: 0
           onContentLoad: 0
           onLoad: 0
-          _domInteractive: 0
-          _ttfb: 0
           comment: comment
         comment: comment
         id: id
@@ -1029,7 +1117,7 @@ components:
             $ref: '#/components/schemas/Error'
           type: array
         pageTimings:
-          $ref: '#/components/schemas/Page_pageTimings'
+          $ref: '#/components/schemas/PageTimings'
         comment:
           type: string
       required:
@@ -1037,9 +1125,6 @@ components:
       - pageTimings
       - startedDateTime
       - title
-      type: object
-    CustomHarData:
-      minProperties: 1
       type: object
     MatchCriteria_request_header:
       allOf:
@@ -1129,13 +1214,13 @@ components:
             beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 6.965117697638846
+            time: 1.284659006116532
             type: type
-            opcode: 3.5571952270680973
+            opcode: 6.965117697638846
           - data: data
-            time: 6.965117697638846
+            time: 1.284659006116532
             type: type
-            opcode: 3.5571952270680973
+            opcode: 6.965117697638846
           response:
             headers:
             - name: name
@@ -1147,8 +1232,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 1
-            bodySize: 4
+            headersSize: 4
+            bodySize: 5
             comment: comment
             cookies:
             - path: path
@@ -1168,13 +1253,13 @@ components:
               secure: true
               value: value
             content:
-              size: 6
+              size: 7
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 7
+              compression: 1
               encoding: encoding
-            status: 1
+            status: 6
           serverIPAddress: serverIPAddress
           timings:
             receive: 0
@@ -1248,13 +1333,13 @@ components:
             beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 6.965117697638846
+            time: 1.284659006116532
             type: type
-            opcode: 3.5571952270680973
+            opcode: 6.965117697638846
           - data: data
-            time: 6.965117697638846
+            time: 1.284659006116532
             type: type
-            opcode: 3.5571952270680973
+            opcode: 6.965117697638846
           response:
             headers:
             - name: name
@@ -1266,8 +1351,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 1
-            bodySize: 4
+            headersSize: 4
+            bodySize: 5
             comment: comment
             cookies:
             - path: path
@@ -1287,13 +1372,13 @@ components:
               secure: true
               value: value
             content:
-              size: 6
+              size: 7
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 7
+              compression: 1
               encoding: encoding
-            status: 1
+            status: 6
           serverIPAddress: serverIPAddress
           timings:
             receive: 0
@@ -1311,16 +1396,18 @@ components:
         pages:
         - startedDateTime: 2000-01-23T04:56:07.000+00:00
           pageTimings:
+            _href: _href
             _ssl: 0
             _firstPaint: 0
             _cumulativeLayoutShift: 0
             _dns: 0
             _largestContentfulPaint: 0
+            _firstInputDelay: 0
+            _domInteractive: 0
+            _ttfb: 0
             _firstContentfulPaint: 0
             onContentLoad: 0
             onLoad: 0
-            _domInteractive: 0
-            _ttfb: 0
             comment: comment
           comment: comment
           id: id
@@ -1344,16 +1431,18 @@ components:
             details: details
         - startedDateTime: 2000-01-23T04:56:07.000+00:00
           pageTimings:
+            _href: _href
             _ssl: 0
             _firstPaint: 0
             _cumulativeLayoutShift: 0
             _dns: 0
             _largestContentfulPaint: 0
+            _firstInputDelay: 0
+            _domInteractive: 0
+            _ttfb: 0
             _firstContentfulPaint: 0
             onContentLoad: 0
             onLoad: 0
-            _domInteractive: 0
-            _ttfb: 0
             comment: comment
           comment: comment
           id: id
@@ -1594,11 +1683,11 @@ components:
       type: object
     HarEntry_response_content:
       example:
-        size: 6
+        size: 7
         comment: comment
         mimeType: mimeType
         text: text
-        compression: 7
+        compression: 1
         encoding: encoding
       properties:
         size:
@@ -1629,8 +1718,8 @@ components:
         httpVersion: httpVersion
         redirectURL: redirectURL
         statusText: statusText
-        headersSize: 1
-        bodySize: 4
+        headersSize: 4
+        bodySize: 5
         comment: comment
         cookies:
         - path: path
@@ -1650,13 +1739,13 @@ components:
           secure: true
           value: value
         content:
-          size: 6
+          size: 7
           comment: comment
           mimeType: mimeType
           text: text
-          compression: 7
+          compression: 1
           encoding: encoding
-        status: 1
+        status: 6
       properties:
         status:
           type: integer
@@ -1782,75 +1871,5 @@ components:
       - send
       - ssl
       - wait
-      type: object
-    Page_pageTimings:
-      example:
-        _ssl: 0
-        _firstPaint: 0
-        _cumulativeLayoutShift: 0
-        _dns: 0
-        _largestContentfulPaint: 0
-        _firstContentfulPaint: 0
-        onContentLoad: 0
-        onLoad: 0
-        _domInteractive: 0
-        _ttfb: 0
-        comment: comment
-      properties:
-        onContentLoad:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        onLoad:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _dns:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _ssl:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _ttfb:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _cumulativeLayoutShift:
-          default: -1
-          format: float
-          minimum: -1
-          type: integer
-        _largestContentfulPaint:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _firstPaint:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _domInteractive:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        _firstContentfulPaint:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
-        comment:
-          type: string
-      required:
-      - onContentLoad
-      - onLoad
       type: object
 

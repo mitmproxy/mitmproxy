@@ -15,7 +15,7 @@ package com.browserup.proxy_client;
 
 import com.browserup.proxy_client.Counter;
 import com.browserup.proxy_client.Error;
-import com.browserup.proxy_client.PagePageTimings;
+import com.browserup.proxy_client.PageTimings;
 import com.browserup.proxy_client.VerifyResult;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;

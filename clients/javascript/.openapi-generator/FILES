@@ -26,8 +26,8 @@ docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
 docs/Page.md
-docs/PagePageTimings.md
 docs/PageTiming.md
+docs/PageTimings.md
 docs/VerifyResult.md
 docs/WebSocketMessage.md
 git_push.sh
@@ -58,8 +58,8 @@ src/BrowserUpMitmProxyClient/model/MatchCriteria.js
 src/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.js
 src/BrowserUpMitmProxyClient/model/NameValuePair.js
 src/BrowserUpMitmProxyClient/model/Page.js
-src/BrowserUpMitmProxyClient/model/PagePageTimings.js
 src/BrowserUpMitmProxyClient/model/PageTiming.js
+src/BrowserUpMitmProxyClient/model/PageTimings.js
 src/BrowserUpMitmProxyClient/model/VerifyResult.js
 src/BrowserUpMitmProxyClient/model/WebSocketMessage.js
 test/BrowserUpMitmProxyClient/api/BrowserUpProxyApi.spec.js
@@ -85,7 +85,7 @@ test/BrowserUpMitmProxyClient/model/MatchCriteria.spec.js
 test/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.spec.js
 test/BrowserUpMitmProxyClient/model/NameValuePair.spec.js
 test/BrowserUpMitmProxyClient/model/Page.spec.js
-test/BrowserUpMitmProxyClient/model/PagePageTimings.spec.js
 test/BrowserUpMitmProxyClient/model/PageTiming.spec.js
+test/BrowserUpMitmProxyClient/model/PageTimings.spec.js
 test/BrowserUpMitmProxyClient/model/VerifyResult.spec.js
 test/BrowserUpMitmProxyClient/model/WebSocketMessage.spec.js
