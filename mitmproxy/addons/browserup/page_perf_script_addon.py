@@ -55,6 +55,7 @@ class PagePerfScriptAddOn:
 
                 flow.response.text = html
 
+
 addons = [
     PagePerfScriptAddOn()
 ]
