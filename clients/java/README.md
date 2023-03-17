@@ -44,7 +44,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.browserup</groupId>
   <artifactId>browserup-mitmproxy-client</artifactId>
-  <version>1.0.5-SNAPSHOT</version>
+  <version>1.0.6-SNAPSHOT</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -60,7 +60,7 @@ Add this dependency to your project's build file:
   }
 
   dependencies {
-     implementation "com.browserup:browserup-mitmproxy-client:1.0.5-SNAPSHOT"
+     implementation "com.browserup:browserup-mitmproxy-client:1.0.6-SNAPSHOT"
   }
 ```
 
@@ -74,7 +74,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/browserup-mitmproxy-client-1.0.5-SNAPSHOT.jar`
+* `target/browserup-mitmproxy-client-1.0.6-SNAPSHOT.jar`
 * `target/lib/*.jar`
 
 ## Getting Started
@@ -136,13 +136,8 @@ Class | Method | HTTP request | Description
  - [Har](docs/Har.md)
  - [HarEntry](docs/HarEntry.md)
  - [HarEntryCache](docs/HarEntryCache.md)
- - [HarEntryCacheBeforeRequest](docs/HarEntryCacheBeforeRequest.md)
- - [HarEntryCacheBeforeRequestOneOf](docs/HarEntryCacheBeforeRequestOneOf.md)
  - [HarEntryRequest](docs/HarEntryRequest.md)
- - [HarEntryRequestCookiesInner](docs/HarEntryRequestCookiesInner.md)
  - [HarEntryRequestPostData](docs/HarEntryRequestPostData.md)
- - [HarEntryRequestPostDataParamsInner](docs/HarEntryRequestPostDataParamsInner.md)
- - [HarEntryRequestQueryStringInner](docs/HarEntryRequestQueryStringInner.md)
  - [HarEntryResponse](docs/HarEntryResponse.md)
  - [HarEntryResponseContent](docs/HarEntryResponseContent.md)
  - [HarEntryTimings](docs/HarEntryTimings.md)
@@ -150,7 +145,6 @@ Class | Method | HTTP request | Description
  - [HarLogCreator](docs/HarLogCreator.md)
  - [Header](docs/Header.md)
  - [MatchCriteria](docs/MatchCriteria.md)
- - [MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
  - [PageTiming](docs/PageTiming.md)

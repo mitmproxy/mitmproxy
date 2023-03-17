@@ -22,8 +22,8 @@ class PageTimings {
     /**
      * Constructs a new <code>PageTimings</code>.
      * @alias module:BrowserUpMitmProxyClient/model/PageTimings
-     * @param onContentLoad {Number} 
-     * @param onLoad {Number} 
+     * @param onContentLoad {Object} 
+     * @param onLoad {Object} 
      */
     constructor(onContentLoad, onLoad) { 
         
@@ -36,8 +36,8 @@ class PageTimings {
      * Only for internal use.
      */
     static initialize(obj, onContentLoad, onLoad) { 
-        obj['onContentLoad'] = onContentLoad || -1;
-        obj['onLoad'] = onLoad || -1;
+        obj['onContentLoad'] = onContentLoad;
+        obj['onLoad'] = onLoad;
     }
 
     /**
@@ -52,43 +52,43 @@ class PageTimings {
             obj = obj || new PageTimings();
 
             if (data.hasOwnProperty('onContentLoad')) {
-                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], 'Number');
+                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], Object);
             }
             if (data.hasOwnProperty('onLoad')) {
-                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
+                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], Object);
             }
             if (data.hasOwnProperty('_href')) {
-                obj['_href'] = ApiClient.convertToType(data['_href'], 'String');
+                obj['_href'] = ApiClient.convertToType(data['_href'], Object);
             }
             if (data.hasOwnProperty('_dns')) {
-                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
+                obj['_dns'] = ApiClient.convertToType(data['_dns'], Object);
             }
             if (data.hasOwnProperty('_ssl')) {
-                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
+                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], Object);
             }
             if (data.hasOwnProperty('_ttfb')) {
-                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], 'Number');
+                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], Object);
             }
             if (data.hasOwnProperty('_cumulativeLayoutShift')) {
-                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
+                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], Object);
             }
             if (data.hasOwnProperty('_largestContentfulPaint')) {
-                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], Object);
             }
             if (data.hasOwnProperty('_firstPaint')) {
-                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
+                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], Object);
             }
             if (data.hasOwnProperty('_firstInputDelay')) {
-                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], 'Number');
+                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], Object);
             }
             if (data.hasOwnProperty('_domInteractive')) {
-                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
+                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], Object);
             }
             if (data.hasOwnProperty('_firstContentfulPaint')) {
-                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
+                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], Object);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
+                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
             }
         }
         return obj;
@@ -106,14 +106,6 @@ class PageTimings {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // ensure the json data is a string
-        if (data['_href'] && !(typeof data['_href'] === 'string' || data['_href'] instanceof String)) {
-            throw new Error("Expected the field `_href` to be a primitive type in the JSON string but got " + data['_href']);
-        }
-        // ensure the json data is a string
-        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
-            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
-        }
 
         return true;
     }
@@ -124,79 +116,67 @@ class PageTimings {
 PageTimings.RequiredProperties = ["onContentLoad", "onLoad"];
 
 /**
- * @member {Number} onContentLoad
- * @default -1
+ * @member {Object} onContentLoad
  */
-PageTimings.prototype['onContentLoad'] = -1;
+PageTimings.prototype['onContentLoad'] = undefined;
 
 /**
- * @member {Number} onLoad
- * @default -1
+ * @member {Object} onLoad
  */
-PageTimings.prototype['onLoad'] = -1;
+PageTimings.prototype['onLoad'] = undefined;
 
 /**
- * @member {String} _href
- * @default ''
+ * @member {Object} _href
  */
-PageTimings.prototype['_href'] = '';
+PageTimings.prototype['_href'] = undefined;
 
 /**
- * @member {Number} _dns
- * @default -1
+ * @member {Object} _dns
  */
-PageTimings.prototype['_dns'] = -1;
+PageTimings.prototype['_dns'] = undefined;
 
 /**
- * @member {Number} _ssl
- * @default -1
+ * @member {Object} _ssl
  */
-PageTimings.prototype['_ssl'] = -1;
+PageTimings.prototype['_ssl'] = undefined;
 
 /**
- * @member {Number} _ttfb
- * @default -1
+ * @member {Object} _ttfb
  */
-PageTimings.prototype['_ttfb'] = -1;
+PageTimings.prototype['_ttfb'] = undefined;
 
 /**
- * @member {Number} _cumulativeLayoutShift
- * @default -1
+ * @member {Object} _cumulativeLayoutShift
  */
-PageTimings.prototype['_cumulativeLayoutShift'] = -1;
+PageTimings.prototype['_cumulativeLayoutShift'] = undefined;
 
 /**
- * @member {Number} _largestContentfulPaint
- * @default -1
+ * @member {Object} _largestContentfulPaint
  */
-PageTimings.prototype['_largestContentfulPaint'] = -1;
+PageTimings.prototype['_largestContentfulPaint'] = undefined;
 
 /**
- * @member {Number} _firstPaint
- * @default -1
+ * @member {Object} _firstPaint
  */
-PageTimings.prototype['_firstPaint'] = -1;
+PageTimings.prototype['_firstPaint'] = undefined;
 
 /**
- * @member {Number} _firstInputDelay
- * @default -1
+ * @member {Object} _firstInputDelay
  */
-PageTimings.prototype['_firstInputDelay'] = -1;
+PageTimings.prototype['_firstInputDelay'] = undefined;
 
 /**
- * @member {Number} _domInteractive
- * @default -1
+ * @member {Object} _domInteractive
  */
-PageTimings.prototype['_domInteractive'] = -1;
+PageTimings.prototype['_domInteractive'] = undefined;
 
 /**
- * @member {Number} _firstContentfulPaint
- * @default -1
+ * @member {Object} _firstContentfulPaint
  */
-PageTimings.prototype['_firstContentfulPaint'] = -1;
+PageTimings.prototype['_firstContentfulPaint'] = undefined;
 
 /**
- * @member {String} comment
+ * @member {Object} comment
  */
 PageTimings.prototype['comment'] = undefined;
 

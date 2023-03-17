@@ -15,17 +15,14 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
-import com.browserup.proxy_client.HarEntry;
 import com.browserup.proxy_client.HarLogCreator;
-import com.browserup.proxy_client.Page;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,7 +52,7 @@ import com.browserup.proxy_client.JSON;
 public class HarLog {
   public static final String SERIALIZED_NAME_VERSION = "version";
   @SerializedName(SERIALIZED_NAME_VERSION)
-  private String version;
+  private Object version = null;
 
   public static final String SERIALIZED_NAME_CREATOR = "creator";
   @SerializedName(SERIALIZED_NAME_CREATOR)
@@ -67,20 +64,20 @@ public class HarLog {
 
   public static final String SERIALIZED_NAME_PAGES = "pages";
   @SerializedName(SERIALIZED_NAME_PAGES)
-  private List<Page> pages = null;
+  private Object pages = [];
 
   public static final String SERIALIZED_NAME_ENTRIES = "entries";
   @SerializedName(SERIALIZED_NAME_ENTRIES)
-  private List<HarEntry> entries = new ArrayList<>();
+  private Object entries = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public HarLog() {
   }
 
-  public HarLog version(String version) {
+  public HarLog version(Object version) {
     
     this.version = version;
     return this;
@@ -90,14 +87,14 @@ public class HarLog {
    * Get version
    * @return version
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getVersion() {
+  public Object getVersion() {
     return version;
   }
 
 
-  public void setVersion(String version) {
+  public void setVersion(Object version) {
     this.version = version;
   }
 
@@ -146,14 +143,9 @@ public class HarLog {
   }
 
 
-  public HarLog pages(List<Page> pages) {
+  public HarLog pages(Object pages) {
     
     this.pages = pages;
-    return this;
-  }
-
-  public HarLog addPagesItem(Page pagesItem) {
-    this.pages.add(pagesItem);
     return this;
   }
 
@@ -161,26 +153,21 @@ public class HarLog {
    * Get pages
    * @return pages
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<Page> getPages() {
+  public Object getPages() {
     return pages;
   }
 
 
-  public void setPages(List<Page> pages) {
+  public void setPages(Object pages) {
     this.pages = pages;
   }
 
 
-  public HarLog entries(List<HarEntry> entries) {
+  public HarLog entries(Object entries) {
     
     this.entries = entries;
-    return this;
-  }
-
-  public HarLog addEntriesItem(HarEntry entriesItem) {
-    this.entries.add(entriesItem);
     return this;
   }
 
@@ -188,19 +175,19 @@ public class HarLog {
    * Get entries
    * @return entries
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<HarEntry> getEntries() {
+  public Object getEntries() {
     return entries;
   }
 
 
-  public void setEntries(List<HarEntry> entries) {
+  public void setEntries(Object entries) {
     this.entries = entries;
   }
 
 
-  public HarLog comment(String comment) {
+  public HarLog comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -212,12 +199,12 @@ public class HarLog {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -240,9 +227,20 @@ public class HarLog {
         Objects.equals(this.comment, harLog.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(version, creator, browser, pages, entries, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -319,37 +317,11 @@ public class HarLog {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
-      if (!jsonObj.get("version").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `version` to be a primitive type in the JSON string but got `%s`", jsonObj.get("version").toString()));
-      }
       // validate the required field `creator`
       HarLogCreator.validateJsonObject(jsonObj.getAsJsonObject("creator"));
       // validate the optional field `browser`
       if (jsonObj.get("browser") != null && !jsonObj.get("browser").isJsonNull()) {
         HarLogCreator.validateJsonObject(jsonObj.getAsJsonObject("browser"));
-      }
-      // ensure the json data is an array
-      if (!jsonObj.get("pages").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `pages` to be an array in the JSON string but got `%s`", jsonObj.get("pages").toString()));
-      }
-
-      JsonArray jsonArraypages = jsonObj.getAsJsonArray("pages");
-      // validate the required field `pages` (array)
-      for (int i = 0; i < jsonArraypages.size(); i++) {
-        Page.validateJsonObject(jsonArraypages.get(i).getAsJsonObject());
-      };
-      // ensure the json data is an array
-      if (!jsonObj.get("entries").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `entries` to be an array in the JSON string but got `%s`", jsonObj.get("entries").toString()));
-      }
-
-      JsonArray jsonArrayentries = jsonObj.getAsJsonArray("entries");
-      // validate the required field `entries` (array)
-      for (int i = 0; i < jsonArrayentries.size(); i++) {
-        HarEntry.validateJsonObject(jsonArrayentries.get(i).getAsJsonObject());
-      };
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

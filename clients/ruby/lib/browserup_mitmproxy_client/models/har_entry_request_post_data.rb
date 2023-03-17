@@ -39,15 +39,18 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'mime_type' => :'String',
-        :'text' => :'String',
-        :'params' => :'Array<HarEntryRequestPostDataParamsInner>'
+        :'mime_type' => :'Object',
+        :'text' => :'Object',
+        :'params' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'mime_type',
+        :'text',
+        :'params'
       ])
     end
 
@@ -75,9 +78,7 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'params')
-        if (value = attributes[:'params']).is_a?(Array)
-          self.params = value
-        end
+        self.params = attributes[:'params']
       end
     end
 
@@ -85,17 +86,12 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @mime_type.nil?
-        invalid_properties.push('invalid value for "mime_type", mime_type cannot be nil.')
-      end
-
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @mime_type.nil?
       true
     end
 

@@ -62,23 +62,30 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'pageref' => :'String',
-        :'started_date_time' => :'Time',
-        :'time' => :'Integer',
+        :'pageref' => :'Object',
+        :'started_date_time' => :'Object',
+        :'time' => :'Object',
         :'request' => :'HarEntryRequest',
         :'response' => :'HarEntryResponse',
         :'cache' => :'HarEntryCache',
         :'timings' => :'HarEntryTimings',
-        :'server_ip_address' => :'String',
-        :'_web_socket_messages' => :'Array<WebSocketMessage>',
-        :'connection' => :'String',
-        :'comment' => :'String'
+        :'server_ip_address' => :'Object',
+        :'_web_socket_messages' => :'Object',
+        :'connection' => :'Object',
+        :'comment' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'pageref',
+        :'started_date_time',
+        :'time',
+        :'server_ip_address',
+        :'_web_socket_messages',
+        :'connection',
+        :'comment'
       ])
     end
 
@@ -130,9 +137,7 @@ module BrowserupMitmProxy
       end
 
       if attributes.key?(:'_web_socket_messages')
-        if (value = attributes[:'_web_socket_messages']).is_a?(Array)
-          self._web_socket_messages = value
-        end
+        self._web_socket_messages = attributes[:'_web_socket_messages']
       end
 
       if attributes.key?(:'connection')
@@ -148,14 +153,6 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @started_date_time.nil?
-        invalid_properties.push('invalid value for "started_date_time", started_date_time cannot be nil.')
-      end
-
-      if @time.nil?
-        invalid_properties.push('invalid value for "time", time cannot be nil.')
-      end
-
       if @time < 0
         invalid_properties.push('invalid value for "time", must be greater than or equal to 0.')
       end
@@ -182,8 +179,6 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @started_date_time.nil?
-      return false if @time.nil?
       return false if @time < 0
       return false if @request.nil?
       return false if @response.nil?
@@ -195,10 +190,6 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] time Value to be assigned
     def time=(time)
-      if time.nil?
-        fail ArgumentError, 'time cannot be nil'
-      end
-
       if time < 0
         fail ArgumentError, 'invalid value for "time", must be greater than or equal to 0.'
       end

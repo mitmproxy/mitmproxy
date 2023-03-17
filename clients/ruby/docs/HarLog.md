@@ -4,12 +4,12 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **version** | **String** |  |  |
+| **version** | **Object** |  |  |
 | **creator** | [**HarLogCreator**](HarLogCreator.md) |  |  |
 | **browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] |
-| **pages** | [**Array&lt;Page&gt;**](Page.md) |  |  |
-| **entries** | [**Array&lt;HarEntry&gt;**](HarEntry.md) |  |  |
-| **comment** | **String** |  | [optional] |
+| **pages** | **Object** |  |  |
+| **entries** | **Object** |  |  |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

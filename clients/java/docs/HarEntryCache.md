@@ -7,9 +7,9 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**beforeRequest** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  |  [optional] |
-|**afterRequest** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  |  [optional] |
-|**comment** | **String** |  |  [optional] |
+|**beforeRequest** | **Object** |  |  [optional] |
+|**afterRequest** | **Object** |  |  [optional] |
+|**comment** | **Object** |  |  [optional] |
 
 
 

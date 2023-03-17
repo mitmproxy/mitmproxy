@@ -15,17 +15,14 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
-import com.browserup.proxy_client.HarEntryRequestCookiesInner;
 import com.browserup.proxy_client.HarEntryResponseContent;
-import com.browserup.proxy_client.Header;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,23 +52,23 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryResponse {
   public static final String SERIALIZED_NAME_STATUS = "status";
   @SerializedName(SERIALIZED_NAME_STATUS)
-  private Integer status;
+  private Object status = null;
 
   public static final String SERIALIZED_NAME_STATUS_TEXT = "statusText";
   @SerializedName(SERIALIZED_NAME_STATUS_TEXT)
-  private String statusText;
+  private Object statusText = null;
 
   public static final String SERIALIZED_NAME_HTTP_VERSION = "httpVersion";
   @SerializedName(SERIALIZED_NAME_HTTP_VERSION)
-  private String httpVersion;
+  private Object httpVersion = null;
 
   public static final String SERIALIZED_NAME_COOKIES = "cookies";
   @SerializedName(SERIALIZED_NAME_COOKIES)
-  private List<HarEntryRequestCookiesInner> cookies = new ArrayList<>();
+  private Object cookies = null;
 
   public static final String SERIALIZED_NAME_HEADERS = "headers";
   @SerializedName(SERIALIZED_NAME_HEADERS)
-  private List<Header> headers = new ArrayList<>();
+  private Object headers = null;
 
   public static final String SERIALIZED_NAME_CONTENT = "content";
   @SerializedName(SERIALIZED_NAME_CONTENT)
@@ -79,24 +76,24 @@ public class HarEntryResponse {
 
   public static final String SERIALIZED_NAME_REDIRECT_U_R_L = "redirectURL";
   @SerializedName(SERIALIZED_NAME_REDIRECT_U_R_L)
-  private String redirectURL;
+  private Object redirectURL = null;
 
   public static final String SERIALIZED_NAME_HEADERS_SIZE = "headersSize";
   @SerializedName(SERIALIZED_NAME_HEADERS_SIZE)
-  private Integer headersSize;
+  private Object headersSize = null;
 
   public static final String SERIALIZED_NAME_BODY_SIZE = "bodySize";
   @SerializedName(SERIALIZED_NAME_BODY_SIZE)
-  private Integer bodySize;
+  private Object bodySize = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public HarEntryResponse() {
   }
 
-  public HarEntryResponse status(Integer status) {
+  public HarEntryResponse status(Object status) {
     
     this.status = status;
     return this;
@@ -106,19 +103,19 @@ public class HarEntryResponse {
    * Get status
    * @return status
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getStatus() {
+  public Object getStatus() {
     return status;
   }
 
 
-  public void setStatus(Integer status) {
+  public void setStatus(Object status) {
     this.status = status;
   }
 
 
-  public HarEntryResponse statusText(String statusText) {
+  public HarEntryResponse statusText(Object statusText) {
     
     this.statusText = statusText;
     return this;
@@ -128,19 +125,19 @@ public class HarEntryResponse {
    * Get statusText
    * @return statusText
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getStatusText() {
+  public Object getStatusText() {
     return statusText;
   }
 
 
-  public void setStatusText(String statusText) {
+  public void setStatusText(Object statusText) {
     this.statusText = statusText;
   }
 
 
-  public HarEntryResponse httpVersion(String httpVersion) {
+  public HarEntryResponse httpVersion(Object httpVersion) {
     
     this.httpVersion = httpVersion;
     return this;
@@ -150,26 +147,21 @@ public class HarEntryResponse {
    * Get httpVersion
    * @return httpVersion
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getHttpVersion() {
+  public Object getHttpVersion() {
     return httpVersion;
   }
 
 
-  public void setHttpVersion(String httpVersion) {
+  public void setHttpVersion(Object httpVersion) {
     this.httpVersion = httpVersion;
   }
 
 
-  public HarEntryResponse cookies(List<HarEntryRequestCookiesInner> cookies) {
+  public HarEntryResponse cookies(Object cookies) {
     
     this.cookies = cookies;
-    return this;
-  }
-
-  public HarEntryResponse addCookiesItem(HarEntryRequestCookiesInner cookiesItem) {
-    this.cookies.add(cookiesItem);
     return this;
   }
 
@@ -177,26 +169,21 @@ public class HarEntryResponse {
    * Get cookies
    * @return cookies
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<HarEntryRequestCookiesInner> getCookies() {
+  public Object getCookies() {
     return cookies;
   }
 
 
-  public void setCookies(List<HarEntryRequestCookiesInner> cookies) {
+  public void setCookies(Object cookies) {
     this.cookies = cookies;
   }
 
 
-  public HarEntryResponse headers(List<Header> headers) {
+  public HarEntryResponse headers(Object headers) {
     
     this.headers = headers;
-    return this;
-  }
-
-  public HarEntryResponse addHeadersItem(Header headersItem) {
-    this.headers.add(headersItem);
     return this;
   }
 
@@ -204,14 +191,14 @@ public class HarEntryResponse {
    * Get headers
    * @return headers
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<Header> getHeaders() {
+  public Object getHeaders() {
     return headers;
   }
 
 
-  public void setHeaders(List<Header> headers) {
+  public void setHeaders(Object headers) {
     this.headers = headers;
   }
 
@@ -238,7 +225,7 @@ public class HarEntryResponse {
   }
 
 
-  public HarEntryResponse redirectURL(String redirectURL) {
+  public HarEntryResponse redirectURL(Object redirectURL) {
     
     this.redirectURL = redirectURL;
     return this;
@@ -248,19 +235,19 @@ public class HarEntryResponse {
    * Get redirectURL
    * @return redirectURL
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getRedirectURL() {
+  public Object getRedirectURL() {
     return redirectURL;
   }
 
 
-  public void setRedirectURL(String redirectURL) {
+  public void setRedirectURL(Object redirectURL) {
     this.redirectURL = redirectURL;
   }
 
 
-  public HarEntryResponse headersSize(Integer headersSize) {
+  public HarEntryResponse headersSize(Object headersSize) {
     
     this.headersSize = headersSize;
     return this;
@@ -270,19 +257,19 @@ public class HarEntryResponse {
    * Get headersSize
    * @return headersSize
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getHeadersSize() {
+  public Object getHeadersSize() {
     return headersSize;
   }
 
 
-  public void setHeadersSize(Integer headersSize) {
+  public void setHeadersSize(Object headersSize) {
     this.headersSize = headersSize;
   }
 
 
-  public HarEntryResponse bodySize(Integer bodySize) {
+  public HarEntryResponse bodySize(Object bodySize) {
     
     this.bodySize = bodySize;
     return this;
@@ -292,19 +279,19 @@ public class HarEntryResponse {
    * Get bodySize
    * @return bodySize
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getBodySize() {
+  public Object getBodySize() {
     return bodySize;
   }
 
 
-  public void setBodySize(Integer bodySize) {
+  public void setBodySize(Object bodySize) {
     this.bodySize = bodySize;
   }
 
 
-  public HarEntryResponse comment(String comment) {
+  public HarEntryResponse comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -316,12 +303,12 @@ public class HarEntryResponse {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -348,9 +335,20 @@ public class HarEntryResponse {
         Objects.equals(this.comment, harEntryResponse.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(status, statusText, httpVersion, cookies, headers, content, redirectURL, headersSize, bodySize, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -440,40 +438,8 @@ public class HarEntryResponse {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
-      if (!jsonObj.get("statusText").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `statusText` to be a primitive type in the JSON string but got `%s`", jsonObj.get("statusText").toString()));
-      }
-      if (!jsonObj.get("httpVersion").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `httpVersion` to be a primitive type in the JSON string but got `%s`", jsonObj.get("httpVersion").toString()));
-      }
-      // ensure the json data is an array
-      if (!jsonObj.get("cookies").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `cookies` to be an array in the JSON string but got `%s`", jsonObj.get("cookies").toString()));
-      }
-
-      JsonArray jsonArraycookies = jsonObj.getAsJsonArray("cookies");
-      // validate the required field `cookies` (array)
-      for (int i = 0; i < jsonArraycookies.size(); i++) {
-        HarEntryRequestCookiesInner.validateJsonObject(jsonArraycookies.get(i).getAsJsonObject());
-      };
-      // ensure the json data is an array
-      if (!jsonObj.get("headers").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `headers` to be an array in the JSON string but got `%s`", jsonObj.get("headers").toString()));
-      }
-
-      JsonArray jsonArrayheaders = jsonObj.getAsJsonArray("headers");
-      // validate the required field `headers` (array)
-      for (int i = 0; i < jsonArrayheaders.size(); i++) {
-        Header.validateJsonObject(jsonArrayheaders.get(i).getAsJsonObject());
-      };
       // validate the required field `content`
       HarEntryResponseContent.validateJsonObject(jsonObj.getAsJsonObject("content"));
-      if (!jsonObj.get("redirectURL").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `redirectURL` to be a primitive type in the JSON string but got `%s`", jsonObj.get("redirectURL").toString()));
-      }
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
-      }
   }
 
   public static class CustomTypeAdapterFactory implements TypeAdapterFactory {

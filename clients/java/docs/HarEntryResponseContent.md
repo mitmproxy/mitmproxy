@@ -7,12 +7,12 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**size** | **Integer** |  |  |
-|**compression** | **Integer** |  |  [optional] |
-|**mimeType** | **String** |  |  |
-|**text** | **String** |  |  [optional] |
-|**encoding** | **String** |  |  [optional] |
-|**comment** | **String** |  |  [optional] |
+|**size** | **Object** |  |  |
+|**compression** | **Object** |  |  [optional] |
+|**mimeType** | **Object** |  |  |
+|**text** | **Object** |  |  [optional] |
+|**encoding** | **Object** |  |  [optional] |
+|**comment** | **Object** |  |  [optional] |
 
 
 

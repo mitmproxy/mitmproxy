@@ -4,14 +4,14 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **started_date_time** | **Time** |  |  |
-| **id** | **String** |  |  |
-| **title** | **String** |  |  |
-| **_verifications** | [**Array&lt;VerifyResult&gt;**](VerifyResult.md) |  | [optional] |
-| **_counters** | [**Array&lt;Counter&gt;**](Counter.md) |  | [optional] |
-| **_errors** | [**Array&lt;Error&gt;**](Error.md) |  | [optional] |
+| **started_date_time** | **Object** |  |  |
+| **id** | **Object** |  |  |
+| **title** | **Object** |  |  |
+| **_verifications** | **Object** |  | [optional] |
+| **_counters** | **Object** |  | [optional] |
+| **_errors** | **Object** |  | [optional] |
 | **page_timings** | [**PageTimings**](PageTimings.md) |  |  |
-| **comment** | **String** |  | [optional] |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

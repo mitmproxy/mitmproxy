@@ -38,15 +38,18 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'before_request' => :'HarEntryCacheBeforeRequest',
-        :'after_request' => :'HarEntryCacheBeforeRequest',
-        :'comment' => :'String'
+        :'before_request' => :'Object',
+        :'after_request' => :'Object',
+        :'comment' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'before_request',
+        :'after_request',
+        :'comment'
       ])
     end
 

@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -48,40 +49,18 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Error {
-  public static final String SERIALIZED_NAME_DETAILS = "details";
-  @SerializedName(SERIALIZED_NAME_DETAILS)
-  private String details;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
+  private Object name = null;
+
+  public static final String SERIALIZED_NAME_DETAILS = "details";
+  @SerializedName(SERIALIZED_NAME_DETAILS)
+  private Object details = null;
 
   public Error() {
   }
 
-  public Error details(String details) {
-    
-    this.details = details;
-    return this;
-  }
-
-   /**
-   * Short details of the error
-   * @return details
-  **/
-  @javax.annotation.Nullable
-
-  public String getDetails() {
-    return details;
-  }
-
-
-  public void setDetails(String details) {
-    this.details = details;
-  }
-
-
-  public Error name(String name) {
+  public Error name(Object name) {
     
     this.name = name;
     return this;
@@ -93,13 +72,35 @@ public class Error {
   **/
   @javax.annotation.Nullable
 
-  public String getName() {
+  public Object getName() {
     return name;
   }
 
 
-  public void setName(String name) {
+  public void setName(Object name) {
     this.name = name;
+  }
+
+
+  public Error details(Object details) {
+    
+    this.details = details;
+    return this;
+  }
+
+   /**
+   * Short details of the error
+   * @return details
+  **/
+  @javax.annotation.Nullable
+
+  public Object getDetails() {
+    return details;
+  }
+
+
+  public void setDetails(Object details) {
+    this.details = details;
   }
 
 
@@ -113,21 +114,32 @@ public class Error {
       return false;
     }
     Error error = (Error) o;
-    return Objects.equals(this.details, error.details) &&
-        Objects.equals(this.name, error.name);
+    return Objects.equals(this.name, error.name) &&
+        Objects.equals(this.details, error.details);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(details, name);
+    return Objects.hash(name, details);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Error {\n");
-    sb.append("    details: ").append(toIndentedString(details)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    details: ").append(toIndentedString(details)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -150,8 +162,8 @@ public class Error {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("details");
     openapiFields.add("name");
+    openapiFields.add("details");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -176,12 +188,6 @@ public class Error {
         if (!Error.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Error` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
-      }
-      if ((jsonObj.get("details") != null && !jsonObj.get("details").isJsonNull()) && !jsonObj.get("details").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `details` to be a primitive type in the JSON string but got `%s`", jsonObj.get("details").toString()));
-      }
-      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
       }
   }
 

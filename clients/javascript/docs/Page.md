@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**startedDateTime** | **Date** |  | 
-**id** | **String** |  | 
-**title** | **String** |  | 
-**verifications** | [**[VerifyResult]**](VerifyResult.md) |  | [optional] 
-**counters** | [**[Counter]**](Counter.md) |  | [optional] 
-**errors** | [**[Error]**](Error.md) |  | [optional] 
+**startedDateTime** | **Object** |  | 
+**id** | **Object** |  | 
+**title** | **Object** |  | 
+**verifications** | **Object** |  | [optional] 
+**counters** | **Object** |  | [optional] 
+**errors** | **Object** |  | [optional] 
 **pageTimings** | [**PageTimings**](PageTimings.md) |  | 
-**comment** | **String** |  | [optional] 
+**comment** | **Object** |  | [optional] 
 
 

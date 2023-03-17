@@ -12,9 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import HarEntry from './HarEntry';
 import HarLogCreator from './HarLogCreator';
-import Page from './Page';
 
 /**
  * The HarLog model module.
@@ -25,10 +23,10 @@ class HarLog {
     /**
      * Constructs a new <code>HarLog</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarLog
-     * @param version {String} 
+     * @param version {Object} 
      * @param creator {module:BrowserUpMitmProxyClient/model/HarLogCreator} 
-     * @param pages {Array.<module:BrowserUpMitmProxyClient/model/Page>} 
-     * @param entries {Array.<module:BrowserUpMitmProxyClient/model/HarEntry>} 
+     * @param pages {Object} 
+     * @param entries {Object} 
      */
     constructor(version, creator, pages, entries) { 
         
@@ -59,7 +57,7 @@ class HarLog {
             obj = obj || new HarLog();
 
             if (data.hasOwnProperty('version')) {
-                obj['version'] = ApiClient.convertToType(data['version'], 'String');
+                obj['version'] = ApiClient.convertToType(data['version'], Object);
             }
             if (data.hasOwnProperty('creator')) {
                 obj['creator'] = HarLogCreator.constructFromObject(data['creator']);
@@ -68,13 +66,13 @@ class HarLog {
                 obj['browser'] = HarLogCreator.constructFromObject(data['browser']);
             }
             if (data.hasOwnProperty('pages')) {
-                obj['pages'] = ApiClient.convertToType(data['pages'], [Page]);
+                obj['pages'] = ApiClient.convertToType(data['pages'], Object);
             }
             if (data.hasOwnProperty('entries')) {
-                obj['entries'] = ApiClient.convertToType(data['entries'], [HarEntry]);
+                obj['entries'] = ApiClient.convertToType(data['entries'], Object);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
+                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
             }
         }
         return obj;
@@ -92,10 +90,6 @@ class HarLog {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // ensure the json data is a string
-        if (data['version'] && !(typeof data['version'] === 'string' || data['version'] instanceof String)) {
-            throw new Error("Expected the field `version` to be a primitive type in the JSON string but got " + data['version']);
-        }
         // validate the optional field `creator`
         if (data['creator']) { // data not null
           HarLogCreator.validateJSON(data['creator']);
@@ -103,30 +97,6 @@ class HarLog {
         // validate the optional field `browser`
         if (data['browser']) { // data not null
           HarLogCreator.validateJSON(data['browser']);
-        }
-        if (data['pages']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['pages'])) {
-                throw new Error("Expected the field `pages` to be an array in the JSON data but got " + data['pages']);
-            }
-            // validate the optional field `pages` (array)
-            for (const item of data['pages']) {
-                Page.validateJSON(item);
-            };
-        }
-        if (data['entries']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['entries'])) {
-                throw new Error("Expected the field `entries` to be an array in the JSON data but got " + data['entries']);
-            }
-            // validate the optional field `entries` (array)
-            for (const item of data['entries']) {
-                HarEntry.validateJSON(item);
-            };
-        }
-        // ensure the json data is a string
-        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
-            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -138,7 +108,7 @@ class HarLog {
 HarLog.RequiredProperties = ["version", "creator", "pages", "entries"];
 
 /**
- * @member {String} version
+ * @member {Object} version
  */
 HarLog.prototype['version'] = undefined;
 
@@ -153,17 +123,17 @@ HarLog.prototype['creator'] = undefined;
 HarLog.prototype['browser'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/Page>} pages
+ * @member {Object} pages
  */
 HarLog.prototype['pages'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntry>} entries
+ * @member {Object} entries
  */
 HarLog.prototype['entries'] = undefined;
 
 /**
- * @member {String} comment
+ * @member {Object} comment
  */
 HarLog.prototype['comment'] = undefined;
 

@@ -68,25 +68,38 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'on_content_load' => :'Integer',
-        :'on_load' => :'Integer',
-        :'_href' => :'String',
-        :'_dns' => :'Integer',
-        :'_ssl' => :'Integer',
-        :'_ttfb' => :'Integer',
-        :'_cumulative_layout_shift' => :'Integer',
-        :'_largest_contentful_paint' => :'Integer',
-        :'_first_paint' => :'Integer',
-        :'_first_input_delay' => :'Integer',
-        :'_dom_interactive' => :'Integer',
-        :'_first_contentful_paint' => :'Integer',
-        :'comment' => :'String'
+        :'on_content_load' => :'Object',
+        :'on_load' => :'Object',
+        :'_href' => :'Object',
+        :'_dns' => :'Object',
+        :'_ssl' => :'Object',
+        :'_ttfb' => :'Object',
+        :'_cumulative_layout_shift' => :'Object',
+        :'_largest_contentful_paint' => :'Object',
+        :'_first_paint' => :'Object',
+        :'_first_input_delay' => :'Object',
+        :'_dom_interactive' => :'Object',
+        :'_first_contentful_paint' => :'Object',
+        :'comment' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'on_content_load',
+        :'on_load',
+        :'_href',
+        :'_dns',
+        :'_ssl',
+        :'_ttfb',
+        :'_cumulative_layout_shift',
+        :'_largest_contentful_paint',
+        :'_first_paint',
+        :'_first_input_delay',
+        :'_dom_interactive',
+        :'_first_contentful_paint',
+        :'comment'
       ])
     end
 
@@ -107,74 +120,50 @@ module BrowserupMitmProxy
 
       if attributes.key?(:'on_content_load')
         self.on_content_load = attributes[:'on_content_load']
-      else
-        self.on_content_load = -1
       end
 
       if attributes.key?(:'on_load')
         self.on_load = attributes[:'on_load']
-      else
-        self.on_load = -1
       end
 
       if attributes.key?(:'_href')
         self._href = attributes[:'_href']
-      else
-        self._href = ''
       end
 
       if attributes.key?(:'_dns')
         self._dns = attributes[:'_dns']
-      else
-        self._dns = -1
       end
 
       if attributes.key?(:'_ssl')
         self._ssl = attributes[:'_ssl']
-      else
-        self._ssl = -1
       end
 
       if attributes.key?(:'_ttfb')
         self._ttfb = attributes[:'_ttfb']
-      else
-        self._ttfb = -1
       end
 
       if attributes.key?(:'_cumulative_layout_shift')
         self._cumulative_layout_shift = attributes[:'_cumulative_layout_shift']
-      else
-        self._cumulative_layout_shift = -1
       end
 
       if attributes.key?(:'_largest_contentful_paint')
         self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
-      else
-        self._largest_contentful_paint = -1
       end
 
       if attributes.key?(:'_first_paint')
         self._first_paint = attributes[:'_first_paint']
-      else
-        self._first_paint = -1
       end
 
       if attributes.key?(:'_first_input_delay')
         self._first_input_delay = attributes[:'_first_input_delay']
-      else
-        self._first_input_delay = -1
       end
 
       if attributes.key?(:'_dom_interactive')
         self._dom_interactive = attributes[:'_dom_interactive']
-      else
-        self._dom_interactive = -1
       end
 
       if attributes.key?(:'_first_contentful_paint')
         self._first_contentful_paint = attributes[:'_first_contentful_paint']
-      else
-        self._first_contentful_paint = -1
       end
 
       if attributes.key?(:'comment')
@@ -186,16 +175,8 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @on_content_load.nil?
-        invalid_properties.push('invalid value for "on_content_load", on_content_load cannot be nil.')
-      end
-
       if @on_content_load < -1
         invalid_properties.push('invalid value for "on_content_load", must be greater than or equal to -1.')
-      end
-
-      if @on_load.nil?
-        invalid_properties.push('invalid value for "on_load", on_load cannot be nil.')
       end
 
       if @on_load < -1
@@ -244,9 +225,7 @@ module BrowserupMitmProxy
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @on_content_load.nil?
       return false if @on_content_load < -1
-      return false if @on_load.nil?
       return false if @on_load < -1
       return false if !@_dns.nil? && @_dns < -1
       return false if !@_ssl.nil? && @_ssl < -1
@@ -263,10 +242,6 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] on_content_load Value to be assigned
     def on_content_load=(on_content_load)
-      if on_content_load.nil?
-        fail ArgumentError, 'on_content_load cannot be nil'
-      end
-
       if on_content_load < -1
         fail ArgumentError, 'invalid value for "on_content_load", must be greater than or equal to -1.'
       end
@@ -277,10 +252,6 @@ module BrowserupMitmProxy
     # Custom attribute writer method with validation
     # @param [Object] on_load Value to be assigned
     def on_load=(on_load)
-      if on_load.nil?
-        fail ArgumentError, 'on_load cannot be nil'
-      end
-
       if on_load < -1
         fail ArgumentError, 'invalid value for "on_load", must be greater than or equal to -1.'
       end

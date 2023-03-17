@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,24 +50,24 @@ import com.browserup.proxy_client.JSON;
 public class WebSocketMessage {
   public static final String SERIALIZED_NAME_TYPE = "type";
   @SerializedName(SERIALIZED_NAME_TYPE)
-  private String type;
+  private Object type = null;
 
   public static final String SERIALIZED_NAME_OPCODE = "opcode";
   @SerializedName(SERIALIZED_NAME_OPCODE)
-  private BigDecimal opcode;
+  private Object opcode = null;
 
   public static final String SERIALIZED_NAME_DATA = "data";
   @SerializedName(SERIALIZED_NAME_DATA)
-  private String data;
+  private Object data = null;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
-  private BigDecimal time;
+  private Object time = null;
 
   public WebSocketMessage() {
   }
 
-  public WebSocketMessage type(String type) {
+  public WebSocketMessage type(Object type) {
     
     this.type = type;
     return this;
@@ -78,19 +77,19 @@ public class WebSocketMessage {
    * Get type
    * @return type
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getType() {
+  public Object getType() {
     return type;
   }
 
 
-  public void setType(String type) {
+  public void setType(Object type) {
     this.type = type;
   }
 
 
-  public WebSocketMessage opcode(BigDecimal opcode) {
+  public WebSocketMessage opcode(Object opcode) {
     
     this.opcode = opcode;
     return this;
@@ -100,19 +99,19 @@ public class WebSocketMessage {
    * Get opcode
    * @return opcode
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public BigDecimal getOpcode() {
+  public Object getOpcode() {
     return opcode;
   }
 
 
-  public void setOpcode(BigDecimal opcode) {
+  public void setOpcode(Object opcode) {
     this.opcode = opcode;
   }
 
 
-  public WebSocketMessage data(String data) {
+  public WebSocketMessage data(Object data) {
     
     this.data = data;
     return this;
@@ -122,19 +121,19 @@ public class WebSocketMessage {
    * Get data
    * @return data
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getData() {
+  public Object getData() {
     return data;
   }
 
 
-  public void setData(String data) {
+  public void setData(Object data) {
     this.data = data;
   }
 
 
-  public WebSocketMessage time(BigDecimal time) {
+  public WebSocketMessage time(Object time) {
     
     this.time = time;
     return this;
@@ -144,14 +143,14 @@ public class WebSocketMessage {
    * Get time
    * @return time
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public BigDecimal getTime() {
+  public Object getTime() {
     return time;
   }
 
 
-  public void setTime(BigDecimal time) {
+  public void setTime(Object time) {
     this.time = time;
   }
 
@@ -246,12 +245,6 @@ public class WebSocketMessage {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
-      }
-      if (!jsonObj.get("type").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `type` to be a primitive type in the JSON string but got `%s`", jsonObj.get("type").toString()));
-      }
-      if (!jsonObj.get("data").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `data` to be a primitive type in the JSON string but got `%s`", jsonObj.get("data").toString()));
       }
   }
 

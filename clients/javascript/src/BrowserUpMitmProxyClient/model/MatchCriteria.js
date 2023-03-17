@@ -12,7 +12,6 @@
  */
 
 import ApiClient from '../ApiClient';
-import MatchCriteriaRequestHeader from './MatchCriteriaRequestHeader';
 
 /**
  * The MatchCriteria model module.
@@ -50,46 +49,46 @@ class MatchCriteria {
             obj = obj || new MatchCriteria();
 
             if (data.hasOwnProperty('url')) {
-                obj['url'] = ApiClient.convertToType(data['url'], 'String');
+                obj['url'] = ApiClient.convertToType(data['url'], Object);
             }
             if (data.hasOwnProperty('page')) {
-                obj['page'] = ApiClient.convertToType(data['page'], 'String');
+                obj['page'] = ApiClient.convertToType(data['page'], Object);
             }
             if (data.hasOwnProperty('status')) {
-                obj['status'] = ApiClient.convertToType(data['status'], 'String');
+                obj['status'] = ApiClient.convertToType(data['status'], Object);
             }
             if (data.hasOwnProperty('content')) {
-                obj['content'] = ApiClient.convertToType(data['content'], 'String');
+                obj['content'] = ApiClient.convertToType(data['content'], Object);
             }
             if (data.hasOwnProperty('content_type')) {
-                obj['content_type'] = ApiClient.convertToType(data['content_type'], 'String');
+                obj['content_type'] = ApiClient.convertToType(data['content_type'], Object);
             }
             if (data.hasOwnProperty('websocket_message')) {
-                obj['websocket_message'] = ApiClient.convertToType(data['websocket_message'], 'String');
+                obj['websocket_message'] = ApiClient.convertToType(data['websocket_message'], Object);
             }
             if (data.hasOwnProperty('request_header')) {
-                obj['request_header'] = MatchCriteriaRequestHeader.constructFromObject(data['request_header']);
+                obj['request_header'] = ApiClient.convertToType(data['request_header'], Object);
             }
             if (data.hasOwnProperty('request_cookie')) {
-                obj['request_cookie'] = MatchCriteriaRequestHeader.constructFromObject(data['request_cookie']);
+                obj['request_cookie'] = ApiClient.convertToType(data['request_cookie'], Object);
             }
             if (data.hasOwnProperty('response_header')) {
-                obj['response_header'] = MatchCriteriaRequestHeader.constructFromObject(data['response_header']);
+                obj['response_header'] = ApiClient.convertToType(data['response_header'], Object);
             }
             if (data.hasOwnProperty('response_cookie')) {
-                obj['response_cookie'] = MatchCriteriaRequestHeader.constructFromObject(data['response_cookie']);
+                obj['response_cookie'] = ApiClient.convertToType(data['response_cookie'], Object);
             }
             if (data.hasOwnProperty('json_valid')) {
-                obj['json_valid'] = ApiClient.convertToType(data['json_valid'], 'Boolean');
+                obj['json_valid'] = ApiClient.convertToType(data['json_valid'], Object);
             }
             if (data.hasOwnProperty('json_path')) {
-                obj['json_path'] = ApiClient.convertToType(data['json_path'], 'String');
+                obj['json_path'] = ApiClient.convertToType(data['json_path'], Object);
             }
             if (data.hasOwnProperty('json_schema')) {
-                obj['json_schema'] = ApiClient.convertToType(data['json_schema'], 'String');
+                obj['json_schema'] = ApiClient.convertToType(data['json_schema'], Object);
             }
             if (data.hasOwnProperty('error_if_no_traffic')) {
-                obj['error_if_no_traffic'] = ApiClient.convertToType(data['error_if_no_traffic'], 'Boolean');
+                obj['error_if_no_traffic'] = ApiClient.convertToType(data['error_if_no_traffic'], Object);
             }
         }
         return obj;
@@ -101,54 +100,6 @@ class MatchCriteria {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>MatchCriteria</code>.
      */
     static validateJSON(data) {
-        // ensure the json data is a string
-        if (data['url'] && !(typeof data['url'] === 'string' || data['url'] instanceof String)) {
-            throw new Error("Expected the field `url` to be a primitive type in the JSON string but got " + data['url']);
-        }
-        // ensure the json data is a string
-        if (data['page'] && !(typeof data['page'] === 'string' || data['page'] instanceof String)) {
-            throw new Error("Expected the field `page` to be a primitive type in the JSON string but got " + data['page']);
-        }
-        // ensure the json data is a string
-        if (data['status'] && !(typeof data['status'] === 'string' || data['status'] instanceof String)) {
-            throw new Error("Expected the field `status` to be a primitive type in the JSON string but got " + data['status']);
-        }
-        // ensure the json data is a string
-        if (data['content'] && !(typeof data['content'] === 'string' || data['content'] instanceof String)) {
-            throw new Error("Expected the field `content` to be a primitive type in the JSON string but got " + data['content']);
-        }
-        // ensure the json data is a string
-        if (data['content_type'] && !(typeof data['content_type'] === 'string' || data['content_type'] instanceof String)) {
-            throw new Error("Expected the field `content_type` to be a primitive type in the JSON string but got " + data['content_type']);
-        }
-        // ensure the json data is a string
-        if (data['websocket_message'] && !(typeof data['websocket_message'] === 'string' || data['websocket_message'] instanceof String)) {
-            throw new Error("Expected the field `websocket_message` to be a primitive type in the JSON string but got " + data['websocket_message']);
-        }
-        // validate the optional field `request_header`
-        if (data['request_header']) { // data not null
-          MatchCriteriaRequestHeader.validateJSON(data['request_header']);
-        }
-        // validate the optional field `request_cookie`
-        if (data['request_cookie']) { // data not null
-          MatchCriteriaRequestHeader.validateJSON(data['request_cookie']);
-        }
-        // validate the optional field `response_header`
-        if (data['response_header']) { // data not null
-          MatchCriteriaRequestHeader.validateJSON(data['response_header']);
-        }
-        // validate the optional field `response_cookie`
-        if (data['response_cookie']) { // data not null
-          MatchCriteriaRequestHeader.validateJSON(data['response_cookie']);
-        }
-        // ensure the json data is a string
-        if (data['json_path'] && !(typeof data['json_path'] === 'string' || data['json_path'] instanceof String)) {
-            throw new Error("Expected the field `json_path` to be a primitive type in the JSON string but got " + data['json_path']);
-        }
-        // ensure the json data is a string
-        if (data['json_schema'] && !(typeof data['json_schema'] === 'string' || data['json_schema'] instanceof String)) {
-            throw new Error("Expected the field `json_schema` to be a primitive type in the JSON string but got " + data['json_schema']);
-        }
 
         return true;
     }
@@ -160,84 +111,83 @@ class MatchCriteria {
 
 /**
  * Request URL regexp to match
- * @member {String} url
+ * @member {Object} url
  */
 MatchCriteria.prototype['url'] = undefined;
 
 /**
  * current|all
- * @member {String} page
+ * @member {Object} page
  */
 MatchCriteria.prototype['page'] = undefined;
 
 /**
  * HTTP Status code to match.
- * @member {String} status
+ * @member {Object} status
  */
 MatchCriteria.prototype['status'] = undefined;
 
 /**
  * Body content regexp content to match
- * @member {String} content
+ * @member {Object} content
  */
 MatchCriteria.prototype['content'] = undefined;
 
 /**
  * Content type
- * @member {String} content_type
+ * @member {Object} content_type
  */
 MatchCriteria.prototype['content_type'] = undefined;
 
 /**
  * Websocket message text to match
- * @member {String} websocket_message
+ * @member {Object} websocket_message
  */
 MatchCriteria.prototype['websocket_message'] = undefined;
 
 /**
- * @member {module:BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader} request_header
+ * @member {Object} request_header
  */
 MatchCriteria.prototype['request_header'] = undefined;
 
 /**
- * @member {module:BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader} request_cookie
+ * @member {Object} request_cookie
  */
 MatchCriteria.prototype['request_cookie'] = undefined;
 
 /**
- * @member {module:BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader} response_header
+ * @member {Object} response_header
  */
 MatchCriteria.prototype['response_header'] = undefined;
 
 /**
- * @member {module:BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader} response_cookie
+ * @member {Object} response_cookie
  */
 MatchCriteria.prototype['response_cookie'] = undefined;
 
 /**
  * Is valid JSON
- * @member {Boolean} json_valid
+ * @member {Object} json_valid
  */
 MatchCriteria.prototype['json_valid'] = undefined;
 
 /**
  * Has JSON path
- * @member {String} json_path
+ * @member {Object} json_path
  */
 MatchCriteria.prototype['json_path'] = undefined;
 
 /**
  * Validates against passed JSON schema
- * @member {String} json_schema
+ * @member {Object} json_schema
  */
 MatchCriteria.prototype['json_schema'] = undefined;
 
 /**
  * If the proxy has NO traffic at all, return error
- * @member {Boolean} error_if_no_traffic
- * @default true
+ * @member {Object} error_if_no_traffic
  */
-MatchCriteria.prototype['error_if_no_traffic'] = true;
+MatchCriteria.prototype['error_if_no_traffic'] = undefined;
 
 
 

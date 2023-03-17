@@ -21,7 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,56 +51,56 @@ import com.browserup.proxy_client.JSON;
 public class PageTiming {
   public static final String SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT = "_cumulativeLayoutShift";
   @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
-  private BigDecimal cumulativeLayoutShift;
-
-  public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
-  @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
-  private BigDecimal domInteractive;
+  private Object cumulativeLayoutShift = null;
 
   public static final String SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT = "_firstContentfulPaint";
   @SerializedName(SERIALIZED_NAME_FIRST_CONTENTFUL_PAINT)
-  private BigDecimal firstContentfulPaint;
-
-  public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
-  @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
-  private BigDecimal firstPaint;
-
-  public static final String SERIALIZED_NAME_SSL = "_ssl";
-  @SerializedName(SERIALIZED_NAME_SSL)
-  private BigDecimal ssl;
+  private Object firstContentfulPaint = null;
 
   public static final String SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT = "_largestContentfulPaint";
   @SerializedName(SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT)
-  private BigDecimal largestContentfulPaint;
+  private Object largestContentfulPaint = null;
 
   public static final String SERIALIZED_NAME_HREF = "_href";
   @SerializedName(SERIALIZED_NAME_HREF)
-  private String href;
-
-  public static final String SERIALIZED_NAME_DNS = "_dns";
-  @SerializedName(SERIALIZED_NAME_DNS)
-  private BigDecimal dns;
-
-  public static final String SERIALIZED_NAME_TTFB = "_ttfb";
-  @SerializedName(SERIALIZED_NAME_TTFB)
-  private BigDecimal ttfb;
-
-  public static final String SERIALIZED_NAME_ON_CONTENT_LOAD = "onContentLoad";
-  @SerializedName(SERIALIZED_NAME_ON_CONTENT_LOAD)
-  private BigDecimal onContentLoad;
-
-  public static final String SERIALIZED_NAME_FIRST_INPUT_DELAY = "_firstInputDelay";
-  @SerializedName(SERIALIZED_NAME_FIRST_INPUT_DELAY)
-  private BigDecimal firstInputDelay;
+  private Object href = null;
 
   public static final String SERIALIZED_NAME_ON_LOAD = "onLoad";
   @SerializedName(SERIALIZED_NAME_ON_LOAD)
-  private BigDecimal onLoad;
+  private Object onLoad = null;
+
+  public static final String SERIALIZED_NAME_DNS = "_dns";
+  @SerializedName(SERIALIZED_NAME_DNS)
+  private Object dns = null;
+
+  public static final String SERIALIZED_NAME_TTFB = "_ttfb";
+  @SerializedName(SERIALIZED_NAME_TTFB)
+  private Object ttfb = null;
+
+  public static final String SERIALIZED_NAME_SSL = "_ssl";
+  @SerializedName(SERIALIZED_NAME_SSL)
+  private Object ssl = null;
+
+  public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
+  @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
+  private Object firstPaint = null;
+
+  public static final String SERIALIZED_NAME_ON_CONTENT_LOAD = "onContentLoad";
+  @SerializedName(SERIALIZED_NAME_ON_CONTENT_LOAD)
+  private Object onContentLoad = null;
+
+  public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
+  @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
+  private Object domInteractive = null;
+
+  public static final String SERIALIZED_NAME_FIRST_INPUT_DELAY = "_firstInputDelay";
+  @SerializedName(SERIALIZED_NAME_FIRST_INPUT_DELAY)
+  private Object firstInputDelay = null;
 
   public PageTiming() {
   }
 
-  public PageTiming cumulativeLayoutShift(BigDecimal cumulativeLayoutShift) {
+  public PageTiming cumulativeLayoutShift(Object cumulativeLayoutShift) {
     
     this.cumulativeLayoutShift = cumulativeLayoutShift;
     return this;
@@ -112,39 +112,17 @@ public class PageTiming {
   **/
   @javax.annotation.Nullable
 
-  public BigDecimal getCumulativeLayoutShift() {
+  public Object getCumulativeLayoutShift() {
     return cumulativeLayoutShift;
   }
 
 
-  public void setCumulativeLayoutShift(BigDecimal cumulativeLayoutShift) {
+  public void setCumulativeLayoutShift(Object cumulativeLayoutShift) {
     this.cumulativeLayoutShift = cumulativeLayoutShift;
   }
 
 
-  public PageTiming domInteractive(BigDecimal domInteractive) {
-    
-    this.domInteractive = domInteractive;
-    return this;
-  }
-
-   /**
-   * domInteractive from the browser
-   * @return domInteractive
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getDomInteractive() {
-    return domInteractive;
-  }
-
-
-  public void setDomInteractive(BigDecimal domInteractive) {
-    this.domInteractive = domInteractive;
-  }
-
-
-  public PageTiming firstContentfulPaint(BigDecimal firstContentfulPaint) {
+  public PageTiming firstContentfulPaint(Object firstContentfulPaint) {
     
     this.firstContentfulPaint = firstContentfulPaint;
     return this;
@@ -156,61 +134,17 @@ public class PageTiming {
   **/
   @javax.annotation.Nullable
 
-  public BigDecimal getFirstContentfulPaint() {
+  public Object getFirstContentfulPaint() {
     return firstContentfulPaint;
   }
 
 
-  public void setFirstContentfulPaint(BigDecimal firstContentfulPaint) {
+  public void setFirstContentfulPaint(Object firstContentfulPaint) {
     this.firstContentfulPaint = firstContentfulPaint;
   }
 
 
-  public PageTiming firstPaint(BigDecimal firstPaint) {
-    
-    this.firstPaint = firstPaint;
-    return this;
-  }
-
-   /**
-   * firstPaint from the browser
-   * @return firstPaint
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getFirstPaint() {
-    return firstPaint;
-  }
-
-
-  public void setFirstPaint(BigDecimal firstPaint) {
-    this.firstPaint = firstPaint;
-  }
-
-
-  public PageTiming ssl(BigDecimal ssl) {
-    
-    this.ssl = ssl;
-    return this;
-  }
-
-   /**
-   * Ssl connect time from the browser
-   * @return ssl
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getSsl() {
-    return ssl;
-  }
-
-
-  public void setSsl(BigDecimal ssl) {
-    this.ssl = ssl;
-  }
-
-
-  public PageTiming largestContentfulPaint(BigDecimal largestContentfulPaint) {
+  public PageTiming largestContentfulPaint(Object largestContentfulPaint) {
     
     this.largestContentfulPaint = largestContentfulPaint;
     return this;
@@ -222,17 +156,17 @@ public class PageTiming {
   **/
   @javax.annotation.Nullable
 
-  public BigDecimal getLargestContentfulPaint() {
+  public Object getLargestContentfulPaint() {
     return largestContentfulPaint;
   }
 
 
-  public void setLargestContentfulPaint(BigDecimal largestContentfulPaint) {
+  public void setLargestContentfulPaint(Object largestContentfulPaint) {
     this.largestContentfulPaint = largestContentfulPaint;
   }
 
 
-  public PageTiming href(String href) {
+  public PageTiming href(Object href) {
     
     this.href = href;
     return this;
@@ -244,105 +178,17 @@ public class PageTiming {
   **/
   @javax.annotation.Nullable
 
-  public String getHref() {
+  public Object getHref() {
     return href;
   }
 
 
-  public void setHref(String href) {
+  public void setHref(Object href) {
     this.href = href;
   }
 
 
-  public PageTiming dns(BigDecimal dns) {
-    
-    this.dns = dns;
-    return this;
-  }
-
-   /**
-   * dns lookup time from the browser
-   * @return dns
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getDns() {
-    return dns;
-  }
-
-
-  public void setDns(BigDecimal dns) {
-    this.dns = dns;
-  }
-
-
-  public PageTiming ttfb(BigDecimal ttfb) {
-    
-    this.ttfb = ttfb;
-    return this;
-  }
-
-   /**
-   * Time to first byte of the page&#39;s first request per the browser
-   * @return ttfb
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getTtfb() {
-    return ttfb;
-  }
-
-
-  public void setTtfb(BigDecimal ttfb) {
-    this.ttfb = ttfb;
-  }
-
-
-  public PageTiming onContentLoad(BigDecimal onContentLoad) {
-    
-    this.onContentLoad = onContentLoad;
-    return this;
-  }
-
-   /**
-   * onContentLoad per the browser
-   * @return onContentLoad
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getOnContentLoad() {
-    return onContentLoad;
-  }
-
-
-  public void setOnContentLoad(BigDecimal onContentLoad) {
-    this.onContentLoad = onContentLoad;
-  }
-
-
-  public PageTiming firstInputDelay(BigDecimal firstInputDelay) {
-    
-    this.firstInputDelay = firstInputDelay;
-    return this;
-  }
-
-   /**
-   * firstInputDelay from the browser
-   * @return firstInputDelay
-  **/
-  @javax.annotation.Nullable
-
-  public BigDecimal getFirstInputDelay() {
-    return firstInputDelay;
-  }
-
-
-  public void setFirstInputDelay(BigDecimal firstInputDelay) {
-    this.firstInputDelay = firstInputDelay;
-  }
-
-
-  public PageTiming onLoad(BigDecimal onLoad) {
+  public PageTiming onLoad(Object onLoad) {
     
     this.onLoad = onLoad;
     return this;
@@ -354,13 +200,167 @@ public class PageTiming {
   **/
   @javax.annotation.Nullable
 
-  public BigDecimal getOnLoad() {
+  public Object getOnLoad() {
     return onLoad;
   }
 
 
-  public void setOnLoad(BigDecimal onLoad) {
+  public void setOnLoad(Object onLoad) {
     this.onLoad = onLoad;
+  }
+
+
+  public PageTiming dns(Object dns) {
+    
+    this.dns = dns;
+    return this;
+  }
+
+   /**
+   * dns lookup time from the browser
+   * @return dns
+  **/
+  @javax.annotation.Nullable
+
+  public Object getDns() {
+    return dns;
+  }
+
+
+  public void setDns(Object dns) {
+    this.dns = dns;
+  }
+
+
+  public PageTiming ttfb(Object ttfb) {
+    
+    this.ttfb = ttfb;
+    return this;
+  }
+
+   /**
+   * Time to first byte of the page&#39;s first request per the browser
+   * @return ttfb
+  **/
+  @javax.annotation.Nullable
+
+  public Object getTtfb() {
+    return ttfb;
+  }
+
+
+  public void setTtfb(Object ttfb) {
+    this.ttfb = ttfb;
+  }
+
+
+  public PageTiming ssl(Object ssl) {
+    
+    this.ssl = ssl;
+    return this;
+  }
+
+   /**
+   * Ssl connect time from the browser
+   * @return ssl
+  **/
+  @javax.annotation.Nullable
+
+  public Object getSsl() {
+    return ssl;
+  }
+
+
+  public void setSsl(Object ssl) {
+    this.ssl = ssl;
+  }
+
+
+  public PageTiming firstPaint(Object firstPaint) {
+    
+    this.firstPaint = firstPaint;
+    return this;
+  }
+
+   /**
+   * firstPaint from the browser
+   * @return firstPaint
+  **/
+  @javax.annotation.Nullable
+
+  public Object getFirstPaint() {
+    return firstPaint;
+  }
+
+
+  public void setFirstPaint(Object firstPaint) {
+    this.firstPaint = firstPaint;
+  }
+
+
+  public PageTiming onContentLoad(Object onContentLoad) {
+    
+    this.onContentLoad = onContentLoad;
+    return this;
+  }
+
+   /**
+   * onContentLoad per the browser
+   * @return onContentLoad
+  **/
+  @javax.annotation.Nullable
+
+  public Object getOnContentLoad() {
+    return onContentLoad;
+  }
+
+
+  public void setOnContentLoad(Object onContentLoad) {
+    this.onContentLoad = onContentLoad;
+  }
+
+
+  public PageTiming domInteractive(Object domInteractive) {
+    
+    this.domInteractive = domInteractive;
+    return this;
+  }
+
+   /**
+   * domInteractive from the browser
+   * @return domInteractive
+  **/
+  @javax.annotation.Nullable
+
+  public Object getDomInteractive() {
+    return domInteractive;
+  }
+
+
+  public void setDomInteractive(Object domInteractive) {
+    this.domInteractive = domInteractive;
+  }
+
+
+  public PageTiming firstInputDelay(Object firstInputDelay) {
+    
+    this.firstInputDelay = firstInputDelay;
+    return this;
+  }
+
+   /**
+   * firstInputDelay from the browser
+   * @return firstInputDelay
+  **/
+  @javax.annotation.Nullable
+
+  public Object getFirstInputDelay() {
+    return firstInputDelay;
+  }
+
+
+  public void setFirstInputDelay(Object firstInputDelay) {
+    this.firstInputDelay = firstInputDelay;
   }
 
 
@@ -375,22 +375,33 @@ public class PageTiming {
     }
     PageTiming pageTiming = (PageTiming) o;
     return Objects.equals(this.cumulativeLayoutShift, pageTiming.cumulativeLayoutShift) &&
-        Objects.equals(this.domInteractive, pageTiming.domInteractive) &&
         Objects.equals(this.firstContentfulPaint, pageTiming.firstContentfulPaint) &&
-        Objects.equals(this.firstPaint, pageTiming.firstPaint) &&
-        Objects.equals(this.ssl, pageTiming.ssl) &&
         Objects.equals(this.largestContentfulPaint, pageTiming.largestContentfulPaint) &&
         Objects.equals(this.href, pageTiming.href) &&
+        Objects.equals(this.onLoad, pageTiming.onLoad) &&
         Objects.equals(this.dns, pageTiming.dns) &&
         Objects.equals(this.ttfb, pageTiming.ttfb) &&
+        Objects.equals(this.ssl, pageTiming.ssl) &&
+        Objects.equals(this.firstPaint, pageTiming.firstPaint) &&
         Objects.equals(this.onContentLoad, pageTiming.onContentLoad) &&
-        Objects.equals(this.firstInputDelay, pageTiming.firstInputDelay) &&
-        Objects.equals(this.onLoad, pageTiming.onLoad);
+        Objects.equals(this.domInteractive, pageTiming.domInteractive) &&
+        Objects.equals(this.firstInputDelay, pageTiming.firstInputDelay);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(cumulativeLayoutShift, domInteractive, firstContentfulPaint, firstPaint, ssl, largestContentfulPaint, href, dns, ttfb, onContentLoad, firstInputDelay, onLoad);
+    return Objects.hash(cumulativeLayoutShift, firstContentfulPaint, largestContentfulPaint, href, onLoad, dns, ttfb, ssl, firstPaint, onContentLoad, domInteractive, firstInputDelay);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -398,17 +409,17 @@ public class PageTiming {
     StringBuilder sb = new StringBuilder();
     sb.append("class PageTiming {\n");
     sb.append("    cumulativeLayoutShift: ").append(toIndentedString(cumulativeLayoutShift)).append("\n");
-    sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
     sb.append("    firstContentfulPaint: ").append(toIndentedString(firstContentfulPaint)).append("\n");
-    sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
-    sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
     sb.append("    largestContentfulPaint: ").append(toIndentedString(largestContentfulPaint)).append("\n");
     sb.append("    href: ").append(toIndentedString(href)).append("\n");
+    sb.append("    onLoad: ").append(toIndentedString(onLoad)).append("\n");
     sb.append("    dns: ").append(toIndentedString(dns)).append("\n");
     sb.append("    ttfb: ").append(toIndentedString(ttfb)).append("\n");
+    sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
+    sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
     sb.append("    onContentLoad: ").append(toIndentedString(onContentLoad)).append("\n");
+    sb.append("    domInteractive: ").append(toIndentedString(domInteractive)).append("\n");
     sb.append("    firstInputDelay: ").append(toIndentedString(firstInputDelay)).append("\n");
-    sb.append("    onLoad: ").append(toIndentedString(onLoad)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -432,17 +443,17 @@ public class PageTiming {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
     openapiFields.add("_cumulativeLayoutShift");
-    openapiFields.add("_domInteractive");
     openapiFields.add("_firstContentfulPaint");
-    openapiFields.add("_firstPaint");
-    openapiFields.add("_ssl");
     openapiFields.add("_largestContentfulPaint");
     openapiFields.add("_href");
+    openapiFields.add("onLoad");
     openapiFields.add("_dns");
     openapiFields.add("_ttfb");
+    openapiFields.add("_ssl");
+    openapiFields.add("_firstPaint");
     openapiFields.add("onContentLoad");
+    openapiFields.add("_domInteractive");
     openapiFields.add("_firstInputDelay");
-    openapiFields.add("onLoad");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -467,9 +478,6 @@ public class PageTiming {
         if (!PageTiming.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `PageTiming` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
-      }
-      if ((jsonObj.get("_href") != null && !jsonObj.get("_href").isJsonNull()) && !jsonObj.get("_href").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `_href` to be a primitive type in the JSON string but got `%s`", jsonObj.get("_href").toString()));
       }
   }
 

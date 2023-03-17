@@ -256,7 +256,7 @@ module BrowserupMitmProxy
     end
 
     # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-    # @param title [String] The unique title for this har page/step.
+    # @param title [Object] The unique title for this har page/step.
     # @param [Hash] opts the optional parameters
     # @return [Har]
     def new_page(title, opts = {})
@@ -265,7 +265,7 @@ module BrowserupMitmProxy
     end
 
     # Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-    # @param title [String] The unique title for this har page/step.
+    # @param title [Object] The unique title for this har page/step.
     # @param [Hash] opts the optional parameters
     # @return [Array<(Har, Integer, Hash)>] Har data, response status code and response headers
     def new_page_with_http_info(title, opts = {})
@@ -377,7 +377,7 @@ module BrowserupMitmProxy
     end
 
     # Verify no matching items are present in the captured traffic
-    # @param name [String] The unique name for this verification operation
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
@@ -387,7 +387,7 @@ module BrowserupMitmProxy
     end
 
     # Verify no matching items are present in the captured traffic
-    # @param name [String] The unique name for this verification operation
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
@@ -454,7 +454,7 @@ module BrowserupMitmProxy
     end
 
     # Verify at least one matching item is present in the captured traffic
-    # @param name [String] The unique name for this verification operation
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
@@ -464,7 +464,7 @@ module BrowserupMitmProxy
     end
 
     # Verify at least one matching item is present in the captured traffic
-    # @param name [String] The unique name for this verification operation
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
@@ -531,8 +531,8 @@ module BrowserupMitmProxy
     end
 
     # Verify matching items in the captured traffic meet the size criteria
-    # @param size [Integer] The size used for comparison, in kilobytes
-    # @param name [String] The unique name for this verification operation
+    # @param size [Object] The size used for comparison, in kilobytes
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
@@ -542,8 +542,8 @@ module BrowserupMitmProxy
     end
 
     # Verify matching items in the captured traffic meet the size criteria
-    # @param size [Integer] The size used for comparison, in kilobytes
-    # @param name [String] The unique name for this verification operation
+    # @param size [Object] The size used for comparison, in kilobytes
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
@@ -618,8 +618,8 @@ module BrowserupMitmProxy
     end
 
     # Verify each traffic item matching the criteria meets is below SLA time
-    # @param time [Integer] The time used for comparison
-    # @param name [String] The unique name for this verification operation
+    # @param time [Object] The time used for comparison
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
@@ -629,8 +629,8 @@ module BrowserupMitmProxy
     end
 
     # Verify each traffic item matching the criteria meets is below SLA time
-    # @param time [Integer] The time used for comparison
-    # @param name [String] The unique name for this verification operation
+    # @param time [Object] The time used for comparison
+    # @param name [Object] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers

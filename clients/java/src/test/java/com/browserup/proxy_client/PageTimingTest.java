@@ -19,7 +19,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -47,35 +47,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'domInteractive'
-     */
-    @Test
-    public void domInteractiveTest() {
-        // TODO: test domInteractive
-    }
-
-    /**
      * Test the property 'firstContentfulPaint'
      */
     @Test
     public void firstContentfulPaintTest() {
         // TODO: test firstContentfulPaint
-    }
-
-    /**
-     * Test the property 'firstPaint'
-     */
-    @Test
-    public void firstPaintTest() {
-        // TODO: test firstPaint
-    }
-
-    /**
-     * Test the property 'ssl'
-     */
-    @Test
-    public void sslTest() {
-        // TODO: test ssl
     }
 
     /**
@@ -95,6 +71,14 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'onLoad'
+     */
+    @Test
+    public void onLoadTest() {
+        // TODO: test onLoad
+    }
+
+    /**
      * Test the property 'dns'
      */
     @Test
@@ -111,6 +95,22 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'firstPaint'
+     */
+    @Test
+    public void firstPaintTest() {
+        // TODO: test firstPaint
+    }
+
+    /**
      * Test the property 'onContentLoad'
      */
     @Test
@@ -119,19 +119,19 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'domInteractive'
+     */
+    @Test
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
+    }
+
+    /**
      * Test the property 'firstInputDelay'
      */
     @Test
     public void firstInputDelayTest() {
         // TODO: test firstInputDelay
-    }
-
-    /**
-     * Test the property 'onLoad'
-     */
-    @Test
-    public void onLoadTest() {
-        // TODO: test onLoad
     }
 
 }

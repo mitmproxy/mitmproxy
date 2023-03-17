@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,20 +51,20 @@ import com.browserup.proxy_client.JSON;
 public class Header {
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
+  private Object name = null;
 
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
-  private String value;
+  private Object value = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public Header() {
   }
 
-  public Header name(String name) {
+  public Header name(Object name) {
     
     this.name = name;
     return this;
@@ -73,19 +74,19 @@ public class Header {
    * Get name
    * @return name
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getName() {
+  public Object getName() {
     return name;
   }
 
 
-  public void setName(String name) {
+  public void setName(Object name) {
     this.name = name;
   }
 
 
-  public Header value(String value) {
+  public Header value(Object value) {
     
     this.value = value;
     return this;
@@ -95,19 +96,19 @@ public class Header {
    * Get value
    * @return value
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getValue() {
+  public Object getValue() {
     return value;
   }
 
 
-  public void setValue(String value) {
+  public void setValue(Object value) {
     this.value = value;
   }
 
 
-  public Header comment(String comment) {
+  public Header comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -119,12 +120,12 @@ public class Header {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -144,9 +145,20 @@ public class Header {
         Objects.equals(this.comment, header.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(name, value, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -214,15 +226,6 @@ public class Header {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
-      }
-      if (!jsonObj.get("name").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
-      }
-      if (!jsonObj.get("value").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `value` to be a primitive type in the JSON string but got `%s`", jsonObj.get("value").toString()));
-      }
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

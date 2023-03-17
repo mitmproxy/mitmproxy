@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,16 +51,16 @@ import com.browserup.proxy_client.JSON;
 public class NameValuePair {
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
+  private Object name = null;
 
   public static final String SERIALIZED_NAME_VALUE = "value";
   @SerializedName(SERIALIZED_NAME_VALUE)
-  private String value;
+  private Object value = null;
 
   public NameValuePair() {
   }
 
-  public NameValuePair name(String name) {
+  public NameValuePair name(Object name) {
     
     this.name = name;
     return this;
@@ -71,17 +72,17 @@ public class NameValuePair {
   **/
   @javax.annotation.Nullable
 
-  public String getName() {
+  public Object getName() {
     return name;
   }
 
 
-  public void setName(String name) {
+  public void setName(Object name) {
     this.name = name;
   }
 
 
-  public NameValuePair value(String value) {
+  public NameValuePair value(Object value) {
     
     this.value = value;
     return this;
@@ -93,12 +94,12 @@ public class NameValuePair {
   **/
   @javax.annotation.Nullable
 
-  public String getValue() {
+  public Object getValue() {
     return value;
   }
 
 
-  public void setValue(String value) {
+  public void setValue(Object value) {
     this.value = value;
   }
 
@@ -117,9 +118,20 @@ public class NameValuePair {
         Objects.equals(this.value, nameValuePair.value);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(name, value);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -176,12 +188,6 @@ public class NameValuePair {
         if (!NameValuePair.openapiFields.contains(entry.getKey())) {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `NameValuePair` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
-      }
-      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
-      }
-      if ((jsonObj.get("value") != null && !jsonObj.get("value").isJsonNull()) && !jsonObj.get("value").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `value` to be a primitive type in the JSON string but got `%s`", jsonObj.get("value").toString()));
       }
   }
 

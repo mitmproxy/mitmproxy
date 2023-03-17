@@ -15,21 +15,21 @@ require 'time'
 
 module BrowserupMitmProxy
   class VerifyResult
-    # Result True / False
-    attr_accessor :result
+    # Type
+    attr_accessor :type
 
     # Name
     attr_accessor :name
 
-    # Type
-    attr_accessor :type
+    # Result True / False
+    attr_accessor :result
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'result' => :'result',
+        :'type' => :'type',
         :'name' => :'name',
-        :'type' => :'type'
+        :'result' => :'result'
       }
     end
 
@@ -41,15 +41,18 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'result' => :'Boolean',
-        :'name' => :'String',
-        :'type' => :'String'
+        :'type' => :'Object',
+        :'name' => :'Object',
+        :'result' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'type',
+        :'name',
+        :'result'
       ])
     end
 
@@ -68,16 +71,16 @@ module BrowserupMitmProxy
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'result')
-        self.result = attributes[:'result']
+      if attributes.key?(:'type')
+        self.type = attributes[:'type']
       end
 
       if attributes.key?(:'name')
         self.name = attributes[:'name']
       end
 
-      if attributes.key?(:'type')
-        self.type = attributes[:'type']
+      if attributes.key?(:'result')
+        self.result = attributes[:'result']
       end
     end
 
@@ -99,9 +102,9 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          result == o.result &&
+          type == o.type &&
           name == o.name &&
-          type == o.type
+          result == o.result
     end
 
     # @see the `==` method
@@ -113,7 +116,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [result, name, type].hash
+      [type, name, result].hash
     end
 
     # Builds the object from hash

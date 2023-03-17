@@ -15,19 +15,14 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
-import com.browserup.proxy_client.HarEntryRequestCookiesInner;
 import com.browserup.proxy_client.HarEntryRequestPostData;
-import com.browserup.proxy_client.HarEntryRequestQueryStringInner;
-import com.browserup.proxy_client.Header;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -57,27 +52,27 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryRequest {
   public static final String SERIALIZED_NAME_METHOD = "method";
   @SerializedName(SERIALIZED_NAME_METHOD)
-  private String method;
+  private Object method = null;
 
   public static final String SERIALIZED_NAME_URL = "url";
   @SerializedName(SERIALIZED_NAME_URL)
-  private URI url;
+  private Object url = null;
 
   public static final String SERIALIZED_NAME_HTTP_VERSION = "httpVersion";
   @SerializedName(SERIALIZED_NAME_HTTP_VERSION)
-  private String httpVersion;
+  private Object httpVersion = null;
 
   public static final String SERIALIZED_NAME_COOKIES = "cookies";
   @SerializedName(SERIALIZED_NAME_COOKIES)
-  private List<HarEntryRequestCookiesInner> cookies = new ArrayList<>();
+  private Object cookies = null;
 
   public static final String SERIALIZED_NAME_HEADERS = "headers";
   @SerializedName(SERIALIZED_NAME_HEADERS)
-  private List<Header> headers = new ArrayList<>();
+  private Object headers = null;
 
   public static final String SERIALIZED_NAME_QUERY_STRING = "queryString";
   @SerializedName(SERIALIZED_NAME_QUERY_STRING)
-  private List<HarEntryRequestQueryStringInner> queryString = new ArrayList<>();
+  private Object queryString = null;
 
   public static final String SERIALIZED_NAME_POST_DATA = "postData";
   @SerializedName(SERIALIZED_NAME_POST_DATA)
@@ -85,20 +80,20 @@ public class HarEntryRequest {
 
   public static final String SERIALIZED_NAME_HEADERS_SIZE = "headersSize";
   @SerializedName(SERIALIZED_NAME_HEADERS_SIZE)
-  private Integer headersSize;
+  private Object headersSize = null;
 
   public static final String SERIALIZED_NAME_BODY_SIZE = "bodySize";
   @SerializedName(SERIALIZED_NAME_BODY_SIZE)
-  private Integer bodySize;
+  private Object bodySize = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public HarEntryRequest() {
   }
 
-  public HarEntryRequest method(String method) {
+  public HarEntryRequest method(Object method) {
     
     this.method = method;
     return this;
@@ -108,19 +103,19 @@ public class HarEntryRequest {
    * Get method
    * @return method
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getMethod() {
+  public Object getMethod() {
     return method;
   }
 
 
-  public void setMethod(String method) {
+  public void setMethod(Object method) {
     this.method = method;
   }
 
 
-  public HarEntryRequest url(URI url) {
+  public HarEntryRequest url(Object url) {
     
     this.url = url;
     return this;
@@ -130,19 +125,19 @@ public class HarEntryRequest {
    * Get url
    * @return url
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public URI getUrl() {
+  public Object getUrl() {
     return url;
   }
 
 
-  public void setUrl(URI url) {
+  public void setUrl(Object url) {
     this.url = url;
   }
 
 
-  public HarEntryRequest httpVersion(String httpVersion) {
+  public HarEntryRequest httpVersion(Object httpVersion) {
     
     this.httpVersion = httpVersion;
     return this;
@@ -152,26 +147,21 @@ public class HarEntryRequest {
    * Get httpVersion
    * @return httpVersion
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getHttpVersion() {
+  public Object getHttpVersion() {
     return httpVersion;
   }
 
 
-  public void setHttpVersion(String httpVersion) {
+  public void setHttpVersion(Object httpVersion) {
     this.httpVersion = httpVersion;
   }
 
 
-  public HarEntryRequest cookies(List<HarEntryRequestCookiesInner> cookies) {
+  public HarEntryRequest cookies(Object cookies) {
     
     this.cookies = cookies;
-    return this;
-  }
-
-  public HarEntryRequest addCookiesItem(HarEntryRequestCookiesInner cookiesItem) {
-    this.cookies.add(cookiesItem);
     return this;
   }
 
@@ -179,26 +169,21 @@ public class HarEntryRequest {
    * Get cookies
    * @return cookies
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<HarEntryRequestCookiesInner> getCookies() {
+  public Object getCookies() {
     return cookies;
   }
 
 
-  public void setCookies(List<HarEntryRequestCookiesInner> cookies) {
+  public void setCookies(Object cookies) {
     this.cookies = cookies;
   }
 
 
-  public HarEntryRequest headers(List<Header> headers) {
+  public HarEntryRequest headers(Object headers) {
     
     this.headers = headers;
-    return this;
-  }
-
-  public HarEntryRequest addHeadersItem(Header headersItem) {
-    this.headers.add(headersItem);
     return this;
   }
 
@@ -206,26 +191,21 @@ public class HarEntryRequest {
    * Get headers
    * @return headers
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<Header> getHeaders() {
+  public Object getHeaders() {
     return headers;
   }
 
 
-  public void setHeaders(List<Header> headers) {
+  public void setHeaders(Object headers) {
     this.headers = headers;
   }
 
 
-  public HarEntryRequest queryString(List<HarEntryRequestQueryStringInner> queryString) {
+  public HarEntryRequest queryString(Object queryString) {
     
     this.queryString = queryString;
-    return this;
-  }
-
-  public HarEntryRequest addQueryStringItem(HarEntryRequestQueryStringInner queryStringItem) {
-    this.queryString.add(queryStringItem);
     return this;
   }
 
@@ -233,14 +213,14 @@ public class HarEntryRequest {
    * Get queryString
    * @return queryString
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public List<HarEntryRequestQueryStringInner> getQueryString() {
+  public Object getQueryString() {
     return queryString;
   }
 
 
-  public void setQueryString(List<HarEntryRequestQueryStringInner> queryString) {
+  public void setQueryString(Object queryString) {
     this.queryString = queryString;
   }
 
@@ -267,7 +247,7 @@ public class HarEntryRequest {
   }
 
 
-  public HarEntryRequest headersSize(Integer headersSize) {
+  public HarEntryRequest headersSize(Object headersSize) {
     
     this.headersSize = headersSize;
     return this;
@@ -277,19 +257,19 @@ public class HarEntryRequest {
    * Get headersSize
    * @return headersSize
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getHeadersSize() {
+  public Object getHeadersSize() {
     return headersSize;
   }
 
 
-  public void setHeadersSize(Integer headersSize) {
+  public void setHeadersSize(Object headersSize) {
     this.headersSize = headersSize;
   }
 
 
-  public HarEntryRequest bodySize(Integer bodySize) {
+  public HarEntryRequest bodySize(Object bodySize) {
     
     this.bodySize = bodySize;
     return this;
@@ -299,19 +279,19 @@ public class HarEntryRequest {
    * Get bodySize
    * @return bodySize
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getBodySize() {
+  public Object getBodySize() {
     return bodySize;
   }
 
 
-  public void setBodySize(Integer bodySize) {
+  public void setBodySize(Object bodySize) {
     this.bodySize = bodySize;
   }
 
 
-  public HarEntryRequest comment(String comment) {
+  public HarEntryRequest comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -323,12 +303,12 @@ public class HarEntryRequest {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -355,9 +335,20 @@ public class HarEntryRequest {
         Objects.equals(this.comment, harEntryRequest.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(method, url, httpVersion, cookies, headers, queryString, postData, headersSize, bodySize, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -446,51 +437,9 @@ public class HarEntryRequest {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
-      if (!jsonObj.get("method").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `method` to be a primitive type in the JSON string but got `%s`", jsonObj.get("method").toString()));
-      }
-      if (!jsonObj.get("url").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `url` to be a primitive type in the JSON string but got `%s`", jsonObj.get("url").toString()));
-      }
-      if (!jsonObj.get("httpVersion").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `httpVersion` to be a primitive type in the JSON string but got `%s`", jsonObj.get("httpVersion").toString()));
-      }
-      // ensure the json data is an array
-      if (!jsonObj.get("cookies").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `cookies` to be an array in the JSON string but got `%s`", jsonObj.get("cookies").toString()));
-      }
-
-      JsonArray jsonArraycookies = jsonObj.getAsJsonArray("cookies");
-      // validate the required field `cookies` (array)
-      for (int i = 0; i < jsonArraycookies.size(); i++) {
-        HarEntryRequestCookiesInner.validateJsonObject(jsonArraycookies.get(i).getAsJsonObject());
-      };
-      // ensure the json data is an array
-      if (!jsonObj.get("headers").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `headers` to be an array in the JSON string but got `%s`", jsonObj.get("headers").toString()));
-      }
-
-      JsonArray jsonArrayheaders = jsonObj.getAsJsonArray("headers");
-      // validate the required field `headers` (array)
-      for (int i = 0; i < jsonArrayheaders.size(); i++) {
-        Header.validateJsonObject(jsonArrayheaders.get(i).getAsJsonObject());
-      };
-      // ensure the json data is an array
-      if (!jsonObj.get("queryString").isJsonArray()) {
-        throw new IllegalArgumentException(String.format("Expected the field `queryString` to be an array in the JSON string but got `%s`", jsonObj.get("queryString").toString()));
-      }
-
-      JsonArray jsonArrayqueryString = jsonObj.getAsJsonArray("queryString");
-      // validate the required field `queryString` (array)
-      for (int i = 0; i < jsonArrayqueryString.size(); i++) {
-        HarEntryRequestQueryStringInner.validateJsonObject(jsonArrayqueryString.get(i).getAsJsonObject());
-      };
       // validate the optional field `postData`
       if (jsonObj.get("postData") != null && !jsonObj.get("postData").isJsonNull()) {
         HarEntryRequestPostData.validateJsonObject(jsonObj.getAsJsonObject("postData"));
-      }
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

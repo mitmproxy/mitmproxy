@@ -7,17 +7,17 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**pageref** | **String** |  |  [optional] |
-|**startedDateTime** | **OffsetDateTime** |  |  |
-|**time** | **Long** |  |  |
+|**pageref** | **Object** |  |  [optional] |
+|**startedDateTime** | **Object** |  |  |
+|**time** | **Object** |  |  |
 |**request** | [**HarEntryRequest**](HarEntryRequest.md) |  |  |
 |**response** | [**HarEntryResponse**](HarEntryResponse.md) |  |  |
 |**cache** | [**HarEntryCache**](HarEntryCache.md) |  |  |
 |**timings** | [**HarEntryTimings**](HarEntryTimings.md) |  |  |
-|**serverIPAddress** | **String** |  |  [optional] |
-|**webSocketMessages** | [**List&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  |  [optional] |
-|**connection** | **String** |  |  [optional] |
-|**comment** | **String** |  |  [optional] |
+|**serverIPAddress** | **Object** |  |  [optional] |
+|**webSocketMessages** | **Object** |  |  [optional] |
+|**connection** | **Object** |  |  [optional] |
+|**comment** | **Object** |  |  [optional] |
 
 
 

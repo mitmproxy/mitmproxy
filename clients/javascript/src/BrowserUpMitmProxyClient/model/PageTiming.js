@@ -48,40 +48,40 @@ class PageTiming {
             obj = obj || new PageTiming();
 
             if (data.hasOwnProperty('_cumulativeLayoutShift')) {
-                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
-            }
-            if (data.hasOwnProperty('_domInteractive')) {
-                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
+                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], Object);
             }
             if (data.hasOwnProperty('_firstContentfulPaint')) {
-                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
-            }
-            if (data.hasOwnProperty('_firstPaint')) {
-                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
-            }
-            if (data.hasOwnProperty('_ssl')) {
-                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
+                obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], Object);
             }
             if (data.hasOwnProperty('_largestContentfulPaint')) {
-                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], Object);
             }
             if (data.hasOwnProperty('_href')) {
-                obj['_href'] = ApiClient.convertToType(data['_href'], 'String');
-            }
-            if (data.hasOwnProperty('_dns')) {
-                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
-            }
-            if (data.hasOwnProperty('_ttfb')) {
-                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], 'Number');
-            }
-            if (data.hasOwnProperty('onContentLoad')) {
-                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], 'Number');
-            }
-            if (data.hasOwnProperty('_firstInputDelay')) {
-                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], 'Number');
+                obj['_href'] = ApiClient.convertToType(data['_href'], Object);
             }
             if (data.hasOwnProperty('onLoad')) {
-                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
+                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], Object);
+            }
+            if (data.hasOwnProperty('_dns')) {
+                obj['_dns'] = ApiClient.convertToType(data['_dns'], Object);
+            }
+            if (data.hasOwnProperty('_ttfb')) {
+                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], Object);
+            }
+            if (data.hasOwnProperty('_ssl')) {
+                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], Object);
+            }
+            if (data.hasOwnProperty('_firstPaint')) {
+                obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], Object);
+            }
+            if (data.hasOwnProperty('onContentLoad')) {
+                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], Object);
+            }
+            if (data.hasOwnProperty('_domInteractive')) {
+                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], Object);
+            }
+            if (data.hasOwnProperty('_firstInputDelay')) {
+                obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], Object);
             }
         }
         return obj;
@@ -93,10 +93,6 @@ class PageTiming {
      * @return {boolean} to indicate whether the JSON data is valid with respect to <code>PageTiming</code>.
      */
     static validateJSON(data) {
-        // ensure the json data is a string
-        if (data['_href'] && !(typeof data['_href'] === 'string' || data['_href'] instanceof String)) {
-            throw new Error("Expected the field `_href` to be a primitive type in the JSON string but got " + data['_href']);
-        }
 
         return true;
     }
@@ -108,75 +104,75 @@ class PageTiming {
 
 /**
  * cumulativeLayoutShift metric from the browser
- * @member {Number} _cumulativeLayoutShift
+ * @member {Object} _cumulativeLayoutShift
  */
 PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
 
 /**
- * domInteractive from the browser
- * @member {Number} _domInteractive
- */
-PageTiming.prototype['_domInteractive'] = undefined;
-
-/**
  * firstContentfulPaint from the browser
- * @member {Number} _firstContentfulPaint
+ * @member {Object} _firstContentfulPaint
  */
 PageTiming.prototype['_firstContentfulPaint'] = undefined;
 
 /**
- * firstPaint from the browser
- * @member {Number} _firstPaint
- */
-PageTiming.prototype['_firstPaint'] = undefined;
-
-/**
- * Ssl connect time from the browser
- * @member {Number} _ssl
- */
-PageTiming.prototype['_ssl'] = undefined;
-
-/**
  * largestContentfulPaint from the browser
- * @member {Number} _largestContentfulPaint
+ * @member {Object} _largestContentfulPaint
  */
 PageTiming.prototype['_largestContentfulPaint'] = undefined;
 
 /**
  * Top level href, including hashtag, etc per the browser
- * @member {String} _href
+ * @member {Object} _href
  */
 PageTiming.prototype['_href'] = undefined;
 
 /**
+ * onLoad per the browser
+ * @member {Object} onLoad
+ */
+PageTiming.prototype['onLoad'] = undefined;
+
+/**
  * dns lookup time from the browser
- * @member {Number} _dns
+ * @member {Object} _dns
  */
 PageTiming.prototype['_dns'] = undefined;
 
 /**
  * Time to first byte of the page's first request per the browser
- * @member {Number} _ttfb
+ * @member {Object} _ttfb
  */
 PageTiming.prototype['_ttfb'] = undefined;
 
 /**
+ * Ssl connect time from the browser
+ * @member {Object} _ssl
+ */
+PageTiming.prototype['_ssl'] = undefined;
+
+/**
+ * firstPaint from the browser
+ * @member {Object} _firstPaint
+ */
+PageTiming.prototype['_firstPaint'] = undefined;
+
+/**
  * onContentLoad per the browser
- * @member {Number} onContentLoad
+ * @member {Object} onContentLoad
  */
 PageTiming.prototype['onContentLoad'] = undefined;
 
 /**
- * firstInputDelay from the browser
- * @member {Number} _firstInputDelay
+ * domInteractive from the browser
+ * @member {Object} _domInteractive
  */
-PageTiming.prototype['_firstInputDelay'] = undefined;
+PageTiming.prototype['_domInteractive'] = undefined;
 
 /**
- * onLoad per the browser
- * @member {Number} onLoad
+ * firstInputDelay from the browser
+ * @member {Object} _firstInputDelay
  */
-PageTiming.prototype['onLoad'] = undefined;
+PageTiming.prototype['_firstInputDelay'] = undefined;
 
 
 

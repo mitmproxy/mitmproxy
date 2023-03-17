@@ -7,10 +7,10 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**type** | **String** |  |  |
-|**opcode** | **BigDecimal** |  |  |
-|**data** | **String** |  |  |
-|**time** | **BigDecimal** |  |  |
+|**type** | **Object** |  |  |
+|**opcode** | **Object** |  |  |
+|**data** | **Object** |  |  |
+|**time** | **Object** |  |  |
 
 
 

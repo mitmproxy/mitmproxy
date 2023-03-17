@@ -22,10 +22,10 @@ class WebSocketMessage {
     /**
      * Constructs a new <code>WebSocketMessage</code>.
      * @alias module:BrowserUpMitmProxyClient/model/WebSocketMessage
-     * @param type {String} 
-     * @param opcode {Number} 
-     * @param data {String} 
-     * @param time {Number} 
+     * @param type {Object} 
+     * @param opcode {Object} 
+     * @param data {Object} 
+     * @param time {Object} 
      */
     constructor(type, opcode, data, time) { 
         
@@ -56,16 +56,16 @@ class WebSocketMessage {
             obj = obj || new WebSocketMessage();
 
             if (data.hasOwnProperty('type')) {
-                obj['type'] = ApiClient.convertToType(data['type'], 'String');
+                obj['type'] = ApiClient.convertToType(data['type'], Object);
             }
             if (data.hasOwnProperty('opcode')) {
-                obj['opcode'] = ApiClient.convertToType(data['opcode'], 'Number');
+                obj['opcode'] = ApiClient.convertToType(data['opcode'], Object);
             }
             if (data.hasOwnProperty('data')) {
-                obj['data'] = ApiClient.convertToType(data['data'], 'String');
+                obj['data'] = ApiClient.convertToType(data['data'], Object);
             }
             if (data.hasOwnProperty('time')) {
-                obj['time'] = ApiClient.convertToType(data['time'], 'Number');
+                obj['time'] = ApiClient.convertToType(data['time'], Object);
             }
         }
         return obj;
@@ -83,14 +83,6 @@ class WebSocketMessage {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // ensure the json data is a string
-        if (data['type'] && !(typeof data['type'] === 'string' || data['type'] instanceof String)) {
-            throw new Error("Expected the field `type` to be a primitive type in the JSON string but got " + data['type']);
-        }
-        // ensure the json data is a string
-        if (data['data'] && !(typeof data['data'] === 'string' || data['data'] instanceof String)) {
-            throw new Error("Expected the field `data` to be a primitive type in the JSON string but got " + data['data']);
-        }
 
         return true;
     }
@@ -101,22 +93,22 @@ class WebSocketMessage {
 WebSocketMessage.RequiredProperties = ["type", "opcode", "data", "time"];
 
 /**
- * @member {String} type
+ * @member {Object} type
  */
 WebSocketMessage.prototype['type'] = undefined;
 
 /**
- * @member {Number} opcode
+ * @member {Object} opcode
  */
 WebSocketMessage.prototype['opcode'] = undefined;
 
 /**
- * @member {String} data
+ * @member {Object} data
  */
 WebSocketMessage.prototype['data'] = undefined;
 
 /**
- * @member {Number} time
+ * @member {Object} time
  */
 WebSocketMessage.prototype['time'] = undefined;
 

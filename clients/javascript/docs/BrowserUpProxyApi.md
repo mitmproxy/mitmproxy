@@ -203,7 +203,7 @@ Starts a fresh HAR Page (Step) in the current active HAR to group requests.
 import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
 let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let title = "title_example"; // String | The unique title for this har page/step.
+let title = null; // Object | The unique title for this har page/step.
 apiInstance.newPage(title, (error, data, response) => {
   if (error) {
     console.error(error);
@@ -218,7 +218,7 @@ apiInstance.newPage(title, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **title** | **String**| The unique title for this har page/step. | 
+ **title** | [**Object**](.md)| The unique title for this har page/step. | 
 
 ### Return type
 
@@ -289,7 +289,7 @@ Verify no matching items are present in the captured traffic
 import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
 let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let name = "name_example"; // String | The unique name for this verification operation
+let name = null; // Object | The unique name for this verification operation
 let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifyNotPresent(name, matchCriteria, (error, data, response) => {
   if (error) {
@@ -305,7 +305,7 @@ apiInstance.verifyNotPresent(name, matchCriteria, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **name** | **String**| The unique name for this verification operation | 
+ **name** | [**Object**](.md)| The unique name for this verification operation | 
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
 
 ### Return type
@@ -336,7 +336,7 @@ Verify at least one matching item is present in the captured traffic
 import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
 let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let name = "name_example"; // String | The unique name for this verification operation
+let name = null; // Object | The unique name for this verification operation
 let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifyPresent(name, matchCriteria, (error, data, response) => {
   if (error) {
@@ -352,7 +352,7 @@ apiInstance.verifyPresent(name, matchCriteria, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **name** | **String**| The unique name for this verification operation | 
+ **name** | [**Object**](.md)| The unique name for this verification operation | 
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
 
 ### Return type
@@ -383,8 +383,8 @@ Verify each traffic item matching the criteria meets is below SLA time
 import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
 let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let time = 56; // Number | The time used for comparison
-let name = "name_example"; // String | The unique name for this verification operation
+let time = null; // Object | The time used for comparison
+let name = null; // Object | The unique name for this verification operation
 let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifySLA(time, name, matchCriteria, (error, data, response) => {
   if (error) {
@@ -400,8 +400,8 @@ apiInstance.verifySLA(time, name, matchCriteria, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **time** | **Number**| The time used for comparison | 
- **name** | **String**| The unique name for this verification operation | 
+ **time** | [**Object**](.md)| The time used for comparison | 
+ **name** | [**Object**](.md)| The unique name for this verification operation | 
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
 
 ### Return type
@@ -432,8 +432,8 @@ Verify matching items in the captured traffic meet the size criteria
 import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
 
 let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let size = 56; // Number | The size used for comparison, in kilobytes
-let name = "name_example"; // String | The unique name for this verification operation
+let size = null; // Object | The size used for comparison, in kilobytes
+let name = null; // Object | The unique name for this verification operation
 let matchCriteria = new BrowserUpMitmProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
 apiInstance.verifySize(size, name, matchCriteria, (error, data, response) => {
   if (error) {
@@ -449,8 +449,8 @@ apiInstance.verifySize(size, name, matchCriteria, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **size** | **Number**| The size used for comparison, in kilobytes | 
- **name** | **String**| The unique name for this verification operation | 
+ **size** | [**Object**](.md)| The size used for comparison, in kilobytes | 
+ **name** | [**Object**](.md)| The unique name for this verification operation | 
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
 
 ### Return type

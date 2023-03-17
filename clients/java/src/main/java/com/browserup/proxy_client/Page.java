@@ -15,19 +15,14 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
-import com.browserup.proxy_client.Counter;
-import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.PageTimings;
-import com.browserup.proxy_client.VerifyResult;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -57,27 +52,27 @@ import com.browserup.proxy_client.JSON;
 public class Page {
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private OffsetDateTime startedDateTime;
+  private Object startedDateTime = null;
 
   public static final String SERIALIZED_NAME_ID = "id";
   @SerializedName(SERIALIZED_NAME_ID)
-  private String id;
+  private Object id = null;
 
   public static final String SERIALIZED_NAME_TITLE = "title";
   @SerializedName(SERIALIZED_NAME_TITLE)
-  private String title;
+  private Object title = null;
 
   public static final String SERIALIZED_NAME_VERIFICATIONS = "_verifications";
   @SerializedName(SERIALIZED_NAME_VERIFICATIONS)
-  private List<VerifyResult> verifications = null;
+  private Object verifications = [];
 
   public static final String SERIALIZED_NAME_COUNTERS = "_counters";
   @SerializedName(SERIALIZED_NAME_COUNTERS)
-  private List<Counter> counters = null;
+  private Object counters = [];
 
   public static final String SERIALIZED_NAME_ERRORS = "_errors";
   @SerializedName(SERIALIZED_NAME_ERRORS)
-  private List<Error> errors = null;
+  private Object errors = [];
 
   public static final String SERIALIZED_NAME_PAGE_TIMINGS = "pageTimings";
   @SerializedName(SERIALIZED_NAME_PAGE_TIMINGS)
@@ -85,12 +80,12 @@ public class Page {
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public Page() {
   }
 
-  public Page startedDateTime(OffsetDateTime startedDateTime) {
+  public Page startedDateTime(Object startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -100,19 +95,19 @@ public class Page {
    * Get startedDateTime
    * @return startedDateTime
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public OffsetDateTime getStartedDateTime() {
+  public Object getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(OffsetDateTime startedDateTime) {
+  public void setStartedDateTime(Object startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 
 
-  public Page id(String id) {
+  public Page id(Object id) {
     
     this.id = id;
     return this;
@@ -122,19 +117,19 @@ public class Page {
    * Get id
    * @return id
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getId() {
+  public Object getId() {
     return id;
   }
 
 
-  public void setId(String id) {
+  public void setId(Object id) {
     this.id = id;
   }
 
 
-  public Page title(String title) {
+  public Page title(Object title) {
     
     this.title = title;
     return this;
@@ -144,29 +139,21 @@ public class Page {
    * Get title
    * @return title
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getTitle() {
+  public Object getTitle() {
     return title;
   }
 
 
-  public void setTitle(String title) {
+  public void setTitle(Object title) {
     this.title = title;
   }
 
 
-  public Page verifications(List<VerifyResult> verifications) {
+  public Page verifications(Object verifications) {
     
     this.verifications = verifications;
-    return this;
-  }
-
-  public Page addVerificationsItem(VerifyResult verificationsItem) {
-    if (this.verifications == null) {
-      this.verifications = null;
-    }
-    this.verifications.add(verificationsItem);
     return this;
   }
 
@@ -176,27 +163,19 @@ public class Page {
   **/
   @javax.annotation.Nullable
 
-  public List<VerifyResult> getVerifications() {
+  public Object getVerifications() {
     return verifications;
   }
 
 
-  public void setVerifications(List<VerifyResult> verifications) {
+  public void setVerifications(Object verifications) {
     this.verifications = verifications;
   }
 
 
-  public Page counters(List<Counter> counters) {
+  public Page counters(Object counters) {
     
     this.counters = counters;
-    return this;
-  }
-
-  public Page addCountersItem(Counter countersItem) {
-    if (this.counters == null) {
-      this.counters = null;
-    }
-    this.counters.add(countersItem);
     return this;
   }
 
@@ -206,27 +185,19 @@ public class Page {
   **/
   @javax.annotation.Nullable
 
-  public List<Counter> getCounters() {
+  public Object getCounters() {
     return counters;
   }
 
 
-  public void setCounters(List<Counter> counters) {
+  public void setCounters(Object counters) {
     this.counters = counters;
   }
 
 
-  public Page errors(List<Error> errors) {
+  public Page errors(Object errors) {
     
     this.errors = errors;
-    return this;
-  }
-
-  public Page addErrorsItem(Error errorsItem) {
-    if (this.errors == null) {
-      this.errors = null;
-    }
-    this.errors.add(errorsItem);
     return this;
   }
 
@@ -236,12 +207,12 @@ public class Page {
   **/
   @javax.annotation.Nullable
 
-  public List<Error> getErrors() {
+  public Object getErrors() {
     return errors;
   }
 
 
-  public void setErrors(List<Error> errors) {
+  public void setErrors(Object errors) {
     this.errors = errors;
   }
 
@@ -268,7 +239,7 @@ public class Page {
   }
 
 
-  public Page comment(String comment) {
+  public Page comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -280,12 +251,12 @@ public class Page {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -310,9 +281,20 @@ public class Page {
         Objects.equals(this.comment, page.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(startedDateTime, id, title, verifications, counters, errors, pageTimings, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -393,59 +375,8 @@ public class Page {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
       }
-      if (!jsonObj.get("id").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `id` to be a primitive type in the JSON string but got `%s`", jsonObj.get("id").toString()));
-      }
-      if (!jsonObj.get("title").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `title` to be a primitive type in the JSON string but got `%s`", jsonObj.get("title").toString()));
-      }
-      if (jsonObj.get("_verifications") != null && !jsonObj.get("_verifications").isJsonNull()) {
-        JsonArray jsonArrayverifications = jsonObj.getAsJsonArray("_verifications");
-        if (jsonArrayverifications != null) {
-          // ensure the json data is an array
-          if (!jsonObj.get("_verifications").isJsonArray()) {
-            throw new IllegalArgumentException(String.format("Expected the field `_verifications` to be an array in the JSON string but got `%s`", jsonObj.get("_verifications").toString()));
-          }
-
-          // validate the optional field `_verifications` (array)
-          for (int i = 0; i < jsonArrayverifications.size(); i++) {
-            VerifyResult.validateJsonObject(jsonArrayverifications.get(i).getAsJsonObject());
-          };
-        }
-      }
-      if (jsonObj.get("_counters") != null && !jsonObj.get("_counters").isJsonNull()) {
-        JsonArray jsonArraycounters = jsonObj.getAsJsonArray("_counters");
-        if (jsonArraycounters != null) {
-          // ensure the json data is an array
-          if (!jsonObj.get("_counters").isJsonArray()) {
-            throw new IllegalArgumentException(String.format("Expected the field `_counters` to be an array in the JSON string but got `%s`", jsonObj.get("_counters").toString()));
-          }
-
-          // validate the optional field `_counters` (array)
-          for (int i = 0; i < jsonArraycounters.size(); i++) {
-            Counter.validateJsonObject(jsonArraycounters.get(i).getAsJsonObject());
-          };
-        }
-      }
-      if (jsonObj.get("_errors") != null && !jsonObj.get("_errors").isJsonNull()) {
-        JsonArray jsonArrayerrors = jsonObj.getAsJsonArray("_errors");
-        if (jsonArrayerrors != null) {
-          // ensure the json data is an array
-          if (!jsonObj.get("_errors").isJsonArray()) {
-            throw new IllegalArgumentException(String.format("Expected the field `_errors` to be an array in the JSON string but got `%s`", jsonObj.get("_errors").toString()));
-          }
-
-          // validate the optional field `_errors` (array)
-          for (int i = 0; i < jsonArrayerrors.size(); i++) {
-            Error.validateJsonObject(jsonArrayerrors.get(i).getAsJsonObject());
-          };
-        }
-      }
       // validate the required field `pageTimings`
       PageTimings.validateJsonObject(jsonObj.getAsJsonObject("pageTimings"));
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
-      }
   }
 
   public static class CustomTypeAdapterFactory implements TypeAdapterFactory {

@@ -12,10 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import HarEntryRequestCookiesInner from './HarEntryRequestCookiesInner';
 import HarEntryRequestPostData from './HarEntryRequestPostData';
-import HarEntryRequestQueryStringInner from './HarEntryRequestQueryStringInner';
-import Header from './Header';
 
 /**
  * The HarEntryRequest model module.
@@ -26,14 +23,14 @@ class HarEntryRequest {
     /**
      * Constructs a new <code>HarEntryRequest</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryRequest
-     * @param method {String} 
-     * @param url {String} 
-     * @param httpVersion {String} 
-     * @param cookies {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} 
-     * @param headers {Array.<module:BrowserUpMitmProxyClient/model/Header>} 
-     * @param queryString {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestQueryStringInner>} 
-     * @param headersSize {Number} 
-     * @param bodySize {Number} 
+     * @param method {Object} 
+     * @param url {Object} 
+     * @param httpVersion {Object} 
+     * @param cookies {Object} 
+     * @param headers {Object} 
+     * @param queryString {Object} 
+     * @param headersSize {Object} 
+     * @param bodySize {Object} 
      */
     constructor(method, url, httpVersion, cookies, headers, queryString, headersSize, bodySize) { 
         
@@ -68,34 +65,34 @@ class HarEntryRequest {
             obj = obj || new HarEntryRequest();
 
             if (data.hasOwnProperty('method')) {
-                obj['method'] = ApiClient.convertToType(data['method'], 'String');
+                obj['method'] = ApiClient.convertToType(data['method'], Object);
             }
             if (data.hasOwnProperty('url')) {
-                obj['url'] = ApiClient.convertToType(data['url'], 'String');
+                obj['url'] = ApiClient.convertToType(data['url'], Object);
             }
             if (data.hasOwnProperty('httpVersion')) {
-                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], 'String');
+                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], Object);
             }
             if (data.hasOwnProperty('cookies')) {
-                obj['cookies'] = ApiClient.convertToType(data['cookies'], [HarEntryRequestCookiesInner]);
+                obj['cookies'] = ApiClient.convertToType(data['cookies'], Object);
             }
             if (data.hasOwnProperty('headers')) {
-                obj['headers'] = ApiClient.convertToType(data['headers'], [Header]);
+                obj['headers'] = ApiClient.convertToType(data['headers'], Object);
             }
             if (data.hasOwnProperty('queryString')) {
-                obj['queryString'] = ApiClient.convertToType(data['queryString'], [HarEntryRequestQueryStringInner]);
+                obj['queryString'] = ApiClient.convertToType(data['queryString'], Object);
             }
             if (data.hasOwnProperty('postData')) {
                 obj['postData'] = HarEntryRequestPostData.constructFromObject(data['postData']);
             }
             if (data.hasOwnProperty('headersSize')) {
-                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], 'Number');
+                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], Object);
             }
             if (data.hasOwnProperty('bodySize')) {
-                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], 'Number');
+                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], Object);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
+                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
             }
         }
         return obj;
@@ -113,55 +110,9 @@ class HarEntryRequest {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // ensure the json data is a string
-        if (data['method'] && !(typeof data['method'] === 'string' || data['method'] instanceof String)) {
-            throw new Error("Expected the field `method` to be a primitive type in the JSON string but got " + data['method']);
-        }
-        // ensure the json data is a string
-        if (data['url'] && !(typeof data['url'] === 'string' || data['url'] instanceof String)) {
-            throw new Error("Expected the field `url` to be a primitive type in the JSON string but got " + data['url']);
-        }
-        // ensure the json data is a string
-        if (data['httpVersion'] && !(typeof data['httpVersion'] === 'string' || data['httpVersion'] instanceof String)) {
-            throw new Error("Expected the field `httpVersion` to be a primitive type in the JSON string but got " + data['httpVersion']);
-        }
-        if (data['cookies']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['cookies'])) {
-                throw new Error("Expected the field `cookies` to be an array in the JSON data but got " + data['cookies']);
-            }
-            // validate the optional field `cookies` (array)
-            for (const item of data['cookies']) {
-                HarEntryRequestCookiesInner.validateJSON(item);
-            };
-        }
-        if (data['headers']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['headers'])) {
-                throw new Error("Expected the field `headers` to be an array in the JSON data but got " + data['headers']);
-            }
-            // validate the optional field `headers` (array)
-            for (const item of data['headers']) {
-                Header.validateJSON(item);
-            };
-        }
-        if (data['queryString']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['queryString'])) {
-                throw new Error("Expected the field `queryString` to be an array in the JSON data but got " + data['queryString']);
-            }
-            // validate the optional field `queryString` (array)
-            for (const item of data['queryString']) {
-                HarEntryRequestQueryStringInner.validateJSON(item);
-            };
-        }
         // validate the optional field `postData`
         if (data['postData']) { // data not null
           HarEntryRequestPostData.validateJSON(data['postData']);
-        }
-        // ensure the json data is a string
-        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
-            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -173,32 +124,32 @@ class HarEntryRequest {
 HarEntryRequest.RequiredProperties = ["method", "url", "httpVersion", "cookies", "headers", "queryString", "headersSize", "bodySize"];
 
 /**
- * @member {String} method
+ * @member {Object} method
  */
 HarEntryRequest.prototype['method'] = undefined;
 
 /**
- * @member {String} url
+ * @member {Object} url
  */
 HarEntryRequest.prototype['url'] = undefined;
 
 /**
- * @member {String} httpVersion
+ * @member {Object} httpVersion
  */
 HarEntryRequest.prototype['httpVersion'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} cookies
+ * @member {Object} cookies
  */
 HarEntryRequest.prototype['cookies'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/Header>} headers
+ * @member {Object} headers
  */
 HarEntryRequest.prototype['headers'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestQueryStringInner>} queryString
+ * @member {Object} queryString
  */
 HarEntryRequest.prototype['queryString'] = undefined;
 
@@ -208,17 +159,17 @@ HarEntryRequest.prototype['queryString'] = undefined;
 HarEntryRequest.prototype['postData'] = undefined;
 
 /**
- * @member {Number} headersSize
+ * @member {Object} headersSize
  */
 HarEntryRequest.prototype['headersSize'] = undefined;
 
 /**
- * @member {Number} bodySize
+ * @member {Object} bodySize
  */
 HarEntryRequest.prototype['bodySize'] = undefined;
 
 /**
- * @member {String} comment
+ * @member {Object} comment
  */
 HarEntryRequest.prototype['comment'] = undefined;
 

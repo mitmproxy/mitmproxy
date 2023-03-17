@@ -47,18 +47,24 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'size' => :'Integer',
-        :'compression' => :'Integer',
-        :'mime_type' => :'String',
-        :'text' => :'String',
-        :'encoding' => :'String',
-        :'comment' => :'String'
+        :'size' => :'Object',
+        :'compression' => :'Object',
+        :'mime_type' => :'Object',
+        :'text' => :'Object',
+        :'encoding' => :'Object',
+        :'comment' => :'Object'
       }
     end
 
     # List of attributes with nullable: true
     def self.openapi_nullable
       Set.new([
+        :'size',
+        :'compression',
+        :'mime_type',
+        :'text',
+        :'encoding',
+        :'comment'
       ])
     end
 
@@ -106,22 +112,12 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
-      if @size.nil?
-        invalid_properties.push('invalid value for "size", size cannot be nil.')
-      end
-
-      if @mime_type.nil?
-        invalid_properties.push('invalid value for "mime_type", mime_type cannot be nil.')
-      end
-
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
-      return false if @size.nil?
-      return false if @mime_type.nil?
       true
     end
 

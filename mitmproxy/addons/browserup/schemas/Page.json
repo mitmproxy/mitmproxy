@@ -1,12 +1,12 @@
 {
   "type": "object",
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "required": [
     "startedDateTime",
     "id",
     "title",
     "pageTimings"
   ],
+  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "properties": {
     "startedDateTime": {
       "type": "string",

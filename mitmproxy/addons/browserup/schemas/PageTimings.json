@@ -1,10 +1,11 @@
 {
   "type": "object",
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
+  "additionalProperties": false,
   "required": [
     "onLoad",
     "onContentLoad"
   ],
+  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "properties": {
     "onContentLoad": {
       "type": "integer",

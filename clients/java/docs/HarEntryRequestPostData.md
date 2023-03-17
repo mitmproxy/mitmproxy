@@ -8,9 +8,9 @@ Posted data info.
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**mimeType** | **String** |  |  |
-|**text** | **String** |  |  [optional] |
-|**params** | [**List&lt;HarEntryRequestPostDataParamsInner&gt;**](HarEntryRequestPostDataParamsInner.md) |  |  [optional] |
+|**mimeType** | **Object** |  |  |
+|**text** | **Object** |  |  [optional] |
+|**params** | **Object** |  |  [optional] |
 
 
 

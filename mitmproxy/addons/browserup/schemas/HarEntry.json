@@ -24,7 +24,6 @@
     },
     "request": {
       "type": "object",
-      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
       "required": [
         "method",
         "url",
@@ -35,6 +34,7 @@
         "headersSize",
         "bodySize"
       ],
+      "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
       "properties": {
         "method": {
           "type": "string"

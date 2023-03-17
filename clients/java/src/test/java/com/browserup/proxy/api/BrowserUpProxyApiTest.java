@@ -88,7 +88,7 @@ public class BrowserUpProxyApiTest {
      */
     @Test
     public void newPageTest() throws ApiException {
-        String title = null;
+        Object title = null;
         Har response = api.newPage(title);
         // TODO: test validations
     }
@@ -111,7 +111,7 @@ public class BrowserUpProxyApiTest {
      */
     @Test
     public void verifyNotPresentTest() throws ApiException {
-        String name = null;
+        Object name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifyNotPresent(name, matchCriteria);
         // TODO: test validations
@@ -124,7 +124,7 @@ public class BrowserUpProxyApiTest {
      */
     @Test
     public void verifyPresentTest() throws ApiException {
-        String name = null;
+        Object name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifyPresent(name, matchCriteria);
         // TODO: test validations
@@ -137,8 +137,8 @@ public class BrowserUpProxyApiTest {
      */
     @Test
     public void verifySLATest() throws ApiException {
-        Integer time = null;
-        String name = null;
+        Object time = null;
+        Object name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifySLA(time, name, matchCriteria);
         // TODO: test validations
@@ -151,8 +151,8 @@ public class BrowserUpProxyApiTest {
      */
     @Test
     public void verifySizeTest() throws ApiException {
-        Integer size = null;
-        String name = null;
+        Object size = null;
+        Object name = null;
         MatchCriteria matchCriteria = null;
         VerifyResult response = api.verifySize(size, name, matchCriteria);
         // TODO: test validations

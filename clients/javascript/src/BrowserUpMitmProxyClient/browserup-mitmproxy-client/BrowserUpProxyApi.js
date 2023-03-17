@@ -199,7 +199,7 @@ export default class BrowserUpProxyApi {
 
     /**
      * Starts a fresh HAR Page (Step) in the current active HAR to group requests.
-     * @param {String} title The unique title for this har page/step.
+     * @param {Object} title The unique title for this har page/step.
      * @param {module:BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi~newPageCallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpMitmProxyClient/model/Har}
      */
@@ -277,7 +277,7 @@ export default class BrowserUpProxyApi {
 
     /**
      * Verify no matching items are present in the captured traffic
-     * @param {String} name The unique name for this verification operation
+     * @param {Object} name The unique name for this verification operation
      * @param {module:BrowserUpMitmProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
      * @param {module:BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi~verifyNotPresentCallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpMitmProxyClient/model/VerifyResult}
@@ -324,7 +324,7 @@ export default class BrowserUpProxyApi {
 
     /**
      * Verify at least one matching item is present in the captured traffic
-     * @param {String} name The unique name for this verification operation
+     * @param {Object} name The unique name for this verification operation
      * @param {module:BrowserUpMitmProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
      * @param {module:BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi~verifyPresentCallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpMitmProxyClient/model/VerifyResult}
@@ -371,8 +371,8 @@ export default class BrowserUpProxyApi {
 
     /**
      * Verify each traffic item matching the criteria meets is below SLA time
-     * @param {Number} time The time used for comparison
-     * @param {String} name The unique name for this verification operation
+     * @param {Object} time The time used for comparison
+     * @param {Object} name The unique name for this verification operation
      * @param {module:BrowserUpMitmProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
      * @param {module:BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi~verifySLACallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpMitmProxyClient/model/VerifyResult}
@@ -424,8 +424,8 @@ export default class BrowserUpProxyApi {
 
     /**
      * Verify matching items in the captured traffic meet the size criteria
-     * @param {Number} size The size used for comparison, in kilobytes
-     * @param {String} name The unique name for this verification operation
+     * @param {Object} size The size used for comparison, in kilobytes
+     * @param {Object} name The unique name for this verification operation
      * @param {module:BrowserUpMitmProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
      * @param {module:BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi~verifySizeCallback} callback The callback function, accepting three arguments: error, data, response
      * data is of type: {@link module:BrowserUpMitmProxyClient/model/VerifyResult}

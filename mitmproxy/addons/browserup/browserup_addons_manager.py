@@ -61,7 +61,7 @@ The BrowserUp MitmProxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 """, "x-logo": {"url": "logo.png"}},
-            openapi_version='3.0.3',
+            openapi_version='3.1.0',
             plugins=[
                 FalconPlugin(app),
                 MarshmallowPlugin(),

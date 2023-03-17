@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **name** | **String** | Name to match | [optional] |
-| **value** | **String** | Value to match | [optional] |
+| **name** | **Object** | Name to match | [optional] |
+| **value** | **Object** | Value to match | [optional] |
 
 ## Example
 

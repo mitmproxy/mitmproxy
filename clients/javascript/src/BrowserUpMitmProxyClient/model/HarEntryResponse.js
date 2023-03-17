@@ -12,9 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import HarEntryRequestCookiesInner from './HarEntryRequestCookiesInner';
 import HarEntryResponseContent from './HarEntryResponseContent';
-import Header from './Header';
 
 /**
  * The HarEntryResponse model module.
@@ -25,15 +23,15 @@ class HarEntryResponse {
     /**
      * Constructs a new <code>HarEntryResponse</code>.
      * @alias module:BrowserUpMitmProxyClient/model/HarEntryResponse
-     * @param status {Number} 
-     * @param statusText {String} 
-     * @param httpVersion {String} 
-     * @param cookies {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} 
-     * @param headers {Array.<module:BrowserUpMitmProxyClient/model/Header>} 
+     * @param status {Object} 
+     * @param statusText {Object} 
+     * @param httpVersion {Object} 
+     * @param cookies {Object} 
+     * @param headers {Object} 
      * @param content {module:BrowserUpMitmProxyClient/model/HarEntryResponseContent} 
-     * @param redirectURL {String} 
-     * @param headersSize {Number} 
-     * @param bodySize {Number} 
+     * @param redirectURL {Object} 
+     * @param headersSize {Object} 
+     * @param bodySize {Object} 
      */
     constructor(status, statusText, httpVersion, cookies, headers, content, redirectURL, headersSize, bodySize) { 
         
@@ -69,34 +67,34 @@ class HarEntryResponse {
             obj = obj || new HarEntryResponse();
 
             if (data.hasOwnProperty('status')) {
-                obj['status'] = ApiClient.convertToType(data['status'], 'Number');
+                obj['status'] = ApiClient.convertToType(data['status'], Object);
             }
             if (data.hasOwnProperty('statusText')) {
-                obj['statusText'] = ApiClient.convertToType(data['statusText'], 'String');
+                obj['statusText'] = ApiClient.convertToType(data['statusText'], Object);
             }
             if (data.hasOwnProperty('httpVersion')) {
-                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], 'String');
+                obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], Object);
             }
             if (data.hasOwnProperty('cookies')) {
-                obj['cookies'] = ApiClient.convertToType(data['cookies'], [HarEntryRequestCookiesInner]);
+                obj['cookies'] = ApiClient.convertToType(data['cookies'], Object);
             }
             if (data.hasOwnProperty('headers')) {
-                obj['headers'] = ApiClient.convertToType(data['headers'], [Header]);
+                obj['headers'] = ApiClient.convertToType(data['headers'], Object);
             }
             if (data.hasOwnProperty('content')) {
                 obj['content'] = HarEntryResponseContent.constructFromObject(data['content']);
             }
             if (data.hasOwnProperty('redirectURL')) {
-                obj['redirectURL'] = ApiClient.convertToType(data['redirectURL'], 'String');
+                obj['redirectURL'] = ApiClient.convertToType(data['redirectURL'], Object);
             }
             if (data.hasOwnProperty('headersSize')) {
-                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], 'Number');
+                obj['headersSize'] = ApiClient.convertToType(data['headersSize'], Object);
             }
             if (data.hasOwnProperty('bodySize')) {
-                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], 'Number');
+                obj['bodySize'] = ApiClient.convertToType(data['bodySize'], Object);
             }
             if (data.hasOwnProperty('comment')) {
-                obj['comment'] = ApiClient.convertToType(data['comment'], 'String');
+                obj['comment'] = ApiClient.convertToType(data['comment'], Object);
             }
         }
         return obj;
@@ -114,45 +112,9 @@ class HarEntryResponse {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
         }
-        // ensure the json data is a string
-        if (data['statusText'] && !(typeof data['statusText'] === 'string' || data['statusText'] instanceof String)) {
-            throw new Error("Expected the field `statusText` to be a primitive type in the JSON string but got " + data['statusText']);
-        }
-        // ensure the json data is a string
-        if (data['httpVersion'] && !(typeof data['httpVersion'] === 'string' || data['httpVersion'] instanceof String)) {
-            throw new Error("Expected the field `httpVersion` to be a primitive type in the JSON string but got " + data['httpVersion']);
-        }
-        if (data['cookies']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['cookies'])) {
-                throw new Error("Expected the field `cookies` to be an array in the JSON data but got " + data['cookies']);
-            }
-            // validate the optional field `cookies` (array)
-            for (const item of data['cookies']) {
-                HarEntryRequestCookiesInner.validateJSON(item);
-            };
-        }
-        if (data['headers']) { // data not null
-            // ensure the json data is an array
-            if (!Array.isArray(data['headers'])) {
-                throw new Error("Expected the field `headers` to be an array in the JSON data but got " + data['headers']);
-            }
-            // validate the optional field `headers` (array)
-            for (const item of data['headers']) {
-                Header.validateJSON(item);
-            };
-        }
         // validate the optional field `content`
         if (data['content']) { // data not null
           HarEntryResponseContent.validateJSON(data['content']);
-        }
-        // ensure the json data is a string
-        if (data['redirectURL'] && !(typeof data['redirectURL'] === 'string' || data['redirectURL'] instanceof String)) {
-            throw new Error("Expected the field `redirectURL` to be a primitive type in the JSON string but got " + data['redirectURL']);
-        }
-        // ensure the json data is a string
-        if (data['comment'] && !(typeof data['comment'] === 'string' || data['comment'] instanceof String)) {
-            throw new Error("Expected the field `comment` to be a primitive type in the JSON string but got " + data['comment']);
         }
 
         return true;
@@ -164,27 +126,27 @@ class HarEntryResponse {
 HarEntryResponse.RequiredProperties = ["status", "statusText", "httpVersion", "cookies", "headers", "content", "redirectURL", "headersSize", "bodySize"];
 
 /**
- * @member {Number} status
+ * @member {Object} status
  */
 HarEntryResponse.prototype['status'] = undefined;
 
 /**
- * @member {String} statusText
+ * @member {Object} statusText
  */
 HarEntryResponse.prototype['statusText'] = undefined;
 
 /**
- * @member {String} httpVersion
+ * @member {Object} httpVersion
  */
 HarEntryResponse.prototype['httpVersion'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/HarEntryRequestCookiesInner>} cookies
+ * @member {Object} cookies
  */
 HarEntryResponse.prototype['cookies'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpMitmProxyClient/model/Header>} headers
+ * @member {Object} headers
  */
 HarEntryResponse.prototype['headers'] = undefined;
 
@@ -194,22 +156,22 @@ HarEntryResponse.prototype['headers'] = undefined;
 HarEntryResponse.prototype['content'] = undefined;
 
 /**
- * @member {String} redirectURL
+ * @member {Object} redirectURL
  */
 HarEntryResponse.prototype['redirectURL'] = undefined;
 
 /**
- * @member {Number} headersSize
+ * @member {Object} headersSize
  */
 HarEntryResponse.prototype['headersSize'] = undefined;
 
 /**
- * @member {Number} bodySize
+ * @member {Object} bodySize
  */
 HarEntryResponse.prototype['bodySize'] = undefined;
 
 /**
- * @member {String} comment
+ * @member {Object} comment
  */
 HarEntryResponse.prototype['comment'] = undefined;
 

@@ -4,17 +4,17 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **pageref** | **String** |  | [optional] |
-| **started_date_time** | **Time** |  |  |
-| **time** | **Integer** |  |  |
+| **pageref** | **Object** |  | [optional] |
+| **started_date_time** | **Object** |  |  |
+| **time** | **Object** |  |  |
 | **request** | [**HarEntryRequest**](HarEntryRequest.md) |  |  |
 | **response** | [**HarEntryResponse**](HarEntryResponse.md) |  |  |
 | **cache** | [**HarEntryCache**](HarEntryCache.md) |  |  |
 | **timings** | [**HarEntryTimings**](HarEntryTimings.md) |  |  |
-| **server_ip_address** | **String** |  | [optional] |
-| **_web_socket_messages** | [**Array&lt;WebSocketMessage&gt;**](WebSocketMessage.md) |  | [optional] |
-| **connection** | **String** |  | [optional] |
-| **comment** | **String** |  | [optional] |
+| **server_ip_address** | **Object** |  | [optional] |
+| **_web_socket_messages** | **Object** |  | [optional] |
+| **connection** | **Object** |  | [optional] |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

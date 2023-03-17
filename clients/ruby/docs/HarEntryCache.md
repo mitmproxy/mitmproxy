@@ -4,9 +4,9 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **before_request** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  | [optional] |
-| **after_request** | [**HarEntryCacheBeforeRequest**](HarEntryCacheBeforeRequest.md) |  | [optional] |
-| **comment** | **String** |  | [optional] |
+| **before_request** | **Object** |  | [optional] |
+| **after_request** | **Object** |  | [optional] |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

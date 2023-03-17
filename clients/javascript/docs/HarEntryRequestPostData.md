@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**mimeType** | **String** |  | 
-**text** | **String** |  | [optional] 
-**params** | [**[HarEntryRequestPostDataParamsInner]**](HarEntryRequestPostDataParamsInner.md) |  | [optional] 
+**mimeType** | **Object** |  | 
+**text** | **Object** |  | [optional] 
+**params** | **Object** |  | [optional] 
 
 

@@ -4,19 +4,19 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **on_content_load** | **Integer** |  | [default to -1] |
-| **on_load** | **Integer** |  | [default to -1] |
-| **_href** | **String** |  | [optional][default to &#39;&#39;] |
-| **_dns** | **Integer** |  | [optional][default to -1] |
-| **_ssl** | **Integer** |  | [optional][default to -1] |
-| **_ttfb** | **Integer** |  | [optional][default to -1] |
-| **_cumulative_layout_shift** | **Integer** |  | [optional][default to -1] |
-| **_largest_contentful_paint** | **Integer** |  | [optional][default to -1] |
-| **_first_paint** | **Integer** |  | [optional][default to -1] |
-| **_first_input_delay** | **Integer** |  | [optional][default to -1] |
-| **_dom_interactive** | **Integer** |  | [optional][default to -1] |
-| **_first_contentful_paint** | **Integer** |  | [optional][default to -1] |
-| **comment** | **String** |  | [optional] |
+| **on_content_load** | **Object** |  |  |
+| **on_load** | **Object** |  |  |
+| **_href** | **Object** |  | [optional] |
+| **_dns** | **Object** |  | [optional] |
+| **_ssl** | **Object** |  | [optional] |
+| **_ttfb** | **Object** |  | [optional] |
+| **_cumulative_layout_shift** | **Object** |  | [optional] |
+| **_largest_contentful_paint** | **Object** |  | [optional] |
+| **_first_paint** | **Object** |  | [optional] |
+| **_first_input_delay** | **Object** |  | [optional] |
+| **_dom_interactive** | **Object** |  | [optional] |
+| **_first_contentful_paint** | **Object** |  | [optional] |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

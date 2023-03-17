@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,32 +51,32 @@ import com.browserup.proxy_client.JSON;
 public class HarEntryResponseContent {
   public static final String SERIALIZED_NAME_SIZE = "size";
   @SerializedName(SERIALIZED_NAME_SIZE)
-  private Integer size;
+  private Object size = null;
 
   public static final String SERIALIZED_NAME_COMPRESSION = "compression";
   @SerializedName(SERIALIZED_NAME_COMPRESSION)
-  private Integer compression;
+  private Object compression = null;
 
   public static final String SERIALIZED_NAME_MIME_TYPE = "mimeType";
   @SerializedName(SERIALIZED_NAME_MIME_TYPE)
-  private String mimeType;
+  private Object mimeType = null;
 
   public static final String SERIALIZED_NAME_TEXT = "text";
   @SerializedName(SERIALIZED_NAME_TEXT)
-  private String text;
+  private Object text = null;
 
   public static final String SERIALIZED_NAME_ENCODING = "encoding";
   @SerializedName(SERIALIZED_NAME_ENCODING)
-  private String encoding;
+  private Object encoding = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public HarEntryResponseContent() {
   }
 
-  public HarEntryResponseContent size(Integer size) {
+  public HarEntryResponseContent size(Object size) {
     
     this.size = size;
     return this;
@@ -85,19 +86,19 @@ public class HarEntryResponseContent {
    * Get size
    * @return size
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public Integer getSize() {
+  public Object getSize() {
     return size;
   }
 
 
-  public void setSize(Integer size) {
+  public void setSize(Object size) {
     this.size = size;
   }
 
 
-  public HarEntryResponseContent compression(Integer compression) {
+  public HarEntryResponseContent compression(Object compression) {
     
     this.compression = compression;
     return this;
@@ -109,17 +110,17 @@ public class HarEntryResponseContent {
   **/
   @javax.annotation.Nullable
 
-  public Integer getCompression() {
+  public Object getCompression() {
     return compression;
   }
 
 
-  public void setCompression(Integer compression) {
+  public void setCompression(Object compression) {
     this.compression = compression;
   }
 
 
-  public HarEntryResponseContent mimeType(String mimeType) {
+  public HarEntryResponseContent mimeType(Object mimeType) {
     
     this.mimeType = mimeType;
     return this;
@@ -129,19 +130,19 @@ public class HarEntryResponseContent {
    * Get mimeType
    * @return mimeType
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getMimeType() {
+  public Object getMimeType() {
     return mimeType;
   }
 
 
-  public void setMimeType(String mimeType) {
+  public void setMimeType(Object mimeType) {
     this.mimeType = mimeType;
   }
 
 
-  public HarEntryResponseContent text(String text) {
+  public HarEntryResponseContent text(Object text) {
     
     this.text = text;
     return this;
@@ -153,17 +154,17 @@ public class HarEntryResponseContent {
   **/
   @javax.annotation.Nullable
 
-  public String getText() {
+  public Object getText() {
     return text;
   }
 
 
-  public void setText(String text) {
+  public void setText(Object text) {
     this.text = text;
   }
 
 
-  public HarEntryResponseContent encoding(String encoding) {
+  public HarEntryResponseContent encoding(Object encoding) {
     
     this.encoding = encoding;
     return this;
@@ -175,17 +176,17 @@ public class HarEntryResponseContent {
   **/
   @javax.annotation.Nullable
 
-  public String getEncoding() {
+  public Object getEncoding() {
     return encoding;
   }
 
 
-  public void setEncoding(String encoding) {
+  public void setEncoding(Object encoding) {
     this.encoding = encoding;
   }
 
 
-  public HarEntryResponseContent comment(String comment) {
+  public HarEntryResponseContent comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -197,12 +198,12 @@ public class HarEntryResponseContent {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -225,9 +226,20 @@ public class HarEntryResponseContent {
         Objects.equals(this.comment, harEntryResponseContent.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(size, compression, mimeType, text, encoding, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -301,18 +313,6 @@ public class HarEntryResponseContent {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
-      }
-      if (!jsonObj.get("mimeType").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `mimeType` to be a primitive type in the JSON string but got `%s`", jsonObj.get("mimeType").toString()));
-      }
-      if ((jsonObj.get("text") != null && !jsonObj.get("text").isJsonNull()) && !jsonObj.get("text").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `text` to be a primitive type in the JSON string but got `%s`", jsonObj.get("text").toString()));
-      }
-      if ((jsonObj.get("encoding") != null && !jsonObj.get("encoding").isJsonNull()) && !jsonObj.get("encoding").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `encoding` to be a primitive type in the JSON string but got `%s`", jsonObj.get("encoding").toString()));
-      }
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 

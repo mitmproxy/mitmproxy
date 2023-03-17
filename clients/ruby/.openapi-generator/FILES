@@ -14,13 +14,8 @@ docs/Error.md
 docs/Har.md
 docs/HarEntry.md
 docs/HarEntryCache.md
-docs/HarEntryCacheBeforeRequest.md
-docs/HarEntryCacheBeforeRequestOneOf.md
 docs/HarEntryRequest.md
-docs/HarEntryRequestCookiesInner.md
 docs/HarEntryRequestPostData.md
-docs/HarEntryRequestPostDataParamsInner.md
-docs/HarEntryRequestQueryStringInner.md
 docs/HarEntryResponse.md
 docs/HarEntryResponseContent.md
 docs/HarEntryTimings.md
@@ -28,7 +23,6 @@ docs/HarLog.md
 docs/HarLogCreator.md
 docs/Header.md
 docs/MatchCriteria.md
-docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
 docs/Page.md
 docs/PageTiming.md
@@ -46,13 +40,8 @@ lib/browserup_mitmproxy_client/models/error.rb
 lib/browserup_mitmproxy_client/models/har.rb
 lib/browserup_mitmproxy_client/models/har_entry.rb
 lib/browserup_mitmproxy_client/models/har_entry_cache.rb
-lib/browserup_mitmproxy_client/models/har_entry_cache_before_request.rb
-lib/browserup_mitmproxy_client/models/har_entry_cache_before_request_one_of.rb
 lib/browserup_mitmproxy_client/models/har_entry_request.rb
-lib/browserup_mitmproxy_client/models/har_entry_request_cookies_inner.rb
 lib/browserup_mitmproxy_client/models/har_entry_request_post_data.rb
-lib/browserup_mitmproxy_client/models/har_entry_request_post_data_params_inner.rb
-lib/browserup_mitmproxy_client/models/har_entry_request_query_string_inner.rb
 lib/browserup_mitmproxy_client/models/har_entry_response.rb
 lib/browserup_mitmproxy_client/models/har_entry_response_content.rb
 lib/browserup_mitmproxy_client/models/har_entry_timings.rb
@@ -60,7 +49,6 @@ lib/browserup_mitmproxy_client/models/har_log.rb
 lib/browserup_mitmproxy_client/models/har_log_creator.rb
 lib/browserup_mitmproxy_client/models/header.rb
 lib/browserup_mitmproxy_client/models/match_criteria.rb
-lib/browserup_mitmproxy_client/models/match_criteria_request_header.rb
 lib/browserup_mitmproxy_client/models/name_value_pair.rb
 lib/browserup_mitmproxy_client/models/page.rb
 lib/browserup_mitmproxy_client/models/page_timing.rb
@@ -73,13 +61,8 @@ spec/api_client_spec.rb
 spec/configuration_spec.rb
 spec/models/counter_spec.rb
 spec/models/error_spec.rb
-spec/models/har_entry_cache_before_request_one_of_spec.rb
-spec/models/har_entry_cache_before_request_spec.rb
 spec/models/har_entry_cache_spec.rb
-spec/models/har_entry_request_cookies_inner_spec.rb
-spec/models/har_entry_request_post_data_params_inner_spec.rb
 spec/models/har_entry_request_post_data_spec.rb
-spec/models/har_entry_request_query_string_inner_spec.rb
 spec/models/har_entry_request_spec.rb
 spec/models/har_entry_response_content_spec.rb
 spec/models/har_entry_response_spec.rb
@@ -89,7 +72,6 @@ spec/models/har_log_creator_spec.rb
 spec/models/har_log_spec.rb
 spec/models/har_spec.rb
 spec/models/header_spec.rb
-spec/models/match_criteria_request_header_spec.rb
 spec/models/match_criteria_spec.rb
 spec/models/name_value_pair_spec.rb
 spec/models/page_spec.rb

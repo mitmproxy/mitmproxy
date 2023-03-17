@@ -278,7 +278,7 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    String title = "title_example"; // String | The unique title for this har page/step.
+    Object title = null; // Object | The unique title for this har page/step.
     try {
       Har result = apiInstance.newPage(title);
       System.out.println(result);
@@ -297,7 +297,7 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **title** | **String**| The unique title for this har page/step. | |
+| **title** | [**Object**](.md)| The unique title for this har page/step. | |
 
 ### Return type
 
@@ -398,7 +398,7 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    String name = "name_example"; // String | The unique name for this verification operation
+    Object name = null; // Object | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
       VerifyResult result = apiInstance.verifyNotPresent(name, matchCriteria);
@@ -418,7 +418,7 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **name** | **String**| The unique name for this verification operation | |
+| **name** | [**Object**](.md)| The unique name for this verification operation | |
 | **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
@@ -463,7 +463,7 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    String name = "name_example"; // String | The unique name for this verification operation
+    Object name = null; // Object | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
       VerifyResult result = apiInstance.verifyPresent(name, matchCriteria);
@@ -483,7 +483,7 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **name** | **String**| The unique name for this verification operation | |
+| **name** | [**Object**](.md)| The unique name for this verification operation | |
 | **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
@@ -528,8 +528,8 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Integer time = 56; // Integer | The time used for comparison
-    String name = "name_example"; // String | The unique name for this verification operation
+    Object time = null; // Object | The time used for comparison
+    Object name = null; // Object | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
       VerifyResult result = apiInstance.verifySLA(time, name, matchCriteria);
@@ -549,8 +549,8 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **time** | **Integer**| The time used for comparison | |
-| **name** | **String**| The unique name for this verification operation | |
+| **time** | [**Object**](.md)| The time used for comparison | |
+| **name** | [**Object**](.md)| The unique name for this verification operation | |
 | **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type
@@ -595,8 +595,8 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Integer size = 56; // Integer | The size used for comparison, in kilobytes
-    String name = "name_example"; // String | The unique name for this verification operation
+    Object size = null; // Object | The size used for comparison, in kilobytes
+    Object name = null; // Object | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
       VerifyResult result = apiInstance.verifySize(size, name, matchCriteria);
@@ -616,8 +616,8 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **size** | **Integer**| The size used for comparison, in kilobytes | |
-| **name** | **String**| The unique name for this verification operation | |
+| **size** | [**Object**](.md)| The size used for comparison, in kilobytes | |
+| **name** | [**Object**](.md)| The unique name for this verification operation | |
 | **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | |
 
 ### Return type

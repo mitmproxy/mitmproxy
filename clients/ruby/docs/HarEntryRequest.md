@@ -4,16 +4,16 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **method** | **String** |  |  |
-| **url** | **String** |  |  |
-| **http_version** | **String** |  |  |
-| **cookies** | [**Array&lt;HarEntryRequestCookiesInner&gt;**](HarEntryRequestCookiesInner.md) |  |  |
-| **headers** | [**Array&lt;Header&gt;**](Header.md) |  |  |
-| **query_string** | [**Array&lt;HarEntryRequestQueryStringInner&gt;**](HarEntryRequestQueryStringInner.md) |  |  |
+| **method** | **Object** |  |  |
+| **url** | **Object** |  |  |
+| **http_version** | **Object** |  |  |
+| **cookies** | **Object** |  |  |
+| **headers** | **Object** |  |  |
+| **query_string** | **Object** |  |  |
 | **post_data** | [**HarEntryRequestPostData**](HarEntryRequestPostData.md) |  | [optional] |
-| **headers_size** | **Integer** |  |  |
-| **body_size** | **Integer** |  |  |
-| **comment** | **String** |  | [optional] |
+| **headers_size** | **Object** |  |  |
+| **body_size** | **Object** |  |  |
+| **comment** | **Object** |  | [optional] |
 
 ## Example
 

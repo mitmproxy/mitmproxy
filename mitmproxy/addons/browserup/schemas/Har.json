@@ -1,9 +1,9 @@
 {
   "type": "object",
-  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "required": [
     "log"
   ],
+  "patternProperties": { "^_[^_]+": { "type": ["number", "string"] } },
   "properties": {
     "log": {
       "type": "object",

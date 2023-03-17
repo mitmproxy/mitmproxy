@@ -7,16 +7,16 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**method** | **String** |  |  |
-|**url** | **URI** |  |  |
-|**httpVersion** | **String** |  |  |
-|**cookies** | [**List&lt;HarEntryRequestCookiesInner&gt;**](HarEntryRequestCookiesInner.md) |  |  |
-|**headers** | [**List&lt;Header&gt;**](Header.md) |  |  |
-|**queryString** | [**List&lt;HarEntryRequestQueryStringInner&gt;**](HarEntryRequestQueryStringInner.md) |  |  |
+|**method** | **Object** |  |  |
+|**url** | **Object** |  |  |
+|**httpVersion** | **Object** |  |  |
+|**cookies** | **Object** |  |  |
+|**headers** | **Object** |  |  |
+|**queryString** | **Object** |  |  |
 |**postData** | [**HarEntryRequestPostData**](HarEntryRequestPostData.md) |  |  [optional] |
-|**headersSize** | **Integer** |  |  |
-|**bodySize** | **Integer** |  |  |
-|**comment** | **String** |  |  [optional] |
+|**headersSize** | **Object** |  |  |
+|**bodySize** | **Object** |  |  |
+|**comment** | **Object** |  |  [optional] |
 
 
 

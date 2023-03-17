@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,20 +51,20 @@ import com.browserup.proxy_client.JSON;
 public class HarLogCreator {
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
+  private Object name = null;
 
   public static final String SERIALIZED_NAME_VERSION = "version";
   @SerializedName(SERIALIZED_NAME_VERSION)
-  private String version;
+  private Object version = null;
 
   public static final String SERIALIZED_NAME_COMMENT = "comment";
   @SerializedName(SERIALIZED_NAME_COMMENT)
-  private String comment;
+  private Object comment = null;
 
   public HarLogCreator() {
   }
 
-  public HarLogCreator name(String name) {
+  public HarLogCreator name(Object name) {
     
     this.name = name;
     return this;
@@ -73,19 +74,19 @@ public class HarLogCreator {
    * Get name
    * @return name
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getName() {
+  public Object getName() {
     return name;
   }
 
 
-  public void setName(String name) {
+  public void setName(Object name) {
     this.name = name;
   }
 
 
-  public HarLogCreator version(String version) {
+  public HarLogCreator version(Object version) {
     
     this.version = version;
     return this;
@@ -95,19 +96,19 @@ public class HarLogCreator {
    * Get version
    * @return version
   **/
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
 
-  public String getVersion() {
+  public Object getVersion() {
     return version;
   }
 
 
-  public void setVersion(String version) {
+  public void setVersion(Object version) {
     this.version = version;
   }
 
 
-  public HarLogCreator comment(String comment) {
+  public HarLogCreator comment(Object comment) {
     
     this.comment = comment;
     return this;
@@ -119,12 +120,12 @@ public class HarLogCreator {
   **/
   @javax.annotation.Nullable
 
-  public String getComment() {
+  public Object getComment() {
     return comment;
   }
 
 
-  public void setComment(String comment) {
+  public void setComment(Object comment) {
     this.comment = comment;
   }
 
@@ -144,9 +145,20 @@ public class HarLogCreator {
         Objects.equals(this.comment, harLogCreator.comment);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(name, version, comment);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -214,15 +226,6 @@ public class HarLogCreator {
         if (jsonObj.get(requiredField) == null) {
           throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
         }
-      }
-      if (!jsonObj.get("name").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
-      }
-      if (!jsonObj.get("version").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `version` to be a primitive type in the JSON string but got `%s`", jsonObj.get("version").toString()));
-      }
-      if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
       }
   }
 
