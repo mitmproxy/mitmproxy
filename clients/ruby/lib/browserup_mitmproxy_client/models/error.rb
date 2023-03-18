@@ -15,17 +15,17 @@ require 'time'
 
 module BrowserupMitmProxy
   class Error
-    # Short details of the error
-    attr_accessor :details
-
     # Name of the Error to add. Stored in har under _errors
     attr_accessor :name
+
+    # Short details of the error
+    attr_accessor :details
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'details' => :'details',
-        :'name' => :'name'
+        :'name' => :'name',
+        :'details' => :'details'
       }
     end
 
@@ -37,8 +37,8 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'details' => :'String',
-        :'name' => :'String'
+        :'name' => :'String',
+        :'details' => :'String'
       }
     end
 
@@ -63,12 +63,12 @@ module BrowserupMitmProxy
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'details')
-        self.details = attributes[:'details']
-      end
-
       if attributes.key?(:'name')
         self.name = attributes[:'name']
+      end
+
+      if attributes.key?(:'details')
+        self.details = attributes[:'details']
       end
     end
 
@@ -90,8 +90,8 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          details == o.details &&
-          name == o.name
+          name == o.name &&
+          details == o.details
     end
 
     # @see the `==` method
@@ -103,7 +103,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [details, name].hash
+      [name, details].hash
     end
 
     # Builds the object from hash

@@ -60,7 +60,7 @@ import com.browserup.proxy_client.auth.ApiKeyAuth;
  */
 public class ApiClient {
 
-    private String basePath = "http://localhost:8088";
+    private String basePath = "http://localhost:48088";
     protected List<ServerConfiguration> servers = new ArrayList<ServerConfiguration>(Arrays.asList(
     new ServerConfiguration(
       "http://localhost:{port}",
@@ -68,10 +68,10 @@ public class ApiClient {
       new HashMap<String, ServerVariable>() {{
         put("port", new ServerVariable(
           "No description provided",
-          "8088",
+          "48088",
           new HashSet<String>(
             Arrays.asList(
-              "8088"
+              "48088"
             )
           )
         ));
@@ -148,7 +148,7 @@ public class ApiClient {
         json = new JSON();
 
         // Set default User-Agent.
-        setUserAgent("OpenAPI-Generator/1.0.6-SNAPSHOT/java");
+        setUserAgent("OpenAPI-Generator/1.0.8-SNAPSHOT/java");
 
         authentications = new HashMap<String, Authentication>();
     }
@@ -165,7 +165,7 @@ public class ApiClient {
     /**
      * Set base path
      *
-     * @param basePath Base path of the URL (e.g http://localhost:8088
+     * @param basePath Base path of the URL (e.g http://localhost:48088
      * @return An instance of OkHttpClient
      */
     public ApiClient setBasePath(String basePath) {

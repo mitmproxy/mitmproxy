@@ -121,7 +121,7 @@ api.addCounter(counter, callback);
 
 ## Documentation for API Endpoints
 
-All URIs are relative to *http://localhost:8088*
+All URIs are relative to *http://localhost:48088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------

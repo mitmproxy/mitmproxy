@@ -145,7 +145,7 @@ module BrowserupMitmProxy
 
     def initialize
       @scheme = 'http'
-      @host = 'localhost:8088'
+      @host = 'localhost:48088'
       @base_path = ''
       @server_index = 0
       @server_operation_index = {}
@@ -239,9 +239,9 @@ module BrowserupMitmProxy
           variables: {
             port: {
                 description: "No description provided",
-                default_value: "8088",
+                default_value: "48088",
                 enum_values: [
-                  "8088"
+                  "48088"
                 ]
               }
             }

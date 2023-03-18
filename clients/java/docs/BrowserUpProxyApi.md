@@ -1,6 +1,6 @@
 # BrowserUpProxyApi
 
-All URIs are relative to *http://localhost:8088*
+All URIs are relative to *http://localhost:48088*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -36,7 +36,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
@@ -98,7 +98,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Error error = new Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
@@ -160,7 +160,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     try {
@@ -218,7 +218,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     try {
@@ -275,7 +275,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     String title = "title_example"; // String | The unique title for this har page/step.
@@ -337,7 +337,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     try {
@@ -395,7 +395,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     String name = "name_example"; // String | The unique name for this verification operation
@@ -460,7 +460,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     String name = "name_example"; // String | The unique name for this verification operation
@@ -525,7 +525,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Integer time = 56; // Integer | The time used for comparison
@@ -592,7 +592,7 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8088");
+    defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Integer size = 56; // Integer | The size used for comparison, in kilobytes

@@ -1,6 +1,6 @@
 # BrowserUpMitmProxyClient.BrowserUpProxyApi
 
-All URIs are relative to *http://localhost:8088*
+All URIs are relative to *http://localhost:48088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------

@@ -33,11 +33,11 @@ class ApiClient {
      * Overrides the default value set in spec file if present
      * @param {String} basePath
      */
-    constructor(basePath = 'http://localhost:8088') {
+    constructor(basePath = 'http://localhost:48088') {
         /**
          * The base URL against which to resolve every API call's (relative) path.
          * @type {String}
-         * @default http://localhost:8088
+         * @default http://localhost:48088
          */
         this.basePath = basePath.replace(/\/+$/, '');
 
@@ -597,9 +597,9 @@ class ApiClient {
               'variables': {
                 port: {
                     'description': "No description provided",
-                    'default_value': "8088",
+                    'default_value': "48088",
                     'enum_values': [
-                      "8088"
+                      "48088"
                     ]
                   }
                 }
