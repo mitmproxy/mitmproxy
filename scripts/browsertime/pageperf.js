@@ -212,7 +212,7 @@ function postPerf(){
    sendTimings(page_timings);
 }
 
-function proxyMgmtURL(){ window.bupURL }
+function proxyMgmtURL(){ return window.bupURL; }
 
 function sendTimings(page_timings){
     let data = new FormData();
