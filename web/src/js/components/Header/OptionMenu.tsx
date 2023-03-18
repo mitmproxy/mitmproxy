@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CommandBarToggle, EventlogToggle, OptionsToggle } from "./MenuToggle";
+import { CommandBarToggle, EventlogToggle, OptionsToggle, TreeViewToggle } from "./MenuToggle";
 import Button from "../common/Button";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
