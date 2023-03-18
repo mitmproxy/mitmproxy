@@ -3,7 +3,6 @@ from mitmproxy import ctx
 import logging
 
 import re
-import os
 
 # The intention is that we can inject a script into browser-responses for html
 # that lets us get DOM timings, first paint time, and other metrics. Devs and managers would like

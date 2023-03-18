@@ -23,7 +23,7 @@ class BrowserUpAddonsManagerAddOn:
 
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
-        ctx.options.update(listen_port  = 48080)
+        ctx.options.update(listen_port = 48080)
         l.add_option(
             "addons_management_port", int, 48088, "REST api management port.",
         )
