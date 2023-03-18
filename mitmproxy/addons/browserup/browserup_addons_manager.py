@@ -23,8 +23,9 @@ class BrowserUpAddonsManagerAddOn:
 
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
+        ctx.options.update(listen_port  = 48080)
         l.add_option(
-            "addons_management_port", int, 8088, "REST api management port.",
+            "addons_management_port", int, 48088, "REST api management port.",
         )
 
     def running(self):
@@ -51,7 +52,7 @@ class BrowserUpAddonsManagerAddOn:
             version='1.0.0',
             servers = [{"url": "http://localhost:{port}/",
                         "description": "The development API server",
-                        "variables": {"port": {"enum": ["8088"], "default": '8088'}}
+                        "variables": {"port": {"enum": ["48088"], "default": '48088'}}
                         }],
             tags = [{"name": 'The BrowserUp MitmProxy API', "description": "BrowserUp MitmProxy REST API"}],
             info= {"description":

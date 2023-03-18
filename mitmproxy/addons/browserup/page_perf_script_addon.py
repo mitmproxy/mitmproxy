@@ -17,7 +17,7 @@ class PagePerfScriptAddOn:
     def get_proxy_management_url(self):
         url = "http://{0}:{1}".format(
             ctx.options.listen_host or "127.0.0.1",
-            os.getenv('PROXY_MANAGEMENT_PORT') or "48088"
+            ctx.options.addons_management_port or "48088"
         )
         return url
 
