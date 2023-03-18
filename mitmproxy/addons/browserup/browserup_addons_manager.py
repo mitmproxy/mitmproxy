@@ -6,7 +6,7 @@ import logging
 import falcon
 import os
 
-
+from typing import Optional
 from wsgiref.simple_server import make_server
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -24,8 +24,12 @@ class BrowserUpAddonsManagerAddOn:
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
         ctx.options.update(listen_port = 48080)
+
         l.add_option(
-            "addons_management_port", int, 48088, "REST api management port.",
+            name="addons_management_port",
+            typespec=Optional[int],
+            default=48088,
+            help= "REST api management port.",
         )
 
     def running(self):

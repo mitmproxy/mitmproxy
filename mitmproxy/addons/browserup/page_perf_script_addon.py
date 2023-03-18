@@ -1,7 +1,7 @@
 import mitmproxy.http
 from mitmproxy import ctx
 import logging
-
+import os
 import re
 
 # The intention is that we can inject a script into browser-responses for html
@@ -14,10 +14,9 @@ class PagePerfScriptAddOn:
         logging.info('Loading PagePerfScriptAddon')
 
     def get_proxy_management_url(self):
-        url = "http://{0}:{1}".format(
-            ctx.options.listen_host or "127.0.0.1",
-            ctx.options.addons_management_port or "48088"
-        )
+        management_port = os.environ['PROXY_MANAGEMENT_PORT'] or ctx.options.addons_management_port or "48088"
+        proxy_baseurl = ctx.options.listen_host or "127.0.0.1"
+        url = "http://{0}:{1}".format(proxy_baseurl , management_port)
         return url
 
     def request(self, flow: mitmproxy.http.HTTPFlow):
@@ -31,6 +30,7 @@ class PagePerfScriptAddOn:
     def response(self, flow: mitmproxy.http.HTTPFlow):
         if flow.response is not None and "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
             proxy_mgmt_url = self.get_proxy_management_url()
+            logging.info('Proxy management URL' + proxy_mgmt_url)
             src_url = proxy_mgmt_url + "/browser/scripts/pageperf.js"
 
             flow.response.headers["access-control-allow-origin"] = "*"
