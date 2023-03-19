@@ -117,7 +117,6 @@ class HarManagerMixin():
         return None
 
     def new_har(self, initial_page_ref=DEFAULT_PAGE_REF, initial_page_title=DEFAULT_PAGE_TITLE, create_page=False):
-
         if create_page:
             logging.info(
                 'Creating new har with initial page ref: {}, title: {}'.

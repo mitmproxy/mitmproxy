@@ -81,7 +81,7 @@ class HarBuilder():
         return {
             "status": 0,
             "statusText": "",
-            "httpVersion": "",
+            "httpVersion": "unknown",
             "cookies": [],
             "headers": [],
             "content": {
@@ -113,8 +113,8 @@ class HarBuilder():
             "pageref": "",
             "startedDateTime": "",
             "time": 0,
-            "request": {},
-            "response": {},
+            "request": HarBuilder.entry_request(),
+            "response": HarBuilder.entry_response(),
             "_webSocketMessages": [],
             "cache": {},
             "timings": HarBuilder.entry_timings(),

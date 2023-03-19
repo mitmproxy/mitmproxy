@@ -39,6 +39,30 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'href'
+     */
+    @Test
+    public void hrefTest() {
+        // TODO: test href
+    }
+
+    /**
+     * Test the property 'dns'
+     */
+    @Test
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'firstPaint'
+     */
+    @Test
+    public void firstPaintTest() {
+        // TODO: test firstPaint
+    }
+
+    /**
      * Test the property 'largestContentfulPaint'
      */
     @Test
@@ -47,11 +71,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstContentfulPaint'
+     * Test the property 'ttfb'
      */
     @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
+    public void ttfbTest() {
+        // TODO: test ttfb
     }
 
     /**
@@ -60,6 +84,22 @@ public class PageTimingTest {
     @Test
     public void firstInputDelayTest() {
         // TODO: test firstInputDelay
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'cumulativeLayoutShift'
+     */
+    @Test
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
     }
 
     /**
@@ -79,46 +119,6 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'ttfb'
-     */
-    @Test
-    public void ttfbTest() {
-        // TODO: test ttfb
-    }
-
-    /**
-     * Test the property 'href'
-     */
-    @Test
-    public void hrefTest() {
-        // TODO: test href
-    }
-
-    /**
-     * Test the property 'ssl'
-     */
-    @Test
-    public void sslTest() {
-        // TODO: test ssl
-    }
-
-    /**
-     * Test the property 'dns'
-     */
-    @Test
-    public void dnsTest() {
-        // TODO: test dns
-    }
-
-    /**
-     * Test the property 'cumulativeLayoutShift'
-     */
-    @Test
-    public void cumulativeLayoutShiftTest() {
-        // TODO: test cumulativeLayoutShift
-    }
-
-    /**
      * Test the property 'onLoad'
      */
     @Test
@@ -127,11 +127,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstPaint'
+     * Test the property 'firstContentfulPaint'
      */
     @Test
-    public void firstPaintTest() {
-        // TODO: test firstPaint
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
 }

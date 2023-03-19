@@ -285,14 +285,29 @@ components:
   schemas:
     PageTiming:
       properties:
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
+          type: string
+        _dns:
+          description: dns lookup time from the browser
+          type: number
+        _firstPaint:
+          description: firstPaint from the browser
+          type: number
         _largestContentfulPaint:
           description: largestContentfulPaint from the browser
           type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
           type: number
         _firstInputDelay:
           description: firstInputDelay from the browser
+          type: number
+        _ssl:
+          description: Ssl connect time from the browser
+          type: number
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
         onContentLoad:
           description: onContentLoad per the browser
@@ -300,26 +315,11 @@ components:
         _domInteractive:
           description: domInteractive from the browser
           type: number
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
-          type: number
-        _href:
-          description: "Top level href, including hashtag, etc per the browser"
-          type: string
-        _ssl:
-          description: Ssl connect time from the browser
-          type: number
-        _dns:
-          description: dns lookup time from the browser
-          type: number
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
-          type: number
         onLoad:
           description: onLoad per the browser
           type: number
-        _firstPaint:
-          description: firstPaint from the browser
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
           type: number
       type: object
     NameValuePair:
@@ -415,12 +415,12 @@ components:
         name: name
         type: type
       properties:
-        name:
-          description: Name
-          type: string
         result:
           description: Result True / False
           type: boolean
+        name:
+          description: Name
+          type: string
         type:
           description: Type
           type: string
