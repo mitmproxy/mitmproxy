@@ -42,7 +42,6 @@ function observeAndReportFirstInputDelay() {
     }
     new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
-            console.log('Observin')
             const delay = Number((entry.processingStart - entry.startTime).toFixed(1));
 
             var paint = {};

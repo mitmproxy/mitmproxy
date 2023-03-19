@@ -3,6 +3,8 @@ import os
 import glob
 import json
 import falcon
+import logging
+
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
@@ -228,6 +230,7 @@ class PageTimingsResource():
     # By accepting regular form posts, rather than application/json, we get out of some
     # CORS headaches.
     def on_post(self, req, resp):
+        logging.debug('Page timings resource post')
         try:
             form = req.get_media()
             page_timings = {}
@@ -235,10 +238,13 @@ class PageTimingsResource():
                 page_timings = json.loads(part.text)
             self.HarCaptureAddon.add_page_info_to_har(page_timings)
         except ValidationError as err:
+            logging.debug('Page timings validation error')
+            logging.debug(json.dumps({'Page timings error': err.messages}))
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
             resp.text = json.dumps({'error': err.messages}, ensure_ascii=False)
         else:
+            logging.debug('Page timings returning 204')
             resp.status = falcon.HTTP_204
 
 

@@ -12,6 +12,7 @@ import re
 class PagePerfScriptAddOn:
     def load(self, l):
         logging.info('Loading PagePerfScriptAddon')
+        self.injectable_methods = ['GET', 'POST', 'PUT']
 
     def get_proxy_management_url(self):
         management_port = os.environ.get('PROXY_MANAGEMENT_PORT') or ctx.options.addons_management_port or "48088"
@@ -28,7 +29,11 @@ class PagePerfScriptAddOn:
                                                                     "access-control-max-age": "1728000"})
 
     def response(self, flow: mitmproxy.http.HTTPFlow):
-        if flow.response is not None and "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
+        if flow.response is None or flow.request.method not in self.injectable_methods or flow.response.status_code != 200:
+            logging.debug('Not injecting script')
+            return
+
+        if "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
             proxy_mgmt_url = self.get_proxy_management_url()
             logging.info('Proxy management URL' + proxy_mgmt_url)
             src_url = proxy_mgmt_url + "/browser/scripts/pageperf.js"

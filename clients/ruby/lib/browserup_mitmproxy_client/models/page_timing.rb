@@ -15,57 +15,57 @@ require 'time'
 
 module BrowserupMitmProxy
   class PageTiming
-    # Top level href, including hashtag, etc per the browser
-    attr_accessor :_href
-
-    # dns lookup time from the browser
-    attr_accessor :_dns
-
-    # firstPaint from the browser
-    attr_accessor :_first_paint
-
-    # largestContentfulPaint from the browser
-    attr_accessor :_largest_contentful_paint
-
-    # Time to first byte of the page's first request per the browser
-    attr_accessor :_ttfb
-
-    # firstInputDelay from the browser
-    attr_accessor :_first_input_delay
+    # domInteractive from the browser
+    attr_accessor :_dom_interactive
 
     # Ssl connect time from the browser
     attr_accessor :_ssl
 
-    # cumulativeLayoutShift metric from the browser
-    attr_accessor :_cumulative_layout_shift
-
     # onContentLoad per the browser
     attr_accessor :on_content_load
 
-    # domInteractive from the browser
-    attr_accessor :_dom_interactive
+    # firstPaint from the browser
+    attr_accessor :_first_paint
 
-    # onLoad per the browser
-    attr_accessor :on_load
+    # firstInputDelay from the browser
+    attr_accessor :_first_input_delay
 
     # firstContentfulPaint from the browser
     attr_accessor :_first_contentful_paint
 
+    # dns lookup time from the browser
+    attr_accessor :_dns
+
+    # Top level href, including hashtag, etc per the browser
+    attr_accessor :_href
+
+    # cumulativeLayoutShift metric from the browser
+    attr_accessor :_cumulative_layout_shift
+
+    # onLoad per the browser
+    attr_accessor :on_load
+
+    # Time to first byte of the page's first request per the browser
+    attr_accessor :_ttfb
+
+    # largestContentfulPaint from the browser
+    attr_accessor :_largest_contentful_paint
+
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'_href' => :'_href',
-        :'_dns' => :'_dns',
-        :'_first_paint' => :'_firstPaint',
-        :'_largest_contentful_paint' => :'_largestContentfulPaint',
-        :'_ttfb' => :'_ttfb',
-        :'_first_input_delay' => :'_firstInputDelay',
-        :'_ssl' => :'_ssl',
-        :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
-        :'on_content_load' => :'onContentLoad',
         :'_dom_interactive' => :'_domInteractive',
+        :'_ssl' => :'_ssl',
+        :'on_content_load' => :'onContentLoad',
+        :'_first_paint' => :'_firstPaint',
+        :'_first_input_delay' => :'_firstInputDelay',
+        :'_first_contentful_paint' => :'_firstContentfulPaint',
+        :'_dns' => :'_dns',
+        :'_href' => :'_href',
+        :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
         :'on_load' => :'onLoad',
-        :'_first_contentful_paint' => :'_firstContentfulPaint'
+        :'_ttfb' => :'_ttfb',
+        :'_largest_contentful_paint' => :'_largestContentfulPaint'
       }
     end
 
@@ -77,18 +77,18 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'_href' => :'String',
-        :'_dns' => :'Float',
-        :'_first_paint' => :'Float',
-        :'_largest_contentful_paint' => :'Float',
-        :'_ttfb' => :'Float',
-        :'_first_input_delay' => :'Float',
-        :'_ssl' => :'Float',
-        :'_cumulative_layout_shift' => :'Float',
-        :'on_content_load' => :'Float',
         :'_dom_interactive' => :'Float',
+        :'_ssl' => :'Float',
+        :'on_content_load' => :'Float',
+        :'_first_paint' => :'Float',
+        :'_first_input_delay' => :'Float',
+        :'_first_contentful_paint' => :'Float',
+        :'_dns' => :'Float',
+        :'_href' => :'String',
+        :'_cumulative_layout_shift' => :'Float',
         :'on_load' => :'Float',
-        :'_first_contentful_paint' => :'Float'
+        :'_ttfb' => :'Float',
+        :'_largest_contentful_paint' => :'Float'
       }
     end
 
@@ -113,52 +113,52 @@ module BrowserupMitmProxy
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'_href')
-        self._href = attributes[:'_href']
-      end
-
-      if attributes.key?(:'_dns')
-        self._dns = attributes[:'_dns']
-      end
-
-      if attributes.key?(:'_first_paint')
-        self._first_paint = attributes[:'_first_paint']
-      end
-
-      if attributes.key?(:'_largest_contentful_paint')
-        self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
-      end
-
-      if attributes.key?(:'_ttfb')
-        self._ttfb = attributes[:'_ttfb']
-      end
-
-      if attributes.key?(:'_first_input_delay')
-        self._first_input_delay = attributes[:'_first_input_delay']
+      if attributes.key?(:'_dom_interactive')
+        self._dom_interactive = attributes[:'_dom_interactive']
       end
 
       if attributes.key?(:'_ssl')
         self._ssl = attributes[:'_ssl']
       end
 
-      if attributes.key?(:'_cumulative_layout_shift')
-        self._cumulative_layout_shift = attributes[:'_cumulative_layout_shift']
-      end
-
       if attributes.key?(:'on_content_load')
         self.on_content_load = attributes[:'on_content_load']
       end
 
-      if attributes.key?(:'_dom_interactive')
-        self._dom_interactive = attributes[:'_dom_interactive']
+      if attributes.key?(:'_first_paint')
+        self._first_paint = attributes[:'_first_paint']
+      end
+
+      if attributes.key?(:'_first_input_delay')
+        self._first_input_delay = attributes[:'_first_input_delay']
+      end
+
+      if attributes.key?(:'_first_contentful_paint')
+        self._first_contentful_paint = attributes[:'_first_contentful_paint']
+      end
+
+      if attributes.key?(:'_dns')
+        self._dns = attributes[:'_dns']
+      end
+
+      if attributes.key?(:'_href')
+        self._href = attributes[:'_href']
+      end
+
+      if attributes.key?(:'_cumulative_layout_shift')
+        self._cumulative_layout_shift = attributes[:'_cumulative_layout_shift']
       end
 
       if attributes.key?(:'on_load')
         self.on_load = attributes[:'on_load']
       end
 
-      if attributes.key?(:'_first_contentful_paint')
-        self._first_contentful_paint = attributes[:'_first_contentful_paint']
+      if attributes.key?(:'_ttfb')
+        self._ttfb = attributes[:'_ttfb']
+      end
+
+      if attributes.key?(:'_largest_contentful_paint')
+        self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
       end
     end
 
@@ -180,18 +180,18 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          _href == o._href &&
-          _dns == o._dns &&
-          _first_paint == o._first_paint &&
-          _largest_contentful_paint == o._largest_contentful_paint &&
-          _ttfb == o._ttfb &&
-          _first_input_delay == o._first_input_delay &&
-          _ssl == o._ssl &&
-          _cumulative_layout_shift == o._cumulative_layout_shift &&
-          on_content_load == o.on_content_load &&
           _dom_interactive == o._dom_interactive &&
+          _ssl == o._ssl &&
+          on_content_load == o.on_content_load &&
+          _first_paint == o._first_paint &&
+          _first_input_delay == o._first_input_delay &&
+          _first_contentful_paint == o._first_contentful_paint &&
+          _dns == o._dns &&
+          _href == o._href &&
+          _cumulative_layout_shift == o._cumulative_layout_shift &&
           on_load == o.on_load &&
-          _first_contentful_paint == o._first_contentful_paint
+          _ttfb == o._ttfb &&
+          _largest_contentful_paint == o._largest_contentful_paint
     end
 
     # @see the `==` method
@@ -203,7 +203,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [_href, _dns, _first_paint, _largest_contentful_paint, _ttfb, _first_input_delay, _ssl, _cumulative_layout_shift, on_content_load, _dom_interactive, on_load, _first_contentful_paint].hash
+      [_dom_interactive, _ssl, on_content_load, _first_paint, _first_input_delay, _first_contentful_paint, _dns, _href, _cumulative_layout_shift, on_load, _ttfb, _largest_contentful_paint].hash
     end
 
     # Builds the object from hash

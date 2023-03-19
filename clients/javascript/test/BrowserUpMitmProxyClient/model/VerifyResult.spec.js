@@ -54,12 +54,6 @@
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.VerifyResult);
     });
 
-    it('should have the property result (base name: "result")', function() {
-      // uncomment below and update the code to test the property result
-      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
-      //expect(instance).to.be();
-    });
-
     it('should have the property name (base name: "name")', function() {
       // uncomment below and update the code to test the property name
       //var instance = new BrowserUpMitmProxyClient.VerifyResult();
@@ -68,6 +62,12 @@
 
     it('should have the property type (base name: "type")', function() {
       // uncomment below and update the code to test the property type
+      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property result (base name: "result")', function() {
+      // uncomment below and update the code to test the property result
       //var instance = new BrowserUpMitmProxyClient.VerifyResult();
       //expect(instance).to.be();
     });

@@ -285,41 +285,41 @@ components:
   schemas:
     PageTiming:
       properties:
-        _href:
-          description: "Top level href, including hashtag, etc per the browser"
-          type: string
-        _dns:
-          description: dns lookup time from the browser
-          type: number
-        _firstPaint:
-          description: firstPaint from the browser
-          type: number
-        _largestContentfulPaint:
-          description: largestContentfulPaint from the browser
-          type: number
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
-          type: number
-        _firstInputDelay:
-          description: firstInputDelay from the browser
+        _domInteractive:
+          description: domInteractive from the browser
           type: number
         _ssl:
           description: Ssl connect time from the browser
           type: number
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
-          type: number
         onContentLoad:
           description: onContentLoad per the browser
           type: number
-        _domInteractive:
-          description: domInteractive from the browser
+        _firstPaint:
+          description: firstPaint from the browser
+          type: number
+        _firstInputDelay:
+          description: firstInputDelay from the browser
+          type: number
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
+          type: number
+        _dns:
+          description: dns lookup time from the browser
+          type: number
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
+          type: string
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
         onLoad:
           description: onLoad per the browser
           type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
+        _ttfb:
+          description: Time to first byte of the page's first request per the browser
+          type: number
+        _largestContentfulPaint:
+          description: largestContentfulPaint from the browser
           type: number
       type: object
     NameValuePair:
@@ -415,26 +415,26 @@ components:
         name: name
         type: type
       properties:
-        result:
-          description: Result True / False
-          type: boolean
         name:
           description: Name
           type: string
         type:
           description: Type
           type: string
+        result:
+          description: Result True / False
+          type: boolean
       type: object
     Error:
       example:
         name: name
         details: details
       properties:
-        name:
-          description: Name of the Error to add. Stored in har under _errors
-          type: string
         details:
           description: Short details of the error
+          type: string
+        name:
+          description: Name of the Error to add. Stored in har under _errors
           type: string
       type: object
     Counter:
