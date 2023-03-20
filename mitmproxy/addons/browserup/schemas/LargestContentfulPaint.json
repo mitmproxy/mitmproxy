@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "startTime": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "size": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": -1,
+      "default": -1
+    },
+    "domPath": {
+      "type": "string",
+      "default": ""
+    },
+    "tag": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}
+

@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **ssl** | **Number** |  | [optional] [default to -1]
 **ttfb** | **Number** |  | [optional] [default to -1]
 **cumulativeLayoutShift** | **Number** |  | [optional] [default to -1]
-**largestContentfulPaint** | **Number** |  | [optional] [default to -1]
+**largestContentfulPaint** | [**LargestContentfulPaint**](LargestContentfulPaint.md) |  | [optional] 
 **firstPaint** | **Number** |  | [optional] [default to -1]
 **firstInputDelay** | **Number** |  | [optional] [default to -1]
 **domInteractive** | **Number** |  | [optional] [default to -1]

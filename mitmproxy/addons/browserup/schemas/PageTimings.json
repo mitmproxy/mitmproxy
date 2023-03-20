@@ -48,10 +48,7 @@
       "default": -1
     },
     "_largestContentfulPaint": {
-      "type": "integer",
-      "format": "int64",
-      "minimum": -1,
-      "default": -1
+      "$ref": "#/components/schemas/LargestContentfulPaint"
     },
     "_firstPaint": {
       "type": "integer",

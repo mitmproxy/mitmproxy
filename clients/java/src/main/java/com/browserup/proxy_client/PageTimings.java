@@ -15,6 +15,7 @@ package com.browserup.proxy_client;
 
 import java.util.Objects;
 import java.util.Arrays;
+import com.browserup.proxy_client.LargestContentfulPaint;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
@@ -78,7 +79,7 @@ public class PageTimings {
 
   public static final String SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT = "_largestContentfulPaint";
   @SerializedName(SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT)
-  private Long largestContentfulPaint = -1l;
+  private LargestContentfulPaint largestContentfulPaint;
 
   public static final String SERIALIZED_NAME_FIRST_PAINT = "_firstPaint";
   @SerializedName(SERIALIZED_NAME_FIRST_PAINT)
@@ -263,7 +264,7 @@ public class PageTimings {
   }
 
 
-  public PageTimings largestContentfulPaint(Long largestContentfulPaint) {
+  public PageTimings largestContentfulPaint(LargestContentfulPaint largestContentfulPaint) {
     
     this.largestContentfulPaint = largestContentfulPaint;
     return this;
@@ -271,17 +272,16 @@ public class PageTimings {
 
    /**
    * Get largestContentfulPaint
-   * minimum: -1
    * @return largestContentfulPaint
   **/
   @javax.annotation.Nullable
 
-  public Long getLargestContentfulPaint() {
+  public LargestContentfulPaint getLargestContentfulPaint() {
     return largestContentfulPaint;
   }
 
 
-  public void setLargestContentfulPaint(Long largestContentfulPaint) {
+  public void setLargestContentfulPaint(LargestContentfulPaint largestContentfulPaint) {
     this.largestContentfulPaint = largestContentfulPaint;
   }
 

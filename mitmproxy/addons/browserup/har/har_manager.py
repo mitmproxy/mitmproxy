@@ -151,7 +151,7 @@ class HarManagerMixin():
             page['title'] = page_info['title']
             del page_info['title']
         page['pageTimings'] = page['pageTimings'] | page_info
-        # print(self.har)
+        logging.info(self.har)
 
     def add_custom_value_to_har(self, item_type, item):
         page = self.get_or_create_current_page()

@@ -11,7 +11,7 @@
 | **_ssl** | **Integer** |  | [optional][default to -1] |
 | **_ttfb** | **Integer** |  | [optional][default to -1] |
 | **_cumulative_layout_shift** | **Integer** |  | [optional][default to -1] |
-| **_largest_contentful_paint** | **Integer** |  | [optional][default to -1] |
+| **_largest_contentful_paint** | [**LargestContentfulPaint**](LargestContentfulPaint.md) |  | [optional] |
 | **_first_paint** | **Integer** |  | [optional][default to -1] |
 | **_first_input_delay** | **Integer** |  | [optional][default to -1] |
 | **_dom_interactive** | **Integer** |  | [optional][default to -1] |

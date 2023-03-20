@@ -110,6 +110,7 @@ Class | Method | HTTP request | Description
  - [BrowserupMitmProxy::HarLog](docs/HarLog.md)
  - [BrowserupMitmProxy::HarLogCreator](docs/HarLogCreator.md)
  - [BrowserupMitmProxy::Header](docs/Header.md)
+ - [BrowserupMitmProxy::LargestContentfulPaint](docs/LargestContentfulPaint.md)
  - [BrowserupMitmProxy::MatchCriteria](docs/MatchCriteria.md)
  - [BrowserupMitmProxy::MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [BrowserupMitmProxy::NameValuePair](docs/NameValuePair.md)

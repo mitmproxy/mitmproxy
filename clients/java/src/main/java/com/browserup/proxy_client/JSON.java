@@ -112,6 +112,7 @@ public class JSON {
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarLog.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.HarLogCreator.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.Header.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.LargestContentfulPaint.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.MatchCriteria.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.MatchCriteriaRequestHeader.CustomTypeAdapterFactory());
         gsonBuilder.registerTypeAdapterFactory(new com.browserup.proxy_client.NameValuePair.CustomTypeAdapterFactory());

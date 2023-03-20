@@ -27,6 +27,7 @@ docs/HarEntryTimings.md
 docs/HarLog.md
 docs/HarLogCreator.md
 docs/Header.md
+docs/LargestContentfulPaint.md
 docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
@@ -59,6 +60,7 @@ lib/browserup_mitmproxy_client/models/har_entry_timings.rb
 lib/browserup_mitmproxy_client/models/har_log.rb
 lib/browserup_mitmproxy_client/models/har_log_creator.rb
 lib/browserup_mitmproxy_client/models/header.rb
+lib/browserup_mitmproxy_client/models/largest_contentful_paint.rb
 lib/browserup_mitmproxy_client/models/match_criteria.rb
 lib/browserup_mitmproxy_client/models/match_criteria_request_header.rb
 lib/browserup_mitmproxy_client/models/name_value_pair.rb
@@ -89,6 +91,7 @@ spec/models/har_log_creator_spec.rb
 spec/models/har_log_spec.rb
 spec/models/har_spec.rb
 spec/models/header_spec.rb
+spec/models/largest_contentful_paint_spec.rb
 spec/models/match_criteria_request_header_spec.rb
 spec/models/match_criteria_spec.rb
 spec/models/name_value_pair_spec.rb

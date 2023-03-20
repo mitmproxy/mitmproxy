@@ -7,9 +7,7 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
 
 function cumulativeLayoutShift() {
     let supported = PerformanceObserver.supportedEntryTypes;
-    if (!supported || supported.indexOf('layout-shift') === -1) {
-        return;
-    }
+    if (!supported || supported.indexOf('layout-shift') === -1) { return; }
     // See https://web.dev/layout-instability-api
     // https://github.com/mmocny/web-vitals/wiki/Snippets-for-LSN-using-PerformanceObserver#max-session-gap1s-limit5s
     let max = 0;
@@ -37,13 +35,10 @@ function cumulativeLayoutShift() {
 function observeAndReportFirstInputDelay() {
 // note, may need updating for iframes, can use code here:  https://github.com/GoogleChrome/web-vitals
     const supported = PerformanceObserver.supportedEntryTypes;
-    if (!supported || supported.indexOf("first-input") === -1) {
-        return
-    }
+    if (!supported || supported.indexOf("first-input") === -1) { return; }
     new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-            const delay = Number((entry.processingStart - entry.startTime).toFixed(1));
-
+        for (entry of entryList.getEntries()) {
+            var delay = Number((entry.processingStart - entry.startTime).toFixed(1));
             var paint = {};
             performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
 
@@ -86,9 +81,11 @@ function largestContentfulPaint() {
         return stack.slice(1);
     }
 
+    let result =  { startTime: -1, size: -1, domPath: "", tag:  "" };
+
     let supported = PerformanceObserver.supportedEntryTypes;
     if (!supported || supported.indexOf('largest-contentful-paint') === -1) {
-        return;
+        return result;
     }
     let observer = new PerformanceObserver(list => {});
     observer.observe({ type: 'largest-contentful-paint', buffered: true });
@@ -113,7 +110,13 @@ function largestContentfulPaint() {
 
         )
     }
-    return candidates;
+    let lcp = candidates.pop() || {}
+    result.startTime = lcp.startTime || result.startTime
+    result.size = lcp.size || result.size
+    result.domPath = lcp.domPath || result.domPath
+    result.tag = lcp.tag || result.tag
+
+    return result;
 }
 
 function navTimings() {
@@ -170,17 +173,15 @@ function firstPaint() {
             (timing.timeToNonBlankPaint - timing.navigationStart).toFixed(0)
         );
     }
-    return undefined;
+    return -1;
 }
 
-function postPerf(){
+function perfTimings(){
     if (inIframe()) { return };
     var paint = {};
     performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
     var perf = performance.getEntriesByType('navigation')[0];
-
     n = navTimings()
-
     // missing har fields
     let onContentLoad = n.domContentLoadedTime;
     let onLoad = n.pageLoadTime;
@@ -194,7 +195,7 @@ function postPerf(){
     let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart);
     let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart);
 
-    var page_timings = {
+    return {
         "title": window.document.title,
         "onContentLoad": onContentLoad,
         "onLoad": onLoad,
@@ -208,7 +209,6 @@ function postPerf(){
         "_domInteractive": _domInteractive,
         "_firstContentfulPaint": _firstContentfulPaint
    }
-   sendTimings(page_timings);
 }
 
 function proxyMgmtURL(){ return window.bupURL; }
@@ -217,22 +217,28 @@ function sendTimings(page_timings){
     let data = new FormData();
     Object.keys(page_timings).forEach(key => page_timings[key] === undefined ? delete page_timings[key] : {});
     console.log(page_timings);
-    data.append("pageTimings", JSON.stringify(page_timings));
+    data.append("pageTiming", JSON.stringify(page_timings));
     if ('sendBeacon' in navigator) {
-        console.log("----> Sendbeacon---")
+        console.log("Send timings")
         if (navigator.sendBeacon(proxyMgmtURL() + "/har/page_timings", data)) {}
         else { console.error("BrowserUpProxy sendbeacon page_timings error") }
+    }
+}
+function postPerf(){ sendTimings(perfTimings()); }
+function handleClose(){
+    if (window.closeIsHandled) { return true };
+    let title = document.title;
+    console.log("Page change: " + title)
+    window.closeIsHandled = true;
+    if ('sendBeacon' in navigator) {
+        navigator.sendBeacon(proxyMgmtURL() + "/har/page?title=" + title, {});
     }
 }
 
 observeAndReportFirstInputDelay();
 window.addEventListener('load', postPerf);
+window.addEventListener('beforeunload', handleClose);
 
 document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') {
-        console.log("----> Page change---")
-        if ('sendBeacon' in navigator) {
-            navigator.sendBeacon(proxyMgmtURL() + "/har/page?title=", {});
-        }
-    }
+    if (document.visibilityState === 'hidden') { handleClose(); }
 });

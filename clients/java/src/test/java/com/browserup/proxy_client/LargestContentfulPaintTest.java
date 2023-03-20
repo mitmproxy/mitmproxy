@@ -24,41 +24,49 @@ import org.junit.jupiter.api.Test;
 
 
 /**
- * Model tests for VerifyResult
+ * Model tests for LargestContentfulPaint
  */
-public class VerifyResultTest {
-    private final VerifyResult model = new VerifyResult();
+public class LargestContentfulPaintTest {
+    private final LargestContentfulPaint model = new LargestContentfulPaint();
 
     /**
-     * Model tests for VerifyResult
+     * Model tests for LargestContentfulPaint
      */
     @Test
-    public void testVerifyResult() {
-        // TODO: test VerifyResult
+    public void testLargestContentfulPaint() {
+        // TODO: test LargestContentfulPaint
     }
 
     /**
-     * Test the property 'name'
+     * Test the property 'startTime'
      */
     @Test
-    public void nameTest() {
-        // TODO: test name
+    public void startTimeTest() {
+        // TODO: test startTime
     }
 
     /**
-     * Test the property 'result'
+     * Test the property 'size'
      */
     @Test
-    public void resultTest() {
-        // TODO: test result
+    public void sizeTest() {
+        // TODO: test size
     }
 
     /**
-     * Test the property 'type'
+     * Test the property 'domPath'
      */
     @Test
-    public void typeTest() {
-        // TODO: test type
+    public void domPathTest() {
+        // TODO: test domPath
+    }
+
+    /**
+     * Test the property 'tag'
+     */
+    @Test
+    public void tagTest() {
+        // TODO: test tag
     }
 
 }

@@ -75,7 +75,7 @@ module BrowserupMitmProxy
         :'_ssl' => :'Integer',
         :'_ttfb' => :'Integer',
         :'_cumulative_layout_shift' => :'Integer',
-        :'_largest_contentful_paint' => :'Integer',
+        :'_largest_contentful_paint' => :'LargestContentfulPaint',
         :'_first_paint' => :'Integer',
         :'_first_input_delay' => :'Integer',
         :'_dom_interactive' => :'Integer',
@@ -149,8 +149,6 @@ module BrowserupMitmProxy
 
       if attributes.key?(:'_largest_contentful_paint')
         self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
-      else
-        self._largest_contentful_paint = -1
       end
 
       if attributes.key?(:'_first_paint')
@@ -218,10 +216,6 @@ module BrowserupMitmProxy
         invalid_properties.push('invalid value for "_cumulative_layout_shift", must be greater than or equal to -1.')
       end
 
-      if !@_largest_contentful_paint.nil? && @_largest_contentful_paint < -1
-        invalid_properties.push('invalid value for "_largest_contentful_paint", must be greater than or equal to -1.')
-      end
-
       if !@_first_paint.nil? && @_first_paint < -1
         invalid_properties.push('invalid value for "_first_paint", must be greater than or equal to -1.')
       end
@@ -252,7 +246,6 @@ module BrowserupMitmProxy
       return false if !@_ssl.nil? && @_ssl < -1
       return false if !@_ttfb.nil? && @_ttfb < -1
       return false if !@_cumulative_layout_shift.nil? && @_cumulative_layout_shift < -1
-      return false if !@_largest_contentful_paint.nil? && @_largest_contentful_paint < -1
       return false if !@_first_paint.nil? && @_first_paint < -1
       return false if !@_first_input_delay.nil? && @_first_input_delay < -1
       return false if !@_dom_interactive.nil? && @_dom_interactive < -1
@@ -326,16 +319,6 @@ module BrowserupMitmProxy
       end
 
       @_cumulative_layout_shift = _cumulative_layout_shift
-    end
-
-    # Custom attribute writer method with validation
-    # @param [Object] _largest_contentful_paint Value to be assigned
-    def _largest_contentful_paint=(_largest_contentful_paint)
-      if !_largest_contentful_paint.nil? && _largest_contentful_paint < -1
-        fail ArgumentError, 'invalid value for "_largest_contentful_paint", must be greater than or equal to -1.'
-      end
-
-      @_largest_contentful_paint = _largest_contentful_paint
     end
 
     # Custom attribute writer method with validation

@@ -23,6 +23,8 @@ class BrowserUpAddonsManagerAddOn:
 
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
+        logging.info('Version 1.14')
+
         ctx.options.update(listen_port = 48080)
 
         l.add_option(

@@ -22,6 +22,7 @@ docs/HarEntryTimings.md
 docs/HarLog.md
 docs/HarLogCreator.md
 docs/Header.md
+docs/LargestContentfulPaint.md
 docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
@@ -54,6 +55,7 @@ src/BrowserUpMitmProxyClient/model/HarEntryTimings.js
 src/BrowserUpMitmProxyClient/model/HarLog.js
 src/BrowserUpMitmProxyClient/model/HarLogCreator.js
 src/BrowserUpMitmProxyClient/model/Header.js
+src/BrowserUpMitmProxyClient/model/LargestContentfulPaint.js
 src/BrowserUpMitmProxyClient/model/MatchCriteria.js
 src/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.js
 src/BrowserUpMitmProxyClient/model/NameValuePair.js
@@ -81,6 +83,7 @@ test/BrowserUpMitmProxyClient/model/HarEntryTimings.spec.js
 test/BrowserUpMitmProxyClient/model/HarLog.spec.js
 test/BrowserUpMitmProxyClient/model/HarLogCreator.spec.js
 test/BrowserUpMitmProxyClient/model/Header.spec.js
+test/BrowserUpMitmProxyClient/model/LargestContentfulPaint.spec.js
 test/BrowserUpMitmProxyClient/model/MatchCriteria.spec.js
 test/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.spec.js
 test/BrowserUpMitmProxyClient/model/NameValuePair.spec.js

@@ -4,6 +4,9 @@
 
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 
+# we need to regenerate the schema in the top level dir
+
+
 rm -rf java && npx openapi-generator-cli generate \
 --package-name BrowserUpMitmProxyClient \
 -g java -i "${DIR}/../browserup-proxy.schema.json" \

@@ -14,58 +14,22 @@ require 'date'
 require 'time'
 
 module BrowserupMitmProxy
-  class PageTiming
-    # firstPaint from the browser
-    attr_accessor :_first_paint
+  class LargestContentfulPaint
+    attr_accessor :start_time
 
-    # Ssl connect time from the browser
-    attr_accessor :_ssl
+    attr_accessor :size
 
-    # dns lookup time from the browser
-    attr_accessor :_dns
+    attr_accessor :dom_path
 
-    # cumulativeLayoutShift metric from the browser
-    attr_accessor :_cumulative_layout_shift
-
-    # Top level href, including hashtag, etc per the browser
-    attr_accessor :_href
-
-    # firstInputDelay from the browser
-    attr_accessor :_first_input_delay
-
-    # onLoad per the browser
-    attr_accessor :on_load
-
-    # firstContentfulPaint from the browser
-    attr_accessor :_first_contentful_paint
-
-    # domInteractive from the browser
-    attr_accessor :_dom_interactive
-
-    # onContentLoad per the browser
-    attr_accessor :on_content_load
-
-    # Time to first byte of the page's first request per the browser
-    attr_accessor :_ttfb
-
-    # largestContentfulPaint from the browser
-    attr_accessor :_largest_contentful_paint
+    attr_accessor :tag
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'_first_paint' => :'_firstPaint',
-        :'_ssl' => :'_ssl',
-        :'_dns' => :'_dns',
-        :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
-        :'_href' => :'_href',
-        :'_first_input_delay' => :'_firstInputDelay',
-        :'on_load' => :'onLoad',
-        :'_first_contentful_paint' => :'_firstContentfulPaint',
-        :'_dom_interactive' => :'_domInteractive',
-        :'on_content_load' => :'onContentLoad',
-        :'_ttfb' => :'_ttfb',
-        :'_largest_contentful_paint' => :'_largestContentfulPaint'
+        :'start_time' => :'startTime',
+        :'size' => :'size',
+        :'dom_path' => :'domPath',
+        :'tag' => :'tag'
       }
     end
 
@@ -77,18 +41,10 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'_first_paint' => :'Float',
-        :'_ssl' => :'Float',
-        :'_dns' => :'Float',
-        :'_cumulative_layout_shift' => :'Float',
-        :'_href' => :'String',
-        :'_first_input_delay' => :'Float',
-        :'on_load' => :'Float',
-        :'_first_contentful_paint' => :'Float',
-        :'_dom_interactive' => :'Float',
-        :'on_content_load' => :'Float',
-        :'_ttfb' => :'Float',
-        :'_largest_contentful_paint' => :'Float'
+        :'start_time' => :'Integer',
+        :'size' => :'Integer',
+        :'dom_path' => :'String',
+        :'tag' => :'String'
       }
     end
 
@@ -102,63 +58,39 @@ module BrowserupMitmProxy
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupMitmProxy::PageTiming` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupMitmProxy::LargestContentfulPaint` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupMitmProxy::PageTiming`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupMitmProxy::LargestContentfulPaint`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'_first_paint')
-        self._first_paint = attributes[:'_first_paint']
+      if attributes.key?(:'start_time')
+        self.start_time = attributes[:'start_time']
+      else
+        self.start_time = -1
       end
 
-      if attributes.key?(:'_ssl')
-        self._ssl = attributes[:'_ssl']
+      if attributes.key?(:'size')
+        self.size = attributes[:'size']
+      else
+        self.size = -1
       end
 
-      if attributes.key?(:'_dns')
-        self._dns = attributes[:'_dns']
+      if attributes.key?(:'dom_path')
+        self.dom_path = attributes[:'dom_path']
+      else
+        self.dom_path = ''
       end
 
-      if attributes.key?(:'_cumulative_layout_shift')
-        self._cumulative_layout_shift = attributes[:'_cumulative_layout_shift']
-      end
-
-      if attributes.key?(:'_href')
-        self._href = attributes[:'_href']
-      end
-
-      if attributes.key?(:'_first_input_delay')
-        self._first_input_delay = attributes[:'_first_input_delay']
-      end
-
-      if attributes.key?(:'on_load')
-        self.on_load = attributes[:'on_load']
-      end
-
-      if attributes.key?(:'_first_contentful_paint')
-        self._first_contentful_paint = attributes[:'_first_contentful_paint']
-      end
-
-      if attributes.key?(:'_dom_interactive')
-        self._dom_interactive = attributes[:'_dom_interactive']
-      end
-
-      if attributes.key?(:'on_content_load')
-        self.on_content_load = attributes[:'on_content_load']
-      end
-
-      if attributes.key?(:'_ttfb')
-        self._ttfb = attributes[:'_ttfb']
-      end
-
-      if attributes.key?(:'_largest_contentful_paint')
-        self._largest_contentful_paint = attributes[:'_largest_contentful_paint']
+      if attributes.key?(:'tag')
+        self.tag = attributes[:'tag']
+      else
+        self.tag = ''
       end
     end
 
@@ -166,13 +98,43 @@ module BrowserupMitmProxy
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if !@start_time.nil? && @start_time < -1
+        invalid_properties.push('invalid value for "start_time", must be greater than or equal to -1.')
+      end
+
+      if !@size.nil? && @size < -1
+        invalid_properties.push('invalid value for "size", must be greater than or equal to -1.')
+      end
+
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if !@start_time.nil? && @start_time < -1
+      return false if !@size.nil? && @size < -1
       true
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] start_time Value to be assigned
+    def start_time=(start_time)
+      if !start_time.nil? && start_time < -1
+        fail ArgumentError, 'invalid value for "start_time", must be greater than or equal to -1.'
+      end
+
+      @start_time = start_time
+    end
+
+    # Custom attribute writer method with validation
+    # @param [Object] size Value to be assigned
+    def size=(size)
+      if !size.nil? && size < -1
+        fail ArgumentError, 'invalid value for "size", must be greater than or equal to -1.'
+      end
+
+      @size = size
     end
 
     # Checks equality by comparing each attribute.
@@ -180,18 +142,10 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          _first_paint == o._first_paint &&
-          _ssl == o._ssl &&
-          _dns == o._dns &&
-          _cumulative_layout_shift == o._cumulative_layout_shift &&
-          _href == o._href &&
-          _first_input_delay == o._first_input_delay &&
-          on_load == o.on_load &&
-          _first_contentful_paint == o._first_contentful_paint &&
-          _dom_interactive == o._dom_interactive &&
-          on_content_load == o.on_content_load &&
-          _ttfb == o._ttfb &&
-          _largest_contentful_paint == o._largest_contentful_paint
+          start_time == o.start_time &&
+          size == o.size &&
+          dom_path == o.dom_path &&
+          tag == o.tag
     end
 
     # @see the `==` method
@@ -203,7 +157,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [_first_paint, _ssl, _dns, _cumulative_layout_shift, _href, _first_input_delay, on_load, _first_contentful_paint, _dom_interactive, on_content_load, _ttfb, _largest_contentful_paint].hash
+      [start_time, size, dom_path, tag].hash
     end
 
     # Builds the object from hash

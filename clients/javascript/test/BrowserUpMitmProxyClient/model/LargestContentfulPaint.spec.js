@@ -28,7 +28,7 @@
   var instance;
 
   beforeEach(function() {
-    instance = new BrowserUpMitmProxyClient.VerifyResult();
+    instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
   });
 
   var getProperty = function(object, getter, property) {
@@ -47,28 +47,34 @@
       object[property] = value;
   }
 
-  describe('VerifyResult', function() {
-    it('should create an instance of VerifyResult', function() {
-      // uncomment below and update the code to test VerifyResult
-      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
-      //expect(instance).to.be.a(BrowserUpMitmProxyClient.VerifyResult);
+  describe('LargestContentfulPaint', function() {
+    it('should create an instance of LargestContentfulPaint', function() {
+      // uncomment below and update the code to test LargestContentfulPaint
+      //var instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
+      //expect(instance).to.be.a(BrowserUpMitmProxyClient.LargestContentfulPaint);
     });
 
-    it('should have the property name (base name: "name")', function() {
-      // uncomment below and update the code to test the property name
-      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
+    it('should have the property startTime (base name: "startTime")', function() {
+      // uncomment below and update the code to test the property startTime
+      //var instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
       //expect(instance).to.be();
     });
 
-    it('should have the property result (base name: "result")', function() {
-      // uncomment below and update the code to test the property result
-      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
+    it('should have the property size (base name: "size")', function() {
+      // uncomment below and update the code to test the property size
+      //var instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
       //expect(instance).to.be();
     });
 
-    it('should have the property type (base name: "type")', function() {
-      // uncomment below and update the code to test the property type
-      //var instance = new BrowserUpMitmProxyClient.VerifyResult();
+    it('should have the property domPath (base name: "domPath")', function() {
+      // uncomment below and update the code to test the property domPath
+      //var instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property tag (base name: "tag")', function() {
+      // uncomment below and update the code to test the property tag
+      //var instance = new BrowserUpMitmProxyClient.LargestContentfulPaint();
       //expect(instance).to.be();
     });
 

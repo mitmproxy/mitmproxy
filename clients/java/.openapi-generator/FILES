@@ -25,6 +25,7 @@ docs/HarEntryTimings.md
 docs/HarLog.md
 docs/HarLogCreator.md
 docs/Header.md
+docs/LargestContentfulPaint.md
 docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
 docs/NameValuePair.md
@@ -69,6 +70,7 @@ src/main/java/com/browserup/proxy_client/HarLog.java
 src/main/java/com/browserup/proxy_client/HarLogCreator.java
 src/main/java/com/browserup/proxy_client/Header.java
 src/main/java/com/browserup/proxy_client/JSON.java
+src/main/java/com/browserup/proxy_client/LargestContentfulPaint.java
 src/main/java/com/browserup/proxy_client/MatchCriteria.java
 src/main/java/com/browserup/proxy_client/MatchCriteriaRequestHeader.java
 src/main/java/com/browserup/proxy_client/NameValuePair.java
@@ -106,6 +108,7 @@ src/test/java/com/browserup/proxy_client/HarLogCreatorTest.java
 src/test/java/com/browserup/proxy_client/HarLogTest.java
 src/test/java/com/browserup/proxy_client/HarTest.java
 src/test/java/com/browserup/proxy_client/HeaderTest.java
+src/test/java/com/browserup/proxy_client/LargestContentfulPaintTest.java
 src/test/java/com/browserup/proxy_client/MatchCriteriaRequestHeaderTest.java
 src/test/java/com/browserup/proxy_client/MatchCriteriaTest.java
 src/test/java/com/browserup/proxy_client/NameValuePairTest.java

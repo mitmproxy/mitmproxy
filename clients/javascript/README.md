@@ -157,6 +157,7 @@ Class | Method | HTTP request | Description
  - [BrowserUpMitmProxyClient.HarLog](docs/HarLog.md)
  - [BrowserUpMitmProxyClient.HarLogCreator](docs/HarLogCreator.md)
  - [BrowserUpMitmProxyClient.Header](docs/Header.md)
+ - [BrowserUpMitmProxyClient.LargestContentfulPaint](docs/LargestContentfulPaint.md)
  - [BrowserUpMitmProxyClient.MatchCriteria](docs/MatchCriteria.md)
  - [BrowserUpMitmProxyClient.MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [BrowserUpMitmProxyClient.NameValuePair](docs/NameValuePair.md)

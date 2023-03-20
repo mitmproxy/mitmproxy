@@ -35,7 +35,7 @@ class PagePerfScriptAddOn:
 
         if "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
             proxy_mgmt_url = self.get_proxy_management_url()
-            logging.info('Proxy management URL' + proxy_mgmt_url)
+            logging.info('Proxy management URL: ' + proxy_mgmt_url)
             src_url = proxy_mgmt_url + "/browser/scripts/pageperf.js"
 
             flow.response.headers["access-control-allow-origin"] = "*"

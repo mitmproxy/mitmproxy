@@ -14,7 +14,7 @@
 |**ssl** | **Long** |  |  [optional] |
 |**ttfb** | **Long** |  |  [optional] |
 |**cumulativeLayoutShift** | **Integer** |  |  [optional] |
-|**largestContentfulPaint** | **Long** |  |  [optional] |
+|**largestContentfulPaint** | **LargestContentfulPaint** |  |  [optional] |
 |**firstPaint** | **Long** |  |  [optional] |
 |**firstInputDelay** | **Long** |  |  [optional] |
 |**domInteractive** | **Long** |  |  [optional] |

@@ -285,35 +285,35 @@ components:
   schemas:
     PageTiming:
       properties:
-        _domInteractive:
-          description: domInteractive from the browser
+        _firstPaint:
+          description: firstPaint from the browser
           type: number
         _ssl:
           description: Ssl connect time from the browser
           type: number
-        onContentLoad:
-          description: onContentLoad per the browser
-          type: number
-        _firstPaint:
-          description: firstPaint from the browser
-          type: number
-        _firstInputDelay:
-          description: firstInputDelay from the browser
-          type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
-          type: number
         _dns:
           description: dns lookup time from the browser
+          type: number
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
         _href:
           description: "Top level href, including hashtag, etc per the browser"
           type: string
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
+        _firstInputDelay:
+          description: firstInputDelay from the browser
           type: number
         onLoad:
           description: onLoad per the browser
+          type: number
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
+          type: number
+        _domInteractive:
+          description: domInteractive from the browser
+          type: number
+        onContentLoad:
+          description: onContentLoad per the browser
           type: number
         _ttfb:
           description: Time to first byte of the page's first request per the browser
@@ -418,12 +418,12 @@ components:
         name:
           description: Name
           type: string
-        type:
-          description: Type
-          type: string
         result:
           description: Result True / False
           type: boolean
+        type:
+          description: Type
+          type: string
       type: object
     Error:
       example:
@@ -450,12 +450,37 @@ components:
           format: double
           type: number
       type: object
+    LargestContentfulPaint:
+      additionalProperties: true
+      example:
+        size: 0
+        domPath: domPath
+        startTime: 0
+        tag: tag
+      properties:
+        startTime:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        size:
+          default: -1
+          format: int64
+          minimum: -1
+          type: integer
+        domPath:
+          default: ""
+          type: string
+        tag:
+          default: ""
+          type: string
+      type: object
     WebSocketMessage:
       example:
         data: data
-        time: 1.284659006116532
+        time: 2.8841621266687802
         type: type
-        opcode: 6.965117697638846
+        opcode: 1.284659006116532
       properties:
         type:
           type: string
@@ -495,7 +520,11 @@ components:
         _firstPaint: 0
         _cumulativeLayoutShift: 0
         _dns: 0
-        _largestContentfulPaint: 0
+        _largestContentfulPaint:
+          size: 0
+          domPath: domPath
+          startTime: 0
+          tag: tag
         _firstInputDelay: 0
         _domInteractive: 0
         _ttfb: 0
@@ -538,10 +567,7 @@ components:
           minimum: -1
           type: integer
         _largestContentfulPaint:
-          default: -1
-          format: int64
-          minimum: -1
-          type: integer
+          $ref: '#/components/schemas/LargestContentfulPaint'
         _firstPaint:
           default: -1
           format: int64
@@ -589,7 +615,7 @@ components:
               httpVersion: httpVersion
               method: method
               headersSize: 1
-              bodySize: 1
+              bodySize: 6
               comment: comment
               queryString:
               - name: name
@@ -636,13 +662,13 @@ components:
               beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 1.284659006116532
+              time: 2.8841621266687802
               type: type
-              opcode: 6.965117697638846
+              opcode: 1.284659006116532
             - data: data
-              time: 1.284659006116532
+              time: 2.8841621266687802
               type: type
-              opcode: 6.965117697638846
+              opcode: 1.284659006116532
             response:
               headers:
               - name: name
@@ -654,8 +680,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 4
-              bodySize: 5
+              headersSize: 5
+              bodySize: 9
               comment: comment
               cookies:
               - path: path
@@ -675,13 +701,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 7
+                size: 1
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 1
+                compression: 4
                 encoding: encoding
-              status: 6
+              status: 7
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -708,7 +734,7 @@ components:
               httpVersion: httpVersion
               method: method
               headersSize: 1
-              bodySize: 1
+              bodySize: 6
               comment: comment
               queryString:
               - name: name
@@ -755,13 +781,13 @@ components:
               beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 1.284659006116532
+              time: 2.8841621266687802
               type: type
-              opcode: 6.965117697638846
+              opcode: 1.284659006116532
             - data: data
-              time: 1.284659006116532
+              time: 2.8841621266687802
               type: type
-              opcode: 6.965117697638846
+              opcode: 1.284659006116532
             response:
               headers:
               - name: name
@@ -773,8 +799,8 @@ components:
               httpVersion: httpVersion
               redirectURL: redirectURL
               statusText: statusText
-              headersSize: 4
-              bodySize: 5
+              headersSize: 5
+              bodySize: 9
               comment: comment
               cookies:
               - path: path
@@ -794,13 +820,13 @@ components:
                 secure: true
                 value: value
               content:
-                size: 7
+                size: 1
                 comment: comment
                 mimeType: mimeType
                 text: text
-                compression: 1
+                compression: 4
                 encoding: encoding
-              status: 6
+              status: 7
             serverIPAddress: serverIPAddress
             timings:
               receive: 0
@@ -823,7 +849,11 @@ components:
               _firstPaint: 0
               _cumulativeLayoutShift: 0
               _dns: 0
-              _largestContentfulPaint: 0
+              _largestContentfulPaint:
+                size: 0
+                domPath: domPath
+                startTime: 0
+                tag: tag
               _firstInputDelay: 0
               _domInteractive: 0
               _ttfb: 0
@@ -858,7 +888,11 @@ components:
               _firstPaint: 0
               _cumulativeLayoutShift: 0
               _dns: 0
-              _largestContentfulPaint: 0
+              _largestContentfulPaint:
+                size: 0
+                domPath: domPath
+                startTime: 0
+                tag: tag
               _firstInputDelay: 0
               _domInteractive: 0
               _ttfb: 0
@@ -912,7 +946,7 @@ components:
           httpVersion: httpVersion
           method: method
           headersSize: 1
-          bodySize: 1
+          bodySize: 6
           comment: comment
           queryString:
           - name: name
@@ -959,13 +993,13 @@ components:
           beforeRequest: null
         _webSocketMessages:
         - data: data
-          time: 1.284659006116532
+          time: 2.8841621266687802
           type: type
-          opcode: 6.965117697638846
+          opcode: 1.284659006116532
         - data: data
-          time: 1.284659006116532
+          time: 2.8841621266687802
           type: type
-          opcode: 6.965117697638846
+          opcode: 1.284659006116532
         response:
           headers:
           - name: name
@@ -977,8 +1011,8 @@ components:
           httpVersion: httpVersion
           redirectURL: redirectURL
           statusText: statusText
-          headersSize: 4
-          bodySize: 5
+          headersSize: 5
+          bodySize: 9
           comment: comment
           cookies:
           - path: path
@@ -998,13 +1032,13 @@ components:
             secure: true
             value: value
           content:
-            size: 7
+            size: 1
             comment: comment
             mimeType: mimeType
             text: text
-            compression: 1
+            compression: 4
             encoding: encoding
-          status: 6
+          status: 7
         serverIPAddress: serverIPAddress
         timings:
           receive: 0
@@ -1068,7 +1102,11 @@ components:
           _firstPaint: 0
           _cumulativeLayoutShift: 0
           _dns: 0
-          _largestContentfulPaint: 0
+          _largestContentfulPaint:
+            size: 0
+            domPath: domPath
+            startTime: 0
+            tag: tag
           _firstInputDelay: 0
           _domInteractive: 0
           _ttfb: 0
@@ -1170,7 +1208,7 @@ components:
             httpVersion: httpVersion
             method: method
             headersSize: 1
-            bodySize: 1
+            bodySize: 6
             comment: comment
             queryString:
             - name: name
@@ -1217,13 +1255,13 @@ components:
             beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 1.284659006116532
+            time: 2.8841621266687802
             type: type
-            opcode: 6.965117697638846
+            opcode: 1.284659006116532
           - data: data
-            time: 1.284659006116532
+            time: 2.8841621266687802
             type: type
-            opcode: 6.965117697638846
+            opcode: 1.284659006116532
           response:
             headers:
             - name: name
@@ -1235,8 +1273,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 4
-            bodySize: 5
+            headersSize: 5
+            bodySize: 9
             comment: comment
             cookies:
             - path: path
@@ -1256,13 +1294,13 @@ components:
               secure: true
               value: value
             content:
-              size: 7
+              size: 1
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 1
+              compression: 4
               encoding: encoding
-            status: 6
+            status: 7
           serverIPAddress: serverIPAddress
           timings:
             receive: 0
@@ -1289,7 +1327,7 @@ components:
             httpVersion: httpVersion
             method: method
             headersSize: 1
-            bodySize: 1
+            bodySize: 6
             comment: comment
             queryString:
             - name: name
@@ -1336,13 +1374,13 @@ components:
             beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 1.284659006116532
+            time: 2.8841621266687802
             type: type
-            opcode: 6.965117697638846
+            opcode: 1.284659006116532
           - data: data
-            time: 1.284659006116532
+            time: 2.8841621266687802
             type: type
-            opcode: 6.965117697638846
+            opcode: 1.284659006116532
           response:
             headers:
             - name: name
@@ -1354,8 +1392,8 @@ components:
             httpVersion: httpVersion
             redirectURL: redirectURL
             statusText: statusText
-            headersSize: 4
-            bodySize: 5
+            headersSize: 5
+            bodySize: 9
             comment: comment
             cookies:
             - path: path
@@ -1375,13 +1413,13 @@ components:
               secure: true
               value: value
             content:
-              size: 7
+              size: 1
               comment: comment
               mimeType: mimeType
               text: text
-              compression: 1
+              compression: 4
               encoding: encoding
-            status: 6
+            status: 7
           serverIPAddress: serverIPAddress
           timings:
             receive: 0
@@ -1404,7 +1442,11 @@ components:
             _firstPaint: 0
             _cumulativeLayoutShift: 0
             _dns: 0
-            _largestContentfulPaint: 0
+            _largestContentfulPaint:
+              size: 0
+              domPath: domPath
+              startTime: 0
+              tag: tag
             _firstInputDelay: 0
             _domInteractive: 0
             _ttfb: 0
@@ -1439,7 +1481,11 @@ components:
             _firstPaint: 0
             _cumulativeLayoutShift: 0
             _dns: 0
-            _largestContentfulPaint: 0
+            _largestContentfulPaint:
+              size: 0
+              domPath: domPath
+              startTime: 0
+              tag: tag
             _firstInputDelay: 0
             _domInteractive: 0
             _ttfb: 0
@@ -1605,7 +1651,7 @@ components:
         httpVersion: httpVersion
         method: method
         headersSize: 1
-        bodySize: 1
+        bodySize: 6
         comment: comment
         queryString:
         - name: name
@@ -1686,11 +1732,11 @@ components:
       type: object
     HarEntry_response_content:
       example:
-        size: 7
+        size: 1
         comment: comment
         mimeType: mimeType
         text: text
-        compression: 1
+        compression: 4
         encoding: encoding
       properties:
         size:
@@ -1722,8 +1768,8 @@ components:
         httpVersion: httpVersion
         redirectURL: redirectURL
         statusText: statusText
-        headersSize: 4
-        bodySize: 5
+        headersSize: 5
+        bodySize: 9
         comment: comment
         cookies:
         - path: path
@@ -1743,13 +1789,13 @@ components:
           secure: true
           value: value
         content:
-          size: 7
+          size: 1
           comment: comment
           mimeType: mimeType
           text: text
-          compression: 1
+          compression: 4
           encoding: encoding
-        status: 6
+        status: 7
       properties:
         status:
           type: integer

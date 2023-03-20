@@ -31,6 +31,7 @@ import HarEntryTimings from './model/HarEntryTimings';
 import HarLog from './model/HarLog';
 import HarLogCreator from './model/HarLogCreator';
 import Header from './model/Header';
+import LargestContentfulPaint from './model/LargestContentfulPaint';
 import MatchCriteria from './model/MatchCriteria';
 import MatchCriteriaRequestHeader from './model/MatchCriteriaRequestHeader';
 import NameValuePair from './model/NameValuePair';
@@ -187,6 +188,12 @@ export {
      * @property {module:BrowserUpMitmProxyClient/model/Header}
      */
     Header,
+
+    /**
+     * The LargestContentfulPaint model constructor.
+     * @property {module:BrowserUpMitmProxyClient/model/LargestContentfulPaint}
+     */
+    LargestContentfulPaint,
 
     /**
      * The MatchCriteria model constructor.

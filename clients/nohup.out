@@ -1,0 +1,82 @@
+[11:22:18.181] Loading BrowserUpAddonsManagerAddOn
+[11:22:18.181] Version 1.14
+[11:22:18.181] Loading PagePerfScriptAddon
+[11:22:18.181] Loading HarCaptureAddon
+[11:22:18.251] Addon error: Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/mitmproxy/.browserup-mitmproxy'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/addons/tlsconfig.py", line 308, in configure
+    self.certstore = certs.CertStore.from_store(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/certs.py", line 358, in from_store
+    cls.create_store(path, basename, key_size)
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/certs.py", line 395, in create_store
+    path.mkdir(parents=True, exist_ok=True)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+OSError: [Errno 45] Operation not supported: '/home/mitmproxy'
+
+[11:22:37.090] Loading BrowserUpAddonsManagerAddOn
+[11:22:37.090] Version 1.14
+[11:22:37.090] Loading PagePerfScriptAddon
+[11:22:37.090] Loading HarCaptureAddon
+[11:22:37.157] Addon error: Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/mitmproxy/.browserup-mitmproxy'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/addons/tlsconfig.py", line 308, in configure
+    self.certstore = certs.CertStore.from_store(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/certs.py", line 358, in from_store
+    cls.create_store(path, basename, key_size)
+  File "/Users/ebeland/apps/mitmproxy/mitmproxy/certs.py", line 395, in create_store
+    path.mkdir(parents=True, exist_ok=True)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+OSError: [Errno 45] Operation not supported: '/home/mitmproxy'
+
+nohup: ../browserup-proxy: No such file or directory
+nohup: ../browserup-proxy: No such file or directory
+[11:24:39.236] Loading BrowserUpAddonsManagerAddOn
+[11:24:39.236] Version 1.14
+[11:24:39.236] Loading PagePerfScriptAddon
+[11:24:39.237] Loading HarCaptureAddon
+[11:24:39.243] HTTP(S) proxy listening at *:9999.
+[11:24:39.311] Scanning for custom add-ons resources...
+[11:24:39.311] Scanning for custom add-ons resources...
+[11:24:39.311] Starting falcon REST service...
+===static path /Users/ebeland/apps/mitmproxy/scripts/browsertime
+Routes: 
+[('/har/page', <mitmproxy.addons.browserup.har.har_resources.HarPageResource object at 0x104aa80d0>), ('/har/capture_types', <mitmproxy.addons.browserup.har.har_resources.HarCaptureTypesResource object at 0x104a176d0>), ('/har/errors', <mitmproxy.addons.browserup.har.har_resources.ErrorResource object at 0x104aa8210>), ('/har/counters', <mitmproxy.addons.browserup.har.har_resources.CounterResource object at 0x104aa8250>), ('/har/page_timings', <mitmproxy.addons.browserup.har.har_resources.PageTimingsResource object at 0x104aa8290>), ('/verify/present/{name}', <mitmproxy.addons.browserup.har.har_resources.PresentResource object at 0x104aa8110>), ('/verify/not_present/{name}', <mitmproxy.addons.browserup.har.har_resources.NotPresentResource object at 0x104aa8150>), ('/verify/size/{size}/{name}', <mitmproxy.addons.browserup.har.har_resources.SizeResource object at 0x104aa8190>), ('/verify/sla/{time}/{name}', <mitmproxy.addons.browserup.har.har_resources.SLAResource object at 0x104aa81d0>), ('/healthcheck', <mitmproxy.addons.browserup.har.har_resources.HealthCheckResource object at 0x104aa82d0>), ('/latency/{latency}', <mitmproxy.addons.browserup.latency_addon.LatencyResource object at 0x104ac23d0>)]
+Starting REST API management on port: 48088
+[11:25:14.530] Loading BrowserUpAddonsManagerAddOn
+[11:25:14.530] Version 1.14
+[11:25:14.531] Loading PagePerfScriptAddon
+[11:25:14.531] Loading HarCaptureAddon
+[11:25:14.538] HTTP(S) proxy listening at *:9999.
+[11:25:14.606] Scanning for custom add-ons resources...
+[11:25:14.606] Scanning for custom add-ons resources...
+[11:25:14.606] Starting falcon REST service...
+===static path /Users/ebeland/apps/mitmproxy/scripts/browsertime
+Routes: 
+[('/har/page', <mitmproxy.addons.browserup.har.har_resources.HarPageResource object at 0x1060db690>), ('/har/capture_types', <mitmproxy.addons.browserup.har.har_resources.HarCaptureTypesResource object at 0x1064e4550>), ('/har/errors', <mitmproxy.addons.browserup.har.har_resources.ErrorResource object at 0x1064e47d0>), ('/har/counters', <mitmproxy.addons.browserup.har.har_resources.CounterResource object at 0x1064e4810>), ('/har/page_timings', <mitmproxy.addons.browserup.har.har_resources.PageTimingsResource object at 0x1064e4850>), ('/verify/present/{name}', <mitmproxy.addons.browserup.har.har_resources.PresentResource object at 0x1064e46d0>), ('/verify/not_present/{name}', <mitmproxy.addons.browserup.har.har_resources.NotPresentResource object at 0x1064e4710>), ('/verify/size/{size}/{name}', <mitmproxy.addons.browserup.har.har_resources.SizeResource object at 0x1064e4750>), ('/verify/sla/{time}/{name}', <mitmproxy.addons.browserup.har.har_resources.SLAResource object at 0x1064e4790>), ('/healthcheck', <mitmproxy.addons.browserup.har.har_resources.HealthCheckResource object at 0x1064e4890>), ('/latency/{latency}', <mitmproxy.addons.browserup.latency_addon.LatencyResource object at 0x106500410>)]
+Starting REST API management on port: 48088
+[11:31:40.029] Loading BrowserUpAddonsManagerAddOn
+[11:31:40.029] Version 1.14
+[11:31:40.029] Loading PagePerfScriptAddon
+[11:31:40.029] Loading HarCaptureAddon
+[11:31:40.037] [Errno 48] HTTP(S) proxy failed to listen on *:9999 with [Errno 48] error while attempting to bind on address ('::', 9999, 0, 0): address already in use
+Try specifying a different port by using `--mode regular@10000`.

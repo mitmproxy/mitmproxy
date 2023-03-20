@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import LargestContentfulPaint from './LargestContentfulPaint';
 
 /**
  * The PageTimings model module.
@@ -77,7 +78,7 @@ class PageTimings {
                 obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
             }
             if (data.hasOwnProperty('_largestContentfulPaint')) {
-                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+                obj['_largestContentfulPaint'] = LargestContentfulPaint.constructFromObject(data['_largestContentfulPaint']);
             }
             if (data.hasOwnProperty('_firstPaint')) {
                 obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
@@ -170,10 +171,9 @@ PageTimings.prototype['_ttfb'] = -1;
 PageTimings.prototype['_cumulativeLayoutShift'] = -1;
 
 /**
- * @member {Number} _largestContentfulPaint
- * @default -1
+ * @member {module:BrowserUpMitmProxyClient/model/LargestContentfulPaint} _largestContentfulPaint
  */
-PageTimings.prototype['_largestContentfulPaint'] = -1;
+PageTimings.prototype['_largestContentfulPaint'] = undefined;
 
 /**
  * @member {Number} _firstPaint

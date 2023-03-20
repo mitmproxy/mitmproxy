@@ -52,13 +52,13 @@ public class VerifyResult {
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
-  public static final String SERIALIZED_NAME_TYPE = "type";
-  @SerializedName(SERIALIZED_NAME_TYPE)
-  private String type;
-
   public static final String SERIALIZED_NAME_RESULT = "result";
   @SerializedName(SERIALIZED_NAME_RESULT)
   private Boolean result;
+
+  public static final String SERIALIZED_NAME_TYPE = "type";
+  @SerializedName(SERIALIZED_NAME_TYPE)
+  private String type;
 
   public VerifyResult() {
   }
@@ -85,28 +85,6 @@ public class VerifyResult {
   }
 
 
-  public VerifyResult type(String type) {
-    
-    this.type = type;
-    return this;
-  }
-
-   /**
-   * Type
-   * @return type
-  **/
-  @javax.annotation.Nullable
-
-  public String getType() {
-    return type;
-  }
-
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-
   public VerifyResult result(Boolean result) {
     
     this.result = result;
@@ -129,6 +107,28 @@ public class VerifyResult {
   }
 
 
+  public VerifyResult type(String type) {
+    
+    this.type = type;
+    return this;
+  }
+
+   /**
+   * Type
+   * @return type
+  **/
+  @javax.annotation.Nullable
+
+  public String getType() {
+    return type;
+  }
+
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -140,13 +140,13 @@ public class VerifyResult {
     }
     VerifyResult verifyResult = (VerifyResult) o;
     return Objects.equals(this.name, verifyResult.name) &&
-        Objects.equals(this.type, verifyResult.type) &&
-        Objects.equals(this.result, verifyResult.result);
+        Objects.equals(this.result, verifyResult.result) &&
+        Objects.equals(this.type, verifyResult.type);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, type, result);
+    return Objects.hash(name, result, type);
   }
 
   @Override
@@ -154,8 +154,8 @@ public class VerifyResult {
     StringBuilder sb = new StringBuilder();
     sb.append("class VerifyResult {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    result: ").append(toIndentedString(result)).append("\n");
+    sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -179,8 +179,8 @@ public class VerifyResult {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
     openapiFields.add("name");
-    openapiFields.add("type");
     openapiFields.add("result");
+    openapiFields.add("type");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
