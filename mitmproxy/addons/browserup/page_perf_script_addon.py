@@ -28,8 +28,6 @@ class PagePerfScriptAddOn:
                                                                     "Access-Control-Allow-Headers": "*",
                                                                     "Access-Control-Max-Age": "1728000"})
 
-
-
     def response(self, flow: mitmproxy.http.HTTPFlow):
         if flow.response is None or flow.request.method not in self.injectable_methods or flow.response.status_code != 200:
             logging.debug('Not injecting script')
