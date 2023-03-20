@@ -31,13 +31,13 @@ describe BrowserupMitmProxy::VerifyResult do
     end
   end
 
-  describe 'test attribute "result"' do
+  describe 'test attribute "type"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
   end
 
-  describe 'test attribute "type"' do
+  describe 'test attribute "result"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end

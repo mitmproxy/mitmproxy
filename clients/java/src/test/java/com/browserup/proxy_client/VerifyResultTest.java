@@ -46,19 +46,19 @@ public class VerifyResultTest {
     }
 
     /**
-     * Test the property 'result'
-     */
-    @Test
-    public void resultTest() {
-        // TODO: test result
-    }
-
-    /**
      * Test the property 'type'
      */
     @Test
     public void typeTest() {
         // TODO: test type
+    }
+
+    /**
+     * Test the property 'result'
+     */
+    @Test
+    public void resultTest() {
+        // TODO: test result
     }
 
 }

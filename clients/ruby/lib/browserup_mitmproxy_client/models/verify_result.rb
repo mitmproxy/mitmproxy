@@ -18,18 +18,18 @@ module BrowserupMitmProxy
     # Name
     attr_accessor :name
 
-    # Result True / False
-    attr_accessor :result
-
     # Type
     attr_accessor :type
+
+    # Result True / False
+    attr_accessor :result
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
         :'name' => :'name',
-        :'result' => :'result',
-        :'type' => :'type'
+        :'type' => :'type',
+        :'result' => :'result'
       }
     end
 
@@ -42,8 +42,8 @@ module BrowserupMitmProxy
     def self.openapi_types
       {
         :'name' => :'String',
-        :'result' => :'Boolean',
-        :'type' => :'String'
+        :'type' => :'String',
+        :'result' => :'Boolean'
       }
     end
 
@@ -72,12 +72,12 @@ module BrowserupMitmProxy
         self.name = attributes[:'name']
       end
 
-      if attributes.key?(:'result')
-        self.result = attributes[:'result']
-      end
-
       if attributes.key?(:'type')
         self.type = attributes[:'type']
+      end
+
+      if attributes.key?(:'result')
+        self.result = attributes[:'result']
       end
     end
 
@@ -100,8 +100,8 @@ module BrowserupMitmProxy
       return true if self.equal?(o)
       self.class == o.class &&
           name == o.name &&
-          result == o.result &&
-          type == o.type
+          type == o.type &&
+          result == o.result
     end
 
     # @see the `==` method
@@ -113,7 +113,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [name, result, type].hash
+      [name, type, result].hash
     end
 
     # Builds the object from hash
