@@ -386,41 +386,25 @@
       "PageTiming": {
         "type": "object",
         "properties": {
-          "_firstPaint": {
-            "type": "number",
-            "description": "firstPaint from the browser"
-          },
-          "_ssl": {
-            "type": "number",
-            "description": "Ssl connect time from the browser"
-          },
-          "_dns": {
-            "type": "number",
-            "description": "dns lookup time from the browser"
-          },
-          "_cumulativeLayoutShift": {
-            "type": "number",
-            "description": "cumulativeLayoutShift metric from the browser"
-          },
           "_href": {
             "type": "string",
             "description": "Top level href, including hashtag, etc per the browser"
           },
-          "_firstInputDelay": {
+          "_largestContentfulPaint": {
             "type": "number",
-            "description": "firstInputDelay from the browser"
-          },
-          "onLoad": {
-            "type": "number",
-            "description": "onLoad per the browser"
+            "description": "largestContentfulPaint from the browser"
           },
           "_firstContentfulPaint": {
             "type": "number",
             "description": "firstContentfulPaint from the browser"
           },
-          "_domInteractive": {
+          "_dns": {
             "type": "number",
-            "description": "domInteractive from the browser"
+            "description": "dns lookup time from the browser"
+          },
+          "_ssl": {
+            "type": "number",
+            "description": "Ssl connect time from the browser"
           },
           "onContentLoad": {
             "type": "number",
@@ -430,9 +414,25 @@
             "type": "number",
             "description": "Time to first byte of the page's first request per the browser"
           },
-          "_largestContentfulPaint": {
+          "_firstInputDelay": {
             "type": "number",
-            "description": "largestContentfulPaint from the browser"
+            "description": "firstInputDelay from the browser"
+          },
+          "_firstPaint": {
+            "type": "number",
+            "description": "firstPaint from the browser"
+          },
+          "_cumulativeLayoutShift": {
+            "type": "number",
+            "description": "cumulativeLayoutShift metric from the browser"
+          },
+          "onLoad": {
+            "type": "number",
+            "description": "onLoad per the browser"
+          },
+          "_domInteractive": {
+            "type": "number",
+            "description": "domInteractive from the browser"
           }
         }
       },
@@ -571,13 +571,13 @@
             "type": "string",
             "description": "Name"
           },
-          "result": {
-            "type": "boolean",
-            "description": "Result True / False"
-          },
           "type": {
             "type": "string",
             "description": "Type"
+          },
+          "result": {
+            "type": "boolean",
+            "description": "Result True / False"
           }
         }
       },

@@ -125,7 +125,6 @@ class HarResource(RespondWithHarMixin):
                   $ref: "#/components/schemas/Har"
         """
         page_title = req.get_param('title')
-
         har = self.HarCaptureAddon.new_har(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)

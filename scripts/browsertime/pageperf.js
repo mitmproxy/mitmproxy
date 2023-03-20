@@ -231,7 +231,9 @@ function handleClose(){
     console.log("Page change: " + title)
     window.closeIsHandled = true;
     if ('sendBeacon' in navigator) {
-        navigator.sendBeacon(proxyMgmtURL() + "/har/page?title=" + title, {});
+        let data = new FormData();
+        data.append('title', title);
+        navigator.sendBeacon(proxyMgmtURL() + "/har/page", data);
     }
 }
 

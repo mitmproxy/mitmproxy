@@ -23,10 +23,12 @@ class PagePerfScriptAddOn:
     def request(self, flow: mitmproxy.http.HTTPFlow):
         # Hijack CORS OPTIONS request
         if flow.request.method == "OPTIONS":
-            flow.response = mitmproxy.http.Response.make(200, b"", {"access-control-allow-origin": "*",
-                                                                    "access-control-allow-methods": "GET,POST",
-                                                                    "access-control-allow-headers": "Authorization",
-                                                                    "access-control-max-age": "1728000"})
+            flow.response = mitmproxy.http.Response.make(204, b"", {"Access-Control-Allow-Origin": "*",
+                                                                    "Access-Control-Allow-Methods": "*",
+                                                                    "Access-Control-Allow-Headers": "*",
+                                                                    "Access-Control-Max-Age": "1728000"})
+
+
 
     def response(self, flow: mitmproxy.http.HTTPFlow):
         if flow.response is None or flow.request.method not in self.injectable_methods or flow.response.status_code != 200:
@@ -35,11 +37,7 @@ class PagePerfScriptAddOn:
 
         if "content-type" in flow.response.headers and "text/html" in flow.response.headers["content-type"]:
             proxy_mgmt_url = self.get_proxy_management_url()
-            logging.info('Proxy management URL: ' + proxy_mgmt_url)
             src_url = proxy_mgmt_url + "/browser/scripts/pageperf.js"
-
-            flow.response.headers["access-control-allow-origin"] = "*"
-            flow.response.headers["access-control-allow-methods"] = "POST,GET,OPTIONS,PUT,DELETE"
 
             script = f'''
                 <script>if (!window.bupLoaded){{let s=document.createElement("script");s.setAttribute("src", "{src_url}");
