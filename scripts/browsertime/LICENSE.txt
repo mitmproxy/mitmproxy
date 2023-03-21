@@ -1,1 +1,9 @@
 Some items in stats.js are sourced from Browsertime.
+
+// Change summary for BrowserTime APACHE items from this folder:
+
+// Scripts from: https://github.com/sitespeedio/browsertime/tree/main/browserscripts
+// were consolidated here for a JSON summary payload with core vitals data.
+// https://web.dev/vitals/
+
+

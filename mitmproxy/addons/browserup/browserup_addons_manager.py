@@ -2,7 +2,6 @@ import _thread
 import asyncio
 import json
 import logging
-
 import falcon
 import os
 
@@ -13,9 +12,11 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
 from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema, PageTimingSchema
 from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
-from mitmproxy.addons.browserup.page_perf_script_addon import PagePerfScriptAddOn
+from mitmproxy.addons.browserup.browser_data_addon import BrowserDataAddOn
 from mitmproxy import ctx
 from pathlib import Path
+
+# https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
 
 class BrowserUpAddonsManagerAddOn:
@@ -23,7 +24,7 @@ class BrowserUpAddonsManagerAddOn:
 
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
-        logging.info('Version 1.14')
+        logging.info('Version 1.15')
 
         ctx.options.update(listen_port = 48080)
 
@@ -102,9 +103,8 @@ ___
 
     def get_app(self):
         app = falcon.App()
-        static_path = self.get_project_root() + "/scripts/browsertime"
-        print("===static path " + static_path)
-        app.add_static_route('/browser/scripts', static_path)
+        # static_path = self.get_project_root() + "/scripts/browsertime"
+        # app.add_static_route('/browser/scripts', static_path)
 
         app.req_options.auto_parse_form_urlencoded = True
 
@@ -143,11 +143,11 @@ ___
             asyncio.set_event_loop(loop)
             httpd.serve_forever()
 
-            # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
+har_capture_addon = HarCaptureAddOn()
 
 addons = [
-    HarCaptureAddOn(),
-    PagePerfScriptAddOn(),
+    har_capture_addon,
+    BrowserDataAddOn(har_capture_addon),
     BrowserUpAddonsManagerAddOn()
 ]

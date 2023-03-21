@@ -23,6 +23,9 @@ class FlowCaptureMixin(object):
 
     def capture_request(self, flow):
         full_url = self.get_full_url(flow.request)
+        if 'BrowserData' in full_url and 'action' in full_url:
+            return
+
         logging.debug('Populating har entry for request: {}'.format(full_url))
 
         har_entry = flow.get_har_entry()
@@ -65,7 +68,8 @@ class FlowCaptureMixin(object):
         flow.set_har_entry(har_entry)
 
     def capture_response(self, flow):
-        logging.debug('Incoming response for request to url: {}'.format(flow.request.url))
+        full_url = self.get_full_url(flow.request)
+        logging.debug('Incoming response for request to url: {}'.format(full_url))
 
         t = HarBuilder.entry_timings()
         t['send'] = self.diff_millis(flow.request.timestamp_end, flow.request.timestamp_start)
@@ -87,9 +91,12 @@ class FlowCaptureMixin(object):
 
         # Response body size and encoding
         response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
-        response_body_decoded_size = len(
-            flow.response.content) if flow.response.content else 0
+        response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
         response_body_compression = response_body_decoded_size - response_body_size
+
+        if flow.metadata.get('injected_script_len') and response_body_size > 0:
+            logging.debug(f"Subtracting injected script length of {flow.metadata.get('injected_script_len')}")
+            response_body_size = response_body_size - flow.metadata.get('injected_script_len')
 
         har_response = HarBuilder.entry_response()
         har_response["status"] = flow.response.status_code

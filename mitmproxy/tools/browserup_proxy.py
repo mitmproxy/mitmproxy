@@ -7,7 +7,7 @@ from mitmproxy import master
 
 from mitmproxy.addons import dumper, termlog, keepserving, readfile
 from mitmproxy.addons.browserup import har_capture_addon, \
-    browserup_addons_manager, latency_addon, page_perf_script_addon
+    browserup_addons_manager, latency_addon, browser_data_addon
 
 from mitmproxy.addons.errorcheck import ErrorCheck
 
@@ -28,8 +28,9 @@ class BrowserupProxyMaster(master.Master):
 
         self.addons.add(dumper.Dumper())
 
-        self.addons.add(browserup_addons_manager.BrowserUpAddonsManagerAddOn(), page_perf_script_addon.PagePerfScriptAddOn(),
-                        har_capture_addon.HarCaptureAddOn(), latency_addon.LatencyAddOn())
+        harCaptureAddon = har_capture_addon.HarCaptureAddOn()
+        self.addons.add(browserup_addons_manager.BrowserUpAddonsManagerAddOn(), harCaptureAddon,
+                        browser_data_addon.BrowserDataAddOn(harCaptureAddon), latency_addon.LatencyAddOn())
         self.addons.add(
             keepserving.KeepServing(),
             readfile.ReadFileStdin(),
