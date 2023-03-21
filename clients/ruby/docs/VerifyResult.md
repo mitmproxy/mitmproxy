@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **name** | **String** | Name | [optional] |
 | **type** | **String** | Type | [optional] |
+| **name** | **String** | Name | [optional] |
 | **result** | **Boolean** | Result True / False | [optional] |
 
 ## Example
@@ -14,8 +14,8 @@
 require 'browserup_mitmproxy_client'
 
 instance = BrowserupMitmProxy::VerifyResult.new(
-  name: null,
   type: null,
+  name: null,
   result: null
 )
 ```

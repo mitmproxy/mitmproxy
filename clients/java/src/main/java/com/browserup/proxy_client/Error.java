@@ -48,38 +48,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Error {
-  public static final String SERIALIZED_NAME_DETAILS = "details";
-  @SerializedName(SERIALIZED_NAME_DETAILS)
-  private String details;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
+  public static final String SERIALIZED_NAME_DETAILS = "details";
+  @SerializedName(SERIALIZED_NAME_DETAILS)
+  private String details;
+
   public Error() {
   }
-
-  public Error details(String details) {
-    
-    this.details = details;
-    return this;
-  }
-
-   /**
-   * Short details of the error
-   * @return details
-  **/
-  @javax.annotation.Nullable
-
-  public String getDetails() {
-    return details;
-  }
-
-
-  public void setDetails(String details) {
-    this.details = details;
-  }
-
 
   public Error name(String name) {
     
@@ -103,6 +81,28 @@ public class Error {
   }
 
 
+  public Error details(String details) {
+    
+    this.details = details;
+    return this;
+  }
+
+   /**
+   * Short details of the error
+   * @return details
+  **/
+  @javax.annotation.Nullable
+
+  public String getDetails() {
+    return details;
+  }
+
+
+  public void setDetails(String details) {
+    this.details = details;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -113,21 +113,21 @@ public class Error {
       return false;
     }
     Error error = (Error) o;
-    return Objects.equals(this.details, error.details) &&
-        Objects.equals(this.name, error.name);
+    return Objects.equals(this.name, error.name) &&
+        Objects.equals(this.details, error.details);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(details, name);
+    return Objects.hash(name, details);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Error {\n");
-    sb.append("    details: ").append(toIndentedString(details)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    details: ").append(toIndentedString(details)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -150,8 +150,8 @@ public class Error {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("details");
     openapiFields.add("name");
+    openapiFields.add("details");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -177,11 +177,11 @@ public class Error {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `Error` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
       }
-      if ((jsonObj.get("details") != null && !jsonObj.get("details").isJsonNull()) && !jsonObj.get("details").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `details` to be a primitive type in the JSON string but got `%s`", jsonObj.get("details").toString()));
-      }
       if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
+      }
+      if ((jsonObj.get("details") != null && !jsonObj.get("details").isJsonNull()) && !jsonObj.get("details").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `details` to be a primitive type in the JSON string but got `%s`", jsonObj.get("details").toString()));
       }
   }
 
