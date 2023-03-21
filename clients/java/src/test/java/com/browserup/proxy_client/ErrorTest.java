@@ -38,19 +38,19 @@ public class ErrorTest {
     }
 
     /**
-     * Test the property 'name'
-     */
-    @Test
-    public void nameTest() {
-        // TODO: test name
-    }
-
-    /**
      * Test the property 'details'
      */
     @Test
     public void detailsTest() {
         // TODO: test details
+    }
+
+    /**
+     * Test the property 'name'
+     */
+    @Test
+    public void nameTest() {
+        // TODO: test name
     }
 
 }

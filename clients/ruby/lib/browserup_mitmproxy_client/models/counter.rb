@@ -15,17 +15,17 @@ require 'time'
 
 module BrowserupMitmProxy
   class Counter
-    # Value for the counter
-    attr_accessor :value
-
     # Name of Custom Counter to add to the page under _counters
     attr_accessor :name
+
+    # Value for the counter
+    attr_accessor :value
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'value' => :'value',
-        :'name' => :'name'
+        :'name' => :'name',
+        :'value' => :'value'
       }
     end
 
@@ -37,8 +37,8 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'value' => :'Float',
-        :'name' => :'String'
+        :'name' => :'String',
+        :'value' => :'Float'
       }
     end
 
@@ -63,12 +63,12 @@ module BrowserupMitmProxy
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'value')
-        self.value = attributes[:'value']
-      end
-
       if attributes.key?(:'name')
         self.name = attributes[:'name']
+      end
+
+      if attributes.key?(:'value')
+        self.value = attributes[:'value']
       end
     end
 
@@ -90,8 +90,8 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          value == o.value &&
-          name == o.name
+          name == o.name &&
+          value == o.value
     end
 
     # @see the `==` method
@@ -103,7 +103,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [value, name].hash
+      [name, value].hash
     end
 
     # Builds the object from hash
