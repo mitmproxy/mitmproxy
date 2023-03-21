@@ -3,13 +3,13 @@ import logging
 import re
 import json
 import os
-
+import pathlib
 
 # Inject a script into browser-responses for html that lets us get DOM timings, first paint time, and other metrics.
 class BrowserDataAddOn:
     def __init__(self, har_capture_addon):
-        filepath = os.path.normpath(("scripts/browsertime/browser-data.js"))
-        logging.info(filepath)
+        file_dir = pathlib.Path(__file__).parent.parent.parent.parent.resolve()
+        filepath = os.path.normpath(os.path.join(file_dir, "scripts/browsertime/browser-data.js"))
         with open(filepath, 'r') as file:
             self.browser_data_script = f'<script data-browserup=true>' + file.read() + '</script>'
             self.browser_data_script_len = len(self.browser_data_script)
