@@ -1,8 +1,9 @@
 # Release History
 
-## Unreleased: mitmproxy next
+## XX March 2023: mitmproxy 9.0.2
 
-
+* Fix a bugwhen using replying flow with upstream mode enabled
+  ([#5241](https://github.com/mitmproxy/mitmproxy/issues/5241), @raphaelts3))
 
 ## 02 November 2022: mitmproxy 9.0.1
 
