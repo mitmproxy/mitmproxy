@@ -407,6 +407,7 @@ class Server(Connection):
         self.timestamp_tcp_setup = state["timestamp_tcp_setup"]
         self.timestamp_tls_setup = state["timestamp_tls_setup"]
         self.tls_version = state["tls_version"]
+        self.via = state["via2"]
         self.state = ConnectionState(state["state"])
         self.error = state["error"]
         self.tls = state["tls"]
@@ -416,7 +417,6 @@ class Server(Connection):
         self.alpn_offers = state["alpn_offers"]
         self.cipher = state["cipher_name"]
         self.cipher_list = state["cipher_list"]
-        self.via = state["via2"]
 
     @property
     def ip_address(self) -> Optional[Address]:  # pragma: no cover
