@@ -1,11 +1,14 @@
 import * as React from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAppSelector } from "../ducks";
 import { RequestUtils } from "../flow/utils";
+import classnames from "classnames";
+import { select } from "../ducks/flows";
 
 interface TreeViewFlow {
     path: string;
     child: Map<string, TreeViewFlow>;
+    flow_id: string | null
 }
 
 function FlowTreeView() {
@@ -21,10 +24,12 @@ function FlowTreeView() {
                         newFlows.set(url.host, {
                             path: url.href,
                             child: new Map(),
+                            flow_id: null
                         });
                     newFlows.get(url.host)?.child.set(url.pathname, {
                         path: url.href,
                         child: new Map(),
+                        flow_id: flow.id
                     });
                 } catch (error) {
                     console.error(error);
@@ -34,11 +39,18 @@ function FlowTreeView() {
     });
 
     return (
-        <ul className="list-group w-100" style={{ width: "100%" }}>
-            {Array.from(newFlows).map((el) => (
-                <FlowRow flow={el[1]} text={el[0]} />
-            ))}
-        </ul>
+        <div className="flow-table" style={{
+            width: "100%", maxHeight: "90vh"
+        }}>
+            <ul className="list-group w-100 overflow-auto" style={{ width: "100%", height: "100%" }
+            } >
+                {
+                    Array.from(newFlows).map((el) => (
+                        <FlowRow flow={el[1]} text={el[0]} />
+                    ))
+                }
+            </ ul>
+        </div>
     );
 }
 
@@ -54,13 +66,21 @@ function FlowRow({
 }) {
     const [show, setShow] = React.useState(false);
     const childs = Array.from(flow.child ?? []);
+    const dispatch = useDispatch()
+
     return (
         <>
             <li
-                onClick={() => setShow(!show)}
-                className={`list-group-item ${active ? "active" : ""}`}
-                data-bs-toggle="collapse"
+                onClick={() => {
+                    if (childs.length !== 0) setShow(!show)
+                    if (flow.flow_id) dispatch(select(flow.flow_id));
+
+                }}
+                className={classnames(["list-group-item", active ? "active" : ""])}
             >
+                <span style={{}}>
+
+                </span>
                 {text}
             </li>
             <div style={{ display: show ? "block" : "none" }}>
@@ -73,5 +93,6 @@ function FlowRow({
         </>
     );
 }
+
 
 export default FlowTreeView;
