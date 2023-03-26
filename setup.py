@@ -77,7 +77,7 @@ setup(
         "asgiref>=3.2.10,<3.7",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
-        "cryptography>=38.0,<39.1",
+        "cryptography>=38.0,<40.1",
         "flask>=1.1.1,<2.3",
         "h11>=0.11,<0.15",
         "h2>=4.1,<5",
@@ -88,7 +88,7 @@ setup(
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<5",
-        "pyOpenSSL>=22.1,<23.1",
+        "pyOpenSSL>=22.1,<23.2",
         "pyparsing>=2.4.2,<3.1",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.18",
