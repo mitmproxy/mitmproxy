@@ -4,33 +4,43 @@ import { useAppSelector } from "../ducks";
 import { RequestUtils } from "../flow/utils";
 import classnames from "classnames";
 import { select } from "../ducks/flows";
+import Filt from "../filt/filt";
+import { Flow } from "../flow";
 
-interface TreeViewFlow {
+interface TreeViewFlowWrapper {
     path: string;
-    child: Map<string, TreeViewFlow>;
-    flow_id: string | null
+    child: Map<string, TreeViewFlowWrapper>;
+    flow: Flow | null,
+    highlight: boolean | undefined
 }
 
 function FlowTreeView() {
     const flows = useAppSelector((state) => state.flows.list);
-    const newFlows: Map<string, TreeViewFlow> = new Map();
+    const newFlows: Map<string, TreeViewFlowWrapper> = new Map();
+    const highlightFilter = useAppSelector((state) => state.flows.highlight);
+    const isHighlightedFn = highlightFilter ? Filt.parse(highlightFilter) : () => false;
 
     flows.map((flow) => {
         if (flow.server_conn?.address) {
             if (flow.type === "http") {
                 try {
                     const url = new URL(RequestUtils.pretty_url(flow.request));
-                    if (!newFlows.has(url.host))
+                    if (!newFlows.has(url.host)) {
                         newFlows.set(url.host, {
                             path: url.href,
                             child: new Map(),
-                            flow_id: null
+                            flow: null,
+                            highlight: false
                         });
+                    }
+                    const isHighlighted = flow && isHighlightedFn(flow)
                     newFlows.get(url.host)?.child.set(url.pathname, {
                         path: url.href,
                         child: new Map(),
-                        flow_id: flow.id
+                        flow: flow,
+                        highlight: isHighlighted
                     });
+                    if (isHighlighted) newFlows.get(url.host)!.highlight = true
                 } catch (error) {
                     console.error(error);
                 }
@@ -61,7 +71,7 @@ function FlowRow({
 }: {
     active?: boolean;
     show?: boolean;
-    flow: TreeViewFlow;
+    flow: TreeViewFlowWrapper;
     text: string;
 }) {
     const [show, setShow] = React.useState(false);
@@ -73,9 +83,9 @@ function FlowRow({
             <li
                 onClick={() => {
                     if (childs.length !== 0) setShow(!show)
-                    if (flow.flow_id) dispatch(select(flow.flow_id));
-
+                    if (flow.flow) dispatch(select(flow.flow.id));
                 }}
+                style={{ backgroundColor: flow.highlight ? "aqua" : "" }}
                 className={classnames(["list-group-item", active ? "active" : ""])}
             >
                 <span style={{}}>
