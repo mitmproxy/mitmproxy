@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import classnames from "classnames";
 import { Flow } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { select } from "../../ducks/flows";
+import { multiSelect, select } from "../../ducks/flows";
 import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
@@ -36,7 +36,12 @@ export default React.memo(function FlowRow({
                 if (node.classList.contains("col-quickactions")) return;
                 node = node.parentNode;
             }
-            dispatch(select(flow.id));
+            if (e.ctrlKey) {
+                dispatch(multiSelect(flow.id))
+            }
+            if (!e.ctrlKey) {
+                dispatch(select(flow.id));
+            }
         },
         [flow]
     );

@@ -9,13 +9,14 @@ export const UPDATE = "FLOWS_UPDATE";
 export const REMOVE = "FLOWS_REMOVE";
 export const RECEIVE = "FLOWS_RECEIVE";
 export const SELECT = "FLOWS_SELECT";
+export const MULTI_SELECT = "FLOWS_MULTI_SELECT";
 export const SET_FILTER = "FLOWS_SET_FILTER";
 export const SET_SORT = "FLOWS_SET_SORT";
 export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
 
-interface FlowSortFn extends store.SortFn<Flow> {}
+interface FlowSortFn extends store.SortFn<Flow> { }
 
-interface FlowFilterFn extends store.FilterFn<Flow> {}
+interface FlowFilterFn extends store.FilterFn<Flow> { }
 
 export interface FlowsState extends store.State<Flow> {
     highlight?: string;
@@ -111,6 +112,11 @@ export default function reducer(
                 selected: action.flowIds,
             };
 
+        case MULTI_SELECT:
+            return {
+                ...state,
+                selected: [...state.selected, ...action.flowIds],
+            };
         default:
             return state;
     }
@@ -239,6 +245,13 @@ export function upload(file) {
 export function select(id?: string) {
     return {
         type: SELECT,
+        flowIds: id ? [id] : [],
+    };
+}
+
+export function multiSelect(id?: string) {
+    return {
+        type: MULTI_SELECT,
         flowIds: id ? [id] : [],
     };
 }
