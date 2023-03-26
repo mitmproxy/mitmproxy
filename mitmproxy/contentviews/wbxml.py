@@ -12,7 +12,7 @@ class ViewWBXML(base.View):
             parsedContent = parser.xmlString
             if parsedContent:
                 return "WBXML", base.format_text(parsedContent)
-        except:
+        except Exception:
             return None
 
     def render_priority(

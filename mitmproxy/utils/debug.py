@@ -39,7 +39,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
 
         try:
             import psutil
-        except:
+        except ModuleNotFoundError:
             print("(psutil not installed, skipping some debug info)")
         else:
             p = psutil.Process()

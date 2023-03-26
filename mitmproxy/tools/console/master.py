@@ -132,7 +132,7 @@ class ConsoleMaster(master.Master):
         with self.uistopped():
             try:
                 subprocess.call(cmd)
-            except:
+            except Exception:
                 signals.status_message.send(message="Can't start editor: %s" % c)
             else:
                 with open(name, "r" if text else "rb") as f:
@@ -167,7 +167,7 @@ class ConsoleMaster(master.Master):
         with self.uistopped():
             try:
                 subprocess.call(cmd, shell=False)
-            except:
+            except Exception:
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)
                 )

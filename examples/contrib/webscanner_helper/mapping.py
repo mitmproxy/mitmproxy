@@ -149,7 +149,7 @@ class MappingAddon:
                 try:
                     for css_sel, soup in value.items():
                         store[css_sel] = str(soup)
-                except:
+                except Exception:
                     raise RuntimeError(value)
                 return store
 

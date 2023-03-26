@@ -64,7 +64,7 @@ class ResourceRecord(serializable.SerializableDataclass):
                 return self.domain_name
             if self.type == types.TXT:
                 return self.text
-        except:
+        except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
 
