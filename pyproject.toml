@@ -130,13 +130,18 @@ filterwarnings = [
     "ignore::DeprecationWarning:tornado.*:",
 ]
 
-[[tool.mypy]]
+[tool.mypy]
 check_untyped_defs = true
 ignore_missing_imports = true
 files = [
     "mitmproxy",
     "examples/addons",
     "release/*.py",
+]
+exclude = [
+    "^docs/",
+    "^release/build/",
+    "^examples/contrib/",
 ]
 
 [[tool.mypy.overrides]]
