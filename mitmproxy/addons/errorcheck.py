@@ -8,8 +8,14 @@ from mitmproxy import log
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
 
-    def __init__(self, log_to_stderr: bool = False) -> None:
-        self.log_to_stderr = log_to_stderr
+    repeat_errors_on_stderr: bool
+    """
+    Repeat all errors on stderr before exiting.
+    This is useful for the console UI, which otherwise swallows all output.
+    """
+
+    def __init__(self, repeat_errors_on_stderr: bool = False) -> None:
+        self.repeat_errors_on_stderr = repeat_errors_on_stderr
 
         self.logger = ErrorCheckHandler()
         self.logger.install()
@@ -21,10 +27,12 @@ class ErrorCheck:
         # don't run immediately, wait for all logging tasks to finish.
         await asyncio.sleep(0)
         if self.logger.has_errored:
-            if self.log_to_stderr:
-                plural = "s" if len(self.logger.has_errored) > 1 else ""
+            plural = "s" if len(self.logger.has_errored) > 1 else ""
+            if self.repeat_errors_on_stderr:
                 msg = "\n".join(r.msg for r in self.logger.has_errored)
-                print(f"Error{plural} on startup: {msg}", file=sys.stderr)
+                print(f"Error{plural} logged during startup: {msg}", file=sys.stderr)
+            else:
+                print(f"Error{plural} logged during startup, exiting...", file=sys.stderr)
 
             sys.exit(1)
 

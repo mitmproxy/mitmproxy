@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 from mitmproxy.addons.errorcheck import ErrorCheck
@@ -13,10 +15,19 @@ def test_errorcheck(tdata, capsys):
                 tdata.path("mitmproxy/data/addonscripts/load_error.py"),
             ]
         )
-    assert "Error on startup" in capsys.readouterr().err
+    assert "Error logged during startup" in capsys.readouterr().err
 
 
 async def test_no_error():
     e = ErrorCheck()
     await e.shutdown_if_errored()
     e.finish()
+
+
+async def test_error_message(capsys):
+    e = ErrorCheck()
+    logging.error("wat")
+    logging.error("wat")
+    with pytest.raises(SystemExit):
+        await e.shutdown_if_errored()
+    assert "Errors logged during startup" in capsys.readouterr().err
