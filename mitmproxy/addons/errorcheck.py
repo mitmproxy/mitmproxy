@@ -32,7 +32,9 @@ class ErrorCheck:
                 msg = "\n".join(r.msg for r in self.logger.has_errored)
                 print(f"Error{plural} logged during startup: {msg}", file=sys.stderr)
             else:
-                print(f"Error{plural} logged during startup, exiting...", file=sys.stderr)
+                print(
+                    f"Error{plural} logged during startup, exiting...", file=sys.stderr
+                )
 
             sys.exit(1)
 
