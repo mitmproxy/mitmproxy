@@ -46,10 +46,9 @@ def wheel():
     subprocess.check_call(
         [
             "python",
-            "setup.py",
-            "-q",
-            "bdist_wheel",
-            "--dist-dir",
+            "-m",
+            "build",
+            "--outdir",
             DIST_DIR,
         ]
     )

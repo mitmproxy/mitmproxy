@@ -100,7 +100,7 @@ jobs:
         with:
           path: release/installbuilder/setup
           key: installbuilder
-      - run: pip install -e .[dev]
+      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'linux'
         run: python -u release/build.py --dirty wheel
