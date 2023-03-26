@@ -37,7 +37,7 @@ export default React.memo(function FlowRow({
                 node = node.parentNode;
             }
             if (e.ctrlKey) {
-                dispatch(multiSelect(flow.id))
+                dispatch(multiSelect(flow.id));
             }
             if (!e.ctrlKey) {
                 dispatch(select(flow.id));

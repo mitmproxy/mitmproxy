@@ -14,9 +14,9 @@ export const SET_FILTER = "FLOWS_SET_FILTER";
 export const SET_SORT = "FLOWS_SET_SORT";
 export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
 
-interface FlowSortFn extends store.SortFn<Flow> { }
+interface FlowSortFn extends store.SortFn<Flow> {}
 
-interface FlowFilterFn extends store.FilterFn<Flow> { }
+interface FlowFilterFn extends store.FilterFn<Flow> {}
 
 export interface FlowsState extends store.State<Flow> {
     highlight?: string;
