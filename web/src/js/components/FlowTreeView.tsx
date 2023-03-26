@@ -10,15 +10,17 @@ import { Flow } from "../flow";
 interface TreeViewFlowWrapper {
     path: string;
     child: Map<string, TreeViewFlowWrapper>;
-    flow: Flow | null,
-    highlight: boolean | undefined
+    flow: Flow | null;
+    highlight: boolean | undefined;
 }
 
 function FlowTreeView() {
     const flows = useAppSelector((state) => state.flows.view);
     const newFlows: Map<string, TreeViewFlowWrapper> = new Map();
     const highlightFilter = useAppSelector((state) => state.flows.highlight);
-    const isHighlightedFn = highlightFilter ? Filt.parse(highlightFilter) : () => false;
+    const isHighlightedFn = highlightFilter
+        ? Filt.parse(highlightFilter)
+        : () => false;
 
     flows.map((flow) => {
         if (flow.server_conn?.address) {
@@ -30,17 +32,17 @@ function FlowTreeView() {
                             path: url.href,
                             child: new Map(),
                             flow: null,
-                            highlight: false
+                            highlight: false,
                         });
                     }
-                    const isHighlighted = flow && isHighlightedFn(flow)
+                    const isHighlighted = flow && isHighlightedFn(flow);
                     newFlows.get(url.host)?.child.set(url.pathname, {
                         path: url.href,
                         child: new Map(),
                         flow: flow,
-                        highlight: isHighlighted
+                        highlight: isHighlighted,
                     });
-                    if (isHighlighted) newFlows.get(url.host)!.highlight = true
+                    if (isHighlighted) newFlows.get(url.host)!.highlight = true;
                 } catch (error) {
                     console.error(error);
                 }
@@ -49,17 +51,21 @@ function FlowTreeView() {
     });
 
     return (
-        <div className="flow-table" style={{
-            width: "100%", maxHeight: "90vh"
-        }}>
-            <ul className="list-group w-100 overflow-auto" style={{ width: "100%", height: "100%" }
-            } >
-                {
-                    Array.from(newFlows).map((el) => (
-                        <FlowRow flow={el[1]} text={el[0]} />
-                    ))
-                }
-            </ ul>
+        <div
+            className="flow-table"
+            style={{
+                width: "100%",
+                maxHeight: "90vh",
+            }}
+        >
+            <ul
+                className="list-group w-100 overflow-auto"
+                style={{ width: "100%", height: "100%" }}
+            >
+                {Array.from(newFlows).map((el) => (
+                    <FlowRow flow={el[1]} text={el[0]} />
+                ))}
+            </ul>
         </div>
     );
 }
@@ -75,34 +81,44 @@ function FlowRow({
 }) {
     const [show, setShow] = React.useState(false);
     const childs = Array.from(flow.child ?? []);
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
     const selected = useAppSelector((state) => state.flows.selected);
 
     return (
         <>
             <li
                 onClick={() => {
-                    if (childs.length !== 0) setShow(!show)
+                    if (childs.length !== 0) setShow(!show);
                     if (flow.flow) dispatch(select(flow.flow.id));
                 }}
-                style={{ backgroundColor: active ? "#7bbefc" : (flow.highlight ? "#ffeb99" : "") }}
-                className={classnames(["list-group-item", active ? "active" : ""])}
+                style={{
+                    backgroundColor: active
+                        ? "#7bbefc"
+                        : flow.highlight
+                        ? "#ffeb99"
+                        : "",
+                }}
+                className={classnames([
+                    "list-group-item",
+                    active ? "active" : "",
+                ])}
             >
-                <span style={{}}>
-
-                </span>
+                <span style={{}}></span>
                 {text}
             </li>
             <div style={{ display: show ? "block" : "none" }}>
                 <pre>
                     {childs.map((el) => (
-                        <FlowRow flow={el[1]} text={el[1].path} active={selected.includes(el[1].flow?.id ?? "")} />
+                        <FlowRow
+                            flow={el[1]}
+                            text={el[1].path}
+                            active={selected.includes(el[1].flow?.id ?? "")}
+                        />
                     ))}
                 </pre>
             </div>
         </>
     );
 }
-
 
 export default FlowTreeView;

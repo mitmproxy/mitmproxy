@@ -71,8 +71,8 @@ export function CommandBarToggle() {
 }
 
 export function TreeViewToggle() {
-    const visible = useAppSelector(state => state.ui.flow.isTreeView);
-    const dispatch = useDispatch()
+    const visible = useAppSelector((state) => state.ui.flow.isTreeView);
+    const dispatch = useDispatch();
     return (
         <MenuToggle
             value={visible}
@@ -80,5 +80,5 @@ export function TreeViewToggle() {
         >
             Tree View
         </MenuToggle>
-    )
+    );
 }
