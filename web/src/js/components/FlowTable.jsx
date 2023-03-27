@@ -106,7 +106,7 @@ class FlowTable extends React.Component {
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flows, selected, highlight } = this.props;
+        const { flows, highlight, selectedRows } = this.props;
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
 
         return (
@@ -124,7 +124,7 @@ class FlowTable extends React.Component {
                             <FlowRow
                                 key={flow.id}
                                 flow={flow}
-                                selected={flow === selected}
+                                selected={selectedRows.includes(flow.id)}
                                 highlighted={isHighlighted(flow)}
                             />
                         ))}
@@ -141,5 +141,5 @@ export const PureFlowTable = AutoScroll(FlowTable);
 export default connect((state) => ({
     flows: state.flows.view,
     highlight: state.flows.highlight,
-    selected: state.flows.byId[state.flows.selected[0]],
+    selectedRows: state.flows.selected
 }))(PureFlowTable);
