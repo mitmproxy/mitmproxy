@@ -203,9 +203,11 @@ export function remove(flow: Flow) {
 }
 
 export function removeMultiple(flowIds: string[]) {
-    const promises: Promise<Response>[] = []
-    flowIds.forEach((id) => promises.push(fetchApi(`/flows/${id}`, { method: "DELETE" })))
-    return (dispatch) => Promise.all(promises)
+    const promises: Promise<Response>[] = [];
+    flowIds.forEach((id) =>
+        promises.push(fetchApi(`/flows/${id}`, { method: "DELETE" }))
+    );
+    return (dispatch) => Promise.all(promises);
     // return (dispatch) => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 

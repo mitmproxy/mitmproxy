@@ -141,5 +141,5 @@ export const PureFlowTable = AutoScroll(FlowTable);
 export default connect((state) => ({
     flows: state.flows.view,
     highlight: state.flows.highlight,
-    selectedRows: state.flows.selected
+    selectedRows: state.flows.selected,
 }))(PureFlowTable);
