@@ -22,7 +22,7 @@ from mitmproxy.command_lexer import unquote
 
 
 def verify_arg_signature(f: Callable, args: Iterable[Any], kwargs: dict) -> None:
-    sig = inspect.signature(f)
+    sig = inspect.signature(f, eval_str=True)
     try:
         sig.bind(*args, **kwargs)
     except TypeError as v:
@@ -71,7 +71,7 @@ class Command:
         self.name = name
         self.manager = manager
         self.func = func
-        self.signature = inspect.signature(self.func)
+        self.signature = inspect.signature(self.func, eval_str=True)
 
         if func.__doc__:
             txt = func.__doc__.strip()
