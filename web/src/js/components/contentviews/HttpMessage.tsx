@@ -97,11 +97,12 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 <div className="controls">
                     <h5>{desc}</h5>
                     <Button
-                        onClick={() => copyFormattedViewContent(contentViewData)}
+                        onClick={() =>
+                            copyFormattedViewContent(contentViewData)
+                        }
                         icon="fa-edit"
                         className="btn-xs"
                     >
-
                         Copy
                     </Button>
                     &nbsp;
@@ -130,17 +131,15 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                         }
                     />
                 </div>
-                {
-                    ViewImage.matches(message) && (
-                        <ViewImage flow={flow} message={message} />
-                    )
-                }
+                {ViewImage.matches(message) && (
+                    <ViewImage flow={flow} message={message} />
+                )}
                 <LineRenderer
                     lines={contentViewData?.lines || []}
                     maxLines={maxLines}
                     showMore={showMore}
                 />
-            </div >
+            </div>
         );
     }
 }

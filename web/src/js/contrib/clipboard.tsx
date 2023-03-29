@@ -28,12 +28,13 @@ export function copyToClipboard(text: string): Promise<void> {
     }
 }
 
-
-export function copyFormattedViewContent(contentViewData: ContentViewData | undefined) {
-    let p = ""
+export function copyFormattedViewContent(
+    contentViewData: ContentViewData | undefined
+) {
+    let p = "";
     contentViewData?.lines.forEach((line) => {
-        line.forEach((el) => p = p + String(el[1]))
-        p = p + "\n"
-    })
-    copyToClipboard(p)
+        line.forEach((el) => (p = p + String(el[1])));
+        p = p + "\n";
+    });
+    copyToClipboard(p);
 }
