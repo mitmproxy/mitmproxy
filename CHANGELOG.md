@@ -30,6 +30,8 @@
   ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
 * mitmproxy now requires Python 3.10 or above.
   ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
+* Button to copy formatted ContentView
+  ([#5730](https://github.com/mitmproxy/mitmproxy/issues/5730), @RG7279805)
 
 ### Breaking Changes
 
