@@ -11,6 +11,7 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import LineRenderer from "./LineRenderer";
 import ViewSelector from "./ViewSelector";
+import { copyFormattedViewContent } from "../../contrib/clipboard";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -96,6 +97,15 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 <div className="controls">
                     <h5>{desc}</h5>
                     <Button
+                        onClick={() => copyFormattedViewContent(contentViewData)}
+                        icon="fa-edit"
+                        className="btn-xs"
+                    >
+
+                        Copy
+                    </Button>
+                    &nbsp;
+                    <Button
                         onClick={() => setEdit(true)}
                         icon="fa-edit"
                         className="btn-xs"
@@ -120,15 +130,17 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                         }
                     />
                 </div>
-                {ViewImage.matches(message) && (
-                    <ViewImage flow={flow} message={message} />
-                )}
+                {
+                    ViewImage.matches(message) && (
+                        <ViewImage flow={flow} message={message} />
+                    )
+                }
                 <LineRenderer
                     lines={contentViewData?.lines || []}
                     maxLines={maxLines}
                     showMore={showMore}
                 />
-            </div>
+            </div >
         );
     }
 }

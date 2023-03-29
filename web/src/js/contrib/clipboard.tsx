@@ -2,6 +2,8 @@
 /**
  * `navigator.clipboard.writeText()`, but with an additional fallback for non-secure contexts.
  */
+import { ContentViewData } from "../components/contentviews/useContent";
+
 export function copyToClipboard(text: string): Promise<void> {
     // navigator clipboard requires a security context such as https
     if (navigator.clipboard && window.isSecureContext) {
@@ -24,4 +26,14 @@ export function copyToClipboard(text: string): Promise<void> {
             t.remove();
         }
     }
+}
+
+
+export function copyFormattedViewContent(contentViewData: ContentViewData | undefined) {
+    let p = ""
+    contentViewData?.lines.forEach((line) => {
+        line.forEach((el) => p = p + String(el[1]))
+        p = p + "\n"
+    })
+    copyToClipboard(p)
 }
