@@ -135,6 +135,15 @@ exports[`FlowView 1`] = `
             <i
               class="fa fa-edit"
             />
+             Copy
+          </button>
+           
+          <button
+            class="btn-xs btn btn-default"
+          >
+            <i
+              class="fa fa-edit"
+            />
              Edit
           </button>
            
@@ -305,6 +314,15 @@ exports[`FlowView 2`] = `
           <h5>
             Loading...
           </h5>
+          <button
+            class="btn-xs btn btn-default"
+          >
+            <i
+              class="fa fa-edit"
+            />
+             Copy
+          </button>
+           
           <button
             class="btn-xs btn btn-default"
           >

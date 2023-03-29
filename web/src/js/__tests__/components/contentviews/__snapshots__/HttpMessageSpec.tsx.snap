@@ -17,6 +17,15 @@ exports[`HttpMessage 1`] = `
         <i
           class="fa fa-edit"
         />
+         Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
          Edit
       </button>
        
@@ -142,6 +151,15 @@ exports[`HttpMessage 3`] = `
       <h5>
         Raw
       </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Copy
+      </button>
+       
       <button
         class="btn-xs btn btn-default"
       >
