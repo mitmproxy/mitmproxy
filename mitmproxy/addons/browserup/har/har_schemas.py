@@ -33,7 +33,8 @@ class PageTimingSchema(Schema):
     _firstContentfulPaint = fields.Number(metadata={"optional": True, "description": "firstContentfulPaint from the browser"})
     _dns = fields.Number(metadata={"optional": True, "description": "dns lookup time from the browser"})
     _ssl = fields.Number(metadata={"optional": True, "description": "Ssl connect time from the browser"})
-    _ttfb = fields.Number(metadata={"optional": True, "description": "Time to first byte of the page's first request per the browser"})
+    _timeToFirstByte = fields.Number(metadata={"optional": True,
+                                               "description": "Time to first byte of the page's first request per the browser"})
     _href = fields.Str(metadata={"optional": True, "description": "Top level href, including hashtag, etc per the browser"})
 
 

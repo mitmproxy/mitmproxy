@@ -181,7 +181,7 @@ function perfTimings(){
     let onContentLoad = n.domContentLoadedTime;
     let onLoad = n.pageLoadTime;
 
-    let _ttfb = n.ttfb
+    let _timeToFirstByte = n.ttfb
     let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]);
     let _domInteractive = n.domInteractiveTime;
     let _firstPaint = firstPaint();
@@ -197,7 +197,7 @@ function perfTimings(){
         "_href": window.location.href,
         "_dns": _dns,
         "_ssl": _ssl,
-        "_timeToFirstByte": _ttfb,
+        "_timeToFirstByte": _timeToFirstByte,
         "_cumulativeLayoutShift": _cumulativeLayoutShift,
         "_largestContentfulPaint": _largestContentfulPaint,
         "_firstPaint": _firstPaint,
@@ -236,9 +236,10 @@ function handleClose(){
     }
 }
 
+window.addEventListener('load', postPerf);
+observeAndReportFirstInputDelay();
+
 document.addEventListener('DOMContentLoaded', function () {
-    observeAndReportFirstInputDelay();
-    window.addEventListener('load', postPerf);
     window.addEventListener('beforeunload', handleClose);
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') { handleClose(); }

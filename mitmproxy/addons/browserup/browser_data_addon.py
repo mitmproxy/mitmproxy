@@ -5,8 +5,10 @@ import json
 import os
 import pathlib
 
+
 # Inject a script into browser-responses for html that lets us get DOM timings, first paint time, and other metrics.
 class BrowserDataAddOn:
+
     def __init__(self, har_capture_addon):
         file_dir = pathlib.Path(__file__).parent.parent.parent.parent.resolve()
         filepath = os.path.normpath(os.path.join(file_dir, "scripts/browsertime/browser-data.js"))
@@ -21,6 +23,7 @@ class BrowserDataAddOn:
     def request(self, f: mitmproxy.http.HTTPFlow):
         if f.request.url.rfind('BrowserData') and 'action' in f.request.query.keys():
             action = f.request.query['action']
+            f.intercept()
             logging.info(f'BrowserData {action}')
             f.metadata['blocklisted'] = True
             if action == 'page_info':
@@ -30,6 +33,7 @@ class BrowserDataAddOn:
                 page_timings = json.loads(data)
                 self.HarCaptureAddon.add_page_info_to_har(page_timings)
                 f.response = mitmproxy.http.Response.make(204)
+                f.resume()
 
     def response(self, f: mitmproxy.http.HTTPFlow):
         if f.response is None or f.response.status_code != 200 or f.request.method not in ['GET', 'POST', 'PUT']:
@@ -39,5 +43,12 @@ class BrowserDataAddOn:
             if f.response.content is not None:
                 html = f.response.content.decode('utf-8')
                 html = re.sub('</body', self.browser_data_script + '</body', html)
+                html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
                 f.metadata['injected_script_len'] = self.browser_data_script_len
+
+                # <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+                # if we don't delete this, customer pages may be cranky about the script
+                if 'content-security-policy' in f.response.headers:
+                    del f.response.headers['content-security-policy']
+
                 f.response.text = html

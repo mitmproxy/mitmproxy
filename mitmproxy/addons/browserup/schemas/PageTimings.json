@@ -35,7 +35,7 @@
       "minimum": -1,
       "default": -1
     },
-    "_ttfb": {
+    "_timeToFirstByte": {
       "type": "integer",
       "format": "int64",
       "minimum": -1,

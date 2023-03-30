@@ -38,16 +38,8 @@ function observeAndReportFirstInputDelay() {
     if (!supported || supported.indexOf("first-input") === -1) { return; }
     new PerformanceObserver((entryList) => {
         for (entry of entryList.getEntries()) {
-            var delay = Number((entry.processingStart - entry.startTime).toFixed(1));
-            var paint = {};
-            performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
-
-            let _firstContentfulPaint = paint["first-contentful-paint"];
-            page_timings = {
-                "_firstInputDelay": delay
-            };
-            console.log("--->" + page_timings);
-            sendTimings(page_timings);
+            let delay = Number((entry.processingStart - entry.startTime).toFixed(1));
+            window.bupFirstInputDelay = delay;
         }
     }).observe({type: 'first-input', buffered: true});
 }
@@ -186,7 +178,7 @@ function perfTimings(){
     let onContentLoad = n.domContentLoadedTime;
     let onLoad = n.pageLoadTime;
 
-    let _ttfb = n.ttfb
+    let _timeToFirstByte = n.ttfb
     let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]);
     let _domInteractive = n.domInteractiveTime;
     let _firstPaint = firstPaint();
@@ -194,6 +186,7 @@ function perfTimings(){
     let _cumulativeLayoutShift = cumulativeLayoutShift();
     let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart);
     let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart);
+    let _firstInputDelay = window.bupFirstInputDelay || -1;
 
     return {
         "title": window.document.title,
@@ -202,12 +195,13 @@ function perfTimings(){
         "_href": window.location.href,
         "_dns": _dns,
         "_ssl": _ssl,
-        "_timeToFirstByte": _ttfb,
+        "_firstInputDelay": _firstInputDelay,
+        "_timeToFirstByte": _timeToFirstByte,
         "_cumulativeLayoutShift": _cumulativeLayoutShift,
         "_largestContentfulPaint": _largestContentfulPaint,
         "_firstPaint": _firstPaint,
         "_domInteractive": _domInteractive,
-        "_firstContentfulPaint": _firstContentfulPaint
+        "_firstContentfulPaint": _firstContentfulPaint,
    }
 }
 
@@ -224,7 +218,7 @@ function sendTimings(page_timings){
         else { console.error("BrowserUpProxy sendbeacon page_timings error") }
     }
 }
-function postPerf(){ sendTimings(perfTimings()); }
+function postPageInfo(){ sendTimings(perfTimings()); }
 function handleClose(){
     if (window.closeIsHandled) { return true };
     let title = document.title;
@@ -238,8 +232,8 @@ function handleClose(){
 }
 
 observeAndReportFirstInputDelay();
-window.addEventListener('load', postPerf);
-window.addEventListener('beforeunload', handleClose);
+window.addEventListener('load', postPageInfo);
+window.addEventListener('beforeunload', postPageInfo);
 
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { handleClose(); }

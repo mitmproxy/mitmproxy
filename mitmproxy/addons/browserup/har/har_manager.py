@@ -150,7 +150,7 @@ class HarManagerMixin():
         if 'title' in page_info:
             page['title'] = page_info['title']
             del page_info['title']
-        page['pageTimings'] = page['pageTimings'] | page_info
+        page['pageTimings'] = page_info
         logging.info(self.har)
 
     def add_custom_value_to_har(self, item_type, item):
