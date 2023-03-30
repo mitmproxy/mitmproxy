@@ -39,11 +39,27 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstPaint'
+     * Test the property 'cumulativeLayoutShift'
      */
     @Test
-    public void firstPaintTest() {
-        // TODO: test firstPaint
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
+    }
+
+    /**
+     * Test the property 'dns'
+     */
+    @Test
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'firstContentfulPaint'
+     */
+    @Test
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
     /**
@@ -71,51 +87,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'dns'
-     */
-    @Test
-    public void dnsTest() {
-        // TODO: test dns
-    }
-
-    /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
-     * Test the property 'timeToFirstByte'
-     */
-    @Test
-    public void timeToFirstByteTest() {
-        // TODO: test timeToFirstByte
-    }
-
-    /**
      * Test the property 'onLoad'
      */
     @Test
     public void onLoadTest() {
         // TODO: test onLoad
-    }
-
-    /**
-     * Test the property 'onContentLoad'
-     */
-    @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
-    }
-
-    /**
-     * Test the property 'domInteractive'
-     */
-    @Test
-    public void domInteractiveTest() {
-        // TODO: test domInteractive
     }
 
     /**
@@ -127,11 +103,35 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'cumulativeLayoutShift'
+     * Test the property 'domInteractive'
      */
     @Test
-    public void cumulativeLayoutShiftTest() {
-        // TODO: test cumulativeLayoutShift
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
+    }
+
+    /**
+     * Test the property 'timeToFirstByte'
+     */
+    @Test
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
+    }
+
+    /**
+     * Test the property 'firstPaint'
+     */
+    @Test
+    public void firstPaintTest() {
+        // TODO: test firstPaint
+    }
+
+    /**
+     * Test the property 'onContentLoad'
+     */
+    @Test
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
     }
 
 }

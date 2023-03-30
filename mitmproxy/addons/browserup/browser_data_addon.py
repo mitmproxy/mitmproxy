@@ -25,7 +25,6 @@ class BrowserDataAddOn:
             action = f.request.query['action']
             f.intercept()
             logging.info(f'BrowserData {action}')
-            f.metadata['blocklisted'] = True
             if action == 'page_info':
                 form = f.request.multipart_form
                 logging.info(f'-->PageTimings {form.fields}')

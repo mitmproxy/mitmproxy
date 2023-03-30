@@ -173,19 +173,19 @@ function perfTimings(){
     var paint = {};
     performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
     var perf = performance.getEntriesByType('navigation')[0];
-    n = navTimings()
+    n = navTimings();
     // missing har fields
-    let onContentLoad = n.domContentLoadedTime;
-    let onLoad = n.pageLoadTime;
+    let onContentLoad = n.domContentLoadedTime || -1;
+    let onLoad = n.pageLoadTime || -1;
 
-    let _timeToFirstByte = n.ttfb
-    let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]);
-    let _domInteractive = n.domInteractiveTime;
-    let _firstPaint = firstPaint();
-    let _largestContentfulPaint = largestContentfulPaint();
-    let _cumulativeLayoutShift = cumulativeLayoutShift();
-    let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart);
-    let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart);
+    let _timeToFirstByte = n.ttfb || -1;
+    let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]) || -1;
+    let _domInteractive = n.domInteractiveTime || -1;
+    let _firstPaint = firstPaint() || -1;
+    let _largestContentfulPaint = largestContentfulPaint() || -1;
+    let _cumulativeLayoutShift = cumulativeLayoutShift() || -1;
+    let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart) || -1;
+    let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart) || -1;
     let _firstInputDelay = window.bupFirstInputDelay || -1;
 
     return {
@@ -201,7 +201,7 @@ function perfTimings(){
         "_largestContentfulPaint": _largestContentfulPaint,
         "_firstPaint": _firstPaint,
         "_domInteractive": _domInteractive,
-        "_firstContentfulPaint": _firstContentfulPaint,
+        "_firstContentfulPaint": _firstContentfulPaint
    }
 }
 

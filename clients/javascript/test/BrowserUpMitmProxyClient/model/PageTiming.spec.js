@@ -54,8 +54,20 @@
       //expect(instance).to.be.a(BrowserUpMitmProxyClient.PageTiming);
     });
 
-    it('should have the property firstPaint (base name: "_firstPaint")', function() {
-      // uncomment below and update the code to test the property firstPaint
+    it('should have the property cumulativeLayoutShift (base name: "_cumulativeLayoutShift")', function() {
+      // uncomment below and update the code to test the property cumulativeLayoutShift
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property dns (base name: "_dns")', function() {
+      // uncomment below and update the code to test the property dns
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property firstContentfulPaint (base name: "_firstContentfulPaint")', function() {
+      // uncomment below and update the code to test the property firstContentfulPaint
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });
@@ -78,38 +90,8 @@
       //expect(instance).to.be();
     });
 
-    it('should have the property dns (base name: "_dns")', function() {
-      // uncomment below and update the code to test the property dns
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property firstContentfulPaint (base name: "_firstContentfulPaint")', function() {
-      // uncomment below and update the code to test the property firstContentfulPaint
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property timeToFirstByte (base name: "_timeToFirstByte")', function() {
-      // uncomment below and update the code to test the property timeToFirstByte
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
     it('should have the property onLoad (base name: "onLoad")', function() {
       // uncomment below and update the code to test the property onLoad
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property onContentLoad (base name: "onContentLoad")', function() {
-      // uncomment below and update the code to test the property onContentLoad
-      //var instance = new BrowserUpMitmProxyClient.PageTiming();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property domInteractive (base name: "_domInteractive")', function() {
-      // uncomment below and update the code to test the property domInteractive
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });
@@ -120,8 +102,26 @@
       //expect(instance).to.be();
     });
 
-    it('should have the property cumulativeLayoutShift (base name: "_cumulativeLayoutShift")', function() {
-      // uncomment below and update the code to test the property cumulativeLayoutShift
+    it('should have the property domInteractive (base name: "_domInteractive")', function() {
+      // uncomment below and update the code to test the property domInteractive
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property timeToFirstByte (base name: "_timeToFirstByte")', function() {
+      // uncomment below and update the code to test the property timeToFirstByte
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property firstPaint (base name: "_firstPaint")', function() {
+      // uncomment below and update the code to test the property firstPaint
+      //var instance = new BrowserUpMitmProxyClient.PageTiming();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property onContentLoad (base name: "onContentLoad")', function() {
+      // uncomment below and update the code to test the property onContentLoad
       //var instance = new BrowserUpMitmProxyClient.PageTiming();
       //expect(instance).to.be();
     });
