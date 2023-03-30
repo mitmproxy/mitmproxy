@@ -69,9 +69,9 @@ public class PageTimings {
   @SerializedName(SERIALIZED_NAME_SSL)
   private Long ssl = -1l;
 
-  public static final String SERIALIZED_NAME_TTFB = "_ttfb";
-  @SerializedName(SERIALIZED_NAME_TTFB)
-  private Long ttfb = -1l;
+  public static final String SERIALIZED_NAME_TIME_TO_FIRST_BYTE = "_timeToFirstByte";
+  @SerializedName(SERIALIZED_NAME_TIME_TO_FIRST_BYTE)
+  private Long timeToFirstByte = -1l;
 
   public static final String SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT = "_cumulativeLayoutShift";
   @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
@@ -218,26 +218,26 @@ public class PageTimings {
   }
 
 
-  public PageTimings ttfb(Long ttfb) {
+  public PageTimings timeToFirstByte(Long timeToFirstByte) {
     
-    this.ttfb = ttfb;
+    this.timeToFirstByte = timeToFirstByte;
     return this;
   }
 
    /**
-   * Get ttfb
+   * Get timeToFirstByte
    * minimum: -1
-   * @return ttfb
+   * @return timeToFirstByte
   **/
   @javax.annotation.Nullable
 
-  public Long getTtfb() {
-    return ttfb;
+  public Long getTimeToFirstByte() {
+    return timeToFirstByte;
   }
 
 
-  public void setTtfb(Long ttfb) {
-    this.ttfb = ttfb;
+  public void setTimeToFirstByte(Long timeToFirstByte) {
+    this.timeToFirstByte = timeToFirstByte;
   }
 
 
@@ -459,7 +459,7 @@ public class PageTimings {
         Objects.equals(this.href, pageTimings.href) &&
         Objects.equals(this.dns, pageTimings.dns) &&
         Objects.equals(this.ssl, pageTimings.ssl) &&
-        Objects.equals(this.ttfb, pageTimings.ttfb) &&
+        Objects.equals(this.timeToFirstByte, pageTimings.timeToFirstByte) &&
         Objects.equals(this.cumulativeLayoutShift, pageTimings.cumulativeLayoutShift) &&
         Objects.equals(this.largestContentfulPaint, pageTimings.largestContentfulPaint) &&
         Objects.equals(this.firstPaint, pageTimings.firstPaint) &&
@@ -472,7 +472,7 @@ public class PageTimings {
 
   @Override
   public int hashCode() {
-    return Objects.hash(onContentLoad, onLoad, href, dns, ssl, ttfb, cumulativeLayoutShift, largestContentfulPaint, firstPaint, firstInputDelay, domInteractive, firstContentfulPaint, comment, additionalProperties);
+    return Objects.hash(onContentLoad, onLoad, href, dns, ssl, timeToFirstByte, cumulativeLayoutShift, largestContentfulPaint, firstPaint, firstInputDelay, domInteractive, firstContentfulPaint, comment, additionalProperties);
   }
 
   @Override
@@ -484,7 +484,7 @@ public class PageTimings {
     sb.append("    href: ").append(toIndentedString(href)).append("\n");
     sb.append("    dns: ").append(toIndentedString(dns)).append("\n");
     sb.append("    ssl: ").append(toIndentedString(ssl)).append("\n");
-    sb.append("    ttfb: ").append(toIndentedString(ttfb)).append("\n");
+    sb.append("    timeToFirstByte: ").append(toIndentedString(timeToFirstByte)).append("\n");
     sb.append("    cumulativeLayoutShift: ").append(toIndentedString(cumulativeLayoutShift)).append("\n");
     sb.append("    largestContentfulPaint: ").append(toIndentedString(largestContentfulPaint)).append("\n");
     sb.append("    firstPaint: ").append(toIndentedString(firstPaint)).append("\n");
@@ -520,7 +520,7 @@ public class PageTimings {
     openapiFields.add("_href");
     openapiFields.add("_dns");
     openapiFields.add("_ssl");
-    openapiFields.add("_ttfb");
+    openapiFields.add("_timeToFirstByte");
     openapiFields.add("_cumulativeLayoutShift");
     openapiFields.add("_largestContentfulPaint");
     openapiFields.add("_firstPaint");

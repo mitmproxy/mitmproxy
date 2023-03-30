@@ -25,7 +25,7 @@ module BrowserupMitmProxy
 
     attr_accessor :_ssl
 
-    attr_accessor :_ttfb
+    attr_accessor :_time_to_first_byte
 
     attr_accessor :_cumulative_layout_shift
 
@@ -49,7 +49,7 @@ module BrowserupMitmProxy
         :'_href' => :'_href',
         :'_dns' => :'_dns',
         :'_ssl' => :'_ssl',
-        :'_ttfb' => :'_ttfb',
+        :'_time_to_first_byte' => :'_timeToFirstByte',
         :'_cumulative_layout_shift' => :'_cumulativeLayoutShift',
         :'_largest_contentful_paint' => :'_largestContentfulPaint',
         :'_first_paint' => :'_firstPaint',
@@ -73,7 +73,7 @@ module BrowserupMitmProxy
         :'_href' => :'String',
         :'_dns' => :'Integer',
         :'_ssl' => :'Integer',
-        :'_ttfb' => :'Integer',
+        :'_time_to_first_byte' => :'Integer',
         :'_cumulative_layout_shift' => :'Integer',
         :'_largest_contentful_paint' => :'LargestContentfulPaint',
         :'_first_paint' => :'Integer',
@@ -135,10 +135,10 @@ module BrowserupMitmProxy
         self._ssl = -1
       end
 
-      if attributes.key?(:'_ttfb')
-        self._ttfb = attributes[:'_ttfb']
+      if attributes.key?(:'_time_to_first_byte')
+        self._time_to_first_byte = attributes[:'_time_to_first_byte']
       else
-        self._ttfb = -1
+        self._time_to_first_byte = -1
       end
 
       if attributes.key?(:'_cumulative_layout_shift')
@@ -208,8 +208,8 @@ module BrowserupMitmProxy
         invalid_properties.push('invalid value for "_ssl", must be greater than or equal to -1.')
       end
 
-      if !@_ttfb.nil? && @_ttfb < -1
-        invalid_properties.push('invalid value for "_ttfb", must be greater than or equal to -1.')
+      if !@_time_to_first_byte.nil? && @_time_to_first_byte < -1
+        invalid_properties.push('invalid value for "_time_to_first_byte", must be greater than or equal to -1.')
       end
 
       if !@_cumulative_layout_shift.nil? && @_cumulative_layout_shift < -1
@@ -244,7 +244,7 @@ module BrowserupMitmProxy
       return false if @on_load < -1
       return false if !@_dns.nil? && @_dns < -1
       return false if !@_ssl.nil? && @_ssl < -1
-      return false if !@_ttfb.nil? && @_ttfb < -1
+      return false if !@_time_to_first_byte.nil? && @_time_to_first_byte < -1
       return false if !@_cumulative_layout_shift.nil? && @_cumulative_layout_shift < -1
       return false if !@_first_paint.nil? && @_first_paint < -1
       return false if !@_first_input_delay.nil? && @_first_input_delay < -1
@@ -302,13 +302,13 @@ module BrowserupMitmProxy
     end
 
     # Custom attribute writer method with validation
-    # @param [Object] _ttfb Value to be assigned
-    def _ttfb=(_ttfb)
-      if !_ttfb.nil? && _ttfb < -1
-        fail ArgumentError, 'invalid value for "_ttfb", must be greater than or equal to -1.'
+    # @param [Object] _time_to_first_byte Value to be assigned
+    def _time_to_first_byte=(_time_to_first_byte)
+      if !_time_to_first_byte.nil? && _time_to_first_byte < -1
+        fail ArgumentError, 'invalid value for "_time_to_first_byte", must be greater than or equal to -1.'
       end
 
-      @_ttfb = _ttfb
+      @_time_to_first_byte = _time_to_first_byte
     end
 
     # Custom attribute writer method with validation
@@ -371,7 +371,7 @@ module BrowserupMitmProxy
           _href == o._href &&
           _dns == o._dns &&
           _ssl == o._ssl &&
-          _ttfb == o._ttfb &&
+          _time_to_first_byte == o._time_to_first_byte &&
           _cumulative_layout_shift == o._cumulative_layout_shift &&
           _largest_contentful_paint == o._largest_contentful_paint &&
           _first_paint == o._first_paint &&
@@ -390,7 +390,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [on_content_load, on_load, _href, _dns, _ssl, _ttfb, _cumulative_layout_shift, _largest_contentful_paint, _first_paint, _first_input_delay, _dom_interactive, _first_contentful_paint, comment].hash
+      [on_content_load, on_load, _href, _dns, _ssl, _time_to_first_byte, _cumulative_layout_shift, _largest_contentful_paint, _first_paint, _first_input_delay, _dom_interactive, _first_contentful_paint, comment].hash
     end
 
     # Builds the object from hash

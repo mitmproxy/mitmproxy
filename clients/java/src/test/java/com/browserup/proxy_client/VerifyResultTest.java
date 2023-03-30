@@ -38,6 +38,14 @@ public class VerifyResultTest {
     }
 
     /**
+     * Test the property 'result'
+     */
+    @Test
+    public void resultTest() {
+        // TODO: test result
+    }
+
+    /**
      * Test the property 'type'
      */
     @Test
@@ -51,14 +59,6 @@ public class VerifyResultTest {
     @Test
     public void nameTest() {
         // TODO: test name
-    }
-
-    /**
-     * Test the property 'result'
-     */
-    @Test
-    public void resultTest() {
-        // TODO: test result
     }
 
 }

@@ -9,7 +9,7 @@
 | **_href** | **String** |  | [optional][default to &#39;&#39;] |
 | **_dns** | **Integer** |  | [optional][default to -1] |
 | **_ssl** | **Integer** |  | [optional][default to -1] |
-| **_ttfb** | **Integer** |  | [optional][default to -1] |
+| **_time_to_first_byte** | **Integer** |  | [optional][default to -1] |
 | **_cumulative_layout_shift** | **Integer** |  | [optional][default to -1] |
 | **_largest_contentful_paint** | [**LargestContentfulPaint**](LargestContentfulPaint.md) |  | [optional] |
 | **_first_paint** | **Integer** |  | [optional][default to -1] |
@@ -29,7 +29,7 @@ instance = BrowserupMitmProxy::PageTimings.new(
   _href: null,
   _dns: null,
   _ssl: null,
-  _ttfb: null,
+  _time_to_first_byte: null,
   _cumulative_layout_shift: null,
   _largest_contentful_paint: null,
   _first_paint: null,

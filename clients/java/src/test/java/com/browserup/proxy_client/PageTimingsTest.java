@@ -79,11 +79,11 @@ public class PageTimingsTest {
     }
 
     /**
-     * Test the property 'ttfb'
+     * Test the property 'timeToFirstByte'
      */
     @Test
-    public void ttfbTest() {
-        // TODO: test ttfb
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
     }
 
     /**

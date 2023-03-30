@@ -39,59 +39,19 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'largestContentfulPaint'
-     */
-    @Test
-    public void largestContentfulPaintTest() {
-        // TODO: test largestContentfulPaint
-    }
-
-    /**
-     * Test the property 'ssl'
-     */
-    @Test
-    public void sslTest() {
-        // TODO: test ssl
-    }
-
-    /**
-     * Test the property 'domInteractive'
-     */
-    @Test
-    public void domInteractiveTest() {
-        // TODO: test domInteractive
-    }
-
-    /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
-     * Test the property 'firstInputDelay'
-     */
-    @Test
-    public void firstInputDelayTest() {
-        // TODO: test firstInputDelay
-    }
-
-    /**
-     * Test the property 'ttfb'
-     */
-    @Test
-    public void ttfbTest() {
-        // TODO: test ttfb
-    }
-
-    /**
      * Test the property 'firstPaint'
      */
     @Test
     public void firstPaintTest() {
         // TODO: test firstPaint
+    }
+
+    /**
+     * Test the property 'largestContentfulPaint'
+     */
+    @Test
+    public void largestContentfulPaintTest() {
+        // TODO: test largestContentfulPaint
     }
 
     /**
@@ -103,19 +63,35 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'onContentLoad'
+     * Test the property 'firstInputDelay'
      */
     @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
+    public void firstInputDelayTest() {
+        // TODO: test firstInputDelay
     }
 
     /**
-     * Test the property 'cumulativeLayoutShift'
+     * Test the property 'dns'
      */
     @Test
-    public void cumulativeLayoutShiftTest() {
-        // TODO: test cumulativeLayoutShift
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'firstContentfulPaint'
+     */
+    @Test
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
+    }
+
+    /**
+     * Test the property 'timeToFirstByte'
+     */
+    @Test
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
     }
 
     /**
@@ -127,11 +103,35 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'dns'
+     * Test the property 'onContentLoad'
      */
     @Test
-    public void dnsTest() {
-        // TODO: test dns
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
+    }
+
+    /**
+     * Test the property 'domInteractive'
+     */
+    @Test
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'cumulativeLayoutShift'
+     */
+    @Test
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
     }
 
 }

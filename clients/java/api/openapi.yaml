@@ -285,41 +285,41 @@ components:
   schemas:
     PageTiming:
       properties:
-        _largestContentfulPaint:
-          description: largestContentfulPaint from the browser
-          type: number
-        _ssl:
-          description: Ssl connect time from the browser
-          type: number
-        _domInteractive:
-          description: domInteractive from the browser
-          type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
-          type: number
-        _firstInputDelay:
-          description: firstInputDelay from the browser
-          type: number
-        _ttfb:
-          description: Time to first byte of the page's first request per the browser
-          type: number
         _firstPaint:
           description: firstPaint from the browser
+          type: number
+        _largestContentfulPaint:
+          description: largestContentfulPaint from the browser
           type: number
         _href:
           description: "Top level href, including hashtag, etc per the browser"
           type: string
-        onContentLoad:
-          description: onContentLoad per the browser
+        _firstInputDelay:
+          description: firstInputDelay from the browser
           type: number
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
+        _dns:
+          description: dns lookup time from the browser
+          type: number
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
+          type: number
+        _timeToFirstByte:
+          description: Time to first byte of the page's first request per the browser
           type: number
         onLoad:
           description: onLoad per the browser
           type: number
-        _dns:
-          description: dns lookup time from the browser
+        onContentLoad:
+          description: onContentLoad per the browser
+          type: number
+        _domInteractive:
+          description: domInteractive from the browser
+          type: number
+        _ssl:
+          description: Ssl connect time from the browser
+          type: number
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
       type: object
     NameValuePair:
@@ -415,26 +415,26 @@ components:
         name: name
         type: type
       properties:
+        result:
+          description: Result True / False
+          type: boolean
         type:
           description: Type
           type: string
         name:
           description: Name
           type: string
-        result:
-          description: Result True / False
-          type: boolean
       type: object
     Error:
       example:
         name: name
         details: details
       properties:
-        details:
-          description: Short details of the error
-          type: string
         name:
           description: Name of the Error to add. Stored in har under _errors
+          type: string
+        details:
+          description: Short details of the error
           type: string
       type: object
     Counter:
@@ -527,7 +527,7 @@ components:
           tag: tag
         _firstInputDelay: 0
         _domInteractive: 0
-        _ttfb: 0
+        _timeToFirstByte: 0
         _firstContentfulPaint: 0
         onContentLoad: 0
         onLoad: 0
@@ -556,7 +556,7 @@ components:
           format: int64
           minimum: -1
           type: integer
-        _ttfb:
+        _timeToFirstByte:
           default: -1
           format: int64
           minimum: -1
@@ -856,7 +856,7 @@ components:
                 tag: tag
               _firstInputDelay: 0
               _domInteractive: 0
-              _ttfb: 0
+              _timeToFirstByte: 0
               _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
@@ -895,7 +895,7 @@ components:
                 tag: tag
               _firstInputDelay: 0
               _domInteractive: 0
-              _ttfb: 0
+              _timeToFirstByte: 0
               _firstContentfulPaint: 0
               onContentLoad: 0
               onLoad: 0
@@ -1109,7 +1109,7 @@ components:
             tag: tag
           _firstInputDelay: 0
           _domInteractive: 0
-          _ttfb: 0
+          _timeToFirstByte: 0
           _firstContentfulPaint: 0
           onContentLoad: 0
           onLoad: 0
@@ -1449,7 +1449,7 @@ components:
               tag: tag
             _firstInputDelay: 0
             _domInteractive: 0
-            _ttfb: 0
+            _timeToFirstByte: 0
             _firstContentfulPaint: 0
             onContentLoad: 0
             onLoad: 0
@@ -1488,7 +1488,7 @@ components:
               tag: tag
             _firstInputDelay: 0
             _domInteractive: 0
-            _ttfb: 0
+            _timeToFirstByte: 0
             _firstContentfulPaint: 0
             onContentLoad: 0
             onLoad: 0

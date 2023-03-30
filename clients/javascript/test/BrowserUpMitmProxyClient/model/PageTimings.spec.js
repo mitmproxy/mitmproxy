@@ -84,8 +84,8 @@
       //expect(instance).to.be();
     });
 
-    it('should have the property ttfb (base name: "_ttfb")', function() {
-      // uncomment below and update the code to test the property ttfb
+    it('should have the property timeToFirstByte (base name: "_timeToFirstByte")', function() {
+      // uncomment below and update the code to test the property timeToFirstByte
       //var instance = new BrowserUpMitmProxyClient.PageTimings();
       //expect(instance).to.be();
     });

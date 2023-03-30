@@ -71,8 +71,8 @@ class PageTimings {
             if (data.hasOwnProperty('_ssl')) {
                 obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
             }
-            if (data.hasOwnProperty('_ttfb')) {
-                obj['_ttfb'] = ApiClient.convertToType(data['_ttfb'], 'Number');
+            if (data.hasOwnProperty('_timeToFirstByte')) {
+                obj['_timeToFirstByte'] = ApiClient.convertToType(data['_timeToFirstByte'], 'Number');
             }
             if (data.hasOwnProperty('_cumulativeLayoutShift')) {
                 obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
@@ -159,10 +159,10 @@ PageTimings.prototype['_dns'] = -1;
 PageTimings.prototype['_ssl'] = -1;
 
 /**
- * @member {Number} _ttfb
+ * @member {Number} _timeToFirstByte
  * @default -1
  */
-PageTimings.prototype['_ttfb'] = -1;
+PageTimings.prototype['_timeToFirstByte'] = -1;
 
 /**
  * @member {Number} _cumulativeLayoutShift

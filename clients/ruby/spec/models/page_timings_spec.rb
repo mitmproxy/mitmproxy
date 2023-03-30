@@ -55,7 +55,7 @@ describe BrowserupMitmProxy::PageTimings do
     end
   end
 
-  describe 'test attribute "_ttfb"' do
+  describe 'test attribute "_time_to_first_byte"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end

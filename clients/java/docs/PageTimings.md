@@ -12,7 +12,7 @@
 |**href** | **String** |  |  [optional] |
 |**dns** | **Long** |  |  [optional] |
 |**ssl** | **Long** |  |  [optional] |
-|**ttfb** | **Long** |  |  [optional] |
+|**timeToFirstByte** | **Long** |  |  [optional] |
 |**cumulativeLayoutShift** | **Integer** |  |  [optional] |
 |**largestContentfulPaint** | **LargestContentfulPaint** |  |  [optional] |
 |**firstPaint** | **Long** |  |  [optional] |
