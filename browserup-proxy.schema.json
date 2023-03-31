@@ -386,21 +386,25 @@
       "PageTiming": {
         "type": "object",
         "properties": {
-          "_cumulativeLayoutShift": {
+          "_timeToFirstByte": {
             "type": "number",
-            "description": "cumulativeLayoutShift metric from the browser"
+            "description": "Time to first byte of the page's first request per the browser"
           },
-          "_dns": {
+          "_domInteractive": {
             "type": "number",
-            "description": "dns lookup time from the browser"
+            "description": "domInteractive from the browser"
           },
           "_firstContentfulPaint": {
             "type": "number",
             "description": "firstContentfulPaint from the browser"
           },
-          "_largestContentfulPaint": {
+          "_ssl": {
             "type": "number",
-            "description": "largestContentfulPaint from the browser"
+            "description": "Ssl connect time from the browser"
+          },
+          "_dns": {
+            "type": "number",
+            "description": "dns lookup time from the browser"
           },
           "_href": {
             "type": "string",
@@ -410,42 +414,38 @@
             "type": "number",
             "description": "firstInputDelay from the browser"
           },
-          "onLoad": {
+          "onContentLoad": {
             "type": "number",
-            "description": "onLoad per the browser"
+            "description": "onContentLoad per the browser"
           },
-          "_ssl": {
+          "_cumulativeLayoutShift": {
             "type": "number",
-            "description": "Ssl connect time from the browser"
-          },
-          "_domInteractive": {
-            "type": "number",
-            "description": "domInteractive from the browser"
-          },
-          "_timeToFirstByte": {
-            "type": "number",
-            "description": "Time to first byte of the page's first request per the browser"
+            "description": "cumulativeLayoutShift metric from the browser"
           },
           "_firstPaint": {
             "type": "number",
             "description": "firstPaint from the browser"
           },
-          "onContentLoad": {
+          "_largestContentfulPaint": {
             "type": "number",
-            "description": "onContentLoad per the browser"
+            "description": "largestContentfulPaint from the browser"
+          },
+          "onLoad": {
+            "type": "number",
+            "description": "onLoad per the browser"
           }
         }
       },
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name to match"
-          },
           "value": {
             "type": "string",
             "description": "Value to match"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to match"
           }
         }
       },
@@ -567,10 +567,6 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name"
-          },
           "result": {
             "type": "boolean",
             "description": "Result True / False"
@@ -578,6 +574,10 @@
           "type": {
             "type": "string",
             "description": "Type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name"
           }
         }
       },
@@ -597,14 +597,14 @@
       "Counter": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of Custom Counter to add to the page under _counters"
-          },
           "value": {
             "type": "number",
             "format": "double",
             "description": "Value for the counter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of Custom Counter to add to the page under _counters"
           }
         }
       },

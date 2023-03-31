@@ -48,10 +48,6 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class VerifyResult {
-  public static final String SERIALIZED_NAME_NAME = "name";
-  @SerializedName(SERIALIZED_NAME_NAME)
-  private String name;
-
   public static final String SERIALIZED_NAME_RESULT = "result";
   @SerializedName(SERIALIZED_NAME_RESULT)
   private Boolean result;
@@ -60,30 +56,12 @@ public class VerifyResult {
   @SerializedName(SERIALIZED_NAME_TYPE)
   private String type;
 
+  public static final String SERIALIZED_NAME_NAME = "name";
+  @SerializedName(SERIALIZED_NAME_NAME)
+  private String name;
+
   public VerifyResult() {
   }
-
-  public VerifyResult name(String name) {
-    
-    this.name = name;
-    return this;
-  }
-
-   /**
-   * Name
-   * @return name
-  **/
-  @javax.annotation.Nullable
-
-  public String getName() {
-    return name;
-  }
-
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
 
   public VerifyResult result(Boolean result) {
     
@@ -129,6 +107,28 @@ public class VerifyResult {
   }
 
 
+  public VerifyResult name(String name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Name
+   * @return name
+  **/
+  @javax.annotation.Nullable
+
+  public String getName() {
+    return name;
+  }
+
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -139,23 +139,23 @@ public class VerifyResult {
       return false;
     }
     VerifyResult verifyResult = (VerifyResult) o;
-    return Objects.equals(this.name, verifyResult.name) &&
-        Objects.equals(this.result, verifyResult.result) &&
-        Objects.equals(this.type, verifyResult.type);
+    return Objects.equals(this.result, verifyResult.result) &&
+        Objects.equals(this.type, verifyResult.type) &&
+        Objects.equals(this.name, verifyResult.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, result, type);
+    return Objects.hash(result, type, name);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class VerifyResult {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -178,9 +178,9 @@ public class VerifyResult {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("name");
     openapiFields.add("result");
     openapiFields.add("type");
+    openapiFields.add("name");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -206,11 +206,11 @@ public class VerifyResult {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `VerifyResult` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
       }
-      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
-      }
       if ((jsonObj.get("type") != null && !jsonObj.get("type").isJsonNull()) && !jsonObj.get("type").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `type` to be a primitive type in the JSON string but got `%s`", jsonObj.get("type").toString()));
+      }
+      if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
       }
   }
 

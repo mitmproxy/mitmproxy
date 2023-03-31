@@ -15,17 +15,17 @@ require 'time'
 
 module BrowserupMitmProxy
   class MatchCriteriaRequestHeader
-    # Name to match
-    attr_accessor :name
-
     # Value to match
     attr_accessor :value
+
+    # Name to match
+    attr_accessor :name
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'name' => :'name',
-        :'value' => :'value'
+        :'value' => :'value',
+        :'name' => :'name'
       }
     end
 
@@ -37,8 +37,8 @@ module BrowserupMitmProxy
     # Attribute type mapping.
     def self.openapi_types
       {
-        :'name' => :'String',
-        :'value' => :'String'
+        :'value' => :'String',
+        :'name' => :'String'
       }
     end
 
@@ -70,12 +70,12 @@ module BrowserupMitmProxy
         h[k.to_sym] = v
       }
 
-      if attributes.key?(:'name')
-        self.name = attributes[:'name']
-      end
-
       if attributes.key?(:'value')
         self.value = attributes[:'value']
+      end
+
+      if attributes.key?(:'name')
+        self.name = attributes[:'name']
       end
     end
 
@@ -97,8 +97,8 @@ module BrowserupMitmProxy
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
-          name == o.name &&
-          value == o.value
+          value == o.value &&
+          name == o.name
     end
 
     # @see the `==` method
@@ -110,7 +110,7 @@ module BrowserupMitmProxy
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [name, value].hash
+      [value, name].hash
     end
 
     # Builds the object from hash

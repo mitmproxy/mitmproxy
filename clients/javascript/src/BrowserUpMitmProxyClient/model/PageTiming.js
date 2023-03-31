@@ -47,17 +47,20 @@ class PageTiming {
         if (data) {
             obj = obj || new PageTiming();
 
-            if (data.hasOwnProperty('_cumulativeLayoutShift')) {
-                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
+            if (data.hasOwnProperty('_timeToFirstByte')) {
+                obj['_timeToFirstByte'] = ApiClient.convertToType(data['_timeToFirstByte'], 'Number');
             }
-            if (data.hasOwnProperty('_dns')) {
-                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
+            if (data.hasOwnProperty('_domInteractive')) {
+                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
             }
             if (data.hasOwnProperty('_firstContentfulPaint')) {
                 obj['_firstContentfulPaint'] = ApiClient.convertToType(data['_firstContentfulPaint'], 'Number');
             }
-            if (data.hasOwnProperty('_largestContentfulPaint')) {
-                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+            if (data.hasOwnProperty('_ssl')) {
+                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
+            }
+            if (data.hasOwnProperty('_dns')) {
+                obj['_dns'] = ApiClient.convertToType(data['_dns'], 'Number');
             }
             if (data.hasOwnProperty('_href')) {
                 obj['_href'] = ApiClient.convertToType(data['_href'], 'String');
@@ -65,23 +68,20 @@ class PageTiming {
             if (data.hasOwnProperty('_firstInputDelay')) {
                 obj['_firstInputDelay'] = ApiClient.convertToType(data['_firstInputDelay'], 'Number');
             }
-            if (data.hasOwnProperty('onLoad')) {
-                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
+            if (data.hasOwnProperty('onContentLoad')) {
+                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], 'Number');
             }
-            if (data.hasOwnProperty('_ssl')) {
-                obj['_ssl'] = ApiClient.convertToType(data['_ssl'], 'Number');
-            }
-            if (data.hasOwnProperty('_domInteractive')) {
-                obj['_domInteractive'] = ApiClient.convertToType(data['_domInteractive'], 'Number');
-            }
-            if (data.hasOwnProperty('_timeToFirstByte')) {
-                obj['_timeToFirstByte'] = ApiClient.convertToType(data['_timeToFirstByte'], 'Number');
+            if (data.hasOwnProperty('_cumulativeLayoutShift')) {
+                obj['_cumulativeLayoutShift'] = ApiClient.convertToType(data['_cumulativeLayoutShift'], 'Number');
             }
             if (data.hasOwnProperty('_firstPaint')) {
                 obj['_firstPaint'] = ApiClient.convertToType(data['_firstPaint'], 'Number');
             }
-            if (data.hasOwnProperty('onContentLoad')) {
-                obj['onContentLoad'] = ApiClient.convertToType(data['onContentLoad'], 'Number');
+            if (data.hasOwnProperty('_largestContentfulPaint')) {
+                obj['_largestContentfulPaint'] = ApiClient.convertToType(data['_largestContentfulPaint'], 'Number');
+            }
+            if (data.hasOwnProperty('onLoad')) {
+                obj['onLoad'] = ApiClient.convertToType(data['onLoad'], 'Number');
             }
         }
         return obj;
@@ -107,16 +107,16 @@ class PageTiming {
 
 
 /**
- * cumulativeLayoutShift metric from the browser
- * @member {Number} _cumulativeLayoutShift
+ * Time to first byte of the page's first request per the browser
+ * @member {Number} _timeToFirstByte
  */
-PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
+PageTiming.prototype['_timeToFirstByte'] = undefined;
 
 /**
- * dns lookup time from the browser
- * @member {Number} _dns
+ * domInteractive from the browser
+ * @member {Number} _domInteractive
  */
-PageTiming.prototype['_dns'] = undefined;
+PageTiming.prototype['_domInteractive'] = undefined;
 
 /**
  * firstContentfulPaint from the browser
@@ -125,10 +125,16 @@ PageTiming.prototype['_dns'] = undefined;
 PageTiming.prototype['_firstContentfulPaint'] = undefined;
 
 /**
- * largestContentfulPaint from the browser
- * @member {Number} _largestContentfulPaint
+ * Ssl connect time from the browser
+ * @member {Number} _ssl
  */
-PageTiming.prototype['_largestContentfulPaint'] = undefined;
+PageTiming.prototype['_ssl'] = undefined;
+
+/**
+ * dns lookup time from the browser
+ * @member {Number} _dns
+ */
+PageTiming.prototype['_dns'] = undefined;
 
 /**
  * Top level href, including hashtag, etc per the browser
@@ -143,28 +149,16 @@ PageTiming.prototype['_href'] = undefined;
 PageTiming.prototype['_firstInputDelay'] = undefined;
 
 /**
- * onLoad per the browser
- * @member {Number} onLoad
+ * onContentLoad per the browser
+ * @member {Number} onContentLoad
  */
-PageTiming.prototype['onLoad'] = undefined;
+PageTiming.prototype['onContentLoad'] = undefined;
 
 /**
- * Ssl connect time from the browser
- * @member {Number} _ssl
+ * cumulativeLayoutShift metric from the browser
+ * @member {Number} _cumulativeLayoutShift
  */
-PageTiming.prototype['_ssl'] = undefined;
-
-/**
- * domInteractive from the browser
- * @member {Number} _domInteractive
- */
-PageTiming.prototype['_domInteractive'] = undefined;
-
-/**
- * Time to first byte of the page's first request per the browser
- * @member {Number} _timeToFirstByte
- */
-PageTiming.prototype['_timeToFirstByte'] = undefined;
+PageTiming.prototype['_cumulativeLayoutShift'] = undefined;
 
 /**
  * firstPaint from the browser
@@ -173,10 +167,16 @@ PageTiming.prototype['_timeToFirstByte'] = undefined;
 PageTiming.prototype['_firstPaint'] = undefined;
 
 /**
- * onContentLoad per the browser
- * @member {Number} onContentLoad
+ * largestContentfulPaint from the browser
+ * @member {Number} _largestContentfulPaint
  */
-PageTiming.prototype['onContentLoad'] = undefined;
+PageTiming.prototype['_largestContentfulPaint'] = undefined;
+
+/**
+ * onLoad per the browser
+ * @member {Number} onLoad
+ */
+PageTiming.prototype['onLoad'] = undefined;
 
 
 

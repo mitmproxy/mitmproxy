@@ -50,11 +50,11 @@ class MatchCriteriaRequestHeader {
             obj = obj || new MatchCriteriaRequestHeader();
             NameValuePair.constructFromObject(data, obj);
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('value')) {
                 obj['value'] = ApiClient.convertToType(data['value'], 'String');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -67,12 +67,12 @@ class MatchCriteriaRequestHeader {
      */
     static validateJSON(data) {
         // ensure the json data is a string
-        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
-            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
-        }
-        // ensure the json data is a string
         if (data['value'] && !(typeof data['value'] === 'string' || data['value'] instanceof String)) {
             throw new Error("Expected the field `value` to be a primitive type in the JSON string but got " + data['value']);
+        }
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
         }
 
         return true;
@@ -84,29 +84,29 @@ class MatchCriteriaRequestHeader {
 
 
 /**
- * Name to match
- * @member {String} name
- */
-MatchCriteriaRequestHeader.prototype['name'] = undefined;
-
-/**
  * Value to match
  * @member {String} value
  */
 MatchCriteriaRequestHeader.prototype['value'] = undefined;
 
-
-// Implement NameValuePair interface:
 /**
  * Name to match
  * @member {String} name
  */
-NameValuePair.prototype['name'] = undefined;
+MatchCriteriaRequestHeader.prototype['name'] = undefined;
+
+
+// Implement NameValuePair interface:
 /**
  * Value to match
  * @member {String} value
  */
 NameValuePair.prototype['value'] = undefined;
+/**
+ * Name to match
+ * @member {String} name
+ */
+NameValuePair.prototype['name'] = undefined;
 
 
 

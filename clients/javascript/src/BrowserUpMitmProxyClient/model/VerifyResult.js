@@ -47,14 +47,14 @@ class VerifyResult {
         if (data) {
             obj = obj || new VerifyResult();
 
-            if (data.hasOwnProperty('name')) {
-                obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
             if (data.hasOwnProperty('result')) {
                 obj['result'] = ApiClient.convertToType(data['result'], 'Boolean');
             }
             if (data.hasOwnProperty('type')) {
                 obj['type'] = ApiClient.convertToType(data['type'], 'String');
+            }
+            if (data.hasOwnProperty('name')) {
+                obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
         }
         return obj;
@@ -67,12 +67,12 @@ class VerifyResult {
      */
     static validateJSON(data) {
         // ensure the json data is a string
-        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
-            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
-        }
-        // ensure the json data is a string
         if (data['type'] && !(typeof data['type'] === 'string' || data['type'] instanceof String)) {
             throw new Error("Expected the field `type` to be a primitive type in the JSON string but got " + data['type']);
+        }
+        // ensure the json data is a string
+        if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
+            throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
         }
 
         return true;
@@ -82,12 +82,6 @@ class VerifyResult {
 }
 
 
-
-/**
- * Name
- * @member {String} name
- */
-VerifyResult.prototype['name'] = undefined;
 
 /**
  * Result True / False
@@ -100,6 +94,12 @@ VerifyResult.prototype['result'] = undefined;
  * @member {String} type
  */
 VerifyResult.prototype['type'] = undefined;
+
+/**
+ * Name
+ * @member {String} name
+ */
+VerifyResult.prototype['name'] = undefined;
 
 
 

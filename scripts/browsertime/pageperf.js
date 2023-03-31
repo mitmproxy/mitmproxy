@@ -221,19 +221,13 @@ function sendTimings(page_timings){
 function postPageInfo(){ sendTimings(perfTimings()); }
 function handleClose(){
     if (window.closeIsHandled) { return true };
-    let title = document.title;
-    console.log("Page change: " + title)
     window.closeIsHandled = true;
-    if ('sendBeacon' in navigator) {
-        let data = new FormData();
-        data.append('title', title);
-        navigator.sendBeacon(proxyMgmtURL() + "/har/page", data);
-    }
+    sendTimings(perfTimings());
 }
 
 observeAndReportFirstInputDelay();
 window.addEventListener('load', postPageInfo);
-window.addEventListener('beforeunload', postPageInfo);
+window.addEventListener('beforeunload', handleClose);
 
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { handleClose(); }
