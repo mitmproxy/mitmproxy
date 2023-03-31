@@ -48,38 +48,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class Counter {
-  public static final String SERIALIZED_NAME_VALUE = "value";
-  @SerializedName(SERIALIZED_NAME_VALUE)
-  private Double value;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
+  public static final String SERIALIZED_NAME_VALUE = "value";
+  @SerializedName(SERIALIZED_NAME_VALUE)
+  private Double value;
+
   public Counter() {
   }
-
-  public Counter value(Double value) {
-    
-    this.value = value;
-    return this;
-  }
-
-   /**
-   * Value for the counter
-   * @return value
-  **/
-  @javax.annotation.Nullable
-
-  public Double getValue() {
-    return value;
-  }
-
-
-  public void setValue(Double value) {
-    this.value = value;
-  }
-
 
   public Counter name(String name) {
     
@@ -103,6 +81,28 @@ public class Counter {
   }
 
 
+  public Counter value(Double value) {
+    
+    this.value = value;
+    return this;
+  }
+
+   /**
+   * Value for the counter
+   * @return value
+  **/
+  @javax.annotation.Nullable
+
+  public Double getValue() {
+    return value;
+  }
+
+
+  public void setValue(Double value) {
+    this.value = value;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -113,21 +113,21 @@ public class Counter {
       return false;
     }
     Counter counter = (Counter) o;
-    return Objects.equals(this.value, counter.value) &&
-        Objects.equals(this.name, counter.name);
+    return Objects.equals(this.name, counter.name) &&
+        Objects.equals(this.value, counter.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, name);
+    return Objects.hash(name, value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Counter {\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -150,8 +150,8 @@ public class Counter {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("value");
     openapiFields.add("name");
+    openapiFields.add("value");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();

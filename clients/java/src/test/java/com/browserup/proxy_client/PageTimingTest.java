@@ -55,19 +55,27 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
      * Test the property 'ssl'
      */
     @Test
     public void sslTest() {
         // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'onContentLoad'
+     */
+    @Test
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
+    }
+
+    /**
+     * Test the property 'firstContentfulPaint'
+     */
+    @Test
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
     /**
@@ -87,19 +95,27 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'onLoad'
+     */
+    @Test
+    public void onLoadTest() {
+        // TODO: test onLoad
+    }
+
+    /**
+     * Test the property 'largestContentfulPaint'
+     */
+    @Test
+    public void largestContentfulPaintTest() {
+        // TODO: test largestContentfulPaint
+    }
+
+    /**
      * Test the property 'firstInputDelay'
      */
     @Test
     public void firstInputDelayTest() {
         // TODO: test firstInputDelay
-    }
-
-    /**
-     * Test the property 'onContentLoad'
-     */
-    @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
     }
 
     /**
@@ -116,22 +132,6 @@ public class PageTimingTest {
     @Test
     public void firstPaintTest() {
         // TODO: test firstPaint
-    }
-
-    /**
-     * Test the property 'largestContentfulPaint'
-     */
-    @Test
-    public void largestContentfulPaintTest() {
-        // TODO: test largestContentfulPaint
-    }
-
-    /**
-     * Test the property 'onLoad'
-     */
-    @Test
-    public void onLoadTest() {
-        // TODO: test onLoad
     }
 
 }

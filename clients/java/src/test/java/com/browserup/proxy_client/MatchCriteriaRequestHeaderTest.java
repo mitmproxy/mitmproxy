@@ -38,19 +38,19 @@ public class MatchCriteriaRequestHeaderTest {
     }
 
     /**
-     * Test the property 'value'
-     */
-    @Test
-    public void valueTest() {
-        // TODO: test value
-    }
-
-    /**
      * Test the property 'name'
      */
     @Test
     public void nameTest() {
         // TODO: test name
+    }
+
+    /**
+     * Test the property 'value'
+     */
+    @Test
+    public void valueTest() {
+        // TODO: test value
     }
 
 }

@@ -1,3 +1,7 @@
+// Change summary for BrowserTime APACHE items from this folder:
+// Scripts from: https://github.com/sitespeedio/browsertime/tree/main/browserscripts
+// were consolidated here for a JSON summary payload including core vitals data.  https://web.dev/vitals/
+
 function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
 
 function cumulativeLayoutShift() {
@@ -27,22 +31,14 @@ function cumulativeLayoutShift() {
     return max;
 }
 
-function observeAndReportFirstInputDelay() {
+function observeAndSaveFirstInputDelay() {
 // note, may need updating for iframes, can use code here:  https://github.com/GoogleChrome/web-vitals
     const supported = PerformanceObserver.supportedEntryTypes;
     if (!supported || supported.indexOf("first-input") === -1) { return; }
     new PerformanceObserver((entryList) => {
         for (entry of entryList.getEntries()) {
-            var delay = Number((entry.processingStart - entry.startTime).toFixed(1));
-            var paint = {};
-            performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
-
-            let _firstContentfulPaint = paint["first-contentful-paint"];
-            page_timings = {
-                "_firstInputDelay": delay
-            };
-            console.log("--->" + page_timings);
-            sendBrowserData(page_timings);
+            let delay = Number((entry.processingStart - entry.startTime).toFixed(1));
+            window.bupFirstInputDelay = delay;
         }
     }).observe({type: 'first-input', buffered: true});
 }
@@ -110,7 +106,6 @@ function largestContentfulPaint() {
     result.size = lcp.size || result.size
     result.domPath = lcp.domPath || result.domPath
     result.tag = lcp.tag || result.tag
-
     return result;
 }
 
@@ -171,24 +166,25 @@ function firstPaint() {
     return -1;
 }
 
-function perfTimings(){
+function pageTimings(){
     if (inIframe()) { return };
     var paint = {};
     performance.getEntriesByType('paint').forEach(function(element) { paint[element.name] = element.startTime});
     var perf = performance.getEntriesByType('navigation')[0];
-    n = navTimings()
+    n = navTimings();
     // missing har fields
-    let onContentLoad = n.domContentLoadedTime;
-    let onLoad = n.pageLoadTime;
+    let onContentLoad = n.domContentLoadedTime || -1;
+    let onLoad = n.pageLoadTime || -1;
 
-    let _timeToFirstByte = n.ttfb
-    let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]);
-    let _domInteractive = n.domInteractiveTime;
-    let _firstPaint = firstPaint();
-    let _largestContentfulPaint = largestContentfulPaint();
-    let _cumulativeLayoutShift = cumulativeLayoutShift();
-    let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart);
-    let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart);
+    let _timeToFirstByte = n.ttfb || -1;
+    let _firstContentfulPaint = Math.round(paint["first-contentful-paint"]) || -1;
+    let _domInteractive = n.domInteractiveTime || -1;
+    let _firstPaint = firstPaint() || -1;
+    let _largestContentfulPaint = largestContentfulPaint() || -1;
+    let _cumulativeLayoutShift = cumulativeLayoutShift() || -1;
+    let _dns = Math.round(perf.domainLookupEnd - perf.domainLookupStart) || -1;
+    let _ssl = Math.round(perf.requestStart - perf.secureConnectionStart) || -1;
+    let _firstInputDelay = window.bupFirstInputDelay || -1;
 
     return {
         "title": window.document.title,
@@ -197,12 +193,13 @@ function perfTimings(){
         "_href": window.location.href,
         "_dns": _dns,
         "_ssl": _ssl,
+        "_firstInputDelay": _firstInputDelay,
         "_timeToFirstByte": _timeToFirstByte,
         "_cumulativeLayoutShift": _cumulativeLayoutShift,
         "_largestContentfulPaint": _largestContentfulPaint,
         "_firstPaint": _firstPaint,
-        "_domInteractive": _domInteractive,
-        "_firstContentfulPaint": _firstContentfulPaint
+        "_firstContentfulPaint": _firstContentfulPaint,
+        "_domInteractive": _domInteractive
     }
 }
 
@@ -212,36 +209,38 @@ function instrumentationURL(action) {
     return url.toString();
 }
 
-function sendBrowserData(page_timings){
+function submitPageInfo(page_timings){
     let data = new FormData();
     Object.keys(page_timings).forEach(key => page_timings[key] === undefined ? delete page_timings[key] : {});
     console.log(page_timings);
     data.append("BrowserData", JSON.stringify(page_timings));
     if ('sendBeacon' in navigator) {
-        console.log("Send timings")
         if (navigator.sendBeacon(instrumentationURL('page_info'), data)) {}
         else { console.error("BrowserUpProxy sendbeacon page_timings error") }
     }
 }
-function postPerf(){ sendBrowserData(perfTimings()); }
-function handleClose(){
-    if (window.closeIsHandled) { return true };
-    let title = document.title;
-    console.log("Page change: " + title)
-    window.closeIsHandled = true;
-    if ('sendBeacon' in navigator) {
-        let data = new FormData();
-        data.append('title', title);
-        navigator.sendBeacon(instrumentationURL('page_info'), data);
-    }
+
+function postPageTimings(){ submitPageInfo(pageTimings()); }
+
+function delayForPaintAndPostPageTimings(){
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            console.log('Initial rendering done');
+            postPageTimings();
+        });
+    });
 }
 
-window.addEventListener('load', postPerf);
-observeAndReportFirstInputDelay();
+function handleClose(){
+    if (window.closeIsHandled) { return true };
+    window.closeIsHandled = true;
+    postPageTimings();
+}
 
-document.addEventListener('DOMContentLoaded', function () {
-    window.addEventListener('beforeunload', handleClose);
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') { handleClose(); }
-    });
+observeAndSaveFirstInputDelay();
+window.addEventListener('load', delayForPaintAndPostPageTimings);
+window.addEventListener('beforeunload', handleClose);
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { handleClose(); }
 });

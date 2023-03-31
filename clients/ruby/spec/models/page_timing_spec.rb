@@ -37,13 +37,19 @@ describe BrowserupMitmProxy::PageTiming do
     end
   end
 
-  describe 'test attribute "_first_contentful_paint"' do
+  describe 'test attribute "_ssl"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
   end
 
-  describe 'test attribute "_ssl"' do
+  describe 'test attribute "on_content_load"' do
+    it 'should work' do
+      # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
+    end
+  end
+
+  describe 'test attribute "_first_contentful_paint"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
@@ -61,13 +67,19 @@ describe BrowserupMitmProxy::PageTiming do
     end
   end
 
-  describe 'test attribute "_first_input_delay"' do
+  describe 'test attribute "on_load"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
   end
 
-  describe 'test attribute "on_content_load"' do
+  describe 'test attribute "_largest_contentful_paint"' do
+    it 'should work' do
+      # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
+    end
+  end
+
+  describe 'test attribute "_first_input_delay"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
@@ -80,18 +92,6 @@ describe BrowserupMitmProxy::PageTiming do
   end
 
   describe 'test attribute "_first_paint"' do
-    it 'should work' do
-      # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
-    end
-  end
-
-  describe 'test attribute "_largest_contentful_paint"' do
-    it 'should work' do
-      # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
-    end
-  end
-
-  describe 'test attribute "on_load"' do
     it 'should work' do
       # assertion here. ref: https://www.relishapp.com/rspec/rspec-expectations/docs/built-in-matchers
     end
