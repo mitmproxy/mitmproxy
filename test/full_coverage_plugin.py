@@ -99,7 +99,7 @@ def pytest_runtestloop(session):
                     (s, cov.report(s, ignore_errors=True, file=null)) for s in files
                 ]
                 coverage_values[name] = (overall, singles)
-        except:
+        except Exception:
             pass
 
     if any(v < 100 for v, _ in coverage_values.values()):

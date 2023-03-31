@@ -55,7 +55,7 @@ class ConsoleMaster(master.Master):
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(self),
-            errorcheck.ErrorCheck(log_to_stderr=True),
+            errorcheck.ErrorCheck(repeat_errors_on_stderr=True),
         )
 
         self.window: window.Window | None = None
@@ -132,7 +132,7 @@ class ConsoleMaster(master.Master):
         with self.uistopped():
             try:
                 subprocess.call(cmd)
-            except:
+            except Exception:
                 signals.status_message.send(message="Can't start editor: %s" % c)
             else:
                 with open(name, "r" if text else "rb") as f:
@@ -167,7 +167,7 @@ class ConsoleMaster(master.Master):
         with self.uistopped():
             try:
                 subprocess.call(cmd, shell=False)
-            except:
+            except Exception:
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)
                 )

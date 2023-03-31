@@ -258,7 +258,7 @@ class BaseGridEditor(urwid.WidgetWrap):
         value: Any,
         callback: Callable[..., None],
         *cb_args,
-        **cb_kwargs
+        **cb_kwargs,
     ) -> None:
         value = self.data_in(copy.deepcopy(value))
         self.master = master
@@ -402,7 +402,7 @@ class GridEditor(BaseGridEditor):
         value: Any,
         callback: Callable[..., None],
         *cb_args,
-        **cb_kwargs
+        **cb_kwargs,
     ) -> None:
         super().__init__(
             master, self.title, self.columns, value, callback, *cb_args, **cb_kwargs

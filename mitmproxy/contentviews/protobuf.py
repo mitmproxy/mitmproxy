@@ -39,7 +39,7 @@ def format_pbuf(raw):
 
     try:
         pairs = _parse_proto(raw)
-    except:
+    except Exception:
         return False
     stack.extend([(pair, 0) for pair in pairs[::-1]])
 
@@ -62,7 +62,7 @@ def format_pbuf(raw):
             pairs = _parse_proto(body)  # type: ignore
             stack.extend([(pair, indent_level + 2) for pair in pairs[::-1]])
             write_buf(out, pair.field_tag, None, indent_level)
-        except:
+        except Exception:
             write_buf(out, pair.field_tag, body, indent_level)
 
         if stack:

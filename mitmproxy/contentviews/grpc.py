@@ -561,7 +561,7 @@ class ProtoParser:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     if int(self.wire_value).bit_length() > 32:
                         # ignore the fact that varint could exceed 64bit (would violate the specs)
                         return ProtoParser.DecodedTypes.uint64, self.wire_value
@@ -572,21 +572,21 @@ class ProtoParser:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     return ProtoParser.DecodedTypes.fixed64, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.bit_32:
                 try:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     return ProtoParser.DecodedTypes.fixed32, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.len_delimited:
                 try:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     # failover strategy: message --> string (valid UTF-8) --> bytes
                     len_delimited_strategy: list[ProtoParser.DecodedTypes] = [
                         ProtoParser.DecodedTypes.message,
@@ -601,7 +601,7 @@ class ProtoParser:
                             return failover_decoding, self.decode_as(
                                 failover_decoding, False
                             )
-                        except:
+                        except Exception:
                             pass
 
             # we should never get here (could not be added to tests)
@@ -1074,7 +1074,7 @@ class ViewGrpcProtobuf(base.View):
                     if h in self.__valid_grpc_encodings
                     else self.__valid_grpc_encodings[0]
                 )
-            except:
+            except Exception:
                 grpc_encoding = self.__valid_grpc_encodings[0]
 
             text_iter = format_grpc(
