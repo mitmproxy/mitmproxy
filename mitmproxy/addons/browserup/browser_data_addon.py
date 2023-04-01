@@ -22,17 +22,20 @@ class BrowserDataAddOn:
 
     def request(self, f: mitmproxy.http.HTTPFlow):
         if f.request.url.rfind('BrowserData') and 'action' in f.request.query.keys():
-            action = f.request.query['action']
             f.intercept()
+            action = f.request.query['action']
             logging.info(f'BrowserData {action}')
-            if action == 'page_info':
+            f.metadata['blocklisted'] = True
+            if action == 'page_info' or action == 'page_complete':
                 form = f.request.multipart_form
-                logging.info(f'-->PageTimings {form.fields}')
+                logging.info(f'PageTimings {form.fields}')
                 data = form.fields[0][1].decode('UTF-8')
                 page_timings = json.loads(data)
                 self.HarCaptureAddon.add_page_info_to_har(page_timings)
-                f.response = mitmproxy.http.Response.make(204)
-                f.resume()
+                if action == 'page_complete':
+                    logging.info('Page complete')
+                    self.HarCaptureAddon.end_page()
+                    f.kill()
 
     def response(self, f: mitmproxy.http.HTTPFlow):
         if f.response is None or f.response.status_code != 200 or f.request.method not in ['GET', 'POST', 'PUT']:

@@ -75,6 +75,7 @@ class BlockList:
             if spec.matches(flow):
                 flow.metadata["blocklisted"] = True
                 if spec.status_code == NO_RESPONSE:
+                    flow.intercept()
                     if flow.killable:
                         flow.kill()
                     else:

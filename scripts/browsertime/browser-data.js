@@ -2,6 +2,8 @@
 // Scripts from: https://github.com/sitespeedio/browsertime/tree/main/browserscripts
 // were consolidated here for a JSON summary payload including core vitals data.  https://web.dev/vitals/
 
+// Alternative:  https://zizzamia.github.io/perfume/
+
 function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
 
 function cumulativeLayoutShift() {
@@ -209,37 +211,35 @@ function instrumentationURL(action) {
     return url.toString();
 }
 
-function submitPageInfo(page_timings){
+function submitPageInfo(page_timings, action = 'page_info') {
     let data = new FormData();
     Object.keys(page_timings).forEach(key => page_timings[key] === undefined ? delete page_timings[key] : {});
     console.log(page_timings);
     data.append("BrowserData", JSON.stringify(page_timings));
     if ('sendBeacon' in navigator) {
-        if (navigator.sendBeacon(instrumentationURL('page_info'), data)) {}
+        if (navigator.sendBeacon(instrumentationURL(action), data)) {}
         else { console.error("BrowserUpProxy sendbeacon page_timings error") }
     }
 }
 
-function postPageTimings(){ submitPageInfo(pageTimings()); }
+function postPageTimings(){ submitPageInfo(pageTimings(), 'page_info'); }
 
 function delayForPaintAndPostPageTimings(){
     requestAnimationFrame(() => {
-        setTimeout(() => {
-            console.log('Initial rendering done');
-            postPageTimings();
-        });
+        requestIdleCallback(postPageTimings,  { timeout: 500 });
     });
 }
 
 function handleClose(){
-    if (window.closeIsHandled) { return true };
+    if (window.closeIsHandled == true) { return true };
     window.closeIsHandled = true;
-    postPageTimings();
+    submitPageInfo(pageTimings(), 'page_complete');
 }
 
 observeAndSaveFirstInputDelay();
 window.addEventListener('load', delayForPaintAndPostPageTimings);
 window.addEventListener('beforeunload', handleClose);
+window.addEventListener('unload', handleClose);
 
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { handleClose(); }

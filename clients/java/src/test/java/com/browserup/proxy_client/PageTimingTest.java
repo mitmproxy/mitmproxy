@@ -39,62 +39,6 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'timeToFirstByte'
-     */
-    @Test
-    public void timeToFirstByteTest() {
-        // TODO: test timeToFirstByte
-    }
-
-    /**
-     * Test the property 'domInteractive'
-     */
-    @Test
-    public void domInteractiveTest() {
-        // TODO: test domInteractive
-    }
-
-    /**
-     * Test the property 'ssl'
-     */
-    @Test
-    public void sslTest() {
-        // TODO: test ssl
-    }
-
-    /**
-     * Test the property 'onContentLoad'
-     */
-    @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
-    }
-
-    /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
-     * Test the property 'dns'
-     */
-    @Test
-    public void dnsTest() {
-        // TODO: test dns
-    }
-
-    /**
-     * Test the property 'href'
-     */
-    @Test
-    public void hrefTest() {
-        // TODO: test href
-    }
-
-    /**
      * Test the property 'onLoad'
      */
     @Test
@@ -103,19 +47,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'largestContentfulPaint'
+     * Test the property 'firstPaint'
      */
     @Test
-    public void largestContentfulPaintTest() {
-        // TODO: test largestContentfulPaint
-    }
-
-    /**
-     * Test the property 'firstInputDelay'
-     */
-    @Test
-    public void firstInputDelayTest() {
-        // TODO: test firstInputDelay
+    public void firstPaintTest() {
+        // TODO: test firstPaint
     }
 
     /**
@@ -127,11 +63,75 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstPaint'
+     * Test the property 'firstContentfulPaint'
      */
     @Test
-    public void firstPaintTest() {
-        // TODO: test firstPaint
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
+    }
+
+    /**
+     * Test the property 'onContentLoad'
+     */
+    @Test
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
+    }
+
+    /**
+     * Test the property 'timeToFirstByte'
+     */
+    @Test
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'dns'
+     */
+    @Test
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'largestContentfulPaint'
+     */
+    @Test
+    public void largestContentfulPaintTest() {
+        // TODO: test largestContentfulPaint
+    }
+
+    /**
+     * Test the property 'href'
+     */
+    @Test
+    public void hrefTest() {
+        // TODO: test href
+    }
+
+    /**
+     * Test the property 'firstInputDelay'
+     */
+    @Test
+    public void firstInputDelayTest() {
+        // TODO: test firstInputDelay
+    }
+
+    /**
+     * Test the property 'domInteractive'
+     */
+    @Test
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
     }
 
 }

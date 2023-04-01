@@ -386,53 +386,53 @@
       "PageTiming": {
         "type": "object",
         "properties": {
-          "_timeToFirstByte": {
-            "type": "number",
-            "description": "Time to first byte of the page's first request per the browser"
-          },
-          "_domInteractive": {
-            "type": "number",
-            "description": "domInteractive from the browser"
-          },
-          "_ssl": {
-            "type": "number",
-            "description": "Ssl connect time from the browser"
-          },
-          "onContentLoad": {
-            "type": "number",
-            "description": "onContentLoad per the browser"
-          },
-          "_firstContentfulPaint": {
-            "type": "number",
-            "description": "firstContentfulPaint from the browser"
-          },
-          "_dns": {
-            "type": "number",
-            "description": "dns lookup time from the browser"
-          },
-          "_href": {
-            "type": "string",
-            "description": "Top level href, including hashtag, etc per the browser"
-          },
           "onLoad": {
             "type": "number",
             "description": "onLoad per the browser"
           },
-          "_largestContentfulPaint": {
+          "_firstPaint": {
             "type": "number",
-            "description": "largestContentfulPaint from the browser"
-          },
-          "_firstInputDelay": {
-            "type": "number",
-            "description": "firstInputDelay from the browser"
+            "description": "firstPaint from the browser"
           },
           "_cumulativeLayoutShift": {
             "type": "number",
             "description": "cumulativeLayoutShift metric from the browser"
           },
-          "_firstPaint": {
+          "_firstContentfulPaint": {
             "type": "number",
-            "description": "firstPaint from the browser"
+            "description": "firstContentfulPaint from the browser"
+          },
+          "onContentLoad": {
+            "type": "number",
+            "description": "onContentLoad per the browser"
+          },
+          "_timeToFirstByte": {
+            "type": "number",
+            "description": "Time to first byte of the page's first request per the browser"
+          },
+          "_ssl": {
+            "type": "number",
+            "description": "Ssl connect time from the browser"
+          },
+          "_dns": {
+            "type": "number",
+            "description": "dns lookup time from the browser"
+          },
+          "_largestContentfulPaint": {
+            "type": "number",
+            "description": "largestContentfulPaint from the browser"
+          },
+          "_href": {
+            "type": "string",
+            "description": "Top level href, including hashtag, etc per the browser"
+          },
+          "_firstInputDelay": {
+            "type": "number",
+            "description": "firstInputDelay from the browser"
+          },
+          "_domInteractive": {
+            "type": "number",
+            "description": "domInteractive from the browser"
           }
         }
       },
@@ -567,10 +567,6 @@
       "VerifyResult": {
         "type": "object",
         "properties": {
-          "result": {
-            "type": "boolean",
-            "description": "Result True / False"
-          },
           "name": {
             "type": "string",
             "description": "Name"
@@ -578,19 +574,23 @@
           "type": {
             "type": "string",
             "description": "Type"
+          },
+          "result": {
+            "type": "boolean",
+            "description": "Result True / False"
           }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "details": {
-            "type": "string",
-            "description": "Short details of the error"
-          },
           "name": {
             "type": "string",
             "description": "Name of the Error to add. Stored in har under _errors"
+          },
+          "details": {
+            "type": "string",
+            "description": "Short details of the error"
           }
         }
       },
@@ -677,11 +677,11 @@
       },
       "PageTimings": {
         "type": "object",
-        "additionalProperties": true,
         "required": [
           "onLoad",
           "onContentLoad"
         ],
+        "additionalProperties": true,
         "properties": {
           "onContentLoad": {
             "type": "integer",

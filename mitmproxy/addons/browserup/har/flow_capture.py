@@ -38,7 +38,7 @@ class FlowCaptureMixin(object):
         har_request['queryString'] = self.name_value(flow.request.query or {})
         har_request['headersSize'] = len(str(flow.request.headers))
 
-        har_request['_updated'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+       # har_request['_updated'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
         har_entry['request'] = har_request
         req_url = 'none'

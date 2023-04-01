@@ -111,7 +111,7 @@ class HarBuilder():
     def entry():
         return {
             "pageref": "",
-            "startedDateTime": "",
+            "startedDateTime": str(datetime.now(tz=timezone.utc).isoformat()),
             "time": 0,
             "request": HarBuilder.entry_request(),
             "response": HarBuilder.entry_response(),

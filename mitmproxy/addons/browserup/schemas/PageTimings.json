@@ -1,6 +1,5 @@
 {
   "type": "object",
-  "additionalProperties": false,
   "required": [
     "onLoad",
     "onContentLoad"

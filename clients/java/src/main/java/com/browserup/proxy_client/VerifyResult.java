@@ -48,10 +48,6 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class VerifyResult {
-  public static final String SERIALIZED_NAME_RESULT = "result";
-  @SerializedName(SERIALIZED_NAME_RESULT)
-  private Boolean result;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
@@ -60,30 +56,12 @@ public class VerifyResult {
   @SerializedName(SERIALIZED_NAME_TYPE)
   private String type;
 
+  public static final String SERIALIZED_NAME_RESULT = "result";
+  @SerializedName(SERIALIZED_NAME_RESULT)
+  private Boolean result;
+
   public VerifyResult() {
   }
-
-  public VerifyResult result(Boolean result) {
-    
-    this.result = result;
-    return this;
-  }
-
-   /**
-   * Result True / False
-   * @return result
-  **/
-  @javax.annotation.Nullable
-
-  public Boolean getResult() {
-    return result;
-  }
-
-
-  public void setResult(Boolean result) {
-    this.result = result;
-  }
-
 
   public VerifyResult name(String name) {
     
@@ -129,6 +107,28 @@ public class VerifyResult {
   }
 
 
+  public VerifyResult result(Boolean result) {
+    
+    this.result = result;
+    return this;
+  }
+
+   /**
+   * Result True / False
+   * @return result
+  **/
+  @javax.annotation.Nullable
+
+  public Boolean getResult() {
+    return result;
+  }
+
+
+  public void setResult(Boolean result) {
+    this.result = result;
+  }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -139,23 +139,23 @@ public class VerifyResult {
       return false;
     }
     VerifyResult verifyResult = (VerifyResult) o;
-    return Objects.equals(this.result, verifyResult.result) &&
-        Objects.equals(this.name, verifyResult.name) &&
-        Objects.equals(this.type, verifyResult.type);
+    return Objects.equals(this.name, verifyResult.name) &&
+        Objects.equals(this.type, verifyResult.type) &&
+        Objects.equals(this.result, verifyResult.result);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(result, name, type);
+    return Objects.hash(name, type, result);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class VerifyResult {\n");
-    sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
+    sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -178,9 +178,9 @@ public class VerifyResult {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("result");
     openapiFields.add("name");
     openapiFields.add("type");
+    openapiFields.add("result");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
