@@ -2,7 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 const symShouldStick = Symbol("shouldStick") as any;
-const isAtBottom = (v) => v.scrollTop + v.clientHeight === v.scrollHeight;
+const isAtBottom = (v) =>
+    Math.round(v.scrollTop) + v.clientHeight === v.scrollHeight;
 
 export default (Component) =>
     Object.assign(
