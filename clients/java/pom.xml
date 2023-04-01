@@ -5,7 +5,7 @@
     <artifactId>browserup-mitmproxy-client</artifactId>
     <packaging>jar</packaging>
     <name>browserup-mitmproxy-client</name>
-    <version>1.0.21-SNAPSHOT</version>
+    <version>1.0.22-SNAPSHOT</version>
     <url>https://github.com/openapitools/openapi-generator</url>
     <description>browserup-mitmproxy-client</description>
     <scm>
