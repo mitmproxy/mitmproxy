@@ -21,11 +21,11 @@ class BrowserDataAddOn:
         logging.info('Loading BrowserDataAddOn')
 
     def request(self, f: mitmproxy.http.HTTPFlow):
-        if f.request.url.rfind('BrowserData') and 'action' in f.request.query.keys():
-            f.intercept()
-            action = f.request.query['action']
-            logging.info(f'BrowserData {action}')
+        if f.request.url.rfind('BrowserUpData') > -1:
+            logging.info(f'detected URL: {f.request.url}')
+            action = re.search("\/BrowserUpData/([a-zA-Z_]+)", f.request.url).group(1)
             f.metadata['blocklisted'] = True
+            logging.info(f'BrowserUpData action: {action}')
             if action == 'page_info' or action == 'page_complete':
                 form = f.request.multipart_form
                 logging.info(f'PageTimings {form.fields}')
@@ -33,7 +33,6 @@ class BrowserDataAddOn:
                 page_timings = json.loads(data)
                 self.HarCaptureAddon.add_page_info_to_har(page_timings)
                 if action == 'page_complete':
-                    logging.info('Page complete')
                     self.HarCaptureAddon.end_page()
                     f.kill()
 

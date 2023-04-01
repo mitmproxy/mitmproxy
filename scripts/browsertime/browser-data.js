@@ -206,8 +206,7 @@ function pageTimings(){
 }
 
 function instrumentationURL(action) {
-    let url = new URL(window.location.href.substr(0, window.location.href.lastIndexOf('/')) + '/BrowserData');
-    url.searchParams.set('action', action);
+    let url = new URL(window.location.href.substr(0, window.location.href.lastIndexOf('/')) + '/BrowserUpData/' + action);
     return url.toString();
 }
 

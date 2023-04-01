@@ -147,6 +147,7 @@ class HarManagerMixin():
 
     def add_page_info_to_har(self, page_info):
         page = self.get_or_create_current_page()
+
         if 'title' in page_info:
             page['title'] = page_info['title']
             del page_info['title']

@@ -39,27 +39,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'onLoad'
-     */
-    @Test
-    public void onLoadTest() {
-        // TODO: test onLoad
-    }
-
-    /**
      * Test the property 'firstPaint'
      */
     @Test
     public void firstPaintTest() {
         // TODO: test firstPaint
-    }
-
-    /**
-     * Test the property 'cumulativeLayoutShift'
-     */
-    @Test
-    public void cumulativeLayoutShiftTest() {
-        // TODO: test cumulativeLayoutShift
     }
 
     /**
@@ -71,35 +55,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'onContentLoad'
+     * Test the property 'href'
      */
     @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
-    }
-
-    /**
-     * Test the property 'timeToFirstByte'
-     */
-    @Test
-    public void timeToFirstByteTest() {
-        // TODO: test timeToFirstByte
-    }
-
-    /**
-     * Test the property 'ssl'
-     */
-    @Test
-    public void sslTest() {
-        // TODO: test ssl
-    }
-
-    /**
-     * Test the property 'dns'
-     */
-    @Test
-    public void dnsTest() {
-        // TODO: test dns
+    public void hrefTest() {
+        // TODO: test href
     }
 
     /**
@@ -111,11 +71,35 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'href'
+     * Test the property 'dns'
      */
     @Test
-    public void hrefTest() {
-        // TODO: test href
+    public void dnsTest() {
+        // TODO: test dns
+    }
+
+    /**
+     * Test the property 'onLoad'
+     */
+    @Test
+    public void onLoadTest() {
+        // TODO: test onLoad
+    }
+
+    /**
+     * Test the property 'cumulativeLayoutShift'
+     */
+    @Test
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
+    }
+
+    /**
+     * Test the property 'timeToFirstByte'
+     */
+    @Test
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
     }
 
     /**
@@ -132,6 +116,22 @@ public class PageTimingTest {
     @Test
     public void domInteractiveTest() {
         // TODO: test domInteractive
+    }
+
+    /**
+     * Test the property 'ssl'
+     */
+    @Test
+    public void sslTest() {
+        // TODO: test ssl
+    }
+
+    /**
+     * Test the property 'onContentLoad'
+     */
+    @Test
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
     }
 
 }

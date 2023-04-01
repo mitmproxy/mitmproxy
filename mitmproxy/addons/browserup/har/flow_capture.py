@@ -23,14 +23,19 @@ class FlowCaptureMixin(object):
 
     def capture_request(self, flow):
         full_url = self.get_full_url(flow.request)
-        if 'BrowserData' in full_url and 'action' in full_url:
+        if 'BrowserUpData' in full_url:
+            logging.debug('BrowserUpData request, capturing nothing.')
             return
 
         logging.debug('Populating har entry for request: {}'.format(full_url))
 
         har_entry = flow.get_har_entry()
         har_entry['pageref'] = self.get_current_page_ref()
+
         har_entry['startedDateTime'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+
+        logging.debug('Har startedDateTime for request: {} is {}'.format(full_url, har_entry['startedDateTime']))
+
         har_request = HarBuilder.entry_request()
         har_request['method'] = flow.request.method
         har_request['url'] = full_url
@@ -38,7 +43,7 @@ class FlowCaptureMixin(object):
         har_request['queryString'] = self.name_value(flow.request.query or {})
         har_request['headersSize'] = len(str(flow.request.headers))
 
-       # har_request['_updated'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+        har_request['_updated'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
         har_entry['request'] = har_request
         req_url = 'none'
