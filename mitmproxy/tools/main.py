@@ -20,6 +20,20 @@ from mitmproxy.utils import arg_check
 from mitmproxy.utils import debug
 
 
+def load_config(opts, args):
+    args_options = optmanager.specs_to_dict(args.setoptions)
+    # if confdir option is set in args, config files should be loaded from there
+    if "confdir" in args_options:
+        confdir = args_options["confdir"][-1]
+    else:
+        confdir = opts.confdir
+    optmanager.load_paths(
+        opts,
+        os.path.join(confdir, "config.yaml"),
+        os.path.join(confdir, "config.yml"),
+    )
+
+
 def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
@@ -81,12 +95,8 @@ def run(
             sys.exit(1)
 
         try:
+            load_config(opts, args)
             opts.set(*args.setoptions, defer=True)
-            optmanager.load_paths(
-                opts,
-                os.path.join(opts.confdir, "config.yaml"),
-                os.path.join(opts.confdir, "config.yml"),
-            )
             process_options(parser, opts, args)
 
             if args.options:

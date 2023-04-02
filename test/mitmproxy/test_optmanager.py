@@ -469,3 +469,18 @@ def test_set():
     opts.process_deferred()
     assert "deferredsequenceoption" not in opts.deferred
     assert opts.deferredsequenceoption == ["a", "b"]
+
+
+def test_spec_to_dict():
+    assert(optmanager.specs_to_dict([])
+           == {})
+    assert(optmanager.specs_to_dict(["option"])
+           == {"option": []})
+    assert(optmanager.specs_to_dict(["option=value"])
+           == {"option": ["value"]})
+    assert(optmanager.specs_to_dict(["option=value1", "option=value2"])
+           == {"option": ["value1", "value2"]})
+    assert(optmanager.specs_to_dict(["option=value1", "option"])
+           == {"option": ["value1"]})
+    assert(optmanager.specs_to_dict(["option1=value1", "option2=value2"])
+           == {"option1": ["value1"], "option2": ["value2"]})
