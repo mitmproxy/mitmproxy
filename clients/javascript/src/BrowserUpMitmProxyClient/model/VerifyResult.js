@@ -50,11 +50,11 @@ class VerifyResult {
             if (data.hasOwnProperty('type')) {
                 obj['type'] = ApiClient.convertToType(data['type'], 'String');
             }
-            if (data.hasOwnProperty('result')) {
-                obj['result'] = ApiClient.convertToType(data['result'], 'Boolean');
-            }
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
+            }
+            if (data.hasOwnProperty('result')) {
+                obj['result'] = ApiClient.convertToType(data['result'], 'Boolean');
             }
         }
         return obj;
@@ -90,16 +90,16 @@ class VerifyResult {
 VerifyResult.prototype['type'] = undefined;
 
 /**
- * Result True / False
- * @member {Boolean} result
- */
-VerifyResult.prototype['result'] = undefined;
-
-/**
  * Name
  * @member {String} name
  */
 VerifyResult.prototype['name'] = undefined;
+
+/**
+ * Result True / False
+ * @member {Boolean} result
+ */
+VerifyResult.prototype['result'] = undefined;
 
 
 
