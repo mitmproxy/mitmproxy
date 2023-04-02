@@ -41,7 +41,7 @@
       "default": -1
     },
     "_cumulativeLayoutShift": {
-      "type": "integer",
+      "type": "number",
       "format": "float",
       "minimum": -1,
       "default": -1
@@ -56,8 +56,8 @@
       "default": -1
     },
     "_firstInputDelay": {
-      "type": "integer",
-      "format": "int64",
+      "type": "number",
+      "format": "float",
       "minimum": -1,
       "default": -1
     },
