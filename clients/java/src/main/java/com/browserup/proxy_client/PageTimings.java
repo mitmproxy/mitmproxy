@@ -75,7 +75,7 @@ public class PageTimings {
 
   public static final String SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT = "_cumulativeLayoutShift";
   @SerializedName(SERIALIZED_NAME_CUMULATIVE_LAYOUT_SHIFT)
-  private Integer cumulativeLayoutShift = -1;
+  private Float cumulativeLayoutShift = -1f;
 
   public static final String SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT = "_largestContentfulPaint";
   @SerializedName(SERIALIZED_NAME_LARGEST_CONTENTFUL_PAINT)
@@ -87,7 +87,7 @@ public class PageTimings {
 
   public static final String SERIALIZED_NAME_FIRST_INPUT_DELAY = "_firstInputDelay";
   @SerializedName(SERIALIZED_NAME_FIRST_INPUT_DELAY)
-  private Long firstInputDelay = -1l;
+  private Float firstInputDelay = -1f;
 
   public static final String SERIALIZED_NAME_DOM_INTERACTIVE = "_domInteractive";
   @SerializedName(SERIALIZED_NAME_DOM_INTERACTIVE)
@@ -241,7 +241,7 @@ public class PageTimings {
   }
 
 
-  public PageTimings cumulativeLayoutShift(Integer cumulativeLayoutShift) {
+  public PageTimings cumulativeLayoutShift(Float cumulativeLayoutShift) {
     
     this.cumulativeLayoutShift = cumulativeLayoutShift;
     return this;
@@ -254,12 +254,12 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Integer getCumulativeLayoutShift() {
+  public Float getCumulativeLayoutShift() {
     return cumulativeLayoutShift;
   }
 
 
-  public void setCumulativeLayoutShift(Integer cumulativeLayoutShift) {
+  public void setCumulativeLayoutShift(Float cumulativeLayoutShift) {
     this.cumulativeLayoutShift = cumulativeLayoutShift;
   }
 
@@ -309,7 +309,7 @@ public class PageTimings {
   }
 
 
-  public PageTimings firstInputDelay(Long firstInputDelay) {
+  public PageTimings firstInputDelay(Float firstInputDelay) {
     
     this.firstInputDelay = firstInputDelay;
     return this;
@@ -322,12 +322,12 @@ public class PageTimings {
   **/
   @javax.annotation.Nullable
 
-  public Long getFirstInputDelay() {
+  public Float getFirstInputDelay() {
     return firstInputDelay;
   }
 
 
-  public void setFirstInputDelay(Long firstInputDelay) {
+  public void setFirstInputDelay(Float firstInputDelay) {
     this.firstInputDelay = firstInputDelay;
   }
 

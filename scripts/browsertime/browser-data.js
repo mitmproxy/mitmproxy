@@ -7,17 +7,19 @@
 function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
 
 function cumulativeLayoutShift() {
-    let supported = PerformanceObserver.supportedEntryTypes;
-    if (!supported || supported.indexOf('layout-shift') === -1) { return; }
+    const supported = PerformanceObserver.supportedEntryTypes;
+    if (!supported || supported.indexOf('layout-shift') === -1) {
+        return;
+    }
     // See https://web.dev/layout-instability-api
     // https://github.com/mmocny/web-vitals/wiki/Snippets-for-LSN-using-PerformanceObserver#max-session-gap1s-limit5s
     let max = 0;
     let curr = 0;
     let firstTs = Number.NEGATIVE_INFINITY;
     let  prevTs = Number.NEGATIVE_INFINITY;
-    let observer = new PerformanceObserver(list => {});
+    const observer = new PerformanceObserver(list => {});
     observer.observe({ type: 'layout-shift', buffered: true });
-    let list = observer.takeRecords();
+    const list = observer.takeRecords();
     for (let entry of list) {
         if (entry.hadRecentInput) {
             continue;

@@ -285,17 +285,26 @@ components:
   schemas:
     PageTiming:
       properties:
+        _firstInputDelay:
+          description: firstInputDelay from the browser
+          type: number
+        _domInteractive:
+          description: domInteractive from the browser
+          type: number
         _firstPaint:
           description: firstPaint from the browser
           type: number
-        _firstContentfulPaint:
-          description: firstContentfulPaint from the browser
-          type: number
-        _href:
-          description: "Top level href, including hashtag, etc per the browser"
-          type: string
         _largestContentfulPaint:
           description: largestContentfulPaint from the browser
+          type: number
+        onContentLoad:
+          description: onContentLoad per the browser
+          type: number
+        _timeToFirstByte:
+          description: Time to first byte of the page's first request per the browser
+          type: number
+        _firstContentfulPaint:
+          description: firstContentfulPaint from the browser
           type: number
         _dns:
           description: dns lookup time from the browser
@@ -303,32 +312,23 @@ components:
         onLoad:
           description: onLoad per the browser
           type: number
-        _cumulativeLayoutShift:
-          description: cumulativeLayoutShift metric from the browser
-          type: number
-        _timeToFirstByte:
-          description: Time to first byte of the page's first request per the browser
-          type: number
-        _firstInputDelay:
-          description: firstInputDelay from the browser
-          type: number
-        _domInteractive:
-          description: domInteractive from the browser
-          type: number
+        _href:
+          description: "Top level href, including hashtag, etc per the browser"
+          type: string
         _ssl:
           description: Ssl connect time from the browser
           type: number
-        onContentLoad:
-          description: onContentLoad per the browser
+        _cumulativeLayoutShift:
+          description: cumulativeLayoutShift metric from the browser
           type: number
       type: object
     NameValuePair:
       properties:
-        name:
-          description: Name to match
-          type: string
         value:
           description: Value to match
+          type: string
+        name:
+          description: Name to match
           type: string
       type: object
     MatchCriteria:
@@ -415,15 +415,15 @@ components:
         name: name
         type: type
       properties:
-        name:
-          description: Name
-          type: string
-        type:
-          description: Type
-          type: string
         result:
           description: Result True / False
           type: boolean
+        type:
+          description: Type
+          type: string
+        name:
+          description: Name
+          type: string
       type: object
     Error:
       example:
@@ -442,13 +442,13 @@ components:
         name: name
         value: 0.8008281904610115
       properties:
-        name:
-          description: Name of Custom Counter to add to the page under _counters
-          type: string
         value:
           description: Value for the counter
           format: double
           type: number
+        name:
+          description: Name of Custom Counter to add to the page under _counters
+          type: string
       type: object
     LargestContentfulPaint:
       additionalProperties: true
@@ -518,14 +518,14 @@ components:
         _href: _href
         _ssl: 0
         _firstPaint: 0
-        _cumulativeLayoutShift: 0
+        _cumulativeLayoutShift: -0.29385987
         _dns: 0
         _largestContentfulPaint:
           size: 0
           domPath: domPath
           startTime: 0
           tag: tag
-        _firstInputDelay: 0
+        _firstInputDelay: -0.5854392
         _domInteractive: 0
         _timeToFirstByte: 0
         _firstContentfulPaint: 0
@@ -565,7 +565,7 @@ components:
           default: -1
           format: float
           minimum: -1
-          type: integer
+          type: number
         _largestContentfulPaint:
           $ref: '#/components/schemas/LargestContentfulPaint'
         _firstPaint:
@@ -575,9 +575,9 @@ components:
           type: integer
         _firstInputDelay:
           default: -1
-          format: int64
+          format: float
           minimum: -1
-          type: integer
+          type: number
         _domInteractive:
           default: -1
           format: int64
@@ -847,14 +847,14 @@ components:
               _href: _href
               _ssl: 0
               _firstPaint: 0
-              _cumulativeLayoutShift: 0
+              _cumulativeLayoutShift: -0.29385987
               _dns: 0
               _largestContentfulPaint:
                 size: 0
                 domPath: domPath
                 startTime: 0
                 tag: tag
-              _firstInputDelay: 0
+              _firstInputDelay: -0.5854392
               _domInteractive: 0
               _timeToFirstByte: 0
               _firstContentfulPaint: 0
@@ -886,14 +886,14 @@ components:
               _href: _href
               _ssl: 0
               _firstPaint: 0
-              _cumulativeLayoutShift: 0
+              _cumulativeLayoutShift: -0.29385987
               _dns: 0
               _largestContentfulPaint:
                 size: 0
                 domPath: domPath
                 startTime: 0
                 tag: tag
-              _firstInputDelay: 0
+              _firstInputDelay: -0.5854392
               _domInteractive: 0
               _timeToFirstByte: 0
               _firstContentfulPaint: 0
@@ -1100,14 +1100,14 @@ components:
           _href: _href
           _ssl: 0
           _firstPaint: 0
-          _cumulativeLayoutShift: 0
+          _cumulativeLayoutShift: -0.29385987
           _dns: 0
           _largestContentfulPaint:
             size: 0
             domPath: domPath
             startTime: 0
             tag: tag
-          _firstInputDelay: 0
+          _firstInputDelay: -0.5854392
           _domInteractive: 0
           _timeToFirstByte: 0
           _firstContentfulPaint: 0
@@ -1440,14 +1440,14 @@ components:
             _href: _href
             _ssl: 0
             _firstPaint: 0
-            _cumulativeLayoutShift: 0
+            _cumulativeLayoutShift: -0.29385987
             _dns: 0
             _largestContentfulPaint:
               size: 0
               domPath: domPath
               startTime: 0
               tag: tag
-            _firstInputDelay: 0
+            _firstInputDelay: -0.5854392
             _domInteractive: 0
             _timeToFirstByte: 0
             _firstContentfulPaint: 0
@@ -1479,14 +1479,14 @@ components:
             _href: _href
             _ssl: 0
             _firstPaint: 0
-            _cumulativeLayoutShift: 0
+            _cumulativeLayoutShift: -0.29385987
             _dns: 0
             _largestContentfulPaint:
               size: 0
               domPath: domPath
               startTime: 0
               tag: tag
-            _firstInputDelay: 0
+            _firstInputDelay: -0.5854392
             _domInteractive: 0
             _timeToFirstByte: 0
             _firstContentfulPaint: 0

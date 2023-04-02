@@ -74,10 +74,10 @@ module BrowserupMitmProxy
         :'_dns' => :'Integer',
         :'_ssl' => :'Integer',
         :'_time_to_first_byte' => :'Integer',
-        :'_cumulative_layout_shift' => :'Integer',
+        :'_cumulative_layout_shift' => :'Float',
         :'_largest_contentful_paint' => :'LargestContentfulPaint',
         :'_first_paint' => :'Integer',
-        :'_first_input_delay' => :'Integer',
+        :'_first_input_delay' => :'Float',
         :'_dom_interactive' => :'Integer',
         :'_first_contentful_paint' => :'Integer',
         :'comment' => :'String'

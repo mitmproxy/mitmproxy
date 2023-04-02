@@ -39,6 +39,22 @@ public class PageTimingTest {
     }
 
     /**
+     * Test the property 'firstInputDelay'
+     */
+    @Test
+    public void firstInputDelayTest() {
+        // TODO: test firstInputDelay
+    }
+
+    /**
+     * Test the property 'domInteractive'
+     */
+    @Test
+    public void domInteractiveTest() {
+        // TODO: test domInteractive
+    }
+
+    /**
      * Test the property 'firstPaint'
      */
     @Test
@@ -47,27 +63,35 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'firstContentfulPaint'
-     */
-    @Test
-    public void firstContentfulPaintTest() {
-        // TODO: test firstContentfulPaint
-    }
-
-    /**
-     * Test the property 'href'
-     */
-    @Test
-    public void hrefTest() {
-        // TODO: test href
-    }
-
-    /**
      * Test the property 'largestContentfulPaint'
      */
     @Test
     public void largestContentfulPaintTest() {
         // TODO: test largestContentfulPaint
+    }
+
+    /**
+     * Test the property 'onContentLoad'
+     */
+    @Test
+    public void onContentLoadTest() {
+        // TODO: test onContentLoad
+    }
+
+    /**
+     * Test the property 'timeToFirstByte'
+     */
+    @Test
+    public void timeToFirstByteTest() {
+        // TODO: test timeToFirstByte
+    }
+
+    /**
+     * Test the property 'firstContentfulPaint'
+     */
+    @Test
+    public void firstContentfulPaintTest() {
+        // TODO: test firstContentfulPaint
     }
 
     /**
@@ -87,35 +111,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'cumulativeLayoutShift'
+     * Test the property 'href'
      */
     @Test
-    public void cumulativeLayoutShiftTest() {
-        // TODO: test cumulativeLayoutShift
-    }
-
-    /**
-     * Test the property 'timeToFirstByte'
-     */
-    @Test
-    public void timeToFirstByteTest() {
-        // TODO: test timeToFirstByte
-    }
-
-    /**
-     * Test the property 'firstInputDelay'
-     */
-    @Test
-    public void firstInputDelayTest() {
-        // TODO: test firstInputDelay
-    }
-
-    /**
-     * Test the property 'domInteractive'
-     */
-    @Test
-    public void domInteractiveTest() {
-        // TODO: test domInteractive
+    public void hrefTest() {
+        // TODO: test href
     }
 
     /**
@@ -127,11 +127,11 @@ public class PageTimingTest {
     }
 
     /**
-     * Test the property 'onContentLoad'
+     * Test the property 'cumulativeLayoutShift'
      */
     @Test
-    public void onContentLoadTest() {
-        // TODO: test onContentLoad
+    public void cumulativeLayoutShiftTest() {
+        // TODO: test cumulativeLayoutShift
     }
 
 }

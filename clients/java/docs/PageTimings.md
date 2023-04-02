@@ -13,10 +13,10 @@
 |**dns** | **Long** |  |  [optional] |
 |**ssl** | **Long** |  |  [optional] |
 |**timeToFirstByte** | **Long** |  |  [optional] |
-|**cumulativeLayoutShift** | **Integer** |  |  [optional] |
+|**cumulativeLayoutShift** | **Float** |  |  [optional] |
 |**largestContentfulPaint** | **LargestContentfulPaint** |  |  [optional] |
 |**firstPaint** | **Long** |  |  [optional] |
-|**firstInputDelay** | **Long** |  |  [optional] |
+|**firstInputDelay** | **Float** |  |  [optional] |
 |**domInteractive** | **Long** |  |  [optional] |
 |**firstContentfulPaint** | **Long** |  |  [optional] |
 |**comment** | **String** |  |  [optional] |
