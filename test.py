@@ -1,7 +1,7 @@
 import subprocess
 from shutil import which
 
-l = subprocess.Popen(["docker","run","mitm"])
+l = subprocess.Popen(["docker", "run", "mitm"])
 
-if (which("docker")):
+if which("docker"):
     print(l)
