@@ -94,7 +94,7 @@ class Script:
         self.is_running = False
 
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError("No such script")
+            raise exceptions.OptionsError(f"No such script: {self.fullpath}")
 
         self.reloadtask = None
         if reload:
