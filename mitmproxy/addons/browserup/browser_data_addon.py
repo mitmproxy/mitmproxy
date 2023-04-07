@@ -23,7 +23,10 @@ class BrowserDataAddOn:
     def request(self, f: mitmproxy.http.HTTPFlow):
         if f.request.url.rfind('BrowserUpData') > -1:
             logging.info(f'detected URL: {f.request.url}')
-            action = re.search("\/BrowserUpData/([a-zA-Z_]+)", f.request.url).group(1)
+            browserup_data = re.search("\/BrowserUpData/([a-zA-Z_]+)", f.request.url)
+            if browserup_data is None:
+                return
+            action = browserup_data.group(1)
             f.metadata['blocklisted'] = True
             logging.info(f'BrowserUpData action: {action}')
             if action == 'page_info' or action == 'page_complete':
