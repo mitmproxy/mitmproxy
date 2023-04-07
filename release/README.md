@@ -1,6 +1,6 @@
 # Release Checklist
 
-These steps assume you are on the correct branch and have a git remote called `origin` that points to the `mitmproxy/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
+These steps assume you are on the correct branch and have a git remote called `origin` that points to the `browserup/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
 
 - Update CHANGELOG.
 - Verify that the compiled mitmweb assets are up-to-date.
@@ -14,7 +14,7 @@ These steps assume you are on the correct branch and have a git remote called `o
 ### GitHub Releases
 
 - Create release notice on GitHub
-  [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
+  [here](https://github.com/browserup/mitmproxy/releases/new) if not already
   auto-created by the tag.
 - We DO NOT upload release artifacts to GitHub anymore. Simply add the
   following snippet to the notice:
@@ -30,12 +30,12 @@ These steps assume you are on the correct branch and have a git remote called `o
 - The Homebrew maintainers are typically very fast and detect our new relese
   within a day.
 - If you feel the need, you can run this from a macOS machine:
-  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>.tar.gz mitmproxy`
+  `brew bump-formula-pr --url https://github.com/browserup/mitmproxy/archive/v<version number here>.tar.gz mitmproxy`
 
 ### Docker
 
 - The docker image is built by our CI workers and pushed to Docker Hub automatically.
-- Please verify that https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ has the latest version.
+- Please verify that https://hub.docker.com/r/browserup/mitmproxy/tags/ has the latest version.
 - Please verify that the latest tag points to the most recent image (same digest / hash).
 
 ### Docs
@@ -58,4 +58,4 @@ These steps assume you are on the correct branch and have a git remote called `o
 ### Prepare for next release
 
 - Last but not least, bump the major version on main in
-   [https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.
+   [https://github.com/browserup/mitmproxy/blob/main/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.

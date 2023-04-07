@@ -132,7 +132,7 @@ class BuildEnviron:
             t = "dev"
         else:
             t = self.version
-        return f"mitmproxy/mitmproxy:{t}"
+        return f"browserup/mitmproxy:{t}"
 
     def dump_info(self, fp=sys.stdout) -> None:
         lst = [
@@ -543,7 +543,7 @@ def upload():  # pragma: no cover
         if be.is_prod_release:
             subprocess.check_call([
                 "docker", "buildx", "build",
-                "--tag", "mitmproxy/mitmproxy:latest",
+                "--tag", "browserup/mitmproxy:latest",
                 "--push",
                 "--platform", DOCKER_PLATFORMS,
                 "--build-arg", f"MITMPROXY_WHEEL={whl.name}",

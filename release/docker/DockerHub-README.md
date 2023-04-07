@@ -5,7 +5,7 @@ Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SS
 # Usage
 
 ```sh
-$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
+$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 browserup/mitmproxy
 ```
 The *volume mount* is optional: It's to store the generated CA certificates.
 
@@ -17,18 +17,18 @@ $ https_proxy=http://localhost:8080/ curl -k https://example.com/
 
 You can also start `mitmdump` by just adding that to the end of the command-line:
 ```sh
-$ docker run --rm -it -p 8080:8080 mitmproxy/mitmproxy mitmdump
+$ docker run --rm -it -p 8080:8080 browserup/mitmproxy mitmdump
 ```
 
 For `mitmweb`, you also need to expose port 8081:
 ```sh
 # this makes :8081 accessible to the local machine only
-$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-host 0.0.0.0
+$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 browserup/mitmproxy mitmweb --web-host 0.0.0.0
 ```
 
 You can also pass options directly via the CLI:
 ```sh
-$ docker run --rm -it -p 8080:8080 mitmproxy/mitmproxy mitmdump --set ssl_insecure=true
+$ docker run --rm -it -p 8080:8080 browserup/mitmproxy mitmdump --set ssl_insecure=true
 ```
 
 For further details, please consult the mitmproxy [documentation](http://docs.mitmproxy.org/en/stable/).
@@ -36,7 +36,7 @@ For further details, please consult the mitmproxy [documentation](http://docs.mi
 # Tags
 
 The available release tags can be seen
-[here](https://hub.docker.com/r/mitmproxy/mitmproxy/tags/).
+[here](https://hub.docker.com/r/browserup/mitmproxy/tags/).
 
 * `dev` always tracks the git-master branch and represents the unstable development tree.
 * `latest` always points to the same image as the most recent stable release, including bugfix releases (e.g., `4.0.0` and `4.0.1`).
