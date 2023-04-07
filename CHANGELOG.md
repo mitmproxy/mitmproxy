@@ -4,6 +4,10 @@
 
 
 
+## 07 April 2023: mitmproxy 9.0.1
+
+
+
 ## 02 November 2022: mitmproxy 9.0.1
 
 * The precompiled binaries now ship with OpenSSL 3.0.7, which resolves CVE-2022-3602 and CVE-2022-3786.
