@@ -1,9 +1,9 @@
 import logging
+import os
+import re
 import shutil
 import subprocess
 import tempfile
-import re
-import os
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -61,24 +61,36 @@ def get_chrome_cmd() -> list[str] | None:
 
 
 def get_firefox_executable():
-    
     for browser in (
         # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
         r"C:\\Program Files\\Mozilla Firefox\\firefox.exe",
         r"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe",
         # Linux binary names from Python's webbrowser module.
         "firefox",
-        "/usr/bin/firefox"
+        "/usr/bin/firefox",
     ):
         if shutil.which(browser):
             return browser
-    
+
     if os.name == "nt":
-        process = subprocess.check_output(["powershell.exe","Get-ItemProperty" ,"-Path", "'Registry::HKEY_LOCAL_MACHINE\\Software\\Clients\\StartMenuInternet\\Firefox-*\\shell\\open\\command\\'","|","findstr","default"])
-        firefox = re.search(r'"(.*?)"',process.decode("utf-8")).group().replace('"',"")
+        process = subprocess.check_output(
+            [
+                "powershell.exe",
+                "Get-ItemProperty",
+                "-Path",
+                "'Registry::HKEY_LOCAL_MACHINE\\Software\\Clients\\StartMenuInternet\\Firefox-*\\shell\\open\\command\\'",
+                "|",
+                "findstr",
+                "default",
+            ]
+        )
+        firefox = (
+            re.search(r'"(.*?)"', process.decode("utf-8")).group().replace('"', "")
+        )
         return firefox
 
     return None
+
 
 class Browser:
     browser: list[subprocess.Popen] = []
@@ -137,13 +149,14 @@ class Browser:
                 ALERT, "Your platform is not supported yet - please submit a patch."
             )
             return
-        
-        
+
         logging.info(f"Firefox bin: {str(firefox_bin)}")
         tdir = tempfile.TemporaryDirectory()
         self.tdir.append(tdir)
         self.browser.append(
-            subprocess.Popen([firefox_bin],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                [firefox_bin], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         )
 
     def done(self):
