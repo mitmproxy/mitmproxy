@@ -3,6 +3,7 @@ from mitmproxy.addons import anticomp
 from mitmproxy.addons import block
 from mitmproxy.addons import blocklist
 from mitmproxy.addons import browser
+from mitmproxy.addons import docker
 from mitmproxy.addons import clientplayback
 from mitmproxy.addons import command_history
 from mitmproxy.addons import comment
@@ -32,6 +33,7 @@ def default_addons():
     return [
         core.Core(),
         browser.Browser(),
+        docker.Docker(),
         block.Block(),
         blocklist.BlockList(),
         anticache.AntiCache(),

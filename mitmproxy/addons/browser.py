@@ -2,6 +2,8 @@ import logging
 import shutil
 import subprocess
 import tempfile
+import re
+import os
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -49,7 +51,7 @@ def get_chrome_flatpak() -> str | None:
     return None
 
 
-def get_browser_cmd() -> list[str] | None:
+def get_chrome_cmd() -> list[str] | None:
     if browser := get_chrome_executable():
         return [browser]
     elif browser := get_chrome_flatpak():
@@ -57,6 +59,26 @@ def get_browser_cmd() -> list[str] | None:
 
     return None
 
+
+def get_firefox_executable():
+    
+    for browser in (
+        # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
+        r"C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+        r"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe",
+        # Linux binary names from Python's webbrowser module.
+        "firefox",
+        "/usr/bin/firefox"
+    ):
+        if shutil.which(browser):
+            return browser
+    
+    if os.name == "nt":
+        process = subprocess.check_output(["powershell.exe","Get-ItemProperty" ,"-Path", "'Registry::HKEY_LOCAL_MACHINE\\Software\\Clients\\StartMenuInternet\\Firefox-*\\shell\\open\\command\\'","|","findstr","default"])
+        firefox = re.search(r'"(.*?)"',process.decode("utf-8")).group().replace('"',"")
+        return firefox
+
+    return None
 
 class Browser:
     browser: list[subprocess.Popen] = []
@@ -71,7 +93,7 @@ class Browser:
         if len(self.browser) > 0:
             logging.log(ALERT, "Starting additional browser")
 
-        cmd = get_browser_cmd()
+        cmd = get_chrome_cmd()
         if not cmd:
             logging.log(
                 ALERT, "Your platform is not supported yet - please submit a patch."
@@ -98,6 +120,30 @@ class Browser:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
+        )
+
+    @command.command("browser.firefox")
+    def start(self) -> None:
+        """
+        Start an isolated instance of Firefox that points to the currently
+        running proxy.
+        """
+        if len(self.browser) > 0:
+            logging.log(ALERT, "Starting additional browser")
+
+        firefox_bin = get_firefox_executable()
+        if not firefox_bin:
+            logging.log(
+                ALERT, "Your platform is not supported yet - please submit a patch."
+            )
+            return
+        
+        
+        logging.info(f"Firefox bin: {str(firefox_bin)}")
+        tdir = tempfile.TemporaryDirectory()
+        self.tdir.append(tdir)
+        self.browser.append(
+            subprocess.Popen([firefox_bin],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         )
 
     def done(self):
