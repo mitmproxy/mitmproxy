@@ -4,9 +4,13 @@ Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SS
 
 ## Usage
 
+To launch the terminal user interface of mitmproxy:
+
 ```sh
-$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
-[terminal user interface of mitmproxy is launched...]
+$ docker run --rm -it -p 8080:8080 mitmproxy/mitmproxy
+
+# or start it with the volume mounted to your home directory:
+$ docker run --rm -it -v ~/.mitmproxy:/home/mitmproxy/.mitmproxy -p 8080:8080 mitmproxy/mitmproxy
 ```
 
 The *volume mount* is optional: It's to store the generated CA certificates.
