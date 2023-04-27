@@ -1,6 +1,5 @@
 import socket
 import struct
-import typing
 import os
 
 # Python's socket module does not have these constants
@@ -8,7 +7,7 @@ SO_ORIGINAL_DST = 80
 SOL_IPV6 = 41
 
 
-def original_addr(csock: socket.socket) -> typing.Tuple[str, int]:
+def original_addr(csock: socket.socket) -> tuple[str, int]:
     # Get the original destination on Linux.
     # In theory, this can be done using the following syscalls:
     #     sock.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)

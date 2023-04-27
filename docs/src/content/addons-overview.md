@@ -30,7 +30,7 @@ mitmproxy's internal logging mechanism to announce its tally. The output can be
 found in the event log in the interactive tools, or on the console in mitmdump.
 
 Take it for a spin and make sure that it does what it's supposed to, by loading
-it into your mitmproxy tool of choice. We'll use mitmpdump in these examples,
+it into your mitmproxy tool of choice. We'll use mitmdump in these examples,
 but the flag is identical for all tools:
 
 ```bash

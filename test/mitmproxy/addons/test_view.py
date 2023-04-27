@@ -14,7 +14,7 @@ from mitmproxy.tools.console.common import render_marker, SYMBOL_MARK
 def tft(*, method="get", start=0):
     f = tflow.tflow()
     f.request.method = method
-    f.request.timestamp_start = start
+    f.timestamp_created = start
     return f
 
 
@@ -31,7 +31,7 @@ def test_order_refresh():
     with taddons.context() as tctx:
         tctx.configure(v, view_order="time")
         v.add([tf])
-        tf.request.timestamp_start = 10
+        tf.timestamp_created = 10
         assert not sargs
         v.update([tf])
         assert sargs
@@ -52,6 +52,26 @@ def test_order_generators_http():
 
     sz = view.OrderKeySize(v)
     assert sz.generate(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
+
+
+def test_order_generators_dns():
+    v = view.View()
+    tf = tflow.tdnsflow(resp=True)
+
+    rs = view.OrderRequestStart(v)
+    assert rs.generate(tf) == 946681200
+
+    rm = view.OrderRequestMethod(v)
+    assert rm.generate(tf) == "QUERY"
+
+    ru = view.OrderRequestURL(v)
+    assert ru.generate(tf) == "dns.google"
+
+    sz = view.OrderKeySize(v)
+    assert sz.generate(tf) == tf.response.size
+
+    tf = tflow.tdnsflow(resp=False)
+    assert sz.generate(tf) == 0
 
 
 def test_order_generators_tcp():
@@ -138,13 +158,27 @@ def test_simple_tcp():
     assert list(v) == [f]
 
 
+def test_simple_dns():
+    v = view.View()
+    f = tflow.tdnsflow(resp=True, err=True)
+    assert v.store_count() == 0
+    v.dns_request(f)
+    assert list(v) == [f]
+
+    # These all just call update
+    v.dns_request(f)
+    v.dns_response(f)
+    v.dns_error(f)
+    assert list(v) == [f]
+
+
 def test_filter():
     v = view.View()
     v.requestheaders(tft(method="get"))
     v.requestheaders(tft(method="put"))
     v.requestheaders(tft(method="get"))
     v.requestheaders(tft(method="put"))
-    assert(len(v)) == 4
+    assert (len(v)) == 4
     v.set_filter_cmd("~m get")
     assert [i.request.method for i in v] == ["GET", "GET"]
     assert len(v._store) == 4
@@ -194,19 +228,12 @@ def test_orders():
         assert v.order_options()
 
 
-@pytest.mark.asyncio
 async def test_load(tmpdir):
     path = str(tmpdir.join("path"))
     v = view.View()
     with taddons.context() as tctx:
         tctx.master.addons.add(v)
-        tdump(
-            path,
-            [
-                tflow.tflow(resp=True),
-                tflow.tflow(resp=True)
-            ]
-        )
+        tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
         v.load_file(path)
         assert len(v) == 2
         v.load_file(path)
@@ -276,13 +303,15 @@ def test_movement():
     v = view.View()
     with taddons.context():
         v.go(0)
-        v.add([
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-        ])
+        v.add(
+            [
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+            ]
+        )
         assert v.focus.index == 0
         v.go(-1)
         assert v.focus.index == 4
@@ -346,7 +375,7 @@ def test_order():
     v.requestheaders(tft(method="put", start=2))
     v.requestheaders(tft(method="get", start=3))
     v.requestheaders(tft(method="put", start=4))
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    assert [i.timestamp_created for i in v] == [1, 2, 3, 4]
 
     v.set_order("method")
     assert v.get_order() == "method"
@@ -356,10 +385,10 @@ def test_order():
 
     v.set_order("time")
     assert v.get_order() == "time"
-    assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
+    assert [i.timestamp_created for i in v] == [4, 3, 2, 1]
 
     v.set_reversed(False)
-    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    assert [i.timestamp_created for i in v] == [1, 2, 3, 4]
     with pytest.raises(exceptions.CommandError):
         v.set_order("not_an_order")
 
@@ -371,9 +400,9 @@ def test_reversed():
     v.requestheaders(tft(start=3))
     v.set_reversed(True)
 
-    assert v[0].request.timestamp_start == 3
-    assert v[-1].request.timestamp_start == 1
-    assert v[2].request.timestamp_start == 1
+    assert v[0].timestamp_created == 3
+    assert v[-1].timestamp_created == 1
+    assert v[2].timestamp_created == 1
     with pytest.raises(IndexError):
         v[5]
     with pytest.raises(IndexError):
@@ -486,21 +515,21 @@ def test_focus_follow():
 
         v.add([tft(start=4)])
         assert v.focus.index == 0
-        assert v.focus.flow.request.timestamp_start == 4
+        assert v.focus.flow.timestamp_created == 4
 
         v.add([tft(start=7)])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.flow.timestamp_created == 7
 
         mod = tft(method="put", start=6)
         v.add([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.flow.timestamp_created == 7
 
         mod.request.method = "GET"
         v.update([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 6
+        assert v.focus.flow.timestamp_created == 6
 
 
 def test_focus():
@@ -552,12 +581,14 @@ def test_focus():
     assert f.index is None
     assert f.flow is None
 
-    v.add([
-        tft(method="get", start=0),
-        tft(method="get", start=1),
-        tft(method="put", start=2),
-        tft(method="get", start=3),
-    ])
+    v.add(
+        [
+            tft(method="get", start=0),
+            tft(method="get", start=1),
+            tft(method="put", start=2),
+            tft(method="get", start=3),
+        ]
+    )
 
     f.flow = v[2]
     assert f.flow.request.method == "PUT"
@@ -621,11 +652,15 @@ def test_configure():
         assert v.focus_follow
 
 
-@pytest.mark.parametrize("marker, expected", [
-    [":default:", SYMBOL_MARK],
-    ["X", "X"],
-    [":grapes:", "\N{grapes}"],
-    [":not valid:", SYMBOL_MARK], [":weird", SYMBOL_MARK]
-])
+@pytest.mark.parametrize(
+    "marker, expected",
+    [
+        [":default:", SYMBOL_MARK],
+        ["X", "X"],
+        [":grapes:", "\N{grapes}"],
+        [":not valid:", SYMBOL_MARK],
+        [":weird", SYMBOL_MARK],
+    ],
+)
 def test_marker(marker, expected):
     assert render_marker(marker) == expected

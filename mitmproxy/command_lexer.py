@@ -8,12 +8,12 @@ import pyparsing
 
 PartialQuotedString = pyparsing.Regex(
     re.compile(
-        r'''
+        r"""
             "[^"]*(?:"|$)  # double-quoted string that ends with double quote or EOF
             |
             '[^']*(?:'|$)  # single-quoted string that ends with double quote or EOF
-        ''',
-        re.VERBOSE
+        """,
+        re.VERBOSE,
     )
 )
 

@@ -1066,3 +1066,367 @@ exports[`FlowView 7`] = `
   </div>
 </DocumentFragment>
 `;
+
+exports[`FlowView 8`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        TCP Messages
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="error"
+    >
+      <div
+        class="alert alert-warning"
+      >
+        error
+        <div>
+          <small>
+            1999-12-31 23:00:07.000
+          </small>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 9`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class="active"
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="dns-request"
+    >
+      <div
+        class="first-line request-line"
+      >
+        <div>
+          QUERY 
+        </div>
+      </div>
+      <h5>
+        Recursive Question
+      </h5>
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Name
+            </th>
+            <th>
+              Type
+            </th>
+            <th>
+              Class
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              dns.google
+            </td>
+            <td>
+              A
+            </td>
+            <td>
+              IN
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h5>
+        Answer
+      </h5>
+      —
+      <hr />
+      <h5>
+        Authority
+      </h5>
+      —
+      <hr />
+      <h5>
+        Additional
+      </h5>
+      —
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 10`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="dns-response"
+    >
+      <div
+        class="first-line response-line"
+      >
+        <div>
+          NOERROR 
+        </div>
+      </div>
+      <h5>
+        Recursive Question
+      </h5>
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Name
+            </th>
+            <th>
+              Type
+            </th>
+            <th>
+              Class
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              dns.google
+            </td>
+            <td>
+              A
+            </td>
+            <td>
+              IN
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h5>
+        Recursive Answer
+      </h5>
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Name
+            </th>
+            <th>
+              Type
+            </th>
+            <th>
+              Class
+            </th>
+            <th>
+              TTL
+            </th>
+            <th>
+              Data
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              dns.google
+            </td>
+            <td>
+              A
+            </td>
+            <td>
+              IN
+            </td>
+            <td>
+              32
+            </td>
+            <td>
+              8.8.8.8
+            </td>
+          </tr>
+          <tr>
+            <td>
+              dns.google
+            </td>
+            <td>
+              A
+            </td>
+            <td>
+              IN
+            </td>
+            <td>
+              32
+            </td>
+            <td>
+              8.8.4.4
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h5>
+        Authority
+      </h5>
+      —
+      <hr />
+      <h5>
+        Additional
+      </h5>
+      —
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 11`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Request
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Response
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="error"
+    >
+      <div
+        class="alert alert-warning"
+      >
+        error
+        <div>
+          <small>
+            1999-12-31 23:00:07.000
+          </small>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;

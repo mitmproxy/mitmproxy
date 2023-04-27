@@ -36,7 +36,7 @@ Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
 """
 
 from html.parser import HTMLParser
-from typing import Dict, Union, Tuple, Optional, List, NamedTuple
+from typing import NamedTuple, Optional, Union
 from urllib.parse import urlparse
 import re
 import socket
@@ -79,8 +79,8 @@ class SQLiData(NamedTuple):
     dbms: str
 
 
-VulnData = Tuple[Optional[XSSData], Optional[SQLiData]]
-Cookies = Dict[str, str]
+VulnData = tuple[Optional[XSSData], Optional[SQLiData]]
+Cookies = dict[str, str]
 
 
 def get_cookies(flow: http.HTTPFlow) -> Cookies:
@@ -92,14 +92,14 @@ def get_cookies(flow: http.HTTPFlow) -> Cookies:
 
 def find_unclaimed_URLs(body, requestUrl):
     """ Look for unclaimed URLs in script tags and log them if found"""
-    def getValue(attrs: List[Tuple[str, str]], attrName: str) -> Optional[str]:
+    def getValue(attrs: list[tuple[str, str]], attrName: str) -> Optional[str]:
         for name, value in attrs:
             if attrName == name:
                 return value
         return None
 
     class ScriptURLExtractor(HTMLParser):
-        script_URLs: List[str] = []
+        script_URLs: list[str] = []
 
         def handle_starttag(self, tag, attrs):
             if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
@@ -245,7 +245,7 @@ def inside_quote(qc: str, substring_bytes: bytes, text_index: int, body_bytes: b
     return False
 
 
-def paths_to_text(html: str, string: str) -> List[str]:
+def paths_to_text(html: str, string: str) -> list[str]:
     """ Return list of Paths to a given str in the given HTML tree
           - Note that it does a BFS """
 
@@ -258,7 +258,7 @@ def paths_to_text(html: str, string: str) -> List[str]:
 
     class PathHTMLParser(HTMLParser):
         currentPath = ""
-        paths: List[str] = []
+        paths: list[str] = []
 
         def handle_starttag(self, tag, attrs):
             self.currentPath += ("/" + tag)

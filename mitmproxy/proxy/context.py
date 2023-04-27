@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from mitmproxy import connection
 from mitmproxy.options import Options
@@ -9,13 +9,26 @@ if TYPE_CHECKING:
 
 class Context:
     """
-    The context object provided to each `mitmproxy.proxy.layer.Layer` by its parent layer.
+    The context object provided to each protocol layer in the proxy core.
     """
 
     client: connection.Client
+    """The client connection."""
     server: connection.Server
+    """
+    The server connection.
+
+    For practical reasons this attribute is always set, even if there is not server connection yet.
+    In this case the server address is `None`.
+    """
     options: Options
-    layers: List["mitmproxy.proxy.layer.Layer"]
+    """
+    Provides access to options for proxy layers. Not intended for use by addons, use `mitmproxy.ctx.options` instead.
+    """
+    layers: list["mitmproxy.proxy.layer.Layer"]
+    """
+    The protocol layer stack.
+    """
 
     def __init__(
         self,
@@ -24,7 +37,9 @@ class Context:
     ) -> None:
         self.client = client
         self.options = options
-        self.server = connection.Server(None)
+        self.server = connection.Server(
+            None, transport_protocol=client.transport_protocol
+        )
         self.layers = []
 
     def fork(self) -> "Context":

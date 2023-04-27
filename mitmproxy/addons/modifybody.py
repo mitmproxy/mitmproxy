@@ -1,5 +1,5 @@
 import re
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import ctx, exceptions
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
@@ -7,16 +7,18 @@ from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 class ModifyBody:
     def __init__(self):
-        self.replacements: typing.List[ModifySpec] = []
+        self.replacements: list[ModifySpec] = []
 
     def load(self, loader):
         loader.add_option(
-            "modify_body", typing.Sequence[str], [],
+            "modify_body",
+            Sequence[str],
+            [],
             """
             Replacement pattern of the form "[/flow-filter]/regex/[@]replacement", where
             the separator can be any character. The @ allows to provide a file path that
             is used to read the replacement string.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -26,17 +28,19 @@ class ModifyBody:
                 try:
                     spec = parse_modify_spec(option, True)
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Cannot parse modify_body option {option}: {e}") from e
+                    raise exceptions.OptionsError(
+                        f"Cannot parse modify_body option {option}: {e}"
+                    ) from e
 
                 self.replacements.append(spec)
 
     def request(self, flow):
-        if flow.response or flow.error or flow.reply.state == "taken":
+        if flow.response or flow.error or not flow.live:
             return
         self.run(flow)
 
     def response(self, flow):
-        if flow.error or flow.reply.state == "taken":
+        if flow.error or not flow.live:
             return
         self.run(flow)
 
@@ -49,6 +53,13 @@ class ModifyBody:
                     ctx.log.warn(f"Could not read replacement file: {e}")
                     continue
                 if flow.response:
-                    flow.response.content = re.sub(spec.subject, replacement, flow.response.content, flags=re.DOTALL)
+                    flow.response.content = re.sub(
+                        spec.subject,
+                        replacement,
+                        flow.response.content,
+                        flags=re.DOTALL,
+                    )
                 else:
-                    flow.request.content = re.sub(spec.subject, replacement, flow.request.content, flags=re.DOTALL)
+                    flow.request.content = re.sub(
+                        spec.subject, replacement, flow.request.content, flags=re.DOTALL
+                    )

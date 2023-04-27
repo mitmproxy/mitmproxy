@@ -6,10 +6,7 @@ from . import base
 
 class ViewWBXML(base.View):
     name = "WBXML"
-    __content_types = (
-        "application/vnd.wap.wbxml",
-        "application/vnd.ms-sync.wbxml"
-    )
+    __content_types = ("application/vnd.wap.wbxml", "application/vnd.ms-sync.wbxml")
 
     def __call__(self, data, **metadata):
         try:
@@ -20,5 +17,7 @@ class ViewWBXML(base.View):
         except:
             return None
 
-    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+    def render_priority(
+        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+    ) -> float:
         return float(bool(data) and content_type in self.__content_types)

@@ -15,12 +15,7 @@ def tctx() -> context.Context:
     Proxyserver().load(opts)
     TermLog().load(opts)
     return context.Context(
-        connection.Client(
-            ("client", 1234),
-            ("127.0.0.1", 8080),
-            1605699329
-        ),
-        opts
+        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
     )
 
 

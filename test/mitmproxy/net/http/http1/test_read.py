@@ -3,8 +3,14 @@ import pytest
 from mitmproxy.http import Headers
 from mitmproxy.net.http.http1.read import (
     read_request_head,
-    read_response_head, connection_close, expected_http_body_size,
-    _read_request_line, _read_response_line, _read_headers, get_header_tokens
+    read_response_head,
+    connection_close,
+    expected_http_body_size,
+    _read_request_line,
+    _read_response_line,
+    _read_headers,
+    get_header_tokens,
+    validate_headers,
 )
 from mitmproxy.test.tutils import treq, tresp
 
@@ -59,50 +65,73 @@ def test_read_response_head():
     assert r.content is None
 
 
+def test_validate_headers():
+    # both content-length and chunked (possible request smuggling)
+    with pytest.raises(
+        ValueError,
+        match="Received both a Transfer-Encoding and a Content-Length header",
+    ):
+        validate_headers(
+            Headers(transfer_encoding="chunked", content_length="42"),
+        )
+
+    with pytest.raises(ValueError, match="Received an invalid header name"):
+        validate_headers(
+            Headers([(b"content-length ", b"42")]),
+        )
+
+
 def test_expected_http_body_size():
     # Expect: 100-continue
-    assert expected_http_body_size(
-        treq(headers=Headers(expect="100-continue", content_length="42")),
-    ) == 42
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(expect="100-continue", content_length="42")),
+        )
+        == 42
+    )
 
     # http://tools.ietf.org/html/rfc7230#section-3.3
-    assert expected_http_body_size(
-        treq(method=b"HEAD"),
-        tresp(headers=Headers(content_length="42"))
-    ) == 0
-    assert expected_http_body_size(
-        treq(method=b"CONNECT", headers=Headers()),
-        None,
-    ) == 0
-    assert expected_http_body_size(
-        treq(method=b"CONNECT"),
-        tresp()
-    ) == 0
+    assert (
+        expected_http_body_size(
+            treq(method=b"HEAD"), tresp(headers=Headers(content_length="42"))
+        )
+        == 0
+    )
+    assert (
+        expected_http_body_size(
+            treq(method=b"CONNECT", headers=Headers()),
+            None,
+        )
+        == 0
+    )
+    assert expected_http_body_size(treq(method=b"CONNECT"), tresp()) == 0
     for code in (100, 204, 304):
-        assert expected_http_body_size(
-            treq(),
-            tresp(status_code=code)
-        ) == 0
+        assert expected_http_body_size(treq(), tresp(status_code=code)) == 0
 
     # chunked
-    assert expected_http_body_size(
-        treq(headers=Headers(transfer_encoding="chunked")),
-    ) is None
-    assert expected_http_body_size(
-        treq(headers=Headers(transfer_encoding="gzip,\tchunked")),
-    ) is None
-    # both content-length and chunked (possible request smuggling)
-    with pytest.raises(ValueError, match="Received both a Transfer-Encoding and a Content-Length header"):
+    assert (
         expected_http_body_size(
-            treq(headers=Headers(transfer_encoding="chunked", content_length="42")),
+            treq(headers=Headers(transfer_encoding="chunked")),
         )
+        is None
+    )
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(transfer_encoding="gzip,\tchunked")),
+        )
+        is None
+    )
     with pytest.raises(ValueError, match="Invalid transfer encoding"):
         expected_http_body_size(
-            treq(headers=Headers(transfer_encoding="chun\u212Aed")),  # "chunKed".lower() == "chunked"
+            treq(
+                headers=Headers(transfer_encoding="chun\u212Aed")
+            ),  # "chunKed".lower() == "chunked"
         )
     with pytest.raises(ValueError, match="Unknown transfer encoding"):
         expected_http_body_size(
-            treq(headers=Headers(transfer_encoding="chun ked")),  # "chunKed".lower() == "chunked"
+            treq(
+                headers=Headers(transfer_encoding="chun ked")
+            ),  # "chunKed".lower() == "chunked"
         )
     with pytest.raises(ValueError, match="Unknown transfer encoding"):
         expected_http_body_size(
@@ -113,64 +142,87 @@ def test_expected_http_body_size():
         expected_http_body_size(
             treq(headers=Headers(transfer_encoding="gzip")),
         )
-    assert expected_http_body_size(
-        treq(),
-        tresp(headers=Headers(transfer_encoding="gzip")),
-    ) == -1
+    assert (
+        expected_http_body_size(
+            treq(),
+            tresp(headers=Headers(transfer_encoding="gzip")),
+        )
+        == -1
+    )
 
     # explicit length
     for val in (b"foo", b"-7"):
         with pytest.raises(ValueError):
-            expected_http_body_size(
-                treq(headers=Headers(content_length=val))
-            )
-    assert expected_http_body_size(
-        treq(headers=Headers(content_length="42"))
-    ) == 42
+            expected_http_body_size(treq(headers=Headers(content_length=val)))
+    assert expected_http_body_size(treq(headers=Headers(content_length="42"))) == 42
     # multiple content-length headers with same value
-    assert expected_http_body_size(
-        treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'42')]))
-    ) == 42
+    assert (
+        expected_http_body_size(
+            treq(
+                headers=Headers(
+                    [(b"content-length", b"42"), (b"content-length", b"42")]
+                )
+            )
+        )
+        == 42
+    )
     # multiple content-length headers with conflicting value
     with pytest.raises(ValueError, match="Conflicting Content-Length headers"):
         expected_http_body_size(
-            treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'45')]))
+            treq(
+                headers=Headers(
+                    [(b"content-length", b"42"), (b"content-length", b"45")]
+                )
+            )
         )
 
     # non-int content-length
     with pytest.raises(ValueError, match="Invalid Content-Length header"):
-        expected_http_body_size(
-            treq(headers=Headers([(b'content-length', b'NaN')]))
-        )
+        expected_http_body_size(treq(headers=Headers([(b"content-length", b"NaN")])))
     # negative content-length
     with pytest.raises(ValueError, match="Negative Content-Length header"):
-        expected_http_body_size(
-            treq(headers=Headers([(b'content-length', b'-1')]))
-        )
+        expected_http_body_size(treq(headers=Headers([(b"content-length", b"-1")])))
 
     # no length
-    assert expected_http_body_size(
-        treq(headers=Headers())
-    ) == 0
-    assert expected_http_body_size(
-        treq(headers=Headers()), tresp(headers=Headers())
-    ) == -1
+    assert expected_http_body_size(treq(headers=Headers())) == 0
+    assert (
+        expected_http_body_size(treq(headers=Headers()), tresp(headers=Headers())) == -1
+    )
 
 
 def test_read_request_line():
     def t(b):
         return _read_request_line(b)
 
-    assert (t(b"GET / HTTP/1.1") ==
-            ("", 0, b"GET", b"", b"", b"/", b"HTTP/1.1"))
-    assert (t(b"OPTIONS * HTTP/1.1") ==
-            ("", 0, b"OPTIONS", b"", b"", b"*", b"HTTP/1.1"))
-    assert (t(b"CONNECT foo:42 HTTP/1.1") ==
-            ("foo", 42, b"CONNECT", b"", b"foo:42", b"", b"HTTP/1.1"))
-    assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
-            ("foo", 42, b"GET", b"http", b"foo:42", b"/bar", b"HTTP/1.1"))
-    assert (t(b"GET http://foo:42 HTTP/1.1") ==
-            ("foo", 42, b"GET", b"http", b"foo:42", b"/", b"HTTP/1.1"))
+    assert t(b"GET / HTTP/1.1") == ("", 0, b"GET", b"", b"", b"/", b"HTTP/1.1")
+    assert t(b"OPTIONS * HTTP/1.1") == ("", 0, b"OPTIONS", b"", b"", b"*", b"HTTP/1.1")
+    assert t(b"CONNECT foo:42 HTTP/1.1") == (
+        "foo",
+        42,
+        b"CONNECT",
+        b"",
+        b"foo:42",
+        b"",
+        b"HTTP/1.1",
+    )
+    assert t(b"GET http://foo:42/bar HTTP/1.1") == (
+        "foo",
+        42,
+        b"GET",
+        b"http",
+        b"foo:42",
+        b"/bar",
+        b"HTTP/1.1",
+    )
+    assert t(b"GET http://foo:42 HTTP/1.1") == (
+        "foo",
+        42,
+        b"GET",
+        b"http",
+        b"foo:42",
+        b"/",
+        b"HTTP/1.1",
+    )
 
     with pytest.raises(ValueError):
         t(b"GET / WTF/1.1")
@@ -192,7 +244,11 @@ def test_read_response_line():
     assert t(b"HTTP/1.1 200") == (b"HTTP/1.1", 200, b"")
 
     # https://github.com/mitmproxy/mitmproxy/issues/784
-    assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (b"HTTP/1.1", 200, b"Non-Autoris\xc3\xa9")
+    assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (
+        b"HTTP/1.1",
+        200,
+        b"Non-Autoris\xc3\xa9",
+    )
 
     with pytest.raises(ValueError):
         assert t(b"HTTP/1.1")
@@ -211,27 +267,17 @@ class TestReadHeaders:
         return _read_headers(data.splitlines(keepends=True))
 
     def test_read_simple(self):
-        data = (
-            b"Header: one\r\n"
-            b"Header2: two\r\n"
-        )
+        data = b"Header: one\r\n" b"Header2: two\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header2", b"two"))
 
     def test_read_multi(self):
-        data = (
-            b"Header: one\r\n"
-            b"Header: two\r\n"
-        )
+        data = b"Header: one\r\n" b"Header: two\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header", b"two"))
 
     def test_read_continued(self):
-        data = (
-            b"Header: one\r\n"
-            b"\ttwo\r\n"
-            b"Header2: three\r\n"
-        )
+        data = b"Header: one\r\n" b"\ttwo\r\n" b"Header2: three\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one\r\n two"), (b"Header2", b"three"))
 

@@ -9,6 +9,7 @@ class HttpRequestHeadersHook(commands.StartHook):
     """
     HTTP request headers were successfully read. At this point, the body is empty.
     """
+
     name = "requestheaders"
     flow: http.HTTPFlow
 
@@ -23,6 +24,7 @@ class HttpRequestHook(commands.StartHook):
     Enabling streaming may cause unexpected event sequences: For example, `response` may now occur
     before `request` because the server replied with "413 Payload Too Large" during upload.
     """
+
     name = "request"
     flow: http.HTTPFlow
 
@@ -32,6 +34,7 @@ class HttpResponseHeadersHook(commands.StartHook):
     """
     HTTP response headers were successfully read. At this point, the body is empty.
     """
+
     name = "responseheaders"
     flow: http.HTTPFlow
 
@@ -44,6 +47,7 @@ class HttpResponseHook(commands.StartHook):
     Note: If response streaming is active, this event fires after the entire body has been streamed.
     HTTP trailers, if present, have not been transmitted to the client yet and can still be modified.
     """
+
     name = "response"
     flow: http.HTTPFlow
 
@@ -57,6 +61,7 @@ class HttpErrorHook(commands.StartHook):
 
     Every flow will receive either an error or an response event, but not both.
     """
+
     name = "error"
     flow: http.HTTPFlow
 
@@ -74,6 +79,7 @@ class HttpConnectHook(commands.StartHook):
     and not forwarded. They do not generate the usual HTTP handler events,
     but all requests going over the newly opened connection will.
     """
+
     flow: http.HTTPFlow
 
 
@@ -88,4 +94,5 @@ class HttpConnectUpstreamHook(commands.StartHook):
     CONNECT requests do not generate the usual HTTP handler events,
     but all requests going over the newly opened connection will.
     """
+
     flow: http.HTTPFlow

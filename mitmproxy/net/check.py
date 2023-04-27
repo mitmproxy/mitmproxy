@@ -33,7 +33,7 @@ def is_valid_host(host: AnyStr) -> bool:
         return True
     # IPv4/IPv6 address
     try:
-        ipaddress.ip_address(host_bytes.decode('idna'))
+        ipaddress.ip_address(host_bytes.decode("idna"))
         return True
     except ValueError:
         return False

@@ -5,12 +5,15 @@ from mitmproxy.proxy import layers
 from mitmproxy.test import tflow
 
 
-@pytest.mark.parametrize("resp, err", [
-    (False, False),
-    (True, False),
-    (False, True),
-    (True, True),
-])
+@pytest.mark.parametrize(
+    "resp, err",
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
 def test_http_flow(resp, err):
     f = tflow.tflow(resp=resp, err=err)
     i = eventsequence.iterate(f)
@@ -57,6 +60,25 @@ def test_tcp_flow(err):
         assert isinstance(next(i), layers.tcp.TcpErrorHook)
     else:
         assert isinstance(next(i), layers.tcp.TcpEndHook)
+
+
+@pytest.mark.parametrize(
+    "resp, err",
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+def test_dns(resp, err):
+    f = tflow.tdnsflow(resp=resp, err=err)
+    i = eventsequence.iterate(f)
+    assert isinstance(next(i), layers.dns.DnsRequestHook)
+    if resp:
+        assert isinstance(next(i), layers.dns.DnsResponseHook)
+    if err:
+        assert isinstance(next(i), layers.dns.DnsErrorHook)
 
 
 def test_invalid():

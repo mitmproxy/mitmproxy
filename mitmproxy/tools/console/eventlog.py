@@ -15,21 +15,20 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def __init__(self, master):
         self.master = master
-        self.walker = LogBufferWalker(
-            collections.deque(maxlen=self.master.events.size)
-        )
+        self.walker = LogBufferWalker(collections.deque(maxlen=self.master.events.size))
 
         master.events.sig_add.connect(self.add_event)
         master.events.sig_refresh.connect(self.refresh_events)
-        self.master.options.subscribe(self.refresh_events, ["console_eventlog_verbosity"])
+        self.master.options.subscribe(
+            self.refresh_events, ["console_eventlog_verbosity"]
+        )
         self.refresh_events()
 
         super().__init__(self.walker)
 
     def load(self, loader):
         loader.add_option(
-            "console_focus_follow", bool, False,
-            "Focus follows new flows."
+            "console_focus_follow", bool, False, "Focus follows new flows."
         )
 
     def set_focus(self, index):
@@ -44,9 +43,11 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         return super().keypress(size, key)
 
     def add_event(self, event_store, entry: log.LogEntry):
-        if log.log_tier(self.master.options.console_eventlog_verbosity) < log.log_tier(entry.level):
+        if log.log_tier(self.master.options.console_eventlog_verbosity) < log.log_tier(
+            entry.level
+        ):
             return
-        txt = "{}: {}".format(entry.level, str(entry.msg))
+        txt = f"{entry.level}: {str(entry.msg)}"
         if entry.level in ("error", "warn", "alert"):
             e = urwid.Text((entry.level, txt))
         else:

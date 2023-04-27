@@ -11,17 +11,18 @@ from mitmproxy.addons import asgiapp
 app = Flask("proxapp")
 
 
-@app.route('/')
+@app.route("/")
 def hello_world() -> str:
-    return 'Hello World!'
+    return "Hello World!"
 
 
 addons = [
     # Host app at the magic domain "example.com" on port 80. Requests to this
     # domain and port combination will now be routed to the WSGI app instance.
-    asgiapp.WSGIApp(app, "example.com", 80)
-    # SSL works too, but the magic domain needs to be resolvable from the mitmproxy machine due to mitmproxy's design.
-    # mitmproxy will connect to said domain and use serve its certificate (unless --no-upstream-cert is set)
-    # but won't send any data.
-    # mitmproxy.ctx.master.apps.add(app, "example.com", 443)
+    asgiapp.WSGIApp(app, "example.com", 80),
+    # TLS works too, but the magic domain needs to be resolvable from the mitmproxy machine due to mitmproxy's design.
+    # mitmproxy will connect to said domain and use its certificate but won't send any data.
+    # By using `--set upstream_cert=false` and `--set connection_strategy_lazy` the local certificate is used instead.
+    # asgiapp.WSGIApp(app, "example.com", 443),
+
 ]

@@ -1,49 +1,40 @@
-import io
-import ipaddress
 import os
 import threading
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
+from typing import Any, BinaryIO, Callable, Iterable, Optional
 
 import certifi
 
 from OpenSSL.crypto import X509
 from cryptography.hazmat.primitives.asymmetric import rsa
-from kaitaistruct import KaitaiStream
 
 from OpenSSL import SSL, crypto
 from mitmproxy import certs
-from mitmproxy.contrib.kaitaistruct import tls_client_hello
-from mitmproxy.net import check
 
 
 # redeclared here for strict type checking
 class Method(Enum):
-    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
-    TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD", 8)
-    TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD", 9)
+    TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
+    TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
 
 
-# TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
 try:
     SSL._lib.TLS_server_method  # type: ignore
 except AttributeError as e:  # pragma: no cover
-    raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
-
-SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)  # type: ignore
-SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)  # type: ignore
+    raise RuntimeError(
+        "Your installation of the cryptography Python package is outdated."
+    ) from e
 
 
 class Version(Enum):
     UNBOUNDED = 0
-    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
-    SSL3 = getattr(SSL, "SSL3_VERSION", 768)
-    TLS1 = getattr(SSL, "TLS1_VERSION", 769)
-    TLS1_1 = getattr(SSL, "TLS1_1_VERSION", 770)
-    TLS1_2 = getattr(SSL, "TLS1_2_VERSION", 771)
-    TLS1_3 = getattr(SSL, "TLS1_3_VERSION", 772)
+    SSL3 = SSL.SSL3_VERSION
+    TLS1 = SSL.TLS1_VERSION
+    TLS1_1 = SSL.TLS1_1_VERSION
+    TLS1_2 = SSL.TLS1_2_VERSION
+    TLS1_3 = SSL.TLS1_3_VERSION
 
 
 class Verify(Enum):
@@ -53,10 +44,7 @@ class Verify(Enum):
 
 DEFAULT_MIN_VERSION = Version.TLS1_2
 DEFAULT_MAX_VERSION = Version.UNBOUNDED
-DEFAULT_OPTIONS = (
-        SSL.OP_CIPHER_SERVER_PREFERENCE
-        | SSL.OP_NO_COMPRESSION
-)
+DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
 
 class MasterSecretLogger:
@@ -95,11 +83,11 @@ log_master_secret = make_master_secret_logger(
 
 
 def _create_ssl_context(
-        *,
-        method: Method,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Iterable[str]],
+    *,
+    method: Method,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[Iterable[str]],
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -119,7 +107,7 @@ def _create_ssl_context(
         try:
             context.set_cipher_list(b":".join(x.encode() for x in cipher_list))
         except SSL.Error as e:
-            raise RuntimeError("SSL cipher specification error: {e}") from e
+            raise RuntimeError(f"SSL cipher specification error: {e}") from e
 
     # SSLKEYLOGFILE
     if log_master_secret:
@@ -130,16 +118,14 @@ def _create_ssl_context(
 
 @lru_cache(256)
 def create_proxy_server_context(
-        *,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
-        verify: Verify,
-        hostname: Optional[str],
-        ca_path: Optional[str],
-        ca_pemfile: Optional[str],
-        client_cert: Optional[str],
-        alpn_protos: Optional[Tuple[bytes, ...]],
+    *,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[tuple[str, ...]],
+    verify: Verify,
+    ca_path: Optional[str],
+    ca_pemfile: Optional[str],
+    client_cert: Optional[str],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -147,39 +133,16 @@ def create_proxy_server_context(
         max_version=max_version,
         cipher_list=cipher_list,
     )
-
-    if verify is not Verify.VERIFY_NONE and hostname is None:
-        raise ValueError("Cannot validate certificate hostname without SNI")
-
     context.set_verify(verify.value, None)
-    if hostname is not None:
-        assert isinstance(hostname, str)
-        # Manually enable hostname verification on the context object.
-        # https://wiki.openssl.org/index.php/Hostname_validation
-        param = SSL._lib.SSL_CTX_get0_param(context._context)  # type: ignore
-        # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
-        # https://www.chromestatus.com/feature/4981025180483584
-        SSL._lib.X509_VERIFY_PARAM_set_hostflags(  # type: ignore
-            param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT  # type: ignore
-        )
-        try:
-            ip: bytes = ipaddress.ip_address(hostname).packed
-        except ValueError:
-            SSL._openssl_assert(  # type: ignore
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1  # type: ignore
-            )
-        else:
-            SSL._openssl_assert(  # type: ignore
-                SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip)) == 1  # type: ignore
-            )
 
     if ca_path is None and ca_pemfile is None:
         ca_pemfile = certifi.where()
     try:
         context.load_verify_locations(ca_pemfile, ca_path)
     except SSL.Error as e:
-        raise RuntimeError(f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=}).") from e
+        raise RuntimeError(
+            f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=})."
+        ) from e
 
     # Client Certs
     if client_cert:
@@ -189,26 +152,22 @@ def create_proxy_server_context(
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
 
-    if alpn_protos:
-        # advertise application layer protocols
-        context.set_alpn_protos(alpn_protos)
-
     return context
 
 
 @lru_cache(256)
 def create_client_proxy_context(
-        *,
-        min_version: Version,
-        max_version: Version,
-        cipher_list: Optional[Tuple[str, ...]],
-        cert: certs.Cert,
-        key: rsa.RSAPrivateKey,
-        chain_file: Optional[Path],
-        alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
-        request_client_cert: bool,
-        extra_chain_certs: Tuple[certs.Cert, ...],
-        dhparams: certs.DHParams,
+    *,
+    min_version: Version,
+    max_version: Version,
+    cipher_list: Optional[tuple[str, ...]],
+    cert: certs.Cert,
+    key: rsa.RSAPrivateKey,
+    chain_file: Optional[Path],
+    alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
+    request_client_cert: bool,
+    extra_chain_certs: tuple[certs.Cert, ...],
+    dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_SERVER_METHOD,
@@ -246,17 +205,18 @@ def create_client_proxy_context(
         context.add_extra_chain_cert(i.to_pyopenssl())
 
     if dhparams:
-        SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
+        res = SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
+        SSL._openssl_assert(res == 1)  # type: ignore
 
     return context
 
 
 def accept_all(
-        conn_: SSL.Connection,
-        x509: X509,
-        errno: int,
-        err_depth: int,
-        is_cert_verified: int,
+    conn_: SSL.Connection,
+    x509: X509,
+    errno: int,
+    err_depth: int,
+    is_cert_verified: int,
 ) -> bool:
     # Return true to prevent cert verification error
     return True
@@ -273,55 +233,4 @@ def is_tls_record_magic(d):
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     # https://tls13.ulfheim.net/
-    return (
-            len(d) == 3 and
-            d[0] == 0x16 and
-            d[1] == 0x03 and
-            0x0 <= d[2] <= 0x03
-    )
-
-
-class ClientHello:
-
-    def __init__(self, raw_client_hello):
-        self._client_hello = tls_client_hello.TlsClientHello(
-            KaitaiStream(io.BytesIO(raw_client_hello))
-        )
-
-    @property
-    def cipher_suites(self) -> List[int]:
-        return self._client_hello.cipher_suites.cipher_suites
-
-    @property
-    def sni(self) -> Optional[str]:
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
-                is_valid_sni_extension = (
-                        extension.type == 0x00 and
-                        len(extension.body.server_names) == 1 and
-                        extension.body.server_names[0].name_type == 0 and
-                        check.is_valid_host(extension.body.server_names[0].host_name)
-                )
-                if is_valid_sni_extension:
-                    return extension.body.server_names[0].host_name.decode("ascii")
-        return None
-
-    @property
-    def alpn_protocols(self) -> List[bytes]:
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
-                if extension.type == 0x10:
-                    return list(x.name for x in extension.body.alpn_protocols)
-        return []
-
-    @property
-    def extensions(self) -> List[Tuple[int, bytes]]:
-        ret = []
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
-                body = getattr(extension, "_raw_body", extension.body)
-                ret.append((extension.type, body))
-        return ret
-
-    def __repr__(self):
-        return f"ClientHello(sni: {self.sni}, alpn_protocols: {self.alpn_protocols})"
+    return len(d) == 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03

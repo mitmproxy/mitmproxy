@@ -3,14 +3,14 @@ Server specs are used to describe an upstream proxy or server.
 """
 import functools
 import re
-from typing import Tuple, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from mitmproxy.net import check
 
 
 class ServerSpec(NamedTuple):
     scheme: Literal["http", "https"]
-    address: Tuple[str, int]
+    address: tuple[str, int]
 
 
 server_spec_re = re.compile(
@@ -22,7 +22,7 @@ server_spec_re = re.compile(
         /?  #  we allow a trailing backslash, but no path
         $
         """,
-    re.VERBOSE
+    re.VERBOSE,
 )
 
 
@@ -59,17 +59,14 @@ def parse(server_spec: str) -> ServerSpec:
     if m.group("port"):
         port = int(m.group("port"))
     else:
-        port = {
-            "http": 80,
-            "https": 443
-        }[scheme]
+        port = {"http": 80, "https": 443}[scheme]
     if not check.is_valid_port(port):
         raise ValueError(f"Invalid port: {port}")
 
     return ServerSpec(scheme, (host, port))  # type: ignore
 
 
-def parse_with_mode(mode: str) -> Tuple[str, ServerSpec]:
+def parse_with_mode(mode: str) -> tuple[str, ServerSpec]:
     """
     Parse a proxy mode specification, which is usually just `(reverse|upstream):server-spec`.
 

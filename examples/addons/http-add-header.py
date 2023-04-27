@@ -10,6 +10,4 @@ class AddHeader:
         flow.response.headers["count"] = str(self.num)
 
 
-addons = [
-    AddHeader()
-]
+addons = [AddHeader()]

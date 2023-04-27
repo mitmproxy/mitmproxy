@@ -1,7 +1,7 @@
 import email.utils
 import re
 import time
-from typing import Tuple, List, Iterable
+from typing import Iterable
 
 from mitmproxy.coretypes import multidict
 
@@ -23,7 +23,15 @@ cookies to be set in a single header. Serialization follows RFC6265.
     http://tools.ietf.org/html/rfc2965
 """
 
-_cookie_params = {'expires', 'path', 'comment', 'max-age', 'secure', 'httponly', 'version'}
+_cookie_params = {
+    "expires",
+    "path",
+    "comment",
+    "max-age",
+    "secure",
+    "httponly",
+    "version",
+}
 
 ESCAPE = re.compile(r"([\"\\])")
 
@@ -40,31 +48,31 @@ class CookieAttrs(multidict.MultiDict):
         return values[-1]
 
 
-TSetCookie = Tuple[str, str, CookieAttrs]
-TPairs = List[List[str]]  # TODO: Should be List[Tuple[str,str]]?
+TSetCookie = tuple[str, str, CookieAttrs]
+TPairs = list[list[str]]  # TODO: Should be List[Tuple[str,str]]?
 
 
 def _read_until(s, start, term):
     """
-        Read until one of the characters in term is reached.
+    Read until one of the characters in term is reached.
     """
     if start == len(s):
         return "", start + 1
     for i in range(start, len(s)):
         if s[i] in term:
             return s[start:i], i
-    return s[start:i + 1], i + 1
+    return s[start : i + 1], i + 1
 
 
 def _read_quoted_string(s, start):
     """
-        start: offset to the first quote of the string to be read
+    start: offset to the first quote of the string to be read
 
-        A sort of loose super-set of the various quoted string specifications.
+    A sort of loose super-set of the various quoted string specifications.
 
-        RFC6265 disallows backslashes or double quotes within quoted strings.
-        Prior RFCs use backslashes to escape. This leaves us free to apply
-        backslash escaping by default and be compatible with everything.
+    RFC6265 disallows backslashes or double quotes within quoted strings.
+    Prior RFCs use backslashes to escape. This leaves us free to apply
+    backslash escaping by default and be compatible with everything.
     """
     escaping = False
     ret = []
@@ -85,14 +93,14 @@ def _read_quoted_string(s, start):
 
 def _read_key(s, start, delims=";="):
     """
-        Read a key - the LHS of a token/value pair in a cookie.
+    Read a key - the LHS of a token/value pair in a cookie.
     """
     return _read_until(s, start, delims)
 
 
 def _read_value(s, start, delims):
     """
-        Reads a value - the RHS of a token/value pair in a cookie.
+    Reads a value - the RHS of a token/value pair in a cookie.
     """
     if start >= len(s):
         return "", start
@@ -104,9 +112,9 @@ def _read_value(s, start, delims):
 
 def _read_cookie_pairs(s, off=0):
     """
-        Read pairs of lhs=rhs values from Cookie headers.
+    Read pairs of lhs=rhs values from Cookie headers.
 
-        off: start offset
+    off: start offset
     """
     pairs = []
 
@@ -128,14 +136,14 @@ def _read_cookie_pairs(s, off=0):
     return pairs, off
 
 
-def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
+def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
     """
-        Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
+    Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
 
-        off: start offset
-        specials: attributes that are treated specially
+    off: start offset
+    specials: attributes that are treated specially
     """
-    cookies: List[TPairs] = []
+    cookies: list[TPairs] = []
     pairs: TPairs = []
 
     while True:
@@ -187,14 +195,14 @@ def _has_special(s: str) -> bool:
         if i in '",;\\':
             return True
         o = ord(i)
-        if o < 0x21 or o > 0x7e:
+        if o < 0x21 or o > 0x7E:
             return True
     return False
 
 
 def _format_pairs(pairs, specials=(), sep="; "):
     """
-        specials: A lower-cased list of keys that will not be quoted.
+    specials: A lower-cased list of keys that will not be quoted.
     """
     vals = []
     for k, v in pairs:
@@ -206,16 +214,13 @@ def _format_pairs(pairs, specials=(), sep="; "):
 
 
 def _format_set_cookie_pairs(lst):
-    return _format_pairs(
-        lst,
-        specials=("expires", "path")
-    )
+    return _format_pairs(lst, specials=("expires", "path"))
 
 
 def parse_cookie_header(line):
     """
-        Parse a Cookie header value.
-        Returns a list of (lhs, rhs) tuples.
+    Parse a Cookie header value.
+    Returns a list of (lhs, rhs) tuples.
     """
     pairs, off_ = _read_cookie_pairs(line)
     return pairs
@@ -230,12 +235,12 @@ def parse_cookie_headers(cookie_headers):
 
 def format_cookie_header(lst):
     """
-        Formats a Cookie header value.
+    Formats a Cookie header value.
     """
     return _format_pairs(lst)
 
 
-def parse_set_cookie_header(line: str) -> List[TSetCookie]:
+def parse_set_cookie_header(line: str) -> list[TSetCookie]:
     """
     Parse a Set-Cookie header value
 
@@ -249,15 +254,11 @@ def parse_set_cookie_header(line: str) -> List[TSetCookie]:
     for pairs in cookie_pairs:
         if pairs:
             cookie, *attrs = pairs
-            cookies.append((
-                cookie[0],
-                cookie[1],
-                CookieAttrs(attrs)
-            ))
+            cookies.append((cookie[0], cookie[1], CookieAttrs(attrs)))
     return cookies
 
 
-def parse_set_cookie_headers(headers: Iterable[str]) -> List[TSetCookie]:
+def parse_set_cookie_headers(headers: Iterable[str]) -> list[TSetCookie]:
     rv = []
     for header in headers:
         cookies = parse_set_cookie_header(header)
@@ -265,9 +266,9 @@ def parse_set_cookie_headers(headers: Iterable[str]) -> List[TSetCookie]:
     return rv
 
 
-def format_set_cookie_header(set_cookies: List[TSetCookie]) -> str:
+def format_set_cookie_header(set_cookies: list[TSetCookie]) -> str:
     """
-        Formats a Set-Cookie header value.
+    Formats a Set-Cookie header value.
     """
 
     rv = []
@@ -275,9 +276,7 @@ def format_set_cookie_header(set_cookies: List[TSetCookie]) -> str:
     for name, value, attrs in set_cookies:
 
         pairs = [(name, value)]
-        pairs.extend(
-            attrs.fields if hasattr(attrs, "fields") else attrs
-        )
+        pairs.extend(attrs.fields if hasattr(attrs, "fields") else attrs)
 
         rv.append(_format_set_cookie_pairs(pairs))
 
@@ -318,21 +317,21 @@ def refresh_set_cookie_header(c: str, delta: int) -> str:
 
 def get_expiration_ts(cookie_attrs):
     """
-        Determines the time when the cookie will be expired.
+    Determines the time when the cookie will be expired.
 
-        Considering both 'expires' and 'max-age' parameters.
+    Considering both 'expires' and 'max-age' parameters.
 
-        Returns: timestamp of when the cookie will expire.
-                 None, if no expiration time is set.
+    Returns: timestamp of when the cookie will expire.
+             None, if no expiration time is set.
     """
-    if 'expires' in cookie_attrs:
+    if "expires" in cookie_attrs:
         e = email.utils.parsedate_tz(cookie_attrs["expires"])
         if e:
             return email.utils.mktime_tz(e)
 
-    elif 'max-age' in cookie_attrs:
+    elif "max-age" in cookie_attrs:
         try:
-            max_age = int(cookie_attrs['Max-Age'])
+            max_age = int(cookie_attrs["Max-Age"])
         except ValueError:
             pass
         else:
@@ -344,9 +343,9 @@ def get_expiration_ts(cookie_attrs):
 
 def is_expired(cookie_attrs):
     """
-        Determines whether a cookie has expired.
+    Determines whether a cookie has expired.
 
-        Returns: boolean
+    Returns: boolean
     """
 
     exp_ts = get_expiration_ts(cookie_attrs)

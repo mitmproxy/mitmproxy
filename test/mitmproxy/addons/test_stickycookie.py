@@ -32,7 +32,6 @@ class TestStickyCookie:
             f.response.headers["set-cookie"] = "foo=bar"
             sc.request(f)
 
-            f.reply.acked = False
             sc.response(f)
 
             assert sc.jar
@@ -53,8 +52,10 @@ class TestStickyCookie:
         with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
-            c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; " \
+            c = (
+                "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "
                 "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
+            )
 
             self._response(sc, c, "host")
             assert not sc.jar.keys()
@@ -64,7 +65,7 @@ class TestStickyCookie:
 
             sc.jar.clear()
             self._response(sc, "SSID=mooo", "www.google.com")
-            assert list(sc.jar.keys())[0] == ('www.google.com', 80, '/')
+            assert list(sc.jar.keys())[0] == ("www.google.com", 80, "/")
 
     def test_response_multiple(self):
         sc = stickycookie.StickyCookie()
@@ -121,7 +122,9 @@ class TestStickyCookie:
             # Test that a cookie is be deleted
             # by setting the expire time in the past
             f = self._response(sc, "duffer=zafar; Path=/", "www.google.com")
-            f.response.headers["Set-Cookie"] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
+            f.response.headers[
+                "Set-Cookie"
+            ] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
             sc.response(f)
             assert not sc.jar.keys()
 

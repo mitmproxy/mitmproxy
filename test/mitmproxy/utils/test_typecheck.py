@@ -1,5 +1,8 @@
 import io
 import typing
+from collections.abc import Sequence
+from typing import Any, Optional, TextIO, Union
+
 import pytest
 
 from mitmproxy.utils import typecheck
@@ -27,57 +30,58 @@ def test_check_option_type():
 
 
 def test_check_union():
-    typecheck.check_option_type("foo", 42, typing.Union[int, str])
-    typecheck.check_option_type("foo", "42", typing.Union[int, str])
+    typecheck.check_option_type("foo", 42, Union[int, str])
+    typecheck.check_option_type("foo", "42", Union[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", [], typing.Union[int, str])
+        typecheck.check_option_type("foo", [], Union[int, str])
 
 
 def test_check_tuple():
-    typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])
+    typecheck.check_option_type("foo", (42, "42"), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", None, typing.Tuple[int, str])
+        typecheck.check_option_type("foo", None, tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", (), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", (), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", (42, 42), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", (42, 42), tuple[int, str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", ("42", 42), typing.Tuple[int, str])
+        typecheck.check_option_type("foo", ("42", 42), tuple[int, str])
 
 
 def test_check_sequence():
-    typecheck.check_option_type("foo", [10], typing.Sequence[int])
+    typecheck.check_option_type("foo", [10], Sequence[int])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", ["foo"], typing.Sequence[int])
+        typecheck.check_option_type("foo", ["foo"], Sequence[int])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", [10, "foo"], typing.Sequence[int])
+        typecheck.check_option_type("foo", [10, "foo"], Sequence[int])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", [b"foo"], typing.Sequence[str])
+        typecheck.check_option_type("foo", [b"foo"], Sequence[str])
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", "foo", typing.Sequence[str])
+        typecheck.check_option_type("foo", "foo", Sequence[str])
 
 
 def test_check_io():
-    typecheck.check_option_type("foo", io.StringIO(), typing.IO[str])
+    typecheck.check_option_type("foo", io.StringIO(), TextIO)
     with pytest.raises(TypeError):
-        typecheck.check_option_type("foo", "foo", typing.IO[str])
+        typecheck.check_option_type("foo", "foo", TextIO)
 
 
 def test_check_any():
-    typecheck.check_option_type("foo", 42, typing.Any)
-    typecheck.check_option_type("foo", object(), typing.Any)
-    typecheck.check_option_type("foo", None, typing.Any)
+    typecheck.check_option_type("foo", 42, Any)
+    typecheck.check_option_type("foo", object(), Any)
+    typecheck.check_option_type("foo", None, Any)
 
 
 def test_typesec_to_str():
-    assert(typecheck.typespec_to_str(str)) == "str"
-    assert(typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
-    assert(typecheck.typespec_to_str(typing.Optional[str])) == "optional str"
-    assert(typecheck.typespec_to_str(typing.Optional[int])) == "optional int"
+    assert (typecheck.typespec_to_str(str)) == "str"
+    assert (typecheck.typespec_to_str(Sequence[str])) == "sequence of str"
+    assert (typecheck.typespec_to_str(Optional[str])) == "optional str"
+    assert (typecheck.typespec_to_str(Optional[int])) == "optional int"
     with pytest.raises(NotImplementedError):
         typecheck.typespec_to_str(dict)
 
 
-def test_mapping_types():
-    # this is not covered by check_option_type, but still belongs in this module
-    assert (str, int) == typecheck.mapping_types(typing.Mapping[str, int])
+def test_typing_aliases():
+    assert (typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
+    typecheck.check_option_type("foo", [10], typing.Sequence[int])
+    typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])

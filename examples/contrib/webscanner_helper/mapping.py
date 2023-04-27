@@ -1,7 +1,5 @@
 import copy
 import logging
-import typing
-from typing import Dict
 
 from bs4 import BeautifulSoup
 
@@ -96,7 +94,7 @@ class MappingAddon:
             self.logger.debug(f"replace \"{content}\" with \"{replace}\"")
             content.replace_with(copy.copy(replace))
 
-    def apply_template(self, soup: BeautifulSoup, template: Dict[str, typing.Union[BeautifulSoup]]) -> None:
+    def apply_template(self, soup: BeautifulSoup, template: dict[str, BeautifulSoup]) -> None:
         """Applies the given mapping template to the given soup."""
         for css_sel, replace in template.items():
             mapped = soup.select(css_sel)

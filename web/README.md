@@ -4,6 +4,7 @@
 - Run `node --version` to make sure that you have at least Node.js 14 or above. If you are on **Ubuntu <= 20.04**, you
   need to
   [upgrade](https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions).
+- Run `cd mitmproxy/web` to change to the directory with package.json
 - Run `npm install` to install dependencies
 - Run `npm start` to start live-compilation
 - Run `mitmweb` after activating your Python virtualenv (see [`../CONTRIBUTING.md`](../CONTRIBUTING.md)).

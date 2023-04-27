@@ -134,6 +134,8 @@ export function startTime(flow: Flow): number | undefined {
             return flow.request.timestamp_start
         case "tcp":
             return flow.client_conn.timestamp_start
+        case "dns":
+            return flow.request.timestamp
     }
 }
 
@@ -152,6 +154,8 @@ export function endTime(flow: Flow): number | undefined {
             return undefined
         case "tcp":
             return flow.server_conn?.timestamp_end
+        case "dns":
+            return flow.response?.timestamp
     }
 
 }
@@ -169,6 +173,8 @@ export const getTotalSize = (flow: Flow): number => {
             return total
         case "tcp":
             return flow.messages_meta.contentLength || 0
+        case "dns":
+            return flow.response?.size ?? 0
     }
 }
 

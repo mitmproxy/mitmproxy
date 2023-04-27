@@ -8,7 +8,4 @@ class BaseThread(threading.Thread):
         self._thread_started = time.time()
 
     def _threadinfo(self):
-        return "%s - age: %is" % (
-            self.name,
-            int(time.time() - self._thread_started)
-        )
+        return "%s - age: %is" % (self.name, int(time.time() - self._thread_started))

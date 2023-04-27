@@ -16,62 +16,109 @@ from mitmproxy.test import tflow
         ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
         ("https://example.com/foo/", ":example.com/foo:/tmp", ["/tmp/index.html"]),
         ("https://example.com/foo", ":example.com/foo:/tmp/", ["/tmp/index.html"]),
-    ] + [
+    ]
+    + [
         # simple prefixes
-        ("http://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example.com/foo/bar.jpg?query", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example.com/foo/bar/baz.jpg", ":example.com/foo:/tmp",
-         ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
+        (
+            "http://example.com/foo/bar.jpg",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"],
+        ),
+        (
+            "https://example.com/foo/bar.jpg",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"],
+        ),
+        (
+            "https://example.com/foo/bar.jpg?query",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"],
+        ),
+        (
+            "https://example.com/foo/bar/baz.jpg",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"],
+        ),
         ("https://example.com/foo/bar.jpg", ":/foo/bar.jpg:/tmp", ["/tmp/index.html"]),
-    ] + [
+    ]
+    + [
         # URL decode and special characters
-        ("http://example.com/foo%20bar.jpg", ":example.com:/tmp", [
-            "/tmp/foo bar.jpg",
-            "/tmp/foo bar.jpg/index.html",
-            "/tmp/foo_bar.jpg",
-            "/tmp/foo_bar.jpg/index.html"
-        ]),
-        ("http://example.com/fóobår.jpg", ":example.com:/tmp", [
-            "/tmp/fóobår.jpg",
-            "/tmp/fóobår.jpg/index.html",
-            "/tmp/f_ob_r.jpg",
-            "/tmp/f_ob_r.jpg/index.html"
-        ]),
-    ] + [
+        (
+            "http://example.com/foo%20bar.jpg",
+            ":example.com:/tmp",
+            [
+                "/tmp/foo bar.jpg",
+                "/tmp/foo bar.jpg/index.html",
+                "/tmp/foo_bar.jpg",
+                "/tmp/foo_bar.jpg/index.html",
+            ],
+        ),
+        (
+            "http://example.com/fóobår.jpg",
+            ":example.com:/tmp",
+            [
+                "/tmp/fóobår.jpg",
+                "/tmp/fóobår.jpg/index.html",
+                "/tmp/f_ob_r.jpg",
+                "/tmp/f_ob_r.jpg/index.html",
+            ],
+        ),
+    ]
+    + [
         # index.html
         ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
         ("https://example.com/foo/", ":example.com/foo:/tmp", ["/tmp/index.html"]),
-        ("https://example.com/foo/bar", ":example.com/foo:/tmp", ["/tmp/bar", "/tmp/bar/index.html"]),
-        ("https://example.com/foo/bar/", ":example.com/foo:/tmp", ["/tmp/bar", "/tmp/bar/index.html"]),
-    ] + [
+        (
+            "https://example.com/foo/bar",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar", "/tmp/bar/index.html"],
+        ),
+        (
+            "https://example.com/foo/bar/",
+            ":example.com/foo:/tmp",
+            ["/tmp/bar", "/tmp/bar/index.html"],
+        ),
+    ]
+    + [
         # regex
         (
-                "https://example/view.php?f=foo.jpg",
-                ":example/view.php\\?f=(.+):/tmp",
-                ["/tmp/foo.jpg", "/tmp/foo.jpg/index.html"]
-        ), (
-                "https://example/results?id=1&foo=2",
-                ":example/(results\\?id=.+):/tmp",
-                [
-                    "/tmp/results?id=1&foo=2",
-                    "/tmp/results?id=1&foo=2/index.html",
-                    "/tmp/results_id=1_foo=2",
-                    "/tmp/results_id=1_foo=2/index.html"
-                ]
+            "https://example/view.php?f=foo.jpg",
+            ":example/view.php\\?f=(.+):/tmp",
+            ["/tmp/foo.jpg", "/tmp/foo.jpg/index.html"],
         ),
-    ] + [
+        (
+            "https://example/results?id=1&foo=2",
+            ":example/(results\\?id=.+):/tmp",
+            [
+                "/tmp/results?id=1&foo=2",
+                "/tmp/results?id=1&foo=2/index.html",
+                "/tmp/results_id=1_foo=2",
+                "/tmp/results_id=1_foo=2/index.html",
+            ],
+        ),
+    ]
+    + [
         # test directory traversal detection
         ("https://example.com/../../../../../../etc/passwd", ":example.com:/tmp", []),
         # this is slightly hacky, but werkzeug's behavior differs per system.
-        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", [] if sys.platform == "win32" else [
-            "/tmp/C:\\foo.txt",
-            "/tmp/C:\\foo.txt/index.html",
-            "/tmp/C__foo.txt",
-            "/tmp/C__foo.txt/index.html"
-        ]),
-        ("https://example.com//etc/passwd", ":example.com:/tmp", ["/tmp/etc/passwd", "/tmp/etc/passwd/index.html"]),
-    ]
+        (
+            "https://example.com/C:\\foo.txt",
+            ":example.com:/tmp",
+            []
+            if sys.platform == "win32"
+            else [
+                "/tmp/C:\\foo.txt",
+                "/tmp/C:\\foo.txt/index.html",
+                "/tmp/C__foo.txt",
+                "/tmp/C__foo.txt/index.html",
+            ],
+        ),
+        (
+            "https://example.com//etc/passwd",
+            ":example.com:/tmp",
+            ["/tmp/etc/passwd", "/tmp/etc/passwd/index.html"],
+        ),
+    ],
 )
 def test_file_candidates(url, spec, expected_candidates):
     # we circumvent the path existence checks here to simplify testing
@@ -83,7 +130,6 @@ def test_file_candidates(url, spec, expected_candidates):
 
 
 class TestMapLocal:
-
     def test_configure(self, tmpdir):
         ml = MapLocal()
         with taddons.context(ml) as tctx:
@@ -99,12 +145,7 @@ class TestMapLocal:
         with taddons.context(ml) as tctx:
             tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
-            tctx.configure(
-                ml,
-                map_local=[
-                    "|//example.org/images|" + str(tmpdir)
-                ]
-            )
+            tctx.configure(ml, map_local=["|//example.org/images|" + str(tmpdir)])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
             ml.request(f)
@@ -112,12 +153,7 @@ class TestMapLocal:
 
             tmpfile = tmpdir.join("images", "bar.jpg")
             tmpfile.write("bar", ensure=True)
-            tctx.configure(
-                ml,
-                map_local=[
-                    "|//example.org|" + str(tmpdir)
-                ]
-            )
+            tctx.configure(ml, map_local=["|//example.org|" + str(tmpdir)])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/bar.jpg"
             ml.request(f)
@@ -126,27 +162,18 @@ class TestMapLocal:
             tmpfile = tmpdir.join("foofoobar.jpg")
             tmpfile.write("foofoobar", ensure=True)
             tctx.configure(
-                ml,
-                map_local=[
-                    "|example.org/foo/foo/bar.jpg|" + str(tmpfile)
-                ]
+                ml, map_local=["|example.org/foo/foo/bar.jpg|" + str(tmpfile)]
             )
             f = tflow.tflow()
             f.request.url = b"https://example.org/foo/foo/bar.jpg"
             ml.request(f)
             assert f.response.content == b"foofoobar"
 
-    @pytest.mark.asyncio
     async def test_nonexistent_files(self, tmpdir, monkeypatch):
         ml = MapLocal()
 
         with taddons.context(ml) as tctx:
-            tctx.configure(
-                ml,
-                map_local=[
-                    "|example.org/css|" + str(tmpdir)
-                ]
-            )
+            tctx.configure(ml, map_local=["|example.org/css|" + str(tmpdir)])
             f = tflow.tflow()
             f.request.url = b"https://example.org/css/nonexistent"
             ml.request(f)
@@ -155,12 +182,7 @@ class TestMapLocal:
 
             tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
-            tctx.configure(
-                ml,
-                map_local=[
-                    "|//example.org/images|" + str(tmpfile)
-                ]
-            )
+            tctx.configure(ml, map_local=["|//example.org/images|" + str(tmpfile)])
             tmpfile.remove()
             monkeypatch.setattr(Path, "is_file", lambda x: True)
             f = tflow.tflow()
@@ -168,19 +190,14 @@ class TestMapLocal:
             ml.request(f)
             await tctx.master.await_log("could not read file")
 
-    def test_has_reply(self, tmpdir):
+    def test_is_killed(self, tmpdir):
         ml = MapLocal()
         with taddons.context(ml) as tctx:
             tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
-            tctx.configure(
-                ml,
-                map_local=[
-                    "|//example.org/images|" + str(tmpfile)
-                ]
-            )
+            tctx.configure(ml, map_local=["|//example.org/images|" + str(tmpfile)])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
-            f.reply.take()
+            f.kill()
             ml.request(f)
             assert not f.response

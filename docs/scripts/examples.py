@@ -5,7 +5,7 @@ from pathlib import Path
 
 here = Path(__file__).absolute().parent
 example_dir = here / ".." / "src" / "examples" / "addons"
-examples = example_dir.glob('*.py')
+examples = example_dir.glob("*.py")
 
 overview = []
 listings = []
@@ -14,7 +14,8 @@ for example in examples:
     code = example.read_text()
     slug = str(example.with_suffix("").relative_to(example_dir))
     slug = re.sub(r"[^a-zA-Z]", "-", slug)
-    match = re.search(r'''
+    match = re.search(
+        r'''
         ^
         (?:[#][^\n]*\n)?  # there might be a shebang
         """
@@ -22,23 +23,27 @@ for example in examples:
         (.+?)
         \s*
         (?:\n\n|""")     # stop on empty line or end of comment
-    ''', code, re.VERBOSE)
+    ''',
+        code,
+        re.VERBOSE,
+    )
     if match:
         comment = " — " + match.group(1)
     else:
         comment = ""
-    overview.append(
-        f"  * [{example.name}](#{slug}){comment}\n"
-    )
-    listings.append(f"""
+    overview.append(f"  * [{example.name}](#{slug}){comment}\n")
+    listings.append(
+        f"""
 <h3 id="{slug}">Example: {example.name}</h3>
 
 ```python
 {code.strip()}
 ```
-""")
+"""
+    )
 
-print(f"""
+print(
+    f"""
 # Addon Examples
 
 ### Dedicated Example Addons
@@ -62,4 +67,5 @@ Additional examples contributed by the mitmproxy community can be found
 -------------------------
 
 {"".join(listings)}
-""")
+"""
+)
