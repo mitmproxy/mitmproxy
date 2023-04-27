@@ -68,11 +68,8 @@
     <h5>iOS 13+</h5>
     <ol>
         <li>Use Safari to download the certificate. Other browsers may not open the proper installation prompt.</li>
-        <li>Install the new Profile and activate it (<samp>Settings -> General</samp> ->
-            <samp>Profile</samp>).
-        </li>
-        <li><span class="text-danger"><strong>Important: </strong> Goto
-            <samp>Settings -> General -> About -> Certificate Trust Settings</samp>.
+        <li>Install the new Profile (<samp>Settings -> General -> VPN & Device Management</samp>).</li>
+        <li><span class="text-danger"><strong>Important:</strong> Go to <samp>Settings -> General -> About -> Certificate Trust Settings</samp>.
             Toggle <samp>mitmproxy</samp> to <samp>ON</samp>.</span></li>
     </ol>
     {% endcall %}
@@ -86,14 +83,15 @@
     </ol>
 
     <p>Some Android distributions require you to install the certificate via <samp>Settings -> Security -> Advanced ->
-        Encryption and credentials -> Install from storage</samp> instead.</p>
+        Encryption and credentials -> Install a certificate -> CA certificate</samp> (or similar) instead.</p>
 
     <div class="alert alert-warning" role="alert">
         <p><strong>Warning: </strong>Apps that target Android API Level 24 (introduced in 2016) and above only accept
             certificates from the system trust store
             (<a href="https://github.com/mitmproxy/mitmproxy/issues/2054">#2054</a>).
             User-added CAs are not accepted unless the application manually opts in. Except for browsers, you need to
-            patch most apps manually.
+            patch most apps manually
+            (<a href="https://developer.android.com/training/articles/security-config">Android network security config</a>).
         </p>
     </div>
     {% endcall %}

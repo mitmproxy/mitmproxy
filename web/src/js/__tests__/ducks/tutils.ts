@@ -1,9 +1,9 @@
 import thunk from 'redux-thunk'
 import configureStore, {MockStoreCreator, MockStoreEnhanced} from 'redux-mock-store'
 import {ConnectionState} from '../../ducks/connection'
-import {THTTPFlow, TTCPFlow} from './_tflow'
+import {TDNSFlow, THTTPFlow, TTCPFlow} from './_tflow'
 import {AppDispatch, RootState} from "../../ducks";
-import {HTTPFlow, TCPFlow} from "../../flow";
+import {DNSFlow, HTTPFlow, TCPFlow} from "../../flow";
 import {defaultState as defaultConf} from "../../ducks/conf"
 import {defaultState as defaultOptions} from "../../ducks/options"
 
@@ -11,13 +11,14 @@ const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> = configureStor
 
 export {THTTPFlow as TFlow, TTCPFlow}
 
+const tflow0: HTTPFlow = THTTPFlow();
 const tflow1: HTTPFlow = THTTPFlow();
-const tflow2: HTTPFlow = THTTPFlow();
-const tflow3: TCPFlow = TTCPFlow();
-tflow1.modified = true
-tflow1.intercepted = true
-tflow2.id = "flow2";
-tflow2.request.path = "/second";
+const tflow2: TCPFlow = TTCPFlow();
+const tflow3: DNSFlow = TDNSFlow();
+tflow0.modified = true
+tflow0.intercepted = true
+tflow1.id = "flow2";
+tflow1.request.path = "/second";
 
 export const testState: RootState = {
     conf: defaultConf,
@@ -71,18 +72,32 @@ export const testState: RootState = {
     },
     options: defaultOptions,
     flows: {
-        selected: [tflow2.id],
-        byId: {[tflow1.id]: tflow1, [tflow2.id]: tflow2, [tflow3.id]: tflow3},
-        filter: '~u /second | ~tcp',
+        selected: [tflow1.id],
+        byId: {
+            [tflow0.id]: tflow0,
+            [tflow1.id]: tflow1,
+            [tflow2.id]: tflow2,
+            [tflow3.id]: tflow3,
+        },
+        filter: '~u /second | ~tcp | ~dns',
         highlight: '~u /path',
         sort: {
             desc: true,
             column: "path"
         },
-        view: [tflow2, tflow3],
-        list: [tflow1, tflow2, tflow3],
-        listIndex: {[tflow1.id]: 0, [tflow2.id]: 1, [tflow3.id]: 2},
-        viewIndex: {[tflow2.id]: 0, [tflow3.id]: 1},
+        view: [tflow1, tflow2, tflow3],
+        list: [tflow0, tflow1, tflow2, tflow3],
+        listIndex: {
+            [tflow0.id]: 0,
+            [tflow1.id]: 1,
+            [tflow2.id]: 2,
+            [tflow3.id]: 3
+        },
+        viewIndex: {
+            [tflow1.id]: 0,
+            [tflow2.id]: 1,
+            [tflow3.id]: 2,
+        },
     },
     connection: {
         state: ConnectionState.ESTABLISHED

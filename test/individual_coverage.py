@@ -16,19 +16,29 @@ def run_tests(src, test, fail):
     stdout = io.StringIO()
     with contextlib.redirect_stderr(stderr):
         with contextlib.redirect_stdout(stdout):
-            e = pytest.main([
-                '-qq',
-                '--disable-pytest-warnings',
-                '--cov', src.replace('.py', '').replace('/', '.'),
-                '--cov-fail-under', '100',
-                '--cov-report', 'term-missing:skip-covered',
-                '-o', 'faulthandler_timeout=0',
-                test
-            ])
+            e = pytest.main(
+                [
+                    "-qq",
+                    "--disable-pytest-warnings",
+                    "--cov",
+                    src.replace(".py", "").replace("/", "."),
+                    "--cov-fail-under",
+                    "100",
+                    "--cov-report",
+                    "term-missing:skip-covered",
+                    "-o",
+                    "faulthandler_timeout=0",
+                    test,
+                ]
+            )
 
     if e == 0:
         if fail:
-            print("FAIL DUE TO UNEXPECTED SUCCESS:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
+            print(
+                "FAIL DUE TO UNEXPECTED SUCCESS:",
+                src,
+                "Please remove this file from setup.cfg tool:individual_coverage/exclude.",
+            )
             e = 42
         else:
             print(".")
@@ -37,7 +47,11 @@ def run_tests(src, test, fail):
             print("Ignoring allowed fail:", src)
             e = 0
         else:
-            cov = [l for l in stdout.getvalue().split("\n") if (src in l) or ("was never imported" in l)]
+            cov = [
+                l
+                for l in stdout.getvalue().split("\n")
+                if (src in l) or ("was never imported" in l)
+            ]
             if len(cov) == 1:
                 print("FAIL:", cov[0])
             else:
@@ -58,18 +72,27 @@ def start_pytest(src, test, fail):
 
 def main():
     c = configparser.ConfigParser()
-    c.read('setup.cfg')
-    fs = c['tool:individual_coverage']['exclude'].strip().split('\n')
+    c.read("setup.cfg")
+    fs = c["tool:individual_coverage"]["exclude"].strip().split("\n")
     no_individual_cov = [f.strip() for f in fs]
 
-    excluded = ['mitmproxy/contrib/', 'mitmproxy/test/', 'mitmproxy/tools/', 'mitmproxy/platform/']
-    src_files = glob.glob('mitmproxy/**/*.py', recursive=True)
-    src_files = [f for f in src_files if os.path.basename(f) != '__init__.py']
-    src_files = [f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)]
+    excluded = [
+        "mitmproxy/contrib/",
+        "mitmproxy/test/",
+        "mitmproxy/tools/",
+        "mitmproxy/platform/",
+    ]
+    src_files = glob.glob("mitmproxy/**/*.py", recursive=True)
+    src_files = [f for f in src_files if os.path.basename(f) != "__init__.py"]
+    src_files = [
+        f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)
+    ]
 
     ps = []
     for src in sorted(src_files):
-        test = os.path.join("test", os.path.dirname(src), "test_" + os.path.basename(src))
+        test = os.path.join(
+            "test", os.path.dirname(src), "test_" + os.path.basename(src)
+        )
         if os.path.isfile(test):
             ps.append((src, test, src in no_individual_cov))
 
@@ -77,8 +100,7 @@ def main():
 
     if any(e != 0 for _, _, e in result):
         sys.exit(1)
-        pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

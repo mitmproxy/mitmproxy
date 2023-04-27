@@ -39,10 +39,22 @@ class Command:
         return f"{type(self).__name__}({repr(x)})"
 
 
+class RequestWakeup(Command):
+    """
+    Request a `Wakeup` event after the specified amount of seconds.
+    """
+
+    delay: float
+
+    def __init__(self, delay: float):
+        self.delay = delay
+
+
 class ConnectionCommand(Command):
     """
     Commands involving a specific connection
     """
+
     connection: Connection
 
     def __init__(self, connection: Connection):
@@ -53,6 +65,7 @@ class SendData(ConnectionCommand):
     """
     Send data to a remote peer
     """
+
     data: bytes
 
     def __init__(self, connection: Connection, data: bytes):
@@ -68,6 +81,7 @@ class OpenConnection(ConnectionCommand):
     """
     Open a new connection
     """
+
     connection: Server
     blocking = True
 
@@ -77,6 +91,7 @@ class CloseConnection(ConnectionCommand):
     Close a connection. If the client connection is closed,
     all other connections will ultimately be closed during cleanup.
     """
+
     half_close: bool
     """
     If True, only close our half of the connection by sending a FIN packet.
@@ -94,6 +109,7 @@ class StartHook(Command, mitmproxy.hooks.Hook):
     Start an event hook in the mitmproxy core.
     This triggers a particular function (derived from the class name) in all addons.
     """
+
     name = ""
     blocking = True
 
@@ -108,6 +124,7 @@ class GetSocket(ConnectionCommand):
     Get the underlying socket.
     This should really never be used, but is required to implement transparent mode.
     """
+
     blocking = True
 
 
@@ -115,7 +132,11 @@ class Log(Command):
     message: str
     level: str
 
-    def __init__(self, message: str, level: Literal["error", "warn", "info", "alert", "debug"] = "info"):
+    def __init__(
+        self,
+        message: str,
+        level: Literal["error", "warn", "info", "alert", "debug"] = "info",
+    ):
         self.message = message
         self.level = level
 

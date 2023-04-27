@@ -7,24 +7,16 @@ from . import full_eval
 
 def test_parse_json():
     assert json.parse_json(b'{"foo": 1}')
-    assert json.parse_json(b'null') is None
+    assert json.parse_json(b"null") is None
     assert json.parse_json(b"moo") is json.PARSE_ERROR
-    assert json.parse_json(b'{"foo" : "\xe4\xb8\x96\xe7\x95\x8c"}')  # utf8 with chinese characters
+    assert json.parse_json(
+        b'{"foo" : "\xe4\xb8\x96\xe7\x95\x8c"}'
+    )  # utf8 with chinese characters
     assert json.parse_json(b'{"foo" : "\xFF"}') is json.PARSE_ERROR
 
 
 def test_format_json():
-    assert list(json.format_json({
-        "data": [
-            "str",
-            42,
-            True,
-            False,
-            None,
-            {},
-            []
-        ]
-    }))
+    assert list(json.format_json({"data": ["str", 42, True, False, None, {}, []]}))
 
 
 def test_view_json():

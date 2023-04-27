@@ -1,7 +1,7 @@
 import asyncio
 import os.path
 import sys
-import typing
+from typing import BinaryIO, Optional
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -12,20 +12,17 @@ from mitmproxy import command
 
 class ReadFile:
     """
-        An addon that handles reading from file on startup.
+    An addon that handles reading from file on startup.
     """
+
     def __init__(self):
         self.filter = None
         self.is_reading = False
 
     def load(self, loader):
+        loader.add_option("rfile", Optional[str], None, "Read flows from file.")
         loader.add_option(
-            "rfile", typing.Optional[str], None,
-            "Read flows from file."
-        )
-        loader.add_option(
-            "readfile_filter", typing.Optional[str], None,
-            "Read only matching flows."
+            "readfile_filter", Optional[str], None, "Read only matching flows."
         )
 
     def configure(self, updated):
@@ -38,7 +35,7 @@ class ReadFile:
             else:
                 self.filter = None
 
-    async def load_flows(self, fo: typing.IO[bytes]) -> int:
+    async def load_flows(self, fo: BinaryIO) -> int:
         cnt = 0
         freader = io.FlowReader(fo)
         try:
@@ -76,7 +73,7 @@ class ReadFile:
 
     def running(self):
         if ctx.options.rfile:
-            asyncio.get_event_loop().create_task(self.doread(ctx.options.rfile))
+            asyncio.get_running_loop().create_task(self.doread(ctx.options.rfile))
 
     @command.command("readfile.reading")
     def reading(self) -> bool:
@@ -85,6 +82,7 @@ class ReadFile:
 
 class ReadFileStdin(ReadFile):
     """Support the special case of "-" for reading from stdin"""
+
     async def load_flows_from_path(self, path: str) -> int:
         if path == "-":  # pragma: no cover
             # Need to think about how to test this. This function is scheduled

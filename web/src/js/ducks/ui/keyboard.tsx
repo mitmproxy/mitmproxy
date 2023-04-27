@@ -2,6 +2,7 @@ import {selectTab} from "./flow"
 import * as flowsActions from "../flows"
 import * as modalActions from "./modal"
 import {tabsForFlow} from "../../components/FlowView";
+import {runCommand} from "../../utils"
 
 
 export function onKeyDown(e: KeyboardEvent) {
@@ -77,6 +78,11 @@ export function onKeyDown(e: KeyboardEvent) {
                     return
                 }
                 dispatch(flowsActions.remove(flow))
+                break
+            }
+
+            case "n": {
+                runCommand("view.flows.create", "get", "https://example.com/")
                 break
             }
 

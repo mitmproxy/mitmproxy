@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: pip install tox
       - run: tox -e flake8
   filename-matching:
@@ -35,7 +35,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: pip install tox
       - run: tox -e filename_matching
   mypy:
@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: pip install tox
       - run: tox -e mypy
   individual-coverage:
@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # there's a weird bug on 3.10 where some lines are not counted as covered.
       - run: pip install tox
       - run: tox -e individual_coverage
   test:
@@ -67,15 +67,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: '3.10.0-rc - 3.10'
+            py: "3.10"
           - os: windows-latest
-            py: 3.9
+            py: "3.10"
           - os: macos-latest
-            py: 3.9
+            py: "3.10"
           - os: ubuntu-latest
             py: 3.9
-          - os: ubuntu-latest
-            py: 3.8
     runs-on: ${{ matrix.os }}
     steps:
       - run: printenv
@@ -88,6 +86,14 @@ jobs:
           python-version: ${{ matrix.py }}
       - run: pip install tox
       - run: tox -e py
+        if: matrix.os != 'ubuntu-latest'
+      - name: Run tox -e py (without internet)
+        run: |
+          # install dependencies (requires internet connectivity)
+          tox -e py --notest  
+          # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
+          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"  
+        if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
         with:
@@ -118,7 +124,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - if: matrix.platform == 'windows'
         uses: actions/cache@v2
         with:
@@ -169,10 +175,10 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.88.1/hugo_extended_0.88.1_Linux-64bit.deb
-          echo "865ab9a930e0a9e4957e7dbfdf91c32847324f022e33271b5661d5717600bc2b hugo_extended_0.88.1_Linux-64bit.deb" | sha256sum -c
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.92.1/hugo_extended_0.92.1_Linux-64bit.deb
+          echo "a9440adfd3ecce40089def287dee4e42ffae252ba08c77d1ac575b880a079ce6 hugo_extended_0.92.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py
@@ -205,7 +211,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - uses: actions/download-artifact@v2
         with:
           name: binaries.linux
@@ -239,7 +245,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: sudo apt-get update
       - run: sudo apt-get install -y twine awscli
       - uses: actions/download-artifact@v2

@@ -1,6 +1,6 @@
 import mimetypes
 import re
-from typing import Tuple, List, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from mitmproxy.net.http import headers
@@ -18,30 +18,34 @@ def encode(head, l):
                 return b""
             hdrs = []
             for key, value in l:
-                file_type = mimetypes.guess_type(str(key))[0] or "text/plain; charset=utf-8"
+                file_type = (
+                    mimetypes.guess_type(str(key))[0] or "text/plain; charset=utf-8"
+                )
 
                 if key:
-                    hdrs.append(b"--%b" % boundary.encode('utf-8'))
+                    hdrs.append(b"--%b" % boundary.encode("utf-8"))
                     disposition = b'form-data; name="%b"' % key
                     hdrs.append(b"Content-Disposition: %b" % disposition)
-                    hdrs.append(b"Content-Type: %b" % file_type.encode('utf-8'))
-                    hdrs.append(b'')
+                    hdrs.append(b"Content-Type: %b" % file_type.encode("utf-8"))
+                    hdrs.append(b"")
                     hdrs.append(value)
-                hdrs.append(b'')
+                hdrs.append(b"")
 
                 if value is not None:
                     # If boundary is found in value then raise ValueError
-                    if re.search(rb"^--%b$" % re.escape(boundary.encode('utf-8')), value):
+                    if re.search(
+                        rb"^--%b$" % re.escape(boundary.encode("utf-8")), value
+                    ):
                         raise ValueError(b"boundary found in encoded string")
 
-            hdrs.append(b"--%b--\r\n" % boundary.encode('utf-8'))
+            hdrs.append(b"--%b--\r\n" % boundary.encode("utf-8"))
             temp = b"\r\n".join(hdrs)
             return temp
 
 
-def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes, bytes]]:
+def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, bytes]]:
     """
-        Takes a multipart boundary encoded string and returns list of (key, value) tuples.
+    Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
     if content_type:
         ct = headers.parse_content_type(content_type)
@@ -61,7 +65,7 @@ def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes, byt
                     match = rx.search(parts[1])
                     if match:
                         key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b""):])
+                        value = b"".join(parts[3 + parts[2:].index(b"") :])
                         r.append((key, value))
         return r
     return []

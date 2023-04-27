@@ -6,11 +6,7 @@ from mitmproxy.test.tflow import tclient_conn, tserver_conn
 
 class TestConnection:
     def test_basic(self):
-        c = Client(
-            ("127.0.0.1", 52314),
-            ("127.0.0.1", 8080),
-            1607780791
-        )
+        c = Client(("127.0.0.1", 52314), ("127.0.0.1", 8080), 1607780791)
         assert not c.tls_established
         c.timestamp_tls_setup = 1607780792
         assert c.tls_established
@@ -32,11 +28,7 @@ class TestConnection:
 
 class TestClient:
     def test_basic(self):
-        c = Client(
-            ("127.0.0.1", 52314),
-            ("127.0.0.1", 8080),
-            1607780791
-        )
+        c = Client(("127.0.0.1", 52314), ("127.0.0.1", 8080), 1607780791)
         assert repr(c)
         assert str(c)
         c.timestamp_tls_setup = 1607780791

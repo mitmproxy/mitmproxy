@@ -1,8 +1,9 @@
+import asyncio
 import time
-import typing  # noqa
 import uuid
+from typing import Any, ClassVar, Optional
 
-from mitmproxy import controller, connection
+from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
@@ -24,17 +25,14 @@ class Error(stateobject.StateObject):
     timestamp: float
     """Unix timestamp of when this error happened."""
 
-    KILLED_MESSAGE: typing.ClassVar[str] = "Connection killed."
+    KILLED_MESSAGE: ClassVar[str] = "Connection killed."
 
-    def __init__(self, msg: str, timestamp: typing.Optional[float] = None) -> None:
+    def __init__(self, msg: str, timestamp: Optional[float] = None) -> None:
         """Create an error. If no timestamp is passed, the current time is used."""
         self.msg = msg
         self.timestamp = timestamp or time.time()
 
-    _stateobject_attributes = dict(
-        msg=str,
-        timestamp=float
-    )
+    _stateobject_attributes = dict(msg=str, timestamp=float)
 
     def __str__(self):
         return self.msg
@@ -60,6 +58,7 @@ class Flow(stateobject.StateObject):
      - mitmproxy.http.HTTPFlow
      - mitmproxy.tcp.TCPFlow
     """
+
     client_conn: connection.Client
     """The client that connected to mitmproxy."""
 
@@ -73,7 +72,7 @@ class Flow(stateobject.StateObject):
     with a `timestamp_start` set to `None`.
     """
 
-    error: typing.Optional[Error] = None
+    error: Optional[Error] = None
     """A connection or protocol error affecting this flow."""
 
     intercepted: bool
@@ -96,7 +95,7 @@ class Flow(stateobject.StateObject):
     The default marker for the view will be used if the Unicode emoji name can not be interpreted.
     """
 
-    is_replay: typing.Optional[str]
+    is_replay: Optional[str]
     """
     This attribute indicates if this flow has been replayed in either direction.
 
@@ -104,25 +103,37 @@ class Flow(stateobject.StateObject):
      - a value of `response` indicates that the response to the client's request has been set by server replay.
     """
 
+    live: bool
+    """
+    If `True`, the flow belongs to a currently active connection.
+    If `False`, the flow may have been already completed or loaded from disk.
+    """
+
+    timestamp_created: float
+    """
+    The Unix timestamp of when this flow was created.
+
+    In contrast to `timestamp_start`, this value will not change when a flow is replayed.
+    """
+
     def __init__(
         self,
-        type: str,
         client_conn: connection.Client,
         server_conn: connection.Server,
-        live: bool = None
+        live: bool = False,
     ) -> None:
-        self.type = type
         self.id = str(uuid.uuid4())
         self.client_conn = client_conn
         self.server_conn = server_conn
         self.live = live
+        self.timestamp_created = time.time()
 
         self.intercepted: bool = False
-        self._backup: typing.Optional[Flow] = None
-        self.reply: typing.Optional[controller.Reply] = None
+        self._resume_event: Optional[asyncio.Event] = None
+        self._backup: Optional[Flow] = None
         self.marked: str = ""
-        self.is_replay: typing.Optional[str] = None
-        self.metadata: typing.Dict[str, typing.Any] = dict()
+        self.is_replay: Optional[str] = None
+        self.metadata: dict[str, Any] = dict()
         self.comment: str = ""
 
     _stateobject_attributes = dict(
@@ -130,17 +141,28 @@ class Flow(stateobject.StateObject):
         error=Error,
         client_conn=connection.Client,
         server_conn=connection.Server,
-        type=str,
         intercepted=bool,
         is_replay=str,
         marked=str,
-        metadata=typing.Dict[str, typing.Any],
+        metadata=dict[str, Any],
         comment=str,
+        timestamp_created=float,
     )
+
+    __types: dict[str, type["Flow"]] = {}
+
+    @classmethod
+    @property
+    def type(cls) -> str:
+        """The flow type, for example `http`, `tcp`, or `dns`."""
+        return cls.__name__.removesuffix("Flow").lower()
+
+    def __init_subclass__(cls, **kwargs):
+        Flow.__types[cls.type] = cls
 
     def get_state(self):
         d = super().get_state()
-        d.update(version=version.FLOW_FORMAT_VERSION)
+        d.update(version=version.FLOW_FORMAT_VERSION, type=self.type)
         if self._backup and self._backup != d:
             d.update(backup=self._backup)
         return d
@@ -148,13 +170,18 @@ class Flow(stateobject.StateObject):
     def set_state(self, state):
         state = state.copy()
         state.pop("version")
+        state.pop("type")
         if "backup" in state:
             self._backup = state.pop("backup")
         super().set_state(state)
 
     @classmethod
     def from_state(cls, state):
-        f = cls(None, None)
+        try:
+            flow_cls = Flow.__types[state["type"]]
+        except KeyError:
+            raise ValueError(f"Unknown flow type: {state['type']}")
+        f = flow_cls(None, None)  # noqa
         f.set_state(state)
         return f
 
@@ -162,8 +189,6 @@ class Flow(stateobject.StateObject):
         """Make a copy of this flow."""
         f = super().copy()
         f.live = False
-        if self.reply is not None:
-            f.reply = controller.DummyReply()
         return f
 
     def modified(self):
@@ -184,7 +209,7 @@ class Flow(stateobject.StateObject):
 
     def revert(self):
         """
-            Revert to the last backed up state.
+        Revert to the last backed up state.
         """
         if self._backup:
             self.set_state(self._backup)
@@ -193,11 +218,7 @@ class Flow(stateobject.StateObject):
     @property
     def killable(self):
         """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
-        return (
-            self.reply and
-            self.reply.state in {"start", "taken"} and
-            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
-        )
+        return self.live and not (self.error and self.error.msg == Error.KILLED_MESSAGE)
 
     def kill(self):
         """
@@ -205,6 +226,10 @@ class Flow(stateobject.StateObject):
         """
         if not self.killable:
             raise exceptions.ControlException("Flow is not killable.")
+        # TODO: The way we currently signal killing is not ideal. One major problem is that we cannot kill
+        #  flows in transit (https://github.com/mitmproxy/mitmproxy/issues/4711), even though they are advertised
+        #  as killable. An alternative approach would be to introduce a `KillInjected` event similar to
+        #  `MessageInjected`, which should fix this issue.
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
         self.live = False
@@ -217,7 +242,18 @@ class Flow(stateobject.StateObject):
         if self.intercepted:
             return
         self.intercepted = True
-        self.reply.take()
+        if self._resume_event is not None:
+            self._resume_event.clear()
+
+    async def wait_for_resume(self):
+        """
+        Wait until this Flow is resumed.
+        """
+        if not self.intercepted:
+            return
+        if self._resume_event is None:
+            self._resume_event = asyncio.Event()
+        await self._resume_event.wait()
 
     def resume(self):
         """
@@ -226,9 +262,8 @@ class Flow(stateobject.StateObject):
         if not self.intercepted:
             return
         self.intercepted = False
-        # If a flow is intercepted and then duplicated, the duplicated one is not taken.
-        if self.reply.state == "taken":
-            self.reply.commit()
+        if self._resume_event is not None:
+            self._resume_event.set()
 
     @property
     def timestamp_start(self) -> float:

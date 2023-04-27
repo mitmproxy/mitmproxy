@@ -8,7 +8,9 @@ def record_user_interface(d: CliDirector):
     window = tmux.attached_window
 
     d.start_recording("recordings/mitmproxy_user_interface.cast")
-    d.message("Welcome to the mitmproxy tutorial. In this lesson we cover the user interface.")
+    d.message(
+        "Welcome to the mitmproxy tutorial. In this lesson we cover the user interface."
+    )
     d.pause(1)
     d.exec("mitmproxy")
     d.pause(3)
@@ -29,7 +31,7 @@ def record_user_interface(d: CliDirector):
     d.type(" --proxy http://127.0.0.1:8080")
 
     d.message("We use the text-based weather service `wttr.in`.")
-    d.exec(" \"http://wttr.in/Dunedin?0\"")
+    d.exec(' "http://wttr.in/Dunedin?0"')
 
     d.pause(2)
     d.press_key("Up")
@@ -63,7 +65,9 @@ def record_user_interface(d: CliDirector):
     d.press_key("Right", count=2, pause=2.5)
     d.press_key("Left", count=2, pause=1)
 
-    d.message("Press `q` to exit the current view.",)
+    d.message(
+        "Press `q` to exit the current view.",
+    )
     d.type("q")
 
     d.message("Press `?` to get a list of all available keyboard shortcuts.")
@@ -90,7 +94,9 @@ def record_user_interface(d: CliDirector):
     d.message("Press `ENTER` to execute the command.")
     d.press_key("Enter")
 
-    d.message("Commands unleash the full power of mitmproxy, i.e., to configure interceptions.")
+    d.message(
+        "Commands unleash the full power of mitmproxy, i.e., to configure interceptions."
+    )
 
     d.message("You now know basics of mitmproxy’s UI and how to control it.")
     d.pause(1)
@@ -105,22 +111,32 @@ def record_intercept_requests(d: CliDirector):
     window = tmux.attached_window
 
     d.start_recording("recordings/mitmproxy_intercept_requests.cast")
-    d.message("Welcome to the mitmproxy tutorial. In this lesson we cover the interception of requests.")
+    d.message(
+        "Welcome to the mitmproxy tutorial. In this lesson we cover the interception of requests."
+    )
     d.pause(1)
     d.exec("mitmproxy")
     d.pause(3)
 
     d.message("We first need to configure mitmproxy to intercept requests.")
 
-    d.message("Press `i` to prepopulate mitmproxy’s command prompt with `set intercept ''`.")
+    d.message(
+        "Press `i` to prepopulate mitmproxy’s command prompt with `set intercept ''`."
+    )
     d.type("i")
     d.pause(2)
 
-    d.message("We use the flow filter expression `~u <regex>` to only intercept specific URLs.")
-    d.message("Additionally, we use the filter `~q` to only intercept requests, but not responses.")
+    d.message(
+        "We use the flow filter expression `~u <regex>` to only intercept specific URLs."
+    )
+    d.message(
+        "Additionally, we use the filter `~q` to only intercept requests, but not responses."
+    )
     d.message("We combine both flow filters using `&`.")
 
-    d.message("Enter `~u /Dunedin & ~q` between the quotes of the `set intercept` command and press `ENTER`.")
+    d.message(
+        "Enter `~u /Dunedin & ~q` between the quotes of the `set intercept` command and press `ENTER`."
+    )
     d.exec("~u /Dunedin & ~q")
     d.message("The bottom bar shows that the interception has been configured.")
 
@@ -133,14 +149,18 @@ def record_intercept_requests(d: CliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
+    d.exec('curl --proxy http://127.0.0.1:8080 "http://wttr.in/Dunedin?0"')
     d.pause(2)
 
     d.focus_pane(pane_top)
 
     d.message("You see a new line in in the list of flows.")
-    d.message("The new flow is displayed in red to indicate that it has been intercepted.")
-    d.message("Put the focus (`>>`) on the intercepted flow. This is already the case in our example.")
+    d.message(
+        "The new flow is displayed in red to indicate that it has been intercepted."
+    )
+    d.message(
+        "Put the focus (`>>`) on the intercepted flow. This is already the case in our example."
+    )
     d.message("Press `a` to resume this flow without making any changes.")
     d.type("a")
     d.pause(2)
@@ -156,7 +176,9 @@ def record_intercept_requests(d: CliDirector):
     d.press_key("Down")
     d.pause(1)
 
-    d.message("Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`.")
+    d.message(
+        "Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`."
+    )
     d.type("X")
     d.pause(3)
 
@@ -170,13 +192,19 @@ def record_modify_requests(d: CliDirector):
     window = tmux.attached_window
 
     d.start_recording("recordings/mitmproxy_modify_requests.cast")
-    d.message("Welcome to the mitmproxy tutorial. In this lesson we cover the modification of intercepted requests.")
+    d.message(
+        "Welcome to the mitmproxy tutorial. In this lesson we cover the modification of intercepted requests."
+    )
     d.pause(1)
     d.exec("mitmproxy")
     d.pause(3)
 
-    d.message("We configure and use the same interception rule as in the last tutorial.")
-    d.message("Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Dunedin & ~q`, and press `ENTER`.")
+    d.message(
+        "We configure and use the same interception rule as in the last tutorial."
+    )
+    d.message(
+        "Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Dunedin & ~q`, and press `ENTER`."
+    )
     d.type("i")
     d.pause(2)
     d.exec("~u /Dunedin & ~q")
@@ -190,13 +218,15 @@ def record_modify_requests(d: CliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
+    d.exec('curl --proxy http://127.0.0.1:8080 "http://wttr.in/Dunedin?0"')
     d.pause(2)
 
     d.focus_pane(pane_top)
 
     d.message("We now want to modify the intercepted request.")
-    d.message("Put the focus (`>>`) on the intercepted flow. This is already the case in our example.")
+    d.message(
+        "Put the focus (`>>`) on the intercepted flow. This is already the case in our example."
+    )
 
     d.message("Press `ENTER` to open the details view for the intercepted flow.")
     d.press_key("Enter")
@@ -211,7 +241,9 @@ def record_modify_requests(d: CliDirector):
     d.pause(1)
     d.press_key("Enter")
 
-    d.message("mitmproxy shows all path components line by line, in our example its just `Dunedin`.")
+    d.message(
+        "mitmproxy shows all path components line by line, in our example its just `Dunedin`."
+    )
     d.message("Press `ENTER` to modify the selected path component.")
     d.press_key("Down", pause=2)
     d.press_key("Enter")
@@ -230,7 +262,9 @@ def record_modify_requests(d: CliDirector):
     d.type("a")
     d.pause(2)
 
-    d.message("You see that the request URL was modified and `wttr.in` replied with the weather report for `Innsbruck`.")
+    d.message(
+        "You see that the request URL was modified and `wttr.in` replied with the weather report for `Innsbruck`."
+    )
 
     d.message("In the next lesson you will learn to replay flows.")
     d.save_instructions("recordings/mitmproxy_modify_requests_instructions.json")
@@ -242,12 +276,16 @@ def record_replay_requests(d: CliDirector):
     window = tmux.attached_window
 
     d.start_recording("recordings/mitmproxy_replay_requests.cast")
-    d.message("Welcome to the mitmproxy tutorial. In this lesson we cover replaying requests.")
+    d.message(
+        "Welcome to the mitmproxy tutorial. In this lesson we cover replaying requests."
+    )
     d.pause(1)
     d.exec("mitmproxy")
     d.pause(3)
 
-    d.message("Let’s generate a request that we can replay. We use `curl` in a separate terminal.")
+    d.message(
+        "Let’s generate a request that we can replay. We use `curl` in a separate terminal."
+    )
 
     pane_top = d.current_pane
     pane_bottom = window.split_window(attach=True)
@@ -256,23 +294,31 @@ def record_replay_requests(d: CliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
+    d.exec('curl --proxy http://127.0.0.1:8080 "http://wttr.in/Dunedin?0"')
     d.pause(2)
 
     d.focus_pane(pane_top)
 
     d.message("We now want to replay the this request.")
-    d.message("Put the focus (`>>`) on the request that should be replayed. This is already the case in our example.")
+    d.message(
+        "Put the focus (`>>`) on the request that should be replayed. This is already the case in our example."
+    )
     d.message("Press `r` to replay the request.")
     d.type("r")
 
-    d.message("Note that no new rows are added for replayed flows, but the existing row is updated.")
-    d.message("Every time you press `r`, mitmproxy sends this request to the server again and updates the flow.")
+    d.message(
+        "Note that no new rows are added for replayed flows, but the existing row is updated."
+    )
+    d.message(
+        "Every time you press `r`, mitmproxy sends this request to the server again and updates the flow."
+    )
     d.press_key("r", count=4, pause=1)
 
     d.message("You can also modify a flow before replaying it.")
     d.message("It works as shown in the previous lesson, by pressing `e`.")
 
-    d.message("Congratulations! You have completed all lessons of the mitmproxy tutorial.")
+    d.message(
+        "Congratulations! You have completed all lessons of the mitmproxy tutorial."
+    )
     d.save_instructions("recordings/mitmproxy_replay_requests_instructions.json")
     d.end()

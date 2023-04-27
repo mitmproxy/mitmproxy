@@ -1,4 +1,4 @@
-import typing
+from typing import Optional
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
@@ -12,8 +12,10 @@ class StickyAuth:
 
     def load(self, loader):
         loader.add_option(
-            "stickyauth", typing.Optional[str], None,
-            "Set sticky auth filter. Matched against requests."
+            "stickyauth",
+            Optional[str],
+            None,
+            "Set sticky auth filter. Matched against requests.",
         )
 
     def configure(self, updated):

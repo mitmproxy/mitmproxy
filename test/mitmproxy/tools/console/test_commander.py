@@ -9,7 +9,7 @@ from mitmproxy.tools.console.commander import commander
 @pytest.fixture(autouse=True)
 def commander_tctx(tmpdir):
     # This runs before each test
-    dir_name = tmpdir.mkdir('mitmproxy').dirname
+    dir_name = tmpdir.mkdir("mitmproxy").dirname
     confdir = dir_name
 
     opts = options.Options()
@@ -17,7 +17,7 @@ def commander_tctx(tmpdir):
     commander_tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     commander_tctx.master.addons.add(ch)
-    ch.configure('command_history')
+    ch.configure("command_history")
 
     yield commander_tctx
 
@@ -33,21 +33,21 @@ class TestListCompleter:
                 ["a", "b", "c"],
                 ["a", "b", "c", "a"],
                 ["c", "b", "a", "c"],
-                ["a", "c", "a", "c"]
+                ["a", "c", "a", "c"],
             ],
             [
                 "xxx",
                 ["a", "b", "c"],
                 ["xxx", "xxx", "xxx"],
                 ["xxx", "xxx", "xxx"],
-                ["xxx", "xxx", "xxx"]
+                ["xxx", "xxx", "xxx"],
             ],
             [
                 "b",
                 ["a", "b", "ba", "bb", "c"],
                 ["b", "ba", "bb", "b"],
                 ["bb", "ba", "b", "bb"],
-                ["b", "bb", "b", "bb"]
+                ["b", "bb", "b", "bb"],
             ],
         ]
         for start, opts, cycle, cycle_reverse, cycle_mix in tests:
@@ -63,9 +63,8 @@ class TestListCompleter:
 
 
 class TestCommandEdit:
-
     def test_open_command_bar(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
         try:
             edit.update()
@@ -73,224 +72,223 @@ class TestCommandEdit:
             pytest.faied("Unexpected IndexError")
 
     def test_insert(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
-        edit.keypress(1, 'a')
-        assert edit.get_edit_text() == 'a'
+        edit = commander.CommandEdit(commander_tctx.master, "")
+        edit.keypress(1, "a")
+        assert edit.get_edit_text() == "a"
 
         # Don't let users type a space before starting a command
         # as a usability feature
-        edit = commander.CommandEdit(commander_tctx.master, '')
-        edit.keypress(1, ' ')
-        assert edit.get_edit_text() == ''
+        edit = commander.CommandEdit(commander_tctx.master, "")
+        edit.keypress(1, " ")
+        assert edit.get_edit_text() == ""
 
     def test_backspace(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
-        edit.keypress(1, 'a')
-        edit.keypress(1, 'b')
-        assert edit.get_edit_text() == 'ab'
+        edit.keypress(1, "a")
+        edit.keypress(1, "b")
+        assert edit.get_edit_text() == "ab"
 
-        edit.keypress(1, 'backspace')
-        assert edit.get_edit_text() == 'a'
+        edit.keypress(1, "backspace")
+        assert edit.get_edit_text() == "a"
 
     def test_left(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
-        edit.keypress(1, 'a')
+        edit.keypress(1, "a")
         assert edit.cbuf.cursor == 1
 
-        edit.keypress(1, 'left')
+        edit.keypress(1, "left")
         assert edit.cbuf.cursor == 0
 
         # Do it again to make sure it won't go negative
-        edit.keypress(1, 'left')
+        edit.keypress(1, "left")
         assert edit.cbuf.cursor == 0
 
     def test_right(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
-        edit.keypress(1, 'a')
+        edit.keypress(1, "a")
         assert edit.cbuf.cursor == 1
 
         # Make sure cursor won't go past the text
-        edit.keypress(1, 'right')
+        edit.keypress(1, "right")
         assert edit.cbuf.cursor == 1
 
         # Make sure cursor goes left and then back right
-        edit.keypress(1, 'left')
+        edit.keypress(1, "left")
         assert edit.cbuf.cursor == 0
 
-        edit.keypress(1, 'right')
+        edit.keypress(1, "right")
         assert edit.cbuf.cursor == 1
 
     def test_up_and_down(self, commander_tctx):
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
-        commander_tctx.master.commands.execute('commands.history.clear')
+        commander_tctx.master.commands.execute("commands.history.clear")
         commander_tctx.master.commands.execute('commands.history.add "cmd1"')
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
 
-        commander_tctx.master.commands.execute('commands.history.clear')
+        commander_tctx.master.commands.execute("commands.history.clear")
         commander_tctx.master.commands.execute('commands.history.add "cmd1"')
         commander_tctx.master.commands.execute('commands.history.add "cmd2"')
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'a')
-        edit.keypress(1, 'b')
-        edit.keypress(1, 'c')
-        assert edit.get_edit_text() == 'abc'
+        edit.keypress(1, "a")
+        edit.keypress(1, "b")
+        edit.keypress(1, "c")
+        assert edit.get_edit_text() == "abc"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'abc'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "abc"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'abc'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "abc"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'abc'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "abc"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'abc'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "abc"
 
-        edit = commander.CommandEdit(commander_tctx.master, '')
+        edit = commander.CommandEdit(commander_tctx.master, "")
         commander_tctx.master.commands.execute('commands.history.add "cmd3"')
 
-        edit.keypress(1, 'z')
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'z'
+        edit.keypress(1, "z")
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "z"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'z'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "z"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'z'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "z"
 
-        edit.keypress(1, 'backspace')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "backspace")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'c')
-        assert edit.get_edit_text() == 'c'
+        edit.keypress(1, "c")
+        assert edit.get_edit_text() == "c"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'backspace')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "backspace")
+        assert edit.get_edit_text() == ""
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'up')
-        assert edit.get_edit_text() == 'cmd1'
+        edit.keypress(1, "up")
+        assert edit.get_edit_text() == "cmd1"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd2'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd2"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == 'cmd3'
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == "cmd3"
 
-        edit.keypress(1, 'down')
-        assert edit.get_edit_text() == ''
+        edit.keypress(1, "down")
+        assert edit.get_edit_text() == ""
 
 
 class TestCommandBuffer:
-
     def test_backspace(self):
         tests = [
             [("", 0), ("", 0)],
@@ -348,14 +346,14 @@ class TestCommandBuffer:
             cb.cycle_completion()
 
             ce = commander.CommandEdit(commander_tctx.master, "se")
-            ce.keypress(1, 'tab')
+            ce.keypress(1, "tab")
             ce.update()
             ret = ce.cbuf.render()
             assert ret == [
-                ('commander_command', 'set'),
-                ('text', ' '),
-                ('commander_hint', 'option '),
-                ('commander_hint', 'value '),
+                ("commander_command", "set"),
+                ("text", " "),
+                ("commander_hint", "option "),
+                ("commander_hint", "*value "),
             ]
 
     def test_render(self):
@@ -367,18 +365,18 @@ class TestCommandBuffer:
             cb.text = "set view_filter '~bq test'"
             ret = cb.render()
             assert ret == [
-                ('commander_command', 'set'),
-                ('text', ' '),
-                ('text', 'view_filter'),
-                ('text', ' '),
-                ('text', "'~bq test'"),
+                ("commander_command", "set"),
+                ("text", " "),
+                ("text", "view_filter"),
+                ("text", " "),
+                ("text", "'~bq test'"),
             ]
 
             cb.text = "set"
             ret = cb.render()
             assert ret == [
-                ('commander_command', 'set'),
-                ('text', ' '),
-                ('commander_hint', 'option '),
-                ('commander_hint', 'value '),
+                ("commander_command", "set"),
+                ("text", " "),
+                ("commander_hint", "option "),
+                ("commander_hint", "*value "),
             ]

@@ -10,7 +10,7 @@ from mitmproxy import version
 def test_version(capsys):
     here = pathlib.Path(__file__).absolute().parent
     version_file = here / ".." / ".." / "mitmproxy" / "version.py"
-    runpy.run_path(str(version_file), run_name='__main__')
+    runpy.run_path(str(version_file), run_name="__main__")
     stdout, stderr = capsys.readouterr()
     assert len(stdout) > 0
     assert stdout.strip() == version.VERSION
@@ -19,7 +19,7 @@ def test_version(capsys):
 def test_get_version():
     version.VERSION = "3.0.0rc2"
 
-    with mock.patch('subprocess.check_output') as m, mock.patch('subprocess.run') as m2:
+    with mock.patch("subprocess.check_output") as m, mock.patch("subprocess.run") as m2:
         m2.return_value = True
 
         m.return_value = b"tag-0-cafecafe"
@@ -32,5 +32,5 @@ def test_get_version():
         m.return_value = b"tag-2-cafecafe"
         assert version.get_dev_version() == "3.0.0rc2 (+2, commit cafecaf)"
 
-        m.side_effect = subprocess.CalledProcessError(-1, 'git describe --tags --long')
+        m.side_effect = subprocess.CalledProcessError(-1, "git describe --tags --long")
         assert version.get_dev_version() == "3.0.0rc2"

@@ -48,25 +48,11 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
         return common.format_keyvals(kvs)
 
     def keybindings(self):
-        text = [
-            urwid.Text(
-                [
-                    ("title", "Common Keybindings")
-                ]
-            )
-
-        ]
+        text = [urwid.Text([("title", "Common Keybindings")])]
 
         text.extend(self.format_keys(self.master.keymap.list("commonkey")))
 
-        text.append(
-            urwid.Text(
-                [
-                    "\n",
-                    ("title", "Keybindings for this view")
-                ]
-            )
-        )
+        text.append(urwid.Text(["\n", ("title", "Keybindings for this view")]))
         if self.helpctx:
             text.extend(self.format_keys(self.master.keymap.list(self.helpctx)))
 
@@ -95,8 +81,14 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
                     "\n",
                     ("text", "    Regexes are Python-style.\n"),
                     ("text", "    Regexes can be specified as quoted strings.\n"),
-                    ("text", "    Header matching (~h, ~hq, ~hs) is against a string of the form \"name: value\".\n"),
-                    ("text", "    Expressions with no operators are regex matches against URL.\n"),
+                    (
+                        "text",
+                        '    Header matching (~h, ~hq, ~hs) is against a string of the form "name: value".\n',
+                    ),
+                    (
+                        "text",
+                        "    Expressions with no operators are regex matches against URL.\n",
+                    ),
                     ("text", "    Default binary operator is &.\n"),
                     ("head", "\n    Examples:\n"),
                 ]
@@ -105,16 +97,17 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
         examples = [
             (r"google\.com", r"Url containing \"google.com"),
             ("~q ~b test", r"Requests where body contains \"test\""),
-            (r"!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+            (
+                r"!(~q & ~t \"text/html\")",
+                "Anything but requests with a text/html content type.",
+            ),
         ]
-        text.extend(
-            common.format_keyvals(examples, indent=4)
-        )
+        text.extend(common.format_keyvals(examples, indent=4))
         return CListBox(text)
 
     def layout_pushed(self, prev):
         """
-            We are just about to push a window onto the stack.
+        We are just about to push a window onto the stack.
         """
         self.helpctx = prev.keyctx
         self.show()

@@ -1,5 +1,5 @@
 """Handle file paths as command arguments."""
-import typing
+from collections.abc import Sequence
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -12,21 +12,19 @@ class MyAddon:
     @command.command("myaddon.histogram")
     def histogram(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: Sequence[flow.Flow],
         path: types.Path,
     ) -> None:
-        totals: typing.Dict[str, int] = {}
+        totals: dict[str, int] = {}
         for f in flows:
             if isinstance(f, http.HTTPFlow):
                 totals[f.request.host] = totals.setdefault(f.request.host, 0) + 1
 
         with open(path, "w+") as fp:
-            for cnt, dom in sorted([(v, k) for (k, v) in totals.items()]):
+            for cnt, dom in sorted((v, k) for (k, v) in totals.items()):
                 fp.write(f"{cnt}: {dom}\n")
 
         ctx.log.alert("done")
 
 
-addons = [
-    MyAddon()
-]
+addons = [MyAddon()]

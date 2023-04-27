@@ -11,7 +11,10 @@ from mitmproxy.test import taddons
 
 @pytest.fixture
 def tctx():
-    context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+    context.Context(
+        connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+        tctx.options,
+    )
 
 
 client_hello_no_extensions = bytes.fromhex(
@@ -33,12 +36,13 @@ client_hello_with_extensions = bytes.fromhex(
 
 
 class TestNextLayer:
-
     def test_configure(self):
         nl = NextLayer()
         with taddons.context(nl) as tctx:
             with pytest.raises(Exception, match="mutually exclusive"):
-                tctx.configure(nl, allow_hosts=["example.org"], ignore_hosts=["example.com"])
+                tctx.configure(
+                    nl, allow_hosts=["example.org"], ignore_hosts=["example.com"]
+                )
 
     def test_ignore_connection(self):
         nl = NextLayer()
@@ -54,7 +58,12 @@ class TestNextLayer:
             assert nl.ignore_connection(None, client_hello_with_extensions)
             assert nl.ignore_connection(None, client_hello_with_extensions[:-5]) is None
             # invalid clienthello
-            assert nl.ignore_connection(None, client_hello_no_extensions[:9] + b"\x00" * 200) is False
+            assert (
+                nl.ignore_connection(
+                    None, client_hello_no_extensions[:9] + b"\x00" * 200
+                )
+                is False
+            )
             # different server name and SNI
             assert nl.ignore_connection(("decoy", 1234), client_hello_with_extensions)
 
@@ -62,7 +71,10 @@ class TestNextLayer:
             assert nl.ignore_connection(("example.com", 443), b"") is False
             assert nl.ignore_connection(("example.org", 443), b"")
             # different server name and SNI
-            assert nl.ignore_connection(("decoy", 1234), client_hello_with_extensions) is False
+            assert (
+                nl.ignore_connection(("decoy", 1234), client_hello_with_extensions)
+                is False
+            )
 
     def test_make_top_layer(self):
         nl = NextLayer()
@@ -96,22 +108,34 @@ class TestNextLayer:
             assert nl._next_layer(ctx, client_hello_no_extensions[:10], b"") is None
 
             tctx.configure(nl, ignore_hosts=[])
-            assert isinstance(nl._next_layer(ctx, client_hello_no_extensions, b""), layers.ServerTLSLayer)
+            assert isinstance(
+                nl._next_layer(ctx, client_hello_no_extensions, b""),
+                layers.ServerTLSLayer,
+            )
             assert isinstance(ctx.layers[-1], layers.ClientTLSLayer)
 
             ctx.layers = []
             assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
-            assert isinstance(nl._next_layer(ctx, client_hello_no_extensions, b""), layers.ClientTLSLayer)
+            assert isinstance(
+                nl._next_layer(ctx, client_hello_no_extensions, b""),
+                layers.ClientTLSLayer,
+            )
 
             ctx.layers = []
             assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
-            assert isinstance(nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""), layers.HttpLayer)
+            assert isinstance(
+                nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
+                layers.HttpLayer,
+            )
             assert ctx.layers[-1].mode == HTTPMode.regular
 
             ctx.layers = []
             tctx.configure(nl, mode="upstream:http://localhost:8081")
             assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
-            assert isinstance(nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""), layers.HttpLayer)
+            assert isinstance(
+                nl._next_layer(ctx, b"GET http://example.com/ HTTP/1.1\r\n", b""),
+                layers.HttpLayer,
+            )
             assert ctx.layers[-1].mode == HTTPMode.upstream
 
             tctx.configure(nl, tcp_hosts=["example.com"])

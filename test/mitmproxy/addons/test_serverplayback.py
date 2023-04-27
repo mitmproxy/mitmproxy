@@ -107,9 +107,7 @@ def test_ignore_content_wins_over_params():
         tctx.configure(
             s,
             server_replay_ignore_content=True,
-            server_replay_ignore_payload_params=[
-                "param1", "param2"
-            ]
+            server_replay_ignore_payload_params=["param1", "param2"],
         )
 
         # NOTE: parameters are mutually exclusive in options
@@ -131,9 +129,7 @@ def test_ignore_payload_params_other_content_type():
         tctx.configure(
             s,
             server_replay_ignore_content=False,
-            server_replay_ignore_payload_params=[
-                "param1", "param2"
-            ]
+            server_replay_ignore_payload_params=["param1", "param2"],
         )
 
         r = tflow.tflow(resp=True)
@@ -236,10 +232,7 @@ def test_load_with_server_replay_nopop():
 def test_ignore_params():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
-        tctx.configure(
-            s,
-            server_replay_ignore_params=["param1", "param2"]
-        )
+        tctx.configure(s, server_replay_ignore_params=["param1", "param2"])
 
         r = tflow.tflow(resp=True)
         r.request.path = "/test?param1=1"
@@ -258,10 +251,7 @@ def thash(r, r2, setter):
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
         s = serverplayback.ServerPlayback()
-        tctx.configure(
-            s,
-            server_replay_ignore_payload_params=["param1", "param2"]
-        )
+        tctx.configure(s, server_replay_ignore_payload_params=["param1", "param2"])
 
         setter(r, paramx="x", param1="1")
 
@@ -296,20 +286,18 @@ def test_ignore_payload_params():
     r2.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
     thash(r, r2, urlencode_setter)
 
-    boundary = 'somefancyboundary'
+    boundary = "somefancyboundary"
 
     def multipart_setter(r, **kwargs):
         b = f"--{boundary}\n"
         parts = []
         for k, v in kwargs.items():
             parts.append(
-                "Content-Disposition: form-data; name=\"%s\"\n\n"
-                "%s\n" % (k, v)
+                'Content-Disposition: form-data; name="%s"\n\n' "%s\n" % (k, v)
             )
         c = b + b.join(parts) + b
         r.request.content = c.encode()
-        r.request.headers["content-type"] = 'multipart/form-data; boundary=' +\
-            boundary
+        r.request.headers["content-type"] = "multipart/form-data; boundary=" + boundary
 
     r = tflow.tflow(resp=True)
     r2 = tflow.tflow(resp=True)
@@ -340,14 +328,10 @@ def test_server_playback_full():
         assert not tf.response
 
 
-def test_server_playback_kill():
+async def test_server_playback_kill():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
-        tctx.configure(
-            s,
-            server_replay_refresh=True,
-            server_replay_kill_extra=True
-        )
+        tctx.configure(s, server_replay_refresh=True, server_replay_kill_extra=True)
 
         f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
@@ -355,7 +339,7 @@ def test_server_playback_kill():
 
         f = tflow.tflow()
         f.request.host = "nonexistent"
-        tctx.cycle(s, f)
+        await tctx.cycle(s, f)
         assert f.error
 
 

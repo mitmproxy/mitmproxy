@@ -1,6 +1,6 @@
 import json
+from collections import abc
 import typing
-
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import typecheck
 
@@ -13,7 +13,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes: typing.ClassVar[typing.MutableMapping[str, typing.Any]]
+    _stateobject_attributes: typing.ClassVar[abc.MutableMapping[str, typing.Any]]
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the
@@ -57,25 +57,22 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
     elif not make and hasattr(val, "get_state"):
         return val.get_state()
 
-    typename = str(typeinfo)
+    origin = typing.get_origin(typeinfo)
 
-    if typename.startswith("typing.List"):
-        T = typecheck.sequence_type(typeinfo)
+    if origin is list:
+        T = typing.get_args(typeinfo)[0]
         return [_process(T, x, make) for x in val]
-    elif typename.startswith("typing.Tuple"):
-        Ts = typecheck.tuple_types(typeinfo)
+    elif origin is tuple:
+        Ts = typing.get_args(typeinfo)
         if len(Ts) != len(val):
             raise ValueError(f"Invalid data. Expected {Ts}, got {val}.")
-        return tuple(
-            _process(T, x, make) for T, x in zip(Ts, val)
-        )
-    elif typename.startswith("typing.Dict"):
-        k_cls, v_cls = typecheck.mapping_types(typeinfo)
+        return tuple(_process(T, x, make) for T, x in zip(Ts, val))
+    elif origin is dict:
+        k_cls, v_cls = typing.get_args(typeinfo)
         return {
-            _process(k_cls, k, make): _process(v_cls, v, make)
-            for k, v in val.items()
+            _process(k_cls, k, make): _process(v_cls, v, make) for k, v in val.items()
         }
-    elif typename.startswith("typing.Any"):
+    elif typeinfo is typing.Any:
         # This requires a bit of explanation. We can't import our IO layer here,
         # because it causes a circular import. Rather than restructuring the
         # code for this, we use JSON serialization, which has similar primitive

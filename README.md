@@ -29,9 +29,9 @@ The documentation for mitmproxy is available on our website:
 [![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/main/)
 
 If you have questions on how to use mitmproxy, please
-ask them on StackOverflow!
+use GitHub Discussions!
 
-[![StackOverflow: mitmproxy](https://shields.mitmproxy.org/stackexchange/stackoverflow/t/mitmproxy?color=orange&label=stackoverflow%20questions)](https://stackoverflow.com/questions/tagged/mitmproxy)
+[![mitmproxy discussions](https://shields.mitmproxy.org/badge/help-github%20discussions-orange.svg)](https://github.com/mitmproxy/mitmproxy/discussions)
 
 ## Contributing
 

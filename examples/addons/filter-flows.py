@@ -14,9 +14,7 @@ class Filter:
             self.filter = flowfilter.parse(ctx.options.flowfilter)
 
     def load(self, l):
-        l.add_option(
-            "flowfilter", str, "", "Check that flow matches filter."
-        )
+        l.add_option("flowfilter", str, "", "Check that flow matches filter.")
 
     def response(self, flow: http.HTTPFlow) -> None:
         if flowfilter.match(self.filter, flow):
