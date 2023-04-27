@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import defaultdict
 from collections.abc import Sequence
 from functools import cache
 
@@ -71,9 +72,7 @@ class Binding:
 class Keymap:
     def __init__(self, master):
         self.executor = commandexecutor.CommandExecutor(master)
-        self.keys: dict[str, dict[str, Binding]] = {}
-        for c in Contexts:
-            self.keys[c] = {}
+        self.keys: dict[str, dict[str, Binding]] = defaultdict(dict)
         self.bindings = []
 
     def _check_contexts(self, contexts):
