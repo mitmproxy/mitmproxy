@@ -83,7 +83,12 @@ def map(km: Keymap) -> None:
         "Export this flow to file",
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
-    km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
+    km.add(
+        "F",
+        "set console_focus_follow toggle",
+        ["flowlist", "flowview"],
+        "Set focus follow",
+    )
     km.add(
         "ctrl l",
         "console.command cut.clip ",
