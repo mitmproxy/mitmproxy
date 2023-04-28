@@ -30,6 +30,8 @@
   ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
 * mitmproxy now requires Python 3.10 or above.
   ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
+* the `esc` key can now be used to exit the current view
+  ([#6087](https://github.com/mitmproxy/mitmproxy/pull/6087), @sujaldev)
 * focus-follow shortcut will now work in flow view context too.
   ([#6088](https://github.com/mitmproxy/mitmproxy/pull/6088), @sujaldev)
 
