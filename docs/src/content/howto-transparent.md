@@ -275,6 +275,9 @@ tproxy_user = "nobody"
 
 rdr pass proto tcp from any to any port $redir_ports -> $tproxy
 pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user { != $tproxy_user }
+
+# End the file with a blank newline /!\
+
 ```
 
 Follow steps **3-5** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **6** should look like:
