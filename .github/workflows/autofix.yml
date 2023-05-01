@@ -39,7 +39,7 @@ jobs:
       - uses: install-pinned/autoflake@46b4898323be58db319656fe2758f3fd5ddfee32
       - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
 
-      - uses: install-pinned/black@87375d4cc14ee53c4372492102a7503f9fd18837
+      - uses: install-pinned/black@98d42bad3459705a15b069b0f4dfd9e2b2d63a2b
       - run: black --extend-exclude mitmproxy/contrib .
 
       - name: Run prettier
