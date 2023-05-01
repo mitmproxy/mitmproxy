@@ -36,7 +36,7 @@ jobs:
            export GLOBIGNORE='mitmproxy/contrib/**'
            yesqa **/*.py || true
 
-      - uses: install-pinned/autoflake@80957f084eab3ad54adf35d689a3f0af436cbe0a
+      - uses: install-pinned/autoflake@46b4898323be58db319656fe2758f3fd5ddfee32
       - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
 
       - uses: install-pinned/black@87375d4cc14ee53c4372492102a7503f9fd18837
