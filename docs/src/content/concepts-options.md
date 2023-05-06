@@ -34,9 +34,11 @@ persistent by saving the settings out to a YAML configuration file (please see
 the specific tool's interactive help for details on how to do this).
 
 For all tools, options can be set directly by name using the `--set`
-command-line option. Please see the command-line help (`--help`) for usage. Example on Windows:
+command-line option. Please see the command-line help (`--help`) for usage. Example:
 ```
-mitmdump.exe -p 8088 --set ssl_version_client=all --set ssl_version_server=all
+mitmproxy --set anticomp=true
+mitmweb --set web_columns=path --set web_columns=status
+mitmweb --set ignore_hosts=142.250.179.100 --set ignore_hosts=2a00:1450:4007:80e::2004 --set ignore_hosts=2a00:1450:4007:819::2004
 ```
 
 ## Available Options
