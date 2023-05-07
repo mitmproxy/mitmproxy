@@ -38,7 +38,7 @@ command-line option. Please see the command-line help (`--help`) for usage. Exam
 ```
 mitmproxy --set anticomp=true
 mitmweb --set web_columns=path --set web_columns=status
-mitmweb --set ignore_hosts=142.250.179.100 --set ignore_hosts=2a00:1450:4007:80e::2004 --set ignore_hosts=2a00:1450:4007:819::2004
+mitmweb --set ignore_hosts=<IPv4-1> --set ignore_hosts=<IPv4-2> --set ignore_hosts=<IPv6-1> --set ignore_hosts=<IPv6-2> 
 ```
 
 ## Available Options
