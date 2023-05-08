@@ -37,8 +37,7 @@ For all tools, options can be set directly by name using the `--set`
 command-line option. Please see the command-line help (`--help`) for usage. Example:
 ```
 mitmproxy --set anticomp=true
-mitmweb --set web_columns=path --set web_columns=status
-mitmweb --set ignore_hosts=IPv4-1 --set ignore_hosts=IPv4-2 --set ignore_hosts=IPv6-1 --set ignore_hosts=IPv6-2 
+mitmweb --set ignore_hosts=example.com --set ignore_hosts=example.org 
 ```
 
 ## Available Options
