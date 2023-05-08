@@ -3,7 +3,7 @@
 ## Unreleased: mitmproxy next
 
 * Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
-  ([#6107](https://github.com/mitmproxy/mitmproxy/pull/6107), @Semnodime)
+  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
 * Add "Prettier" code linting tool to mitmweb.
   ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
 * Add experimental support for HTTP/3 and QUIC.
