@@ -94,8 +94,8 @@ class Options(optmanager.OptManager):
             Sequence[str],
             [],
             """
-            Opposite of --ignore-hosts: only https traffic to these hosts will appear. 
-            However, http traffic will always show, which can be filtered with 
+            Opposite of --ignore-hosts: only https traffic to these hosts will appear.
+            However, http traffic will always show, which can be filtered with
             the --view-filter option or press f in mitmproxy
             """,
         )
