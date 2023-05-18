@@ -89,7 +89,7 @@ class Options(optmanager.OptManager):
             regular expression and matched on the ip or the hostname.
             """,
         )
-        self.add_option("allow_hosts", Sequence[str], [], "Opposite of --ignore-hosts.")
+        self.add_option("allow_hosts", Sequence[str], [], "Opposite of --ignore-hosts: only https traffic to these hosts will appear. However, http traffic will always show, which can be filtered with the --view-filter option or press f in mitmproxy")
         self.add_option(
             "listen_host",
             str,
