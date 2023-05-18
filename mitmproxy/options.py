@@ -93,7 +93,11 @@ class Options(optmanager.OptManager):
             "allow_hosts",
             Sequence[str],
             [],
-            "Opposite of --ignore-hosts: only https traffic to these hosts will appear. However, http traffic will always show, which can be filtered with the --view-filter option or press f in mitmproxy",
+            """
+            Opposite of --ignore-hosts: only https traffic to these hosts will appear. 
+            However, http traffic will always show, which can be filtered with 
+            the --view-filter option or press f in mitmproxy
+            """,
         )
         self.add_option(
             "listen_host",
