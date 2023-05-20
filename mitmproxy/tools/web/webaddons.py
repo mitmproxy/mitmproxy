@@ -1,12 +1,9 @@
-from errno import EADDRINUSE
 import logging
 import webbrowser
 import socket
 from collections.abc import Sequence
 
 from mitmproxy import ctx
-from pprint import pprint
-
 
 
 class WebAddon:
