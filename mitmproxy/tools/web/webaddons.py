@@ -1,15 +1,26 @@
+from errno import EADDRINUSE
 import logging
 import webbrowser
+import socket
 from collections.abc import Sequence
 
 from mitmproxy import ctx
+from pprint import pprint
+
 
 
 class WebAddon:
+    def get_free_port(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        _, port = sock.getsockname()
+        sock.close()
+        return port
+    
     def load(self, loader):
         loader.add_option("web_open_browser", bool, True, "Start a browser.")
         loader.add_option("web_debug", bool, False, "Enable mitmweb debugging.")
-        loader.add_option("web_port", int, 8081, "Web UI port.")
+        loader.add_option("web_port", int, self.get_free_port(), "Web UI port.")
         loader.add_option("web_host", str, "127.0.0.1", "Web UI host.")
         loader.add_option(
             "web_columns",
