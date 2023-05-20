@@ -1,6 +1,6 @@
 import logging
-import webbrowser
 import socket
+import webbrowser
 from collections.abc import Sequence
 
 from mitmproxy import ctx
@@ -13,7 +13,7 @@ class WebAddon:
         _, port = sock.getsockname()
         sock.close()
         return port
-    
+
     def load(self, loader):
         loader.add_option("web_open_browser", bool, True, "Start a browser.")
         loader.add_option("web_debug", bool, False, "Enable mitmweb debugging.")
