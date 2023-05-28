@@ -1432,6 +1432,29 @@ def test_transparent_sni(tctx):
     assert server().sni == "example.com"
 
 
+def test_reverse_sni(tctx):
+    """Test that we use the destination address as SNI in reverse mode."""
+    tctx.client.sni = "localhost"
+    tctx.server.address = ("192.0.2.42", 443)
+    tctx.server.tls = True
+    tctx.server.sni = "example.local"
+
+    flow = Placeholder(HTTPFlow)
+
+    server = Placeholder(Server)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+        >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+    )
+    assert server().address == ("192.0.2.42", 443)
+    assert server().sni == "example.local"
+
+
 def test_original_server_disconnects(tctx):
     """Test that we correctly handle the case where the initial server conn is just closed."""
     tctx.server.state = ConnectionState.OPEN
