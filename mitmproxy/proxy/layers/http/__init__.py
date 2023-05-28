@@ -1,6 +1,5 @@
 import collections
 import enum
-import ipaddress
 import time
 from dataclasses import dataclass
 from functools import cached_property
@@ -1045,7 +1044,11 @@ class HttpLayer(layer.Layer):
                     and event.address == self.context.server.address
                 ):
                     # reverse proxy mode may set self.context.server.sni, which takes precedence.
-                    context.server.sni = self.context.server.sni or self.context.client.sni or event.address[0]
+                    context.server.sni = (
+                        self.context.server.sni
+                        or self.context.client.sni
+                        or event.address[0]
+                    )
                 else:
                     context.server.sni = event.address[0]
                 if context.server.transport_protocol == "tcp":
