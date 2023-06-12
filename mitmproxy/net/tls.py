@@ -9,11 +9,11 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-from OpenSSL import SSL
+from OpenSSL import SSL, crypto
 from OpenSSL.crypto import X509
 
 from mitmproxy import certs
-
+from mitmproxy import ctx
 
 # redeclared here for strict type checking
 class Method(Enum):
@@ -105,6 +105,13 @@ def _create_ssl_context(
 
     # Options
     context.set_options(DEFAULT_OPTIONS)
+
+    # ECDHE for Key exchange
+    if ctx.options.curve is not None:
+        try:
+            context.set_tmp_ecdh(crypto.get_elliptic_curve(ctx.options.curve))
+        except ValueError as e:
+            raise RuntimeError(f"Elliptic curve specification error: {e}") from e
 
     # Cipher List
     if cipher_list is not None:
