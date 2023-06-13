@@ -15,6 +15,7 @@ from OpenSSL.crypto import X509
 from mitmproxy import certs
 from mitmproxy import ctx
 
+
 # redeclared here for strict type checking
 class Method(Enum):
     TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
