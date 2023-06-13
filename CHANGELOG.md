@@ -3,7 +3,7 @@
 ## Unreleased: mitmproxy next
 
 * Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
-  (, @Mike-Ki-ASD)
+  ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
 * Add "Prettier" code linting tool to mitmweb.
   ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
 * Add experimental support for HTTP/3 and QUIC.
