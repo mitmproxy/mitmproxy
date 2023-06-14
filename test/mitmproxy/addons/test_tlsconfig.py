@@ -84,6 +84,9 @@ class TestTlsConfig:
             with pytest.raises(Exception, match="file does not exist"):
                 tctx.configure(ta, certs=["*=nonexistent"])
 
+            with pytest.raises(Exception, match="Invalid ECDH curve"):
+                tctx.configure(ta, tls_ecdh_curve_client="invalid")
+
             with pytest.raises(Exception, match="Invalid certificate format"):
                 tctx.configure(
                     ta,

@@ -92,7 +92,7 @@ def _create_ssl_context(
     min_version: Version,
     max_version: Version,
     cipher_list: Iterable[str] | None,
-    tls_ecdh_curve: str | None,
+    ecdh_curve: str | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -108,9 +108,9 @@ def _create_ssl_context(
     context.set_options(DEFAULT_OPTIONS)
 
     # ECDHE for Key exchange
-    if tls_ecdh_curve is not None:
+    if ecdh_curve is not None:
         try:
-            context.set_tmp_ecdh(crypto.get_elliptic_curve(tls_ecdh_curve))
+            context.set_tmp_ecdh(crypto.get_elliptic_curve(ecdh_curve))
         except ValueError as e:
             raise RuntimeError(f"Elliptic curve specification error: {e}") from e
 
@@ -135,7 +135,7 @@ def create_proxy_server_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    tls_ecdh_curve: str | None,
+    ecdh_curve: str | None,
     verify: Verify,
     ca_path: str | None,
     ca_pemfile: str | None,
@@ -146,7 +146,7 @@ def create_proxy_server_context(
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
-        tls_ecdh_curve=tls_ecdh_curve,
+        ecdh_curve=ecdh_curve,
     )
     context.set_verify(verify.value, None)
 
@@ -177,7 +177,7 @@ def create_client_proxy_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    tls_ecdh_curve: str | None,
+    ecdh_curve: str | None,
     chain_file: Path | None,
     alpn_select_callback: Callable[[SSL.Connection, list[bytes]], Any] | None,
     request_client_cert: bool,
@@ -189,7 +189,7 @@ def create_client_proxy_context(
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
-        tls_ecdh_curve=tls_ecdh_curve,
+        ecdh_curve=ecdh_curve,
     )
 
     if chain_file is not None:

@@ -143,6 +143,20 @@ class TlsConfig:
             choices=[x.name for x in net_tls.Version],
             help=f"Set the maximum TLS version for server connections.",
         )
+        loader.add_option(
+            name="tls_ecdh_curve_client",
+            typespec=str | None,
+            default=None,
+            help="Use a specific elliptic curve for ECDHE key exchange on client connections. "
+                 "OpenSSL syntax, for example \"prime256v1\" (see `openssl ecparam -list_curves`)."
+        )
+        loader.add_option(
+            name="tls_ecdh_curve_server",
+            typespec=str | None,
+            default=None,
+            help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
+                 "OpenSSL syntax, for example \"prime256v1\" (see `openssl ecparam -list_curves`)."
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -180,7 +194,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
-            tls_ecdh_curve=ctx.options.tls_ecdh_curve,
+            ecdh_curve=ctx.options.tls_ecdh_curve_client,
             chain_file=entry.chain_file,
             request_client_cert=False,
             alpn_select_callback=alpn_select_callback,
@@ -275,7 +289,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_server_min],
             max_version=net_tls.Version[ctx.options.tls_version_server_max],
             cipher_list=tuple(cipher_list),
-            tls_ecdh_curve=ctx.options.tls_ecdh_curve,
+            ecdh_curve=ctx.options.tls_ecdh_curve_server,
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
@@ -407,48 +421,62 @@ class TlsConfig:
         self.configure("confdir")  # pragma: no cover
 
     def configure(self, updated):
-        if "confdir" not in updated and "certs" not in updated:
-            return
-
-        certstore_path = os.path.expanduser(ctx.options.confdir)
-        self.certstore = certs.CertStore.from_store(
-            path=certstore_path,
-            basename=CONF_BASENAME,
-            key_size=ctx.options.key_size,
-            passphrase=ctx.options.cert_passphrase.encode("utf8")
-            if ctx.options.cert_passphrase
-            else None,
-        )
-        if self.certstore.default_ca.has_expired():
-            logging.warning(
-                "The mitmproxy certificate authority has expired!\n"
-                "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
-                "The CA will be regenerated automatically after restarting mitmproxy.\n"
-                "See https://docs.mitmproxy.org/stable/concepts-certificates/ for additional help.",
+        if (
+            "certs" in updated or
+            "confdir" in updated or
+            "key_size" in updated or
+            "cert_passphrase" in updated
+        ):
+            certstore_path = os.path.expanduser(ctx.options.confdir)
+            self.certstore = certs.CertStore.from_store(
+                path=certstore_path,
+                basename=CONF_BASENAME,
+                key_size=ctx.options.key_size,
+                passphrase=ctx.options.cert_passphrase.encode("utf8")
+                if ctx.options.cert_passphrase
+                else None,
             )
-
-        for certspec in ctx.options.certs:
-            parts = certspec.split("=", 1)
-            if len(parts) == 1:
-                parts = ["*", parts[0]]
-
-            cert = Path(parts[1]).expanduser()
-            if not cert.exists():
-                raise exceptions.OptionsError(
-                    f"Certificate file does not exist: {cert}"
+            if self.certstore.default_ca.has_expired():
+                logging.warning(
+                    "The mitmproxy certificate authority has expired!\n"
+                    "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
+                    "The CA will be regenerated automatically after restarting mitmproxy.\n"
+                    "See https://docs.mitmproxy.org/stable/concepts-certificates/ for additional help.",
                 )
-            try:
-                self.certstore.add_cert_file(
-                    parts[0],
-                    cert,
-                    passphrase=ctx.options.cert_passphrase.encode("utf8")
-                    if ctx.options.cert_passphrase
-                    else None,
-                )
-            except ValueError as e:
-                raise exceptions.OptionsError(
-                    f"Invalid certificate format for {cert}: {e}"
-                ) from e
+
+            for certspec in ctx.options.certs:
+                parts = certspec.split("=", 1)
+                if len(parts) == 1:
+                    parts = ["*", parts[0]]
+
+                cert = Path(parts[1]).expanduser()
+                if not cert.exists():
+                    raise exceptions.OptionsError(
+                        f"Certificate file does not exist: {cert}"
+                    )
+                try:
+                    self.certstore.add_cert_file(
+                        parts[0],
+                        cert,
+                        passphrase=ctx.options.cert_passphrase.encode("utf8")
+                        if ctx.options.cert_passphrase
+                        else None,
+                    )
+                except ValueError as e:
+                    raise exceptions.OptionsError(
+                        f"Invalid certificate format for {cert}: {e}"
+                    ) from e
+
+        if (
+            "tls_ecdh_curve_client" in updated or
+            "tls_ecdh_curve_server" in updated
+        ):
+            for ecdh_curve in [ctx.options.tls_ecdh_curve_client, ctx.options.tls_ecdh_curve_server]:
+                if ecdh_curve is not None:
+                    try:
+                        crypto.get_elliptic_curve(ecdh_curve)
+                    except Exception as e:
+                        raise exceptions.OptionsError(f"Invalid ECDH curve: {ecdh_curve!r}") from e
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """

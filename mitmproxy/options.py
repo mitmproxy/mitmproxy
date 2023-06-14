@@ -75,13 +75,6 @@ class Options(optmanager.OptManager):
             "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax.",
         )
         self.add_option(
-            "tls_ecdh_curve",
-            Optional[str],
-            None,
-            "Specify an elliptic curve for ECDHE key exchange between mitmproxy <-> server connections using OpenSSL "
-            "syntax. Examples are prime256v1, secp384r1 or brainpoolP256r1."
-        )
-        self.add_option(
             "client_certs", Optional[str], None, "Client certificate file or directory."
         )
         self.add_option(
