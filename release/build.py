@@ -221,7 +221,11 @@ def installbuilder_installer():
 
     if not IB_CLI.exists():
         if not IB_SETUP.exists():
-            print("Downloading InstallBuilder...")
+            url = (
+                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
+                f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe"
+            )
+            print("Downloading InstallBuilder from {url}...")
 
             def report(block, blocksize, total):
                 done = block * blocksize
@@ -230,8 +234,7 @@ def installbuilder_installer():
 
             tmp = IB_SETUP.with_suffix(".tmp")
             urllib.request.urlretrieve(
-                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
-                f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
+                url,
                 tmp,
                 reporthook=report,
             )
