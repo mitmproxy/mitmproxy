@@ -230,7 +230,8 @@ def installbuilder_installer():
 
             tmp = IB_SETUP.with_suffix(".tmp")
             urllib.request.urlretrieve(
-                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
+                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
+                f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
                 tmp,
                 reporthook=report,
             )
