@@ -148,14 +148,14 @@ class TlsConfig:
             typespec=str | None,
             default=None,
             help="Use a specific elliptic curve for ECDHE key exchange on client connections. "
-                 "OpenSSL syntax, for example \"prime256v1\" (see `openssl ecparam -list_curves`)."
+            'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
         )
         loader.add_option(
             name="tls_ecdh_curve_server",
             typespec=str | None,
             default=None,
             help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
-                 "OpenSSL syntax, for example \"prime256v1\" (see `openssl ecparam -list_curves`)."
+            'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
         )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
@@ -422,10 +422,10 @@ class TlsConfig:
 
     def configure(self, updated):
         if (
-            "certs" in updated or
-            "confdir" in updated or
-            "key_size" in updated or
-            "cert_passphrase" in updated
+            "certs" in updated
+            or "confdir" in updated
+            or "key_size" in updated
+            or "cert_passphrase" in updated
         ):
             certstore_path = os.path.expanduser(ctx.options.confdir)
             self.certstore = certs.CertStore.from_store(
@@ -467,16 +467,18 @@ class TlsConfig:
                         f"Invalid certificate format for {cert}: {e}"
                     ) from e
 
-        if (
-            "tls_ecdh_curve_client" in updated or
-            "tls_ecdh_curve_server" in updated
-        ):
-            for ecdh_curve in [ctx.options.tls_ecdh_curve_client, ctx.options.tls_ecdh_curve_server]:
+        if "tls_ecdh_curve_client" in updated or "tls_ecdh_curve_server" in updated:
+            for ecdh_curve in [
+                ctx.options.tls_ecdh_curve_client,
+                ctx.options.tls_ecdh_curve_server,
+            ]:
                 if ecdh_curve is not None:
                     try:
                         crypto.get_elliptic_curve(ecdh_curve)
                     except Exception as e:
-                        raise exceptions.OptionsError(f"Invalid ECDH curve: {ecdh_curve!r}") from e
+                        raise exceptions.OptionsError(
+                            f"Invalid ECDH curve: {ecdh_curve!r}"
+                        ) from e
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """

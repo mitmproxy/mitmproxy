@@ -9,7 +9,8 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-from OpenSSL import SSL, crypto
+from OpenSSL import crypto
+from OpenSSL import SSL
 from OpenSSL.crypto import X509
 
 from mitmproxy import certs
