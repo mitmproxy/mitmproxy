@@ -202,8 +202,8 @@ def installbuilder_installer():
     """Windows: Build the InstallBuilder installer."""
     _ensure_pyinstaller_onedir()
 
-    IB_VERSION = "22.10.0"
-    IB_SETUP_SHA256 = "49cbfc3ee8de02426abc0c1b92839934bdb0bf0ea12d88388dde9e4102fc429f"
+    IB_VERSION = "23.4.0"
+    IB_SETUP_SHA256 = "e4ff212ed962f9e0030d918b8a6e4d6dd8a9adc8bf8bc1833459351ee649eff3"
     IB_DIR = here / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(
@@ -230,7 +230,7 @@ def installbuilder_installer():
 
             tmp = IB_SETUP.with_suffix(".tmp")
             urllib.request.urlretrieve(
-                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
+                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
                 tmp,
                 reporthook=report,
             )
