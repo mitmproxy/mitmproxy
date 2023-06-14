@@ -68,6 +68,8 @@ export interface OptionsState {
     stream_large_bodies: string | undefined;
     tcp_hosts: string[];
     termlog_verbosity: string;
+    tls_ecdh_curve_client: string | undefined;
+    tls_ecdh_curve_server: string | undefined;
     tls_version_client_max: string;
     tls_version_client_min: string;
     tls_version_server_max: string;
@@ -159,6 +161,8 @@ export const defaultState: OptionsState = {
     stream_large_bodies: undefined,
     tcp_hosts: [],
     termlog_verbosity: "info",
+    tls_ecdh_curve_client: undefined,
+    tls_ecdh_curve_server: undefined,
     tls_version_client_max: "UNBOUNDED",
     tls_version_client_min: "TLS1_2",
     tls_version_server_max: "UNBOUNDED",
