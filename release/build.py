@@ -225,7 +225,7 @@ def installbuilder_installer():
                 f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
                 f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe"
             )
-            print("Downloading InstallBuilder from {url}...")
+            print(f"Downloading InstallBuilder from {url}...")
 
             def report(block, blocksize, total):
                 done = block * blocksize
