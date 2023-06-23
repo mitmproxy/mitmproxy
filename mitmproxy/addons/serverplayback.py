@@ -31,12 +31,12 @@ class ServerPlayback:
             "Kill extra requests during replay (for which no replayable response was found).",
         )
         loader.add_option(
-            "server_replay_nopop",
+            "server_replay_pop",
             bool,
-            False,
+            True,
             """
-            Don't remove flows from server replay state after use. This makes it
-            possible to replay same response multiple times.
+            Remove flows from server replay state after use.
+            If set to false, responses are replayed multiple times.
             """,
         )
         loader.add_option(
@@ -201,11 +201,7 @@ class ServerPlayback:
         """
         hash = self._hash(flow)
         if hash in self.flowmap:
-            if ctx.options.server_replay_nopop:
-                return next(
-                    (flow for flow in self.flowmap[hash] if flow.response), None
-                )
-            else:
+            if ctx.options.server_replay_pop:
                 ret = self.flowmap[hash].pop(0)
                 while not ret.response:
                     if self.flowmap[hash]:
@@ -216,6 +212,10 @@ class ServerPlayback:
                 if not self.flowmap[hash]:
                     del self.flowmap[hash]
                 return ret
+            else:
+                return next(
+                    (flow for flow in self.flowmap[hash] if flow.response), None
+                )
         else:
             return None
 
