@@ -11,7 +11,7 @@ mitmproxy not only supports HTTP, but also other important web protocols.
 This page lists details and known limitations of the respective protocol implementations.
 Most protocols can be disabled by toggling the respective [option]({{< relref concepts-options >}}).
 
-## HTTP/1.x
+## HTTP/1
 
 HTTP/1.0 and HTTP/1.1 support in mitmproxy is based on our custom HTTP stack based on 
 [h11](https://github.com/python-hyper/h11), which is particularly robust to HTTP syntax
@@ -32,6 +32,18 @@ server does not speak HTTP/2, mitmproxy seamlessly translates messages to HTTP/1
   contents, but potentially affects the order in which messages are sent.
 - *Push Promises*: mitmproxy currently does not advertise support for HTTP/2 Push Promises.
 - *Cleartext HTTP/2*: mitmproxy currently does not support unencrypted HTTP/2 (h2c).
+
+## HTTP/3
+
+HTTP/3 support in mitmproxy is based on [aioquic](https://github.com/aiortc/aioquic). Mitmproxy's HTTP/3 functionality
+is still experimental and only available in reverse proxy mode.
+
+##### Known Limitations
+
+- *Replay*: Client Replay is currently broken.
+- *Supported Versions*: mitmproxy currently only supports QUIC Version 1. Version 2 (RFC 9369) is not supported yet.
+- *Implementation Compatibility*: mitmproxy's HTTP/3 support has only been extensively tested with cURL.
+  Other implementations are likely to exhibit bugs.
 
 ## WebSocket
 
