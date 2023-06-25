@@ -285,8 +285,8 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     async def _stop(self) -> None:
         assert self._servers
         try:
-            for server in self._servers:
-                server.close()
+            for s in self._servers:
+                s.close()
             await asyncio.gather(*[s.wait_closed() for s in self._servers])
         finally:
             # we always reset _server and ignore failures
