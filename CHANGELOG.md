@@ -39,6 +39,8 @@
   ([#6148](https://github.com/mitmproxy/mitmproxy/pull/6148), @mhils)
 * Add zstd to valid gRPC encoding schemes.
   ([#6188](https://github.com/mitmproxy/mitmproxy/pull/6188), @tsaaristo)
+* For reverse proxy directly accessed via IP address, the IP address is now included
+  as a subject in the generated certificate.
 
 ### Breaking Changes
 
