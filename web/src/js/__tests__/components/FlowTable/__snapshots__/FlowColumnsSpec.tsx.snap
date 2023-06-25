@@ -299,3 +299,19 @@ exports[`should render columns: tls 1`] = `
   </table>
 </DocumentFragment>
 `;
+
+exports[`should render columns: version 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-http-version"
+        >
+          HTTP/1.1
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;
