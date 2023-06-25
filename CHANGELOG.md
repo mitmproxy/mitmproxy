@@ -41,6 +41,7 @@
   ([#6188](https://github.com/mitmproxy/mitmproxy/pull/6188), @tsaaristo)
 * For reverse proxy directly accessed via IP address, the IP address is now included
   as a subject in the generated certificate.
+  ([#6202](https://github.com/mitmproxy/mitmproxy/pull/6202), @mhils)
 
 ### Breaking Changes
 
