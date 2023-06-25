@@ -519,6 +519,6 @@ class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
         return layers.DNSLayer(context)
 
 
-class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
-    def make_top_layer(self, context: Context) -> Layer:
-        return layers.modes.HttpProxy(context)
+# class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
+#     def make_top_layer(self, context: Context) -> Layer:
+#         return layers.modes.HttpProxy(context)

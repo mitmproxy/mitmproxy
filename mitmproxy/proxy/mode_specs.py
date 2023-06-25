@@ -262,17 +262,17 @@ class DnsMode(ProxyMode):
         _check_empty(self.data)
 
 
-class Http3Mode(ProxyMode):
-    """
-    A regular HTTP3 proxy that is interfaced with absolute-form HTTP requests.
-    (This class will be merged into `RegularMode` once the UDP implementation is deemed stable enough.)
-    """
-
-    description = "HTTP3 proxy"
-    transport_protocol = UDP
-
-    def __post_init__(self) -> None:
-        _check_empty(self.data)
+# class Http3Mode(ProxyMode):
+#     """
+#     A regular HTTP3 proxy that is interfaced with absolute-form HTTP requests.
+#     (This class will be merged into `RegularMode` once the UDP implementation is deemed stable enough.)
+#     """
+#
+#     description = "HTTP3 proxy"
+#     transport_protocol = UDP
+#
+#     def __post_init__(self) -> None:
+#         _check_empty(self.data)
 
 
 class WireGuardMode(ProxyMode):
