@@ -437,9 +437,18 @@ class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:
+        # mitigate impact of https://github.com/mitmproxy/mitmproxy/issues/6204:
+        # For UDP, we don't get an accurate sockname from the transport when binding to all interfaces,
+        # however we would later need that to generate matching certificates.
+        # Until this is fixed properly, we can at least make the localhost case work.
+        sockname = writer.get_extra_info("sockname")
+        if sockname == "::":
+            sockname = "::1"
+        elif sockname == "0.0.0.0":
+            sockname = "127.0.0.1"
         client = Client(
             peername=writer.get_extra_info("peername"),
-            sockname=writer.get_extra_info("sockname"),
+            sockname=sockname,
             timestamp_start=time.time(),
             proxy_mode=mode,
             state=ConnectionState.OPEN,
