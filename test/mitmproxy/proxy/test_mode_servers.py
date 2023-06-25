@@ -9,6 +9,7 @@ import mitmproxy_rs
 import pytest
 
 import mitmproxy.platform
+from ...conftest import no_ipv6
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance
@@ -17,7 +18,6 @@ from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
-from ...conftest import no_ipv6
 
 
 def test_make():
