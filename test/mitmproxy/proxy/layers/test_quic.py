@@ -1062,11 +1062,16 @@ class TestClientTLS:
             << commands.SendData(tctx.client, b"ServerHello")
         )
 
-    @pytest.mark.parametrize("data,err", [
-        (b"\x16\x03\x01\x00\x00", "Packet fixed bit is zero (1603010000)"),
-        (b"test", "Malformed head (74657374)"),
-    ])
-    def test_cannot_parse_clienthello(self, tctx: context.Context, data: bytes, err: str):
+    @pytest.mark.parametrize(
+        "data,err",
+        [
+            (b"\x16\x03\x01\x00\x00", "Packet fixed bit is zero (1603010000)"),
+            (b"test", "Malformed head (74657374)"),
+        ],
+    )
+    def test_cannot_parse_clienthello(
+        self, tctx: context.Context, data: bytes, err: str
+    ):
         """Test the scenario where we cannot parse the ClientHello"""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
         tls_hook_data = tutils.Placeholder(quic.QuicTlsData)
@@ -1074,7 +1079,10 @@ class TestClientTLS:
         assert (
             playbook
             >> events.DataReceived(tctx.client, data)
-            << commands.Log(f"Client QUIC handshake failed. Cannot parse QUIC header: {err}", level=WARNING)
+            << commands.Log(
+                f"Client QUIC handshake failed. Cannot parse QUIC header: {err}",
+                level=WARNING,
+            )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
