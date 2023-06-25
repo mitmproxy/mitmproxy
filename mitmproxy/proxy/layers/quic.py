@@ -1143,6 +1143,8 @@ class ClientQuicLayer(QuicLayer):
         buffer = QuicBuffer(data=data)
         try:
             header = pull_quic_header(buffer)
+        except TypeError:
+            return False, f"Cannot parse QUIC header: Malformed head ({data.hex()})"
         except ValueError as e:
             return False, f"Cannot parse QUIC header: {e} ({data.hex()})"
 
