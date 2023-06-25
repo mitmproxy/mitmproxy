@@ -157,6 +157,9 @@ ignore_errors = true
 module = "test.*"
 ignore_errors = true
 
+[tool.black]
+extend_exclude = "mitmproxy/contrib/"
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
