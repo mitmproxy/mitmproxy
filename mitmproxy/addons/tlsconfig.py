@@ -497,16 +497,15 @@ class TlsConfig:
             if upstream_cert.organization:
                 organization = upstream_cert.organization
 
-        # Add SNI. If not available, try the server address as well.
+        # Add SNI or our local IP address.
         if conn_context.client.sni:
             altnames.append(conn_context.client.sni)
-        elif conn_context.server.address:
-            altnames.append(conn_context.server.address[0])
-
-        # As a last resort, add our local IP address. This may be necessary for HTTPS Proxies which are addressed
-        # via IP. Here we neither have an upstream cert, nor can an IP be included in the server name indication.
-        if not altnames:
+        else:
             altnames.append(conn_context.client.sockname[0])
+
+        # If we already know of a server address, include that in the SANs as well.
+        if conn_context.server.address:
+            altnames.append(conn_context.server.address[0])
 
         # only keep first occurrence of each hostname
         altnames = list(dict.fromkeys(altnames))
