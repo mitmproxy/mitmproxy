@@ -11,34 +11,45 @@ from mitmproxy.log import ALERT
 from mitmproxy import ctx
 from mitmproxy import exceptions
 import asyncio
-import codecs
+from typing import Union, Dict, List, Tuple
 
+logger = logging.getLogger(__name__)
 class ReadHar:
+    
     def __init__(self):
-        self.harFile = {}
         self.flows = []
     
-    def fix_headers(self, request_headers):
-        """Changes provided headers into flow-friendly format"""
+    def fix_headers(self, request_headers:Union[List[Dict[str,str]], List[Tuple[str, str]]])->List[Tuple[bytes,bytes]]:
+        """Converts provided headers into (b"header-name", b"header-value") tuples"""
         flow_headers = []
         for header in request_headers:
-            if type(header) == dict and header.get("name",None):
-                key=header["name"]
-                value=header["value"]
+
+            # Applications that use the {"name":item,"value":item} notation are Brave, Chrome, Edge, Firefox, Charles, Fiddler, Insomnia, Safari
+            if isinstance(header,dict):
+                try:
+                    key=header["name"]
+                    value=header["value"]
+                except KeyError as e:
+                    raise exceptions.OptionsError(str(e)) from e
+
+            # Application that uses the [name, value] notation is Slack
             else:
-                key=header[0]
-                value=header[1]
+                try:
+                    key=header[0]
+                    value=header[1]
+                except IndexError as e:
+                    raise exceptions.OptionsError(str(e)) from e
             flow_headers.append((bytes(key, 'utf-8'),bytes(value, 'utf-8')))
 
         return flow_headers
 
-    
-    def request_to_flow(self, request_json):
+    # Don't know how to make a type annotation for the request json
+    def request_to_flow(self, request_json:Dict)->http.HTTPFlow:
         """
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
-        requestMethod = request_json["request"].get("method","")
+        requestMethod = request_json["request"]["method"]
         requestUrl = request_json["request"].get("url",None)
         if not requestUrl:
             requestUrl = request_json["request"].get("host",None)
@@ -54,16 +65,20 @@ class ReadHar:
                 "127.0.0.1",
                 8080
             ),
+            #TODO Get time info from HAR File
             timestamp_start=time.time()
         )
-        server_conn = connection.Server(address=None)
+
+        # 375:3 is default mitmproxy server_conn when making a new flow.
+        server_conn = connection.Server(address=("375",3))
 
         newflow = http.HTTPFlow(client_conn,server_conn)
         try:
             newflow.request = http.Request.make(requestMethod,requestUrl,"",requestHeaders)
-        except:
-            logging.error("Unable to create flow, please change to a valid HAR format")
-            return
+        except TypeError as e:
+            logger.error("Failed to create request")
+            raise exceptions.OptionsError(str(e)) from e
+            
             
         responseCode = request_json["response"].get("status","")
             
@@ -72,9 +87,9 @@ class ReadHar:
         responseHeaders = self.fix_headers(request_json["response"].get("headers",[]))
         try:
             newflow.response = http.Response.make(responseCode,responseContent,responseHeaders)
-        except:
-            logging.error("Unable to create flow, please change to a valid HAR format")
-            return
+        except TypeError as e:
+            logger.error("Failed to create response")
+            raise exceptions.OptionsError(str(e)) from e
         
         return newflow
 
@@ -92,16 +107,14 @@ class ReadHar:
                 cnt+=1
             except (OSError, exceptions.FlowReadException) as e:
                 if cnt:
-                    logging.warning("Flow file corrupted - loaded %i flows." % cnt)
+                    logger.warning("Flow file corrupted - loaded %i flows." % cnt)
                 else:
-                    logging.error("Flow file corrupted.")
+                    logger.error("Flow file corrupted.")
                 raise exceptions.FlowReadException(str(e)) from e
+        
+
        
-    def running(self):
-            """
-            Runs the loadFlows function
-            """
-            self._read_har_task = asyncio.create_task(self.loadFlows())
+   
     @command.command("readhar")
     def readhar(self,
         path: types.Path,
@@ -114,22 +127,15 @@ class ReadHar:
         """
         with open( path, "r") as fp:
             try:
-                self.harFile = json.load(fp)
-            except:
-                try:
-                    json.load(codecs.open(path, 'r', 'utf-8-sig'))
-                except:
-                    logging.error("Unable to read HAR file. Please provide a valid HAR file")
-                    return
+                harFile = json.load(fp)
+            except Exception:
+                    logger.error("HAR file was unable to be loaded using json.load()")
+                    raise(Exception("Unable to read HAR file. Please provide a valid HAR file"))
         
-        for request_json in self.harFile['log']['entries']:
+        for request_json in harFile['log']['entries']:
             flow = self.request_to_flow(request_json)
             if flow: 
                 self.flows.append(flow)
-        self.running()
-        self._read_har_task
-        
-        
-    
+        asyncio.create_task(self.loadFlows())
 
 addons = [ReadHar()]
