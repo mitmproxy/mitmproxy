@@ -32,7 +32,7 @@ class ReadHar:
                 except KeyError as e:
                     raise exceptions.OptionsError(str(e)) from e
 
-            # Application that uses the [name, value] notation is Slack
+            # Application that use the [name, value] notation is Slack
             else:
                 try:
                     key=header[0]
@@ -49,12 +49,12 @@ class ReadHar:
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
-        requestMethod = request_json["request"]["method"]
-        requestUrl = request_json["request"].get("url",None)
-        if not requestUrl:
-            requestUrl = request_json["request"].get("host",None)
+        request_method = request_json["request"]["method"]
+        request_url = request_json["request"].get("url",None)
+        if not request_url:
+            request_url = request_json["request"].get("host",None)
         
-        requestHeaders = self.fix_headers(request_json["request"].get("headers",[]))
+        request_headers = self.fix_headers(request_json["request"].get("headers",[]))
 
         client_conn = connection.Client(
             peername=(
@@ -74,26 +74,26 @@ class ReadHar:
 
         newflow = http.HTTPFlow(client_conn,server_conn)
         try:
-            newflow.request = http.Request.make(requestMethod,requestUrl,"",requestHeaders)
+            newflow.request = http.Request.make(request_method,request_url,"",request_headers)
         except TypeError as e:
             logger.error("Failed to create request")
             raise exceptions.OptionsError(str(e)) from e
             
             
-        responseCode = request_json["response"].get("status","")
+        response_code = request_json["response"].get("status","")
             
-        responseContent = request_json["response"]["content"].get("text","")
+        response_content = request_json["response"]["content"].get("text","")
         
-        responseHeaders = self.fix_headers(request_json["response"].get("headers",[]))
+        response_headers = self.fix_headers(request_json["response"].get("headers",[]))
         try:
-            newflow.response = http.Response.make(responseCode,responseContent,responseHeaders)
+            newflow.response = http.Response.make(response_code,response_content,response_headers)
         except TypeError as e:
             logger.error("Failed to create response")
             raise exceptions.OptionsError(str(e)) from e
         
         return newflow
 
-    async def loadFlows(self)->None:
+    async def load_flows(self)->None:
         """
         Loads flows into mitmproxy
 
@@ -116,7 +116,7 @@ class ReadHar:
        
    
     @command.command("readhar")
-    def readhar(self,
+    def read_har(self,
         path: types.Path,
         ) -> None:
         """
@@ -136,6 +136,6 @@ class ReadHar:
             flow = self.request_to_flow(request_json)
             if flow: 
                 self.flows.append(flow)
-        asyncio.create_task(self.loadFlows())
+        asyncio.create_task(self.load_flows())
 
 addons = [ReadHar()]
