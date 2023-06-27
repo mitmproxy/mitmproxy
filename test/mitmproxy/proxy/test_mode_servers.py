@@ -9,7 +9,6 @@ import mitmproxy_rs
 import pytest
 
 import mitmproxy.platform
-from ...conftest import no_ipv6
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance
@@ -307,7 +306,7 @@ async def test_udp_connection_reuse(monkeypatch):
 
 
 async def test_udp_dual_stack(caplog_async):
-    caplog_async.set_level("INFO")
+    caplog_async.set_level("DEBUG")
     manager = MagicMock()
     manager.connections = {}
 
@@ -322,7 +321,7 @@ async def test_udp_dual_stack(caplog_async):
         assert await caplog_async.await_log("sent an invalid message")
         writer.close()
 
-        if not no_ipv6:
+        if "listening on IPv4 only" not in caplog_async.caplog.text:
             caplog_async.clear()
             reader, writer = await udp.open_connection("::1", port)
             writer.write(b"\x00\x00\x01")

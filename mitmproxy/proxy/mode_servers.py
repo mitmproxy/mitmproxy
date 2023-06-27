@@ -330,10 +330,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                         "::",
                         port or ipv4.sockets[0].getsockname()[1],
                     )
-                except Exception:
+                except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
                     return [ipv4]
-                else:
+                else:  # pragma: no cover
                     return [ipv4, ipv6]
             return [
                 await udp.start_server(
