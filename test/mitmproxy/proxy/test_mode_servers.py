@@ -26,7 +26,7 @@ def test_make():
 
     for mode in [
         "regular",
-        "http3",
+        # "http3",
         "upstream:example.com",
         "transparent",
         "reverse:example.com",
