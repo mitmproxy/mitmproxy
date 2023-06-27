@@ -1130,7 +1130,7 @@ class ClientQuicLayer(QuicLayer):
     def receive_handshake_data(
         self, data: bytes
     ) -> layer.CommandGenerator[tuple[bool, str | None]]:
-        if isinstance(self.context.layers[0], TransparentProxy):
+        if isinstance(self.context.layers[0], TransparentProxy):  # pragma: no cover
             yield commands.Log(
                 f"Swallowing QUIC handshake because HTTP/3 does not support transparent mode yet.",
                 DEBUG,
