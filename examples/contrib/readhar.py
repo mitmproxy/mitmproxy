@@ -23,9 +23,16 @@ class ReadHar:
         """Changes provided headers into flow-friendly format"""
         flow_headers = []
         for header in request_headers:
-            if type(header) == dict and header.get("name", None):
-                key = header["name"]
-                value = header["value"]
+
+            # Applications that use the {"name":item,"value":item} notation are Brave, Chrome, Edge, Firefox, Charles, Fiddler, Insomnia, Safari
+            if isinstance(header,dict):
+                try:
+                    key=header["name"]
+                    value=header["value"]
+                except KeyError as e:
+                    raise exceptions.OptionsError(str(e)) from e
+
+            # Application that use the [name, value] notation is Slack
             else:
                 key = header[0]
                 value = header[1]
@@ -38,12 +45,12 @@ class ReadHar:
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
-        requestMethod = request_json["request"].get("method", "")
-        requestUrl = request_json["request"].get("url", None)
-        if not requestUrl:
-            requestUrl = request_json["request"].get("host", None)
-
-        requestHeaders = self.fix_headers(request_json["request"].get("headers", []))
+        request_method = request_json["request"]["method"]
+        request_url = request_json["request"].get("url",None)
+        if not request_url:
+            request_url = request_json["request"].get("host",None)
+        
+        request_headers = self.fix_headers(request_json["request"].get("headers",[]))
 
         client_conn = connection.Client(
             peername=("127.0.0.1", 51513),
@@ -56,29 +63,26 @@ class ReadHar:
 
         newflow = http.HTTPFlow(client_conn, server_conn)
         try:
-            newflow.request = http.Request.make(
-                requestMethod, requestUrl, "", requestHeaders
-            )
-        except:
-            logging.error("Unable to create flow, please change to a valid HAR format")
-            return
-
-        responseCode = request_json["response"].get("status", "")
-
-        responseContent = request_json["response"]["content"].get("text", "")
-
-        responseHeaders = self.fix_headers(request_json["response"].get("headers", []))
+            newflow.request = http.Request.make(request_method,request_url,"",request_headers)
+        except TypeError as e:
+            logger.error("Failed to create request")
+            raise exceptions.OptionsError(str(e)) from e
+            
+            
+        response_code = request_json["response"].get("status","")
+            
+        response_content = request_json["response"]["content"].get("text","")
+        
+        response_headers = self.fix_headers(request_json["response"].get("headers",[]))
         try:
-            newflow.response = http.Response.make(
-                responseCode, responseContent, responseHeaders
-            )
-        except:
-            logging.error("Unable to create flow, please change to a valid HAR format")
-            return
-
+            newflow.response = http.Response.make(response_code,response_content,response_headers)
+        except TypeError as e:
+            logger.error("Failed to create response")
+            raise exceptions.OptionsError(str(e)) from e
+        
         return newflow
 
-    async def loadFlows(self) -> None:
+    async def load_flows(self)->None:
         """
         Loads flows into mitmproxy
 
@@ -104,8 +108,7 @@ class ReadHar:
         self._read_har_task = asyncio.create_task(self.loadFlows())
 
     @command.command("readhar")
-    def readhar(
-        self,
+    def read_har(self,
         path: types.Path,
     ) -> None:
         """
@@ -130,8 +133,6 @@ class ReadHar:
             flow = self.request_to_flow(request_json)
             if flow:
                 self.flows.append(flow)
-        self.running()
-        self._read_har_task
-
+        asyncio.create_task(self.load_flows())
 
 addons = [ReadHar()]
