@@ -57,7 +57,7 @@ async def test_last_exception_and_running(monkeypatch):
         await inst1.start()
         assert inst1.last_exception is None
         assert inst1.is_running
-        monkeypatch.setattr(inst1._server, "wait_closed", _raise)
+        monkeypatch.setattr(inst1._servers[0], "wait_closed", _raise)
         with pytest.raises(type(err), match=str(err)):
             await inst1.stop()
         assert inst1.last_exception is err
@@ -303,6 +303,33 @@ async def test_udp_connection_reuse(monkeypatch):
         await asyncio.sleep(0)
 
         assert len(inst.manager.connections) == 1
+
+
+async def test_udp_dual_stack(caplog_async):
+    caplog_async.set_level("DEBUG")
+    manager = MagicMock()
+    manager.connections = {}
+
+    with taddons.context():
+        inst = ServerInstance.make("dns@:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("server listening")
+
+        _, port, *_ = inst.listen_addrs[0]
+        reader, writer = await udp.open_connection("127.0.0.1", port)
+        writer.write(b"\x00\x00\x01")
+        assert await caplog_async.await_log("sent an invalid message")
+        writer.close()
+
+        if "listening on IPv4 only" not in caplog_async.caplog.text:
+            caplog_async.clear()
+            reader, writer = await udp.open_connection("::1", port)
+            writer.write(b"\x00\x00\x01")
+            assert await caplog_async.await_log("sent an invalid message")
+            writer.close()
+
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
 
 
 @pytest.fixture()

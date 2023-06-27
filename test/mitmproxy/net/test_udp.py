@@ -72,10 +72,9 @@ async def test_client_server():
 
 
 async def test_bind_emptystr():
-    server = await start_server(lambda *_: None, "", 0)
-    assert server.sockets[0].getsockname()
-    server.close()
-    await server.wait_closed()
+    # this should be handled by the caller, we just raise visibly here.
+    with pytest.raises(AssertionError):
+        await start_server(lambda *_: None, "", 0)
 
 
 async def test_reader(caplog_async):
