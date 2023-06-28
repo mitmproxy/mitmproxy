@@ -48,8 +48,14 @@ class ReadHar:
 
         request_method = request_json["request"]["method"]
         request_url = request_json["request"]["url"]
-        server_address = request_json["serverIPAddress"]
+        server_address = request_json.get("serverIPAddress",None)
         request_headers = self.fix_headers(request_json["request"]["headers"])
+        http_version = request_json["request"]["httpVersion"]
+        # List contains all the representations of an http request across different HAR files
+        if http_version in ["http/2.0","h3","HTTP/1.1","HTTP/3","HTTP/2"]:
+            port = 443
+        else:
+            port = 80
 
         client_conn = connection.Client(
             peername=("127.0.0.1", 51513),
@@ -57,9 +63,11 @@ class ReadHar:
             # TODO Get time info from HAR File
             timestamp_start=time.time(),
         )
-
-        
-        server_conn = connection.Server(address=(server_address, 3))
+        # TODO find server address if "serverIPAddress" == ""
+        if server_address:
+            server_conn = connection.Server(address=(server_address, port))
+        else:
+            server_conn = connection.Server(address=None)
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
         new_flow.request = http.Request.make(
