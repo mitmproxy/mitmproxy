@@ -58,8 +58,8 @@ class ReadHar:
             port = 80
 
         client_conn = connection.Client(
-            peername=("127.0.0.1", 51513),
-            sockname=("127.0.0.1", 8080),
+            peername=("127.0.0.1", 0),
+            sockname=("127.0.0.1", 0),
             # TODO Get time info from HAR File
             timestamp_start=time.time(),
         )
@@ -94,9 +94,6 @@ class ReadHar:
     ) -> None:
         """
         Reads a HAR file into mitmproxy. Loads a flow for each entry in given HAR file.
-
-        Args:
-            path (types.Path): Path to HAR file
         """
         flows = []
         with open(path) as fp:
