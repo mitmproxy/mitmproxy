@@ -24,7 +24,7 @@ class ReadHar:
         """Converts provided headers into (b"header-name", b"header-value") tuples"""
         flow_headers = []
         for header in request_headers:
-            # Applications that use the {"name":item,"value":item} notation are Brave, Chrome, Edge, Firefox, Charles, Fiddler, Insomnia, Safari
+            # Applications that use the {"name":item,"value":item} notation are Brave,Chrome,Edge,Firefox,Charles,Fiddler,Insomnia,Safari
             if isinstance(header, dict):
                 key = header["name"]
                 value = header["value"]
@@ -48,7 +48,7 @@ class ReadHar:
 
         request_method = request_json["request"]["method"]
         request_url = request_json["request"]["url"]
-
+        server_address = request_json["serverIPAddress"]
         request_headers = self.fix_headers(request_json["request"]["headers"])
 
         client_conn = connection.Client(
@@ -58,30 +58,24 @@ class ReadHar:
             timestamp_start=time.time(),
         )
 
-        # 375:3 is default mitmproxy server_conn when making a new flow.
-        server_conn = connection.Server(address=("375", 3))
+        
+        server_conn = connection.Server(address=(server_address, 3))
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
-        try:
-            new_flow.request = http.Request.make(
-                request_method, request_url, "", request_headers
-            )
-        except TypeError as e:
-            logger.error("Failed to create request")
-            raise exceptions.OptionsError(str(e)) from e
+        new_flow.request = http.Request.make(
+            request_method, request_url, "", request_headers
+        )
 
         response_code = request_json["response"]["status"]
 
-        response_content = request_json["response"]["content"]["text"]
+        # In Firefox HAR files images don't include response bodies
+        response_content = request_json["response"]["content"].get("text","")
 
         response_headers = self.fix_headers(request_json["response"]["headers"])
-        try:
-            new_flow.response = http.Response.make(
-                response_code, response_content, response_headers
-            )
-        except TypeError as e:
-            logger.error("Failed to create response")
-            raise exceptions.OptionsError(str(e)) from e
+        
+        new_flow.response = http.Response.make(
+            response_code, response_content, response_headers
+        )
 
         return new_flow
 
@@ -101,16 +95,12 @@ class ReadHar:
             try:
                 har_file = json.load(fp)
             except Exception:
-                raise (
-                    exceptions.CommandError(
-                        "Unable to read HAR file. Please provide a valid HAR file"
-                    )
-                )
+                raise exceptions.CommandError("Unable to read HAR file. Please provide a valid HAR file")
+                
 
         for request_json in har_file["log"]["entries"]:
             flow = self.request_to_flow(request_json)
-            if flow:
-                flows.append(flow)
+            flows.append(flow)
 
         async def load_flows() -> None:
             for flow in flows:
