@@ -63,11 +63,8 @@ class ReadHar:
             # TODO Get time info from HAR File
             timestamp_start=time.time(),
         )
-        # TODO find server address if "serverIPAddress" == ""
-        if server_address:
-            server_conn = connection.Server(address=(server_address, port))
-        else:
-            server_conn = connection.Server(address=None)
+
+        server_conn = connection.Server(address=(server_address, 3))
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
         new_flow.request = http.Request.make(
@@ -77,10 +74,10 @@ class ReadHar:
         response_code = request_json["response"]["status"]
 
         # In Firefox HAR files images don't include response bodies
-        response_content = request_json["response"]["content"].get("text","")
+        response_content = request_json["response"]["content"].get("text", "")
 
         response_headers = self.fix_headers(request_json["response"]["headers"])
-        
+
         new_flow.response = http.Response.make(
             response_code, response_content, response_headers
         )
@@ -103,8 +100,9 @@ class ReadHar:
             try:
                 har_file = json.load(fp)
             except Exception:
-                raise exceptions.CommandError("Unable to read HAR file. Please provide a valid HAR file")
-                
+                raise exceptions.CommandError(
+                    "Unable to read HAR file. Please provide a valid HAR file"
+                )
 
         for request_json in har_file["log"]["entries"]:
             flow = self.request_to_flow(request_json)
