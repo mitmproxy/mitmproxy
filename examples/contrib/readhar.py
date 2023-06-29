@@ -15,14 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class ReadHar:
-    def __init__(self):
-        pass
-
     def fix_headers(
         self, request_headers: list[dict[str, str]] | list[tuple[str, str]]
-    ) -> list[tuple[bytes, bytes]]:
+    ) -> http.Headers:
         """Converts provided headers into (b"header-name", b"header-value") tuples"""
-        flow_headers = []
+        flow_headers: list[tuple[bytes, bytes]] = []
         for header in request_headers:
             # Applications that use the {"name":item,"value":item} notation are Brave,Chrome,Edge,Firefox,Charles,Fiddler,Insomnia,Safari
             if isinstance(header, dict):
@@ -36,9 +33,9 @@ class ReadHar:
                     value = header[1]
                 except IndexError as e:
                     raise exceptions.OptionsError(str(e)) from e
-            flow_headers.append((bytes(key, "utf-8"), bytes(value, "utf-8")))
+            flow_headers.append((key.encode(), value.encode()))
 
-        return flow_headers
+        return http.Headers(flow_headers)
 
     # Don't know how to make a type annotation for the request json
     def request_to_flow(self, request_json: dict) -> http.HTTPFlow:
@@ -52,10 +49,10 @@ class ReadHar:
         request_headers = self.fix_headers(request_json["request"]["headers"])
         http_version = request_json["request"]["httpVersion"]
         # List contains all the representations of an http request across different HAR files
-        if http_version in ["http/2.0", "h3", "HTTP/1.1", "HTTP/3", "HTTP/2"]:
-            port = 443
-        else:
+        if request_url.startswith("http://"):
             port = 80
+        else:
+            port = 443
 
         client_conn = connection.Client(
             peername=("127.0.0.1", 0),
