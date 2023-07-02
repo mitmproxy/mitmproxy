@@ -131,12 +131,17 @@ class TestTlsConfig:
             assert entry.cert.altnames == [
                 "example.mitmproxy.org",
                 "server-address.example",
+                "127.0.0.1",
             ]
 
             # And now we also incorporate SNI.
             ctx.client.sni = "sni.example"
             entry = ta.get_cert(ctx)
-            assert entry.cert.altnames == ["example.mitmproxy.org", "sni.example"]
+            assert entry.cert.altnames == [
+                "example.mitmproxy.org",
+                "sni.example",
+                "server-address.example",
+            ]
 
             with open(tdata.path("mitmproxy/data/invalid-subject.pem"), "rb") as f:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]

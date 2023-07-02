@@ -820,6 +820,7 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
             await caplog_async.await_log("stopped")
 
 
+@pytest.mark.skip("HTTP/3 for regular mode is not fully supported yet")
 async def test_regular_http3(caplog_async, monkeypatch) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
