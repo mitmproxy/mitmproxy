@@ -90,7 +90,9 @@ class ReplayHandler(server.ConnectionHandler):
 
         context = Context(client, options)
         context.server = Server(address=(flow.request.host, flow.request.port))
-        context.server.tls = flow.request.scheme == "https"
+        if flow.request.scheme == "https":
+            context.server.tls = True
+            context.server.sni = flow.request.pretty_host
         if options.mode and options.mode[0].startswith("upstream:"):
             mode = UpstreamMode.parse(options.mode[0])
             assert isinstance(mode, UpstreamMode)  # remove once mypy supports Self.
