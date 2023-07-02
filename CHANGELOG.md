@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
+  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
 * Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
   ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
 * Add "Prettier" code linting tool to mitmweb.
