@@ -37,7 +37,7 @@
   ([#6088](https://github.com/mitmproxy/mitmproxy/pull/6088), @sujaldev)
 * Fix a bug where a server connection timeout would cause requests to be issued with a wrong SNI in reverse proxy mode.
   ([#6148](https://github.com/mitmproxy/mitmproxy/pull/6148), @mhils)
-* The `server_replay_nopop` option is now `server_replay_pop` to avoid confusing double-negation.
+* The `server_replay_nopop` option has been renamed to `server_replay_reuse` to avoid confusing double-negation.
   ([#6084](https://github.com/mitmproxy/mitmproxy/issues/6084), @prady0t, @Semnodime)
 
 ### Breaking Changes

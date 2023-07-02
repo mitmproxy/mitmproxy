@@ -36,7 +36,6 @@ DEPRECATED = """
 --replay-ignore-param
 --replay-ignore-host
 --replace-from-file
---server-replay-nopop
 """
 
 REPLACED = """
@@ -61,6 +60,7 @@ REPLACED = """
 -f
 --filter
 --socks
+--server-replay-nopop
 """
 
 REPLACEMENTS = {
@@ -76,7 +76,7 @@ REPLACEMENTS = {
     "--upstream-trusted-confdir": "ssl_verify_upstream_trusted_confdir",
     "--upstream-trusted-ca": "ssl_verify_upstream_trusted_ca",
     "--no-onboarding": "onboarding",
-    "--no-pop": "server_replay_pop",
+    "--no-pop": "server_replay_reuse",
     "--replay-ignore-content": "server_replay_ignore_content",
     "--replay-ignore-payload-param": "server_replay_ignore_payload_params",
     "--replay-ignore-param": "server_replay_ignore_params",
@@ -103,7 +103,7 @@ REPLACEMENTS = {
     "-f": "--view-filter",
     "--filter": "--view-filter",
     "--socks": "--mode socks5",
-    "--server-replay-nopop": "server_replay_pop",
+    "--server-replay-nopop": "--server-replay-reuse",
 }
 
 

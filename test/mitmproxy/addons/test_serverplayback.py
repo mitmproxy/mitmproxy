@@ -232,10 +232,10 @@ def test_load():
         assert not s.next_flow(r)
 
 
-def test_load_with_server_replay_pop():
+def test_load_with_server_replay_reuse():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
-        tctx.configure(s, server_replay_pop=False)
+        tctx.configure(s, server_replay_reuse=True)
 
         r = tflow.tflow(resp=True)
         r.request.headers["key"] = "one"
