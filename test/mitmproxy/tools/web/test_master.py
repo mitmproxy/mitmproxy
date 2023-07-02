@@ -15,6 +15,6 @@ async def test_reuse():
     master = WebMaster(Options(), with_termlog=False)
     master.options.web_host = "127.0.0.1"
     master.options.web_port = port
-    with pytest.raises(OSError, match=f"--set web_port={port + 1}"):
+    with pytest.raises(OSError, match=f"--set web_port={port + 2}"):
         await master.running()
     server.close()
