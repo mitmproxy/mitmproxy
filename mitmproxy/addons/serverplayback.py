@@ -16,6 +16,7 @@ from mitmproxy import io
 
 logger = logging.getLogger(__name__)
 
+
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
     configured: bool
@@ -230,7 +231,9 @@ class ServerPlayback:
 
     def configure(self, updated):
         if ctx.options.server_replay_nopop:
-            logger.error("server_replay_nopop has been renamed to server_replay_reuse, please update your config.")
+            logger.error(
+                "server_replay_nopop has been renamed to server_replay_reuse, please update your config."
+            )
         if not self.configured and ctx.options.server_replay:
             self.configured = True
             try:
