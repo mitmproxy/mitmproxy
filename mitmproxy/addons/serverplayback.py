@@ -14,6 +14,8 @@ from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import io
 
+logger = logging.getLogger(__name__)
+
 
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
@@ -31,12 +33,20 @@ class ServerPlayback:
             "Kill extra requests during replay (for which no replayable response was found).",
         )
         loader.add_option(
-            "server_replay_nopop",
+            "server_replay_reuse",
             bool,
             False,
             """
             Don't remove flows from server replay state after use. This makes it
             possible to replay same response multiple times.
+            """,
+        )
+        loader.add_option(
+            "server_replay_nopop",
+            bool,
+            False,
+            """
+            Deprecated alias for `server_replay_reuse`.
             """,
         )
         loader.add_option(
@@ -201,7 +211,7 @@ class ServerPlayback:
         """
         hash = self._hash(flow)
         if hash in self.flowmap:
-            if ctx.options.server_replay_nopop:
+            if ctx.options.server_replay_reuse or ctx.options.server_replay_nopop:
                 return next(
                     (flow for flow in self.flowmap[hash] if flow.response), None
                 )
@@ -220,6 +230,10 @@ class ServerPlayback:
             return None
 
     def configure(self, updated):
+        if ctx.options.server_replay_nopop:  # pragma: no cover
+            logger.error(
+                "server_replay_nopop has been renamed to server_replay_reuse, please update your config."
+            )
         if not self.configured and ctx.options.server_replay:
             self.configured = True
             try:
