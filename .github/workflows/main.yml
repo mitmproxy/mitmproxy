@@ -231,6 +231,9 @@ jobs:
       MSFT_TENANT_ID: ${{ secrets.MSFT_TENANT_ID }}
       MSFT_CLIENT_ID: ${{ secrets.MSFT_CLIENT_ID }}
       MSFT_CLIENT_SECRET: ${{ secrets.MSFT_CLIENT_SECRET }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v3
         with:
