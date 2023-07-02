@@ -41,7 +41,11 @@ async def test_playback(tdata, mode, concurrency):
         else:
             assert req == b"GET /path HTTP/1.1\r\n"
         req = await reader.readuntil(b"data")
-        assert req == (b"header: qvalue\r\n" b"content-length: 4\r\nHost: example.mitmproxy.org\r\n\r\n" b"data")
+        assert req == (
+            b"header: qvalue\r\n"
+            b"content-length: 4\r\nHost: example.mitmproxy.org\r\n\r\n"
+            b"data"
+        )
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
@@ -57,8 +61,12 @@ async def test_playback(tdata, mode, concurrency):
         if mode == "https":
             server_args["ssl"] = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             server_args["ssl"].load_cert_chain(
-                certfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt"),
-                keyfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.key"),
+                certfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.crt"
+                ),
+                keyfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.key"
+                ),
             )
             tctx.configure(
                 tls,
