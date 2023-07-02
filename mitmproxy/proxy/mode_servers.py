@@ -279,7 +279,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 assert (
                     self.mode.custom_listen_host is None
                 )  # since [@ [listen_addr:]listen_port]
-                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
+                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
             raise OSError(e.errno, message, e.filename) from e
 
     async def _stop(self) -> None:

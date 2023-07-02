@@ -103,7 +103,7 @@ class WebMaster(master.Master):
         except OSError as e:
             message = f"Web server failed to listen on {self.options.web_host or '*'}:{self.options.web_port} with {e}"
             if e.errno == errno.EADDRINUSE:
-                message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 1}`."
+                message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 2}`."
             raise OSError(e.errno, message, e.filename) from e
 
         logger.info(
