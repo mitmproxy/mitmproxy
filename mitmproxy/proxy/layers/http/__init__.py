@@ -1043,7 +1043,12 @@ class HttpLayer(layer.Layer):
                     self.mode == HTTPMode.transparent
                     and event.address == self.context.server.address
                 ):
-                    context.server.sni = self.context.client.sni or event.address[0]
+                    # reverse proxy mode may set self.context.server.sni, which takes precedence.
+                    context.server.sni = (
+                        self.context.server.sni
+                        or self.context.client.sni
+                        or event.address[0]
+                    )
                 else:
                     context.server.sni = event.address[0]
                 if context.server.transport_protocol == "tcp":

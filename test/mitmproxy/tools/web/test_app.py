@@ -183,7 +183,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         sock2.getsockname.return_value = ("::1", 8080)
         server = Mock()
         server.sockets = [sock1, sock2]
-        si1._server = server
+        si1._servers = [server]
         si2 = ServerInstance.make("reverse:example.com", m.proxyserver)
         si2.last_exception = RuntimeError("I failed somehow.")
         si3 = ServerInstance.make("socks5", m.proxyserver)

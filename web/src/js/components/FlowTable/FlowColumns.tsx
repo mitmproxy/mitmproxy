@@ -150,6 +150,19 @@ method.sortKey = (flow) => {
     }
 };
 
+export const version: FlowColumn = ({ flow }) => (
+    <td className="col-http-version">{version.sortKey(flow)}</td>
+);
+version.headerName = "Version";
+version.sortKey = (flow) => {
+    switch (flow.type) {
+        case "http":
+            return flow.request.http_version;
+        default:
+            return "";
+    }
+};
+
 export const status: FlowColumn = ({ flow }) => {
     let color = "darkred";
 
@@ -284,6 +297,7 @@ quickactions.sortKey = (flow) => 0;
 export default {
     icon,
     method,
+    version,
     path,
     quickactions,
     size,

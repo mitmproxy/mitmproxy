@@ -202,12 +202,12 @@ def installbuilder_installer():
     """Windows: Build the InstallBuilder installer."""
     _ensure_pyinstaller_onedir()
 
-    IB_VERSION = "22.10.0"
-    IB_SETUP_SHA256 = "49cbfc3ee8de02426abc0c1b92839934bdb0bf0ea12d88388dde9e4102fc429f"
+    IB_VERSION = "23.4.0"
+    IB_SETUP_SHA256 = "e4ff212ed962f9e0030d918b8a6e4d6dd8a9adc8bf8bc1833459351ee649eff3"
     IB_DIR = here / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(
-        rf"C:\Program Files\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
+        rf"C:\Program Files\InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     )
     IB_LICENSE = IB_DIR / "license.xml"
 
@@ -221,7 +221,11 @@ def installbuilder_installer():
 
     if not IB_CLI.exists():
         if not IB_SETUP.exists():
-            print("Downloading InstallBuilder...")
+            url = (
+                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
+                f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe"
+            )
+            print(f"Downloading InstallBuilder from {url}...")
 
             def report(block, blocksize, total):
                 done = block * blocksize
@@ -230,7 +234,7 @@ def installbuilder_installer():
 
             tmp = IB_SETUP.with_suffix(".tmp")
             urllib.request.urlretrieve(
-                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
+                url,
                 tmp,
                 reporthook=report,
             )

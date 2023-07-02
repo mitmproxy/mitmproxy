@@ -988,6 +988,7 @@ class ViewGrpcProtobuf(base.View):
         "gzip",
         "identity",
         "deflate",
+        "zstd",
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
