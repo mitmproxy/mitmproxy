@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 
 import pytest
+from readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
 from mitmproxy.tools.web.app import flow_to_json
-from readhar import ReadHar
 
 
 def file_to_flows(path_name: Path) -> list[dict]:
@@ -38,11 +38,8 @@ here = Path(__file__).parent.absolute()
 
 
 @pytest.mark.parametrize(
-    "har_file", [
-        pytest.param(x, id=x.stem)
-        for x in here.glob("har_files/*.har")
-    ]
-    )
+    "har_file", [pytest.param(x, id=x.stem) for x in here.glob("har_files/*.har")]
+)
 def test_har_to_flow(har_file: Path):
     expected_file = har_file.with_suffix(".json")
 
