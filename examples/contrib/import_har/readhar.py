@@ -96,6 +96,9 @@ class ReadHar:
 
         new_flow.response.timestamp_start = timestamp_started
         new_flow.response.timestamp_end = timestamp_ended
+
+        new_flow.client_conn.timestamp_start = timestamp_started
+        new_flow.client_conn.timestamp_end = timestamp_ended
         return new_flow
 
     @command.command("readhar")
