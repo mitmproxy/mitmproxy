@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 import time
-
+from datetime import datetime
 from mitmproxy import command
 from mitmproxy import connection
 from mitmproxy import ctx
@@ -43,6 +43,13 @@ class ReadHar:
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
+        timestamp_started = request_json["startedDateTime"]
+        timestamp_started = datetime.fromisoformat(timestamp_started)  
+
+        # Convert datetime object to UNIX timestamp
+        timestamp_started = timestamp_started.timestamp()
+        
+        timestamp_ended = timestamp_started + request_json["time"]
         request_method = request_json["request"]["method"]
         request_url = request_json["request"]["url"]
         server_address = request_json.get("serverIPAddress", None)
@@ -66,6 +73,7 @@ class ReadHar:
             server_conn = connection.Server(address=None)
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
+
         new_flow.request = http.Request.make(
             request_method, request_url, "", request_headers
         )
@@ -80,7 +88,13 @@ class ReadHar:
         new_flow.response = http.Response.make(
             response_code, response_content, response_headers
         )
-
+        
+        # Change time to match HAR file
+        new_flow.request.timestamp_start = timestamp_started
+        new_flow.request.timestamp_end = timestamp_ended
+        
+        new_flow.response.timestamp_start = timestamp_started
+        new_flow.response.timestamp_end = timestamp_ended
         return new_flow
 
     @command.command("readhar")
