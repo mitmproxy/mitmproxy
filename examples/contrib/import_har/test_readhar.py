@@ -1,17 +1,17 @@
-import glob
 import json
+from pathlib import Path
 
 import pytest
-from readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
 from mitmproxy.tools.web.app import flow_to_json
+from readhar import ReadHar
 
 
-def file_to_flows(path_name) -> list[dict]:
+def file_to_flows(path_name: Path) -> list[dict]:
     r = ReadHar()
-    with open(path_name) as f:
+    with open(path_name, "rb") as f:
         file_json = json.load(f)["log"]["entries"]
         flows = []
 
@@ -21,30 +21,6 @@ def file_to_flows(path_name) -> list[dict]:
             flows.append(flow_json)
 
     return flows
-
-
-def requests_to_flows(file_list) -> dict[str, list]:
-    results = {}
-    for path_name in file_list:
-        short_path_name = path_name.split("/")[2]
-        results[short_path_name] = {"outcome": []}
-
-        flows = file_to_flows(path_name)
-        results[short_path_name]["outcome"] = flows
-
-    return results
-
-
-def data() -> dict:
-    expected = {}
-    file_list = glob.glob("./expected/*")
-    for file in file_list:
-        short_path_name = file.split("/")[2]
-        with open(file) as fp:
-            file_json = json.load(fp)
-            expected[short_path_name] = file_json
-
-    return expected
 
 
 def test_corrupt():
@@ -58,29 +34,36 @@ def test_corrupt():
         pytest.raises(exceptions.OptionsError, r.fix_headers, file_json["headers"])
 
 
-def test_har_to_flow():
-    expected_data = data()
-    file_list = glob.glob("./har_files/*.har")
-    outcome = requests_to_flows(file_list)
+here = Path(__file__).parent.absolute()
 
-    for file in expected_data:
-        index = 0
-        for flow in expected_data[file]["outcome"]:
-            outcomeflow = outcome[file]["outcome"][index]
-            flow = json.loads(json.dumps(flow))
-            outcomeflow = json.loads(json.dumps(outcomeflow))
 
-            # TODO figure out why contentHash is changing
-            flow["request"].pop("contentHash")
-            outcomeflow["request"].pop("contentHash")
-            flow["response"].pop("contentHash")
-            outcomeflow["response"].pop("contentHash")
+@pytest.mark.parametrize(
+    "har_file", [
+        pytest.param(x, id=x.stem)
+        for x in here.glob("har_files/*.har")
+    ]
+    )
+def test_har_to_flow(har_file: Path):
+    expected_file = har_file.with_suffix(".json")
 
-            # Perform assertions without comparing 'contentHash'
-            assert flow["request"] == outcomeflow["request"]
-            assert flow["response"] == outcomeflow["response"]
+    expected_flows = json.loads(expected_file.read_bytes())
+    actual_flows = file_to_flows(har_file)
 
-            index += 1
+    for expected, actual in zip(expected_flows["outcome"], actual_flows):
+        expected = json.loads(json.dumps(expected))
+
+        actual = json.loads(json.dumps(actual))
+
+        actual["id"] = expected["id"]
+        actual["timestamp_created"] = expected["timestamp_created"]
+        actual["server_conn"]["id"] = expected["server_conn"]["id"]
+        actual["client_conn"]["id"] = expected["client_conn"]["id"]
+
+        # Perform assertions without comparing 'contentHash'
+        assert actual["request"] == expected["request"]
+        assert actual["response"] == expected["response"]
+
+        assert actual == expected
 
 
 if __name__ == "__main__":

@@ -1,16 +1,16 @@
 {
     "outcome": [
         {
-            "id": "5dd27e87-4232-4b06-865e-d5689511fc05",
+            "id": "b6b40db7-1ba4-43ee-b8e0-c9f35e5d5aed",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.703424,
+            "timestamp_created": 1688740128.727534,
             "client_conn": {
-                "id": "65e1df7c-079d-4bdf-bcde-21362821c139",
+                "id": "c3894ba6-8aac-45dd-a0d9-29ec86b777ff",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -25,16 +25,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.70339,
+                "timestamp_start": 1688740128.727509,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "33dfeedf-489d-434a-a7aa-d2be6c19c55d",
+                "id": "9847b126-6862-4339-83f9-489538d1fd83",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -74,7 +74,7 @@
                     ],
                     [
                         "accept",
-                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
                     ],
                     [
                         "accept-encoding",
@@ -82,15 +82,11 @@
                     ],
                     [
                         "accept-language",
-                        "en-US,en;q=0.9"
+                        "en-US,en;q=0.6"
                     ],
                     [
                         "cache-control",
                         "max-age=0"
-                    ],
-                    [
-                        "dnt",
-                        "1"
                     ],
                     [
                         "if-modified-since",
@@ -102,19 +98,7 @@
                     ],
                     [
                         "referer",
-                        "https://www.google.com/"
-                    ],
-                    [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "https://search.brave.com/"
                     ],
                     [
                         "sec-fetch-dest",
@@ -133,12 +117,16 @@
                         "?1"
                     ],
                     [
+                        "sec-gpc",
+                        "1"
+                    ],
+                    [
                         "upgrade-insecure-requests",
                         "1"
                     ],
                     [
                         "user-agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -147,8 +135,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.25,
-                "timestamp_end": 1680134468.9160001,
+                "timestamp_start": 1680135404.541,
+                "timestamp_end": 1680135419.556,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -158,7 +146,7 @@
                 "headers": [
                     [
                         "age",
-                        "11391"
+                        "33410"
                     ],
                     [
                         "alt-svc",
@@ -166,11 +154,15 @@
                     ],
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:54 GMT"
+                        "Wed, 29 Mar 2023 14:59:54 GMT"
                     ],
                     [
                         "etag",
                         "W/\"a1550c2bd25c5bcfef789d730f5bbddf\""
+                    ],
+                    [
+                        "last-modified",
+                        "Sat, 04 Mar 2023 18:02:08 GMT"
                     ],
                     [
                         "server",
@@ -182,15 +174,15 @@
                     ],
                     [
                         "via",
-                        "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "x-amz-cf-id",
-                        "PaWnOEEyng3O4PBX2lab_qyD2DQ60VajC413wiIbt93eiNkaSKvpkQ=="
+                        "aBz-MGXl4zVYEHjdNt3FNyRZ4BKVlhHbVcvmnDhY_h_8feI5fLLk2A=="
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "x-cache",
@@ -203,21 +195,21 @@
                 ],
                 "contentLength": 31824,
                 "contentHash": "dd6fc3e7c599b080577916177db994e83dbf799115a4ef250bb41745d14b85a4",
-                "timestamp_start": 1680134454.25,
-                "timestamp_end": 1680134468.9160001
+                "timestamp_start": 1680135404.541,
+                "timestamp_end": 1680135419.556
             }
         },
         {
-            "id": "aa4ada2e-de5b-4516-b13f-bf7e7c1cd3ca",
+            "id": "c756da8b-c430-49d4-9091-4d2765f6cf3d",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.703874,
+            "timestamp_created": 1688740128.727885,
             "client_conn": {
-                "id": "c0e1e09f-83db-4bd5-a056-b5723eb428a9",
+                "id": "91c5b38f-bfcf-4bf5-a628-34f30a4c84dd",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -232,16 +224,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.703857,
+                "timestamp_start": 1688740128.7278678,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "787623fe-28b7-4d5a-9b9a-99bb2d8b8240",
+                "id": "8e5d6bf1-632a-49f5-8e4d-631236bece69",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -264,28 +256,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -294,8 +270,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3700001,
+                "timestamp_start": 1680135404.566,
+                "timestamp_end": 1680135404.692,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -305,7 +281,7 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 17:41:34 GMT"
+                        "Wed, 29 Mar 2023 09:06:44 GMT"
                     ],
                     [
                         "content-encoding",
@@ -313,7 +289,7 @@
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -325,11 +301,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "37227"
+                        "54575"
                     ],
                     [
                         "etag",
@@ -353,7 +329,7 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "74-ReRjuYM5vOYRWyITSAAqjhe18h2L_Ftv2iGvI7ChoLmL4WH41fg=="
+                        "F-RGfor7wxs5BaR2m3zaDoEDUu-HXtowaQlusU-SBycbFfXaEKoVdA=="
                     ],
                     [
                         "content-length",
@@ -361,22 +337,22 @@
                     ]
                 ],
                 "contentLength": 36819,
-                "contentHash": "cb9b6b1ca8f111894b6afc759ab8b274129d65d81015bef7e2398242b7078af7",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3700001
+                "contentHash": "c6becddbc8f88c0a1fce54f012824efac7151361ad4e57b054b126ab7eb5a2c9",
+                "timestamp_start": 1680135404.566,
+                "timestamp_end": 1680135404.692
             }
         },
         {
-            "id": "0f0425c3-dafb-41f1-bd9f-6e2aec676712",
+            "id": "4da1cbfd-e456-4a47-b070-98304de83e9a",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.71193,
+            "timestamp_created": 1688740128.736012,
             "client_conn": {
-                "id": "8b04c569-d5d3-4169-a1cc-1673a2aee08d",
+                "id": "dcf9e0bd-82cd-4444-afab-9f59a82f4af8",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -391,16 +367,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7119029,
+                "timestamp_start": 1688740128.735992,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "14a918d1-57cd-4193-82cf-9223e8495da6",
+                "id": "9a42a99e-a250-481c-a74d-be85884fe2de",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -423,28 +399,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -453,8 +413,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3200002,
+                "timestamp_start": 1680135404.566,
+                "timestamp_end": 1680135404.677,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -464,11 +424,11 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 17:41:34 GMT"
+                        "Wed, 29 Mar 2023 09:06:44 GMT"
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -480,11 +440,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "37227"
+                        "54574"
                     ],
                     [
                         "etag",
@@ -512,26 +472,26 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "mX-MSVjYk6yyi_4FNWN-mdQQXg37fm6B_3OoOzKOavacct7krRjbMw=="
+                        "lnZ6NUnY6x44EF_E9i-K7nEp8oW3Q-2HYuA2AR4Q4b6TJv6oEan4zg=="
                     ]
                 ],
                 "contentLength": 2860,
                 "contentHash": "548b761dd97ebb901162b0a125e8cfb513efb9ae0b8b84cdc85959802ff60b29",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3200002
+                "timestamp_start": 1680135404.566,
+                "timestamp_end": 1680135404.677
             }
         },
         {
-            "id": "72b32ebf-3cfd-49fc-86b8-009c4d48f47e",
+            "id": "4b568f91-1502-4a02-a906-f4c01a1265a1",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.712152,
+            "timestamp_created": 1688740128.7362251,
             "client_conn": {
-                "id": "5b0901b0-4271-4e94-8991-c554bdc890dc",
+                "id": "e016345c-1f8c-44be-86c1-974583577dc0",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -546,16 +506,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.712138,
+                "timestamp_start": 1688740128.736212,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "50818dc9-08b6-4903-8068-df7b33c6775a",
+                "id": "0d478e7c-a867-4038-9f67-039c54f311d0",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -578,28 +538,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -608,8 +552,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.318,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.639,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -619,11 +563,11 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
+                        "Wed, 29 Mar 2023 16:09:35 GMT"
                     ],
                     [
                         "via",
-                        "1.1 5c9c18dc3f70d2dc4a380b2b87c39e4a.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -635,15 +579,19 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "27309"
+                        "29204"
                     ],
                     [
                         "etag",
                         "\"4f98eb11153c35af50112da2abe191b9\""
+                    ],
+                    [
+                        "vary",
+                        "Accept-Encoding"
                     ],
                     [
                         "x-cache",
@@ -658,31 +606,31 @@
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "x-amz-cf-id",
-                        "WZv2Xsoe-poW21VeOgCw7Hsh0pax9O0QSMn1ZaumZ21frvmg4_aaGw=="
-                    ],
-                    [
                         "content-length",
                         "156292"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "5yfyPmovbYw97YtrGGuR5ZcopoGvv_Peag_ccl1xZX_uPZeH1M5vbw=="
                     ]
                 ],
                 "contentLength": 156292,
                 "contentHash": "f7ae2285674fb1d86eb1ce8e8c07c04bb7e2f8ac00e564b5db960542f780106c",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.318
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.639
             }
         },
         {
-            "id": "b6058552-243a-470c-b8b3-e1574e8097b8",
+            "id": "4d5e9325-d66f-4f75-b657-e5b8b22cb99a",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.712728,
+            "timestamp_created": 1688740128.736792,
             "client_conn": {
-                "id": "44333e6c-1538-43ba-aef2-40e4f718cc38",
+                "id": "094a5085-be8d-4f09-a21b-b14da37302f2",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -697,16 +645,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.712714,
+                "timestamp_start": 1688740128.736779,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "50c0440f-4287-4be3-9ec2-52bb8030f3db",
+                "id": "ef86ceb4-6d11-460c-802f-a94c097dd4bb",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -729,28 +677,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -759,8 +691,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.315,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.636,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -770,11 +702,11 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
+                        "Wed, 29 Mar 2023 19:52:06 GMT"
                     ],
                     [
                         "via",
-                        "1.1 5c9c18dc3f70d2dc4a380b2b87c39e4a.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -786,11 +718,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "38370"
+                        "15853"
                     ],
                     [
                         "etag",
@@ -813,31 +745,31 @@
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "x-amz-cf-id",
-                        "N4LorZJWj8Cs27wAP5vm5LDg9bflY3vgBxDESaX7FUEj160_hNSKlA=="
-                    ],
-                    [
                         "content-length",
                         "35400"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "37VZ5Yn6-yyoQz3WIm9tjwxYMBTAH6isSU6OBaYb886JbhudLOSlSw=="
                     ]
                 ],
                 "contentLength": 35400,
                 "contentHash": "12380236bcf13bf3cc751793f37f079f6fd8d2b18fba36ecb65aee861aef04d6",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.315
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.636
             }
         },
         {
-            "id": "0f1aaf2e-668b-4687-b074-3f97e965b80c",
+            "id": "7ee64b55-3b99-4939-ad90-513659ff6415",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.712982,
+            "timestamp_created": 1688740128.737059,
             "client_conn": {
-                "id": "c3d798d4-8f38-449b-ae2e-dc0fb7f598af",
+                "id": "fc55fb0c-affc-4722-936f-9a74207c6866",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -852,16 +784,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7129679,
+                "timestamp_start": 1688740128.737046,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "0aafb2ff-8752-494c-907b-4f3dab73adb7",
+                "id": "fbd6362c-fbc2-4577-8bb6-4e409d799503",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -884,28 +816,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -914,8 +830,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.313,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.622,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -925,11 +841,11 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 17:41:34 GMT"
+                        "Wed, 29 Mar 2023 19:52:06 GMT"
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -941,11 +857,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "37227"
+                        "15853"
                     ],
                     [
                         "etag",
@@ -973,26 +889,26 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "gwyj7YShZNj5gYz14mP7i216XURMixoKBwYE1navrNYYikMTBKm1pg=="
+                        "DBoSsaFFX0YnmdcDGBOiqu34l_9xpTXIGs6bNIfbhe1Xfg5S0bx0Gg=="
                     ]
                 ],
                 "contentLength": 14376,
                 "contentHash": "71099a8c34afc736f8c58f170155317a8f2332458d08868810c69c39068d4c0b",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.313
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.622
             }
         },
         {
-            "id": "98913e3e-6ba9-4387-b19e-e8742cad2fd2",
+            "id": "64c16a4d-ac85-409d-bfe3-6947d7ee078f",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.7131772,
+            "timestamp_created": 1688740128.737337,
             "client_conn": {
-                "id": "a2a70ec3-e1a8-4c12-ad09-712858d5b4c9",
+                "id": "6bd25617-8e82-4581-af58-c0b74389280f",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1007,16 +923,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.713164,
+                "timestamp_start": 1688740128.737325,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "7ac4acb6-29ec-4416-bf77-ad3ced7a6e99",
+                "id": "91bd310e-4ff6-496f-be53-10b5a0719cf7",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -1039,28 +955,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -1069,8 +969,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3130002,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.6139998,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -1080,7 +980,7 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 17:41:34 GMT"
+                        "Wed, 29 Mar 2023 22:44:19 GMT"
                     ],
                     [
                         "content-encoding",
@@ -1088,7 +988,7 @@
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -1100,11 +1000,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "37227"
+                        "6497"
                     ],
                     [
                         "etag",
@@ -1128,7 +1028,7 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "gVFFbkLKhUCJ5lmfTSal7fcP1os9X5Sg45bCmTnFQo2p-2tfHOeu7Q=="
+                        "oBpj4hxRgwt9xPOQUvP4frGNv_zXxI-Lby0YWwOEs7fNA7WxHljpgw=="
                     ],
                     [
                         "content-length",
@@ -1137,21 +1037,21 @@
                 ],
                 "contentLength": 8231,
                 "contentHash": "340e4f8065b677d8637e55a1a2cfcd832d5e7289a9684ca3dce6d32cf540b4c0",
-                "timestamp_start": 1680134454.272,
-                "timestamp_end": 1680134454.3130002
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.6139998
             }
         },
         {
-            "id": "71ec500d-2bb5-4c77-89be-ca940da6538a",
+            "id": "b8d5b2ba-cb4f-40f9-8958-57c858ca387c",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.714,
+            "timestamp_created": 1688740128.7380521,
             "client_conn": {
-                "id": "00a2c054-9d29-4787-bed6-785b91859af9",
+                "id": "1f26141d-3410-4f95-9fc8-4c4a4aa3af20",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1166,16 +1066,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7139862,
+                "timestamp_start": 1688740128.73804,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "3257b3bc-fc07-4aa7-b42a-5b3206c12aa7",
+                "id": "b7973036-e866-4fa6-b2f4-eb52c2976e06",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -1198,28 +1098,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -1228,8 +1112,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.324,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.623,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -1239,7 +1123,7 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 17:41:34 GMT"
+                        "Wed, 29 Mar 2023 19:52:06 GMT"
                     ],
                     [
                         "content-encoding",
@@ -1247,7 +1131,7 @@
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -1259,11 +1143,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "37227"
+                        "15853"
                     ],
                     [
                         "etag",
@@ -1287,7 +1171,7 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "-bliYEwHM-mh3XVtusVZIR6kGPwDewKKSgdhY3hSPCNcEscj_09kgQ=="
+                        "_4T3RoXkJlh0kSE7t1sF14pNHM10Q6zdTglOCM9Nvw7okf6_6KDtAw=="
                     ],
                     [
                         "content-length",
@@ -1296,21 +1180,21 @@
                 ],
                 "contentLength": 3969,
                 "contentHash": "b6843f9c5695e0ce864a8e75a082bfe4a56acbbb92dc887eae454ba9e91e60fd",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.324
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.623
             }
         },
         {
-            "id": "2f4ecc87-adc2-4416-a786-d9ffeb1b5174",
+            "id": "239d5e07-51d4-4955-8140-9d2d54d127ab",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.714404,
+            "timestamp_created": 1688740128.7384388,
             "client_conn": {
-                "id": "75b3da27-6398-4652-993b-330b99f250f6",
+                "id": "cec0d216-3921-42b7-a7d7-faec03f46c8c",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1325,16 +1209,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.714391,
+                "timestamp_start": 1688740128.7384262,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "0a49e71e-2d07-4400-91ca-e88daf36b57c",
+                "id": "1ee3db89-66f4-4b15-a11c-3284abcc9626",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -1357,28 +1241,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -1387,8 +1255,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.322,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.613,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -1398,7 +1266,7 @@
                 "headers": [
                     [
                         "date",
-                        "Mon, 27 Mar 2023 18:48:35 GMT"
+                        "Wed, 29 Mar 2023 16:03:05 GMT"
                     ],
                     [
                         "content-encoding",
@@ -1406,7 +1274,7 @@
                     ],
                     [
                         "via",
-                        "1.1 61e47cd082bb04a8fb8ae61dd54f6b32.cloudfront.net (CloudFront)"
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -1418,11 +1286,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "33206"
+                        "29594"
                     ],
                     [
                         "etag",
@@ -1446,7 +1314,7 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "B3hNHzccrMjhOmnNN8fp3-B5b44TlG_obClYI0hoggyPqAbpS0ji6g=="
+                        "D6aDxUr3uvM3za4TDWOCWEzDxmH1joEKsMKQmt-uhZ_-Z04bbuMSDg=="
                     ],
                     [
                         "content-length",
@@ -1455,21 +1323,21 @@
                 ],
                 "contentLength": 3346,
                 "contentHash": "0ebca0155bf58b718a386a963d7d4212c2e906a73270ea353c5801dc0f79706c",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.322
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.613
             }
         },
         {
-            "id": "a9453a38-051a-4321-8dcc-e462019dd555",
+            "id": "cf59c3bb-54bf-466f-abf9-5c6d58c39340",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.714772,
+            "timestamp_created": 1688740128.73883,
             "client_conn": {
-                "id": "e9f0575e-837e-4cf6-a56e-475e0f2e47ca",
+                "id": "589f7760-1c1e-4b38-8a5e-52207a00b829",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1484,16 +1352,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.714758,
+                "timestamp_start": 1688740128.738818,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "34fedbd9-75ee-44b7-aedf-4074998d2145",
+                "id": "cc7bc416-b853-491a-b80a-5c2f27c25b78",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.80",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -1516,28 +1384,12 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
                         "Referer",
                         "https://mitmproxy.org/"
                     ],
                     [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -1546,8 +1398,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.3140001,
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.6209998,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -1557,15 +1409,15 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
-                    ],
-                    [
-                        "via",
-                        "1.1 5c9c18dc3f70d2dc4a380b2b87c39e4a.cloudfront.net (CloudFront)"
+                        "Wed, 29 Mar 2023 02:43:50 GMT"
                     ],
                     [
                         "content-encoding",
                         "gzip"
+                    ],
+                    [
+                        "via",
+                        "1.1 0d60533443ead16cd68819273caf966e.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -1577,11 +1429,11 @@
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "age",
-                        "28520"
+                        "77549"
                     ],
                     [
                         "etag",
@@ -1605,7 +1457,7 @@
                     ],
                     [
                         "x-amz-cf-id",
-                        "fjKHxQE5Novj-selBVEsnUDnIs162kg9kzudo9ac2Q4fNjsxMgSrqA=="
+                        "aYtqHBr2-nZWoQcWYKgctWuu265_0vCAo6k8HiBtfkf9vRcTELqJkA=="
                     ],
                     [
                         "content-length",
@@ -1614,21 +1466,21 @@
                 ],
                 "contentLength": 794,
                 "contentHash": "2e26f6c2a856c444b367fae087dd7a9e7c1cb77fe8a9956e214e67f6a29e4663",
-                "timestamp_start": 1680134454.273,
-                "timestamp_end": 1680134454.3140001
+                "timestamp_start": 1680135404.567,
+                "timestamp_end": 1680135404.6209998
             }
         },
         {
-            "id": "440d551c-6390-4026-a295-ff3558a0b979",
+            "id": "b602b560-cf88-47ca-a8b7-174667c2b848",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.715156,
+            "timestamp_created": 1688740128.739051,
             "client_conn": {
-                "id": "fbeec20d-2f25-46dc-b554-d36e585c5d6e",
+                "id": "4363a09e-f84c-4a97-b730-99236b3bd44f",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1643,163 +1495,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.715141,
+                "timestamp_start": 1688740128.739039,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "fa21974a-62a5-4055-a3de-bf3aa53a637d",
+                "id": "239e1f15-c1fa-4497-8243-c82b14842388",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.50",
-                    443
-                ],
-                "tls_established": false,
-                "cert": null,
-                "sni": null,
-                "cipher": null,
-                "alpn": null,
-                "tls_version": null,
-                "timestamp_start": null,
-                "timestamp_tcp_setup": null,
-                "timestamp_tls_setup": null,
-                "timestamp_end": null
-            },
-            "request": {
-                "method": "GET",
-                "scheme": "https",
-                "host": "mitmproxy.org",
-                "port": 443,
-                "path": "/data/twitter-timeline.png",
-                "http_version": "HTTP/1.1",
-                "headers": [
-                    [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
-                        "Referer",
-                        "https://mitmproxy.org/"
-                    ],
-                    [
-                        "DNT",
-                        "1"
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
-                        "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
-                    ],
-                    [
-                        "content-length",
-                        "0"
-                    ]
-                ],
-                "contentLength": 0,
-                "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.282,
-                "timestamp_end": 1680134454.4220002,
-                "pretty_host": "mitmproxy.org"
-            },
-            "response": {
-                "http_version": "HTTP/1.1",
-                "status_code": 200,
-                "reason": "OK",
-                "headers": [
-                    [
-                        "date",
-                        "Thu, 30 Mar 2023 00:00:45 GMT"
-                    ],
-                    [
-                        "via",
-                        "1.1 5c9c18dc3f70d2dc4a380b2b87c39e4a.cloudfront.net (CloudFront)"
-                    ],
-                    [
-                        "last-modified",
-                        "Wed, 29 Mar 2023 23:55:21 GMT"
-                    ],
-                    [
-                        "server",
-                        "AmazonS3"
-                    ],
-                    [
-                        "x-amz-cf-pop",
-                        "SFO5-P1"
-                    ],
-                    [
-                        "etag",
-                        "\"6e7040728ca240d294baba5546a458af\""
-                    ],
-                    [
-                        "x-cache",
-                        "Miss from cloudfront"
-                    ],
-                    [
-                        "content-type",
-                        "image/png"
-                    ],
-                    [
-                        "alt-svc",
-                        "h3=\":443\"; ma=86400"
-                    ],
-                    [
-                        "content-length",
-                        "1042868"
-                    ],
-                    [
-                        "x-amz-cf-id",
-                        "8xWiAsloLYXfE7Emh3wjbBAtbpuVGW7Q5nnxhRaTkbuN23ZtUowfYg=="
-                    ]
-                ],
-                "contentLength": 1042868,
-                "contentHash": "cf2dcf6b0a55bca7dadcc58c751fe5aea27b834fd17df444833e91563fcaff76",
-                "timestamp_start": 1680134454.282,
-                "timestamp_end": 1680134454.4220002
-            }
-        },
-        {
-            "id": "ed086866-2412-4865-965e-50f25575ea5e",
-            "intercepted": false,
-            "is_replay": null,
-            "type": "http",
-            "modified": false,
-            "marked": "",
-            "comment": "",
-            "timestamp_created": 1688740128.718564,
-            "client_conn": {
-                "id": "d895a560-9f97-4dfd-8854-ba1460513ef0",
-                "peername": [
-                    "127.0.0.1",
-                    0
-                ],
-                "sockname": [
-                    "127.0.0.1",
-                    0
-                ],
-                "tls_established": false,
-                "cert": null,
-                "sni": null,
-                "cipher": null,
-                "alpn": null,
-                "tls_version": null,
-                "timestamp_start": 1688740128.718528,
-                "timestamp_tls_setup": null,
-                "timestamp_end": null
-            },
-            "server_conn": {
-                "id": "4728d242-3b67-49a5-89b1-424c93d13f2f",
-                "peername": null,
-                "sockname": null,
-                "address": [
-                    "108.138.246.8",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -1828,8 +1533,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.287,
-                "timestamp_end": 1680134513.0149999,
+                "timestamp_start": 1680135404.586,
+                "timestamp_end": 1680135409.996,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -1839,7 +1544,7 @@
                 "headers": [
                     [
                         "age",
-                        "29778"
+                        "14456"
                     ],
                     [
                         "alt-svc",
@@ -1855,7 +1560,7 @@
                     ],
                     [
                         "date",
-                        "Mon, 27 Mar 2023 19:56:36 GMT"
+                        "Wed, 29 Mar 2023 20:15:23 GMT"
                     ],
                     [
                         "etag",
@@ -1875,15 +1580,15 @@
                     ],
                     [
                         "via",
-                        "1.1 a282f7d4f5ae65b33d809fbc6ea8641c.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "x-amz-cf-id",
-                        "DCO1ItmHuNSjzactunb0bnU9rr1VoXdJIUlq_e6qQzX7CPO3IQlEuQ=="
+                        "qRL3ENs0L4y4hp0FY95PFmNKleanFvPidn1fZRBgdMqwLAmHOxs7lQ=="
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "x-cache",
@@ -1896,21 +1601,21 @@
                 ],
                 "contentLength": 3346,
                 "contentHash": "abd6094a7ebd202fe2bfb12d95a435dc498897197a7b0311d6ff7c72cf802de6",
-                "timestamp_start": 1680134454.287,
-                "timestamp_end": 1680134513.0149999
+                "timestamp_start": 1680135404.586,
+                "timestamp_end": 1680135409.996
             }
         },
         {
-            "id": "5941e4d3-2b43-4b9d-bbda-f23a3bd7621d",
+            "id": "a05b0d13-bd45-462c-8ca8-83ea9e70966c",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.719251,
+            "timestamp_created": 1688740128.739399,
             "client_conn": {
-                "id": "c94f4561-8c2e-4c20-b1d4-830f3bda8158",
+                "id": "7cb766ff-903d-41e4-ad44-daa9d0638f3d",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -1925,16 +1630,151 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.719232,
+                "timestamp_start": 1688740128.7393868,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "f62e3bfe-9649-4e81-b097-54cc234bdca2",
+                "id": "c7164bc6-81f4-465b-9461-08f9c48441b7",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "52.218.196.240",
+                    "13.35.121.31",
+                    443
+                ],
+                "tls_established": false,
+                "cert": null,
+                "sni": null,
+                "cipher": null,
+                "alpn": null,
+                "tls_version": null,
+                "timestamp_start": null,
+                "timestamp_tcp_setup": null,
+                "timestamp_tls_setup": null,
+                "timestamp_end": null
+            },
+            "request": {
+                "method": "GET",
+                "scheme": "https",
+                "host": "mitmproxy.org",
+                "port": 443,
+                "path": "/github-btn.html?user=mitmproxy&repo=mitmproxy&type=star&count=true&size=large",
+                "http_version": "HTTP/1.1",
+                "headers": [
+                    [
+                        "content-length",
+                        "0"
+                    ]
+                ],
+                "contentLength": 0,
+                "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "timestamp_start": 1680135404.588,
+                "timestamp_end": 1680135408.506,
+                "pretty_host": "mitmproxy.org"
+            },
+            "response": {
+                "http_version": "HTTP/1.1",
+                "status_code": 200,
+                "reason": "OK",
+                "headers": [
+                    [
+                        "age",
+                        "14456"
+                    ],
+                    [
+                        "alt-svc",
+                        "h3=\":443\"; ma=86400"
+                    ],
+                    [
+                        "content-encoding",
+                        "gzip"
+                    ],
+                    [
+                        "content-type",
+                        "text/html"
+                    ],
+                    [
+                        "date",
+                        "Wed, 29 Mar 2023 20:15:23 GMT"
+                    ],
+                    [
+                        "etag",
+                        "W/\"8d3963829b6394c8c198172e36049e5e\""
+                    ],
+                    [
+                        "last-modified",
+                        "Sat, 04 Mar 2023 16:01:11 GMT"
+                    ],
+                    [
+                        "server",
+                        "AmazonS3"
+                    ],
+                    [
+                        "vary",
+                        "Accept-Encoding"
+                    ],
+                    [
+                        "via",
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "MMg85HadX_Z14CER1NCGIFenldX8Oe9yQrM2IOZlxwmQ4LKZsDdVqg=="
+                    ],
+                    [
+                        "x-amz-cf-pop",
+                        "SFO5-C1"
+                    ],
+                    [
+                        "x-cache",
+                        "Hit from cloudfront"
+                    ],
+                    [
+                        "content-length",
+                        "3346"
+                    ]
+                ],
+                "contentLength": 3346,
+                "contentHash": "abd6094a7ebd202fe2bfb12d95a435dc498897197a7b0311d6ff7c72cf802de6",
+                "timestamp_start": 1680135404.588,
+                "timestamp_end": 1680135408.506
+            }
+        },
+        {
+            "id": "758f6316-538e-4bc3-a3e5-cb7e8cd73861",
+            "intercepted": false,
+            "is_replay": null,
+            "type": "http",
+            "modified": false,
+            "marked": "",
+            "comment": "",
+            "timestamp_created": 1688740128.739567,
+            "client_conn": {
+                "id": "b77ff6a1-e267-42f6-9057-34b1e01373d6",
+                "peername": [
+                    "127.0.0.1",
+                    0
+                ],
+                "sockname": [
+                    "127.0.0.1",
+                    0
+                ],
+                "tls_established": false,
+                "cert": null,
+                "sni": null,
+                "cipher": null,
+                "alpn": null,
+                "tls_version": null,
+                "timestamp_start": 1688740128.7395551,
+                "timestamp_tls_setup": null,
+                "timestamp_end": null
+            },
+            "server_conn": {
+                "id": "deff6bc2-afe9-4ff5-af18-9468c0db312b",
+                "peername": null,
+                "sockname": null,
+                "address": [
+                    "3.5.82.180",
                     443
                 ],
                 "tls_established": false,
@@ -1966,15 +1806,11 @@
                     ],
                     [
                         "Accept-Language",
-                        "en-US,en;q=0.9"
+                        "en-US,en;q=0.6"
                     ],
                     [
                         "Connection",
                         "keep-alive"
-                    ],
-                    [
-                        "DNT",
-                        "1"
                     ],
                     [
                         "Host",
@@ -2001,20 +1837,12 @@
                         "cross-site"
                     ],
                     [
+                        "Sec-GPC",
+                        "1"
+                    ],
+                    [
                         "User-Agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
                     ],
                     [
                         "content-length",
@@ -2023,8 +1851,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.289,
-                "timestamp_end": 1680134643.3240001,
+                "timestamp_start": 1680135404.594,
+                "timestamp_end": 1680135523.795,
                 "pretty_host": "s3-us-west-2.amazonaws.com"
             },
             "response": {
@@ -2050,7 +1878,7 @@
                     ],
                     [
                         "Date",
-                        "Thu, 30 Mar 2023 00:00:55 GMT"
+                        "Thu, 30 Mar 2023 00:16:45 GMT"
                     ],
                     [
                         "Server",
@@ -2070,30 +1898,30 @@
                     ],
                     [
                         "x-amz-id-2",
-                        "z+vgUvIHg+PuXxFvUA7/XvaXWMHQCJ87G4Ym9s28Kbopsuboeq9oaTU3PKcqKc//hYR6VUxnSG8="
+                        "jbRwbw6oPdzhxp33TjE7Dy7miXM139d3ZDeS9uIqcZA+hBz4/AD/MLe0+V7rYNEEiBiLvF5HHTOnK28bKEITkQ=="
                     ],
                     [
                         "x-amz-request-id",
-                        "DA3HQVAVQRCC1M2H"
+                        "30D5K0R218602Z2Q"
                     ]
                 ],
                 "contentLength": 3406,
                 "contentHash": "1463cf2c4e430b2373b9cd16548f263d3335bc245fdca8019d56a4c9e6ae3b14",
-                "timestamp_start": 1680134454.289,
-                "timestamp_end": 1680134643.3240001
+                "timestamp_start": 1680135404.594,
+                "timestamp_end": 1680135523.795
             }
         },
         {
-            "id": "fee96ad9-cec5-4064-b6f6-4376474be548",
+            "id": "2defbb13-22ee-421c-a721-80c34fe305d9",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.719475,
+            "timestamp_created": 1688740128.7397592,
             "client_conn": {
-                "id": "b71f64c8-7c2c-44f4-8a04-f03b25da16c1",
+                "id": "99a3b9f7-6d27-43d2-bc36-eff1e5a71e23",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -2108,151 +1936,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7194612,
+                "timestamp_start": 1688740128.739747,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "e481cd1b-f095-4f10-9598-2ed6f08ed018",
+                "id": "53a6242c-3793-4521-84c9-d6ce16cf33c2",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.8",
-                    443
-                ],
-                "tls_established": false,
-                "cert": null,
-                "sni": null,
-                "cipher": null,
-                "alpn": null,
-                "tls_version": null,
-                "timestamp_start": null,
-                "timestamp_tcp_setup": null,
-                "timestamp_tls_setup": null,
-                "timestamp_end": null
-            },
-            "request": {
-                "method": "GET",
-                "scheme": "https",
-                "host": "mitmproxy.org",
-                "port": 443,
-                "path": "/github-btn.html?user=mitmproxy&repo=mitmproxy&type=star&count=true&size=large",
-                "http_version": "HTTP/1.1",
-                "headers": [
-                    [
-                        "content-length",
-                        "0"
-                    ]
-                ],
-                "contentLength": 0,
-                "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.29,
-                "timestamp_end": 1680134515.1629999,
-                "pretty_host": "mitmproxy.org"
-            },
-            "response": {
-                "http_version": "HTTP/1.1",
-                "status_code": 200,
-                "reason": "OK",
-                "headers": [
-                    [
-                        "age",
-                        "29778"
-                    ],
-                    [
-                        "alt-svc",
-                        "h3=\":443\"; ma=86400"
-                    ],
-                    [
-                        "content-encoding",
-                        "gzip"
-                    ],
-                    [
-                        "content-type",
-                        "text/html"
-                    ],
-                    [
-                        "date",
-                        "Mon, 27 Mar 2023 19:56:36 GMT"
-                    ],
-                    [
-                        "etag",
-                        "W/\"8d3963829b6394c8c198172e36049e5e\""
-                    ],
-                    [
-                        "last-modified",
-                        "Sat, 04 Mar 2023 16:01:11 GMT"
-                    ],
-                    [
-                        "server",
-                        "AmazonS3"
-                    ],
-                    [
-                        "vary",
-                        "Accept-Encoding"
-                    ],
-                    [
-                        "via",
-                        "1.1 a282f7d4f5ae65b33d809fbc6ea8641c.cloudfront.net (CloudFront)"
-                    ],
-                    [
-                        "x-amz-cf-id",
-                        "gHzYLTOZPAmHhTYTex5-14poVg9M8wKckRD2FUJFd87ape8sTwxevA=="
-                    ],
-                    [
-                        "x-amz-cf-pop",
-                        "SFO5-P1"
-                    ],
-                    [
-                        "x-cache",
-                        "Hit from cloudfront"
-                    ],
-                    [
-                        "content-length",
-                        "3346"
-                    ]
-                ],
-                "contentLength": 3346,
-                "contentHash": "abd6094a7ebd202fe2bfb12d95a435dc498897197a7b0311d6ff7c72cf802de6",
-                "timestamp_start": 1680134454.29,
-                "timestamp_end": 1680134515.1629999
-            }
-        },
-        {
-            "id": "f52ace83-1727-4226-a034-06785dc3e478",
-            "intercepted": false,
-            "is_replay": null,
-            "type": "http",
-            "modified": false,
-            "marked": "",
-            "comment": "",
-            "timestamp_created": 1688740128.71966,
-            "client_conn": {
-                "id": "dac8a2ff-3df0-464e-b1f4-cf49294452ff",
-                "peername": [
-                    "127.0.0.1",
-                    0
-                ],
-                "sockname": [
-                    "127.0.0.1",
-                    0
-                ],
-                "tls_established": false,
-                "cert": null,
-                "sni": null,
-                "cipher": null,
-                "alpn": null,
-                "tls_version": null,
-                "timestamp_start": 1688740128.719641,
-                "timestamp_tls_setup": null,
-                "timestamp_end": null
-            },
-            "server_conn": {
-                "id": "3153afac-8e65-4e4c-ac1e-4081bd59bd8e",
-                "peername": null,
-                "sockname": null,
-                "address": [
-                    "108.138.246.8",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -2285,8 +1978,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.408,
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.695,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -2296,11 +1989,11 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
+                        "Wed, 29 Mar 2023 09:06:45 GMT"
                     ],
                     [
                         "via",
-                        "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -2312,11 +2005,11 @@
                     ],
                     [
                         "age",
-                        "34707"
+                        "54574"
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "etag",
@@ -2339,31 +2032,31 @@
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "x-amz-cf-id",
-                        "vGCnTWSAUroH6jcpXMNWnwSSP_cXzkgRo4EBOOW6yvZlXEaWf790tA=="
-                    ],
-                    [
                         "content-length",
                         "0"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "NQJC4Dhdvrl3wSohREuJaS5WBoUTVRKEGFNmplThirUlkqL2tBnenA=="
                     ]
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.408
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.695
             }
         },
         {
-            "id": "82b9b67f-290d-47de-a468-3c8a8559e51e",
+            "id": "1fe1eec2-168f-40b5-9725-874fa4e35093",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.7198331,
+            "timestamp_created": 1688740128.739914,
             "client_conn": {
-                "id": "5a838aef-1950-41de-874b-a1f9c6db5ddc",
+                "id": "1fa6761c-aaff-4a6e-9e57-f60c00ee5b35",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -2378,16 +2071,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7198179,
+                "timestamp_start": 1688740128.739902,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "4b13dbbe-2410-4210-99e7-44c1baae2ca5",
+                "id": "d8a75c26-6dc9-43ac-ae7d-62c27c96ae2c",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.8",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -2420,8 +2113,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.338,
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.646,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -2431,11 +2124,11 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
+                        "Wed, 29 Mar 2023 02:43:50 GMT"
                     ],
                     [
                         "via",
-                        "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -2447,11 +2140,11 @@
                     ],
                     [
                         "age",
-                        "28519"
+                        "77548"
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "etag",
@@ -2474,31 +2167,31 @@
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "x-amz-cf-id",
-                        "OSw-zn-_gROJk4QHyXfc6K5jgUyH_laZpuci2Ij1jHpAf-W-VJi9yg=="
-                    ],
-                    [
                         "content-length",
                         "0"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "97ypvvM-hFCQYWBFiHdBrn8B7nYzIOryTyftk23WSf3dtsp_Uw4BzQ=="
                     ]
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.338
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.646
             }
         },
         {
-            "id": "9809a3b5-09af-4213-a16e-6d5830783798",
+            "id": "54750418-bed5-4c99-b92f-980fa6a75f48",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.7200031,
+            "timestamp_created": 1688740128.740057,
             "client_conn": {
-                "id": "4f09c44d-aae5-42c4-9658-cb61c97ff8b0",
+                "id": "d397e85d-fae6-497e-9b68-a136ad17341c",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -2513,16 +2206,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.719985,
+                "timestamp_start": 1688740128.740046,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "14237ba6-fb65-49ad-966a-d851812a87ae",
+                "id": "89a26512-e5f1-484b-9596-79c6a258ea05",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.8",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -2555,8 +2248,8 @@
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.3330002,
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.639,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
@@ -2566,11 +2259,11 @@
                 "headers": [
                     [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:43 GMT"
+                        "Wed, 29 Mar 2023 21:21:06 GMT"
                     ],
                     [
                         "via",
-                        "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "last-modified",
@@ -2582,11 +2275,11 @@
                     ],
                     [
                         "age",
-                        "29190"
+                        "10513"
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "etag",
@@ -2609,31 +2302,31 @@
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "x-amz-cf-id",
-                        "xCkWliCdn04w4nCTMVVTI8ZfAcmksyVpzzdDh3G-6Lj5NdN8dsF3XA=="
-                    ],
-                    [
                         "content-length",
                         "0"
+                    ],
+                    [
+                        "x-amz-cf-id",
+                        "i2f4lJwPyDaN6Pan1ZN35S0Hv7__wnsG7ChroB3fTxGRvktm7iEDMw=="
                     ]
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.292,
-                "timestamp_end": 1680134454.3330002
+                "timestamp_start": 1680135404.597,
+                "timestamp_end": 1680135404.639
             }
         },
         {
-            "id": "281143f4-eb19-4b9e-bdc8-24f77c5bc40b",
+            "id": "fb6ab658-6aa7-4ebc-9136-ef0943daf720",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.720169,
+            "timestamp_created": 1688740128.7402098,
             "client_conn": {
-                "id": "27d8cfcd-b915-4d10-89b7-09785aec5c22",
+                "id": "29bca1bb-2399-4574-bc6f-6d5cb1c388f3",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -2648,16 +2341,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.7201548,
+                "timestamp_start": 1688740128.7401989,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "39c93e8a-9567-4364-84ec-ce31721d1ee8",
+                "id": "7e52d083-c77c-4d95-ab89-ca81131cf8f0",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.50",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -2680,36 +2373,88 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
+                        ":authority",
+                        "mitmproxy.org"
+                    ],
+                    [
+                        ":method",
+                        "GET"
+                    ],
+                    [
+                        ":path",
+                        "/data/github-stats.json"
+                    ],
+                    [
+                        ":scheme",
+                        "https"
+                    ],
+                    [
+                        "accept",
+                        "*/*"
+                    ],
+                    [
+                        "accept-encoding",
+                        "gzip, deflate, br"
+                    ],
+                    [
+                        "accept-language",
+                        "en-US,en;q=0.6"
+                    ],
+                    [
+                        "if-modified-since",
+                        "Wed, 29 Mar 2023 23:55:21 GMT"
+                    ],
+                    [
+                        "if-none-match",
+                        "W/\"07201abd774cb0523be31d94fffe67a3\""
+                    ],
+                    [
+                        "sec-fetch-dest",
+                        "empty"
+                    ],
+                    [
+                        "sec-fetch-mode",
+                        "cors"
+                    ],
+                    [
+                        "sec-fetch-site",
+                        "same-origin"
+                    ],
+                    [
+                        "sec-gpc",
+                        "1"
+                    ],
+                    [
+                        "user-agent",
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+                    ],
+                    [
                         "content-length",
                         "0"
                     ]
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.698,
-                "timestamp_end": 1680134460.784,
+                "timestamp_start": 1680135404.728,
+                "timestamp_end": 1680135415.1439998,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
                 "http_version": "HTTP/1.1",
-                "status_code": 200,
-                "reason": "OK",
+                "status_code": 304,
+                "reason": "Not Modified",
                 "headers": [
+                    [
+                        "age",
+                        "1270"
+                    ],
                     [
                         "alt-svc",
                         "h3=\":443\"; ma=86400"
                     ],
                     [
-                        "content-encoding",
-                        "gzip"
-                    ],
-                    [
-                        "content-type",
-                        "application/json"
-                    ],
-                    [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:45 GMT"
+                        "Wed, 29 Mar 2023 23:55:35 GMT"
                     ],
                     [
                         "etag",
@@ -2729,42 +2474,42 @@
                     ],
                     [
                         "via",
-                        "1.1 7813f25b54ee9165a28165976654eb52.cloudfront.net (CloudFront)"
+                        "1.1 39464b01f314ad3cb531f46c3049bf58.cloudfront.net (CloudFront)"
                     ],
                     [
                         "x-amz-cf-id",
-                        "eax3CJmtPULmStC-joxRm6JpqpliseCUgH9YSO3LDsJZa0uVF7_iGQ=="
+                        "GGT3WkafdHGKQHS15qxHpkRMtZxgB6SmuAbqwJZoc4gOkgKJpaR-gw=="
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "x-cache",
-                        "Miss from cloudfront"
+                        "Hit from cloudfront"
                     ],
                     [
                         "content-length",
-                        "1421"
+                        "6986"
                     ]
                 ],
-                "contentLength": 1421,
-                "contentHash": "5394348e1acf9f3f1045343704a6d9b2e52e0b7f170fe3759770fcd10351a077",
-                "timestamp_start": 1680134454.698,
-                "timestamp_end": 1680134460.784
+                "contentLength": 6986,
+                "contentHash": "ebb5ca702c6b7f09fe1c10e8992602bad67989e25151f0cb6928ea51299bf4e8",
+                "timestamp_start": 1680135404.728,
+                "timestamp_end": 1680135415.1439998
             }
         },
         {
-            "id": "013bb9d8-2fd9-40b1-b68e-2e002e27f3d1",
+            "id": "7c8dd35f-5a07-4e1a-b974-b7a0c6956950",
             "intercepted": false,
             "is_replay": null,
             "type": "http",
             "modified": false,
             "marked": "",
             "comment": "",
-            "timestamp_created": 1688740128.720476,
+            "timestamp_created": 1688740128.7403939,
             "client_conn": {
-                "id": "4b50d78e-75a6-42c6-98de-5d300f37a9de",
+                "id": "5034cfb0-e117-4ae0-ae8b-2d962e4574fa",
                 "peername": [
                     "127.0.0.1",
                     0
@@ -2779,16 +2524,16 @@
                 "cipher": null,
                 "alpn": null,
                 "tls_version": null,
-                "timestamp_start": 1688740128.720462,
+                "timestamp_start": 1688740128.740381,
                 "timestamp_tls_setup": null,
                 "timestamp_end": null
             },
             "server_conn": {
-                "id": "8d1afc82-abfd-4046-bbbf-655a5fcd1d9f",
+                "id": "7967ed8a-5897-4344-bfe2-c24b61ebee79",
                 "peername": null,
                 "sockname": null,
                 "address": [
-                    "108.138.246.8",
+                    "13.35.121.31",
                     443
                 ],
                 "tls_established": false,
@@ -2811,108 +2556,48 @@
                 "http_version": "HTTP/1.1",
                 "headers": [
                     [
-                        ":authority",
-                        "mitmproxy.org"
-                    ],
-                    [
-                        ":method",
-                        "GET"
-                    ],
-                    [
-                        ":path",
-                        "/favicon.ico"
-                    ],
-                    [
-                        ":scheme",
-                        "https"
-                    ],
-                    [
-                        "accept",
-                        "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-                    ],
-                    [
-                        "accept-encoding",
-                        "gzip, deflate, br"
-                    ],
-                    [
-                        "accept-language",
-                        "en-US,en;q=0.9"
-                    ],
-                    [
-                        "dnt",
-                        "1"
-                    ],
-                    [
-                        "if-modified-since",
-                        "Sat, 04 Mar 2023 16:01:11 GMT"
-                    ],
-                    [
-                        "if-none-match",
-                        "\"0f8a699781bb4a5a204a467db88dd555\""
-                    ],
-                    [
-                        "referer",
-                        "https://mitmproxy.org/"
-                    ],
-                    [
-                        "sec-ch-ua",
-                        "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
-                    ],
-                    [
-                        "sec-ch-ua-mobile",
-                        "?0"
-                    ],
-                    [
-                        "sec-ch-ua-platform",
-                        "\"macOS\""
-                    ],
-                    [
-                        "sec-fetch-dest",
-                        "image"
-                    ],
-                    [
-                        "sec-fetch-mode",
-                        "no-cors"
-                    ],
-                    [
-                        "sec-fetch-site",
-                        "same-origin"
-                    ],
-                    [
-                        "user-agent",
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-                    ],
-                    [
                         "content-length",
                         "0"
                     ]
                 ],
                 "contentLength": 0,
                 "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "timestamp_start": 1680134454.706,
-                "timestamp_end": 1680134495.562,
+                "timestamp_start": 1680135404.748,
+                "timestamp_end": 1680135410.406,
                 "pretty_host": "mitmproxy.org"
             },
             "response": {
                 "http_version": "HTTP/1.1",
-                "status_code": 304,
-                "reason": "Not Modified",
+                "status_code": 200,
+                "reason": "OK",
                 "headers": [
                     [
                         "age",
-                        "34038"
+                        "63193"
                     ],
                     [
                         "alt-svc",
                         "h3=\":443\"; ma=86400"
                     ],
                     [
+                        "content-length",
+                        "130756"
+                    ],
+                    [
+                        "content-type",
+                        "image/vnd.microsoft.icon"
+                    ],
+                    [
                         "date",
-                        "Thu, 30 Mar 2023 00:00:54 GMT"
+                        "Wed, 29 Mar 2023 06:43:07 GMT"
                     ],
                     [
                         "etag",
                         "\"0f8a699781bb4a5a204a467db88dd555\""
+                    ],
+                    [
+                        "last-modified",
+                        "Sat, 04 Mar 2023 16:01:11 GMT"
                     ],
                     [
                         "server",
@@ -2924,29 +2609,25 @@
                     ],
                     [
                         "via",
-                        "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                        "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                     ],
                     [
                         "x-amz-cf-id",
-                        "iL2xI8asUW6nGW1gmgel9CRgCI59vre8I7OWv8zJhOLmlTphv7cK7g=="
+                        "OQvr4WUAUtOEsVJl-yU56q236aZNSPhYqFX4_td12e7Kd1qsodaVdg=="
                     ],
                     [
                         "x-amz-cf-pop",
-                        "SFO5-P1"
+                        "SFO5-C1"
                     ],
                     [
                         "x-cache",
                         "Hit from cloudfront"
-                    ],
-                    [
-                        "content-length",
-                        "130756"
                     ]
                 ],
                 "contentLength": 130756,
                 "contentHash": "bfea53c2ea9ce90e2428f28c36a8acbc86dc3f6e9ea63b5ea6b07ee96f0be1a8",
-                "timestamp_start": 1680134454.706,
-                "timestamp_end": 1680134495.562
+                "timestamp_start": 1680135404.748,
+                "timestamp_end": 1680135410.406
             }
         }
     ]
