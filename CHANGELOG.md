@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
+  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
 * Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
   ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
 * Add "Prettier" code linting tool to mitmweb.
@@ -37,6 +39,13 @@
   ([#6088](https://github.com/mitmproxy/mitmproxy/pull/6088), @sujaldev)
 * Fix a bug where a server connection timeout would cause requests to be issued with a wrong SNI in reverse proxy mode.
   ([#6148](https://github.com/mitmproxy/mitmproxy/pull/6148), @mhils)
+* The `server_replay_nopop` option has been renamed to `server_replay_reuse` to avoid confusing double-negation.
+  ([#6084](https://github.com/mitmproxy/mitmproxy/issues/6084), @prady0t, @Semnodime)
+* Add zstd to valid gRPC encoding schemes.
+  ([#6188](https://github.com/mitmproxy/mitmproxy/pull/6188), @tsaaristo)
+* For reverse proxy directly accessed via IP address, the IP address is now included
+  as a subject in the generated certificate.
+  ([#6202](https://github.com/mitmproxy/mitmproxy/pull/6202), @mhils)
 
 ### Breaking Changes
 

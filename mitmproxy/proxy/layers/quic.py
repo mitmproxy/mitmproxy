@@ -39,6 +39,7 @@ from mitmproxy.proxy import context
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
 from mitmproxy.proxy import tunnel
+from mitmproxy.proxy.layers.modes import TransparentProxy
 from mitmproxy.proxy.layers.tcp import TCPLayer
 from mitmproxy.proxy.layers.tls import TlsClienthelloHook
 from mitmproxy.proxy.layers.tls import TlsEstablishedClientHook
@@ -1129,6 +1130,12 @@ class ClientQuicLayer(QuicLayer):
     def receive_handshake_data(
         self, data: bytes
     ) -> layer.CommandGenerator[tuple[bool, str | None]]:
+        if isinstance(self.context.layers[0], TransparentProxy):  # pragma: no cover
+            yield commands.Log(
+                f"Swallowing QUIC handshake because HTTP/3 does not support transparent mode yet.",
+                DEBUG,
+            )
+            return False, None
         if not self.context.options.http3:
             yield commands.Log(
                 f"Swallowing QUIC handshake because HTTP/3 is disabled.", DEBUG
@@ -1143,6 +1150,8 @@ class ClientQuicLayer(QuicLayer):
         buffer = QuicBuffer(data=data)
         try:
             header = pull_quic_header(buffer)
+        except TypeError:
+            return False, f"Cannot parse QUIC header: Malformed head ({data.hex()})"
         except ValueError as e:
             return False, f"Cannot parse QUIC header: {e} ({data.hex()})"
 

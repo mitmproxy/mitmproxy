@@ -23,6 +23,7 @@ if __name__ == "__main__":
         upload_dir = tag
     else:
         upload_dir = f"branches/{branch}"
+    # Ideally we could have R2 pull from S3 automatically, but that's not possible yet. So we upload to both.
     print(f"Uploading binaries to snapshots.mitmproxy.org/{upload_dir}...")
     subprocess.check_call(
         [
@@ -30,14 +31,37 @@ if __name__ == "__main__":
             "s3",
             "sync",
             "--delete",
-            "--acl",
-            "public-read",
-            "--exclude",
-            "*.msix",
+            *("--acl", "public-read"),
+            *("--exclude", "*.msix"),
             root / "release/dist",
             f"s3://snapshots.mitmproxy.org/{upload_dir}",
         ]
     )
+    if tag:
+        # We can't scope R2 tokens, so they are only exposed in the deploy env.
+        print(f"Uploading binaries to downloads.mitmproxy.org/{upload_dir}...")
+        subprocess.check_call(
+            [
+                "aws",
+                "s3",
+                "sync",
+                "--delete",
+                *("--acl", "public-read"),
+                *("--exclude", "*.msix"),
+                *(
+                    "--endpoint-url",
+                    f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
+                ),
+                root / "release/dist",
+                f"s3://downloads/{upload_dir}",
+            ],
+            env={
+                **os.environ,
+                "AWS_REGION": "auto",
+                "AWS_ACCESS_KEY_ID": os.environ["R2_ACCESS_KEY_ID"],
+                "AWS_SECRET_ACCESS_KEY": os.environ["R2_SECRET_ACCESS_KEY"],
+            },
+        )
 
     # Upload releases to PyPI
     if tag:

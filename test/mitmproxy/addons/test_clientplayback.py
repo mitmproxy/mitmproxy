@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from contextlib import asynccontextmanager
 
 import pytest
@@ -6,6 +7,7 @@ import pytest
 from mitmproxy.addons.clientplayback import ClientPlayback
 from mitmproxy.addons.clientplayback import ReplayHandler
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.exceptions import CommandError
 from mitmproxy.exceptions import OptionsError
@@ -14,8 +16,8 @@ from mitmproxy.test import tflow
 
 
 @asynccontextmanager
-async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
+async def tcp_server(handle_conn, **server_args) -> Address:
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0, **server_args)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -23,9 +25,9 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-@pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
+@pytest.mark.parametrize("mode", ["http", "https", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
-async def test_playback(mode, concurrency):
+async def test_playback(tdata, mode, concurrency):
     handler_ok = asyncio.Event()
 
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -39,7 +41,11 @@ async def test_playback(mode, concurrency):
         else:
             assert req == b"GET /path HTTP/1.1\r\n"
         req = await reader.readuntil(b"data")
-        assert req == (b"header: qvalue\r\n" b"content-length: 4\r\n" b"\r\n" b"data")
+        assert req == (
+            b"header: qvalue\r\n"
+            b"content-length: 4\r\nHost: example.mitmproxy.org\r\n\r\n"
+            b"data"
+        )
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
@@ -47,9 +53,29 @@ async def test_playback(mode, concurrency):
 
     cp = ClientPlayback()
     ps = Proxyserver()
-    with taddons.context(cp, ps) as tctx:
+    tls = TlsConfig()
+    with taddons.context(cp, ps, tls) as tctx:
         tctx.configure(cp, client_replay_concurrency=concurrency)
-        async with tcp_server(handler) as addr:
+
+        server_args = {}
+        if mode == "https":
+            server_args["ssl"] = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            server_args["ssl"].load_cert_chain(
+                certfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.crt"
+                ),
+                keyfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.key"
+                ),
+            )
+            tctx.configure(
+                tls,
+                ssl_verify_upstream_trusted_ca=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+
+        async with tcp_server(handler, **server_args) as addr:
             cp.running()
             flow = tflow.tflow(live=False)
             flow.request.content = b"data"
@@ -59,6 +85,10 @@ async def test_playback(mode, concurrency):
                 flow.request.host, flow.request.port = "address", 22
             else:
                 flow.request.host, flow.request.port = addr
+            if mode == "https":
+                flow.request.scheme = "https"
+            # Used for SNI
+            flow.request.host_header = "example.mitmproxy.org"
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)

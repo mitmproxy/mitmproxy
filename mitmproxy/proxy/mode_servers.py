@@ -251,45 +251,50 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _server: asyncio.Server | udp.UdpServer | None = None
+    _servers: list[asyncio.Server | udp.UdpServer]
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._servers = []
+        super().__init__(*args, **kwargs)
 
     @property
     def is_running(self) -> bool:
-        return self._server is not None
+        return bool(self._servers)
 
     @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        if self._server is not None:
-            return tuple(s.getsockname() for s in self._server.sockets)
-        else:
-            return tuple()
+        return tuple(
+            sock.getsockname() for serv in self._servers for sock in serv.sockets
+        )
 
     async def _start(self) -> None:
-        assert self._server is None
+        assert not self._servers
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         try:
-            self._server = await self.listen(host, port)
-            self._listen_addrs = tuple(s.getsockname() for s in self._server.sockets)
+            self._servers = await self.listen(host, port)
         except OSError as e:
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
                 assert (
                     self.mode.custom_listen_host is None
                 )  # since [@ [listen_addr:]listen_port]
-                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 1}`."
+                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
             raise OSError(e.errno, message, e.filename) from e
 
     async def _stop(self) -> None:
-        assert self._server is not None
+        assert self._servers
         try:
-            self._server.close()
-            await self._server.wait_closed()
+            for s in self._servers:
+                s.close()
+            await asyncio.gather(*[s.wait_closed() for s in self._servers])
         finally:
             # we always reset _server and ignore failures
-            self._server = None
+            self._servers = []
 
-    async def listen(self, host: str, port: int) -> asyncio.Server | udp.UdpServer:
+    async def listen(
+        self, host: str, port: int
+    ) -> list[asyncio.Server | udp.UdpServer]:
         if self.mode.transport_protocol == "tcp":
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
@@ -301,23 +306,42 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     s.bind(("", 0))
                     fixed_port = s.getsockname()[1]
                     s.close()
-                    return await asyncio.start_server(
-                        self.handle_tcp_connection, host, fixed_port
-                    )
+                    return [
+                        await asyncio.start_server(
+                            self.handle_tcp_connection, host, fixed_port
+                        )
+                    ]
                 except Exception as e:
                     logger.debug(
                         f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                     )
-            return await asyncio.start_server(self.handle_tcp_connection, host, port)
+            return [await asyncio.start_server(self.handle_tcp_connection, host, port)]
         elif self.mode.transport_protocol == "udp":
-            # create_datagram_endpoint only creates one socket, so the workaround above doesn't apply
-            # NOTE once we do dual servers, we should consider creating sockets manually to ensure
-            # both TCP and UDP listen to the same IPs and same ports
-            return await udp.start_server(
-                self.handle_udp_datagram,
-                host,
-                port,
-            )
+            # create_datagram_endpoint only creates one (non-dual-stack) socket, so we spawn two servers instead.
+            if not host:
+                ipv4 = await udp.start_server(
+                    self.handle_udp_datagram,
+                    "0.0.0.0",
+                    port,
+                )
+                try:
+                    ipv6 = await udp.start_server(
+                        self.handle_udp_datagram,
+                        "::",
+                        port or ipv4.sockets[0].getsockname()[1],
+                    )
+                except Exception:  # pragma: no cover
+                    logger.debug("Failed to listen on '::', listening on IPv4 only.")
+                    return [ipv4]
+                else:  # pragma: no cover
+                    return [ipv4, ipv6]
+            return [
+                await udp.start_server(
+                    self.handle_udp_datagram,
+                    host,
+                    port,
+                )
+            ]
         else:
             raise AssertionError(self.mode.transport_protocol)
 
@@ -519,6 +543,6 @@ class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
         return layers.DNSLayer(context)
 
 
-class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
-    def make_top_layer(self, context: Context) -> Layer:
-        return layers.modes.HttpProxy(context)
+# class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
+#     def make_top_layer(self, context: Context) -> Layer:
+#         return layers.modes.HttpProxy(context)
