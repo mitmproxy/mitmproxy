@@ -46,7 +46,7 @@ def test_har_to_flow(har_file: Path):
     expected_flows = json.loads(expected_file.read_bytes())
     actual_flows = file_to_flows(har_file)
 
-    for expected, actual in zip(expected_flows["outcome"], actual_flows):
+    for expected, actual in zip(expected_flows, actual_flows):
         expected = json.loads(json.dumps(expected))
 
         actual = json.loads(json.dumps(actual))
@@ -55,10 +55,6 @@ def test_har_to_flow(har_file: Path):
         actual["timestamp_created"] = expected["timestamp_created"]
         actual["server_conn"]["id"] = expected["server_conn"]["id"]
         actual["client_conn"]["id"] = expected["client_conn"]["id"]
-
-        # Perform assertions without comparing 'contentHash'
-        assert actual["request"] == expected["request"]
-        assert actual["response"] == expected["response"]
 
         assert actual == expected
 
