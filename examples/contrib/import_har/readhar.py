@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from datetime import datetime
-
+from base64 import b64decode
 from mitmproxy import command
 from mitmproxy import connection
 from mitmproxy import ctx
@@ -80,7 +80,9 @@ class ReadHar:
 
         # In Firefox HAR files images don't include response bodies
         response_content = request_json["response"]["content"].get("text", "")
-
+        content_encoding = request_json["response"]["content"].get("encoding",None)
+        if content_encoding == "base64":
+           response_content = b64decode(response_content)
         response_headers = self.fix_headers(request_json["response"]["headers"])
 
         new_flow.response = http.Response.make(
