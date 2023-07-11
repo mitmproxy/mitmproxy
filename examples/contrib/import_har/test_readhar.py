@@ -2,11 +2,13 @@ import json
 from pathlib import Path
 
 import pytest
-from readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
 from mitmproxy.tools.web.app import flow_to_json
+from readhar import ReadHar
+
+here = Path(__file__).parent.absolute()
 
 
 def file_to_flows(path_name: Path) -> list[dict]:
@@ -34,9 +36,6 @@ def test_corrupt():
         pytest.raises(exceptions.OptionsError, r.fix_headers, file_json["headers"])
 
 
-here = Path(__file__).parent.absolute()
-
-
 @pytest.mark.parametrize(
     "har_file", [pytest.param(x, id=x.stem) for x in here.glob("har_files/*.har")]
 )
@@ -47,8 +46,6 @@ def test_har_to_flow(har_file: Path):
     actual_flows = file_to_flows(har_file)
 
     for expected, actual in zip(expected_flows, actual_flows):
-        expected = json.loads(json.dumps(expected))
-
         actual = json.loads(json.dumps(actual))
 
         actual["id"] = expected["id"]
@@ -60,4 +57,10 @@ def test_har_to_flow(har_file: Path):
 
 
 if __name__ == "__main__":
-    pytest.main()
+    for path_name in here.glob("har_files/*.har"):
+        print(path_name)
+
+        flows = file_to_flows(path_name)
+
+        with open(f"har_files/{path_name.stem}.json", "w") as f:
+            json.dump(flows, f, indent=4)
