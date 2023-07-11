@@ -158,7 +158,8 @@ def decode_gzip(content: bytes) -> bytes:
 
 def encode_gzip(content: bytes) -> bytes:
     s = BytesIO()
-    gf = gzip.GzipFile(fileobj=s, mode="wb")
+    # set mtime to 0 so that gzip encoding is deterministic.
+    gf = gzip.GzipFile(fileobj=s, mode="wb", mtime=0)
     gf.write(content)
     gf.close()
     return s.getvalue()
