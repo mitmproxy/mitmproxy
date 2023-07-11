@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 
 import pytest
+from readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
 from mitmproxy.tools.web.app import flow_to_json
-from readhar import ReadHar
 
 here = Path(__file__).parent.absolute()
 

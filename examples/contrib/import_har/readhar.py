@@ -45,7 +45,9 @@ class ReadHar:
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
-        timestamp_start = datetime.fromisoformat(request_json["startedDateTime"]).timestamp()
+        timestamp_start = datetime.fromisoformat(
+            request_json["startedDateTime"]
+        ).timestamp()
         timestamp_end = timestamp_start + request_json["time"]
         request_method = request_json["request"]["method"]
         request_url = request_json["request"]["url"]
