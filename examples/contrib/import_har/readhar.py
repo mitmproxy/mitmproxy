@@ -78,7 +78,7 @@ class ReadHar:
         response_code = request_json["response"]["status"]
 
         # In Firefox HAR files images don't include response bodies
-        response_content = request_json["response"]["content"].get("text", None)
+        response_content = request_json["response"]["content"].get("text", "")
         content_encoding = request_json["response"]["content"].get("encoding", None)
         if content_encoding == "base64":
             response_content = base64.b64decode(response_content)
