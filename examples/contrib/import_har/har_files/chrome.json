@@ -1,15 +1,15 @@
 [
     {
-        "id": "a0f84fbb-b3a8-4661-befa-2a79d9554417",
+        "id": "50e84579-e4c1-47cf-b26c-69372313ad93",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.4973671,
+        "timestamp_created": 1689159891.677584,
         "client_conn": {
-            "id": "df1b7ddf-3703-450e-bc63-40a6a1a31ae0",
+            "id": "da7dab54-99b8-432d-883d-16e6a2e4801b",
             "peername": [
                 "127.0.0.1",
                 0
@@ -29,7 +29,7 @@
             "timestamp_end": 1680134468.9160001
         },
         "server_conn": {
-            "id": "a5bbadd9-1a4e-423c-a4db-9a41ae8d58fc",
+            "id": "bf3c142f-f727-499f-9b8d-0301d061169b",
             "peername": null,
             "sockname": null,
             "address": [
@@ -53,7 +53,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     ":authority",
@@ -151,7 +151,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 304,
             "reason": "Not Modified",
             "headers": [
@@ -207,16 +207,16 @@
         }
     },
     {
-        "id": "f1e3fcc8-6b34-4988-999f-7dafdf9a85ec",
+        "id": "6fbf945b-9922-47c2-bd10-bc49972629ce",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.497903,
+        "timestamp_created": 1689159891.678051,
         "client_conn": {
-            "id": "8da50059-a84c-49bc-99cb-2441eaf15de3",
+            "id": "b1af2181-2e43-4211-9e27-cc803825b35b",
             "peername": [
                 "127.0.0.1",
                 0
@@ -236,7 +236,7 @@
             "timestamp_end": 1680134454.3700001
         },
         "server_conn": {
-            "id": "5e4b3dd2-eba3-4083-bb01-b0de1dd2bb1d",
+            "id": "6c98edcd-4a06-4c29-a46a-f774adf30109",
             "peername": null,
             "sockname": null,
             "address": [
@@ -260,7 +260,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/style.min.css",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -298,7 +298,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -366,16 +366,16 @@
         }
     },
     {
-        "id": "b38ec67d-a903-491f-a06c-6cb2473536f2",
+        "id": "244edf9f-4a59-4aed-a553-411de58532eb",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.506401,
+        "timestamp_created": 1689159891.6859488,
         "client_conn": {
-            "id": "8141600d-fb1b-4769-856f-982cfd2e085f",
+            "id": "6cd8ddbb-67e7-4904-a7d1-b1593f4b4bf7",
             "peername": [
                 "127.0.0.1",
                 0
@@ -395,7 +395,7 @@
             "timestamp_end": 1680134454.3200002
         },
         "server_conn": {
-            "id": "0a17dc81-71ab-4773-ac37-15cf2d9b3344",
+            "id": "5824ff6b-1dae-4d8d-9168-d4f9deffdf7c",
             "peername": null,
             "sockname": null,
             "address": [
@@ -419,7 +419,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/logo-navbar.png",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -457,7 +457,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -521,16 +521,16 @@
         }
     },
     {
-        "id": "ac6710f6-9d7b-4146-b19e-cc62fdd51f13",
+        "id": "330bc14a-c94f-4ea4-9752-7164f104d80b",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.50663,
+        "timestamp_created": 1689159891.686166,
         "client_conn": {
-            "id": "c91c90f0-51a1-462d-bd1f-a57375b47757",
+            "id": "25e7ac8b-7717-4297-91f0-2f903cc0cc2e",
             "peername": [
                 "127.0.0.1",
                 0
@@ -550,7 +550,7 @@
             "timestamp_end": 1680134454.318
         },
         "server_conn": {
-            "id": "685f8bfc-36bc-4d5b-8b46-09a24c00c6b9",
+            "id": "0c7109f1-ad42-475d-909b-8f7408f480d3",
             "peername": null,
             "sockname": null,
             "address": [
@@ -574,7 +574,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/screenshot.png",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -612,7 +612,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -672,16 +672,16 @@
         }
     },
     {
-        "id": "10a20519-34c7-4ddf-8a2e-03ec4f1fe27b",
+        "id": "f3ecc555-7c2f-4307-8df4-e8011875974b",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.507738,
+        "timestamp_created": 1689159891.6874828,
         "client_conn": {
-            "id": "d338199b-9f66-42bc-b35d-6aa32aa99882",
+            "id": "96237d2f-4207-4c6e-95f4-2207516e9ff7",
             "peername": [
                 "127.0.0.1",
                 0
@@ -701,7 +701,7 @@
             "timestamp_end": 1680134454.315
         },
         "server_conn": {
-            "id": "784bd852-de22-468a-bc24-70c4d7bf8d24",
+            "id": "02bd29ed-00a3-4074-93f2-35053327d10f",
             "peername": null,
             "sockname": null,
             "address": [
@@ -725,7 +725,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/mitmweb.png",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -763,7 +763,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -827,16 +827,16 @@
         }
     },
     {
-        "id": "53d44c59-2cac-49f0-b8aa-67ca429b5f6a",
+        "id": "f7c81abc-84bb-40fc-bf69-77d0d84a60a9",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.508115,
+        "timestamp_created": 1689159891.687941,
         "client_conn": {
-            "id": "05f22946-077b-4e93-9811-c78cae22e02d",
+            "id": "9335316f-1872-4970-b856-fe3d962062f7",
             "peername": [
                 "127.0.0.1",
                 0
@@ -856,7 +856,7 @@
             "timestamp_end": 1680134454.313
         },
         "server_conn": {
-            "id": "fc8d3a75-ebc8-4e7e-a4eb-ec036f26788c",
+            "id": "950827c5-4a97-4c9a-8156-db22cd474525",
             "peername": null,
             "sockname": null,
             "address": [
@@ -880,7 +880,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/sponsors/proxyman.png",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -918,7 +918,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -982,16 +982,16 @@
         }
     },
     {
-        "id": "6b41adf7-3e14-404d-a431-5304e6570f56",
+        "id": "17c5b580-84e0-4716-8dd6-d4d1bfb75ef4",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.50836,
+        "timestamp_created": 1689159891.688195,
         "client_conn": {
-            "id": "d379c368-5052-4496-b112-9d40e76e12a8",
+            "id": "c0645352-d242-4551-ba7d-dfdf9c6d69e6",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1011,7 +1011,7 @@
             "timestamp_end": 1680134454.3130002
         },
         "server_conn": {
-            "id": "866872db-b201-4d77-a3d3-de4fadb00c2e",
+            "id": "3e0d954a-4d9a-4e56-9824-30ee0fc8dab9",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1035,7 +1035,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/sponsors/netograph.svg",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -1073,7 +1073,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1141,16 +1141,16 @@
         }
     },
     {
-        "id": "40130be5-bbc6-4595-afac-77c5526e8a8a",
+        "id": "e21e5357-8bf8-4e9f-8567-280ce714e3db",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.509033,
+        "timestamp_created": 1689159891.688877,
         "client_conn": {
-            "id": "275bae0d-14fd-449c-9752-20f42d58b2fe",
+            "id": "68f9d7c3-2423-44d9-aad1-1c6f712d414d",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1170,7 +1170,7 @@
             "timestamp_end": 1680134454.324
         },
         "server_conn": {
-            "id": "4023301d-2cf8-4fa7-a3bf-bf7ea6f6f017",
+            "id": "93e92b6f-e025-4e1f-8a8f-53216f908af3",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1194,7 +1194,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/polyfills.js",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -1232,7 +1232,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1300,16 +1300,16 @@
         }
     },
     {
-        "id": "c1bb4131-5646-48c8-b5c9-71699a719946",
+        "id": "fe22ad90-96f7-4ab3-88b7-96f32f0a3942",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5095081,
+        "timestamp_created": 1689159891.689287,
         "client_conn": {
-            "id": "59c462cd-92b8-49d2-b301-a37a2bf6c5c7",
+            "id": "67af0347-b6c0-4cd5-80d2-68c11db4d3b2",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1329,7 +1329,7 @@
             "timestamp_end": 1680134454.322
         },
         "server_conn": {
-            "id": "e771500b-d9a5-42a1-ac87-d820b7cd0616",
+            "id": "8e2b4cf4-1948-4849-bbbf-fd935acc1649",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1353,7 +1353,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/clipboard.min.js",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -1391,7 +1391,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1459,16 +1459,16 @@
         }
     },
     {
-        "id": "3e128faa-11fa-4e29-b264-3fc33bcd4546",
+        "id": "be14cdce-2bc2-46ec-92b5-741b63043743",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.509989,
+        "timestamp_created": 1689159891.6897569,
         "client_conn": {
-            "id": "a9ab2567-0bda-4ed1-9b2f-23a139b5d528",
+            "id": "56c54482-9ae5-4ef8-8378-d02688a1ff9e",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1488,7 +1488,7 @@
             "timestamp_end": 1680134454.3140001
         },
         "server_conn": {
-            "id": "1614c702-0c92-446b-8ed3-60b9a1fcbb00",
+            "id": "65e1c646-dca8-4988-b95c-d54751a54f66",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1512,7 +1512,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/snapshots.js",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -1550,7 +1550,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1618,16 +1618,16 @@
         }
     },
     {
-        "id": "f4902b93-57bb-41b1-9dfa-677e8469c8cb",
+        "id": "d294eed5-13e2-423a-ae7e-bcefbca96ce2",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.510279,
+        "timestamp_created": 1689159891.6900082,
         "client_conn": {
-            "id": "07301bfa-2047-498c-bddb-57771a38154b",
+            "id": "c3f9a4bd-a065-4737-9433-b957cd350771",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1647,7 +1647,7 @@
             "timestamp_end": 1680134454.4220002
         },
         "server_conn": {
-            "id": "410bd15d-c032-4d86-bad8-df9ecfe21edd",
+            "id": "de3bc317-59c5-4483-9c1d-f8bfccae7d2d",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1671,7 +1671,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/data/twitter-timeline.png",
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "headers": [
                 [
                     "sec-ch-ua",
@@ -1709,7 +1709,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "http/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1765,16 +1765,16 @@
         }
     },
     {
-        "id": "94ea6d9f-65ff-4f63-b1ec-30a1ac0a25d4",
+        "id": "b1d7cc23-c3a7-411c-b196-a281762bc8bf",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.517306,
+        "timestamp_created": 1689159891.696888,
         "client_conn": {
-            "id": "191561b1-ade7-4947-b7f7-5b501ac592eb",
+            "id": "0cdb3012-d704-4fb1-932d-3bb4e859e5cb",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1794,7 +1794,7 @@
             "timestamp_end": 1680134513.0149999
         },
         "server_conn": {
-            "id": "2d2c9efc-cbc7-4df1-a51b-9a2e8b73beb4",
+            "id": "8dc0801d-9146-41a6-b076-1a5eaef1ec73",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1818,7 +1818,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/github-btn.html?user=mhils&type=sponsor&size=large",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "content-length",
@@ -1832,7 +1832,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -1900,16 +1900,16 @@
         }
     },
     {
-        "id": "e8c6c653-6cc9-42a9-bdae-c4785498cb8c",
+        "id": "c9982c29-3f6d-442e-9b0c-d5ae571a8cb5",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.517954,
+        "timestamp_created": 1689159891.697352,
         "client_conn": {
-            "id": "ae203b8a-16fd-4c54-9b05-2e1cd3b417f4",
+            "id": "16330024-e304-48fa-abad-a4aa5473b807",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1929,7 +1929,7 @@
             "timestamp_end": 1680134643.3240001
         },
         "server_conn": {
-            "id": "70c7894b-2352-4939-be3a-0aceafa20ebd",
+            "id": "988b2c8a-6598-4d1b-b426-175f0edc0621",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2083,16 +2083,16 @@
         }
     },
     {
-        "id": "a7a78795-f109-479d-a13f-e025755d1f79",
+        "id": "d772a031-1951-48f4-98ec-427b3fa068fe",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.518195,
+        "timestamp_created": 1689159891.697561,
         "client_conn": {
-            "id": "97b55f68-f0e8-4de0-bebf-7337578340bf",
+            "id": "df49ed6b-f5bd-4588-8916-cc23f7fea595",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2112,7 +2112,7 @@
             "timestamp_end": 1680134515.1629999
         },
         "server_conn": {
-            "id": "6bcccdcf-78fb-4971-b88d-7603c350424d",
+            "id": "da5afe3e-aea3-4d63-8a91-dc6dccd8bd6d",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2136,7 +2136,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/github-btn.html?user=mitmproxy&repo=mitmproxy&type=star&count=true&size=large",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "content-length",
@@ -2150,7 +2150,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2218,16 +2218,16 @@
         }
     },
     {
-        "id": "af09c449-d040-49a2-9e9e-11497075a79c",
+        "id": "c27d8ce9-1630-4044-a74e-6978f3d2ff73",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.518413,
+        "timestamp_created": 1689159891.6977322,
         "client_conn": {
-            "id": "0b9f4751-fe01-4468-bb21-5612bb7d6107",
+            "id": "f3b5ff4c-7f44-4f34-b3b3-9a4e61671924",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2247,7 +2247,7 @@
             "timestamp_end": 1680134454.408
         },
         "server_conn": {
-            "id": "9792fa63-d750-4572-906d-4265092428a9",
+            "id": "915d022b-f4c6-4cae-8c1a-e78c64198f84",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2271,7 +2271,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/webfonts/fa-brands-400.woff2",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "Referer",
@@ -2289,7 +2289,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2353,16 +2353,16 @@
         }
     },
     {
-        "id": "3497bb30-0df7-4bf9-9b30-6a4c1f7ce3fe",
+        "id": "8108b659-7f27-4231-b51f-a2053df0c9e8",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.518595,
+        "timestamp_created": 1689159891.6979141,
         "client_conn": {
-            "id": "0b694f59-dae8-4fd7-8c1c-8e6a6e6817e9",
+            "id": "9573484b-5883-4788-a5d2-fe44d3c3acf7",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2382,7 +2382,7 @@
             "timestamp_end": 1680134454.338
         },
         "server_conn": {
-            "id": "0ebd15a2-29de-4673-b328-e4c3c34caa2b",
+            "id": "a57edf3e-e83a-4af2-9ffb-2cbb86a41d88",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2406,7 +2406,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/webfonts/fa-regular-400.woff2",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "Referer",
@@ -2424,7 +2424,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2488,16 +2488,16 @@
         }
     },
     {
-        "id": "923bd637-2d3a-4f5a-8c9d-60434c63eec4",
+        "id": "844b790f-6436-4a50-9919-f47d297291c5",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.518781,
+        "timestamp_created": 1689159891.698093,
         "client_conn": {
-            "id": "66a91539-14e5-4619-9ed4-b0f381b164f7",
+            "id": "e7dc6a05-7d8b-4a81-aec0-f20c7904d8c3",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2517,7 +2517,7 @@
             "timestamp_end": 1680134454.3330002
         },
         "server_conn": {
-            "id": "695cb92a-35fb-4abb-be71-b932ef33f404",
+            "id": "9d0892f7-b0f1-491e-bba4-fc066fdd51fa",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2541,7 +2541,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/webfonts/fa-solid-900.woff2",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "Referer",
@@ -2559,7 +2559,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2623,16 +2623,16 @@
         }
     },
     {
-        "id": "38848e7d-61a4-4759-a80b-2c62f38d8c94",
+        "id": "3c8a1b0e-1979-4330-888a-f4c309e9eed8",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.518961,
+        "timestamp_created": 1689159891.69825,
         "client_conn": {
-            "id": "7685a37f-be01-4e16-94fb-3a0ee956f911",
+            "id": "c585dc31-98cf-4c13-a698-e750b4fce6fb",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2652,7 +2652,7 @@
             "timestamp_end": 1680134460.784
         },
         "server_conn": {
-            "id": "737f6c7b-4d73-42c3-9596-9fe1fe777d1e",
+            "id": "d61140db-0069-4b1b-9f15-4191817979c0",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2676,7 +2676,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/data/github-stats.json",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     "content-length",
@@ -2690,7 +2690,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2754,16 +2754,16 @@
         }
     },
     {
-        "id": "9d1bf87b-7c53-4626-a8ad-588cd79b3c5f",
+        "id": "09a4884f-ea9c-453a-a371-de47a5d83e52",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5192919,
+        "timestamp_created": 1689159891.6985312,
         "client_conn": {
-            "id": "88f9a176-bbfb-4acc-b1bb-3e16fa87fe56",
+            "id": "2e25cac2-6cc9-4ff1-818f-bb4ec7345f75",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2783,7 +2783,7 @@
             "timestamp_end": 1680134495.562
         },
         "server_conn": {
-            "id": "0e99d314-9e1e-43b6-9dc6-e07e41bdcd48",
+            "id": "e237d727-735c-4e15-aab7-734d3af6f920",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2807,7 +2807,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/favicon.ico",
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "headers": [
                 [
                     ":authority",
@@ -2893,7 +2893,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "h3",
             "status_code": 304,
             "reason": "Not Modified",
             "headers": [
