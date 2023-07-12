@@ -105,7 +105,6 @@ class ExportHar:
         # spent waiting between request.timestamp_end and response.timestamp_start
         # thus it correlates to HAR wait instead.
         
-        
         if flow.response:
             timings_raw = {
                 "send": flow.request.timestamp_end - flow.request.timestamp_start,
