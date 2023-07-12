@@ -39,7 +39,7 @@ class ReadHar:
 
         return http.Headers(flow_headers)
 
-    # Don't know how to make a type annotation for the request json
+    
     def request_to_flow(self, request_json: dict) -> http.HTTPFlow:
         """
         Creates a HTTPFlow object from a given entry in HAR file
@@ -76,7 +76,7 @@ class ReadHar:
         new_flow.request = http.Request.make(
             request_method, request_url, "", request_headers
         )
-
+        new_flow.request.http_version = request_json["request"]["httpVersion"]
         response_code = request_json["response"]["status"]
 
         # In Firefox HAR files images don't include response bodies
@@ -89,6 +89,7 @@ class ReadHar:
         new_flow.response = http.Response.make(
             response_code, response_content, response_headers
         )
+        new_flow.response.http_version = request_json["response"]["httpVersion"]
 
         # Change time to match HAR file
         new_flow.request.timestamp_start = timestamp_started
@@ -99,6 +100,7 @@ class ReadHar:
 
         new_flow.client_conn.timestamp_start = timestamp_started
         new_flow.client_conn.timestamp_end = timestamp_ended
+        
         return new_flow
 
     @command.command("readhar")
