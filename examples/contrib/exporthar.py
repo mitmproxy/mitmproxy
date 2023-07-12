@@ -28,7 +28,7 @@ ERROR_RESPONSE = {
           "headersSize": -1,
           "bodySize": -1,
           "_transferSize": 0,
-          "_error": "net::ERR_NAME_NOT_RESOLVED"
+          "_error": None
         }
 
 def format_cookies(cookie_list):
@@ -104,6 +104,8 @@ class ExportHar:
         # and port from the client connection. So, the time spent waiting is actually
         # spent waiting between request.timestamp_end and response.timestamp_start
         # thus it correlates to HAR wait instead.
+        
+        
         if flow.response:
             timings_raw = {
                 "send": flow.request.timestamp_end - flow.request.timestamp_start,
@@ -144,7 +146,6 @@ class ExportHar:
         # Response body size and encoding
         if not flow.response:
             response = ERROR_RESPONSE.copy()
-            response["_error"] = None
             
             if flow.error:
                 response["_error"] = flow.error.msg
@@ -236,7 +237,6 @@ class ExportHar:
             }
         }
         for flow in flows:
-            
             HAR["log"]["entries"].append(self.flow_entry(flow))
         with open(path,'w') as fp:
             json.dump(HAR,fp,indent= 4)
