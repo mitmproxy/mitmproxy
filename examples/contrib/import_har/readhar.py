@@ -53,6 +53,7 @@ class ReadHar:
         request_url = request_json["request"]["url"]
         server_address = request_json.get("serverIPAddress", None)
         request_headers = self.fix_headers(request_json["request"]["headers"])
+
         # List contains all the representations of an http request across different HAR files
         if request_url.startswith("http://"):
             port = 80
@@ -70,9 +71,12 @@ class ReadHar:
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
 
+        request_content = ""
+        if "postData" in request_json["request"]:
+            request_content = request_json["request"]["postData"]["text"]
         # FIXME: Handle request body.
         new_flow.request = http.Request.make(
-            request_method, request_url, "", request_headers
+            request_method, request_url, request_content ,request_headers
         )
         new_flow.request.http_version = request_json["request"]["httpVersion"]
         response_code = request_json["response"]["status"]
