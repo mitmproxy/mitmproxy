@@ -48,11 +48,11 @@ class ReadHar:
 
         request_method = request_json["request"]["method"]
         request_url = request_json["request"]["url"]
-        server_address = request_json.get("serverIPAddress",None)
+        server_address = request_json.get("serverIPAddress", None)
         request_headers = self.fix_headers(request_json["request"]["headers"])
         http_version = request_json["request"]["httpVersion"]
         # List contains all the representations of an http request across different HAR files
-        if http_version in ["http/2.0","h3","HTTP/1.1","HTTP/3","HTTP/2"]:
+        if http_version in ["http/2.0", "h3", "HTTP/1.1", "HTTP/3", "HTTP/2"]:
             port = 443
         else:
             port = 80
@@ -77,10 +77,10 @@ class ReadHar:
         response_code = request_json["response"]["status"]
 
         # In Firefox HAR files images don't include response bodies
-        response_content = request_json["response"]["content"].get("text","")
+        response_content = request_json["response"]["content"].get("text", "")
 
         response_headers = self.fix_headers(request_json["response"]["headers"])
-        
+
         new_flow.response = http.Response.make(
             response_code, response_content, response_headers
         )
@@ -103,8 +103,9 @@ class ReadHar:
             try:
                 har_file = json.load(fp)
             except Exception:
-                raise exceptions.CommandError("Unable to read HAR file. Please provide a valid HAR file")
-                
+                raise exceptions.CommandError(
+                    "Unable to read HAR file. Please provide a valid HAR file"
+                )
 
         for request_json in har_file["log"]["entries"]:
             flow = self.request_to_flow(request_json)
