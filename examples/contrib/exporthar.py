@@ -11,6 +11,9 @@ from mitmproxy import connection
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import types
+from mitmproxy import flow as mitmflow
+
+
 from mitmproxy import version
 from mitmproxy.net.http import cookies
 from mitmproxy.utils import strutils
@@ -221,7 +224,11 @@ class ExportHar:
         return entry
 
     @command.command("exporthar")
-    def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
+    def export_har(
+        self,
+        flows:Sequence[mitmflow.Flow],
+        path:types.Path
+        ) -> None:
         """Writes given flows into HAR files"""
         HAR = {
             "log": {
