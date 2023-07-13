@@ -120,6 +120,7 @@ class ExportHar:
             "wait": 0,
             "connect": -1,
             "ssl": -1,
+            # Blocked is total time request took
             "blocked": flow.request.timestamp_end - flow.request.timestamp_start 
             }
         else:
