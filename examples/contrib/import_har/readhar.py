@@ -53,10 +53,10 @@ class ReadHar:
         request_url = request_json["request"]["url"]
         server_address = request_json.get("serverIPAddress", None)
         request_headers = self.fix_headers(request_json["request"]["headers"])
-        
+
         http_version_req = request_json["request"]["httpVersion"]
         http_version_resp = request_json["response"]["httpVersion"]
-        
+
         # List contains all the representations of an http request across different HAR files
         if request_url.startswith("http://"):
             port = 80
