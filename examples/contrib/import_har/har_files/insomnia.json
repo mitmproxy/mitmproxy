@@ -1,22 +1,22 @@
 [
     {
-        "id": "a47e8a57-08f8-43ee-bae0-de817ad58726",
+        "id": "731c1f4a-c8f2-4db0-aa88-31184f15a8e1",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.523312,
+        "timestamp_created": 1689251785.607048,
         "client_conn": {
-            "id": "09ad63c4-efa8-4f57-b015-24bbd27d3904",
+            "id": "ab5ba8e0-238b-4919-bcbb-18fcaea3cd7f",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -24,12 +24,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680151158.981,
+            "timestamp_start": 1689251785.607019,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680151229.383
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "71c19919-ae60-4617-b606-8227911f0d5e",
+            "id": "c26245bf-7f72-4443-9ef1-7ccc867e3d2f",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -59,8 +59,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680151158.981,
-            "timestamp_end": 1680151229.383,
+            "timestamp_start": 1689251785.60706,
+            "timestamp_end": 1689251785.60706,
             "pretty_host": "mitm.it"
         },
         "response": {
@@ -131,8 +131,8 @@
             ],
             "contentLength": 250,
             "contentHash": "ad5724ee351ebc53212702f448c0136f3892e52036fb9e5918192a130bde38bd",
-            "timestamp_start": 1680151158.981,
-            "timestamp_end": 1680151229.383
+            "timestamp_start": 1689251785.6072068,
+            "timestamp_end": 1689251785.6072068
         }
     }
 ]

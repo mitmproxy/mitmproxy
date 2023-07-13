@@ -1,22 +1,22 @@
 [
     {
-        "id": "329d92fb-0018-4778-a39b-325dd4869d13",
+        "id": "e1ebe067-2a59-47d7-9336-d81043774699",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.4844,
+        "timestamp_created": 1689251785.589855,
         "client_conn": {
-            "id": "2cf7e39a-a112-48de-a113-79e263982b85",
+            "id": "1f214364-33cd-4a7b-a789-e91f6bd5505a",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -24,12 +24,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.303,
+            "timestamp_start": 1689251785.589822,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134362.303
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "c5aeea4d-0957-4db2-aca7-80a23247cac0",
+            "id": "3e6a6b58-7a4e-4035-88df-c0cf148b88ee",
             "peername": null,
             "sockname": null,
             "address": [
@@ -126,8 +126,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.303,
-            "timestamp_end": 1680134362.303,
+            "timestamp_start": 1689251785.58988,
+            "timestamp_end": 1689251785.5898812,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -186,28 +186,28 @@
             ],
             "contentLength": 23866,
             "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
-            "timestamp_start": 1680134339.303,
-            "timestamp_end": 1680134362.303
+            "timestamp_start": 1689251785.590267,
+            "timestamp_end": 1689251785.590268
         }
     },
     {
-        "id": "5d11fc9a-5a07-4d2c-a952-1247c692dc0c",
+        "id": "c43e3ae7-10f6-4237-803c-b79e508db26d",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.486321,
+        "timestamp_created": 1689251785.5909052,
         "client_conn": {
-            "id": "1af57e7d-85eb-4d2a-b396-985449475b1c",
+            "id": "928817f9-7c5d-47a1-a4c0-611111ae0ac3",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -215,12 +215,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.418,
+            "timestamp_start": 1689251785.5908759,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.418
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "6a49c95d-8352-4bd5-b391-0a0c5339acda",
+            "id": "3c2e196a-a5ea-4b09-af80-fb9f21626ed9",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -274,8 +274,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.418,
-            "timestamp_end": 1680134339.418,
+            "timestamp_start": 1689251785.5909162,
+            "timestamp_end": 1689251785.5909162,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -290,28 +290,28 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.418,
-            "timestamp_end": 1680134339.418
+            "timestamp_start": 1689251785.591032,
+            "timestamp_end": 1689251785.591033
         }
     },
     {
-        "id": "01f5a08b-e2ea-4864-a72d-189f6f643d8c",
+        "id": "90048278-d1f9-46a4-9578-25d6f207abe4",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.486572,
+        "timestamp_created": 1689251785.591142,
         "client_conn": {
-            "id": "aa8a4389-f899-4088-b944-72f4771a9f56",
+            "id": "c72952bc-c070-4a8a-b66a-ecc165318f9a",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -319,12 +319,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.456,
+            "timestamp_start": 1689251785.591121,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.456
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "6b099461-1774-4e64-b399-b4e9350510de",
+            "id": "0d7ca045-e233-4b62-af8e-431cb761973c",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -378,8 +378,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.456,
-            "timestamp_end": 1680134339.456,
+            "timestamp_start": 1689251785.591149,
+            "timestamp_end": 1689251785.591149,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -394,28 +394,28 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.456,
-            "timestamp_end": 1680134339.456
+            "timestamp_start": 1689251785.5912561,
+            "timestamp_end": 1689251785.5912561
         }
     },
     {
-        "id": "a5e15a6f-2b8e-472a-9bea-5deed04bdf30",
+        "id": "bf348983-09f2-4ac1-8f6f-aced578d14fd",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.486778,
+        "timestamp_created": 1689251785.591359,
         "client_conn": {
-            "id": "1b8e1791-d40b-419e-9368-2154b4c21bd6",
+            "id": "0658b3a8-f844-4c14-8e6f-0a9ebcb74e04",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -423,12 +423,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.457,
+            "timestamp_start": 1689251785.591337,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.457
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "7d1a6d16-c5f4-49fc-9fb4-3da77038aadf",
+            "id": "21d844f0-4631-4db7-93b4-9a8a1117fdc7",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -482,8 +482,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.457,
-            "timestamp_end": 1680134339.457,
+            "timestamp_start": 1689251785.5913658,
+            "timestamp_end": 1689251785.591367,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -498,28 +498,28 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.457,
-            "timestamp_end": 1680134339.457
+            "timestamp_start": 1689251785.591467,
+            "timestamp_end": 1689251785.591467
         }
     },
     {
-        "id": "8c250fb3-9a0b-4de4-8d43-5915101c91b3",
+        "id": "9b23ca9c-b43d-44f0-b9f4-0dad690c249e",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.4869828,
+        "timestamp_created": 1689251785.591645,
         "client_conn": {
-            "id": "2d1af5af-a8c6-4f36-8ce6-6f70bc373089",
+            "id": "eea23447-2fad-41f6-8461-edf397d5b49e",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -527,12 +527,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.457,
+            "timestamp_start": 1689251785.591626,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.457
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "0f1e96da-9f84-4c05-984d-2e0343852145",
+            "id": "afeb2843-46df-4f03-8d95-da12ff154cba",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -586,8 +586,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.457,
-            "timestamp_end": 1680134339.457,
+            "timestamp_start": 1689251785.5916522,
+            "timestamp_end": 1689251785.5916522,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -602,28 +602,28 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.457,
-            "timestamp_end": 1680134339.457
+            "timestamp_start": 1689251785.591744,
+            "timestamp_end": 1689251785.591744
         }
     },
     {
-        "id": "c04d0236-ba70-4252-89e8-1a22b94dfa94",
+        "id": "7e03a97a-7d81-496a-a854-68672e260dd6",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.487234,
+        "timestamp_created": 1689251785.591836,
         "client_conn": {
-            "id": "8cbfab36-e508-402b-ab9d-b90a40b7b3b5",
+            "id": "489b92f1-650e-417d-bbcb-54b66792eac0",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -631,12 +631,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.458,
+            "timestamp_start": 1689251785.591819,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.458
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "19b531bb-2725-452d-af92-aa1f71b00822",
+            "id": "cd8da53a-2b00-49ae-b4e3-8849d18504a2",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -690,8 +690,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.458,
-            "timestamp_end": 1680134339.458,
+            "timestamp_start": 1689251785.591841,
+            "timestamp_end": 1689251785.591842,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -706,28 +706,28 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.458,
-            "timestamp_end": 1680134339.458
+            "timestamp_start": 1689251785.591926,
+            "timestamp_end": 1689251785.591926
         }
     },
     {
-        "id": "a5fa7151-b3b4-4353-9620-6b6db11e04e4",
+        "id": "b24c8845-d1fd-421c-b364-e43f8f68ee7f",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.487413,
+        "timestamp_created": 1689251785.592006,
         "client_conn": {
-            "id": "d99ffae9-8900-45be-881c-6a3bb5aa8746",
+            "id": "2e8c837b-3897-4cf8-9252-077d0fa6d197",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -735,12 +735,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.495,
+            "timestamp_start": 1689251785.591991,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.495
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "87bedb3c-1ad8-4a33-8aa3-4740ee3e809c",
+            "id": "8a53f66a-2242-4114-bf42-0984ddad225c",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -818,8 +818,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.495,
-            "timestamp_end": 1680134339.495,
+            "timestamp_start": 1689251785.592012,
+            "timestamp_end": 1689251785.592012,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -886,28 +886,28 @@
             ],
             "contentLength": 3969,
             "contentHash": "3c4880b4b424071aa5e5c5f652b934179099ee8786ea67520b2fadbc4305e5a8",
-            "timestamp_start": 1680134339.495,
-            "timestamp_end": 1680134339.495
+            "timestamp_start": 1689251785.592112,
+            "timestamp_end": 1689251785.592112
         }
     },
     {
-        "id": "b35015e4-1fb5-4cd2-84c3-026cf6d3a6d0",
+        "id": "3655f14e-8801-4a82-a26a-cb6abbc4fd93",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.487967,
+        "timestamp_created": 1689251785.5925171,
         "client_conn": {
-            "id": "1c9959fd-2875-4bd1-bc2e-5621d8140a4e",
+            "id": "07ce221a-0315-4a95-acf6-63166afcf33f",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -915,12 +915,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.498,
+            "timestamp_start": 1689251785.5924978,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.498
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "65bfa578-2447-4a03-8730-846001e57ab9",
+            "id": "1497001d-5833-433e-a478-6842930f901b",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -998,8 +998,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.498,
-            "timestamp_end": 1680134339.498,
+            "timestamp_start": 1689251785.592524,
+            "timestamp_end": 1689251785.592525,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -1066,28 +1066,28 @@
             ],
             "contentLength": 3346,
             "contentHash": "e6c21f88023539515a971172a00e500b7e4444fbf9506e47ceee126ace246808",
-            "timestamp_start": 1680134339.498,
-            "timestamp_end": 1680134339.498
+            "timestamp_start": 1689251785.59263,
+            "timestamp_end": 1689251785.592631
         }
     },
     {
-        "id": "86bece54-c30a-4318-9f6d-dd507d65b190",
+        "id": "51bc8003-2cf9-4f84-90c3-9cd74f840049",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.4884238,
+        "timestamp_created": 1689251785.5929432,
         "client_conn": {
-            "id": "c53a1d3f-becf-4b2d-9fd8-f03c48b59076",
+            "id": "8e681c0b-49f6-4713-b8c3-d6ee4fd9b3c9",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1095,12 +1095,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.5,
+            "timestamp_start": 1689251785.5929291,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.5
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "322e6051-e792-4889-bb52-a078db499417",
+            "id": "c7880ef1-fd0c-48d6-a1c2-1b20cf234e00",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1178,8 +1178,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.5,
-            "timestamp_end": 1680134339.5,
+            "timestamp_start": 1689251785.592949,
+            "timestamp_end": 1689251785.592949,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -1246,28 +1246,28 @@
             ],
             "contentLength": 794,
             "contentHash": "43cb84ef784bafbab5472abc7c396d95fc4468973d6501c83709e40963b2a953",
-            "timestamp_start": 1680134339.5,
-            "timestamp_end": 1680134339.5
+            "timestamp_start": 1689251785.593045,
+            "timestamp_end": 1689251785.593045
         }
     },
     {
-        "id": "1a850362-ab9a-46d1-b215-47f7651f34b9",
+        "id": "cb7b5353-7ef3-4fef-9f8d-9a01b14ea43c",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.488713,
+        "timestamp_created": 1689251785.5932212,
         "client_conn": {
-            "id": "a4cd095e-9f47-4fa5-8992-611e6c62624b",
+            "id": "785ec3dd-4b9f-45fd-a1db-75f1b681d997",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1275,12 +1275,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.527,
+            "timestamp_start": 1689251785.5932071,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134345.527
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "5b4f3ac6-0b1c-4e24-b32a-1803032d0f6f",
+            "id": "f260fe95-12e3-4a98-b46d-0881d58093de",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1377,8 +1377,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.527,
-            "timestamp_end": 1680134345.527,
+            "timestamp_start": 1689251785.593227,
+            "timestamp_end": 1689251785.593227,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -1433,28 +1433,28 @@
             ],
             "contentLength": 9689,
             "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
-            "timestamp_start": 1680134339.527,
-            "timestamp_end": 1680134345.527
+            "timestamp_start": 1689251785.593326,
+            "timestamp_end": 1689251785.593326
         }
     },
     {
-        "id": "3158fdac-be46-4cdb-9a1f-78d64251fb04",
+        "id": "98def1c3-1c1b-414d-b3c6-1e67b4dccaf7",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.488959,
+        "timestamp_created": 1689251785.593444,
         "client_conn": {
-            "id": "2e0b3030-d584-4f78-9545-48b346e174da",
+            "id": "953b14ee-a31b-45d6-aa7f-103e62c37c98",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1462,12 +1462,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.528,
+            "timestamp_start": 1689251785.593431,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134346.528
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "c4a76144-0e44-489a-bb2d-34eb2ed994f4",
+            "id": "42799b21-e7ec-4b7a-afa1-9734d1459104",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1564,8 +1564,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.528,
-            "timestamp_end": 1680134346.528,
+            "timestamp_start": 1689251785.5934489,
+            "timestamp_end": 1689251785.5934489,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -1620,28 +1620,28 @@
             ],
             "contentLength": 9689,
             "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
-            "timestamp_start": 1680134339.528,
-            "timestamp_end": 1680134346.528
+            "timestamp_start": 1689251785.593545,
+            "timestamp_end": 1689251785.593545
         }
     },
     {
-        "id": "0c6b5d41-fd24-49f6-b942-0141b5bb5b93",
+        "id": "0542b5a6-9827-4387-8c37-7f66d9e85bd2",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.489198,
+        "timestamp_created": 1689251785.5936608,
         "client_conn": {
-            "id": "f2d8ac04-c6ca-4d25-8eb2-114fd6f73c93",
+            "id": "e8300fb0-b913-42f0-a927-f652f446786e",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1649,12 +1649,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.543,
+            "timestamp_start": 1689251785.593646,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134586.543
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "b4698062-0e70-4fb2-8b09-6568466e4cd4",
+            "id": "594386fe-839e-463c-afa9-54a3e8643ebe",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1735,8 +1735,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.543,
-            "timestamp_end": 1680134586.543,
+            "timestamp_start": 1689251785.593666,
+            "timestamp_end": 1689251785.593666,
             "pretty_host": "s3-us-west-2.amazonaws.com"
         },
         "response": {
@@ -1791,28 +1791,28 @@
             ],
             "contentLength": 3406,
             "contentHash": "1463cf2c4e430b2373b9cd16548f263d3335bc245fdca8019d56a4c9e6ae3b14",
-            "timestamp_start": 1680134339.543,
-            "timestamp_end": 1680134586.543
+            "timestamp_start": 1689251785.593824,
+            "timestamp_end": 1689251785.593824
         }
     },
     {
-        "id": "ac6b7088-86cc-4554-ac8a-2daf0ffa74f8",
+        "id": "76fce64e-af25-41b2-b932-34bd72a84788",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.489483,
+        "timestamp_created": 1689251785.5939252,
         "client_conn": {
-            "id": "060b05d6-cf83-4d4a-bb04-1cbd7657b9cc",
+            "id": "62bf90fc-206c-4681-bef6-7e1c7b315f80",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1820,12 +1820,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.639,
+            "timestamp_start": 1689251785.5939121,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134346.639
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "58558f3b-5748-4278-b883-cdaa393b51f2",
+            "id": "add4c4aa-e36b-48fd-b6fe-c1550d150abc",
             "peername": null,
             "sockname": null,
             "address": [
@@ -1910,8 +1910,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.639,
-            "timestamp_end": 1680134346.639,
+            "timestamp_start": 1689251785.59393,
+            "timestamp_end": 1689251785.59393,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -1966,28 +1966,28 @@
             ],
             "contentLength": 6986,
             "contentHash": "ebb5ca702c6b7f09fe1c10e8992602bad67989e25151f0cb6928ea51299bf4e8",
-            "timestamp_start": 1680134339.639,
-            "timestamp_end": 1680134346.639
+            "timestamp_start": 1689251785.5940192,
+            "timestamp_end": 1689251785.5940192
         }
     },
     {
-        "id": "61201d8c-9833-4d30-8014-555898f3f7be",
+        "id": "e34fc64c-18e5-49c5-b70b-250de35346d1",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.489706,
+        "timestamp_created": 1689251785.594147,
         "client_conn": {
-            "id": "2d05ea38-6fa8-490e-bd21-f5d7f7c441ed",
+            "id": "b7eaa10d-1549-49a9-aae3-fee65d43057a",
             "peername": [
                 "127.0.0.1",
-                0
+                51513
             ],
             "sockname": [
                 "127.0.0.1",
-                0
+                8080
             ],
             "tls_established": false,
             "cert": null,
@@ -1995,12 +1995,12 @@
             "cipher": null,
             "alpn": null,
             "tls_version": null,
-            "timestamp_start": 1680134339.643,
+            "timestamp_start": 1689251785.5941298,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134339.643
+            "timestamp_end": null
         },
         "server_conn": {
-            "id": "ec155676-4e49-4a00-9f51-4d25130ff2de",
+            "id": "c9349bb2-3ef8-470a-a472-4f296adf4173",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -2078,8 +2078,8 @@
             ],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "timestamp_start": 1680134339.643,
-            "timestamp_end": 1680134339.643,
+            "timestamp_start": 1689251785.594155,
+            "timestamp_end": 1689251785.594155,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -2093,7 +2093,7 @@
                 ],
                 [
                     "content-length",
-                    "98065"
+                    "130756"
                 ],
                 [
                     "age",
@@ -2140,10 +2140,10 @@
                     "dkVeTGCIfZ6m6k9VkhQJKLdxjemd8oSJPwnCEX6Tdimqsa5n2CJybg=="
                 ]
             ],
-            "contentLength": 98065,
-            "contentHash": "ed040187e112545848bb115eb5fd16a85c2a0c89864bea5d930481518d05614d",
-            "timestamp_start": 1680134339.643,
-            "timestamp_end": 1680134339.643
+            "contentLength": 130756,
+            "contentHash": "bfea53c2ea9ce90e2428f28c36a8acbc86dc3f6e9ea63b5ea6b07ee96f0be1a8",
+            "timestamp_start": 1689251785.59424,
+            "timestamp_end": 1689251785.59424
         }
     }
 ]
