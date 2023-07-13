@@ -39,7 +39,6 @@ class ReadHar:
 
         return http.Headers(flow_headers)
 
-    
     def request_to_flow(self, request_json: dict) -> http.HTTPFlow:
         """
         Creates a HTTPFlow object from a given entry in HAR file
@@ -79,7 +78,7 @@ class ReadHar:
             request_content = request_json["request"]["postData"]["text"]
         # FIXME: Handle request body.
         new_flow.request = http.Request.make(
-            request_method, request_url, request_content ,request_headers
+            request_method, request_url, request_content, request_headers
         )
         new_flow.request.http_version = request_json["request"]["httpVersion"]
         response_code = request_json["response"]["status"]
@@ -105,7 +104,7 @@ class ReadHar:
 
         new_flow.client_conn.timestamp_start = timestamp_start
         new_flow.client_conn.timestamp_end = timestamp_end
-        
+
         return new_flow
 
     @command.command("readhar")

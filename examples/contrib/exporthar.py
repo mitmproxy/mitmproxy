@@ -1,38 +1,37 @@
 """Exports flow objects into HAR files"""
+import base64
 import json
 import logging
-import base64
+from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
+
 from mitmproxy import command
 from mitmproxy import connection
-from mitmproxy.net.http import cookies
-from collections.abc import Sequence
+from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import types
-from mitmproxy import flow
-
-
 from mitmproxy import version
+from mitmproxy.net.http import cookies
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
 
 ERROR_RESPONSE = {
-          "status": 0,
-          "statusText": "",
-          "httpVersion": "",
-          "headers": [],
-          "cookies": [],
-          "redirectURL": "",
-          "headersSize": -1,
-          "bodySize": -1,
-          "_transferSize": 0,
-          "_error": None
-        }
+    "status": 0,
+    "statusText": "",
+    "httpVersion": "",
+    "headers": [],
+    "cookies": [],
+    "redirectURL": "",
+    "headersSize": -1,
+    "bodySize": -1,
+    "_transferSize": 0,
+    "_error": None,
+}
+
 
 def format_cookies(cookie_list):
-    
     rv = []
 
     for name, value, attrs in cookie_list:
@@ -79,18 +78,22 @@ def name_value(obj):
 
 class ExportHar:
     def __init__(self) -> None:
-        self.SERVERS_SEEN: set[connection.Server] = set() 
-    def flow_entry(self,flow: http.HTTPFlow) -> dict:
+        self.SERVERS_SEEN: set[connection.Server] = set()
+
+    def flow_entry(self, flow: http.HTTPFlow) -> dict:
         # -1 indicates that these values do not apply to current request
         ssl_time = -1
         connect_time = -1
 
         if flow.server_conn not in self.SERVERS_SEEN:
-            connect_time = (
-                    (flow.server_conn.timestamp_tcp_setup or 0) - (flow.server_conn.timestamp_start or 0)
+            connect_time = (flow.server_conn.timestamp_tcp_setup or 0) - (
+                flow.server_conn.timestamp_start or 0
             )
 
-            if flow.server_conn.timestamp_tls_setup and flow.server_conn.timestamp_tcp_setup:
+            if (
+                flow.server_conn.timestamp_tls_setup
+                and flow.server_conn.timestamp_tcp_setup
+            ):
                 ssl_time = (
                     flow.server_conn.timestamp_tls_setup
                     - flow.server_conn.timestamp_tcp_setup
@@ -104,33 +107,32 @@ class ExportHar:
         # and port from the client connection. So, the time spent waiting is actually
         # spent waiting between request.timestamp_end and response.timestamp_start
         # thus it correlates to HAR wait instead.
-        
+
         if flow.response:
             timings_raw = {
                 "send": flow.request.timestamp_end - flow.request.timestamp_start,
-                "receive": flow.response.timestamp_end  - flow.response.timestamp_start,
+                "receive": flow.response.timestamp_end - flow.response.timestamp_start,
                 "wait": flow.response.timestamp_start - flow.request.timestamp_end,
                 "connect": connect_time,
                 "ssl": ssl_time,
-            } 
+            }
         elif flow.error:
-           timings_raw = {
-            "send": 0,
-            "receive": 0,
-            "wait": 0,
-            "connect": -1,
-            "ssl": -1,
-            # Blocked is total time request took
-            "blocked": flow.request.timestamp_end - flow.request.timestamp_start 
+            timings_raw = {
+                "send": 0,
+                "receive": 0,
+                "wait": 0,
+                "connect": -1,
+                "ssl": -1,
+                # Blocked is total time request took
+                "blocked": flow.request.timestamp_end - flow.request.timestamp_start,
             }
         else:
-           timings_raw = {
-            "send": flow.request.timestamp_end - flow.request.timestamp_start,
-            "receive": 0,
-            "wait": 0,
-            "connect": connect_time,
-            "ssl": ssl_time,
-            
+            timings_raw = {
+                "send": flow.request.timestamp_end - flow.request.timestamp_start,
+                "receive": 0,
+                "wait": 0,
+                "connect": connect_time,
+                "ssl": ssl_time,
             }
         # HAR timings are integers in ms, so we re-encode the raw timings to that format.
         timings = {k: int(1000 * v) if v != -1 else -1 for k, v in timings_raw.items()}
@@ -146,7 +148,7 @@ class ExportHar:
         # Response body size and encoding
         if not flow.response:
             response = ERROR_RESPONSE.copy()
-            
+
             if flow.error:
                 response["_error"] = flow.error.msg
         else:
@@ -172,7 +174,7 @@ class ExportHar:
                 "headersSize": len(str(flow.response.headers)),
                 "bodySize": response_body_size,
             }
-        
+
         entry = {
             "startedDateTime": started_date_time,
             "time": full_time,
@@ -215,14 +217,11 @@ class ExportHar:
 
         if flow.server_conn.connected:
             entry["serverIPAddress"] = str(flow.server_conn.peername[0])
-        
+
         return entry
+
     @command.command("exporthar")
-    def export_har(
-        self,
-        flows:Sequence[flow.Flow],
-        path:types.Path
-        ) -> None:
+    def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Writes given flows into HAR files"""
         HAR = {
             "log": {
@@ -238,7 +237,8 @@ class ExportHar:
         }
         for flow in flows:
             HAR["log"]["entries"].append(self.flow_entry(flow))
-        with open(path,'w') as fp:
-            json.dump(HAR,fp,indent= 4)
+        with open(path, "w") as fp:
+            json.dump(HAR, fp, indent=4)
+
 
 addons = [ExportHar()]
