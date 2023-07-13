@@ -66,8 +66,11 @@ class ReadHar:
             # TODO Get time info from HAR File
             timestamp_start=time.time(),
         )
-
-        server_conn = connection.Server(address=(server_address, 3))
+        # TODO find server address if "serverIPAddress" == ""
+        if server_address:
+            server_conn = connection.Server(address=(server_address, port))
+        else:
+            server_conn = connection.Server(address=None)
 
         new_flow = http.HTTPFlow(client_conn, server_conn)
 
@@ -102,6 +105,7 @@ class ReadHar:
 
         new_flow.client_conn.timestamp_start = timestamp_start
         new_flow.client_conn.timestamp_end = timestamp_end
+        
         return new_flow
 
     @command.command("readhar")
