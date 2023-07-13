@@ -57,6 +57,7 @@ class ReadHar:
         http_version_req = request_json["request"]["httpVersion"]
         http_version_resp = request_json["response"]["httpVersion"]
 
+        request_content = ""
         # List contains all the representations of an http request across different HAR files
         if request_url.startswith("http://"):
             port = 80
@@ -78,8 +79,11 @@ class ReadHar:
         new_flow = http.HTTPFlow(client_conn, server_conn)
 
         # FIXME: Handle request body.
+        if "postData" in request_json["request"]:
+            request_content = request_json["request"]["postData"]
+
         new_flow.request = http.Request.make(
-            request_method, request_url, "", request_headers
+            request_method, request_url, request_content, request_headers
         )
 
         response_code = request_json["response"]["status"]
