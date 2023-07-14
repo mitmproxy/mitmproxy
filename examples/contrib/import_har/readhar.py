@@ -80,7 +80,7 @@ class ReadHar:
 
         # FIXME: Handle request body.
         if "postData" in request_json["request"]:
-            request_content = request_json["request"]["postData"]
+            request_content = request_json["request"]["postData"]["text"]
 
         new_flow.request = http.Request.make(
             request_method, request_url, request_content, request_headers

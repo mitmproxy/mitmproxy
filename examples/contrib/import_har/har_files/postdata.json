@@ -1,0 +1,193 @@
+[
+    {
+        "id": "1ccc7c2d-08d4-4892-b84c-c66c23cd91ae",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 1689354581.324534,
+        "client_conn": {
+            "id": "bff6c23a-ab29-447f-8653-b6df05234b01",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1689188272.05,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1689188415.949
+        },
+        "server_conn": {
+            "id": "c65ad013-ae29-428e-908c-37a3be70da56",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "52.1.46.0",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "POST",
+            "scheme": "https",
+            "host": "bi.pst.tech",
+            "port": 443,
+            "path": "/events",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    ":authority",
+                    "bi.pst.tech"
+                ],
+                [
+                    ":method",
+                    "POST"
+                ],
+                [
+                    ":path",
+                    "/events"
+                ],
+                [
+                    ":scheme",
+                    "https"
+                ],
+                [
+                    "accept",
+                    "text/html"
+                ],
+                [
+                    "accept-encoding",
+                    "gzip, deflate, br"
+                ],
+                [
+                    "accept-language",
+                    "en-US,en;q=0.9"
+                ],
+                [
+                    "cache-control",
+                    "no-cache"
+                ],
+                [
+                    "content-length",
+                    "504"
+                ],
+                [
+                    "content-type",
+                    "text/plain;charset=UTF-8"
+                ],
+                [
+                    "dnt",
+                    "1"
+                ],
+                [
+                    "origin",
+                    "https://www.postman.com"
+                ],
+                [
+                    "pragma",
+                    "no-cache"
+                ],
+                [
+                    "referer",
+                    "https://www.postman.com/"
+                ],
+                [
+                    "sec-ch-ua",
+                    "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Google Chrome\";v=\"114\""
+                ],
+                [
+                    "sec-ch-ua-mobile",
+                    "?0"
+                ],
+                [
+                    "sec-ch-ua-platform",
+                    "\"macOS\""
+                ],
+                [
+                    "sec-fetch-dest",
+                    "empty"
+                ],
+                [
+                    "sec-fetch-mode",
+                    "no-cors"
+                ],
+                [
+                    "sec-fetch-site",
+                    "cross-site"
+                ],
+                [
+                    "user-agent",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                ]
+            ],
+            "contentLength": 504,
+            "contentHash": "c7067c21fd61b85ffa7552d454c936f4ad34f8bebc246a3fbb27b4e9488ad8b6",
+            "timestamp_start": 1689188272.05,
+            "timestamp_end": 1689188415.949,
+            "pretty_host": "bi.pst.tech"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "access-control-allow-origin",
+                    "*"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ],
+                [
+                    "content-type",
+                    "application/json; charset=utf-8"
+                ],
+                [
+                    "date",
+                    "Wed, 12 Jul 2023 18:57:52 GMT"
+                ],
+                [
+                    "etag",
+                    "W/\"101-M4DUrj+vYg3cdaaZ53X938Lz5MA\""
+                ],
+                [
+                    "vary",
+                    "Accept-Encoding"
+                ],
+                [
+                    "x-srv-span",
+                    "v=1;s=27ab58e39ff06cb0"
+                ],
+                [
+                    "x-srv-trace",
+                    "v=1;t=b7be5733d242e483"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1689188272.05,
+            "timestamp_end": 1689188415.949
+        }
+    }
+]
