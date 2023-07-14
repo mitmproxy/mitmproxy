@@ -234,8 +234,8 @@ class ExportHar:
                 "entries": [],
             }
         }
-        for flow in flows:
-            HAR["log"]["entries"].append(self.flow_entry(flow))
+        for given_flow in flows:
+            HAR["log"]["entries"].append(self.flow_entry(given_flow))
         with open(path, "w") as fp:
             json.dump(HAR, fp, indent=4)
 
