@@ -1,15 +1,15 @@
 [
     {
-        "id": "c409d2c5-7b06-43c5-ae45-555063d5f1a8",
+        "id": "f4876af7-a751-475c-952b-8b4971b44416",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.548806,
+        "timestamp_created": 1689352406.771476,
         "client_conn": {
-            "id": "ef2db328-2455-4aea-82a5-6a2d38bc8a02",
+            "id": "032b6e91-cefb-4534-97bc-03804f414234",
             "peername": [
                 "127.0.0.1",
                 0
@@ -29,7 +29,7 @@
             "timestamp_end": 1680135323.7605977
         },
         "server_conn": {
-            "id": "41392c44-fbf0-4e5e-a66b-699423d26bf4",
+            "id": "cb14932e-cdc0-4d86-abb5-98e400635ae4",
             "peername": null,
             "sockname": null,
             "address": [
@@ -53,7 +53,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/",
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2",
             "headers": [
                 [
                     "Accept",
@@ -95,7 +95,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -163,16 +163,16 @@
         }
     },
     {
-        "id": "7cac23ba-3f52-4240-bf2f-ee68307052c8",
+        "id": "d1262961-f362-4c20-a80e-394a42af8db2",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.550688,
+        "timestamp_created": 1689352406.7732291,
         "client_conn": {
-            "id": "c3258ace-06ad-420e-b9ca-a5c203ea54d0",
+            "id": "a375ebda-7e26-4d8a-a860-ba3bf36463e9",
             "peername": [
                 "127.0.0.1",
                 0
@@ -192,7 +192,7 @@
             "timestamp_end": 1680135212.606069
         },
         "server_conn": {
-            "id": "a8016bd6-36a4-4d7d-a5b0-6befc170d3b1",
+            "id": "7c0d1b1f-e1a2-4b16-be56-44f72dd50e04",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -295,16 +295,16 @@
         }
     },
     {
-        "id": "90068b2b-4c91-4d37-9c0d-215ff4cf512c",
+        "id": "6be2376b-2b61-49a7-8d9f-603f61790642",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.558614,
+        "timestamp_created": 1689352406.781028,
         "client_conn": {
-            "id": "114d5ceb-4506-4bf5-9c76-ed121edf9310",
+            "id": "b74c0e29-9ce7-422f-a3fe-78f371ac0993",
             "peername": [
                 "127.0.0.1",
                 0
@@ -324,7 +324,7 @@
             "timestamp_end": 1680135212.625603
         },
         "server_conn": {
-            "id": "0a7ae8f8-2522-429b-9290-fd3211268cf7",
+            "id": "6020171c-6c38-468d-819c-887a6c1b43b6",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -423,16 +423,16 @@
         }
     },
     {
-        "id": "e61bba06-9e9f-4504-80bb-5df9e6f3ffb1",
+        "id": "7c44ce2c-7666-4ab9-a10a-c686a73e358d",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.558796,
+        "timestamp_created": 1689352406.7812219,
         "client_conn": {
-            "id": "046a41d9-3187-4ece-a00a-d395fa468f4e",
+            "id": "d38cc0b8-943a-42fb-9653-0549b9a44290",
             "peername": [
                 "127.0.0.1",
                 0
@@ -452,7 +452,7 @@
             "timestamp_end": 1680135212.604729
         },
         "server_conn": {
-            "id": "e5d8dad9-2f1f-4a5e-913d-051fcab28ab5",
+            "id": "e7bd5e23-1b29-480b-a0ea-0647defdabe5",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -551,16 +551,16 @@
         }
     },
     {
-        "id": "a78bc39c-7928-4973-ab39-1ee9d099a846",
+        "id": "8bfc57d8-e8cb-4d31-8d31-f3501be4d029",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.559809,
+        "timestamp_created": 1689352406.782211,
         "client_conn": {
-            "id": "a7297b4a-6716-4fc2-bc84-57d752d8a14c",
+            "id": "2b26608b-bc53-4c5a-b917-27d81ca6e61e",
             "peername": [
                 "127.0.0.1",
                 0
@@ -580,7 +580,7 @@
             "timestamp_end": 1680135212.609786
         },
         "server_conn": {
-            "id": "11a80053-bdf6-41dc-a2b6-89a6280cfe1a",
+            "id": "70c5c89f-822c-41b7-8f5e-95852fb3b51a",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -679,16 +679,16 @@
         }
     },
     {
-        "id": "bc33a715-7faf-4f0c-993f-e5d6f949201f",
+        "id": "bf0eb242-424f-4a8f-9a22-7abee0658abb",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.560143,
+        "timestamp_created": 1689352406.782657,
         "client_conn": {
-            "id": "beb11395-db6c-4bce-8194-2b7cebdacd4f",
+            "id": "5c52138e-efb1-45a8-a65f-e04150b28066",
             "peername": [
                 "127.0.0.1",
                 0
@@ -708,7 +708,7 @@
             "timestamp_end": 1680135212.856044
         },
         "server_conn": {
-            "id": "9e471537-ae36-4c6a-8d13-0a6c889fcad3",
+            "id": "48475d5f-7a4c-4b70-9932-69d4870ce11e",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -807,16 +807,16 @@
         }
     },
     {
-        "id": "53a01253-a6b1-4837-9bec-1859ae710cf5",
+        "id": "949a9e3d-95f1-417c-a61d-9be5ebedc0f6",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.56036,
+        "timestamp_created": 1689352406.782882,
         "client_conn": {
-            "id": "25796474-3648-4b71-a508-862bd25746ae",
+            "id": "0c4dec77-4470-4351-add7-a118b3382da5",
             "peername": [
                 "127.0.0.1",
                 0
@@ -836,7 +836,7 @@
             "timestamp_end": 1680135212.8695679
         },
         "server_conn": {
-            "id": "1e254138-5d44-4559-819a-252f818414ef",
+            "id": "18d33711-2db6-491a-a687-c7630a2abf1c",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -939,16 +939,16 @@
         }
     },
     {
-        "id": "623377c8-a625-4ffa-b2b9-21bb0e345cb7",
+        "id": "91307af8-72ad-4c03-9690-93d8c6c44544",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5609531,
+        "timestamp_created": 1689352406.783427,
         "client_conn": {
-            "id": "40c4f60e-6a9b-4a9d-a3d4-8ca76897edb8",
+            "id": "39a0151a-59c7-4679-aba3-718855bf5b40",
             "peername": [
                 "127.0.0.1",
                 0
@@ -968,7 +968,7 @@
             "timestamp_end": 1680135212.631427
         },
         "server_conn": {
-            "id": "b9b4d8b9-c606-42f1-9c83-16fe1cc5ef69",
+            "id": "acbd6141-c45e-4513-922e-388d78cd706d",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1071,16 +1071,16 @@
         }
     },
     {
-        "id": "bfb0ca6d-580d-4346-b5f1-70f0279a51f2",
+        "id": "9a09fc66-e53d-4af4-b03f-b723a5701a55",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5613,
+        "timestamp_created": 1689352406.7838132,
         "client_conn": {
-            "id": "e134c201-3f1a-4009-9c2c-6768e2f22a0b",
+            "id": "5834c7bf-8333-4264-a236-5a437e7028e5",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1100,7 +1100,7 @@
             "timestamp_end": 1680135212.620405
         },
         "server_conn": {
-            "id": "19e1bfc6-09e1-42a9-a907-6997f6ae5c5e",
+            "id": "c58f4d31-93a9-4b2a-a25e-3c140aaef6be",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1203,16 +1203,16 @@
         }
     },
     {
-        "id": "d3e2adb5-dfb2-45a9-9df0-fe3b55858e15",
+        "id": "c515e637-d58c-49e1-b992-039d3228e991",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5615191,
+        "timestamp_created": 1689352406.784089,
         "client_conn": {
-            "id": "d6ec1b32-188b-4095-903c-407cc5e68f85",
+            "id": "6551e928-2faa-414b-b8c7-ef0739657ca2",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1232,7 +1232,7 @@
             "timestamp_end": 1680135247.3946638
         },
         "server_conn": {
-            "id": "120f0e9a-74da-415c-a76d-8093b13c3b1f",
+            "id": "1c097e43-56cb-4d71-b871-766d2fcc8979",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1347,16 +1347,16 @@
         }
     },
     {
-        "id": "d406b180-106c-4019-a901-69651000bfe9",
+        "id": "85fb9670-3483-48b0-945c-69b61b090052",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5618649,
+        "timestamp_created": 1689352406.784485,
         "client_conn": {
-            "id": "47222d45-9588-4299-bc79-63f41963beed",
+            "id": "0d1edf40-35e9-435b-b142-ee084c739bf2",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1376,7 +1376,7 @@
             "timestamp_end": 1680135247.3946638
         },
         "server_conn": {
-            "id": "b0825140-d184-4966-ac42-abf63ec4a436",
+            "id": "1653f855-b851-481b-87c7-6338a831a333",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1491,16 +1491,16 @@
         }
     },
     {
-        "id": "f50722b2-6d39-44db-aa82-fd8d5e8509cc",
+        "id": "60d8acde-509c-4910-b1a4-5a7563883170",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.56203,
+        "timestamp_created": 1689352406.7846851,
         "client_conn": {
-            "id": "09e7e993-8640-49f4-be1d-4cdc10b1ca33",
+            "id": "9e1c0662-e10f-4c94-93b2-9205db641931",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1520,7 +1520,7 @@
             "timestamp_end": 1680135252.528817
         },
         "server_conn": {
-            "id": "cac79b24-ff95-4e53-a475-222e3e149981",
+            "id": "c87dbb3a-04f1-4509-bb8b-e2a630766678",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1635,16 +1635,16 @@
         }
     },
     {
-        "id": "531d37fc-5a8e-4029-9513-d7115fc468a2",
+        "id": "12f7f4e7-b7d9-4a95-b384-d95c401528b3",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.562195,
+        "timestamp_created": 1689352406.7848508,
         "client_conn": {
-            "id": "1c1da52d-1513-436f-9d0c-8110ea5dc44d",
+            "id": "ef523e4f-0adb-4649-8043-397bf6fd0701",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1664,7 +1664,7 @@
             "timestamp_end": 1680135252.528817
         },
         "server_conn": {
-            "id": "5ba7456d-4943-4c48-955a-a65c8499e3bb",
+            "id": "d54fef9b-a3b8-4c40-bfc6-83509476bcbb",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1779,16 +1779,16 @@
         }
     },
     {
-        "id": "472b1073-6a52-4a9c-a93e-4e0498b2f971",
+        "id": "ec9d8422-217c-4081-8c7c-5cee1e88d25d",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.562358,
+        "timestamp_created": 1689352406.785014,
         "client_conn": {
-            "id": "d60bebdf-337f-4378-8bbd-a9f9e6630027",
+            "id": "d84de632-275e-447a-98e7-6809891e1c37",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1808,7 +1808,7 @@
             "timestamp_end": 1680135212.644795
         },
         "server_conn": {
-            "id": "04a0df47-4081-49c7-8530-9d4b8d939218",
+            "id": "a1e65e89-e13e-4b67-8a79-8241dfcc52a3",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -1907,16 +1907,16 @@
         }
     },
     {
-        "id": "5a5d292b-29aa-4183-bc8a-348ca237310a",
+        "id": "7bf2309a-097b-4408-ad29-cb2d6f0953a4",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.563074,
+        "timestamp_created": 1689352406.785722,
         "client_conn": {
-            "id": "cccd1423-79f8-4744-b0e2-4a9b02dc042f",
+            "id": "4a5c02d5-a7f9-4363-9a8c-7ec53ebf2e00",
             "peername": [
                 "127.0.0.1",
                 0
@@ -1936,7 +1936,7 @@
             "timestamp_end": 1680135212.609024
         },
         "server_conn": {
-            "id": "2a05414e-1fd2-4dfb-85f4-8bb29e7f9440",
+            "id": "cdebd621-4f74-4054-9f49-eb09c5183099",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -2035,16 +2035,16 @@
         }
     },
     {
-        "id": "53d88941-159e-4490-978b-7b823b3553e6",
+        "id": "e1bae123-aee2-4d94-b316-902f59a52320",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.563328,
+        "timestamp_created": 1689352406.785992,
         "client_conn": {
-            "id": "b4f26f14-dc15-42cc-b45f-ce828820fd3b",
+            "id": "d298f334-7c67-44ce-870d-7757732a1498",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2064,7 +2064,7 @@
             "timestamp_end": 1680135212.622383
         },
         "server_conn": {
-            "id": "18664639-d926-4bce-a9ba-3dc6bb7b658e",
+            "id": "f784d3d9-a81c-4602-86fb-1bb8a4f01223",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -2163,16 +2163,16 @@
         }
     },
     {
-        "id": "2e7c0342-3b80-45a4-95b4-87412f722e8e",
+        "id": "1621c4f8-60f1-4ba4-9d1d-e6b4be5abfad",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5640352,
+        "timestamp_created": 1689352406.78669,
         "client_conn": {
-            "id": "04ac9652-87a0-4e0c-82bc-ed20ca17d628",
+            "id": "bec85699-34b7-4d47-8689-8f1fc9e9bb15",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2192,7 +2192,7 @@
             "timestamp_end": 1680135212.729846
         },
         "server_conn": {
-            "id": "c606397b-2fe7-4d36-a66a-76633848c207",
+            "id": "e9115acd-6dc5-4506-beec-609a471a40d2",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -2295,16 +2295,16 @@
         }
     },
     {
-        "id": "8053ec9c-3e74-4ef6-95fa-7cb9743f5719",
+        "id": "4d60d1ab-a3ae-44a0-bdaf-d49a90b65a55",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.564407,
+        "timestamp_created": 1689352406.787083,
         "client_conn": {
-            "id": "a410f901-a5ff-4f62-870a-f96846099870",
+            "id": "59575f43-a6ef-4bd0-9166-6808cc45a4aa",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2324,7 +2324,7 @@
             "timestamp_end": 1680135389.811421
         },
         "server_conn": {
-            "id": "ac3b26c7-bd01-4044-a6c4-bd220a32670b",
+            "id": "e04753a3-c52b-45f3-bb7a-9aa9923e404e",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2450,16 +2450,16 @@
         }
     },
     {
-        "id": "bc354bca-6331-4158-b313-e17ac2177f26",
+        "id": "9e4e0672-6d25-4724-9dbf-327053664c84",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.5645802,
+        "timestamp_created": 1689352406.7873752,
         "client_conn": {
-            "id": "c44351b4-5014-4607-a356-982a1b3df50d",
+            "id": "be719c3c-a4d3-4d3b-8e56-bfd97f8318c7",
             "peername": [
                 "127.0.0.1",
                 0
@@ -2479,7 +2479,7 @@
             "timestamp_end": 1680135222.496895
         },
         "server_conn": {
-            "id": "f2875215-ecba-439b-b84a-49dabe6755c1",
+            "id": "08be0284-d3f5-4dea-a475-923aa7d74434",
             "peername": null,
             "sockname": null,
             "address": [
@@ -2503,7 +2503,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/data/github-stats.json",
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2",
             "headers": [
                 [
                     "User-Agent",
@@ -2541,7 +2541,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2",
             "status_code": 200,
             "reason": "OK",
             "headers": [

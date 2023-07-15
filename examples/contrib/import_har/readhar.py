@@ -53,6 +53,10 @@ class ReadHar:
         request_url = request_json["request"]["url"]
         server_address = request_json.get("serverIPAddress", None)
         request_headers = self.fix_headers(request_json["request"]["headers"])
+
+        http_version_req = request_json["request"]["httpVersion"]
+        http_version_resp = request_json["response"]["httpVersion"]
+
         # List contains all the representations of an http request across different HAR files
         if request_url.startswith("http://"):
             port = 80
@@ -81,7 +85,7 @@ class ReadHar:
         response_code = request_json["response"]["status"]
 
         # In Firefox HAR files images don't include response bodies
-        response_content = request_json["response"]["content"].get("text", None)
+        response_content = request_json["response"]["content"].get("text", "")
         content_encoding = request_json["response"]["content"].get("encoding", None)
         if content_encoding == "base64":
             response_content = base64.b64decode(response_content)
@@ -100,6 +104,26 @@ class ReadHar:
 
         new_flow.client_conn.timestamp_start = timestamp_start
         new_flow.client_conn.timestamp_end = timestamp_end
+
+        match http_version_req:
+            case "http/2.0":
+                new_flow.request.http_version = "HTTP/2"
+            case "HTTP/2":
+                new_flow.request.http_version = "HTTP/2"
+            case "HTTP/3":
+                new_flow.request.http_version = "HTTP/3"
+            case _:
+                new_flow.request.http_version = "HTTP/1.1"
+        match http_version_resp:
+            case "http/2.0":
+                new_flow.response.http_version = "HTTP/2"
+            case "HTTP/2":
+                new_flow.response.http_version = "HTTP/2"
+            case "HTTP/3":
+                new_flow.response.http_version = "HTTP/3"
+            case _:
+                new_flow.response.http_version = "HTTP/1.1"
+
         return new_flow
 
     @command.command("readhar")
