@@ -1,15 +1,15 @@
 [
     {
-        "id": "a0f84fbb-b3a8-4661-befa-2a79d9554417",
+        "id": "hardcoded_for_test",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1688815815.4973671,
+        "timestamp_created": 0,
         "client_conn": {
-            "id": "a5bbadd9-1a4e-423c-a4db-9a41ae8d58fc",
+            "id": "hardcoded_for_test",
             "peername": [
                 "127.0.0.1",
                 0
@@ -29,7 +29,7 @@
             "timestamp_end": 1680136769.482
         },
         "server_conn": {
-            "id": "df1b7ddf-3703-450e-bc63-40a6a1a31ae0",
+            "id": "hardcoded_for_test",
             "peername": null,
             "sockname": null,
             "address": [
