@@ -10,11 +10,13 @@ from mitmproxy.tools.web.app import flow_to_json
 
 here = Path(__file__).parent.absolute()
 
-def hardcode_variable_fields_for_tests(flow:dict)->None:
+
+def hardcode_variable_fields_for_tests(flow: dict) -> None:
     flow["id"] = "hardcoded_for_test"
     flow["timestamp_created"] = 0
     flow["server_conn"]["id"] = "hardcoded_for_test"
     flow["client_conn"]["id"] = "hardcoded_for_test"
+
 
 def file_to_flows(path_name: Path) -> list[dict]:
     r = ReadHar()
