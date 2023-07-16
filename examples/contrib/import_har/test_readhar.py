@@ -11,6 +11,13 @@ from mitmproxy.tools.web.app import flow_to_json
 here = Path(__file__).parent.absolute()
 
 
+def hardcode_variable_fields_for_tests(flow: dict) -> None:
+    flow["id"] = "hardcoded_for_test"
+    flow["timestamp_created"] = 0
+    flow["server_conn"]["id"] = "hardcoded_for_test"
+    flow["client_conn"]["id"] = "hardcoded_for_test"
+
+
 def file_to_flows(path_name: Path) -> list[dict]:
     r = ReadHar()
     with open(path_name, "rb") as f:
@@ -20,6 +27,7 @@ def file_to_flows(path_name: Path) -> list[dict]:
         for entry in file_json:
             expected = r.request_to_flow(entry)
             flow_json = flow_to_json(expected)
+            hardcode_variable_fields_for_tests(flow_json)
             flows.append(flow_json)
 
     return flows
@@ -47,11 +55,6 @@ def test_har_to_flow(har_file: Path):
 
     for expected, actual in zip(expected_flows, actual_flows):
         actual = json.loads(json.dumps(actual))
-
-        actual["id"] = expected["id"]
-        actual["timestamp_created"] = expected["timestamp_created"]
-        actual["server_conn"]["id"] = expected["server_conn"]["id"]
-        actual["client_conn"]["id"] = expected["client_conn"]["id"]
 
         assert actual == expected
 

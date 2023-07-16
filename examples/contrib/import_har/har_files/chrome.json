@@ -1,15 +1,15 @@
 [
     {
-        "id": "cb213e8a-a9de-4946-8173-6852481342cd",
+        "id": "hardcoded_for_test",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1689352406.7651358,
+        "timestamp_created": 0,
         "client_conn": {
-            "id": "3942c060-8e31-493f-8908-250a2ceb2663",
+            "id": "hardcoded_for_test",
             "peername": [
                 "127.0.0.1",
                 0
@@ -29,7 +29,7 @@
             "timestamp_end": 1680134468.9160001
         },
         "server_conn": {
-            "id": "d6f0aa24-647c-410a-b319-b1879a6e7587",
+            "id": "hardcoded_for_test",
             "peername": null,
             "sockname": null,
             "address": [
@@ -207,16 +207,16 @@
         }
     },
     {
-        "id": "c15b740b-4e4c-4ef5-8b0d-e1eed496c67d",
+        "id": "hardcoded_for_test",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1689352406.765561,
+        "timestamp_created": 0,
         "client_conn": {
-            "id": "eb85da21-edcb-4fef-a3cb-1abab8be3132",
+            "id": "hardcoded_for_test",
             "peername": [
                 "127.0.0.1",
                 0
@@ -236,7 +236,7 @@
             "timestamp_end": 1689251556.795
         },
         "server_conn": {
-            "id": "5c6eb024-3d43-4ca0-b574-bef71c9b0def",
+            "id": "hardcoded_for_test",
             "peername": null,
             "sockname": null,
             "address": null,
@@ -339,16 +339,16 @@
         }
     },
     {
-        "id": "bbbbb709-e652-4dce-afcb-d5eb2cda19ee",
+        "id": "hardcoded_for_test",
         "intercepted": false,
         "is_replay": null,
         "type": "http",
         "modified": false,
         "marked": "",
         "comment": "",
-        "timestamp_created": 1689352406.765755,
+        "timestamp_created": 0,
         "client_conn": {
-            "id": "889b02ae-c4d6-4e8c-ae83-fab4dc138962",
+            "id": "hardcoded_for_test",
             "peername": [
                 "127.0.0.1",
                 0
@@ -368,7 +368,7 @@
             "timestamp_end": 1689188415.949
         },
         "server_conn": {
-            "id": "01a82235-e771-458e-b622-5124d02a425d",
+            "id": "hardcoded_for_test",
             "peername": null,
             "sockname": null,
             "address": [
@@ -428,7 +428,7 @@
                 ],
                 [
                     "content-length",
-                    "0"
+                    "504"
                 ],
                 [
                     "content-type",
@@ -479,8 +479,8 @@
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
                 ]
             ],
-            "contentLength": 0,
-            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "contentLength": 504,
+            "contentHash": "c7067c21fd61b85ffa7552d454c936f4ad34f8bebc246a3fbb27b4e9488ad8b6",
             "timestamp_start": 1689188272.05,
             "timestamp_end": 1689188415.949,
             "pretty_host": "bi.pst.tech"
