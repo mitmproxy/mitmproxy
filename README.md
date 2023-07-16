@@ -5,7 +5,7 @@ and export performance data as a HAR file.
 
 The proxy is a fork of the amazing [mitmproxy](https://mitmproxy.org/), with an added performance testing, QA and DevOps flavor. 
 
-Along with the standard mitmproxy features, the BrowserUp MITM Proxy offers adds a REST control API and native language clients in 
+Along with the standard mitmproxy features, the BrowserUp MITM Proxy adds a REST control API and native language clients in 
 Java, JavaScript, Python and Ruby. It allows HAR capture (websockets and HTTP/2 too), and provides the ability to 
 verify (assert) about network traffic.
 
