@@ -23,6 +23,8 @@ Follow the mitmproxy [certificate setup instructions](https://docs.mitmproxy.org
 
 Run one of our [examples in clients/examples](clients/examples)
 
+The executable for the BrowserUp Proxy, is *browserup-proxy*, so use that *instead* of mitmdump.
+
 The standard mitmproxy executables, like mitmweb are also shipped, and should work as normal.
 
 BrowserUp is a code contributor to the upstream project, and we hope to continue to support them with 
@@ -35,6 +37,7 @@ test/mitmproxy/addons/browserup
 clients/
 
 The standard MITMProxy documentation follows below.
+
 
 ----------------
 
