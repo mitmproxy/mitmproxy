@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
+
 import pytest
 from exporthar import ExportHar
+
 from mitmproxy import io
 from mitmproxy import types
 
@@ -17,7 +19,7 @@ def test_errors(log_file):
         FileNotFoundError,
         e.export_har,
         flows,
-        types.Path("unknown_dir/testing_flow.har")
+        types.Path("unknown_dir/testing_flow.har"),
     )
 
 

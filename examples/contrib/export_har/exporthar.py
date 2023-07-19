@@ -1,8 +1,11 @@
+import base64
 import json
 import logging
-import base64
-from datetime import datetime, timezone
-from mitmproxy import command, version
+from datetime import datetime
+from datetime import timezone
+
+from mitmproxy import command
+from mitmproxy import version
 from mitmproxy.net.http import cookies
 from mitmproxy.utils import strutils
 
@@ -25,7 +28,9 @@ class ExportHar:
                 cookie_har[key] = bool(key in attrs)
             expire_ts = cookies.get_expiration_ts(attrs)
             if expire_ts is not None:
-                cookie_har["expires"] = datetime.fromtimestamp(expire_ts, timezone.utc).isoformat()
+                cookie_har["expires"] = datetime.fromtimestamp(
+                    expire_ts, timezone.utc
+                ).isoformat()
             rv.append(cookie_har)
         return rv
 
@@ -55,9 +60,17 @@ class ExportHar:
         connect_time = -1
 
         if flow.server_conn not in self.SERVERS_SEEN:
-            connect_time = (flow.server_conn.timestamp_tcp_setup or 0) - (flow.server_conn.timestamp_start or 0)
-            if flow.server_conn.timestamp_tls_setup and flow.server_conn.timestamp_tcp_setup:
-                ssl_time = flow.server_conn.timestamp_tls_setup - flow.server_conn.timestamp_tcp_setup
+            connect_time = (flow.server_conn.timestamp_tcp_setup or 0) - (
+                flow.server_conn.timestamp_start or 0
+            )
+            if (
+                flow.server_conn.timestamp_tls_setup
+                and flow.server_conn.timestamp_tcp_setup
+            ):
+                ssl_time = (
+                    flow.server_conn.timestamp_tls_setup
+                    - flow.server_conn.timestamp_tcp_setup
+                )
             self.SERVERS_SEEN.add(flow.server_conn)
 
         if flow.response:
@@ -88,15 +101,21 @@ class ExportHar:
 
         timings = {k: int(1000 * v) if v != -1 else -1 for k, v in timings_raw.items()}
         full_time = sum(v for v in timings.values() if v > -1)
-        started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+        started_date_time = datetime.fromtimestamp(
+            flow.request.timestamp_start, timezone.utc
+        ).isoformat()
 
         if not flow.response:
             response = ERROR_RESPONSE
             if flow.error:
                 response["_error"] = flow.error.msg
         else:
-            response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
-            response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
+            response_body_size = (
+                len(flow.response.raw_content) if flow.response.raw_content else 0
+            )
+            response_body_decoded_size = (
+                len(flow.response.content) if flow.response.content else 0
+            )
             response_body_compression = response_body_decoded_size - response_body_size
             response = {
                 "status": flow.response.status_code,
@@ -140,10 +159,15 @@ class ExportHar:
                 "encoding": "base64",
             }
         else:
-            entry["response"]["content"] = {"text": flow.response.get_text(strict=False)}
+            entry["response"]["content"] = {
+                "text": flow.response.get_text(strict=False)
+            }
 
         if flow.request.method in ["POST", "PUT", "PATCH"]:
-            params = [{"name": a, "value": b} for a, b in flow.request.urlencoded_form.items(multi=True)]
+            params = [
+                {"name": a, "value": b}
+                for a, b in flow.request.urlencoded_form.items(multi=True)
+            ]
             entry["request"]["postData"] = {
                 "mimeType": flow.request.headers.get("Content-Type", ""),
                 "text": flow.request.get_text(strict=False),
@@ -160,7 +184,11 @@ class ExportHar:
         HAR = {
             "log": {
                 "version": "1.2",
-                "creator": {"name": "mitmproxy exporthar", "version": "0.1", "comment": "mitmproxy version %s" % version.MITMPROXY},
+                "creator": {
+                    "name": "mitmproxy exporthar",
+                    "version": "0.1",
+                    "comment": "mitmproxy version %s" % version.MITMPROXY,
+                },
                 "pages": [],
                 "entries": [self.flow_entry(flow) for flow in flows],
             }
