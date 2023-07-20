@@ -44,7 +44,7 @@ class ExportHar:
         return [{"name": k, "value": v} for k, v in obj.items()]
 
     def flow_entry(self, flow):
-        
+
         ssl_time = -1
         connect_time = -1
 
