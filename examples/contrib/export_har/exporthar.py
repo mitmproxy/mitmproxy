@@ -44,18 +44,7 @@ class ExportHar:
         return [{"name": k, "value": v} for k, v in obj.items()]
 
     def flow_entry(self, flow):
-        ERROR_RESPONSE = {
-            "status": 0,
-            "statusText": "",
-            "httpVersion": "",
-            "headers": [],
-            "cookies": [],
-            "redirectURL": "",
-            "headersSize": -1,
-            "bodySize": -1,
-            "_transferSize": 0,
-            "_error": None,
-        }
+        
         ssl_time = -1
         connect_time = -1
 
@@ -106,7 +95,18 @@ class ExportHar:
         ).isoformat()
 
         if not flow.response:
-            response = ERROR_RESPONSE
+            response = {
+            "status": 0,
+            "statusText": "",
+            "httpVersion": "",
+            "headers": [],
+            "cookies": [],
+            "redirectURL": "",
+            "headersSize": -1,
+            "bodySize": -1,
+            "_transferSize": 0,
+            "_error": None,
+            }
             if flow.error:
                 response["_error"] = flow.error.msg
         else:
