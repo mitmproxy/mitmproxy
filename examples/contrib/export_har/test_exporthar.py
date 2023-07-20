@@ -10,7 +10,9 @@ from mitmproxy import types
 here = Path(__file__).parent.absolute()
 
 
-@pytest.mark.parametrize("log_file", [pytest.param(here / "flows/logfile", id="logfile")])
+@pytest.mark.parametrize(
+    "log_file", [pytest.param(here / "flows/logfile", id="logfile")]
+)
 def test_errors(log_file):
     e = ExportHar()
     path = open(log_file, "rb")
@@ -23,7 +25,9 @@ def test_errors(log_file):
     )
 
 
-@pytest.mark.parametrize("log_file", [pytest.param(here / "flows/logfile", id="logfile")])
+@pytest.mark.parametrize(
+    "log_file", [pytest.param(here / "flows/logfile", id="logfile")]
+)
 def test_exporthar(log_file, tmp_path):
     e = ExportHar()
     path = open(log_file, "rb")
