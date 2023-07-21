@@ -7,8 +7,9 @@ from collections.abc import Iterable
 from collections.abc import MutableSequence
 from collections.abc import Sequence
 from typing import Any
-from typing import AnyStr
 from typing import ClassVar
+from typing import Literal
+from typing import overload
 
 import urwid
 
@@ -19,7 +20,15 @@ from mitmproxy.tools.console import signals
 from mitmproxy.utils import strutils
 
 
-def read_file(filename: str, escaped: bool) -> AnyStr:
+@overload 
+def read_file(filename: str, escaped: Literal[True]) -> bytes:
+    ...
+
+@overload 
+def read_file(filename: str, escaped: Literal[False]) -> str:
+    ...
+
+def read_file(filename: str, escaped: bool) -> bytes | str:
     filename = os.path.expanduser(filename)
     try:
         with open(filename, "r" if escaped else "rb") as f:
