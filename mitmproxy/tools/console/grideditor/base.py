@@ -20,13 +20,15 @@ from mitmproxy.tools.console import signals
 from mitmproxy.utils import strutils
 
 
-@overload 
+@overload
 def read_file(filename: str, escaped: Literal[True]) -> bytes:
     ...
 
-@overload 
+
+@overload
 def read_file(filename: str, escaped: Literal[False]) -> str:
     ...
+
 
 def read_file(filename: str, escaped: bool) -> bytes | str:
     filename = os.path.expanduser(filename)
