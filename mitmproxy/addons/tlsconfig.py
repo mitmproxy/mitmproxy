@@ -294,6 +294,7 @@ class TlsConfig:
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
+            legacy_server_connect=ctx.options.ssl_insecure,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)

@@ -141,6 +141,7 @@ def create_proxy_server_context(
     ca_path: str | None,
     ca_pemfile: str | None,
     client_cert: str | None,
+    legacy_server_connect: bool,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -167,6 +168,9 @@ def create_proxy_server_context(
             context.use_certificate_chain_file(client_cert)
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
+
+    if legacy_server_connect:
+        context.set_options(0x4)  # OP_LEGACY_SERVER_CONNECT
 
     return context
 
