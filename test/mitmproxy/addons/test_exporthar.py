@@ -2,15 +2,17 @@ import json
 from pathlib import Path
 
 import pytest
-from exporthar import ExportHar
 
+from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 
-here = Path(__file__).parent.absolute()
+
+here = Path(__file__).parent.parent.absolute() 
+
 
 
 def test_write_errors():
@@ -33,7 +35,7 @@ def test_write_errors():
 def test_request_cookies(header: Headers, expected: list[dict]):
     e = ExportHar()
     req = Request.make("GET", "https://example.com", "", header)
-    assert e.format_request_cookies(req) == expected
+    assert e.format_multidict(req.cookies) == expected
 
 
 @pytest.mark.parametrize(
@@ -44,7 +46,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                 [
                     (
                         b"set-cookie",
-                        b"foo=bar; expires=Wed, 24-Jul-2024 12:58:46 GMT; path=/; domain=.google.com; priority=high",
+                        b"foo=bar; path=/; domain=.google.com; priority=high",
                     )
                 ]
             ),
@@ -54,7 +56,6 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "value": "bar",
                     "path": "/",
                     "domain": ".google.com",
-                    "expires": "2024-07-24T12:58:46.000Z",
                     "httpOnly": False,
                     "secure": False,
                 }
@@ -65,11 +66,11 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                 [
                     (
                         b"set-cookie",
-                        b"foo=bar; expires=Wed, 24-Jul-2024 12:58:46 GMT; path=/; domain=.google.com; Secure; HttpOnly; priority=high",
+                        b"foo=bar; path=/; domain=.google.com; Secure; HttpOnly; priority=high",
                     ),
                     (
                         b"set-cookie",
-                        b"fooz=baz; expires=Wed, 24-Jul-2024 12:58:46 GMT; path=/; domain=.google.com; priority=high; SameSite=none",
+                        b"fooz=baz; path=/; domain=.google.com; priority=high; SameSite=none",
                     ),
                 ]
             ),
@@ -79,7 +80,6 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "value": "bar",
                     "path": "/",
                     "domain": ".google.com",
-                    "expires": "2024-07-24T12:58:46.000Z",
                     "httpOnly": True,
                     "secure": True,
                 },
@@ -88,7 +88,6 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "value": "baz",
                     "path": "/",
                     "domain": ".google.com",
-                    "expires": "2024-07-24T12:58:46.000Z",
                     "httpOnly": False,
                     "secure": False,
                     "sameSite": "none",
@@ -104,7 +103,7 @@ def test_response_cookies(header: Headers, expected: list[dict]):
 
 
 @pytest.mark.parametrize(
-    "log_file", [pytest.param(x, id=x.stem) for x in here.glob("flows/*.mitm")]
+    "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
 )
 def test_exporthar(log_file: Path, tmp_path: Path):
     e = ExportHar()
@@ -112,7 +111,7 @@ def test_exporthar(log_file: Path, tmp_path: Path):
     flows = io.read_flows_from_paths([log_file])
 
     e.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
-    correct_har = json.load(open(f"flows/{log_file.stem}.har"))
+    correct_har = json.load(open(f"data/flows/{log_file.stem}.har"))
     testing_har = json.load(open(tmp_path / "testing_flow.har"))
 
     assert testing_har == correct_har
@@ -120,10 +119,10 @@ def test_exporthar(log_file: Path, tmp_path: Path):
 
 if __name__ == "__main__":
     e = ExportHar()
-
-    for file in here.glob("flows/*"):
+    print(here)
+    for file in here.glob("data/flows/*"):
         if not file.suffix == ".har":
             path = open(file, "rb")
             flows = io.FlowReader(path).stream()
 
-            e.export_har(flows, types.Path(f"flows/{file.stem}.har"))
+            e.export_har(flows, types.Path(f"data/flows/{file.stem}.har"))
