@@ -1,16 +1,16 @@
 import base64
 import json
 import logging
+from collections.abc import Iterable
 from datetime import datetime
 from datetime import timezone
 
 from mitmproxy import command
-from mitmproxy import version
-from mitmproxy.utils import strutils
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import types
-from collections.abc import Iterable
+from mitmproxy import version
+from mitmproxy.utils import strutils
 
 
 logger = logging.getLogger(__name__)
