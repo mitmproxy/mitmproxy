@@ -21,34 +21,35 @@ logger = logging.getLogger(__name__)
 
 
 class ExportHar:
-    def format_response_cookies(self, response: http.Response) -> list[dict]:
-        """Formats the response's cookie header to list of cookies"""
-        cookie_list = response.cookies.items(multi=True)
-        rv = []
-        for name, (value, attrs) in cookie_list:
-            cookie = {
-                "name": name,
-                "value": value,
-                "path": attrs["path"],
-                "domain": attrs["domain"],
-                "httpOnly": "httpOnly" in attrs,
-                "secure": "secure" in attrs,
+    @command.command("exporthar")
+    def export_har(self, flows: Iterable[flow.Flow], path: types.Path) -> None:
+        """Writes provided flows into a HAR file at a given path"""
+        entries = []
+
+        # A list of server seen till now is maintained so we can avoid
+        # using 'connect' time for entries that use an existing connection.
+        servers_seen: set[Server] = set()
+
+        for f in flows:
+            if isinstance(f, http.HTTPFlow):
+                entries.append(self.flow_entry(f, servers_seen))
+            else:
+                raise CommandError(f"Cannot export {type(f).__name__} flows to HAR.")
+
+        har = {
+            "log": {
+                "version": "1.2",
+                "creator": {
+                    "name": "mitmproxy exporthar",
+                    "version": "0.1",
+                    "comment": f"mitmproxy version {version.MITMPROXY}",
+                },
+                "pages": [],
+                "entries": entries,
             }
-            # TODO: handle expires attribute here.
-            # This is not quite trivial because we need to parse random date formats.
-            # For now, we just ignore the attribute.
-
-            if "sameSite" in attrs:
-                cookie["sameSite"] = attrs["sameSite"]
-
-            rv.append(cookie)
-        return rv
-
-    def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
-        return [
-            {"name": k, "value": v}
-            for k, v in obj.items(multi=True)
-        ]
+        }
+        with open(path, "w") as fp:
+            json.dump(har, fp, indent=4)
 
     def flow_entry(self, flow: http.HTTPFlow, servers_seen: set[Server]) -> dict:
         """Creates HAR entry from flow"""
@@ -171,35 +172,34 @@ class ExportHar:
 
         return entry
 
-    @command.command("exporthar")
-    def export_har(self, flows: Iterable[flow.Flow], path: types.Path) -> None:
-        """Writes provided flows into a HAR file at a given path"""
-        entries = []
-
-        # A list of server seen till now is maintained so we can avoid
-        # using 'connect' time for entries that use an existing connection.
-        servers_seen: set[Server] = set()
-
-        for f in flows:
-            if isinstance(f, http.HTTPFlow):
-                entries.append(self.flow_entry(f, servers_seen))
-            else:
-                raise CommandError(f"Cannot export {type(f).__name__} flows to HAR.")
-
-        har = {
-            "log": {
-                "version": "1.2",
-                "creator": {
-                    "name": "mitmproxy exporthar",
-                    "version": "0.1",
-                    "comment": f"mitmproxy version {version.MITMPROXY}",
-                },
-                "pages": [],
-                "entries": entries,
+    def format_response_cookies(self, response: http.Response) -> list[dict]:
+        """Formats the response's cookie header to list of cookies"""
+        cookie_list = response.cookies.items(multi=True)
+        rv = []
+        for name, (value, attrs) in cookie_list:
+            cookie = {
+                "name": name,
+                "value": value,
+                "path": attrs["path"],
+                "domain": attrs["domain"],
+                "httpOnly": "httpOnly" in attrs,
+                "secure": "secure" in attrs,
             }
-        }
-        with open(path, "w") as fp:
-            json.dump(har, fp, indent=4)
+            # TODO: handle expires attribute here.
+            # This is not quite trivial because we need to parse random date formats.
+            # For now, we just ignore the attribute.
+
+            if "sameSite" in attrs:
+                cookie["sameSite"] = attrs["sameSite"]
+
+            rv.append(cookie)
+        return rv
+
+    def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
+        return [
+            {"name": k, "value": v}
+            for k, v in obj.items(multi=True)
+        ]
 
 
 addons = [ExportHar()]
