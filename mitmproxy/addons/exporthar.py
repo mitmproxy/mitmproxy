@@ -59,7 +59,9 @@ class ExportHar:
             ssl_time = -1.0
         elif flow.server_conn.timestamp_tcp_setup:
             assert flow.server_conn.timestamp_start
-            connect_time = 1000 * (flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start)
+            connect_time = 1000 * (
+                flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
+            )
 
             if flow.server_conn.timestamp_tls_setup:
                 ssl_time = 1000 * (
@@ -84,7 +86,9 @@ class ExportHar:
             wait = 0
 
         if flow.response and flow.response.timestamp_end:
-            receive = 1000 * (flow.response.timestamp_end - flow.response.timestamp_start)
+            receive = 1000 * (
+                flow.response.timestamp_end - flow.response.timestamp_start
+            )
         else:
             receive = 0
 
@@ -120,7 +124,9 @@ class ExportHar:
                 "bodySize": response_body_size,
             }
             if flow.response.content and strutils.is_mostly_bin(flow.response.content):
-                response["content"]["text"] = base64.b64encode(flow.response.content).decode()
+                response["content"]["text"] = base64.b64encode(
+                    flow.response.content
+                ).decode()
                 response["content"]["encoding"] = "base64"
             else:
                 response["content"]["text"] = flow.response.get_text(strict=False)
@@ -142,7 +148,9 @@ class ExportHar:
                 response["_error"] = flow.error.msg
 
         entry: dict[str, Any] = {
-            "startedDateTime": datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat(),
+            "startedDateTime": datetime.fromtimestamp(
+                flow.request.timestamp_start, timezone.utc
+            ).isoformat(),
             "time": sum(v for v in timings.values() if v is not None and v >= 0),
             "request": {
                 "method": flow.request.method,
@@ -196,10 +204,7 @@ class ExportHar:
         return rv
 
     def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
-        return [
-            {"name": k, "value": v}
-            for k, v in obj.items(multi=True)
-        ]
+        return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
 
 
 addons = [ExportHar()]
