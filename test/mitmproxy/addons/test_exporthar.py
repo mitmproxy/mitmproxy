@@ -3,16 +3,15 @@ from pathlib import Path
 
 import pytest
 
-from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy import io
 from mitmproxy import types
+from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 
 
-here = Path(__file__).parent.parent.absolute() 
-
+here = Path(__file__).parent.parent.absolute()
 
 
 def test_write_errors():
