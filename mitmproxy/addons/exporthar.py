@@ -46,7 +46,7 @@ class ExportHar:
                 "httpOnly": "httpOnly" in attrs,
                 "secure": "secure" in attrs,
             }
-            if attrs.get("expires",None):
+            if attrs.get("expires", None):
                 # date is given as 'Wed, 24-Jul-2024 12:58:46 GMT' format but need to be '2024-07-24T12:58:46.000Z' format
                 output_date_string = datetime.strptime(
                     attrs["expires"], "%a, %d-%b-%Y %H:%M:%S %Z"
