@@ -3,12 +3,8 @@ from pathlib import Path
 
 import pytest
 from exporthar import ExportHar
-
-from mitmproxy import io
-from mitmproxy import types
-from mitmproxy.http import Headers
-from mitmproxy.http import Request
-from mitmproxy.http import Response
+from mitmproxy import io, types
+from mitmproxy.http import Request, Response, Headers
 
 here = Path(__file__).parent.absolute()
 
@@ -30,7 +26,7 @@ def test_write_errors():
         ),
     ],
 )
-def test_request_cookies(header, expected):
+def test_request_cookies(header: Headers, expected: list[dict]):
     e = ExportHar()
     req = Request.make("GET", "https://example.com", "", header)
     assert e.format_request_cookies(req) == expected
@@ -97,7 +93,7 @@ def test_request_cookies(header, expected):
         ),
     ],
 )
-def test_response_cookies(header, expected):
+def test_response_cookies(header: Headers, expected: list[dict]):
     e = ExportHar()
     resp = Response.make(200, "", header)
     assert e.format_response_cookies(resp) == expected
