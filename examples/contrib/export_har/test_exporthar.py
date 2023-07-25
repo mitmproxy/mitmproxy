@@ -3,8 +3,12 @@ from pathlib import Path
 
 import pytest
 from exporthar import ExportHar
-from mitmproxy import io, types
-from mitmproxy.http import Request, Response, Headers
+
+from mitmproxy import io
+from mitmproxy import types
+from mitmproxy.http import Headers
+from mitmproxy.http import Request
+from mitmproxy.http import Response
 
 here = Path(__file__).parent.absolute()
 
