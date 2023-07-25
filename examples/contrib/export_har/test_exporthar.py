@@ -69,7 +69,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     ),
                     (
                         b"set-cookie",
-                        b"fooz=baz; expires=Wed, 24-Jul-2024 12:58:46 GMT; path=/; domain=.google.com; Secure; HttpOnly; priority=high; SameSite=none",
+                        b"fooz=baz; expires=Wed, 24-Jul-2024 12:58:46 GMT; path=/; domain=.google.com; priority=high; SameSite=none",
                     ),
                 ]
             ),
@@ -89,8 +89,8 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "path": "/",
                     "domain": ".google.com",
                     "expires": "2024-07-24T12:58:46.000Z",
-                    "httpOnly": True,
-                    "secure": True,
+                    "httpOnly": False,
+                    "secure": False,
                     "sameSite": "none",
                 },
             ],

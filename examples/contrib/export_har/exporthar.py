@@ -1,3 +1,4 @@
+"""Write flow objects to a HAR file"""
 import base64
 import json
 import logging
@@ -22,6 +23,7 @@ class ExportHar:
         self.servers_seen = set()
 
     def format_request_cookies(self, request: http.Request) -> list[dict[str, str]]:
+        """Formats the request's cookie header to list of cookies"""
         cookie_list = request.cookies.items(multi=True)
 
         rv = []
@@ -31,6 +33,7 @@ class ExportHar:
         return rv
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
+        """Formats the response's cookie header to list of cookies"""
         cookie_list = response.cookies.items(multi=True)
         rv = []
         for name, (value, attrs) in cookie_list:
@@ -43,7 +46,7 @@ class ExportHar:
                 "httpOnly": "httpOnly" in attrs,
                 "secure": "secure" in attrs,
             }
-            if attrs.get("expires") != None:
+            if attrs.get("expires",None):
                 # date is given as 'Wed, 24-Jul-2024 12:58:46 GMT' format but need to be '2024-07-24T12:58:46.000Z' format
                 output_date_string = datetime.strptime(
                     attrs["expires"], "%a, %d-%b-%Y %H:%M:%S %Z"
@@ -60,6 +63,7 @@ class ExportHar:
         return [{"name": k, "value": v} for k, v in obj.items()]
 
     def flow_entry(self, flow: flow.Flow) -> dict:
+        """Creates HAR entry from flow"""
         ssl_time = -1
         connect_time = -1
 
@@ -196,6 +200,7 @@ class ExportHar:
 
     @command.command("exporthar")
     def export_har(self, flows: Iterable[flow.Flow], path: types.Path) -> None:
+        """Writes provided flows into a HAR file at a given path"""
         har = {
             "log": {
                 "version": "1.2",
