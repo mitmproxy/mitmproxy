@@ -106,13 +106,14 @@ def test_request_cookies(header: Headers, expected: list[dict]):
         ),
     ],
 )
+
+
 def test_response_cookies(header: Headers, expected: list[dict]):
     e = ExportHar()
     resp = Response.make(200, "", header)
     assert e.format_response_cookies(resp) == expected
 
 
-# tflow
 def test_seen_server_conn():
     e = ExportHar()
 
