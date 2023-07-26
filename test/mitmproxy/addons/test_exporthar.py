@@ -126,11 +126,10 @@ def test_seen_server_conn():
     assert calculated_timings["ssl"] == -1.0
 
 
-def test_tcp_setup_timestamp_end():
+def test_timestamp_end():
     e = ExportHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
-    flow.server_conn.timestamp_tcp_setup = None
     flow.request.timestamp_end = None
     calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
 
