@@ -1,22 +1,23 @@
-import base64
 import json
-from pathlib import Path
-
 import pytest
+import base64
 
+from pathlib import Path
+from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy import io
 from mitmproxy import types
-from mitmproxy.addons.exporthar import ExportHar
-from mitmproxy.connection import Server
-from mitmproxy.exceptions import CommandError
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
-from mitmproxy.test import tflow
+from mitmproxy.utils import strutils
+from mitmproxy.exceptions import CommandError
+from mitmproxy.connection import Server
 from mitmproxy.test.tflow import ttcpflow
+from mitmproxy.test import tflow
 
 
-here = Path(__file__).parent.parent
+here = Path(__file__).parent.parent 
+
 
 
 def test_write_error():
@@ -25,11 +26,10 @@ def test_write_error():
     with pytest.raises(FileNotFoundError):
         e.export_har([], types.Path("unknown_dir/testing_flow.har"))
 
-
 def test_command_error():
     e = ExportHar()
     with pytest.raises(CommandError):
-        e.export_har([ttcpflow()], types.Path("unknown_dir/testing_flow.har"))
+        e.export_har([ttcpflow()],types.Path("unknown_dir/testing_flow.har"))
 
 
 @pytest.mark.parametrize(
@@ -112,55 +112,57 @@ def test_response_cookies(header: Headers, expected: list[dict]):
     assert e.format_response_cookies(resp) == expected
 
 
-# tflow
+
+#tflow 
 def test_seen_server_conn():
     e = ExportHar()
 
     flow = tflow.twebsocketflow()
-
+    
     servers_seen: set[Server] = set()
     servers_seen.add(flow.server_conn)
-
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
+    
+    calculated_timings = e.flow_entry(flow,servers_seen)["timings"]
 
     assert calculated_timings["connect"] == -1.0
     assert calculated_timings["ssl"] == -1.0
 
+def test_tcp_setup_timestamp_end():
 
-def test_timestamp_end():
     e = ExportHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
+    flow.server_conn.timestamp_tcp_setup = None
     flow.request.timestamp_end = None
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
+    calculated_timings = e.flow_entry(flow,servers_seen)["timings"]
 
     assert calculated_timings["send"] == 0
-
 
 def test_tls_setup():
     e = ExportHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
     flow.server_conn.timestamp_tls_setup = None
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
+    calculated_timings = e.flow_entry(flow,servers_seen)["timings"]
 
-    assert calculated_timings["ssl"] == None
+    assert calculated_timings["ssl"] is None
 
 
+    
 def test_binary_content():
     e = ExportHar()
 
     flow = tflow.twebsocketflow()
     assert flow.response
-
+    
     flow.response.set_content(b"\xFF")
     servers_seen: set[Server] = set()
 
     assert flow.response.content
 
-    calculated_content = e.flow_entry(flow, servers_seen)["response"]["content"]["text"]
+    calculated_content = e.flow_entry(flow,servers_seen)["response"]["content"]["text"]
     assert base64.b64encode(flow.response.content).decode() == calculated_content
-
+    
 
 @pytest.mark.parametrize(
     "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
@@ -179,7 +181,7 @@ def test_exporthar(log_file: Path, tmp_path: Path):
 
 if __name__ == "__main__":
     e = ExportHar()
-
+    
     for file in here.glob("data/flows/*"):
         if not file.suffix == ".har":
             path = open(file, "rb")
