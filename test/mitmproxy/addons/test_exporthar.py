@@ -106,8 +106,6 @@ def test_request_cookies(header: Headers, expected: list[dict]):
         ),
     ],
 )
-
-
 def test_response_cookies(header: Headers, expected: list[dict]):
     e = ExportHar()
     resp = Response.make(200, "", header)
