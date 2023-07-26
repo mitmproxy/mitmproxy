@@ -1,20 +1,19 @@
-import json
-import pytest
 import base64
-
+import json
 from pathlib import Path
-from mitmproxy.addons.exporthar import ExportHar
+
+import pytest
+
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy.addons.exporthar import ExportHar
+from mitmproxy.connection import Server
+from mitmproxy.exceptions import CommandError
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
-from mitmproxy.utils import strutils
-from mitmproxy.exceptions import CommandError
-from mitmproxy.connection import Server
-from mitmproxy.test.tflow import ttcpflow
 from mitmproxy.test import tflow
+from mitmproxy.test.tflow import ttcpflow
 
 
 here = Path(__file__).parent.parent
