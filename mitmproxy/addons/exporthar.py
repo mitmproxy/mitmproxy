@@ -2,7 +2,7 @@
 import base64
 import json
 import logging
-from collections.abc import Iterable
+from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
 from typing import Any
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ExportHar:
     @command.command("exporthar")
-    def export_har(self, flows: Iterable[flow.Flow], path: types.Path) -> None:
+    def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Writes provided flows into a HAR file at a given path"""
         entries = []
 
