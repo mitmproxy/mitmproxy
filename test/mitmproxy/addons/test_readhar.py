@@ -11,7 +11,7 @@ from mitmproxy.addons.view import View
 from mitmproxy.test import taddons
 from mitmproxy.tools.web.app import flow_to_json
 
-here = Path(__file__).parent.parent.absolute() / "data"
+here = Path(__file__).parent.parent / "data"
 
 
 def hardcode_variable_fields_for_tests(flow: dict) -> None:
