@@ -46,6 +46,8 @@
 * For reverse proxy directly accessed via IP address, the IP address is now included
   as a subject in the generated certificate.
   ([#6202](https://github.com/mitmproxy/mitmproxy/pull/6202), @mhils)
+* Enable legacy SSL connect when connecting to server if the `ssl_insecure` flag is set.
+  ([#6281](https://github.com/mitmproxy/mitmproxy/pull/6281), @DurandA)
 
 ### Breaking Changes
 
