@@ -1,12 +1,12 @@
+import asyncio
 import json
 from pathlib import Path
 
 import pytest
-import asyncio
-from mitmproxy.addons.readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
+from mitmproxy.addons.readhar import ReadHar
 from mitmproxy.addons.view import View
 from mitmproxy.test import taddons
 from mitmproxy.tools.web.app import flow_to_json
