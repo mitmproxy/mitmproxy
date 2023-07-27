@@ -178,8 +178,8 @@ def test_exporthar(log_file: Path, tmp_path: Path):
     flows = io.read_flows_from_paths([log_file])
 
     e.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
-    expected_har = json.load(open(here / f"data/flows/{log_file.stem}.har"))
-    actual_har = json.load(open(tmp_path / "testing_flow.har"))
+    expected_har = json.loads(Path(here / f"data/flows/{log_file.stem}.har").read_bytes())
+    actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
     assert actual_har == expected_har
 
