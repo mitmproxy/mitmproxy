@@ -4,8 +4,7 @@ import base64
 import json
 import logging
 import time
-from datetime import datetime
-from pathlib import Path
+from dateutil import parser
 
 from mitmproxy import command
 from mitmproxy import connection
@@ -46,7 +45,7 @@ class ReadHar:
         Creates a HTTPFlow object from a given entry in HAR file
         """
 
-        timestamp_start = datetime.fromisoformat(
+        timestamp_start = parser.isoparse(
             request_json["startedDateTime"]
         ).timestamp()
         timestamp_end = timestamp_start + request_json["time"]
