@@ -192,6 +192,5 @@ if __name__ == "__main__":
     for file in here.glob("data/flows/*.mitm"):
         if not file.suffix == ".har":
             path = open(file, "rb")
-            flows = io.FlowReader(path).stream()
-            assert type(flows) is Sequence[Flow]
+            flows = list(io.FlowReader(path).stream())
             e.export_har(flows, types.Path(here / f"data/flows/{file.stem}.har"))
