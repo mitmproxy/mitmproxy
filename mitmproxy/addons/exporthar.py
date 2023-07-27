@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class ExportHar:
     @command.command("exporthar")
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
-        """Writes provided flows into a HAR file at a given path"""
+        """Export flows to an HAR (HTTP Archive) file."""
         entries = []
 
         # A list of server seen till now is maintained so we can avoid

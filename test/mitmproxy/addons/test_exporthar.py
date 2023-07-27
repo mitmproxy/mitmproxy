@@ -1,9 +1,8 @@
-import base64
 import json
 from pathlib import Path
 
 import pytest
-
+from collections.abc import Sequence
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy.addons.exporthar import ExportHar
@@ -13,6 +12,7 @@ from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 from mitmproxy.test import tflow
+from mitmproxy.flow import Flow
 from mitmproxy.test.tflow import ttcpflow
 
 
@@ -130,6 +130,9 @@ def test_timestamp_end():
     e = ExportHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
+
+    assert e.flow_entry(flow, set())["timings"]["send"] == 1000
+
     flow.request.timestamp_end = None
     calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
 
@@ -141,9 +144,8 @@ def test_tls_setup():
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
     flow.server_conn.timestamp_tls_setup = None
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
 
-    assert calculated_timings["ssl"] is None
+    assert e.flow_entry(flow, servers_seen)["timings"]["ssl"] is None
 
 
 def test_binary_content():
@@ -157,8 +159,13 @@ def test_binary_content():
 
     assert flow.response.content
 
-    calculated_content = e.flow_entry(flow, servers_seen)["response"]["content"]["text"]
-    assert base64.b64encode(flow.response.content).decode() == calculated_content
+    assert {
+        "size": 1,
+        "compression": 0,
+        "mimeType": "",
+        "text": "/w==",
+        "encoding": "base64",
+    } == e.flow_entry(flow, servers_seen)["response"]["content"]
 
 
 @pytest.mark.parametrize(
@@ -170,18 +177,18 @@ def test_exporthar(log_file: Path, tmp_path: Path):
     flows = io.read_flows_from_paths([log_file])
 
     e.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
-    correct_har = json.load(open(here / f"data/flows/{log_file.stem}.har"))
-    testing_har = json.load(open(tmp_path / "testing_flow.har"))
+    expected_har = json.load(open(here / f"data/flows/{log_file.stem}.har"))
+    actual_har = json.load(open(tmp_path / "testing_flow.har"))
 
-    assert testing_har == correct_har
+    assert actual_har == expected_har
 
 
 if __name__ == "__main__":
     e = ExportHar()
 
-    for file in here.glob("data/flows/*"):
+    for file in here.glob("data/flows/*.mitm"):
         if not file.suffix == ".har":
             path = open(file, "rb")
             flows = io.FlowReader(path).stream()
-
+            assert type(flows) is Sequence[Flow]
             e.export_har(flows, types.Path(here / f"data/flows/{file.stem}.har"))
