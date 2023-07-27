@@ -6,7 +6,7 @@ import logging
 import time
 
 from dateutil import parser
-
+from pathlib import Path
 from mitmproxy import command
 from mitmproxy import connection
 from mitmproxy import ctx
