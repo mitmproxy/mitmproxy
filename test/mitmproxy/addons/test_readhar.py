@@ -2,11 +2,13 @@ import json
 from pathlib import Path
 
 import pytest
+import asyncio
 from mitmproxy.addons.readhar import ReadHar
 
 from mitmproxy import exceptions
 from mitmproxy import types
-
+from mitmproxy.addons.view import View
+from mitmproxy.test import taddons
 from mitmproxy.tools.web.app import flow_to_json
 
 here = Path(__file__).parent.parent.absolute() / "data"
@@ -66,8 +68,13 @@ def test_har_to_flow(har_file: Path):
     "har_file", [pytest.param(x, id=x.stem) for x in here.glob("har_files/*.har")]
 )
 async def test_read_har(har_file):
-    rh = ReadHar()
-    assert rh.read_har(har_file) is None
+    r = ReadHar()
+    v = View()
+    with taddons.context(r, v):
+        assert v.store_count() == 0
+        r.read_har(types.Path(har_file))
+        await asyncio.sleep(0)
+        assert v.store_count() > 0
 
 
 if __name__ == "__main__":
