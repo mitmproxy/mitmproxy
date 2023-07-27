@@ -1,18 +1,19 @@
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from collections.abc import Sequence
+
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import CommandError
+from mitmproxy.flow import Flow
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 from mitmproxy.test import tflow
-from mitmproxy.flow import Flow
 from mitmproxy.test.tflow import ttcpflow
 
 
