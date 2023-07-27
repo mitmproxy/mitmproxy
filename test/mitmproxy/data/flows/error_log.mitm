@@ -1,0 +1,118 @@
+1711:4:type;4:http;7:version;2:18#9:websocket;0:~8:response;0:~7:request;411:4:path;1:/,9:authority;0:,6:scheme;4:http,6:method;3:GET,4:port;2:80#4:host;7:163.com;13:timestamp_end;18:1690282995.2192252^15:timestamp_start;17:1690282995.216374^8:trailers;0:~7:content;0:,7:headers;177:17:4:Host,7:163.com,]29:10:User-Agent,11:Wget/1.21.4,]15:6:Accept,3:*/*,]30:15:Accept-Encoding,8:identity,]28:10:Connection,10:Keep-Alive,]34:16:Proxy-Connection,10:Keep-Alive,]]12:http_version;8:HTTP/1.1,}17:timestamp_created;17:1690282995.216589^7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;387:4:via2;0:~11:cipher_list;0:]11:cipher_name;0:~11:alpn_offers;0:]16:certificate_list;0:]3:tls;5:false!5:error;0:~5:state;1:0#3:via;0:~11:tls_version;0:~15:tls_established;5:false!19:timestamp_tls_setup;0:~19:timestamp_tcp_setup;0:~15:timestamp_start;0:~13:timestamp_end;0:~14:source_address;0:~3:sni;0:~10:ip_address;0:~2:id;36:e2a0c5dd-5877-447c-886b-265658665ca0;4:alpn;0:~7:address;0:~}11:client_conn;454:10:proxy_mode;7:regular;11:cipher_list;0:]11:alpn_offers;0:]16:certificate_list;0:]3:tls;5:false!5:error;0:~8:sockname;19:9:127.0.0.1;4:8080#]5:state;1:0#11:tls_version;0:~14:tls_extensions;0:]15:tls_established;5:false!19:timestamp_tls_setup;0:~15:timestamp_start;17:1690282995.214719^13:timestamp_end;17:1690283145.296892^3:sni;0:~8:mitmcert;0:~2:id;36:9cf45015-5dbb-4ab4-9dc3-e59d04625413;11:cipher_name;0:~4:alpn;0:~7:address;20:9:127.0.0.1;5:51741#]}5:error;169:9:timestamp;17:1690283145.289149^3:msg;125:Multiple exceptions: [Errno 60] Connect call failed ('123.58.180.8', 80), [Errno 60] Connect call failed ('123.58.180.7', 80);}2:id;36:a68db102-de4c-477d-9412-bf2a1b9a4859;}9382:4:type;4:http;7:version;2:18#9:websocket;0:~8:response;615:6:reason;0:,11:status_code;3:405#13:timestamp_end;17:1690283279.375848^15:timestamp_start;16:1690283279.37242^8:trailers;0:~7:content;178:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>405 Method Not Allowed</title>
+<h1>Method Not Allowed</h1>
+<p>The method is not allowed for the requested URL.</p>
+,7:headers;256:40:4:date,29:Tue, 25 Jul 2023 11:07:59 GMT,]28:12:content-type,9:text/html,]24:14:content-length,3:178,]28:6:server,15:gunicorn/19.9.0,]30:5:allow,18:GET, HEAD, OPTIONS,]35:27:access-control-allow-origin,1:*,]43:32:access-control-allow-credentials,4:true,]]12:http_version;8:HTTP/2.0,}7:request;416:4:path;4:/get,9:authority;11:httpbin.org,6:scheme;5:https,6:method;4:POST,4:port;3:443#4:host;11:httpbin.org;13:timestamp_end;17:1690283276.332961^15:timestamp_start;17:1690283276.330959^8:trailers;0:~7:content;23:key1=value1&key2=value2,7:headers;136:29:10:user-agent,11:curl/7.86.0,]15:6:accept,3:*/*,]53:12:content-type,33:application/x-www-form-urlencoded,]23:14:content-length,2:23,]]12:http_version;8:HTTP/2.0,}17:timestamp_created;17:1690283276.331157^7:comment;0:;8:metadata;0:}6:marked;0:;9:is_replay;0:~11:intercepted;5:false!11:server_conn;7529:4:via2;0:~11:cipher_list;0:]11:cipher_name;27:ECDHE-RSA-AES128-GCM-SHA256;11:alpn_offers;16:2:h2,8:http/1.1,]16:certificate_list;6929:2078:-----BEGIN CERTIFICATE-----
+MIIF0TCCBLmgAwIBAgIQBMaXROWeY5Qs9ibwxtesVDANBgkqhkiG9w0BAQsFADA8
+MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRwwGgYDVQQDExNBbWF6b24g
+UlNBIDIwNDggTTAyMB4XDTIzMDMwMTAwMDAwMFoXDTIzMTExOTIzNTk1OVowFjEU
+MBIGA1UEAxMLaHR0cGJpbi5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQCPE28yK7/fA5KcuE2U5qT4TwU2GUsXvss+y3EojNC0rQPwAVVp4+ID33r9
+Wr8LusvHgyqmPu7hNA17UUCvUVWrlYtzSSkxPqDpaRtF68laf9hPtpzxsAEcJ3Zj
+QLg81JYVvgodPuKsAQ/j2s0b9Yd6O//g2NI2jl5Pu94Kveo5uedSbCGdGNgm0a04
+N9egCih4CumstTUjApVv566tNUILUbIQU6Zik2dn3AR/W6OEgk7818QCfYa1YlVV
+y4Z3wZ+UucKd0c73Fy3kW3MhJcQ8YwuXpoH9D338UBDIeSy7Yd5J9nOZXaq9A9eR
+0GiOh3DcDL71dPEkX80qBouCpHEhAgMBAAGjggLzMIIC7zAfBgNVHSMEGDAWgBTA
+MVLNWlDDgnx0cc7L6Zz5euuC4jAdBgNVHQ4EFgQU8dXJczk/NQ+psnYfrKl/NN1E
+2d4wJQYDVR0RBB4wHIILaHR0cGJpbi5vcmeCDSouaHR0cGJpbi5vcmcwDgYDVR0P
+AQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjA7BgNVHR8E
+NDAyMDCgLqAshipodHRwOi8vY3JsLnIybTAyLmFtYXpvbnRydXN0LmNvbS9yMm0w
+Mi5jcmwwEwYDVR0gBAwwCjAIBgZngQwBAgEwdQYIKwYBBQUHAQEEaTBnMC0GCCsG
+AQUFBzABhiFodHRwOi8vb2NzcC5yMm0wMi5hbWF6b250cnVzdC5jb20wNgYIKwYB
+BQUHMAKGKmh0dHA6Ly9jcnQucjJtMDIuYW1hem9udHJ1c3QuY29tL3IybTAyLmNl
+cjAMBgNVHRMBAf8EAjAAMIIBfgYKKwYBBAHWeQIEAgSCAW4EggFqAWgAdgCt9776
+fP8QyIudPZwePhhqtGcpXc+xDCTKhYY069yCigAAAYadUPKfAAAEAwBHMEUCIBtT
+nUnstwdXAMX0ZV2qinUM7CBGmLsJGslKNZbDNQjiAiEA9LLXQMqBJEoqdg5UJcSi
+c3LibKO877zTkemG3QlH9dYAdgCzc3cH4YRQ+GOG1gWp3BEJSnktsWcMC4fc8AMO
+eTalmgAAAYadUPLWAAAEAwBHMEUCIChRxIknXNkZN7cIUKLcLErdkkKLzFBUV6d3
+85QOXQ2gAiEApG5R/+k6XGd5QrNDa9I6IgqzTxCbCs7Xqkl8MAb73H0AdgC3Pvsk
+35xNunXyOcW6WPRsXfxCz3qfNcSeHQmBJe20mQAAAYadUPKCAAAEAwBHMEUCIQCq
+Sut242xHZ/P2c/8n/0EiZ/CwtgmCXfz7NdB75dYtlAIgIE4TUU2JAyIRJlCKfatQ
+aAOkpEP18yLmw9GIq3nnVAAwDQYJKoZIhvcNAQELBQADggEBACjTDO0NpDuWaZnw
+6nHRFcYC+kWJ9dVD7y2LaZTaMQbrB24EDudhSJuZDOvFzkz5cdSc0KOjYPorMXQ3
+z31mBqFDNE1nVKAVhGT6Z2hgmBTCWn3cJG2E6lSsKVZLC3wW02BlU/eClE4cuxS/
+vtAbE8zJosU0V/+YJWNZe649AvF0cDSRsd37arNs+iJuHdCYKpd6tVgr8qSfjiYU
+5XahqdcF3R328aVe5/vpBmFtyNNI4uCsBihrJIeXLOgFkt1xo+vrQVuAx5BDjgLG
+2Jbx6D7eeSQmnhwZvkBXYuZhndyqb4yn5g7q/5u2dVUuEFyX6gUAJG1cdmJxOCJw
+atJSKtI=
+-----END CERTIFICATE-----
+,1574:-----BEGIN CERTIFICATE-----
+MIIEXjCCA0agAwIBAgITB3MSSkvL1E7HtTvq8ZSELToPoTANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTIyMDgyMzIyMjUzMFoXDTMwMDgyMzIyMjUzMFowPDEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEcMBoGA1UEAxMTQW1hem9uIFJT
+QSAyMDQ4IE0wMjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALtDGMZa
+qHneKei1by6+pUPPLljTB143Si6VpEWPc6mSkFhZb/6qrkZyoHlQLbDYnI2D7hD0
+sdzEqfnuAjIsuXQLG3A8TvX6V3oFNBFVe8NlLJHvBseKY88saLwufxkZVwk74g4n
+WlNMXzla9Y5F3wwRHwMVH443xGz6UtGSZSqQ94eFx5X7Tlqt8whi8qCaKdZ5rNak
++r9nUThOeClqFd4oXych//Rc7Y0eX1KNWHYSI1Nk31mYgiK3JvH063g+K9tHA63Z
+eTgKgndlh+WI+zv7i44HepRZjA1FYwYZ9Vv/9UkC5Yz8/yU65fgjaE+wVHM4e/Yy
+C2osrPWE7gJ+dXMCAwEAAaOCAVowggFWMBIGA1UdEwEB/wQIMAYBAf8CAQAwDgYD
+VR0PAQH/BAQDAgGGMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNV
+HQ4EFgQUwDFSzVpQw4J8dHHOy+mc+XrrguIwHwYDVR0jBBgwFoAUhBjMhTTsvAyU
+lC4IWZzHshBOCggwewYIKwYBBQUHAQEEbzBtMC8GCCsGAQUFBzABhiNodHRwOi8v
+b2NzcC5yb290Y2ExLmFtYXpvbnRydXN0LmNvbTA6BggrBgEFBQcwAoYuaHR0cDov
+L2NydC5yb290Y2ExLmFtYXpvbnRydXN0LmNvbS9yb290Y2ExLmNlcjA/BgNVHR8E
+ODA2MDSgMqAwhi5odHRwOi8vY3JsLnJvb3RjYTEuYW1hem9udHJ1c3QuY29tL3Jv
+b3RjYTEuY3JsMBMGA1UdIAQMMAowCAYGZ4EMAQIBMA0GCSqGSIb3DQEBCwUAA4IB
+AQAtTi6Fs0Azfi+iwm7jrz+CSxHH+uHl7Law3MQSXVtR8RV53PtR6r/6gNpqlzdo
+Zq4FKbADi1v9Bun8RY8D51uedRfjsbeodizeBB8nXmeyD33Ep7VATj4ozcd31YFV
+fgRhvTSxNrrTlNpWkUk0m3BMPv8sg381HhA6uEYokE5q9uws/3YkKqRiEz3TsaWm
+JqIRZhMbgAfp7O7FUwFIb7UIspogZSKxPIWJpxiPo3TcBambbVtQOcNRWz5qCQdD
+slI2yayq0n2TXoHyNCLEH8rpsJRVILFsg0jc7BaFrMnF462+ajSehgj12IidNeRN
+4zl+EoNaWdpnWndvSpAEkq2P
+-----END CERTIFICATE-----
+,1647:-----BEGIN CERTIFICATE-----
+MIIEkjCCA3qgAwIBAgITBn+USionzfP6wq4rAfkI7rnExjANBgkqhkiG9w0BAQsF
+ADCBmDELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNj
+b3R0c2RhbGUxJTAjBgNVBAoTHFN0YXJmaWVsZCBUZWNobm9sb2dpZXMsIEluYy4x
+OzA5BgNVBAMTMlN0YXJmaWVsZCBTZXJ2aWNlcyBSb290IENlcnRpZmljYXRlIEF1
+dGhvcml0eSAtIEcyMB4XDTE1MDUyNTEyMDAwMFoXDTM3MTIzMTAxMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaOCATEwggEtMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/
+BAQDAgGGMB0GA1UdDgQWBBSEGMyFNOy8DJSULghZnMeyEE4KCDAfBgNVHSMEGDAW
+gBScXwDfqgHXMCs4iKK4bUqc8hGRgzB4BggrBgEFBQcBAQRsMGowLgYIKwYBBQUH
+MAGGImh0dHA6Ly9vY3NwLnJvb3RnMi5hbWF6b250cnVzdC5jb20wOAYIKwYBBQUH
+MAKGLGh0dHA6Ly9jcnQucm9vdGcyLmFtYXpvbnRydXN0LmNvbS9yb290ZzIuY2Vy
+MD0GA1UdHwQ2MDQwMqAwoC6GLGh0dHA6Ly9jcmwucm9vdGcyLmFtYXpvbnRydXN0
+LmNvbS9yb290ZzIuY3JsMBEGA1UdIAQKMAgwBgYEVR0gADANBgkqhkiG9w0BAQsF
+AAOCAQEAYjdCXLwQtT6LLOkMm2xF4gcAevnFWAu5CIw+7bMlPLVvUOTNNWqnkzSW
+MiGpSESrnO09tKpzbeR/FoCJbM8oAxiDR3mjEH4wW6w7sGDgd9QIpuEdfF7Au/ma
+eyKdpwAJfqxGF4PcnCZXmTA5YpaP7dreqsXMGz7KQ2hsVxa81Q4gLv7/wmpdLqBK
+bRRYh5TmOTFffHPLkIhqhBGWJ6bt2YFGpn6jcgAKUj6DiAdjd4lpFw85hdKrCEVN
+0FE6/V1dN2RMfjCyVSRCnTawXZwXgWHxyvkQAiSr6w10kY17RSlQOYiypok1JR4U
+akcjMS9cmvqtmg5iUaQqqcT5NJ0hGA==
+-----END CERTIFICATE-----
+,1606:-----BEGIN CERTIFICATE-----
+MIIEdTCCA12gAwIBAgIJAKcOSkw0grd/MA0GCSqGSIb3DQEBCwUAMGgxCzAJBgNV
+BAYTAlVTMSUwIwYDVQQKExxTdGFyZmllbGQgVGVjaG5vbG9naWVzLCBJbmMuMTIw
+MAYDVQQLEylTdGFyZmllbGQgQ2xhc3MgMiBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0
+eTAeFw0wOTA5MDIwMDAwMDBaFw0zNDA2MjgxNzM5MTZaMIGYMQswCQYDVQQGEwJV
+UzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTElMCMGA1UE
+ChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjE7MDkGA1UEAxMyU3RhcmZp
+ZWxkIFNlcnZpY2VzIFJvb3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5IC0gRzIwggEi
+MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDVDDrEKvlO4vW+GZdfjohTsR8/
+y8+fIBNtKTrID30892t2OGPZNmCom15cAICyL1l/9of5JUOG52kbUpqQ4XHj2C0N
+Tm/2yEnZtvMaVq4rtnQU68/7JuMauh2WLmo7WJSJR1b/JaCTcFOD2oR0FMNnngRo
+Ot+OQFodSk7PQ5E751bWAHDLUu57fa4657wx+UX2wmDPE1kCK4DMNEffud6QZW0C
+zyyRpqbn3oUYSXxmTqM6bam17jQuug0DuDPfR+uxa40l2ZvOgdFFRjKWcIfeAg5J
+Q4W2bHO7ZOphQazJ1FTfhy/HIrImzJ9ZVGif/L4qL8RVHHVAYBeFAlU5i38FAgMB
+AAGjgfAwge0wDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0O
+BBYEFJxfAN+qAdcwKziIorhtSpzyEZGDMB8GA1UdIwQYMBaAFL9ft9HO3R+G9FtV
+rNzXEMIOqYjnME8GCCsGAQUFBwEBBEMwQTAcBggrBgEFBQcwAYYQaHR0cDovL28u
+c3MyLnVzLzAhBggrBgEFBQcwAoYVaHR0cDovL3guc3MyLnVzL3guY2VyMCYGA1Ud
+HwQfMB0wG6AZoBeGFWh0dHA6Ly9zLnNzMi51cy9yLmNybDARBgNVHSAECjAIMAYG
+BFUdIAAwDQYJKoZIhvcNAQELBQADggEBACMd44pXyn3pF3lM8R5V/cxTbj5HD9/G
+VfKyBDbtgB9TxF00KGu+x1X8Z+rLP3+QsjPNG1gQggL4+C/1E2DUBc7xgQjB3ad1
+l08YuW3e95ORCLp+QCztweq7dp4zBncdDQh/U90bZKuCJ/Fp1U1ervShw3WnWEQt
+8jxwmKy6abaVd38PMV4s/KCHOkdp8Hlf9BRUpJVeEXgSYCfOn8J3/yNTd126/+pZ
+59vPr5KW7ySaNRB6nJHGDn2Z9j8Z3/VyVOEVqQdZe4O/Ui5GjLIAZHYcSNPYeehu
+VsyuLAOQ1xk4meTKCRlb/weWsKh/NEnfVqn3sF/tM+2MR7cwA130A4w=
+-----END CERTIFICATE-----
+,]3:tls;4:true!5:error;0:~5:state;1:0#3:via;0:~11:tls_version;7:TLSv1.2;15:tls_established;4:true!19:timestamp_tls_setup;17:1690283276.283815^19:timestamp_tcp_setup;17:1690283275.924842^15:timestamp_start;17:1690283275.615766^13:timestamp_end;18:1690283279.3815942^14:source_address;27:15:192.168.178.132;5:51858#]3:sni;11:httpbin.org;10:ip_address;22:12:100.26.90.23;3:443#]2:id;36:ded73dcb-b467-4bd8-a357-3984b6121b09;4:alpn;2:h2,7:address;21:11:httpbin.org;3:443#]}11:client_conn;531:10:proxy_mode;7:regular;11:cipher_list;0:]11:alpn_offers;16:2:h2,8:http/1.1,]16:certificate_list;0:]3:tls;4:true!5:error;0:~8:sockname;19:9:127.0.0.1;4:8080#]5:state;1:0#11:tls_version;7:TLSv1.3;14:tls_extensions;0:]15:tls_established;4:true!19:timestamp_tls_setup;17:1690283276.328037^15:timestamp_start;17:1690283275.612224^13:timestamp_end;17:1690283279.380243^3:sni;11:httpbin.org;8:mitmcert;0:~2:id;36:ea89783f-0427-49d5-8b9a-cc52338dd773;11:cipher_name;22:TLS_AES_256_GCM_SHA384;4:alpn;2:h2,7:address;20:9:127.0.0.1;5:51857#]}5:error;0:~2:id;36:bba69bfb-3a7e-420d-a301-faa9de7d658b;}
