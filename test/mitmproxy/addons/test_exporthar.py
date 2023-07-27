@@ -1,5 +1,4 @@
 import json
-from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -9,7 +8,6 @@ from mitmproxy import types
 from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import CommandError
-from mitmproxy.flow import Flow
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
