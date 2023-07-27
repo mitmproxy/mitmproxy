@@ -12,6 +12,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import types
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +140,13 @@ class ReadHar:
         Reads a HAR file into mitmproxy. Loads a flow for each entry in given HAR file.
         """
         flows = []
-        with open(path) as fp:
-            try:
-                har_file = json.load(fp)
-            except Exception:
-                raise exceptions.CommandError(
-                    "Unable to read HAR file. Please provide a valid HAR file"
-                )
+        
+        try:
+            har_file = json.loads(Path(path).read_bytes())
+        except Exception:
+            raise exceptions.CommandError(
+                "Unable to read HAR file. Please provide a valid HAR file"
+            )
 
         for request_json in har_file["log"]["entries"]:
             flow = self.request_to_flow(request_json)
