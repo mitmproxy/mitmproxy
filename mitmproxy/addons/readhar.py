@@ -5,7 +5,6 @@ import json
 import logging
 import time
 from datetime import datetime
-from datetime import date
 from pathlib import Path
 
 from mitmproxy import command
@@ -46,9 +45,9 @@ class ReadHar:
         """
         Creates a HTTPFlow object from a given entry in HAR file
         """
-        
+
         timestamp_start = datetime.fromisoformat(
-            request_json["startedDateTime"].replace("Z","+00:00")
+            request_json["startedDateTime"].replace("Z", "+00:00")
         ).timestamp()
         timestamp_end = timestamp_start + request_json["time"]
         request_method = request_json["request"]["method"]
