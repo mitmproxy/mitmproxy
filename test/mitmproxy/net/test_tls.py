@@ -34,6 +34,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         ca_path=None,
         ca_pemfile=None,
         client_cert=None,
+        legacy_server_connect=False,
     )
     sctx = tls.create_client_proxy_context(
         method=tls.Method.TLS_SERVER_METHOD,

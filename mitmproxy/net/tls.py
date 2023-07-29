@@ -15,6 +15,12 @@ from OpenSSL.crypto import X509
 
 from mitmproxy import certs
 
+# Remove once pyOpenSSL 23.3.0 is released and bump version in pyproject.toml.
+try:  # pragma: no cover
+    from OpenSSL.SSL import OP_LEGACY_SERVER_CONNECT  # type: ignore
+except ImportError:
+    OP_LEGACY_SERVER_CONNECT = 0x4
+
 
 # redeclared here for strict type checking
 class Method(Enum):
@@ -141,6 +147,7 @@ def create_proxy_server_context(
     ca_path: str | None,
     ca_pemfile: str | None,
     client_cert: str | None,
+    legacy_server_connect: bool,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -167,6 +174,9 @@ def create_proxy_server_context(
             context.use_certificate_chain_file(client_cert)
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
+
+    if legacy_server_connect:
+        context.set_options(OP_LEGACY_SERVER_CONNECT)
 
     return context
 
