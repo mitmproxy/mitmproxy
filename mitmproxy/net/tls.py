@@ -17,7 +17,7 @@ from mitmproxy import certs
 
 # Remove once pyOpenSSL 23.3.0 is released and bump version in pyproject.toml.
 try:  # pragma: no cover
-    from OpenSSL.SSL import OP_LEGACY_SERVER_CONNECT
+    from OpenSSL.SSL import OP_LEGACY_SERVER_CONNECT  # type: ignore
 except ImportError:
     OP_LEGACY_SERVER_CONNECT = 0x4
 
