@@ -5,6 +5,7 @@ import json
 import logging
 import time
 from datetime import datetime
+from pathlib import Path
 
 from mitmproxy import command
 from mitmproxy import connection
@@ -46,7 +47,7 @@ class ReadHar:
         """
 
         timestamp_start = datetime.fromisoformat(
-            request_json["startedDateTime"]
+            request_json["startedDateTime"].replace("Z", "+00:00")
         ).timestamp()
         timestamp_end = timestamp_start + request_json["time"]
         request_method = request_json["request"]["method"]
@@ -139,13 +140,13 @@ class ReadHar:
         Reads a HAR file into mitmproxy. Loads a flow for each entry in given HAR file.
         """
         flows = []
-        with open(path) as fp:
-            try:
-                har_file = json.load(fp)
-            except Exception:
-                raise exceptions.CommandError(
-                    "Unable to read HAR file. Please provide a valid HAR file"
-                )
+
+        try:
+            har_file = json.loads(Path(path).read_bytes())
+        except Exception:
+            raise exceptions.CommandError(
+                "Unable to read HAR file. Please provide a valid HAR file"
+            )
 
         for request_json in har_file["log"]["entries"]:
             flow = self.request_to_flow(request_json)
