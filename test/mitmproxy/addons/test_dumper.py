@@ -292,8 +292,11 @@ def test_quic():
     with taddons.context(d):
         f = tflow.ttcpflow()
         f.client_conn.tls_version = "QUIC"
+        # TODO: This should not be metadata, this should be typed attributes.
+        f.metadata["quic_stream_id_client"] = 1
+        f.metadata["quic_stream_id_server"] = 1
         d.tcp_message(f)
-        assert "quic/tcp" in sio.getvalue()
+        assert "quic stream 1" in sio.getvalue()
 
 
 def test_styling():

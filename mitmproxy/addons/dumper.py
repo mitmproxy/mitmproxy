@@ -345,15 +345,24 @@ class Dumper:
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
             if f.client_conn.tls_version == "QUIC":
-                type_ = f"quic/{f.type}"
+                if f.type == "tcp":
+                    quic_type = "stream"
+                else:
+                    quic_type = "dgrams"
+                # TODO: This should not be metadata, this should be typed attributes.
+                flow_type = (
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_client','')} "
+                    f"{direction} mitmproxy {direction} "
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_server','')}"
+                )
             else:
-                type_ = f.type
+                flow_type = f.type
             self.echo(
                 "{client} {direction} {type} {direction} {server}".format(
                     client=human.format_address(f.client_conn.peername),
                     server=human.format_address(f.server_conn.address),
                     direction=direction,
-                    type=type_,
+                    type=flow_type,
                 )
             )
             if ctx.options.flow_detail >= 3:

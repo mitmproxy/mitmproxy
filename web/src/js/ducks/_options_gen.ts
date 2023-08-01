@@ -58,6 +58,7 @@ export interface OptionsState {
     server_replay_kill_extra: boolean;
     server_replay_nopop: boolean;
     server_replay_refresh: boolean;
+    server_replay_reuse: boolean;
     server_replay_use_headers: string[];
     showhost: boolean;
     ssl_insecure: boolean;
@@ -151,6 +152,7 @@ export const defaultState: OptionsState = {
     server_replay_kill_extra: false,
     server_replay_nopop: false,
     server_replay_refresh: true,
+    server_replay_reuse: false,
     server_replay_use_headers: [],
     showhost: false,
     ssl_insecure: false,
