@@ -27,6 +27,10 @@ A function annotated with CommandGenerator[bool] may yield commands and ultimate
 """
 
 
+MAX_LOG_STATEMENT_SIZE = 512
+"""Maximum size of individual log statements before they will be truncated."""
+
+
 class Paused(NamedTuple):
     """
     State of a layer that's paused because it is waiting for a command reply.
@@ -97,8 +101,8 @@ class Layer:
 
     def __debug(self, message):
         """yield a Log command indicating what message is passing through this layer."""
-        if len(message) > 512:
-            message = message[:512] + "…"
+        if len(message) > MAX_LOG_STATEMENT_SIZE:
+            message = message[:MAX_LOG_STATEMENT_SIZE] + "…"
         if Layer.__last_debug_message == message:
             message = message.split("\n", 1)[0].strip()
             if len(message) > 256:
