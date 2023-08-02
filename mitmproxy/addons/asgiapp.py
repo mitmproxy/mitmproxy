@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 import urllib.parse
 
 import asgiref.compatibility
@@ -138,8 +137,8 @@ async def serve(app, flow: http.HTTPFlow):
         await app(scope, receive, send)
         if not sent_response:
             raise RuntimeError(f"no response sent.")
-    except Exception:
-        logger.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
+    except Exception as e:
+        logger.exception(f"Error in asgi app: {e}")
         flow.response = http.Response.make(500, b"ASGI Error.")
     finally:
         done.set()
