@@ -123,27 +123,24 @@ class TestScript:
             await caplog_async.await_log("error.py")
             sc.done()
 
-    async def test_import_error(self, monkeypatch, tdata, caplog):
+    def test_import_error(self, monkeypatch, tdata, caplog):
         monkeypatch.setattr(sys, "frozen", True, raising=False)
         script.Script(
             tdata.path("mitmproxy/data/addonscripts/import_error.py"),
-            False,
+            reload=False,
         )
         assert (
             "Note that mitmproxy's binaries include their own Python environment"
             in caplog.text
         )
 
-    async def test_optionexceptions(self, tdata, caplog_async):
-        with taddons.context() as tctx:
-            sc = script.Script(
+    def test_configure_error(self, tdata, caplog):
+        with taddons.context():
+            script.Script(
                 tdata.path("mitmproxy/data/addonscripts/configure.py"),
-                True,
+                False,
             )
-            tctx.master.addons.add(sc)
-            tctx.configure(sc)
-            await caplog_async.await_log("Options Error")
-            sc.done()
+            assert "Options Error" in caplog.text
 
     async def test_addon(self, tdata, caplog_async):
         caplog_async.set_level("INFO")
@@ -244,18 +241,6 @@ class TestScriptLoader:
             await asyncio.sleep(0.1)
             assert not tctx.options.scripts
             assert not sl.addons
-
-    async def test_script_error_handler(self, caplog):
-        path = "/sample/path/example.py"
-        exc = SyntaxError
-        msg = "Error raised"
-        tb = True
-        with taddons.context():
-            script.script_error_handler(path, exc, msg, tb)
-            assert "/sample/path/example.py" in caplog.text
-            assert "Error raised" in caplog.text
-            assert "lineno" in caplog.text
-            assert "NoneType" in caplog.text
 
     async def test_order(self, tdata, caplog_async):
         caplog_async.set_level("DEBUG")

@@ -39,43 +39,34 @@ def load_script(path: str) -> types.ModuleType | None:
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
     except ImportError as e:
-        err_msg = str(e)
         if getattr(sys, "frozen", False):
-            err_msg = (
-                f"{err_msg}. \n"
+            e.msg += (
+                f".\n"
                 f"Note that mitmproxy's binaries include their own Python environment. "
                 f"If your addon requires the installation of additional dependencies, "
                 f"please install mitmproxy from PyPI "
                 f"(https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)."
             )
-        script_error_handler(path, e, msg=err_msg)
+        script_error_handler(path, e)
     except Exception as e:
-        script_error_handler(path, e, msg=str(e))
+        script_error_handler(path, e)
     finally:
         sys.path[:] = oldpath
         return m
 
 
-def script_error_handler(path, exc, msg="", tb=False):
+def script_error_handler(path: str, exc: Exception) -> None:
     """
-    Handles all the user's script errors with
-    an optional traceback
+    Log errors during script loading.
     """
-    exception = type(exc).__name__
-    if msg:
-        exception = msg
-    lineno = ""
-    if hasattr(exc, "lineno"):
-        lineno = str(exc.lineno)
-    log_msg = f"in script {path}:{lineno} {exception}"
-    if tb:
-        etype, value, tback = sys.exc_info()
-        tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
-        assert etype
-        assert value
-        logger.error(log_msg, exc_info=(etype, value, tback))
-    else:
-        logger.error(log_msg)
+    tback = exc.__traceback__
+    tback = addonmanager.cut_traceback(
+        tback, "invoke_addon_sync"
+    )  # we're calling configure() on load
+    tback = addonmanager.cut_traceback(
+        tback, "_call_with_frames_removed"
+    )  # module execution from importlib
+    logger.error(f"error in script {path}", exc_info=(type(exc), exc, tback))
 
 
 ReloadInterval = 1
@@ -130,8 +121,8 @@ class Script:
                 ctx.master.addons.invoke_addon_sync(
                     self.ns, hooks.ConfigureHook(ctx.options.keys())
                 )
-            except exceptions.OptionsError as e:
-                script_error_handler(self.fullpath, e, msg=str(e))
+            except Exception as e:
+                script_error_handler(self.fullpath, e)
             if self.is_running:
                 # We're already running, so we call that on the addon now.
                 ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
