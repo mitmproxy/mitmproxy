@@ -5,6 +5,8 @@ import logging
 import time
 import traceback
 from collections.abc import Sequence
+from types import TracebackType
+from typing import Literal
 from typing import cast
 
 import mitmproxy.types
@@ -112,7 +114,12 @@ class ReplayHandler(server.ConnectionHandler):
         self.server_event(events.Start())
         await self.done.wait()
 
-    def log(self, message: str, level: int = logging.INFO) -> None:
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+        exc_info: Literal[True] | tuple[type[BaseException] | None, BaseException | None, TracebackType | None] | None = None
+    ) -> None:
         assert isinstance(level, int)
         logger.log(level=level, msg=f"[replay] {message}")
 

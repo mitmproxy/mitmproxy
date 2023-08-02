@@ -17,6 +17,8 @@ from collections.abc import Callable
 from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from types import TracebackType
+from typing import Literal
 
 import mitmproxy_rs
 from OpenSSL import SSL
@@ -350,7 +352,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def handle_hook(self, hook: commands.StartHook) -> None:
         pass
 
-    def log(self, message: str, level: int = logging.INFO, exc_info=None) -> None:
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+        exc_info: Literal[True] | tuple[type[BaseException] | None, BaseException | None, TracebackType | None] | None = None
+    ) -> None:
         logger.log(level, message, extra={"client": self.client.peername}, exc_info=exc_info)
 
     def server_event(self, event: events.Event) -> None:
