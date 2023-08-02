@@ -11,7 +11,6 @@ import asyncio
 import collections
 import logging
 import time
-import traceback
 from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import MutableMapping
@@ -356,9 +355,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self,
         message: str,
         level: int = logging.INFO,
-        exc_info: Literal[True] | tuple[type[BaseException], BaseException, TracebackType | None] | None = None
+        exc_info: Literal[True]
+        | tuple[type[BaseException], BaseException, TracebackType | None]
+        | None = None,
     ) -> None:
-        logger.log(level, message, extra={"client": self.client.peername}, exc_info=exc_info)
+        logger.log(
+            level, message, extra={"client": self.client.peername}, exc_info=exc_info
+        )
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 
 from . import ctx as mitmproxy_ctx
 from .proxy.mode_specs import ReverseMode
@@ -88,7 +87,10 @@ class Master:
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
-            logger.error("Unhandled errror in task.", exc_info=(type(exc), exc, exc.__traceback__))
+            logger.error(
+                "Unhandled errror in task.",
+                exc_info=(type(exc), exc, exc.__traceback__),
+            )
 
     async def load_flow(self, f):
         """

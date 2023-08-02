@@ -4,7 +4,6 @@ import importlib.util
 import logging
 import os
 import sys
-import traceback
 import types
 from collections.abc import Sequence
 

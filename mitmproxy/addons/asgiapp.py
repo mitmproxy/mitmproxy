@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 import urllib.parse
 
 import asgiref.compatibility
