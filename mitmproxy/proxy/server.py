@@ -152,8 +152,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await asyncio.wait([handler])
             if not handler.cancelled() and (e := handler.exception()):
                 self.log(
-                    f"mitmproxy has crashed!\n{traceback.format_exception(e)}",
+                    f"connection handler has crashed: {e}",
                     logging.ERROR,
+                    exc_info=(type(e), e, e.__traceback__),
                 )
 
         watch.cancel()
@@ -349,8 +350,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def handle_hook(self, hook: commands.StartHook) -> None:
         pass
 
-    def log(self, message: str, level: int = logging.INFO) -> None:
-        logger.log(level, message, extra={"client": self.client.peername})
+    def log(self, message: str, level: int = logging.INFO, exc_info=None) -> None:
+        logger.log(level, message, extra={"client": self.client.peername}, exc_info=exc_info)
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
@@ -401,7 +402,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     raise RuntimeError(f"Unexpected command: {command}")
         except Exception:
-            self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", logging.ERROR)
+            self.log(f"mitmproxy has crashed!", logging.ERROR, exc_info=True)
 
     def close_connection(
         self, connection: Connection, half_close: bool = False

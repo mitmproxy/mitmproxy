@@ -49,6 +49,8 @@ class MitmFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         time = self.formatTime(record)
         message = record.getMessage()
+        if record.exc_info:
+            message = f"{message}\n{self.formatException(record.exc_info)}"
         if self.colorize:
             message = miniclick.style(
                 message,

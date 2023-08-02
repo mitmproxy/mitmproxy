@@ -52,7 +52,8 @@ def safecall():
         tb = cut_traceback(tb, "invoke_addon_sync")
         tb = cut_traceback(tb, "invoke_addon")
         logger.error(
-            "Addon error: %s" % "".join(traceback.format_exception(etype, value, tb))
+            f"Addon error: {value}",
+            exc_info=(etype, value, tb),
         )
 
 

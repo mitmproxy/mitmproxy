@@ -72,10 +72,9 @@ def script_error_handler(path, exc, msg="", tb=False):
     if tb:
         etype, value, tback = sys.exc_info()
         tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
-        log_msg = (
-            log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
-        )
-    logger.error(log_msg)
+        logger.error(log_msg, exc_info=(etype, value, tback))
+    else:
+        logger.error(log_msg)
 
 
 ReloadInterval = 1

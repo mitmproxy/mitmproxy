@@ -84,19 +84,11 @@ class Master:
         try:
             exc: Exception = context["exception"]
         except KeyError:
-            logger.error(
-                f"Unhandled asyncio error: {context}"
-                "\nPlease lodge a bug report at:"
-                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
-            )
+            logger.error(f"Unhandled asyncio error: {context}")
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
-            logger.error(
-                "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-                + "\nPlease lodge a bug report at:"
-                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
-            )
+            logger.error("Unhandled errror in task.", exc_info=(type(exc), exc, exc.__traceback__))
 
     async def load_flow(self, f):
         """
