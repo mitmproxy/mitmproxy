@@ -180,7 +180,7 @@ class ClientPlayback:
                 else:
                     await h.replay()
             except Exception:
-                logger.error(f"Client replay has crashed!", exc_info=True)
+                logger.exception(f"Client replay has crashed!")
             self.queue.task_done()
             self.inflight = None
 

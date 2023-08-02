@@ -51,6 +51,8 @@ def safecall():
         etype, value, tb = sys.exc_info()
         tb = cut_traceback(tb, "invoke_addon_sync")
         tb = cut_traceback(tb, "invoke_addon")
+        assert etype
+        assert value
         logger.error(
             f"Addon error: {value}",
             exc_info=(etype, value, tb),

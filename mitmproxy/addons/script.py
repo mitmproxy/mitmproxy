@@ -72,6 +72,8 @@ def script_error_handler(path, exc, msg="", tb=False):
     if tb:
         etype, value, tback = sys.exc_info()
         tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
+        assert etype
+        assert value
         logger.error(log_msg, exc_info=(etype, value, tback))
     else:
         logger.error(log_msg)

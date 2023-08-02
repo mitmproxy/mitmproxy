@@ -356,7 +356,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self,
         message: str,
         level: int = logging.INFO,
-        exc_info: Literal[True] | tuple[type[BaseException] | None, BaseException | None, TracebackType | None] | None = None
+        exc_info: Literal[True] | tuple[type[BaseException], BaseException, TracebackType | None] | None = None
     ) -> None:
         logger.log(level, message, extra={"client": self.client.peername}, exc_info=exc_info)
 

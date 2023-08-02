@@ -139,7 +139,7 @@ async def serve(app, flow: http.HTTPFlow):
         if not sent_response:
             raise RuntimeError(f"no response sent.")
     except Exception as e:
-        logger.error(f"Error in asgi app: {e}", exc_info=True)
+        logger.exception(f"Error in asgi app: {e}")
         flow.response = http.Response.make(500, b"ASGI Error.")
     finally:
         done.set()
