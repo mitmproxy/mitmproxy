@@ -18,7 +18,7 @@ from mitmproxy.utils import asyncio_utils
 
 def dump_system_info():
     mitmproxy_version = version.get_dev_version()
-    openssl_version = SSL.SSLeay_version(SSL.SSLEAY_VERSION)
+    openssl_version: str | bytes = SSL.SSLeay_version(SSL.SSLEAY_VERSION)
     if isinstance(openssl_version, bytes):
         openssl_version = openssl_version.decode()
 

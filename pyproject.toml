@@ -193,13 +193,13 @@ commands =
 
 [testenv:mypy]
 deps =
-  mypy==1.0.0
+  mypy==1.4.1
   types-certifi==2021.10.8.3
   types-Flask==1.1.6
   types-Werkzeug==1.0.9
-  types-requests==2.28.11.11
+  types-requests==2.31.0.2
   types-cryptography==3.3.23.2
-  types-pyOpenSSL==23.0.0.2
+  types-pyOpenSSL==23.2.0.2
   -e .[dev]
 
 commands =
