@@ -2,37 +2,26 @@
 
 ## Unreleased: mitmproxy next
 
-* Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
-  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
-* Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
-  ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
-* Add "Prettier" code linting tool to mitmweb.
-  ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
 * Add experimental support for HTTP/3 and QUIC.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
-* You can now set the `http3` to false to block all QUIC and HTTP/3 traffic
-  in transparent modes.
-  ([#5967](https://github.com/mitmproxy/mitmproxy/pull/5967), @mhils)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
   This makes it simpler to accept both HTTP and HTTPS.
   ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
 * Add `replay.server.add` command for adding flows to server replay buffer
   ([#5851](https://github.com/mitmproxy/mitmproxy/pull/5851), @italankin)
-* Removed string escaping in raw view.
+* Remove string escaping in raw view.
   ([#5470](https://github.com/mitmproxy/mitmproxy/issues/5470), @stephenspol)
 * Updating `Request.port` now also updates the Host header if present.
   This aligns with `Request.host`, which already does this.
   ([#5908](https://github.com/mitmproxy/mitmproxy/pull/5908), @sujaldev)
 * Fix editing of multipart HTTP requests from the CLI.
   ([#5148](https://github.com/mitmproxy/mitmproxy/issues/5148), @mhils)
-* Added documentation on using Magisk module for intercepting traffic in Android production builds.
+* Add documentation on using Magisk module for intercepting traffic in Android production builds.
   ([#5924](https://github.com/mitmproxy/mitmproxy/pull/5924), @Jurrie)
 * Fix a bug where the direction indicator in the message stream view would be in the wrong direction.
   ([#5921](https://github.com/mitmproxy/mitmproxy/issues/5921), @konradh)
 * Fix a bug where peername would be None in tls_passthrough script, which would make it not working.
   ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
-* mitmproxy now requires Python 3.10 or above.
-  ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
 * the `esc` key can now be used to exit the current view
   ([#6087](https://github.com/mitmproxy/mitmproxy/pull/6087), @sujaldev)
 * focus-follow shortcut will now work in flow view context too.
@@ -48,6 +37,16 @@
   ([#6202](https://github.com/mitmproxy/mitmproxy/pull/6202), @mhils)
 * Enable legacy SSL connect when connecting to server if the `ssl_insecure` flag is set.
   ([#6281](https://github.com/mitmproxy/mitmproxy/pull/6281), @DurandA)
+* Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
+  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
+* Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
+  ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
+* Add "Prettier" code linting tool to mitmweb.
+  ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
+* When logging exceptions, provide the entire exception object to log handlers
+  ([#6295](https://github.com/mitmproxy/mitmproxy/pull/6295), @mhils)
+* mitmproxy now requires Python 3.10 or above.
+  ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
 
 ### Breaking Changes
 
