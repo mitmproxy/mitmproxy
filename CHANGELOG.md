@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 04 August 2023: mitmproxy 10.0.0
+
 * Add experimental support for HTTP/3 and QUIC.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
 * ASGI/WSGI apps can now listen on all ports for a specific hostname. 
