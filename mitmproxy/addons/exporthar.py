@@ -42,7 +42,7 @@ class ExportHar:
                 "creator": {
                     "name": "mitmproxy exporthar",
                     "version": "0.1",
-                    "comment": f"mitmproxy version {version.MITMPROXY}",
+                    "comment": f"mitmproxy version {version.VERSION}",
                 },
                 "pages": [],
                 "entries": entries,
