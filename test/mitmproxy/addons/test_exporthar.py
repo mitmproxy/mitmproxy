@@ -5,6 +5,7 @@ import pytest
 
 from mitmproxy import io
 from mitmproxy import types
+from mitmproxy import version
 from mitmproxy.addons.exporthar import ExportHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import CommandError
@@ -170,7 +171,8 @@ def test_binary_content():
 @pytest.mark.parametrize(
     "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
 )
-def test_exporthar(log_file: Path, tmp_path: Path):
+def test_exporthar(log_file: Path, tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "1.2.3")
     e = ExportHar()
 
     flows = io.read_flows_from_paths([log_file])
