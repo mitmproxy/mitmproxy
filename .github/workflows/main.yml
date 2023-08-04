@@ -104,7 +104,8 @@ jobs:
       - run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'linux'
         run: python -u release/build.py --dirty wheel
-      - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+      - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' &&
+            (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
         run: python -u release/build.py --dirty installbuilder-installer msix-installer
       - uses: actions/upload-artifact@v3
         with:
