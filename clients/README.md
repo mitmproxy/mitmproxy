@@ -20,6 +20,10 @@ for instructions via NPM, or a Jar here:
 
 https://openapi-generator.tech/docs/installation/
 
+Note: 
+* For homebrew installs, it is: openapi-generator 
+* In npm, it is openapi-generator-cli
+
 ## Config
 We have language specific config files set. The options for every language are
 different. So see them, follow this pattern:
@@ -27,19 +31,26 @@ different. So see them, follow this pattern:
 `openapi-generator config-help -g python`
 
 
+## Generate REST API-Docs
+`openapi-generator generate -g markdown -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o markdown`
+
+
 # Generating Clients
 
 ## Java
-`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient -g java -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o java -c config-java.yaml`
+`openapi-generator generate --package-name BrowserUpMitmProxyClient -g java -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o java -c config-java.yaml`
 
 ## JavaScript
-`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g javascript -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o javascript -c config-javascript.yaml`
+`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g javascript -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o javascript -c config-javascript.yaml`
 
 ## Ruby
-`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g ruby -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o ruby -c config-ruby.yaml`
+`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g ruby -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o ruby -c config-ruby.yaml`
 
 ## Python
-`openapi-generator-cli generate --package-name BrowserUpMitmProxyClient  -g python -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o python -c config-python.yaml`
+`openapi-generator generate --package-name BrowserUpMitmProxyClient  -g python -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o python -c config-python.yaml`
+
+## CSharp
+`openapi-generator generate -g csharp-netcore -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o csharp -c config-csharp.yaml`
 
 
 Notes:
