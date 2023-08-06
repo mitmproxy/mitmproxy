@@ -1,0 +1,5 @@
+# Ruby
+
+packageName: BrowserUp.Mitmproxy.Client
+targetFramework: "net7.0"
+netCoreProjectFile: true
