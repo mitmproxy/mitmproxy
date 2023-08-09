@@ -74,7 +74,7 @@ def map(km: Keymap) -> None:
         "D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow"
     )
     km.add(
-        "e",
+        "x",
         """
         console.choose.cmd Format export.formats
         console.command export.file {choice} @focus
