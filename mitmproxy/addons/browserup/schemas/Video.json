@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string"
+    },
+    "src": {
+      "type": "string"
+    },
+    "bufferedPercent": {
+      "type": "number"
+    },
+    "droppedVideoFrames": {
+      "type": "number"
+    },
+    "totalVideoFrames": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "filename",
+    "src",
+    "bufferedPercent",
+    "droppedVideoFrames",
+    "totalVideoFrames"
+  ],
+  "additionalProperties": false
+}
