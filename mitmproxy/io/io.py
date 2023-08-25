@@ -1,4 +1,6 @@
 import os
+import json
+from pathlib import Path
 from collections.abc import Iterable
 from typing import Any
 from typing import BinaryIO
@@ -10,6 +12,8 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
+from io import BufferedReader
+from mitmproxy.io.har import ReadHar
 
 
 class FlowWriter:
@@ -23,27 +27,42 @@ class FlowWriter:
 
 class FlowReader:
     def __init__(self, fo: BinaryIO):
-        self.fo: BinaryIO = fo
+        self.fo: BufferedReader = BufferedReader(fo)        
 
     def stream(self) -> Iterable[flow.Flow]:
         """
         Yields Flow objects from the dump.
         """
-        try:
-            while True:
-                # FIXME: This cast hides a lack of dynamic type checking
-                loaded = cast(
-                    dict[Union[bytes, str], Any],
-                    tnetstring.load(self.fo),
+        
+        if self.fo.peek(1).startswith(b"{"):
+            
+            try:
+                har_file = json.loads(self.fo.read().decode('utf-8'))
+            except Exception:
+                raise exceptions.FlowReadException(
+                    "Unable to read HAR file. Please provide a valid HAR file"
                 )
-                try:
-                    yield flow.Flow.from_state(compat.migrate_flow(loaded))
-                except ValueError as e:
-                    raise exceptions.FlowReadException(e) from e
-        except (ValueError, TypeError, IndexError) as e:
-            if str(e) == "not a tnetstring: empty file":
-                return  # Error is due to EOF
-            raise exceptions.FlowReadException("Invalid data format.") from e
+
+            for request_json in har_file["log"]["entries"]:
+                har_flow = ReadHar().request_to_flow(request_json)
+                yield har_flow
+
+        else:
+            try:
+                while True:
+                    # FIXME: This cast hides a lack of dynamic type checking
+                    loaded = cast(
+                        dict[Union[bytes, str], Any],
+                        tnetstring.load(self.fo),
+                    )
+                    try:
+                        yield flow.Flow.from_state(compat.migrate_flow(loaded))
+                    except ValueError as e:
+                        raise exceptions.FlowReadException(e) from e
+            except (ValueError, TypeError, IndexError) as e:
+                if str(e) == "not a tnetstring: empty file":
+                    return  # Error is due to EOF
+                raise exceptions.FlowReadException("Invalid data format.") from e
 
 
 class FilteredFlowWriter:
