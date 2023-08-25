@@ -12,11 +12,12 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
-from mitmproxy.io.har import ReadHar
+from mitmproxy.io.har import request_to_flow
 
 
 class FlowWriter:
     def __init__(self, fo):
+        print(type(fo))
         self.fo = fo
 
     def add(self, f: flow.Flow) -> None:
@@ -26,7 +27,7 @@ class FlowWriter:
 
 class FlowReader:
     def __init__(self, fo: BinaryIO):
-        self.fo: BufferedReader = BufferedReader(fo)
+            self.fo: BufferedReader = BufferedReader(fo)
 
     def stream(self) -> Iterable[flow.Flow]:
         """
@@ -38,7 +39,7 @@ class FlowReader:
                 har_file = json.loads(self.fo.read().decode("utf-8"))
 
                 for request_json in har_file["log"]["entries"]:
-                    yield ReadHar().request_to_flow(request_json)
+                    yield request_to_flow(request_json)
 
             except Exception:
                 raise exceptions.FlowReadException(
