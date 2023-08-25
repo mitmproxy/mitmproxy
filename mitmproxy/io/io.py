@@ -1,7 +1,7 @@
-import os
 import json
-from pathlib import Path
+import os
 from collections.abc import Iterable
+from io import BufferedReader
 from typing import Any
 from typing import BinaryIO
 from typing import cast
@@ -12,7 +12,6 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
-from io import BufferedReader
 from mitmproxy.io.har import ReadHar
 
 
@@ -27,17 +26,16 @@ class FlowWriter:
 
 class FlowReader:
     def __init__(self, fo: BinaryIO):
-        self.fo: BufferedReader = BufferedReader(fo)        
+        self.fo: BufferedReader = BufferedReader(fo)
 
     def stream(self) -> Iterable[flow.Flow]:
         """
         Yields Flow objects from the dump.
         """
-        
+
         if self.fo.peek(1).startswith(b"{"):
-            
             try:
-                har_file = json.loads(self.fo.read().decode('utf-8'))
+                har_file = json.loads(self.fo.read().decode("utf-8"))
             except Exception:
                 raise exceptions.FlowReadException(
                     "Unable to read HAR file. Please provide a valid HAR file"
