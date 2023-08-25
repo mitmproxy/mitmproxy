@@ -9,8 +9,9 @@ from mitmproxy import exceptions
 from mitmproxy import version
 from mitmproxy.io import FlowReader
 from mitmproxy.io import tnetstring
+from pathlib import Path
 
-
+here = Path(__file__).parent.parent / "data"
 class TestFlowReader:
     @given(binary())
     @example(b"51:11:12345678901#4:this,8:true!0:~,4:true!0:]4:\\x00,~}")
@@ -23,7 +24,18 @@ class TestFlowReader:
                 pass
         except exceptions.FlowReadException:
             pass  # should never raise anything else.
-
+    @pytest.mark.parametrize(
+        "file", [pytest.param(x, id=x.stem) for x in here.glob("har_files/*.har")]
+    )
+    def test_har(self, file):
+        with open(file, "rb") as f:
+            
+            reader = FlowReader(f)
+            try:
+                for _ in reader.stream():
+                    pass
+            except exceptions.FlowReadException:
+                pass  # should never raise anything else.
     def test_empty(self):
         assert list(FlowReader(io.BytesIO(b"")).stream()) == []
 

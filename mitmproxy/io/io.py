@@ -36,14 +36,15 @@ class FlowReader:
         if self.fo.peek(1).startswith(b"{"):
             try:
                 har_file = json.loads(self.fo.read().decode("utf-8"))
+            
+                for request_json in har_file["log"]["entries"]:      
+                    yield ReadHar().request_to_flow(request_json)
+            
             except Exception:
                 raise exceptions.FlowReadException(
                     "Unable to read HAR file. Please provide a valid HAR file"
                 )
 
-            for request_json in har_file["log"]["entries"]:
-                har_flow = ReadHar().request_to_flow(request_json)
-                yield har_flow
 
         else:
             try:

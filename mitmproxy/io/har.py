@@ -1,18 +1,13 @@
 """Reads HAR files into flow objects"""
-import asyncio
 import base64
-import json
 import logging
 import time
-from datetime import datetime
-from pathlib import Path
 
-from mitmproxy import command
+from datetime import datetime
 from mitmproxy import connection
-from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy import types
+
 
 logger = logging.getLogger(__name__)
 
@@ -131,32 +126,3 @@ class ReadHar:
 
         return new_flow
 
-    @command.command("readhar")
-    def read_har(
-        self,
-        path: types.Path,
-    ) -> None:
-        """
-        Reads a HAR file into mitmproxy. Loads a flow for each entry in given HAR file.
-        """
-        flows = []
-
-        try:
-            har_file = json.loads(Path(path).read_bytes())
-        except Exception:
-            raise exceptions.CommandError(
-                "Unable to read HAR file. Please provide a valid HAR file"
-            )
-
-        for request_json in har_file["log"]["entries"]:
-            flow = self.request_to_flow(request_json)
-            flows.append(flow)
-
-        async def load_flows() -> None:
-            for flow in flows:
-                await ctx.master.load_flow(flow)
-
-        asyncio.create_task(load_flows())
-
-
-addons = [ReadHar()]
