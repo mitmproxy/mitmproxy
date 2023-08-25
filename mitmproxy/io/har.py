@@ -2,8 +2,8 @@
 import base64
 import logging
 import time
-
 from datetime import datetime
+
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
@@ -125,4 +125,3 @@ class ReadHar:
                 new_flow.response.http_version = "HTTP/1.1"
 
         return new_flow
-
