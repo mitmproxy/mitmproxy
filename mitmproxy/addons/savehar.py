@@ -25,7 +25,7 @@ HAR: dict = {
             "log": {
                 "version": "1.2",
                 "creator": {
-                    "name": "mitmproxy har_dump",
+                    "name": "mitmproxy exporthar",
                     "version": "0.1",
                     "comment": "mitmproxy version %s" % version.MITMPROXY,
                 },
@@ -192,6 +192,24 @@ class SaveHar:
 
         if flow.server_conn.peername:
             entry["serverIPAddress"] = str(flow.server_conn.peername[0])
+
+        websocket_messages = []
+        if flow.websocket:
+            for message in flow.websocket.messages:
+                if message.is_text:
+                    data = message.text
+                else:
+                    data = base64.b64encode(message.content).decode()
+                websocket_message = {
+                    "type": "send" if message.from_client else "receive",
+                    "time": message.timestamp,
+                    "opcode": message.type.value,
+                    "data": data,
+                }
+                websocket_messages.append(websocket_message)
+
+            entry["_resourceType"] = "websocket"
+            entry["_webSocketMessages"] = websocket_messages
         HAR["log"]["entries"].append(entry)
         return entry
 
@@ -204,7 +222,7 @@ class SaveHar:
                 "name": name,
                 "value": value,
                 "path": attrs["path"],
-                "domain": attrs["domain"],
+                "domain": attrs.get("domain",""),
                 "httpOnly": "httpOnly" in attrs,
                 "secure": "secure" in attrs,
             }

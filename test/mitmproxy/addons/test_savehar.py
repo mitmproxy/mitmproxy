@@ -6,7 +6,10 @@ import pytest
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
-from mitmproxy.addons.savehar import SaveHar
+from mitmproxy.addons.savehar import SaveHar, done, load, response, websocket_end
+from mitmproxy.net.http import cookies
+from mitmproxy.test import taddons
+from mitmproxy.test import tutils
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import CommandError
 from mitmproxy.http import Headers
@@ -18,6 +21,17 @@ from mitmproxy.test.tflow import ttcpflow
 
 here = Path(__file__).parent.parent
 
+def flow(resp_content=b"message"):
+    times = dict(
+        timestamp_start=746203272,
+        timestamp_end=746203272,
+    )
+
+    # Create a dummy flow for testing
+    return tflow.tflow(
+        req=tutils.treq(method=b"GET", **times),
+        resp=tutils.tresp(content=resp_content, **times),
+    )
 
 def test_write_error():
     s = SaveHar()
@@ -171,7 +185,7 @@ def test_binary_content():
 @pytest.mark.parametrize(
     "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
 )
-def test_SaveHar(log_file: Path, tmp_path: Path, monkeypatch):
+def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
     s = SaveHar()
 
@@ -184,6 +198,40 @@ def test_SaveHar(log_file: Path, tmp_path: Path, monkeypatch):
     actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
     assert actual_har == expected_har
+
+
+@pytest.mark.parametrize(
+    "flow", [pytest.param(x) for x in io.read_flows_from_paths([Path(here / "data/flows/websocket.mitm")])]
+)
+def test_savehar_dump(flow,tmpdir, tdata, monkeypatch):
+        monkeypatch.setattr(version, "VERSION", "1.2.3")
+
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+            assert a
+            path = str(tmpdir.join("somefile"))
+            tctx.configure(a, hardump=path)
+            a.websocket_end(flow)
+            a.done()
+            with open(path) as inp:
+                har = json.load(inp)
+            assert har == json.loads(Path(here / f"data/flows/websocket.har").read_bytes())
+
+
+def test_base64(tmpdir, tdata):
+    with taddons.context() as tctx:
+        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+        assert a
+        path = str(tmpdir.join("somefile"))
+        tctx.configure(a, hardump=path)
+
+        a.response(flow(resp_content=b"foo" + b"\xFF" * 10))
+        a.done()
+        with open(path) as inp:
+            har = json.load(inp)
+        assert (
+            har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
+        )
 
 
 if __name__ == "__main__":
