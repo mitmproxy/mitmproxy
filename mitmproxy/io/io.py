@@ -26,7 +26,6 @@ class FlowWriter:
 
 
 class FlowReader:
-
     fo: BinaryIO
 
     def __init__(self, fo: BinaryIO):
