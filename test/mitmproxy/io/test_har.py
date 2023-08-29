@@ -8,7 +8,7 @@ from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
 
-here = Path(__file__).parent.parent / "data"
+data_dir = Path(__file__).parent.parent / "data"
 
 
 def hardcode_variable_fields_for_tests(flow: dict) -> None:
@@ -33,14 +33,14 @@ def file_to_flows(path_name: Path) -> list[dict]:
 
 def test_corrupt():
     file_json = json.loads(
-        Path(here / "corrupted_har/broken_headers.json").read_bytes()
+        Path(data_dir / "corrupted_har/broken_headers.json").read_bytes()
     )
     with pytest.raises(exceptions.OptionsError):
         fix_headers(file_json["headers"])
 
 
 @pytest.mark.parametrize(
-    "har_file", [pytest.param(x, id=x.stem) for x in here.glob("har_files/*.har")]
+    "har_file", [pytest.param(x, id=x.stem) for x in data_dir.glob("har_files/*.har")]
 )
 def test_har_to_flow(har_file: Path):
     expected_file = har_file.with_suffix(".json")
@@ -55,10 +55,10 @@ def test_har_to_flow(har_file: Path):
 
 
 if __name__ == "__main__":
-    for path_name in here.glob("har_files/*.har"):
+    for path_name in data_dir.glob("har_files/*.har"):
         print(path_name)
 
         flows = file_to_flows(path_name)
 
-        with open(f"har_files/{path_name.stem}.json", "w") as f:
+        with open(data_dir / f"har_files/{path_name.stem}.json", "w") as f:
             json.dump(flows, f, indent=4)
