@@ -6,7 +6,7 @@ import pytest
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
-from mitmproxy.addons.exporthar import ExportHar
+from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import CommandError
 from mitmproxy.http import Headers
@@ -20,16 +20,16 @@ here = Path(__file__).parent.parent
 
 
 def test_write_error():
-    e = ExportHar()
+    s = SaveHar()
 
     with pytest.raises(FileNotFoundError):
-        e.export_har([], types.Path("unknown_dir/testing_flow.har"))
+        s.export_har([], types.Path("unknown_dir/testing_flow.har"))
 
 
 def test_command_error():
-    e = ExportHar()
+    s = SaveHar()
     with pytest.raises(CommandError):
-        e.export_har([ttcpflow()], types.Path("unknown_dir/testing_flow.har"))
+        s.export_har([ttcpflow()], types.Path("unknown_dir/testing_flow.har"))
 
 
 @pytest.mark.parametrize(
@@ -43,9 +43,9 @@ def test_command_error():
     ],
 )
 def test_request_cookies(header: Headers, expected: list[dict]):
-    e = ExportHar()
-    req = Request.make("GET", "https://example.com", "", header)
-    assert e.format_multidict(req.cookies) == expected
+    s = SaveHar()
+    req = Request.make("GET", "https://exampls.com", "", header)
+    assert s.format_multidict(req.cookies) == expected
 
 
 @pytest.mark.parametrize(
@@ -56,7 +56,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                 [
                     (
                         b"set-cookie",
-                        b"foo=bar; path=/; domain=.google.com; priority=high",
+                        b"foo=bar; path=/; domain=.googls.com; priority=high",
                     )
                 ]
             ),
@@ -65,7 +65,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "name": "foo",
                     "value": "bar",
                     "path": "/",
-                    "domain": ".google.com",
+                    "domain": ".googls.com",
                     "httpOnly": False,
                     "secure": False,
                 }
@@ -76,11 +76,11 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                 [
                     (
                         b"set-cookie",
-                        b"foo=bar; path=/; domain=.google.com; Secure; HttpOnly; priority=high",
+                        b"foo=bar; path=/; domain=.googls.com; Secure; HttpOnly; priority=high",
                     ),
                     (
                         b"set-cookie",
-                        b"fooz=baz; path=/; domain=.google.com; priority=high; SameSite=none",
+                        b"fooz=baz; path=/; domain=.googls.com; priority=high; SameSite=none",
                     ),
                 ]
             ),
@@ -89,7 +89,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "name": "foo",
                     "value": "bar",
                     "path": "/",
-                    "domain": ".google.com",
+                    "domain": ".googls.com",
                     "httpOnly": True,
                     "secure": True,
                 },
@@ -97,7 +97,7 @@ def test_request_cookies(header: Headers, expected: list[dict]):
                     "name": "fooz",
                     "value": "baz",
                     "path": "/",
-                    "domain": ".google.com",
+                    "domain": ".googls.com",
                     "httpOnly": False,
                     "secure": False,
                     "sameSite": "none",
@@ -107,49 +107,49 @@ def test_request_cookies(header: Headers, expected: list[dict]):
     ],
 )
 def test_response_cookies(header: Headers, expected: list[dict]):
-    e = ExportHar()
+    s = SaveHar()
     resp = Response.make(200, "", header)
-    assert e.format_response_cookies(resp) == expected
+    assert s.format_response_cookies(resp) == expected
 
 
 def test_seen_server_conn():
-    e = ExportHar()
+    s = SaveHar()
 
     flow = tflow.twebsocketflow()
 
     servers_seen: set[Server] = set()
     servers_seen.add(flow.server_conn)
 
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
+    calculated_timings = s.flow_entry(flow, servers_seen)["timings"]
 
     assert calculated_timings["connect"] == -1.0
     assert calculated_timings["ssl"] == -1.0
 
 
 def test_timestamp_end():
-    e = ExportHar()
+    s = SaveHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
 
-    assert e.flow_entry(flow, set())["timings"]["send"] == 1000
+    assert s.flow_entry(flow, set())["timings"]["send"] == 1000
 
     flow.request.timestamp_end = None
-    calculated_timings = e.flow_entry(flow, servers_seen)["timings"]
+    calculated_timings = s.flow_entry(flow, servers_seen)["timings"]
 
     assert calculated_timings["send"] == 0
 
 
 def test_tls_setup():
-    e = ExportHar()
+    s = SaveHar()
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
     flow.server_conn.timestamp_tls_setup = None
 
-    assert e.flow_entry(flow, servers_seen)["timings"]["ssl"] is None
+    assert s.flow_entry(flow, servers_seen)["timings"]["ssl"] is None
 
 
 def test_binary_content():
-    e = ExportHar()
+    s = SaveHar()
 
     flow = tflow.twebsocketflow()
     assert flow.response
@@ -165,19 +165,19 @@ def test_binary_content():
         "mimeType": "",
         "text": "/w==",
         "encoding": "base64",
-    } == e.flow_entry(flow, servers_seen)["response"]["content"]
+    } == s.flow_entry(flow, servers_seen)["response"]["content"]
 
 
 @pytest.mark.parametrize(
     "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
 )
-def test_exporthar(log_file: Path, tmp_path: Path, monkeypatch):
+def test_SaveHar(log_file: Path, tmp_path: Path, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
-    e = ExportHar()
+    s = SaveHar()
 
     flows = io.read_flows_from_paths([log_file])
 
-    e.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
+    s.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
     expected_har = json.loads(
         Path(here / f"data/flows/{log_file.stem}.har").read_bytes()
     )
@@ -187,10 +187,10 @@ def test_exporthar(log_file: Path, tmp_path: Path, monkeypatch):
 
 
 if __name__ == "__main__":
-    e = ExportHar()
+    s = SaveHar()
 
     for file in here.glob("data/flows/*.mitm"):
         if not file.suffix == ".har":
             path = open(file, "rb")
             flows = list(io.FlowReader(path).stream())
-            e.export_har(flows, types.Path(here / f"data/flows/{file.stem}.har"))
+            s.export_har(flows, types.Path(here / f"data/flows/{file.stem}.har"))

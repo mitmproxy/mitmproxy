@@ -2,6 +2,8 @@
 import base64
 import json
 import logging
+import zlib
+import os
 from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
@@ -16,12 +18,25 @@ from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.exceptions import CommandError
 from mitmproxy.utils import strutils
+from mitmproxy import ctx
 
 logger = logging.getLogger(__name__)
+HAR: dict = {
+            "log": {
+                "version": "1.2",
+                "creator": {
+                    "name": "mitmproxy har_dump",
+                    "version": "0.1",
+                    "comment": "mitmproxy version %s" % version.MITMPROXY,
+                },
+                "pages": [],
+                "entries": [],
+            }
+        }
+SERVERS_SEEN: set[Server] = set()
 
-
-class ExportHar:
-    @command.command("exporthar")
+class SaveHar:
+    @command.command("save.har")
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
         entries = []
@@ -177,7 +192,7 @@ class ExportHar:
 
         if flow.server_conn.peername:
             entry["serverIPAddress"] = str(flow.server_conn.peername[0])
-
+        HAR["log"]["entries"].append(entry)
         return entry
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
@@ -205,6 +220,63 @@ class ExportHar:
 
     def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
         return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
+    
+def load(l):
+    l.add_option(
+        "hardump",
+        str,
+        "",
+        "HAR dump path.",
+    )
 
 
-addons = [ExportHar()]
+def response(flow: http.HTTPFlow):
+    """
+    Called when a server response has been received.
+    """
+    if flow.websocket is None:
+        s = SaveHar()
+        s.flow_entry(flow,SERVERS_SEEN)
+
+def websocket_end(flow: http.HTTPFlow):
+    s = SaveHar()
+    entry = s.flow_entry(flow,SERVERS_SEEN)
+
+    websocket_messages = []
+    if flow.websocket:
+        for message in flow.websocket.messages:
+            if message.is_text:
+                data = message.text
+            else:
+                data = base64.b64encode(message.content).decode()
+            websocket_message = {
+                "type": "send" if message.from_client else "receive",
+                "time": message.timestamp,
+                "opcode": message.type.value,
+                "data": data,
+            }
+            websocket_messages.append(websocket_message)
+
+    entry["_resourceType"] = "websocket"
+    entry["_webSocketMessages"] = websocket_messages
+
+def done():
+    """
+    Called once on script shutdown, after any other events.
+    """
+    if ctx.options.hardump:
+        json_dump: str = json.dumps(HAR, indent=2)
+
+        if ctx.options.hardump == "-":
+            print(json_dump)
+        else:
+            raw: bytes = json_dump.encode()
+            if ctx.options.hardump.endswith(".zhar"):
+                raw = zlib.compress(raw, 9)
+
+            with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
+                f.write(raw)
+
+            logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+
+addons = [SaveHar()]
