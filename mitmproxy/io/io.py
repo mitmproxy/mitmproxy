@@ -26,15 +26,28 @@ class FlowWriter:
 
 
 class FlowReader:
+
+    fo: BinaryIO
+
     def __init__(self, fo: BinaryIO):
-        self.fo: BufferedReader = BufferedReader(fo)
+        self.fo = fo
+
+    def peek(self, n: int) -> bytes:
+        try:
+            return cast(BufferedReader, self.fo).peek(n)
+        except AttributeError:
+            # https://github.com/python/cpython/issues/90533: io.BytesIO does not have peek()
+            pos = self.fo.tell()
+            ret = self.fo.read(n)
+            self.fo.seek(pos)
+            return ret
 
     def stream(self) -> Iterable[flow.Flow]:
         """
         Yields Flow objects from the dump.
         """
 
-        if self.fo.peek(1).startswith(b"{"):
+        if self.peek(1).startswith(b"{"):
             try:
                 har_file = json.loads(self.fo.read().decode("utf-8"))
 
