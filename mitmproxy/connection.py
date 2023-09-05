@@ -264,7 +264,7 @@ class Server(Connection):
     Which of those two will be present depends on the proxy mode and the client.
     For explicit proxies, this value will reflect what the client instructs mitmproxy to connect to.
     For example, if the client starts off a connection with `CONNECT example.com HTTP/1.1`, it will be `example.com`.
-    For transparent proxies such as WireGuard mode, this value is always an IP address.
+    For transparent proxies such as WireGuard mode, this value will be an IP address.
     """
 
     peername: Address | None = None
