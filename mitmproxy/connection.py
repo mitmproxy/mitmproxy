@@ -258,8 +258,8 @@ class Server(Connection):
 
     address: Address | None  # type: ignore
     """
-    The server's `(host, port)` address tuple. 
-    
+    The server's `(host, port)` address tuple.
+
     The host can either be a domain or a plain IP address.
     Which of those two will be present depends on the proxy mode and the client.
     For explicit proxies, this value will reflect what the client instructs mitmproxy to connect to.
