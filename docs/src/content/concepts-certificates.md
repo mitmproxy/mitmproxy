@@ -109,6 +109,7 @@ exist to accomplish this:
    which supports certificate pinning bypasses on iOS and Android.
  - [ssl-kill-switch2](https://github.com/nabla-c0d3/ssl-kill-switch2) is a blackbox tool to disable certificate pinning
    within iOS and macOS applications.
+ - [android-unpinner](https://github.com/mitmproxy/android-unpinner) modifies Android APKs to inject Frida and HTTP Toolkit's unpinning scripts.
 
 *Please propose other useful tools using the "Edit on GitHub" button on the top right of this page.*
 
