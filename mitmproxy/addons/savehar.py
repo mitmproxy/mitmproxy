@@ -40,7 +40,7 @@ class SaveHar:
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
         entries = []
-
+        skipped = 0
         # A list of server seen till now is maintained so we can avoid
         # using 'connect' time for entries that use an existing connection.
         servers_seen: set[Server] = set()
@@ -49,7 +49,10 @@ class SaveHar:
             if isinstance(f, http.HTTPFlow):
                 entries.append(self.flow_entry(f, servers_seen))
             else:
-                raise CommandError(f"Cannot export {type(f).__name__} flows to HAR.")
+                skipped+=1
+                logger.info(skipped)
+        if skipped > 0:
+            logger.info(f"Skipped {skipped} flows that werent HTTPFlows.")
 
         har = {
             "log": {
@@ -74,15 +77,11 @@ class SaveHar:
             ssl_time = -1.0
         elif flow.server_conn.timestamp_tcp_setup:
             assert flow.server_conn.timestamp_start
-            connect_time = 1000 * (
-                flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
-            )
+            connect_time = flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
+            
 
             if flow.server_conn.timestamp_tls_setup:
-                ssl_time = 1000 * (
-                    flow.server_conn.timestamp_tls_setup
-                    - flow.server_conn.timestamp_tcp_setup
-                )
+                ssl_time = flow.server_conn.timestamp_tls_setup - flow.server_conn.timestamp_tcp_setup
             else:
                 ssl_time = None
             servers_seen.add(flow.server_conn)
@@ -91,19 +90,18 @@ class SaveHar:
             ssl_time = None
 
         if flow.request.timestamp_end:
-            send = 1000 * (flow.request.timestamp_end - flow.request.timestamp_start)
+            send = flow.request.timestamp_end - flow.request.timestamp_start
         else:
             send = 0
 
         if flow.response and flow.request.timestamp_end:
-            wait = 1000 * (flow.response.timestamp_start - flow.request.timestamp_end)
+            wait = flow.response.timestamp_start - flow.request.timestamp_end
         else:
             wait = 0
 
         if flow.response and flow.response.timestamp_end:
-            receive = 1000 * (
-                flow.response.timestamp_end - flow.response.timestamp_start
-            )
+            receive = flow.response.timestamp_end - flow.response.timestamp_start
+            
         else:
             receive = 0
 
