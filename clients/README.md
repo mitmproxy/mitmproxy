@@ -31,6 +31,11 @@ different. So see them, follow this pattern:
 `openapi-generator config-help -g python`
 
 
+* cd to clients folder
+* run the tests (to regen the schema file browserup-proxy.schema.json)
+* run the commands below to generate the clients
+
+
 ## Generate REST API-Docs
 `openapi-generator generate -g markdown -i /Users/ebeland/apps/mitmproxy/browserup-proxy.schema.json -o markdown`
 

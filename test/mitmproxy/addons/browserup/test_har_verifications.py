@@ -26,7 +26,7 @@ class TestHARVerifications:
     def test_page_response_present_succeeds(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert (hv.present({'status': '200', 'page': 'Default'}))
+        assert (hv.present({'status': '200', 'page': 'page_1'}))
 
     def test_page_response_missing_page(self, hc, flow):
         hc.response(flow)

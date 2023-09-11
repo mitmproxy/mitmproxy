@@ -34,20 +34,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="Error" /> class.
         /// </summary>
-        /// <param name="details">Short details of the error.</param>
         /// <param name="name">Name of the Error to add. Stored in har under _errors.</param>
-        public Error(string details = default(string), string name = default(string))
+        /// <param name="details">Short details of the error.</param>
+        public Error(string name = default(string), string details = default(string))
         {
-            this.Details = details;
             this.Name = name;
+            this.Details = details;
         }
-
-        /// <summary>
-        /// Short details of the error
-        /// </summary>
-        /// <value>Short details of the error</value>
-        [DataMember(Name = "details", EmitDefaultValue = false)]
-        public string Details { get; set; }
 
         /// <summary>
         /// Name of the Error to add. Stored in har under _errors
@@ -57,6 +50,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Name { get; set; }
 
         /// <summary>
+        /// Short details of the error
+        /// </summary>
+        /// <value>Short details of the error</value>
+        [DataMember(Name = "details", EmitDefaultValue = false)]
+        public string Details { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -64,8 +64,8 @@ namespace BrowserUp.Mitmproxy.Client.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class Error {\n");
-            sb.Append("  Details: ").Append(Details).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Details: ").Append(Details).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -102,14 +102,14 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             return 
                 (
-                    this.Details == input.Details ||
-                    (this.Details != null &&
-                    this.Details.Equals(input.Details))
-                ) && 
-                (
                     this.Name == input.Name ||
                     (this.Name != null &&
                     this.Name.Equals(input.Name))
+                ) && 
+                (
+                    this.Details == input.Details ||
+                    (this.Details != null &&
+                    this.Details.Equals(input.Details))
                 );
         }
 
@@ -122,13 +122,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                if (this.Details != null)
-                {
-                    hashCode = (hashCode * 59) + this.Details.GetHashCode();
-                }
                 if (this.Name != null)
                 {
                     hashCode = (hashCode * 59) + this.Name.GetHashCode();
+                }
+                if (this.Details != null)
+                {
+                    hashCode = (hashCode * 59) + this.Details.GetHashCode();
                 }
                 return hashCode;
             }

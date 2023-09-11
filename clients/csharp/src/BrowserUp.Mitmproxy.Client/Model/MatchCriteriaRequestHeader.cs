@@ -34,20 +34,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="MatchCriteriaRequestHeader" /> class.
         /// </summary>
-        /// <param name="value">Value to match.</param>
         /// <param name="name">Name to match.</param>
-        public MatchCriteriaRequestHeader(string value = default(string), string name = default(string))
+        /// <param name="value">Value to match.</param>
+        public MatchCriteriaRequestHeader(string name = default(string), string value = default(string))
         {
-            this.Value = value;
             this.Name = name;
+            this.Value = value;
         }
-
-        /// <summary>
-        /// Value to match
-        /// </summary>
-        /// <value>Value to match</value>
-        [DataMember(Name = "value", EmitDefaultValue = false)]
-        public string Value { get; set; }
 
         /// <summary>
         /// Name to match
@@ -57,6 +50,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Name { get; set; }
 
         /// <summary>
+        /// Value to match
+        /// </summary>
+        /// <value>Value to match</value>
+        [DataMember(Name = "value", EmitDefaultValue = false)]
+        public string Value { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -64,8 +64,8 @@ namespace BrowserUp.Mitmproxy.Client.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class MatchCriteriaRequestHeader {\n");
-            sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -102,14 +102,14 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             return 
                 (
-                    this.Value == input.Value ||
-                    (this.Value != null &&
-                    this.Value.Equals(input.Value))
-                ) && 
-                (
                     this.Name == input.Name ||
                     (this.Name != null &&
                     this.Name.Equals(input.Name))
+                ) && 
+                (
+                    this.Value == input.Value ||
+                    (this.Value != null &&
+                    this.Value.Equals(input.Value))
                 );
         }
 
@@ -122,13 +122,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                if (this.Value != null)
-                {
-                    hashCode = (hashCode * 59) + this.Value.GetHashCode();
-                }
                 if (this.Name != null)
                 {
                     hashCode = (hashCode * 59) + this.Name.GetHashCode();
+                }
+                if (this.Value != null)
+                {
+                    hashCode = (hashCode * 59) + this.Value.GetHashCode();
                 }
                 return hashCode;
             }

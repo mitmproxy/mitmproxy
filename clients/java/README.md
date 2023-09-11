@@ -44,7 +44,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.browserup</groupId>
   <artifactId>browserup-mitmproxy-client</artifactId>
-  <version>1.0.23-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -60,7 +60,7 @@ Add this dependency to your project's build file:
   }
 
   dependencies {
-     implementation "com.browserup:browserup-mitmproxy-client:1.0.23-SNAPSHOT"
+     implementation "com.browserup:browserup-mitmproxy-client:1.1.0-SNAPSHOT"
   }
 ```
 
@@ -74,7 +74,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/browserup-mitmproxy-client-1.0.23-SNAPSHOT.jar`
+* `target/browserup-mitmproxy-client-1.1.0-SNAPSHOT.jar`
 * `target/lib/*.jar`
 
 ## Getting Started
@@ -131,13 +131,13 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Models
 
+ - [Action](docs/Action.md)
  - [Counter](docs/Counter.md)
  - [Error](docs/Error.md)
  - [Har](docs/Har.md)
  - [HarEntry](docs/HarEntry.md)
  - [HarEntryCache](docs/HarEntryCache.md)
  - [HarEntryCacheBeforeRequest](docs/HarEntryCacheBeforeRequest.md)
- - [HarEntryCacheBeforeRequestOneOf](docs/HarEntryCacheBeforeRequestOneOf.md)
  - [HarEntryRequest](docs/HarEntryRequest.md)
  - [HarEntryRequestCookiesInner](docs/HarEntryRequestCookiesInner.md)
  - [HarEntryRequestPostData](docs/HarEntryRequestPostData.md)
@@ -151,7 +151,6 @@ Class | Method | HTTP request | Description
  - [Header](docs/Header.md)
  - [LargestContentfulPaint](docs/LargestContentfulPaint.md)
  - [MatchCriteria](docs/MatchCriteria.md)
- - [MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
  - [PageTiming](docs/PageTiming.md)
@@ -160,10 +159,11 @@ Class | Method | HTTP request | Description
  - [WebSocketMessage](docs/WebSocketMessage.md)
 
 
+<a id="documentation-for-authorization"></a>
 ## Documentation for Authorization
 
-All endpoints do not require authorization.
-Authentication schemes defined for the API:
+Endpoints do not require authorization.
+
 
 ## Recommendation
 

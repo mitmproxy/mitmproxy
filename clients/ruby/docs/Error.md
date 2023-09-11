@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **details** | **String** | Short details of the error | [optional] |
 | **name** | **String** | Name of the Error to add. Stored in har under _errors | [optional] |
+| **details** | **String** | Short details of the error | [optional] |
 
 ## Example
 
@@ -13,8 +13,8 @@
 require 'browserup_mitmproxy_client'
 
 instance = BrowserupMitmProxy::Error.new(
-  details: null,
-  name: null
+  name: null,
+  details: null
 )
 ```
 

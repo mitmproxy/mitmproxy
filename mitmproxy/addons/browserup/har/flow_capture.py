@@ -14,27 +14,24 @@ from datetime import timezone
 # using 'connect' time for entries that use an existing connection.
 SERVERS_SEEN: typing.Set[connection.Server] = set()
 
-DEFAULT_PAGE_REF = "Default"
-DEFAULT_PAGE_TITLE = "Default"
-REQUEST_SUBMITTED_FLAG = "_request_submitted"
+REQUEST_SUBMITTED_FLAG = "_submitted"
 
 
 class FlowCaptureMixin(object):
 
     def capture_request(self, flow):
         full_url = self.get_full_url(flow.request)
-        if 'BrowserUpData' in full_url:
-            logging.debug('BrowserUpData request, capturing nothing.')
+        if 'BrowserUpData' in full_url or 'detectportal.firefox.com' in full_url:
+            logging.info('Ignored, capturing nothing.')
             return
 
-        logging.debug('Populating har entry for request: {}'.format(full_url))
+        logging.info('Populating har entry for request: {}'.format(full_url))
 
         har_entry = flow.get_har_entry()
-        har_entry['pageref'] = self.get_current_page_ref()
 
         har_entry['startedDateTime'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
-        logging.debug('Har startedDateTime for request: {} is {}'.format(full_url, har_entry['startedDateTime']))
+        logging.info('Har startedDateTime for request: {} is {}'.format(full_url, har_entry['startedDateTime']))
 
         har_request = HarBuilder.entry_request()
         har_request['method'] = flow.request.method
@@ -50,7 +47,7 @@ class FlowCaptureMixin(object):
         if flow.request is not None:
             req_url = flow.request.url
 
-        logging.debug('Incoming request, url: {}'.format(req_url))
+        logging.info('Incoming request, url: {}'.format(req_url))
 
         if HarCaptureTypes.REQUEST_COOKIES in self.har_capture_types:
             har_entry['request']['cookies'] = self.format_request_cookies(flow.request.cookies.fields)
@@ -74,6 +71,11 @@ class FlowCaptureMixin(object):
 
     def capture_response(self, flow):
         full_url = self.get_full_url(flow.request)
+
+        if 'BrowserUpData' in full_url or 'detectportal.firefox.com' in full_url:
+            logging.info('BrowserUpData response or ignored response, capturing nothing.')
+            return
+
         logging.debug('Incoming response for request to url: {}'.format(full_url))
 
         t = HarBuilder.entry_timings()
@@ -146,26 +148,33 @@ class FlowCaptureMixin(object):
                 flow.server_conn.ip_address[0])
 
         flow.set_har_entry(har_entry)
-        logging.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
 
     def capture_websocket_message(self, flow):
-        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
-            har_entry = flow.get_har_entry()
-            msg = flow.websocket.messages[-1]
+        full_url = self.get_full_url(flow.request)
+        if 'BrowserUpData' in full_url or 'devtools' in full_url:
+            logging.info('BrowserUpData websocket, capturing nothing.')
+        else:
+            logging.info('Capturing WS data.')
+            if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
+                har_entry = flow.get_har_entry()
+                msg = flow.websocket.messages[-1]
+                data = msg.content
+                try:
+                    data = data.decode("utf-8")
+                except (UnicodeDecodeError, AttributeError):
+                    pass
 
-            data = msg.content
-            try:
-                data = data.decode("utf-8")
-            except (UnicodeDecodeError, AttributeError):
-                pass
+                msg = {
+                    "type": 'send' if msg.from_client else 'receive',
+                    "opcode": msg.type.value,
+                    "data": data,
+                    "time": msg.timestamp
+                }
 
-            har_entry.setdefault("_webSocketMessages", []).append({
-                "type": 'send' if msg.from_client else 'receive',
-                "opcode": msg.type.value,
-                "data": data,
-                "time": msg.timestamp
-            })
-            flow.set_har_entry(har_entry)
+                msgs = har_entry.get('_webSocketMessages', [])
+                msgs.append(msg)
+                har_entry['_webSocketMessages'] = msgs
+                flow.set_har_entry(har_entry)
 
     # for all of these:  Use -1 if the timing does not apply to the current request.
     # Time required to create TCP connection.

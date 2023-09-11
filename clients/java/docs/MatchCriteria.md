@@ -14,10 +14,10 @@ A set of criteria for filtering HTTP Requests and Responses.                    
 |**content** | **String** | Body content regexp content to match |  [optional] |
 |**contentType** | **String** | Content type |  [optional] |
 |**websocketMessage** | **String** | Websocket message text to match |  [optional] |
-|**requestHeader** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
-|**requestCookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
-|**responseHeader** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
-|**responseCookie** | [**MatchCriteriaRequestHeader**](MatchCriteriaRequestHeader.md) |  |  [optional] |
+|**requestHeader** | [**NameValuePair**](NameValuePair.md) |  |  [optional] |
+|**requestCookie** | [**NameValuePair**](NameValuePair.md) |  |  [optional] |
+|**responseHeader** | [**NameValuePair**](NameValuePair.md) |  |  [optional] |
+|**responseCookie** | [**NameValuePair**](NameValuePair.md) |  |  [optional] |
 |**jsonValid** | **Boolean** | Is valid JSON |  [optional] |
 |**jsonPath** | **String** | Has JSON path |  [optional] |
 |**jsonSchema** | **String** | Validates against passed JSON schema |  [optional] |

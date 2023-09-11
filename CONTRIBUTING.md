@@ -1,5 +1,9 @@
 # Contributing
 
+Please contribute upstream--we follow mitmproxy, but they 
+are the source of truth for the proxy in general.
+
+----------------------------------
 As an open source project, mitmproxy welcomes contributions of all forms. If you would like to bring the project
 forward, please consider contributing in the following areas:
 

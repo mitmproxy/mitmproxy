@@ -92,13 +92,13 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Models
 
+ - [BrowserupMitmProxy::Action](docs/Action.md)
  - [BrowserupMitmProxy::Counter](docs/Counter.md)
  - [BrowserupMitmProxy::Error](docs/Error.md)
  - [BrowserupMitmProxy::Har](docs/Har.md)
  - [BrowserupMitmProxy::HarEntry](docs/HarEntry.md)
  - [BrowserupMitmProxy::HarEntryCache](docs/HarEntryCache.md)
  - [BrowserupMitmProxy::HarEntryCacheBeforeRequest](docs/HarEntryCacheBeforeRequest.md)
- - [BrowserupMitmProxy::HarEntryCacheBeforeRequestOneOf](docs/HarEntryCacheBeforeRequestOneOf.md)
  - [BrowserupMitmProxy::HarEntryRequest](docs/HarEntryRequest.md)
  - [BrowserupMitmProxy::HarEntryRequestCookiesInner](docs/HarEntryRequestCookiesInner.md)
  - [BrowserupMitmProxy::HarEntryRequestPostData](docs/HarEntryRequestPostData.md)
@@ -112,7 +112,6 @@ Class | Method | HTTP request | Description
  - [BrowserupMitmProxy::Header](docs/Header.md)
  - [BrowserupMitmProxy::LargestContentfulPaint](docs/LargestContentfulPaint.md)
  - [BrowserupMitmProxy::MatchCriteria](docs/MatchCriteria.md)
- - [BrowserupMitmProxy::MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
  - [BrowserupMitmProxy::NameValuePair](docs/NameValuePair.md)
  - [BrowserupMitmProxy::Page](docs/Page.md)
  - [BrowserupMitmProxy::PageTiming](docs/PageTiming.md)
@@ -123,5 +122,5 @@ Class | Method | HTTP request | Description
 
 ## Documentation for Authorization
 
- All endpoints do not require authorization.
+Endpoints do not require authorization.
 

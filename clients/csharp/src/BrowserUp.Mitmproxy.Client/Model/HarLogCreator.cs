@@ -40,9 +40,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// Initializes a new instance of the <see cref="HarLogCreator" /> class.
         /// </summary>
         /// <param name="name">name (required).</param>
-        /// <param name="version">version (required).</param>
+        /// <param name="varVersion">varVersion (required).</param>
         /// <param name="comment">comment.</param>
-        public HarLogCreator(string name = default(string), string version = default(string), string comment = default(string))
+        public HarLogCreator(string name = default(string), string varVersion = default(string), string comment = default(string))
         {
             // to ensure "name" is required (not null)
             if (name == null)
@@ -50,12 +50,12 @@ namespace BrowserUp.Mitmproxy.Client.Model
                 throw new ArgumentNullException("name is a required property for HarLogCreator and cannot be null");
             }
             this.Name = name;
-            // to ensure "version" is required (not null)
-            if (version == null)
+            // to ensure "varVersion" is required (not null)
+            if (varVersion == null)
             {
-                throw new ArgumentNullException("version is a required property for HarLogCreator and cannot be null");
+                throw new ArgumentNullException("varVersion is a required property for HarLogCreator and cannot be null");
             }
-            this._Version = version;
+            this.VarVersion = varVersion;
             this.Comment = comment;
         }
 
@@ -66,10 +66,10 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or Sets _Version
+        /// Gets or Sets VarVersion
         /// </summary>
         [DataMember(Name = "version", IsRequired = true, EmitDefaultValue = true)]
-        public string _Version { get; set; }
+        public string VarVersion { get; set; }
 
         /// <summary>
         /// Gets or Sets Comment
@@ -86,7 +86,7 @@ namespace BrowserUp.Mitmproxy.Client.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class HarLogCreator {\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
-            sb.Append("  _Version: ").Append(_Version).Append("\n");
+            sb.Append("  VarVersion: ").Append(VarVersion).Append("\n");
             sb.Append("  Comment: ").Append(Comment).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -129,9 +129,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
                     this.Name.Equals(input.Name))
                 ) && 
                 (
-                    this._Version == input._Version ||
-                    (this._Version != null &&
-                    this._Version.Equals(input._Version))
+                    this.VarVersion == input.VarVersion ||
+                    (this.VarVersion != null &&
+                    this.VarVersion.Equals(input.VarVersion))
                 ) && 
                 (
                     this.Comment == input.Comment ||
@@ -153,9 +153,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
                 {
                     hashCode = (hashCode * 59) + this.Name.GetHashCode();
                 }
-                if (this._Version != null)
+                if (this.VarVersion != null)
                 {
-                    hashCode = (hashCode * 59) + this._Version.GetHashCode();
+                    hashCode = (hashCode * 59) + this.VarVersion.GetHashCode();
                 }
                 if (this.Comment != null)
                 {

@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "className": {
+      "type": "string"
+    },
+    "tagName": {
+      "type": "string"
+    },
+    "xpath": {
+      "type": "string"
+    },
+    "dataAttributes": {
+        "type": "string"
+    },
+    "formName": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

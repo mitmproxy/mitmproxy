@@ -1,9 +1,11 @@
 from datetime import datetime
 from datetime import timezone
 
+DEFAULT_PAGE_TITLE = "Default"
+DEFAULT_PAGE_REF = "page_1"
+
 
 class HarBuilder():
-    # Default templates for building har chunks as dictionaries
 
     @staticmethod
     def har():
@@ -21,7 +23,7 @@ class HarBuilder():
                 "comment": ""
             },
             "entries": [],
-            "pages": []
+            "pages": [HarBuilder.page(id=DEFAULT_PAGE_REF)]
         }
 
     @staticmethod
@@ -33,7 +35,7 @@ class HarBuilder():
         }
 
     @staticmethod
-    def page(title="", id=""):
+    def page(id=DEFAULT_PAGE_REF, title=DEFAULT_PAGE_TITLE):
         return {
             "title": title,
             "id": id,
@@ -108,9 +110,9 @@ class HarBuilder():
         return result
 
     @staticmethod
-    def entry():
+    def entry(pageref = DEFAULT_PAGE_REF):
         return {
-            "pageref": "",
+            "pageref": pageref,
             "startedDateTime": str(datetime.now(tz=timezone.utc).isoformat()),
             "time": 0,
             "request": HarBuilder.entry_request(),

@@ -39,20 +39,20 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="HarLog" /> class.
         /// </summary>
-        /// <param name="version">version (required).</param>
+        /// <param name="varVersion">varVersion (required).</param>
         /// <param name="creator">creator (required).</param>
         /// <param name="browser">browser.</param>
         /// <param name="pages">pages (required).</param>
         /// <param name="entries">entries (required).</param>
         /// <param name="comment">comment.</param>
-        public HarLog(string version = default(string), HarLogCreator creator = default(HarLogCreator), HarLogCreator browser = default(HarLogCreator), List<Page> pages = default(List<Page>), List<HarEntry> entries = default(List<HarEntry>), string comment = default(string))
+        public HarLog(string varVersion = default(string), HarLogCreator creator = default(HarLogCreator), HarLogCreator browser = default(HarLogCreator), List<Page> pages = default(List<Page>), List<HarEntry> entries = default(List<HarEntry>), string comment = default(string))
         {
-            // to ensure "version" is required (not null)
-            if (version == null)
+            // to ensure "varVersion" is required (not null)
+            if (varVersion == null)
             {
-                throw new ArgumentNullException("version is a required property for HarLog and cannot be null");
+                throw new ArgumentNullException("varVersion is a required property for HarLog and cannot be null");
             }
-            this._Version = version;
+            this.VarVersion = varVersion;
             // to ensure "creator" is required (not null)
             if (creator == null)
             {
@@ -76,10 +76,10 @@ namespace BrowserUp.Mitmproxy.Client.Model
         }
 
         /// <summary>
-        /// Gets or Sets _Version
+        /// Gets or Sets VarVersion
         /// </summary>
         [DataMember(Name = "version", IsRequired = true, EmitDefaultValue = true)]
-        public string _Version { get; set; }
+        public string VarVersion { get; set; }
 
         /// <summary>
         /// Gets or Sets Creator
@@ -119,7 +119,7 @@ namespace BrowserUp.Mitmproxy.Client.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class HarLog {\n");
-            sb.Append("  _Version: ").Append(_Version).Append("\n");
+            sb.Append("  VarVersion: ").Append(VarVersion).Append("\n");
             sb.Append("  Creator: ").Append(Creator).Append("\n");
             sb.Append("  Browser: ").Append(Browser).Append("\n");
             sb.Append("  Pages: ").Append(Pages).Append("\n");
@@ -161,9 +161,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             return 
                 (
-                    this._Version == input._Version ||
-                    (this._Version != null &&
-                    this._Version.Equals(input._Version))
+                    this.VarVersion == input.VarVersion ||
+                    (this.VarVersion != null &&
+                    this.VarVersion.Equals(input.VarVersion))
                 ) && 
                 (
                     this.Creator == input.Creator ||
@@ -203,9 +203,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                if (this._Version != null)
+                if (this.VarVersion != null)
                 {
-                    hashCode = (hashCode * 59) + this._Version.GetHashCode();
+                    hashCode = (hashCode * 59) + this.VarVersion.GetHashCode();
                 }
                 if (this.Creator != null)
                 {

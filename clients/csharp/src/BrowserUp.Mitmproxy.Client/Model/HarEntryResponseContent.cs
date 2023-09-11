@@ -44,8 +44,16 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <param name="mimeType">mimeType (required).</param>
         /// <param name="text">text.</param>
         /// <param name="encoding">encoding.</param>
+        /// <param name="videoBufferedPercent">videoBufferedPercent (default to -1).</param>
+        /// <param name="videoStallCount">videoStallCount (default to -1).</param>
+        /// <param name="videoDecodedByteCount">videoDecodedByteCount (default to -1).</param>
+        /// <param name="videoWaitingCount">videoWaitingCount (default to -1).</param>
+        /// <param name="videoErrorCount">videoErrorCount (default to -1).</param>
+        /// <param name="videoDroppedFrames">videoDroppedFrames (default to -1).</param>
+        /// <param name="videoTotalFrames">videoTotalFrames (default to -1).</param>
+        /// <param name="videoAudioBytesDecoded">videoAudioBytesDecoded (default to -1).</param>
         /// <param name="comment">comment.</param>
-        public HarEntryResponseContent(int size = default(int), int compression = default(int), string mimeType = default(string), string text = default(string), string encoding = default(string), string comment = default(string))
+        public HarEntryResponseContent(int size = default(int), int compression = default(int), string mimeType = default(string), string text = default(string), string encoding = default(string), long videoBufferedPercent = -1, long videoStallCount = -1, long videoDecodedByteCount = -1, long videoWaitingCount = -1, long videoErrorCount = -1, long videoDroppedFrames = -1, long videoTotalFrames = -1, long videoAudioBytesDecoded = -1, string comment = default(string))
         {
             this.Size = size;
             // to ensure "mimeType" is required (not null)
@@ -57,6 +65,14 @@ namespace BrowserUp.Mitmproxy.Client.Model
             this.Compression = compression;
             this.Text = text;
             this.Encoding = encoding;
+            this.VideoBufferedPercent = videoBufferedPercent;
+            this.VideoStallCount = videoStallCount;
+            this.VideoDecodedByteCount = videoDecodedByteCount;
+            this.VideoWaitingCount = videoWaitingCount;
+            this.VideoErrorCount = videoErrorCount;
+            this.VideoDroppedFrames = videoDroppedFrames;
+            this.VideoTotalFrames = videoTotalFrames;
+            this.VideoAudioBytesDecoded = videoAudioBytesDecoded;
             this.Comment = comment;
         }
 
@@ -91,6 +107,54 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Encoding { get; set; }
 
         /// <summary>
+        /// Gets or Sets VideoBufferedPercent
+        /// </summary>
+        [DataMember(Name = "_videoBufferedPercent", EmitDefaultValue = false)]
+        public long VideoBufferedPercent { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoStallCount
+        /// </summary>
+        [DataMember(Name = "_videoStallCount", EmitDefaultValue = false)]
+        public long VideoStallCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoDecodedByteCount
+        /// </summary>
+        [DataMember(Name = "_videoDecodedByteCount", EmitDefaultValue = false)]
+        public long VideoDecodedByteCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoWaitingCount
+        /// </summary>
+        [DataMember(Name = "_videoWaitingCount", EmitDefaultValue = false)]
+        public long VideoWaitingCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoErrorCount
+        /// </summary>
+        [DataMember(Name = "_videoErrorCount", EmitDefaultValue = false)]
+        public long VideoErrorCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoDroppedFrames
+        /// </summary>
+        [DataMember(Name = "_videoDroppedFrames", EmitDefaultValue = false)]
+        public long VideoDroppedFrames { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoTotalFrames
+        /// </summary>
+        [DataMember(Name = "_videoTotalFrames", EmitDefaultValue = false)]
+        public long VideoTotalFrames { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VideoAudioBytesDecoded
+        /// </summary>
+        [DataMember(Name = "_videoAudioBytesDecoded", EmitDefaultValue = false)]
+        public long VideoAudioBytesDecoded { get; set; }
+
+        /// <summary>
         /// Gets or Sets Comment
         /// </summary>
         [DataMember(Name = "comment", EmitDefaultValue = false)]
@@ -109,6 +173,14 @@ namespace BrowserUp.Mitmproxy.Client.Model
             sb.Append("  MimeType: ").Append(MimeType).Append("\n");
             sb.Append("  Text: ").Append(Text).Append("\n");
             sb.Append("  Encoding: ").Append(Encoding).Append("\n");
+            sb.Append("  VideoBufferedPercent: ").Append(VideoBufferedPercent).Append("\n");
+            sb.Append("  VideoStallCount: ").Append(VideoStallCount).Append("\n");
+            sb.Append("  VideoDecodedByteCount: ").Append(VideoDecodedByteCount).Append("\n");
+            sb.Append("  VideoWaitingCount: ").Append(VideoWaitingCount).Append("\n");
+            sb.Append("  VideoErrorCount: ").Append(VideoErrorCount).Append("\n");
+            sb.Append("  VideoDroppedFrames: ").Append(VideoDroppedFrames).Append("\n");
+            sb.Append("  VideoTotalFrames: ").Append(VideoTotalFrames).Append("\n");
+            sb.Append("  VideoAudioBytesDecoded: ").Append(VideoAudioBytesDecoded).Append("\n");
             sb.Append("  Comment: ").Append(Comment).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -169,6 +241,38 @@ namespace BrowserUp.Mitmproxy.Client.Model
                     this.Encoding.Equals(input.Encoding))
                 ) && 
                 (
+                    this.VideoBufferedPercent == input.VideoBufferedPercent ||
+                    this.VideoBufferedPercent.Equals(input.VideoBufferedPercent)
+                ) && 
+                (
+                    this.VideoStallCount == input.VideoStallCount ||
+                    this.VideoStallCount.Equals(input.VideoStallCount)
+                ) && 
+                (
+                    this.VideoDecodedByteCount == input.VideoDecodedByteCount ||
+                    this.VideoDecodedByteCount.Equals(input.VideoDecodedByteCount)
+                ) && 
+                (
+                    this.VideoWaitingCount == input.VideoWaitingCount ||
+                    this.VideoWaitingCount.Equals(input.VideoWaitingCount)
+                ) && 
+                (
+                    this.VideoErrorCount == input.VideoErrorCount ||
+                    this.VideoErrorCount.Equals(input.VideoErrorCount)
+                ) && 
+                (
+                    this.VideoDroppedFrames == input.VideoDroppedFrames ||
+                    this.VideoDroppedFrames.Equals(input.VideoDroppedFrames)
+                ) && 
+                (
+                    this.VideoTotalFrames == input.VideoTotalFrames ||
+                    this.VideoTotalFrames.Equals(input.VideoTotalFrames)
+                ) && 
+                (
+                    this.VideoAudioBytesDecoded == input.VideoAudioBytesDecoded ||
+                    this.VideoAudioBytesDecoded.Equals(input.VideoAudioBytesDecoded)
+                ) && 
+                (
                     this.Comment == input.Comment ||
                     (this.Comment != null &&
                     this.Comment.Equals(input.Comment))
@@ -198,6 +302,14 @@ namespace BrowserUp.Mitmproxy.Client.Model
                 {
                     hashCode = (hashCode * 59) + this.Encoding.GetHashCode();
                 }
+                hashCode = (hashCode * 59) + this.VideoBufferedPercent.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoStallCount.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoDecodedByteCount.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoWaitingCount.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoErrorCount.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoDroppedFrames.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoTotalFrames.GetHashCode();
+                hashCode = (hashCode * 59) + this.VideoAudioBytesDecoded.GetHashCode();
                 if (this.Comment != null)
                 {
                     hashCode = (hashCode * 59) + this.Comment.GetHashCode();
@@ -213,6 +325,54 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <returns>Validation Result</returns>
         IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {
+            // VideoBufferedPercent (long) minimum
+            if (this.VideoBufferedPercent < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoBufferedPercent, must be a value greater than or equal to -1.", new [] { "VideoBufferedPercent" });
+            }
+
+            // VideoStallCount (long) minimum
+            if (this.VideoStallCount < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoStallCount, must be a value greater than or equal to -1.", new [] { "VideoStallCount" });
+            }
+
+            // VideoDecodedByteCount (long) minimum
+            if (this.VideoDecodedByteCount < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoDecodedByteCount, must be a value greater than or equal to -1.", new [] { "VideoDecodedByteCount" });
+            }
+
+            // VideoWaitingCount (long) minimum
+            if (this.VideoWaitingCount < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoWaitingCount, must be a value greater than or equal to -1.", new [] { "VideoWaitingCount" });
+            }
+
+            // VideoErrorCount (long) minimum
+            if (this.VideoErrorCount < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoErrorCount, must be a value greater than or equal to -1.", new [] { "VideoErrorCount" });
+            }
+
+            // VideoDroppedFrames (long) minimum
+            if (this.VideoDroppedFrames < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoDroppedFrames, must be a value greater than or equal to -1.", new [] { "VideoDroppedFrames" });
+            }
+
+            // VideoTotalFrames (long) minimum
+            if (this.VideoTotalFrames < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoTotalFrames, must be a value greater than or equal to -1.", new [] { "VideoTotalFrames" });
+            }
+
+            // VideoAudioBytesDecoded (long) minimum
+            if (this.VideoAudioBytesDecoded < (long)-1)
+            {
+                yield return new System.ComponentModel.DataAnnotations.ValidationResult("Invalid value for VideoAudioBytesDecoded, must be a value greater than or equal to -1.", new [] { "VideoAudioBytesDecoded" });
+            }
+
             yield break;
         }
     }

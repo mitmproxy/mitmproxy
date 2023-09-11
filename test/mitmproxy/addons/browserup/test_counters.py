@@ -34,7 +34,7 @@ class TestHARCounters:
     def test_new_har_empty_counters(self, hc, flow):
         hc.add_counter_to_har({'name': 'time-to-first-byte', 'value': 1})
         hc.add_counter_to_har({'name': 'time-to-first-paint', 'value': 2})
-        hc.new_har()
+        hc.reset_har_and_return_old_har()
         hc.new_page('page1', 'New Page!')
         assert (hc.get_or_create_current_page().get('_counters') is None)
 

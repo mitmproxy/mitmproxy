@@ -2,6 +2,7 @@ import json
 import pytest
 import tempfile
 import os
+from mitmproxy import http
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import twebsocketflow
 from mitmproxy.test import tutils
@@ -11,7 +12,6 @@ from mitmproxy.utils import data
 from mitmproxy.addons.browserup import har_capture_addon
 from mitmproxy import websocket
 from wsproto.frame_protocol import Opcode
-
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
 
@@ -28,6 +28,29 @@ class TestHARCapture:
             req=tutils.treq(method=b'GET', **times),
             resp=tutils.tresp(content=resp_content, **times)
         )
+
+    def tvideoflow(self):
+        # Create a request object
+        req = http.Request.make(
+            "GET",
+            "http://example.com/video.mp4",
+            headers={
+                "Host": "example.com",
+                "User-Agent": "TestAgent"
+            }
+        )
+
+        # Create a response object
+        resp = http.Response.make(
+            200,  # status code
+            b"video binary data here",  # video content (truncated for example)
+            {
+                "Content-Type": "video/mp4",
+                "Content-Length": "1234567"  # replace with actual content length
+            }
+        )
+        flow = tflow.tflow(req=req, resp=resp)
+        return flow
 
     def test_simple(self, hc, path):
         # is invoked if there are exceptions
@@ -53,7 +76,6 @@ class TestHARCapture:
             hc.save_current_har_to_path(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
-                print(har)
                 assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
     def test_format_cookies(self, hc):
@@ -152,7 +174,6 @@ class TestHARCapture:
             websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204)
         ]
         hc.websocket_message(f)
-
         assert (hc.har['log']['entries'][0]['_webSocketMessages'])
 
     def test_capture_response_on(self, hc):
@@ -172,7 +193,7 @@ class TestHARCapture:
         f = self.flow()
         hc.har_capture_types = []
         hc.response(f)
-        hc.new_har('', '')
+        hc.reset_har_and_return_old_har()
         assert (len(hc.har['log']['entries']) == 0)
         f = tflow.tflow(
             req=tutils.treq(method=b'GET'),
@@ -181,27 +202,140 @@ class TestHARCapture:
         hc.request(f)
         assert (len(hc.har['log']['pages']) == 1)
 
-    def test_default_page(self, hc):
+    def test_blank_default_page(self, hc):
         f = self.flow()
         hc.request(f)
-        assert (hc.har['log']['pages'][0]['id'] == "Default")
-        hc.new_har()
-        assert (len(hc.har['log']['pages']) == 0)
+        assert (hc.har['log']['pages'][0]['id'] == "page_1")
+        assert (hc.har['log']['pages'][0]['title'] == "Default")
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
 
     def test_har_entries_timings(self, hc):
         f = self.flow()
         hc.request(f)
-        assert (hc.har['log']['pages'][0]['id'] == "Default")
+        assert (hc.har['log']['pages'][0]['id'] == "page_1")
 
+    def test_reset_har_removes_pages_and_entries(self, hc):
+        f = self.flow()
+        hc.request(f)
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
 
-# def test_servers_seen_resettable:
+    # test reset returns old har
+    def test_reset_returns_old_har(self, hc):
+        f = self.flow()
+        hc.request(f)
+        old_har = hc.reset_har_and_return_old_har()
+        assert (len(old_har['log']['pages']) == 1)
+        assert (len(old_har['log']['entries']) == 1)
 
+    def test_reset_inits_empty_first_page(self, hc):
+        f = self.flow()
+        hc.request(f)
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
 
-# def test_default_page_in_new_state:
+    def test_filter_submitted_entries(self, hc):
+        f = self.flow()
+        hc.request(f)
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
 
-# def test_ssl_timing_negative_one_for_recycled_connection
+    def test_clean_har(self, hc):
+        f = self.flow()
+        hc.request(f)
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
 
-# def test_connect_timing_negative_one_for_recycled_connection
+    def test_uncleaned_video_har_entries_still_there(self, hc):
+        f = self.tvideoflow()
+        hc.request(f)
+        hc.response(f)
+
+        h = hc.create_filtered_har_and_track_submitted()
+        assert (len(h['log']['entries']) == 1)
+
+        assert (hc.har['log']['entries'][0]['request']['_submitted'] is True)
+        assert (not hc.har['log']['entries'][0]['response'].get('_submitted'))
+
+        # test filtering
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
+
+    def test_uncleaned_websocket_har_entries_still_there(self, hc):
+        f = self.flow()
+        hc.request(f)
+
+        f = twebsocketflow()
+        hc.request(f)
+        hc.response(f)
+
+        f.websocket.messages = [
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203)
+        ]
+        hc.websocket_message(f)
+        f.websocket.messages = [
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204)
+        ]
+        hc.websocket_message(f)
+
+        hc.create_filtered_har_and_track_submitted()
+
+        assert (len(hc.har['log']['entries']) == 2)
+        assert (hc.har['log']['entries'][0]['request'].get('_submitted'))
+
+        assert (hc.har['log']['entries'][1]['request'].get('_submitted'))
+        assert (not hc.har['log']['entries'][1]['response'].get('_submitted'))
+
+        # test filtering
+        hc.reset_har_and_return_old_har()
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (len(hc.har['log']['entries']) == 0)
+
+    def test_full_submit(self, hc):
+        # combine video and websocket flows and regular flow.
+        # Then call create_filtered_har_and_track_submitted(self, report_last_page = True, include_websockets = True, include_videos = True)
+        # assert that there are no entries, and no pages
+        f = self.flow()
+        hc.request(f)
+        hc.response(f)
+        f = self.tvideoflow()
+        hc.request(f)
+        hc.response(f)
+
+        f = twebsocketflow()
+        hc.request(f)
+        f = self.flow()
+
+        filtered_result = hc.create_filtered_har_and_track_submitted(report_last_page = True,
+                                                                     include_websockets = True,
+                                                                     include_videos = True)
+
+        assert (len(filtered_result['log']['entries']) == 3)
+
+        # loop through har entries and assert that they are all submitted
+        for entry in hc.har['log']['entries']:
+            assert (entry['request'].get('_submitted'))
+            assert (entry['response'].get('_submitted'))
+
+        # loop through har pages and assert that they are all submitted
+        for page in hc.har['log']['pages']:
+            assert (page.get('_submitted'))
+
+        old_har = hc.reset_har_and_return_old_har()
+        assert (len(old_har['log']['entries']) == 3)
+
+        assert (len(hc.har['log']['entries']) == 0)
+
+        assert (len(hc.har['log']['pages']) == 1)
+        assert (hc.har['log']['pages'][0]['id'] == "page_1")
+
 
 @pytest.fixture()
 def hc(path):

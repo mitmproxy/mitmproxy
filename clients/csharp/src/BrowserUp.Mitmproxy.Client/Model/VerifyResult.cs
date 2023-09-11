@@ -34,29 +34,15 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="VerifyResult" /> class.
         /// </summary>
-        /// <param name="type">Type.</param>
-        /// <param name="name">Name.</param>
         /// <param name="result">Result True / False.</param>
-        public VerifyResult(string type = default(string), string name = default(string), bool result = default(bool))
+        /// <param name="name">Name.</param>
+        /// <param name="type">Type.</param>
+        public VerifyResult(bool result = default(bool), string name = default(string), string type = default(string))
         {
-            this.Type = type;
-            this.Name = name;
             this.Result = result;
+            this.Name = name;
+            this.Type = type;
         }
-
-        /// <summary>
-        /// Type
-        /// </summary>
-        /// <value>Type</value>
-        [DataMember(Name = "type", EmitDefaultValue = false)]
-        public string Type { get; set; }
-
-        /// <summary>
-        /// Name
-        /// </summary>
-        /// <value>Name</value>
-        [DataMember(Name = "name", EmitDefaultValue = false)]
-        public string Name { get; set; }
 
         /// <summary>
         /// Result True / False
@@ -66,6 +52,20 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public bool Result { get; set; }
 
         /// <summary>
+        /// Name
+        /// </summary>
+        /// <value>Name</value>
+        [DataMember(Name = "name", EmitDefaultValue = false)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Type
+        /// </summary>
+        /// <value>Type</value>
+        [DataMember(Name = "type", EmitDefaultValue = false)]
+        public string Type { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -73,9 +73,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class VerifyResult {\n");
-            sb.Append("  Type: ").Append(Type).Append("\n");
-            sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  Result: ").Append(Result).Append("\n");
+            sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Type: ").Append(Type).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -112,9 +112,8 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             return 
                 (
-                    this.Type == input.Type ||
-                    (this.Type != null &&
-                    this.Type.Equals(input.Type))
+                    this.Result == input.Result ||
+                    this.Result.Equals(input.Result)
                 ) && 
                 (
                     this.Name == input.Name ||
@@ -122,8 +121,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
                     this.Name.Equals(input.Name))
                 ) && 
                 (
-                    this.Result == input.Result ||
-                    this.Result.Equals(input.Result)
+                    this.Type == input.Type ||
+                    (this.Type != null &&
+                    this.Type.Equals(input.Type))
                 );
         }
 
@@ -136,15 +136,15 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                if (this.Type != null)
-                {
-                    hashCode = (hashCode * 59) + this.Type.GetHashCode();
-                }
+                hashCode = (hashCode * 59) + this.Result.GetHashCode();
                 if (this.Name != null)
                 {
                     hashCode = (hashCode * 59) + this.Name.GetHashCode();
                 }
-                hashCode = (hashCode * 59) + this.Result.GetHashCode();
+                if (this.Type != null)
+                {
+                    hashCode = (hashCode * 59) + this.Type.GetHashCode();
+                }
                 return hashCode;
             }
         }
