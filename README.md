@@ -33,7 +33,9 @@ code contributions where possible.
 The main changes for our fork are in the folders below/
 
 mitmproxy/addons/browserup/
+
 test/mitmproxy/addons/browserup
+
 clients/
 
 The standard MITMProxy documentation follows below.

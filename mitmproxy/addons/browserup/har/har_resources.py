@@ -102,12 +102,20 @@ class HarResource(RespondWithHarMixin):
         clean_har = req.get_param('cleanHar') == 'true'
         har = self.HarCaptureAddon.get_har(clean_har)
 
-        filtered_har = self.HarCaptureAddon.filter_har_for_report(har)
-        har_file = self.HarCaptureAddon.save_har(filtered_har)
-
         if clean_har:
-            self.HarCaptureAddon.mark_har_entries_submitted(har)
-        self.respond_with_har(resp, har, har_file)
+            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(report_last_page = True,
+                                                                                        include_websockets = True,
+                                                                                        include_videos = True)
+        else:
+            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(report_last_page = False,
+                                                                                        include_websockets = False,
+                                                                                        include_videos = False)
+
+        old_har_file = self.HarCaptureAddon.save_har(filtered_har)
+        if clean_har:
+            self.HarCaptureAddon.reset_har_and_return_old_har()
+
+        self.respond_with_har(resp, har, old_har_file)
 
     def on_put(self, req, resp):
         """Starts or resets the Har capture session, returns the last session.
@@ -125,7 +133,7 @@ class HarResource(RespondWithHarMixin):
                   $ref: "#/components/schemas/Har"
         """
         page_title = req.get_param('title')
-        har = self.HarCaptureAddon.new_har(page_title)
+        har = self.HarCaptureAddon.reset_har_and_return_old_har(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 

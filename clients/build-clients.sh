@@ -6,6 +6,14 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 # we need to regenerate the schema in the top level dir
 
+rm -rf markdown && npx openapi-generator-cli generate \
+-g markdown -i "${DIR}/../browserup-proxy.schema.json" \
+-o markdown
+
+rm -rf csharp && npx openapi-generator-cli generate \
+--package-name BrowserUpMitmProxyClient \
+-g csharp-netcore -i "${DIR}/../browserup-proxy.schema.json" \
+-o csharp -c config-csharp.yaml
 
 rm -rf java && npx openapi-generator-cli generate \
 --package-name BrowserUpMitmProxyClient \

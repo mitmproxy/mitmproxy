@@ -1,49 +1,26 @@
 # BrowserupMitmProxy::HarEntryCacheBeforeRequest
 
-## Class instance methods
+## Properties
 
-### `openapi_one_of`
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **expires** | **String** |  | [optional] |
+| **last_access** | **String** |  |  |
+| **e_tag** | **String** |  |  |
+| **hit_count** | **Integer** |  |  |
+| **comment** | **String** |  | [optional] |
 
-Returns the list of classes defined in oneOf.
-
-#### Example
-
-```ruby
-require 'browserup_mitmproxy_client'
-
-BrowserupMitmProxy::HarEntryCacheBeforeRequest.openapi_one_of
-# =>
-# [
-#   :'HarEntryCacheBeforeRequestOneOf',
-#   :'Null'
-# ]
-```
-
-### build
-
-Find the appropriate object from the `openapi_one_of` list and casts the data into it.
-
-#### Example
+## Example
 
 ```ruby
 require 'browserup_mitmproxy_client'
 
-BrowserupMitmProxy::HarEntryCacheBeforeRequest.build(data)
-# => #<HarEntryCacheBeforeRequestOneOf:0x00007fdd4aab02a0>
-
-BrowserupMitmProxy::HarEntryCacheBeforeRequest.build(data_that_doesnt_match)
-# => nil
+instance = BrowserupMitmProxy::HarEntryCacheBeforeRequest.new(
+  expires: null,
+  last_access: null,
+  e_tag: null,
+  hit_count: null,
+  comment: null
+)
 ```
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| **data** | **Mixed** | data to be matched against the list of oneOf items |
-
-#### Return type
-
-- `HarEntryCacheBeforeRequestOneOf`
-- `Null`
-- `nil` (if no type matches)
 

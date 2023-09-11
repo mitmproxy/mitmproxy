@@ -14,7 +14,6 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
 import com.browserup.proxy_client.Counter;
 import com.browserup.proxy_client.Error;
 import com.browserup.proxy_client.PageTimings;
@@ -27,6 +26,7 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -39,6 +39,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -69,15 +73,15 @@ public class Page {
 
   public static final String SERIALIZED_NAME_VERIFICATIONS = "_verifications";
   @SerializedName(SERIALIZED_NAME_VERIFICATIONS)
-  private List<VerifyResult> verifications = null;
+  private List<VerifyResult> verifications = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_COUNTERS = "_counters";
   @SerializedName(SERIALIZED_NAME_COUNTERS)
-  private List<Counter> counters = null;
+  private List<Counter> counters = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_ERRORS = "_errors";
   @SerializedName(SERIALIZED_NAME_ERRORS)
-  private List<Error> errors = null;
+  private List<Error> errors = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_PAGE_TIMINGS = "pageTimings";
   @SerializedName(SERIALIZED_NAME_PAGE_TIMINGS)
@@ -101,7 +105,6 @@ public class Page {
    * @return startedDateTime
   **/
   @javax.annotation.Nonnull
-
   public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
   }
@@ -123,7 +126,6 @@ public class Page {
    * @return id
   **/
   @javax.annotation.Nonnull
-
   public String getId() {
     return id;
   }
@@ -145,7 +147,6 @@ public class Page {
    * @return title
   **/
   @javax.annotation.Nonnull
-
   public String getTitle() {
     return title;
   }
@@ -164,7 +165,7 @@ public class Page {
 
   public Page addVerificationsItem(VerifyResult verificationsItem) {
     if (this.verifications == null) {
-      this.verifications = null;
+      this.verifications = new ArrayList<>();
     }
     this.verifications.add(verificationsItem);
     return this;
@@ -175,7 +176,6 @@ public class Page {
    * @return verifications
   **/
   @javax.annotation.Nullable
-
   public List<VerifyResult> getVerifications() {
     return verifications;
   }
@@ -194,7 +194,7 @@ public class Page {
 
   public Page addCountersItem(Counter countersItem) {
     if (this.counters == null) {
-      this.counters = null;
+      this.counters = new ArrayList<>();
     }
     this.counters.add(countersItem);
     return this;
@@ -205,7 +205,6 @@ public class Page {
    * @return counters
   **/
   @javax.annotation.Nullable
-
   public List<Counter> getCounters() {
     return counters;
   }
@@ -224,7 +223,7 @@ public class Page {
 
   public Page addErrorsItem(Error errorsItem) {
     if (this.errors == null) {
-      this.errors = null;
+      this.errors = new ArrayList<>();
     }
     this.errors.add(errorsItem);
     return this;
@@ -235,7 +234,6 @@ public class Page {
    * @return errors
   **/
   @javax.annotation.Nullable
-
   public List<Error> getErrors() {
     return errors;
   }
@@ -257,7 +255,6 @@ public class Page {
    * @return pageTimings
   **/
   @javax.annotation.Nonnull
-
   public PageTimings getPageTimings() {
     return pageTimings;
   }
@@ -279,7 +276,6 @@ public class Page {
    * @return comment
   **/
   @javax.annotation.Nullable
-
   public String getComment() {
     return comment;
   }
@@ -413,24 +409,25 @@ public class Page {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to Page
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to Page
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!Page.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!Page.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in Page is not found in the empty JSON string", Page.openapiRequiredFields.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : Page.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        if (jsonElement.getAsJsonObject().get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if (!jsonObj.get("id").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `id` to be a primitive type in the JSON string but got `%s`", jsonObj.get("id").toString()));
       }
@@ -447,7 +444,7 @@ public class Page {
 
           // validate the optional field `_verifications` (array)
           for (int i = 0; i < jsonArrayverifications.size(); i++) {
-            VerifyResult.validateJsonObject(jsonArrayverifications.get(i).getAsJsonObject());
+            VerifyResult.validateJsonElement(jsonArrayverifications.get(i));
           };
         }
       }
@@ -461,7 +458,7 @@ public class Page {
 
           // validate the optional field `_counters` (array)
           for (int i = 0; i < jsonArraycounters.size(); i++) {
-            Counter.validateJsonObject(jsonArraycounters.get(i).getAsJsonObject());
+            Counter.validateJsonElement(jsonArraycounters.get(i));
           };
         }
       }
@@ -475,7 +472,7 @@ public class Page {
 
           // validate the optional field `_errors` (array)
           for (int i = 0; i < jsonArrayerrors.size(); i++) {
-            Error.validateJsonObject(jsonArrayerrors.get(i).getAsJsonObject());
+            Error.validateJsonElement(jsonArrayerrors.get(i));
           };
         }
       }
@@ -521,8 +518,9 @@ public class Page {
 
            @Override
            public Page read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             JsonObject jsonObj = jsonElement.getAsJsonObject();
              // store additional fields in the deserialized instance
              Page instance = thisAdapter.fromJsonTree(jsonObj);
              for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {

@@ -48,7 +48,7 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <param name="jsonPath">Has JSON path.</param>
         /// <param name="jsonSchema">Validates against passed JSON schema.</param>
         /// <param name="errorIfNoTraffic">If the proxy has NO traffic at all, return error (default to true).</param>
-        public MatchCriteria(string url = default(string), string page = default(string), string status = default(string), string content = default(string), string contentType = default(string), string websocketMessage = default(string), MatchCriteriaRequestHeader requestHeader = default(MatchCriteriaRequestHeader), MatchCriteriaRequestHeader requestCookie = default(MatchCriteriaRequestHeader), MatchCriteriaRequestHeader responseHeader = default(MatchCriteriaRequestHeader), MatchCriteriaRequestHeader responseCookie = default(MatchCriteriaRequestHeader), bool jsonValid = default(bool), string jsonPath = default(string), string jsonSchema = default(string), bool errorIfNoTraffic = true)
+        public MatchCriteria(string url = default(string), string page = default(string), string status = default(string), string content = default(string), string contentType = default(string), string websocketMessage = default(string), NameValuePair requestHeader = default(NameValuePair), NameValuePair requestCookie = default(NameValuePair), NameValuePair responseHeader = default(NameValuePair), NameValuePair responseCookie = default(NameValuePair), bool jsonValid = default(bool), string jsonPath = default(string), string jsonSchema = default(string), bool errorIfNoTraffic = true)
         {
             this.Url = url;
             this.Page = page;
@@ -112,25 +112,25 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// Gets or Sets RequestHeader
         /// </summary>
         [DataMember(Name = "request_header", EmitDefaultValue = false)]
-        public MatchCriteriaRequestHeader RequestHeader { get; set; }
+        public NameValuePair RequestHeader { get; set; }
 
         /// <summary>
         /// Gets or Sets RequestCookie
         /// </summary>
         [DataMember(Name = "request_cookie", EmitDefaultValue = false)]
-        public MatchCriteriaRequestHeader RequestCookie { get; set; }
+        public NameValuePair RequestCookie { get; set; }
 
         /// <summary>
         /// Gets or Sets ResponseHeader
         /// </summary>
         [DataMember(Name = "response_header", EmitDefaultValue = false)]
-        public MatchCriteriaRequestHeader ResponseHeader { get; set; }
+        public NameValuePair ResponseHeader { get; set; }
 
         /// <summary>
         /// Gets or Sets ResponseCookie
         /// </summary>
         [DataMember(Name = "response_cookie", EmitDefaultValue = false)]
-        public MatchCriteriaRequestHeader ResponseCookie { get; set; }
+        public NameValuePair ResponseCookie { get; set; }
 
         /// <summary>
         /// Is valid JSON

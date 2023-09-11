@@ -22,72 +22,76 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 using OpenAPIDateConverter = BrowserUp.Mitmproxy.Client.Client.OpenAPIDateConverter;
-using System.Reflection;
 
 namespace BrowserUp.Mitmproxy.Client.Model
 {
     /// <summary>
     /// HarEntryCacheBeforeRequest
     /// </summary>
-    [JsonConverter(typeof(HarEntryCacheBeforeRequestJsonConverter))]
     [DataContract(Name = "HarEntry_cache_beforeRequest")]
-    public partial class HarEntryCacheBeforeRequest : AbstractOpenAPISchema, IEquatable<HarEntryCacheBeforeRequest>, IValidatableObject
+    public partial class HarEntryCacheBeforeRequest : IEquatable<HarEntryCacheBeforeRequest>, IValidatableObject
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="HarEntryCacheBeforeRequest" /> class.
         /// </summary>
-        public HarEntryCacheBeforeRequest()
-        {
-            this.IsNullable = true;
-            this.SchemaType= "oneOf";
-        }
-
+        [JsonConstructorAttribute]
+        protected HarEntryCacheBeforeRequest() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="HarEntryCacheBeforeRequest" /> class
-        /// with the <see cref="HarEntryCacheBeforeRequestOneOf" /> class
+        /// Initializes a new instance of the <see cref="HarEntryCacheBeforeRequest" /> class.
         /// </summary>
-        /// <param name="actualInstance">An instance of HarEntryCacheBeforeRequestOneOf.</param>
-        public HarEntryCacheBeforeRequest(HarEntryCacheBeforeRequestOneOf actualInstance)
+        /// <param name="expires">expires.</param>
+        /// <param name="lastAccess">lastAccess (required).</param>
+        /// <param name="eTag">eTag (required).</param>
+        /// <param name="hitCount">hitCount (required).</param>
+        /// <param name="comment">comment.</param>
+        public HarEntryCacheBeforeRequest(string expires = default(string), string lastAccess = default(string), string eTag = default(string), int hitCount = default(int), string comment = default(string))
         {
-            this.IsNullable = true;
-            this.SchemaType= "oneOf";
-            this.ActualInstance = actualInstance;
-        }
-
-
-        private Object _actualInstance;
-
-        /// <summary>
-        /// Gets or Sets ActualInstance
-        /// </summary>
-        public override Object ActualInstance
-        {
-            get
+            // to ensure "lastAccess" is required (not null)
+            if (lastAccess == null)
             {
-                return _actualInstance;
+                throw new ArgumentNullException("lastAccess is a required property for HarEntryCacheBeforeRequest and cannot be null");
             }
-            set
+            this.LastAccess = lastAccess;
+            // to ensure "eTag" is required (not null)
+            if (eTag == null)
             {
-                if (value.GetType() == typeof(HarEntryCacheBeforeRequestOneOf))
-                {
-                    this._actualInstance = value;
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid instance found. Must be the following types: HarEntryCacheBeforeRequestOneOf");
-                }
+                throw new ArgumentNullException("eTag is a required property for HarEntryCacheBeforeRequest and cannot be null");
             }
+            this.ETag = eTag;
+            this.HitCount = hitCount;
+            this.Expires = expires;
+            this.Comment = comment;
         }
 
         /// <summary>
-        /// Get the actual instance of `HarEntryCacheBeforeRequestOneOf`. If the actual instance is not `HarEntryCacheBeforeRequestOneOf`,
-        /// the InvalidClassException will be thrown
+        /// Gets or Sets Expires
         /// </summary>
-        /// <returns>An instance of HarEntryCacheBeforeRequestOneOf</returns>
-        public HarEntryCacheBeforeRequestOneOf GetHarEntryCacheBeforeRequestOneOf()
-        {
-            return (HarEntryCacheBeforeRequestOneOf)this.ActualInstance;
-        }
+        [DataMember(Name = "expires", EmitDefaultValue = false)]
+        public string Expires { get; set; }
+
+        /// <summary>
+        /// Gets or Sets LastAccess
+        /// </summary>
+        [DataMember(Name = "lastAccess", IsRequired = true, EmitDefaultValue = true)]
+        public string LastAccess { get; set; }
+
+        /// <summary>
+        /// Gets or Sets ETag
+        /// </summary>
+        [DataMember(Name = "eTag", IsRequired = true, EmitDefaultValue = true)]
+        public string ETag { get; set; }
+
+        /// <summary>
+        /// Gets or Sets HitCount
+        /// </summary>
+        [DataMember(Name = "hitCount", IsRequired = true, EmitDefaultValue = true)]
+        public int HitCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Comment
+        /// </summary>
+        [DataMember(Name = "comment", EmitDefaultValue = false)]
+        public string Comment { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -95,9 +99,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <returns>String presentation of the object</returns>
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             sb.Append("class HarEntryCacheBeforeRequest {\n");
-            sb.Append("  ActualInstance: ").Append(this.ActualInstance).Append("\n");
+            sb.Append("  Expires: ").Append(Expires).Append("\n");
+            sb.Append("  LastAccess: ").Append(LastAccess).Append("\n");
+            sb.Append("  ETag: ").Append(ETag).Append("\n");
+            sb.Append("  HitCount: ").Append(HitCount).Append("\n");
+            sb.Append("  Comment: ").Append(Comment).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -106,58 +114,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// Returns the JSON string presentation of the object
         /// </summary>
         /// <returns>JSON string presentation of the object</returns>
-        public override string ToJson()
+        public virtual string ToJson()
         {
-            return JsonConvert.SerializeObject(this.ActualInstance, HarEntryCacheBeforeRequest.SerializerSettings);
-        }
-
-        /// <summary>
-        /// Converts the JSON string into an instance of HarEntryCacheBeforeRequest
-        /// </summary>
-        /// <param name="jsonString">JSON string</param>
-        /// <returns>An instance of HarEntryCacheBeforeRequest</returns>
-        public static HarEntryCacheBeforeRequest FromJson(string jsonString)
-        {
-            HarEntryCacheBeforeRequest newHarEntryCacheBeforeRequest = null;
-
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                return newHarEntryCacheBeforeRequest;
-            }
-            int match = 0;
-            List<string> matchedTypes = new List<string>();
-
-            try
-            {
-                // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
-                if (typeof(HarEntryCacheBeforeRequestOneOf).GetProperty("AdditionalProperties") == null)
-                {
-                    newHarEntryCacheBeforeRequest = new HarEntryCacheBeforeRequest(JsonConvert.DeserializeObject<HarEntryCacheBeforeRequestOneOf>(jsonString, HarEntryCacheBeforeRequest.SerializerSettings));
-                }
-                else
-                {
-                    newHarEntryCacheBeforeRequest = new HarEntryCacheBeforeRequest(JsonConvert.DeserializeObject<HarEntryCacheBeforeRequestOneOf>(jsonString, HarEntryCacheBeforeRequest.AdditionalPropertiesSerializerSettings));
-                }
-                matchedTypes.Add("HarEntryCacheBeforeRequestOneOf");
-                match++;
-            }
-            catch (Exception exception)
-            {
-                // deserialization failed, try the next one
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into HarEntryCacheBeforeRequestOneOf: {1}", jsonString, exception.ToString()));
-            }
-
-            if (match == 0)
-            {
-                throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
-            }
-            else if (match > 1)
-            {
-                throw new InvalidDataException("The JSON string `" + jsonString + "` incorrectly matches more than one schema (should be exactly one match): " + matchedTypes);
-            }
-
-            // deserialization is considered successful at this point if no exception has been thrown.
-            return newHarEntryCacheBeforeRequest;
+            return Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
         }
 
         /// <summary>
@@ -178,9 +137,34 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public bool Equals(HarEntryCacheBeforeRequest input)
         {
             if (input == null)
+            {
                 return false;
-
-            return this.ActualInstance.Equals(input.ActualInstance);
+            }
+            return 
+                (
+                    this.Expires == input.Expires ||
+                    (this.Expires != null &&
+                    this.Expires.Equals(input.Expires))
+                ) && 
+                (
+                    this.LastAccess == input.LastAccess ||
+                    (this.LastAccess != null &&
+                    this.LastAccess.Equals(input.LastAccess))
+                ) && 
+                (
+                    this.ETag == input.ETag ||
+                    (this.ETag != null &&
+                    this.ETag.Equals(input.ETag))
+                ) && 
+                (
+                    this.HitCount == input.HitCount ||
+                    this.HitCount.Equals(input.HitCount)
+                ) && 
+                (
+                    this.Comment == input.Comment ||
+                    (this.Comment != null &&
+                    this.Comment.Equals(input.Comment))
+                );
         }
 
         /// <summary>
@@ -192,8 +176,23 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                if (this.ActualInstance != null)
-                    hashCode = hashCode * 59 + this.ActualInstance.GetHashCode();
+                if (this.Expires != null)
+                {
+                    hashCode = (hashCode * 59) + this.Expires.GetHashCode();
+                }
+                if (this.LastAccess != null)
+                {
+                    hashCode = (hashCode * 59) + this.LastAccess.GetHashCode();
+                }
+                if (this.ETag != null)
+                {
+                    hashCode = (hashCode * 59) + this.ETag.GetHashCode();
+                }
+                hashCode = (hashCode * 59) + this.HitCount.GetHashCode();
+                if (this.Comment != null)
+                {
+                    hashCode = (hashCode * 59) + this.Comment.GetHashCode();
+                }
                 return hashCode;
             }
         }
@@ -206,50 +205,6 @@ namespace BrowserUp.Mitmproxy.Client.Model
         IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {
             yield break;
-        }
-    }
-
-    /// <summary>
-    /// Custom JSON converter for HarEntryCacheBeforeRequest
-    /// </summary>
-    public class HarEntryCacheBeforeRequestJsonConverter : JsonConverter
-    {
-        /// <summary>
-        /// To write the JSON string
-        /// </summary>
-        /// <param name="writer">JSON writer</param>
-        /// <param name="value">Object to be converted into a JSON string</param>
-        /// <param name="serializer">JSON Serializer</param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            writer.WriteRawValue((string)(typeof(HarEntryCacheBeforeRequest).GetMethod("ToJson").Invoke(value, null)));
-        }
-
-        /// <summary>
-        /// To convert a JSON string into an object
-        /// </summary>
-        /// <param name="reader">JSON reader</param>
-        /// <param name="objectType">Object type</param>
-        /// <param name="existingValue">Existing value</param>
-        /// <param name="serializer">JSON Serializer</param>
-        /// <returns>The object converted from the JSON string</returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            if(reader.TokenType != JsonToken.Null)
-            {
-                return HarEntryCacheBeforeRequest.FromJson(JObject.Load(reader).ToString(Formatting.None));
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Check if the object can be converted
-        /// </summary>
-        /// <param name="objectType">Object type</param>
-        /// <returns>True if the object can be converted</returns>
-        public override bool CanConvert(Type objectType)
-        {
-            return false;
         }
     }
 

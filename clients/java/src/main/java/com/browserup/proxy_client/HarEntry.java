@@ -14,7 +14,6 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
 import com.browserup.proxy_client.HarEntryCache;
 import com.browserup.proxy_client.HarEntryRequest;
 import com.browserup.proxy_client.HarEntryResponse;
@@ -28,6 +27,7 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -40,6 +40,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -90,7 +94,7 @@ public class HarEntry {
 
   public static final String SERIALIZED_NAME_WEB_SOCKET_MESSAGES = "_webSocketMessages";
   @SerializedName(SERIALIZED_NAME_WEB_SOCKET_MESSAGES)
-  private List<WebSocketMessage> webSocketMessages = new ArrayList<>();
+  private List<WebSocketMessage> webSocketMessages;
 
   public static final String SERIALIZED_NAME_CONNECTION = "connection";
   @SerializedName(SERIALIZED_NAME_CONNECTION)
@@ -114,7 +118,6 @@ public class HarEntry {
    * @return pageref
   **/
   @javax.annotation.Nullable
-
   public String getPageref() {
     return pageref;
   }
@@ -136,7 +139,6 @@ public class HarEntry {
    * @return startedDateTime
   **/
   @javax.annotation.Nonnull
-
   public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
   }
@@ -159,7 +161,6 @@ public class HarEntry {
    * @return time
   **/
   @javax.annotation.Nonnull
-
   public Long getTime() {
     return time;
   }
@@ -181,7 +182,6 @@ public class HarEntry {
    * @return request
   **/
   @javax.annotation.Nonnull
-
   public HarEntryRequest getRequest() {
     return request;
   }
@@ -203,7 +203,6 @@ public class HarEntry {
    * @return response
   **/
   @javax.annotation.Nonnull
-
   public HarEntryResponse getResponse() {
     return response;
   }
@@ -225,7 +224,6 @@ public class HarEntry {
    * @return cache
   **/
   @javax.annotation.Nonnull
-
   public HarEntryCache getCache() {
     return cache;
   }
@@ -247,7 +245,6 @@ public class HarEntry {
    * @return timings
   **/
   @javax.annotation.Nonnull
-
   public HarEntryTimings getTimings() {
     return timings;
   }
@@ -269,7 +266,6 @@ public class HarEntry {
    * @return serverIPAddress
   **/
   @javax.annotation.Nullable
-
   public String getServerIPAddress() {
     return serverIPAddress;
   }
@@ -299,7 +295,6 @@ public class HarEntry {
    * @return webSocketMessages
   **/
   @javax.annotation.Nullable
-
   public List<WebSocketMessage> getWebSocketMessages() {
     return webSocketMessages;
   }
@@ -321,7 +316,6 @@ public class HarEntry {
    * @return connection
   **/
   @javax.annotation.Nullable
-
   public String getConnection() {
     return connection;
   }
@@ -343,7 +337,6 @@ public class HarEntry {
    * @return comment
   **/
   @javax.annotation.Nullable
-
   public String getComment() {
     return comment;
   }
@@ -442,39 +435,40 @@ public class HarEntry {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to HarEntry
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to HarEntry
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!HarEntry.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!HarEntry.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in HarEntry is not found in the empty JSON string", HarEntry.openapiRequiredFields.toString()));
         }
       }
 
-      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      Set<Entry<String, JsonElement>> entries = jsonElement.getAsJsonObject().entrySet();
       // check to see if the JSON string contains additional fields
       for (Entry<String, JsonElement> entry : entries) {
         if (!HarEntry.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarEntry` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarEntry` properties. JSON: %s", entry.getKey(), jsonElement.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : HarEntry.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        if (jsonElement.getAsJsonObject().get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if ((jsonObj.get("pageref") != null && !jsonObj.get("pageref").isJsonNull()) && !jsonObj.get("pageref").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `pageref` to be a primitive type in the JSON string but got `%s`", jsonObj.get("pageref").toString()));
       }
       // validate the required field `cache`
-      HarEntryCache.validateJsonObject(jsonObj.getAsJsonObject("cache"));
+      HarEntryCache.validateJsonElement(jsonObj.get("cache"));
       // validate the required field `timings`
-      HarEntryTimings.validateJsonObject(jsonObj.getAsJsonObject("timings"));
+      HarEntryTimings.validateJsonElement(jsonObj.get("timings"));
       if ((jsonObj.get("serverIPAddress") != null && !jsonObj.get("serverIPAddress").isJsonNull()) && !jsonObj.get("serverIPAddress").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `serverIPAddress` to be a primitive type in the JSON string but got `%s`", jsonObj.get("serverIPAddress").toString()));
       }
@@ -488,7 +482,7 @@ public class HarEntry {
 
           // validate the optional field `_webSocketMessages` (array)
           for (int i = 0; i < jsonArraywebSocketMessages.size(); i++) {
-            WebSocketMessage.validateJsonObject(jsonArraywebSocketMessages.get(i).getAsJsonObject());
+            WebSocketMessage.validateJsonElement(jsonArraywebSocketMessages.get(i));
           };
         }
       }
@@ -520,9 +514,9 @@ public class HarEntry {
 
            @Override
            public HarEntry read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
-             return thisAdapter.fromJsonTree(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             return thisAdapter.fromJsonTree(jsonElement);
            }
 
        }.nullSafe();

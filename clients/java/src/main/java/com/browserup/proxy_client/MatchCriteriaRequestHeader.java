@@ -32,6 +32,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -48,38 +52,16 @@ import com.browserup.proxy_client.JSON;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class MatchCriteriaRequestHeader {
-  public static final String SERIALIZED_NAME_VALUE = "value";
-  @SerializedName(SERIALIZED_NAME_VALUE)
-  private String value;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
+  public static final String SERIALIZED_NAME_VALUE = "value";
+  @SerializedName(SERIALIZED_NAME_VALUE)
+  private String value;
+
   public MatchCriteriaRequestHeader() {
   }
-
-  public MatchCriteriaRequestHeader value(String value) {
-    
-    this.value = value;
-    return this;
-  }
-
-   /**
-   * Value to match
-   * @return value
-  **/
-  @javax.annotation.Nullable
-
-  public String getValue() {
-    return value;
-  }
-
-
-  public void setValue(String value) {
-    this.value = value;
-  }
-
 
   public MatchCriteriaRequestHeader name(String name) {
     
@@ -92,7 +74,6 @@ public class MatchCriteriaRequestHeader {
    * @return name
   **/
   @javax.annotation.Nullable
-
   public String getName() {
     return name;
   }
@@ -100,6 +81,27 @@ public class MatchCriteriaRequestHeader {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+
+  public MatchCriteriaRequestHeader value(String value) {
+    
+    this.value = value;
+    return this;
+  }
+
+   /**
+   * Value to match
+   * @return value
+  **/
+  @javax.annotation.Nullable
+  public String getValue() {
+    return value;
+  }
+
+
+  public void setValue(String value) {
+    this.value = value;
   }
 
 
@@ -113,21 +115,21 @@ public class MatchCriteriaRequestHeader {
       return false;
     }
     MatchCriteriaRequestHeader matchCriteriaRequestHeader = (MatchCriteriaRequestHeader) o;
-    return Objects.equals(this.value, matchCriteriaRequestHeader.value) &&
-        Objects.equals(this.name, matchCriteriaRequestHeader.name);
+    return Objects.equals(this.name, matchCriteriaRequestHeader.name) &&
+        Objects.equals(this.value, matchCriteriaRequestHeader.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, name);
+    return Objects.hash(name, value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class MatchCriteriaRequestHeader {\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -150,8 +152,8 @@ public class MatchCriteriaRequestHeader {
   static {
     // a set of all properties/fields (JSON key names)
     openapiFields = new HashSet<String>();
-    openapiFields.add("value");
     openapiFields.add("name");
+    openapiFields.add("value");
 
     // a set of required properties/fields (JSON key names)
     openapiRequiredFields = new HashSet<String>();
@@ -177,11 +179,11 @@ public class MatchCriteriaRequestHeader {
           throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `MatchCriteriaRequestHeader` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
         }
       }
-      if ((jsonObj.get("value") != null && !jsonObj.get("value").isJsonNull()) && !jsonObj.get("value").isJsonPrimitive()) {
-        throw new IllegalArgumentException(String.format("Expected the field `value` to be a primitive type in the JSON string but got `%s`", jsonObj.get("value").toString()));
-      }
       if ((jsonObj.get("name") != null && !jsonObj.get("name").isJsonNull()) && !jsonObj.get("name").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `name` to be a primitive type in the JSON string but got `%s`", jsonObj.get("name").toString()));
+      }
+      if ((jsonObj.get("value") != null && !jsonObj.get("value").isJsonNull()) && !jsonObj.get("value").isJsonPrimitive()) {
+        throw new IllegalArgumentException(String.format("Expected the field `value` to be a primitive type in the JSON string but got `%s`", jsonObj.get("value").toString()));
       }
   }
 

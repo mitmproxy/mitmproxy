@@ -14,7 +14,6 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
 import com.browserup.proxy_client.LargestContentfulPaint;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
@@ -22,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,6 +33,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -116,7 +120,6 @@ public class PageTimings {
    * @return onContentLoad
   **/
   @javax.annotation.Nonnull
-
   public Long getOnContentLoad() {
     return onContentLoad;
   }
@@ -139,7 +142,6 @@ public class PageTimings {
    * @return onLoad
   **/
   @javax.annotation.Nonnull
-
   public Long getOnLoad() {
     return onLoad;
   }
@@ -161,7 +163,6 @@ public class PageTimings {
    * @return href
   **/
   @javax.annotation.Nullable
-
   public String getHref() {
     return href;
   }
@@ -184,7 +185,6 @@ public class PageTimings {
    * @return dns
   **/
   @javax.annotation.Nullable
-
   public Long getDns() {
     return dns;
   }
@@ -207,7 +207,6 @@ public class PageTimings {
    * @return ssl
   **/
   @javax.annotation.Nullable
-
   public Long getSsl() {
     return ssl;
   }
@@ -230,7 +229,6 @@ public class PageTimings {
    * @return timeToFirstByte
   **/
   @javax.annotation.Nullable
-
   public Long getTimeToFirstByte() {
     return timeToFirstByte;
   }
@@ -253,7 +251,6 @@ public class PageTimings {
    * @return cumulativeLayoutShift
   **/
   @javax.annotation.Nullable
-
   public Float getCumulativeLayoutShift() {
     return cumulativeLayoutShift;
   }
@@ -275,7 +272,6 @@ public class PageTimings {
    * @return largestContentfulPaint
   **/
   @javax.annotation.Nullable
-
   public LargestContentfulPaint getLargestContentfulPaint() {
     return largestContentfulPaint;
   }
@@ -298,7 +294,6 @@ public class PageTimings {
    * @return firstPaint
   **/
   @javax.annotation.Nullable
-
   public Long getFirstPaint() {
     return firstPaint;
   }
@@ -321,7 +316,6 @@ public class PageTimings {
    * @return firstInputDelay
   **/
   @javax.annotation.Nullable
-
   public Float getFirstInputDelay() {
     return firstInputDelay;
   }
@@ -344,7 +338,6 @@ public class PageTimings {
    * @return domInteractive
   **/
   @javax.annotation.Nullable
-
   public Long getDomInteractive() {
     return domInteractive;
   }
@@ -367,7 +360,6 @@ public class PageTimings {
    * @return firstContentfulPaint
   **/
   @javax.annotation.Nullable
-
   public Long getFirstContentfulPaint() {
     return firstContentfulPaint;
   }
@@ -389,7 +381,6 @@ public class PageTimings {
    * @return comment
   **/
   @javax.annotation.Nullable
-
   public String getComment() {
     return comment;
   }
@@ -536,24 +527,25 @@ public class PageTimings {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to PageTimings
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to PageTimings
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!PageTimings.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!PageTimings.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in PageTimings is not found in the empty JSON string", PageTimings.openapiRequiredFields.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : PageTimings.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        if (jsonElement.getAsJsonObject().get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if ((jsonObj.get("_href") != null && !jsonObj.get("_href").isJsonNull()) && !jsonObj.get("_href").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `_href` to be a primitive type in the JSON string but got `%s`", jsonObj.get("_href").toString()));
       }
@@ -599,8 +591,9 @@ public class PageTimings {
 
            @Override
            public PageTimings read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             JsonObject jsonObj = jsonElement.getAsJsonObject();
              // store additional fields in the deserialized instance
              PageTimings instance = thisAdapter.fromJsonTree(jsonObj);
              for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {

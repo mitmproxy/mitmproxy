@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**_Version** | **string** |  | 
+**VarVersion** | **string** |  | 
 **Creator** | [**HarLogCreator**](HarLogCreator.md) |  | 
 **Browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] 
 **Pages** | [**List&lt;Page&gt;**](Page.md) |  | 

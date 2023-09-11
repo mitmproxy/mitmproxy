@@ -47,13 +47,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Gets or Sets BeforeRequest
         /// </summary>
-        [DataMember(Name = "beforeRequest", EmitDefaultValue = false)]
+        [DataMember(Name = "beforeRequest", EmitDefaultValue = true)]
         public HarEntryCacheBeforeRequest BeforeRequest { get; set; }
 
         /// <summary>
         /// Gets or Sets AfterRequest
         /// </summary>
-        [DataMember(Name = "afterRequest", EmitDefaultValue = false)]
+        [DataMember(Name = "afterRequest", EmitDefaultValue = true)]
         public HarEntryCacheBeforeRequest AfterRequest { get; set; }
 
         /// <summary>

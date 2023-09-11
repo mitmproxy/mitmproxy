@@ -14,7 +14,6 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
 import com.browserup.proxy_client.HarEntry;
 import com.browserup.proxy_client.HarLogCreator;
 import com.browserup.proxy_client.Page;
@@ -25,6 +24,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -37,6 +37,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -91,7 +95,6 @@ public class HarLog {
    * @return version
   **/
   @javax.annotation.Nonnull
-
   public String getVersion() {
     return version;
   }
@@ -113,7 +116,6 @@ public class HarLog {
    * @return creator
   **/
   @javax.annotation.Nonnull
-
   public HarLogCreator getCreator() {
     return creator;
   }
@@ -135,7 +137,6 @@ public class HarLog {
    * @return browser
   **/
   @javax.annotation.Nullable
-
   public HarLogCreator getBrowser() {
     return browser;
   }
@@ -153,6 +154,9 @@ public class HarLog {
   }
 
   public HarLog addPagesItem(Page pagesItem) {
+    if (this.pages == null) {
+      this.pages = new ArrayList<>();
+    }
     this.pages.add(pagesItem);
     return this;
   }
@@ -162,7 +166,6 @@ public class HarLog {
    * @return pages
   **/
   @javax.annotation.Nonnull
-
   public List<Page> getPages() {
     return pages;
   }
@@ -180,6 +183,9 @@ public class HarLog {
   }
 
   public HarLog addEntriesItem(HarEntry entriesItem) {
+    if (this.entries == null) {
+      this.entries = new ArrayList<>();
+    }
     this.entries.add(entriesItem);
     return this;
   }
@@ -189,7 +195,6 @@ public class HarLog {
    * @return entries
   **/
   @javax.annotation.Nonnull
-
   public List<HarEntry> getEntries() {
     return entries;
   }
@@ -211,7 +216,6 @@ public class HarLog {
    * @return comment
   **/
   @javax.annotation.Nullable
-
   public String getComment() {
     return comment;
   }
@@ -293,40 +297,41 @@ public class HarLog {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to HarLog
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to HarLog
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!HarLog.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!HarLog.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in HarLog is not found in the empty JSON string", HarLog.openapiRequiredFields.toString()));
         }
       }
 
-      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      Set<Entry<String, JsonElement>> entries = jsonElement.getAsJsonObject().entrySet();
       // check to see if the JSON string contains additional fields
       for (Entry<String, JsonElement> entry : entries) {
         if (!HarLog.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarLog` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `HarLog` properties. JSON: %s", entry.getKey(), jsonElement.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : HarLog.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        if (jsonElement.getAsJsonObject().get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if (!jsonObj.get("version").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `version` to be a primitive type in the JSON string but got `%s`", jsonObj.get("version").toString()));
       }
       // validate the required field `creator`
-      HarLogCreator.validateJsonObject(jsonObj.getAsJsonObject("creator"));
+      HarLogCreator.validateJsonElement(jsonObj.get("creator"));
       // validate the optional field `browser`
       if (jsonObj.get("browser") != null && !jsonObj.get("browser").isJsonNull()) {
-        HarLogCreator.validateJsonObject(jsonObj.getAsJsonObject("browser"));
+        HarLogCreator.validateJsonElement(jsonObj.get("browser"));
       }
       // ensure the required json array is present
       if (jsonObj.get("pages") == null) {
@@ -342,7 +347,7 @@ public class HarLog {
       JsonArray jsonArrayentries = jsonObj.getAsJsonArray("entries");
       // validate the required field `entries` (array)
       for (int i = 0; i < jsonArrayentries.size(); i++) {
-        HarEntry.validateJsonObject(jsonArrayentries.get(i).getAsJsonObject());
+        HarEntry.validateJsonElement(jsonArrayentries.get(i));
       };
       if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
@@ -369,9 +374,9 @@ public class HarLog {
 
            @Override
            public HarLog read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
-             return thisAdapter.fromJsonTree(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             return thisAdapter.fromJsonTree(jsonElement);
            }
 
        }.nullSafe();

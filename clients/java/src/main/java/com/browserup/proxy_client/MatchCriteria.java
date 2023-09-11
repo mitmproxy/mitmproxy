@@ -14,14 +14,14 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
-import com.browserup.proxy_client.MatchCriteriaRequestHeader;
+import com.browserup.proxy_client.NameValuePair;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,6 +33,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -75,19 +79,19 @@ public class MatchCriteria {
 
   public static final String SERIALIZED_NAME_REQUEST_HEADER = "request_header";
   @SerializedName(SERIALIZED_NAME_REQUEST_HEADER)
-  private MatchCriteriaRequestHeader requestHeader;
+  private NameValuePair requestHeader;
 
   public static final String SERIALIZED_NAME_REQUEST_COOKIE = "request_cookie";
   @SerializedName(SERIALIZED_NAME_REQUEST_COOKIE)
-  private MatchCriteriaRequestHeader requestCookie;
+  private NameValuePair requestCookie;
 
   public static final String SERIALIZED_NAME_RESPONSE_HEADER = "response_header";
   @SerializedName(SERIALIZED_NAME_RESPONSE_HEADER)
-  private MatchCriteriaRequestHeader responseHeader;
+  private NameValuePair responseHeader;
 
   public static final String SERIALIZED_NAME_RESPONSE_COOKIE = "response_cookie";
   @SerializedName(SERIALIZED_NAME_RESPONSE_COOKIE)
-  private MatchCriteriaRequestHeader responseCookie;
+  private NameValuePair responseCookie;
 
   public static final String SERIALIZED_NAME_JSON_VALID = "json_valid";
   @SerializedName(SERIALIZED_NAME_JSON_VALID)
@@ -119,7 +123,6 @@ public class MatchCriteria {
    * @return url
   **/
   @javax.annotation.Nullable
-
   public String getUrl() {
     return url;
   }
@@ -141,7 +144,6 @@ public class MatchCriteria {
    * @return page
   **/
   @javax.annotation.Nullable
-
   public String getPage() {
     return page;
   }
@@ -163,7 +165,6 @@ public class MatchCriteria {
    * @return status
   **/
   @javax.annotation.Nullable
-
   public String getStatus() {
     return status;
   }
@@ -185,7 +186,6 @@ public class MatchCriteria {
    * @return content
   **/
   @javax.annotation.Nullable
-
   public String getContent() {
     return content;
   }
@@ -207,7 +207,6 @@ public class MatchCriteria {
    * @return contentType
   **/
   @javax.annotation.Nullable
-
   public String getContentType() {
     return contentType;
   }
@@ -229,7 +228,6 @@ public class MatchCriteria {
    * @return websocketMessage
   **/
   @javax.annotation.Nullable
-
   public String getWebsocketMessage() {
     return websocketMessage;
   }
@@ -240,7 +238,7 @@ public class MatchCriteria {
   }
 
 
-  public MatchCriteria requestHeader(MatchCriteriaRequestHeader requestHeader) {
+  public MatchCriteria requestHeader(NameValuePair requestHeader) {
     
     this.requestHeader = requestHeader;
     return this;
@@ -251,18 +249,17 @@ public class MatchCriteria {
    * @return requestHeader
   **/
   @javax.annotation.Nullable
-
-  public MatchCriteriaRequestHeader getRequestHeader() {
+  public NameValuePair getRequestHeader() {
     return requestHeader;
   }
 
 
-  public void setRequestHeader(MatchCriteriaRequestHeader requestHeader) {
+  public void setRequestHeader(NameValuePair requestHeader) {
     this.requestHeader = requestHeader;
   }
 
 
-  public MatchCriteria requestCookie(MatchCriteriaRequestHeader requestCookie) {
+  public MatchCriteria requestCookie(NameValuePair requestCookie) {
     
     this.requestCookie = requestCookie;
     return this;
@@ -273,18 +270,17 @@ public class MatchCriteria {
    * @return requestCookie
   **/
   @javax.annotation.Nullable
-
-  public MatchCriteriaRequestHeader getRequestCookie() {
+  public NameValuePair getRequestCookie() {
     return requestCookie;
   }
 
 
-  public void setRequestCookie(MatchCriteriaRequestHeader requestCookie) {
+  public void setRequestCookie(NameValuePair requestCookie) {
     this.requestCookie = requestCookie;
   }
 
 
-  public MatchCriteria responseHeader(MatchCriteriaRequestHeader responseHeader) {
+  public MatchCriteria responseHeader(NameValuePair responseHeader) {
     
     this.responseHeader = responseHeader;
     return this;
@@ -295,18 +291,17 @@ public class MatchCriteria {
    * @return responseHeader
   **/
   @javax.annotation.Nullable
-
-  public MatchCriteriaRequestHeader getResponseHeader() {
+  public NameValuePair getResponseHeader() {
     return responseHeader;
   }
 
 
-  public void setResponseHeader(MatchCriteriaRequestHeader responseHeader) {
+  public void setResponseHeader(NameValuePair responseHeader) {
     this.responseHeader = responseHeader;
   }
 
 
-  public MatchCriteria responseCookie(MatchCriteriaRequestHeader responseCookie) {
+  public MatchCriteria responseCookie(NameValuePair responseCookie) {
     
     this.responseCookie = responseCookie;
     return this;
@@ -317,13 +312,12 @@ public class MatchCriteria {
    * @return responseCookie
   **/
   @javax.annotation.Nullable
-
-  public MatchCriteriaRequestHeader getResponseCookie() {
+  public NameValuePair getResponseCookie() {
     return responseCookie;
   }
 
 
-  public void setResponseCookie(MatchCriteriaRequestHeader responseCookie) {
+  public void setResponseCookie(NameValuePair responseCookie) {
     this.responseCookie = responseCookie;
   }
 
@@ -339,7 +333,6 @@ public class MatchCriteria {
    * @return jsonValid
   **/
   @javax.annotation.Nullable
-
   public Boolean getJsonValid() {
     return jsonValid;
   }
@@ -361,7 +354,6 @@ public class MatchCriteria {
    * @return jsonPath
   **/
   @javax.annotation.Nullable
-
   public String getJsonPath() {
     return jsonPath;
   }
@@ -383,7 +375,6 @@ public class MatchCriteria {
    * @return jsonSchema
   **/
   @javax.annotation.Nullable
-
   public String getJsonSchema() {
     return jsonSchema;
   }
@@ -405,7 +396,6 @@ public class MatchCriteria {
    * @return errorIfNoTraffic
   **/
   @javax.annotation.Nullable
-
   public Boolean getErrorIfNoTraffic() {
     return errorIfNoTraffic;
   }
@@ -507,25 +497,26 @@ public class MatchCriteria {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to MatchCriteria
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to MatchCriteria
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!MatchCriteria.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!MatchCriteria.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in MatchCriteria is not found in the empty JSON string", MatchCriteria.openapiRequiredFields.toString()));
         }
       }
 
-      Set<Entry<String, JsonElement>> entries = jsonObj.entrySet();
+      Set<Entry<String, JsonElement>> entries = jsonElement.getAsJsonObject().entrySet();
       // check to see if the JSON string contains additional fields
       for (Entry<String, JsonElement> entry : entries) {
         if (!MatchCriteria.openapiFields.contains(entry.getKey())) {
-          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `MatchCriteria` properties. JSON: %s", entry.getKey(), jsonObj.toString()));
+          throw new IllegalArgumentException(String.format("The field `%s` in the JSON string is not defined in the `MatchCriteria` properties. JSON: %s", entry.getKey(), jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if ((jsonObj.get("url") != null && !jsonObj.get("url").isJsonNull()) && !jsonObj.get("url").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `url` to be a primitive type in the JSON string but got `%s`", jsonObj.get("url").toString()));
       }
@@ -546,19 +537,19 @@ public class MatchCriteria {
       }
       // validate the optional field `request_header`
       if (jsonObj.get("request_header") != null && !jsonObj.get("request_header").isJsonNull()) {
-        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_header"));
+        NameValuePair.validateJsonElement(jsonObj.get("request_header"));
       }
       // validate the optional field `request_cookie`
       if (jsonObj.get("request_cookie") != null && !jsonObj.get("request_cookie").isJsonNull()) {
-        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("request_cookie"));
+        NameValuePair.validateJsonElement(jsonObj.get("request_cookie"));
       }
       // validate the optional field `response_header`
       if (jsonObj.get("response_header") != null && !jsonObj.get("response_header").isJsonNull()) {
-        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_header"));
+        NameValuePair.validateJsonElement(jsonObj.get("response_header"));
       }
       // validate the optional field `response_cookie`
       if (jsonObj.get("response_cookie") != null && !jsonObj.get("response_cookie").isJsonNull()) {
-        MatchCriteriaRequestHeader.validateJsonObject(jsonObj.getAsJsonObject("response_cookie"));
+        NameValuePair.validateJsonElement(jsonObj.get("response_cookie"));
       }
       if ((jsonObj.get("json_path") != null && !jsonObj.get("json_path").isJsonNull()) && !jsonObj.get("json_path").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `json_path` to be a primitive type in the JSON string but got `%s`", jsonObj.get("json_path").toString()));
@@ -588,9 +579,9 @@ public class MatchCriteria {
 
            @Override
            public MatchCriteria read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
-             return thisAdapter.fromJsonTree(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             return thisAdapter.fromJsonTree(jsonElement);
            }
 
        }.nullSafe();

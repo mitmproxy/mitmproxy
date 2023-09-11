@@ -4,11 +4,10 @@
 // Alternative:  https://zizzamia.github.io/perfume/
 /* jshint esversion: 11 */
 (function() {
+    function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
 
-function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
-
-// cumulative layout shift can continue to change after page load, so we need to observe
-    function observeAndSaveCumulativeLayoutShift() {
+    // cumulative layout shift can continue to change after page load, so we need to observe
+     function observeAndSaveCumulativeLayoutShift() {
         try {
             const supported = PerformanceObserver.supportedEntryTypes;
             if (!supported || supported.indexOf('layout-shift') === -1) { return; }
@@ -31,7 +30,7 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
                     cumulativeLayoutShift = Math.max(cumulativeLayoutShift, curr);
                 }
 
-                sendData('page_data',{"_cumulativeLayoutShift": cumulativeLayoutShift});
+                sendData('page_timings', {"_cumulativeLayoutShift": cumulativeLayoutShift});
             });
             observer.observe({type: 'layout-shift', buffered: true});
         } catch (e)  {
@@ -47,7 +46,7 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
             new PerformanceObserver((entryList) => {
                 for (let entry of entryList.getEntries()) {
                     let delay = Number((entry.processingStart - entry.startTime).toFixed(1));
-                    sendData('page_data', { "_firstInputDelay": delay });
+                    sendData('page_timings', { "_firstInputDelay": delay });
                 }
             }).observe({type: 'first-input', buffered: true});
         } catch (e) {
@@ -140,7 +139,7 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
                 for (const entry of list.getEntries()) {
                     if (entry.name === 'first-paint') {
                         firstPaintTime = entry.startTime.toFixed(0);
-                        sendData('page_data', {"_firstPaint": firstPaintTime});
+                        sendData('page_timings', {"_firstPaint": firstPaintTime});
                     }
                 }
             });
@@ -205,40 +204,73 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
         return stack.slice(1);
     }
 
-    function observeAndSaveActions() {
-        document.addEventListener('click', function(event) {
-            let element = event.target;
-            if (element) {
-                let dataAttributesArr = [];
-                const pattern = /test|qa|cy|play|sele|autom|name|id|browserup/i;
 
-                for (let attr of element.attributes) {
-                    if (attr.name.startsWith('data-') && pattern.test(attr.name)) {
-                        dataAttributesArr.push(`${attr.name}=${attr.value.substring(0, 50)}`);
-                    }
+    function getElementXPath(element) {
+        let paths = [];
+        for (; element && element.nodeType == 1; element = element.parentNode) {
+            let index = 0;
+            for (let sibling = element.previousSibling; sibling; sibling = sibling.previousSibling) {
+                if (sibling.nodeType == 1 && sibling.tagName == element.tagName) {
+                    index++;
                 }
-
-                let dataAttributesStr = dataAttributesArr.join(',');
-                let contentValue = (element.value || element.innerText).trim();
-                contentValue = contentValue.length > 50 ? contentValue.substring(0, 50) : contentValue;
-
-                let actionObj = {
-                    name: element.getAttribute('name') || null,
-                    id: element.getAttribute('id') || null,
-                    className: element.getAttribute('class') || null,
-                    tagName: element.tagName,
-                    xpath: getElementXPath(element),
-                    dataAttributes: dataAttributesStr,
-                    form: element?.form?.name || null,
-                    content: contentValue
-                };
-
-                Object.keys(actionObj).forEach((k) => actionObj[k] == null && delete actionObj[k]);
-                actions.push(actionObj);
-                sendData('page_actions', actions);
-
             }
-        }, true);
+            let tagName = element.tagName.toLowerCase();
+            let pathIndex = (index ? "[" + (index + 1) + "]" : "");
+            paths.splice(0, 0, tagName + pathIndex);
+        }
+        return paths.length ? "/" + paths.join("/") : null;
+    }
+
+    function observeAndSaveActions() {
+        document.addEventListener('change', function(event) { captureAction(event); }, true);
+        document.addEventListener('click', function(event) { captureAction(event); }, true);
+    }
+
+    function captureAction(event) {
+        let element = event.target;
+        if (element) {
+            let dataAttributesArr = [];
+            const pattern = /test|qa|cy|play|sele|autom|name|id|browserup/i;
+
+            for (let attr of element.attributes) {
+                if (attr.name.startsWith('data-') && pattern.test(attr.name)) {
+                    dataAttributesArr.push(`${attr.name}=${attr.value.substring(0, 50)}`);
+                }
+            }
+
+            let dataAttributesStr = dataAttributesArr.join(',');
+            let contentValue = (element.value || element.innerText).trim();
+            contentValue = contentValue.length > 50 ? contentValue.substring(0, 50) : contentValue;
+
+            let actionObj = {
+                name: element.getAttribute('name') || null,
+                id: element.getAttribute('id') || null,
+                className: element.getAttribute('class') || null,
+                ariaLabel: element.getAttribute('aria-label') || null,
+                tagName: element.tagName,
+                event: event.type,
+                role: element.getAttribute('role'),
+                xpath: getElementXPath(element),
+                dataAttributes: dataAttributesStr,
+                form: element?.form?.name || null,
+                content: contentValue
+            };
+
+            Object.keys(actionObj).forEach((k) => actionObj[k] == null && delete actionObj[k]);
+            actions.push(actionObj);
+        }
+    }
+
+    function getAbsoluteURL(baseURL, relativePath) {
+        try {
+            if (!relativePath) return relativePath; // Return the same value if path is null or empty
+            // Create a URL object with base URL and the relative path
+            const urlObj = new URL(relativePath, baseURL);
+            return urlObj.href; // Return the absolute URL
+        } catch (e) {
+            console.error(e);
+            return relativePath;
+        }
     }
 
     function getVideoDecodedByteCount(video) {
@@ -266,37 +298,40 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
     function videoData() {
         try {
             let videos = [];
-            let vids = querySelectorWithShadows('video');
+            const vids = querySelectorWithShadows('video'); // Assuming this function is implemented elsewhere to query shadow DOM
+
             for (let video of vids) {
                 video.addEventListener('play', sendVideoData);
                 video.addEventListener('pause', sendVideoData);
 
-                video.addEventListener("stalled", (event) => {
+                video.addEventListener("stalled", function(event) {
                     this.stallCount = this.stallCount ? this.stallCount + 1 : 1;
                 });
-                video.addEventListener("waiting", (event) => {
+                video.addEventListener("waiting", function(event) {
                     this.waitingCount = this.waitingCount ? this.waitingCount + 1 : 1;
                 });
-                video.addEventListener("error", (event) => {
+                video.addEventListener("error", function(event) {
                     this.errorCount = this.errorCount ? this.errorCount + 1 : 1;
                 });
 
                 let vidQuality = video.getVideoPlaybackQuality();
+                let sources = video.querySelectorAll('source');
 
-                let vid = {
-                                src: video.src,
-                                bufferedPercent: calculateBufferedPercent(video),
-                                filename: (video.src == '') ? '' : new URL(video.src).pathname.split('/').pop(),
-                                stallCount: video.stallCount || 0,
-                                videoDecodedByteCount: getVideoDecodedByteCount(video),
-                                audioBytesDecoded:  getAudioDecodedByteCount(video),
-                                waitingCount: video.waitingCount || 0,
-                                errorCount: video.errorCount || 0,
-                                droppedVideoFrames: vidQuality.droppedVideoFrames,
-                                totalVideoFrames: vidQuality.totalVideoFrames
-                            };
-                videos.push(vid);
+                if (sources.length === 0) {
+                    // No <source> tags, use src property from video tag
+                    if (isValidSrc(video.src)) {
+                        let vid = buildVideoObject(video.src, video, vidQuality);
+                        videos.push(vid);
+                    }
+                } else {
+                    let src = video.currentSrc;
+                    if (isValidSrc(src)) {
+                        let vid = buildVideoObject(src, video, vidQuality);
+                        videos.push(vid);
+                    }
+                }
             }
+
             return videos;
         }
         catch (e) {
@@ -305,21 +340,24 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
         }
     }
 
-    function getElementXPath(element) {
-        let paths = [];
-        for (; element && element.nodeType == 1; element = element.parentNode) {
-            let index = 0;
-            for (let sibling = element.previousSibling; sibling; sibling = sibling.previousSibling) {
-                if (sibling.nodeType == 1 && sibling.tagName == element.tagName) {
-                    index++;
-                }
-            }
-            let tagName = element.tagName.toLowerCase();
-            let pathIndex = (index ? "[" + (index + 1) + "]" : "");
-            paths.splice(0, 0, tagName + pathIndex);
-        }
-        return paths.length ? "/" + paths.join("/") : null;
+    function isValidSrc(src) {
+        return typeof src === 'string' && src.length > 1;
     }
+
+    function buildVideoObject(src, video, vidQuality) {
+        return {
+            _videoSRC: getAbsoluteURL(window.location, src),
+            _videoBufferedPercent: calculateBufferedPercent(video),
+            _videoStallCount: video.stallCount || 0,
+            _videoDecodedByteCount: getVideoDecodedByteCount(video),
+            _videoWaitingCount: video.waitingCount || 0,
+            _videoErrorCount: video.errorCount || 0,
+            _videoDroppedFrames: vidQuality.droppedVideoFrames,
+            _videoTotalFrames: vidQuality.totalVideoFrames,
+            _videoAudioBytesDecoded:  getAudioDecodedByteCount(video)
+        };
+    }
+
 
     function calculateBufferedPercent(video) {
         try {
@@ -340,9 +378,17 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
         if (closeHandled) {
             return;
         }
+
+        let sendPromise = new Promise(function(resolve, reject) {
+            sendData('page_complete', pageData());
+            sendVideoData();
+            sendData('actions', actions);
+        });
+
+        sendPromise.then(function() {
+            if (proxyWs.readyState !== WebSocket.CLOSED) { proxyWs.close(); }
+        });
         closeHandled = true;
-        let data  = {...pageData(), ...videoData()}
-        sendData('page_complete', data);
     }
     function instrumentationURL() {
         let protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
@@ -350,78 +396,75 @@ function inIframe () { try { return window.self !== window.top; } catch (e) { re
         return url;
     }
 
-    function connectWebSocket() {
-        try {
-            const proxyURL = instrumentationURL()
-            console.log('Connecting to BrowserUp Page Info WebSocket ' + proxyURL);
-            proxyWs = new WebSocket(proxyURL);
-        }
-        catch (e) {
-            console.log('Failed to create WebSocket for BrowserUp Page Info', e);
-        }
-        proxyWs.onopen = () => {
-            console.log('WebSocket connected');
-            reconnectInterval = 50;  // Reset reconnect interval on successful connection
-        };
-
-        proxyWs.onclose = (event) => {
-            if (event.wasClean) {
-                console.log(`WebSocket closed cleanly, code=${event.code}, reason=${event.reason}`);
-            } else {
-                console.log('WebSocket died');
-            }
-            setTimeout(connectWebSocket, reconnectInterval);
-            reconnectInterval = Math.min(maxReconnectInterval, reconnectInterval * reconnectMultiplier);
-        };
-    }
 
     function sendVideoData() {
         const videoInfo = videoData();
-        if (videoInfo.length === 0) {
-            console.log('No videos found');
-            return;
-        }
-        sendData('videos', videoData());
+        console.log(`Found ${videoInfo.length} videos per sendVideoData`);
+        if (videoInfo.length === 0) { return; }
+        sendData('videos', videoInfo);
     }
     function sendPageData() {
-        console.log(videoData());
-        sendData('page_data', pageData());
-
-    }
-
-    function sendData(action, data) {
-        Object.keys(data).forEach(key => data[key] === undefined ? delete data[key] : {});
-        let payload = { action: action, data: data };
-        if (proxyWs.readyState === WebSocket.OPEN) {
-            proxyWs.send(JSON.stringify(payload));
-        } else {
-            console.error("WebSocket is not open. Cannot send data.");
-        }
+        sendData('page_timings', pageData());
     }
 
     let actions = [];
     let videoDataIntervalId;
-    let proxyWs;
-    let reconnectInterval = 500;
-    let maxReconnectInterval = 5000;
-    let reconnectMultiplier = 1.5;
+    let reconnectInterval = 100;
+    let maxReconnectInterval = 10000;
+    let reconnectMultiplier = 2;
     let closeHandled = false;
+
+    let proxyWs = new WebSocket(instrumentationURL());
+    proxyWs.onclose = (event) => {
+        if (closeHandled == true) { return; }
+        setTimeout(connectWebSocket, reconnectInterval);
+        reconnectInterval = Math.min(maxReconnectInterval, reconnectInterval * reconnectMultiplier);
+    };
+
+    proxyWs.onopen = function(event) {
+        console.log('WebSocket connected');
+        reconnectInterval = 50;  // Reset reconnect interval on successful connection
+    };
+
+     function sendData(operation, data) {
+        Object.keys(data).forEach(key => data[key] === undefined ? delete data[key] : {});
+        let payload = { operation: operation, data: data };
+         waitForOpenSocket(proxyWs).then(_ => {
+             console.log(`Sending ${operation} data to proxy`);
+             proxyWs.send(JSON.stringify(payload));
+        });
+    }
+
+    function waitForOpenSocket(socket) {
+        return new Promise((resolve) => {
+            if (socket.readyState !== socket.OPEN) {
+                socket.addEventListener("open", (_) => {
+                    resolve(socket);
+                })
+            } else {
+                resolve();
+            }
+        });
+    }
+
+
 
     function init() {
         if (window.browserUp) { console.error('BrowserUp Double load Error!!!'); return; }
-        connectWebSocket();
+
         observeAndSaveFirstPaint();
         observeAndSaveFirstInputDelay();
         observeAndSaveCumulativeLayoutShift();
         observeAndSaveActions();
+        videoDataIntervalId = setInterval(sendVideoData, 15000);
 
+        window.addEventListener('load', sendPageData);
         window.addEventListener('click', sendPageData);
         window.addEventListener('beforeunload', handleClose);
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') { handleClose(); }
         });
-        videoDataIntervalId = setInterval(sendVideoData, 15000);
-    }
 
+    }
     init();
 })();

@@ -242,6 +242,54 @@
             "encoding": {
               "type": "string"
             },
+            "_videoBufferedPercent": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoStallCount": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoDecodedByteCount": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoWaitingCount": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoErrorCount": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoDroppedFrames": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoTotalFrames": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
+            "_videoAudioBytesDecoded": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": -1,
+              "default": -1
+            },
             "comment": {
               "type": "string"
             }

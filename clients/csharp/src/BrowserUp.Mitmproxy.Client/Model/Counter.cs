@@ -34,20 +34,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="Counter" /> class.
         /// </summary>
-        /// <param name="value">Value for the counter.</param>
         /// <param name="name">Name of Custom Counter to add to the page under _counters.</param>
-        public Counter(double value = default(double), string name = default(string))
+        /// <param name="value">Value for the counter.</param>
+        public Counter(string name = default(string), double value = default(double))
         {
-            this.Value = value;
             this.Name = name;
+            this.Value = value;
         }
-
-        /// <summary>
-        /// Value for the counter
-        /// </summary>
-        /// <value>Value for the counter</value>
-        [DataMember(Name = "value", EmitDefaultValue = false)]
-        public double Value { get; set; }
 
         /// <summary>
         /// Name of Custom Counter to add to the page under _counters
@@ -57,6 +50,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Name { get; set; }
 
         /// <summary>
+        /// Value for the counter
+        /// </summary>
+        /// <value>Value for the counter</value>
+        [DataMember(Name = "value", EmitDefaultValue = false)]
+        public double Value { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -64,8 +64,8 @@ namespace BrowserUp.Mitmproxy.Client.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class Counter {\n");
-            sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -102,13 +102,13 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             return 
                 (
-                    this.Value == input.Value ||
-                    this.Value.Equals(input.Value)
-                ) && 
-                (
                     this.Name == input.Name ||
                     (this.Name != null &&
                     this.Name.Equals(input.Name))
+                ) && 
+                (
+                    this.Value == input.Value ||
+                    this.Value.Equals(input.Value)
                 );
         }
 
@@ -121,11 +121,11 @@ namespace BrowserUp.Mitmproxy.Client.Model
             unchecked // Overflow is fine, just wrap
             {
                 int hashCode = 41;
-                hashCode = (hashCode * 59) + this.Value.GetHashCode();
                 if (this.Name != null)
                 {
                     hashCode = (hashCode * 59) + this.Name.GetHashCode();
                 }
+                hashCode = (hashCode * 59) + this.Value.GetHashCode();
                 return hashCode;
             }
         }

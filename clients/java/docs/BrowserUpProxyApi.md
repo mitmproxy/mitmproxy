@@ -16,7 +16,7 @@ All URIs are relative to *http://localhost:48088*
 | [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} |  |
 
 
-<a name="addCounter"></a>
+<a id="addCounter"></a>
 # **addCounter**
 > addCounter(counter)
 
@@ -78,7 +78,7 @@ No authorization required
 | **204** | The counter was added. |  -  |
 | **422** | The counter was invalid. |  -  |
 
-<a name="addError"></a>
+<a id="addError"></a>
 # **addError**
 > addError(error)
 
@@ -140,7 +140,7 @@ No authorization required
 | **204** | The Error was added. |  -  |
 | **422** | The Error was invalid. |  -  |
 
-<a name="getHarLog"></a>
+<a id="getHarLog"></a>
 # **getHarLog**
 > Har getHarLog()
 
@@ -198,7 +198,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a name="healthcheck"></a>
+<a id="healthcheck"></a>
 # **healthcheck**
 > healthcheck()
 
@@ -255,7 +255,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | OK means all is well. |  -  |
 
-<a name="newPage"></a>
+<a id="newPage"></a>
 # **newPage**
 > Har newPage(title)
 
@@ -317,7 +317,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a name="resetHarLog"></a>
+<a id="resetHarLog"></a>
 # **resetHarLog**
 > Har resetHarLog()
 
@@ -375,7 +375,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a name="verifyNotPresent"></a>
+<a id="verifyNotPresent"></a>
 # **verifyNotPresent**
 > VerifyResult verifyNotPresent(name, matchCriteria)
 
@@ -440,7 +440,7 @@ No authorization required
 | **200** | The traffic had no matching items |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a name="verifyPresent"></a>
+<a id="verifyPresent"></a>
 # **verifyPresent**
 > VerifyResult verifyPresent(name, matchCriteria)
 
@@ -505,7 +505,7 @@ No authorization required
 | **200** | The traffic conformed to the time criteria. |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a name="verifySLA"></a>
+<a id="verifySLA"></a>
 # **verifySLA**
 > VerifyResult verifySLA(time, name, matchCriteria)
 
@@ -572,7 +572,7 @@ No authorization required
 | **200** | The traffic conformed to the time criteria. |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a name="verifySize"></a>
+<a id="verifySize"></a>
 # **verifySize**
 > VerifyResult verifySize(size, name, matchCriteria)
 

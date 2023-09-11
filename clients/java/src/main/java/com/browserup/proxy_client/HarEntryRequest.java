@@ -14,7 +14,6 @@
 package com.browserup.proxy_client;
 
 import java.util.Objects;
-import java.util.Arrays;
 import com.browserup.proxy_client.HarEntryRequestCookiesInner;
 import com.browserup.proxy_client.HarEntryRequestPostData;
 import com.browserup.proxy_client.HarEntryRequestQueryStringInner;
@@ -27,6 +26,7 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -39,6 +39,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -109,7 +113,6 @@ public class HarEntryRequest {
    * @return method
   **/
   @javax.annotation.Nonnull
-
   public String getMethod() {
     return method;
   }
@@ -131,7 +134,6 @@ public class HarEntryRequest {
    * @return url
   **/
   @javax.annotation.Nonnull
-
   public URI getUrl() {
     return url;
   }
@@ -153,7 +155,6 @@ public class HarEntryRequest {
    * @return httpVersion
   **/
   @javax.annotation.Nonnull
-
   public String getHttpVersion() {
     return httpVersion;
   }
@@ -171,6 +172,9 @@ public class HarEntryRequest {
   }
 
   public HarEntryRequest addCookiesItem(HarEntryRequestCookiesInner cookiesItem) {
+    if (this.cookies == null) {
+      this.cookies = new ArrayList<>();
+    }
     this.cookies.add(cookiesItem);
     return this;
   }
@@ -180,7 +184,6 @@ public class HarEntryRequest {
    * @return cookies
   **/
   @javax.annotation.Nonnull
-
   public List<HarEntryRequestCookiesInner> getCookies() {
     return cookies;
   }
@@ -198,6 +201,9 @@ public class HarEntryRequest {
   }
 
   public HarEntryRequest addHeadersItem(Header headersItem) {
+    if (this.headers == null) {
+      this.headers = new ArrayList<>();
+    }
     this.headers.add(headersItem);
     return this;
   }
@@ -207,7 +213,6 @@ public class HarEntryRequest {
    * @return headers
   **/
   @javax.annotation.Nonnull
-
   public List<Header> getHeaders() {
     return headers;
   }
@@ -225,6 +230,9 @@ public class HarEntryRequest {
   }
 
   public HarEntryRequest addQueryStringItem(HarEntryRequestQueryStringInner queryStringItem) {
+    if (this.queryString == null) {
+      this.queryString = new ArrayList<>();
+    }
     this.queryString.add(queryStringItem);
     return this;
   }
@@ -234,7 +242,6 @@ public class HarEntryRequest {
    * @return queryString
   **/
   @javax.annotation.Nonnull
-
   public List<HarEntryRequestQueryStringInner> getQueryString() {
     return queryString;
   }
@@ -256,7 +263,6 @@ public class HarEntryRequest {
    * @return postData
   **/
   @javax.annotation.Nullable
-
   public HarEntryRequestPostData getPostData() {
     return postData;
   }
@@ -278,7 +284,6 @@ public class HarEntryRequest {
    * @return headersSize
   **/
   @javax.annotation.Nonnull
-
   public Integer getHeadersSize() {
     return headersSize;
   }
@@ -300,7 +305,6 @@ public class HarEntryRequest {
    * @return bodySize
   **/
   @javax.annotation.Nonnull
-
   public Integer getBodySize() {
     return bodySize;
   }
@@ -322,7 +326,6 @@ public class HarEntryRequest {
    * @return comment
   **/
   @javax.annotation.Nullable
-
   public String getComment() {
     return comment;
   }
@@ -466,24 +469,25 @@ public class HarEntryRequest {
   }
 
  /**
-  * Validates the JSON Object and throws an exception if issues found
+  * Validates the JSON Element and throws an exception if issues found
   *
-  * @param jsonObj JSON Object
-  * @throws IOException if the JSON Object is invalid with respect to HarEntryRequest
+  * @param jsonElement JSON Element
+  * @throws IOException if the JSON Element is invalid with respect to HarEntryRequest
   */
-  public static void validateJsonObject(JsonObject jsonObj) throws IOException {
-      if (jsonObj == null) {
-        if (!HarEntryRequest.openapiRequiredFields.isEmpty()) { // has required fields but JSON object is null
+  public static void validateJsonElement(JsonElement jsonElement) throws IOException {
+      if (jsonElement == null) {
+        if (!HarEntryRequest.openapiRequiredFields.isEmpty()) { // has required fields but JSON element is null
           throw new IllegalArgumentException(String.format("The required field(s) %s in HarEntryRequest is not found in the empty JSON string", HarEntryRequest.openapiRequiredFields.toString()));
         }
       }
 
       // check to make sure all required properties/fields are present in the JSON string
       for (String requiredField : HarEntryRequest.openapiRequiredFields) {
-        if (jsonObj.get(requiredField) == null) {
-          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonObj.toString()));
+        if (jsonElement.getAsJsonObject().get(requiredField) == null) {
+          throw new IllegalArgumentException(String.format("The required field `%s` is not found in the JSON string: %s", requiredField, jsonElement.toString()));
         }
       }
+        JsonObject jsonObj = jsonElement.getAsJsonObject();
       if (!jsonObj.get("method").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `method` to be a primitive type in the JSON string but got `%s`", jsonObj.get("method").toString()));
       }
@@ -501,7 +505,7 @@ public class HarEntryRequest {
       JsonArray jsonArraycookies = jsonObj.getAsJsonArray("cookies");
       // validate the required field `cookies` (array)
       for (int i = 0; i < jsonArraycookies.size(); i++) {
-        HarEntryRequestCookiesInner.validateJsonObject(jsonArraycookies.get(i).getAsJsonObject());
+        HarEntryRequestCookiesInner.validateJsonElement(jsonArraycookies.get(i));
       };
       // ensure the json data is an array
       if (!jsonObj.get("headers").isJsonArray()) {
@@ -511,7 +515,7 @@ public class HarEntryRequest {
       JsonArray jsonArrayheaders = jsonObj.getAsJsonArray("headers");
       // validate the required field `headers` (array)
       for (int i = 0; i < jsonArrayheaders.size(); i++) {
-        Header.validateJsonObject(jsonArrayheaders.get(i).getAsJsonObject());
+        Header.validateJsonElement(jsonArrayheaders.get(i));
       };
       // ensure the json data is an array
       if (!jsonObj.get("queryString").isJsonArray()) {
@@ -521,11 +525,11 @@ public class HarEntryRequest {
       JsonArray jsonArrayqueryString = jsonObj.getAsJsonArray("queryString");
       // validate the required field `queryString` (array)
       for (int i = 0; i < jsonArrayqueryString.size(); i++) {
-        HarEntryRequestQueryStringInner.validateJsonObject(jsonArrayqueryString.get(i).getAsJsonObject());
+        HarEntryRequestQueryStringInner.validateJsonElement(jsonArrayqueryString.get(i));
       };
       // validate the optional field `postData`
       if (jsonObj.get("postData") != null && !jsonObj.get("postData").isJsonNull()) {
-        HarEntryRequestPostData.validateJsonObject(jsonObj.getAsJsonObject("postData"));
+        HarEntryRequestPostData.validateJsonElement(jsonObj.get("postData"));
       }
       if ((jsonObj.get("comment") != null && !jsonObj.get("comment").isJsonNull()) && !jsonObj.get("comment").isJsonPrimitive()) {
         throw new IllegalArgumentException(String.format("Expected the field `comment` to be a primitive type in the JSON string but got `%s`", jsonObj.get("comment").toString()));
@@ -569,8 +573,9 @@ public class HarEntryRequest {
 
            @Override
            public HarEntryRequest read(JsonReader in) throws IOException {
-             JsonObject jsonObj = elementAdapter.read(in).getAsJsonObject();
-             validateJsonObject(jsonObj);
+             JsonElement jsonElement = elementAdapter.read(in);
+             validateJsonElement(jsonElement);
+             JsonObject jsonObj = jsonElement.getAsJsonObject();
              // store additional fields in the deserialized instance
              HarEntryRequest instance = thisAdapter.fromJsonTree(jsonObj);
              for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {

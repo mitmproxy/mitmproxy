@@ -41,8 +41,8 @@ namespace BrowserUp.Mitmproxy.Client.Model
         /// </summary>
         /// <param name="mimeType">mimeType (required).</param>
         /// <param name="text">text.</param>
-        /// <param name="_params">_params.</param>
-        public HarEntryRequestPostData(string mimeType = default(string), string text = default(string), List<HarEntryRequestPostDataParamsInner> _params = default(List<HarEntryRequestPostDataParamsInner>))
+        /// <param name="varParams">varParams.</param>
+        public HarEntryRequestPostData(string mimeType = default(string), string text = default(string), List<HarEntryRequestPostDataParamsInner> varParams = default(List<HarEntryRequestPostDataParamsInner>))
         {
             // to ensure "mimeType" is required (not null)
             if (mimeType == null)
@@ -51,7 +51,7 @@ namespace BrowserUp.Mitmproxy.Client.Model
             }
             this.MimeType = mimeType;
             this.Text = text;
-            this.Params = _params;
+            this.VarParams = varParams;
         }
 
         /// <summary>
@@ -67,10 +67,10 @@ namespace BrowserUp.Mitmproxy.Client.Model
         public string Text { get; set; }
 
         /// <summary>
-        /// Gets or Sets Params
+        /// Gets or Sets VarParams
         /// </summary>
         [DataMember(Name = "params", EmitDefaultValue = false)]
-        public List<HarEntryRequestPostDataParamsInner> Params { get; set; }
+        public List<HarEntryRequestPostDataParamsInner> VarParams { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -82,7 +82,7 @@ namespace BrowserUp.Mitmproxy.Client.Model
             sb.Append("class HarEntryRequestPostData {\n");
             sb.Append("  MimeType: ").Append(MimeType).Append("\n");
             sb.Append("  Text: ").Append(Text).Append("\n");
-            sb.Append("  Params: ").Append(Params).Append("\n");
+            sb.Append("  VarParams: ").Append(VarParams).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -129,10 +129,10 @@ namespace BrowserUp.Mitmproxy.Client.Model
                     this.Text.Equals(input.Text))
                 ) && 
                 (
-                    this.Params == input.Params ||
-                    this.Params != null &&
-                    input.Params != null &&
-                    this.Params.SequenceEqual(input.Params)
+                    this.VarParams == input.VarParams ||
+                    this.VarParams != null &&
+                    input.VarParams != null &&
+                    this.VarParams.SequenceEqual(input.VarParams)
                 );
         }
 
@@ -153,9 +153,9 @@ namespace BrowserUp.Mitmproxy.Client.Model
                 {
                     hashCode = (hashCode * 59) + this.Text.GetHashCode();
                 }
-                if (this.Params != null)
+                if (this.VarParams != null)
                 {
-                    hashCode = (hashCode * 59) + this.Params.GetHashCode();
+                    hashCode = (hashCode * 59) + this.VarParams.GetHashCode();
                 }
                 return hashCode;
             }
