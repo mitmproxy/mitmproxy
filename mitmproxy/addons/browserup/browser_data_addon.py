@@ -26,11 +26,6 @@ class BrowserDataAddOn:
         assert f.websocket is not None
         if 'BrowserUpData' in f.request.url:
             message = f.websocket.messages[-1]
-            if message.from_client:
-                logging.info(f"Received message from client: {message.content}")
-            else:
-                logging.info(f"Received message from server (unexpected!): {message.content}")
-
             content = message.content
             message.drop()
 
@@ -47,21 +42,23 @@ class BrowserDataAddOn:
             # Generate the handshake response
             websocket_key = f.request.headers.get('Sec-WebSocket-Key', '')
             websocket_accept = self._compute_websocket_accept_value(websocket_key)
-            response_headers = [
+            response_headers = (
                 (b"Upgrade", b"websocket"),
                 (b"Connection", b"Upgrade"),
                 (b"Sec-WebSocket-Accept", websocket_accept.encode()),
-            ]
+            )
+
             timestamp_start = time.time()
             timestamp_end = timestamp_start
             self.handshaked = True
+
             f.response = mitmproxy.http.Response(
-                http_version=f.request.http_version,
+                http_version=f.request.http_version.encode("ascii", "strict"),
                 status_code=101,
                 reason=b"Switching Protocols",
                 headers=response_headers,
                 content=b"",
-                trailers=[],
+                trailers=(),
                 timestamp_start=timestamp_start,
                 timestamp_end=timestamp_end
             )
@@ -72,6 +69,8 @@ class BrowserDataAddOn:
             self._inject_data_script(f)
 
     def _inject_data_script(self, f: mitmproxy.http.HTTPFlow):
+        assert f.response is not None
+        assert f.response.content is not None
         html = f.response.content.decode('utf-8')
         html = re.sub('</body', self.browser_data_script + '</body', html)
         html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
@@ -86,7 +85,11 @@ class BrowserDataAddOn:
 
     def _is_full_html_page(self, f: mitmproxy.http.HTTPFlow):
         logging.info("Evaluating injection for {}".format(f.request.url))
-        if f.response is None or f.response.status_code != 200 or f.request.method not in ['GET', 'POST', 'PUT']:
+        if f.response is None or f.response.content is None:
+            logging.info("Evaluating injection false for content")
+            return False
+
+        if f.response.status_code != 200 or f.request.method not in ['GET', 'POST', 'PUT']:
             logging.info("Evaluating injection for response false for meth or code")
             return False
 
