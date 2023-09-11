@@ -56,7 +56,7 @@ class BrowserUpAddonsManagerAddOn:
     def basic_spec(self, app):
         return APISpec(
             title='BrowserUp MitmProxy',
-            version='1.0.0',
+            version='1.1.1',
             servers = [{"url": "http://localhost:{port}/",
                         "description": "The development API server",
                         "variables": {"port": {"enum": ["48088"], "default": '48088'}}
