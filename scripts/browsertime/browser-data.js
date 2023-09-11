@@ -458,6 +458,7 @@
         observeAndSaveActions();
         videoDataIntervalId = setInterval(sendVideoData, 15000);
 
+        window.addEventListener('load', sendVideoData);
         window.addEventListener('load', sendPageData);
         window.addEventListener('click', sendPageData);
         window.addEventListener('beforeunload', handleClose);
