@@ -16,6 +16,14 @@ SERVERS_SEEN: typing.Set[connection.Server] = set()
 
 REQUEST_SUBMITTED_FLAG = "_submitted"
 
+STATIC_MIME_TYPES = [
+    'application/javascript', 'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
+    'image/webp', 'image/bmp', 'image/tiff', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'video/mp4',
+    'video/webm', 'video/ogg', 'video/quicktime', 'font/woff', 'font/woff2', 'font/ttf', 'image/x-icon',
+    'application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/x-7z-compressed',
+    'application/octet-stream', 'application/x-shockwave-flash', 'text/css'
+]
+
 
 class FlowCaptureMixin(object):
 
@@ -124,6 +132,16 @@ class FlowCaptureMixin(object):
         content['size'] = response_body_size
         content['compression'] = response_body_compression
         content['mimeType'] = flow.response.headers.get('Content-Type', '')
+
+        if HarCaptureTypes.RESPONSE_DYNAMIC_CONTENT in self.har_capture_types:
+            mime_type = flow.response.headers.get('Content-Type', '').split(';')[0].strip()
+            # Skip capturing if mime_type is in the types to ignore
+            if mime_type not in STATIC_MIME_TYPES:
+                if strutils.is_mostly_bin(flow.response.content):
+                    har_response["content"]["text"] = base64.b64encode(flow.response.content).decode()
+                    har_response["content"]["encoding"] = "base64"
+                else:
+                    har_response["content"]["text"] = flow.response.get_text(strict=False)
 
         if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
             if strutils.is_mostly_bin(flow.response.content):

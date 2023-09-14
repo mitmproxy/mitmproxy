@@ -52,6 +52,23 @@ class TestHARCapture:
         flow = tflow.tflow(req=req, resp=resp)
         return flow
 
+    def test_capture_dynamic_response_content(self, hc):
+        # Test dynamic content (HTML)
+        f_dynamic = self.flow()
+        f_dynamic.response.headers["Content-Type"] = "text/html"
+        f_dynamic.response.content = b"<html><body>Hello World</body></html>"
+        hc.har_capture_types = [HarCaptureTypes.RESPONSE_DYNAMIC_CONTENT]
+        hc.response(f_dynamic)
+        assert (hc.har['log']['entries'][0]['response']['content']['text'] == "<html><body>Hello World</body></html>")
+
+        # Clear entries for the next test
+        hc.har['log']['entries'].clear()
+
+        # Test non-dynamic content (Video)
+        f_video = self.tvideoflow()
+        hc.response(f_video)
+        assert (hc.har['log']['entries'][0]['response']['content']['text'] == "")
+
     def test_simple(self, hc, path):
         # is invoked if there are exceptions
         # check script is read without errors

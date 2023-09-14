@@ -28,7 +28,7 @@ class HarManagerMixin():
             HarCaptureTypes.REQUEST_BINARY_CONTENT,
             HarCaptureTypes.RESPONSE_HEADERS,
             HarCaptureTypes.RESPONSE_COOKIES,
-            HarCaptureTypes.RESPONSE_CONTENT,
+            HarCaptureTypes.RESPONSE_DYNAMIC_CONTENT,
             HarCaptureTypes.WEBSOCKET_MESSAGES,
         ]
         #  omitting HarCaptureTypes.RESPONSE_BINARY_CONTENT,
