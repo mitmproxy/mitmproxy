@@ -20,18 +20,7 @@ from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
-HAR: dict = {
-    "log": {
-        "version": "1.2",
-        "creator": {
-            "name": "mitmproxy exporthar",
-            "version": "0.1",
-            "comment": "mitmproxy version %s" % version.MITMPROXY,
-        },
-        "pages": [],
-        "entries": [],
-    }
-}
+ENTRIES = []
 SERVERS_SEEN: set[Server] = set()
 
 
@@ -212,7 +201,7 @@ class SaveHar:
 
             entry["_resourceType"] = "websocket"
             entry["_webSocketMessages"] = websocket_messages
-        HAR["log"]["entries"].append(entry)
+        ENTRIES.append(entry)
         return entry
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
@@ -269,8 +258,18 @@ def done():
     """
     Called once on script shutdown, after any other events.
     """
+    har =   {"log": {
+        "version": "1.2",
+        "creator": {
+            "name": "mitmproxy exporthar",
+            "version": "0.1",
+            "comment": "mitmproxy version %s" % version.VERSION,
+        },
+        "pages": [],
+        "entries": ENTRIES,
+    }}
     if ctx.options.hardump:
-        json_dump: str = json.dumps(HAR, indent=2)
+        json_dump: str = json.dumps(har, indent=2)
 
         if ctx.options.hardump == "-":
             print(json_dump)

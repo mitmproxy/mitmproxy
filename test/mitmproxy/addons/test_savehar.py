@@ -195,8 +195,10 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
-def test_savehar_dump(tmpdir, tdata):
+def test_savehar_dump(tmpdir, tdata, monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
+        
         a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
         assert a
         path = str(tmpdir.join("somefile"))
@@ -206,17 +208,18 @@ def test_savehar_dump(tmpdir, tdata):
             [Path(test_dir / "data/flows/websocket.mitm")]
         ):
             a.websocket_end(x)
+        
         a.done()
 
         with open(path) as inp:
             har = json.load(inp)
-            har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
         assert har == json.loads(
             Path(test_dir / f"data/flows/websocket.har").read_bytes()
         )
 
 
-def test_options(tdata, capfd):
+def test_options(tdata, capfd, monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
         a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
         assert a
@@ -229,13 +232,13 @@ def test_options(tdata, capfd):
         a.done()
         out, _ = capfd.readouterr()
         out_har = json.loads(out)
-        out_har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
         assert out_har == json.loads(
             Path(test_dir / f"data/flows/websocket.har").read_bytes()
         )
 
 
-def test_zhar(tmpdir, tdata):
+def test_zhar(tmpdir, tdata, monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
         a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
         assert a
@@ -256,8 +259,6 @@ def test_zhar(tmpdir, tdata):
             print(f"Error decompressing: {e}")
             har = None
 
-    if har:
-        har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
 
     expected_path = test_dir / "data/flows/compressed.zhar"
     with open(expected_path, "rb") as expected_file:
@@ -267,8 +268,7 @@ def test_zhar(tmpdir, tdata):
         except zlib.error as e:
             print(f"Error decompressing: {e}")
             expected_data = None
-        if expected_data:
-            expected_data["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
+
 
     assert har == expected_data
 
