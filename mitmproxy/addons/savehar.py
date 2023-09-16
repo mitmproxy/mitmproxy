@@ -2,38 +2,38 @@
 import base64
 import json
 import logging
-import zlib
 import os
+import zlib
 from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
 from typing import Any
 
 from mitmproxy import command
+from mitmproxy import ctx
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
-from mitmproxy.exceptions import CommandError
 from mitmproxy.utils import strutils
-from mitmproxy import ctx
 
 logger = logging.getLogger(__name__)
 HAR: dict = {
-            "log": {
-                "version": "1.2",
-                "creator": {
-                    "name": "mitmproxy exporthar",
-                    "version": "0.1",
-                    "comment": "mitmproxy version %s" % version.MITMPROXY,
-                },
-                "pages": [],
-                "entries": [],
-            }
-        }
+    "log": {
+        "version": "1.2",
+        "creator": {
+            "name": "mitmproxy exporthar",
+            "version": "0.1",
+            "comment": "mitmproxy version %s" % version.MITMPROXY,
+        },
+        "pages": [],
+        "entries": [],
+    }
+}
 SERVERS_SEEN: set[Server] = set()
+
 
 class SaveHar:
     @command.command("save.har")
@@ -49,7 +49,7 @@ class SaveHar:
             if isinstance(f, http.HTTPFlow):
                 entries.append(self.flow_entry(f, servers_seen))
             else:
-                skipped+=1
+                skipped += 1
 
         if skipped > 0:
             logger.info(f"Skipped {skipped} flows that werent HTTPFlows.")
@@ -77,11 +77,15 @@ class SaveHar:
             ssl_time = -1.0
         elif flow.server_conn.timestamp_tcp_setup:
             assert flow.server_conn.timestamp_start
-            connect_time = flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
-            
+            connect_time = (
+                flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
+            )
 
             if flow.server_conn.timestamp_tls_setup:
-                ssl_time = flow.server_conn.timestamp_tls_setup - flow.server_conn.timestamp_tcp_setup
+                ssl_time = (
+                    flow.server_conn.timestamp_tls_setup
+                    - flow.server_conn.timestamp_tcp_setup
+                )
             else:
                 ssl_time = None
             servers_seen.add(flow.server_conn)
@@ -101,7 +105,7 @@ class SaveHar:
 
         if flow.response and flow.response.timestamp_end:
             receive = flow.response.timestamp_end - flow.response.timestamp_start
-            
+
         else:
             receive = 0
 
@@ -220,7 +224,7 @@ class SaveHar:
                 "name": name,
                 "value": value,
                 "path": attrs["path"],
-                "domain": attrs.get("domain",""),
+                "domain": attrs.get("domain", ""),
                 "httpOnly": "httpOnly" in attrs,
                 "secure": "secure" in attrs,
             }
@@ -236,7 +240,8 @@ class SaveHar:
 
     def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
         return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
-    
+
+
 def load(l):
     l.add_option(
         "hardump",
@@ -252,13 +257,14 @@ def response(flow: http.HTTPFlow):
     """
     if flow.websocket is None:
         s = SaveHar()
-        s.flow_entry(flow,SERVERS_SEEN)
+        s.flow_entry(flow, SERVERS_SEEN)
+
 
 def websocket_end(flow: http.HTTPFlow):
     s = SaveHar()
-    s.flow_entry(flow,SERVERS_SEEN)
+    s.flow_entry(flow, SERVERS_SEEN)
 
-    
+
 def done():
     """
     Called once on script shutdown, after any other events.
@@ -277,5 +283,6 @@ def done():
                 f.write(raw)
 
             logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+
 
 addons = [SaveHar()]

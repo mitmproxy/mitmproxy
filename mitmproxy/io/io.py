@@ -27,7 +27,7 @@ class FlowWriter:
 
 class FlowReader:
     def __init__(self, fo: BinaryIO):
-            self.fo: BufferedReader = BufferedReader(fo)
+        self.fo: BufferedReader = BufferedReader(fo)
 
     def stream(self) -> Iterable[flow.Flow]:
         """

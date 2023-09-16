@@ -12,7 +12,6 @@ from mitmproxy import http
 logger = logging.getLogger(__name__)
 
 
-
 def fix_headers(
     request_headers: list[dict[str, str]] | list[tuple[str, str]]
 ) -> http.Headers:
@@ -34,6 +33,7 @@ def fix_headers(
         flow_headers.append((key.encode(), value.encode()))
 
     return http.Headers(flow_headers)
+
 
 # Don't know how to make a type annotation for the request json
 def request_to_flow(request_json: dict) -> http.HTTPFlow:

@@ -1,29 +1,25 @@
 import json
+import zlib
 from pathlib import Path
 
 import pytest
-import zlib
+
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
-from mitmproxy.addons.savehar import SaveHar, done, load, response, websocket_end
-from mitmproxy.net.http import cookies
-from mitmproxy.test import taddons
-from mitmproxy.test import tutils
+from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.connection import Server
-from mitmproxy.exceptions import CommandError
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from wsproto.frame_protocol import Opcode
-from mitmproxy.websocket import WebSocketMessage
-from mitmproxy.test.tflow import ttcpflow
-
+from mitmproxy.test import tutils
 
 
 test_dir = Path(__file__).parent.parent
 mitmproxy_dir = test_dir.parent.parent
+
 
 def flow(resp_content=b"message"):
     times = dict(
@@ -36,6 +32,7 @@ def flow(resp_content=b"message"):
         req=tutils.treq(method=b"GET", **times),
         resp=tutils.tresp(content=resp_content, **times),
     )
+
 
 def test_write_error():
     s = SaveHar()
@@ -198,84 +195,82 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
-
 def test_savehar_dump(tmpdir, tdata):
+    with taddons.context() as tctx:
+        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+        assert a
+        path = str(tmpdir.join("somefile"))
+        tctx.configure(a, hardump=path)
 
-        with taddons.context() as tctx:
+        for x in io.read_flows_from_paths(
+            [Path(test_dir / "data/flows/websocket.mitm")]
+        ):
+            a.websocket_end(x)
+        a.done()
 
-            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-            assert a
-            path = str(tmpdir.join("somefile"))
-            tctx.configure(a, hardump=path)
-            
-            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/websocket.mitm")]):
-                
-                a.websocket_end(x)
-            a.done()
+        with open(path) as inp:
+            har = json.load(inp)
+            har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
+        assert har == json.loads(
+            Path(test_dir / f"data/flows/websocket.har").read_bytes()
+        )
 
-            with open(path) as inp:
-                har = json.load(inp)
-                har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
-            assert har == json.loads(Path(test_dir / f"data/flows/websocket.har").read_bytes())
 
-def test_options( tdata, capfd):
+def test_options(tdata, capfd):
+    with taddons.context() as tctx:
+        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+        assert a
+        tctx.configure(a, hardump="-")
 
-        with taddons.context() as tctx:
+        for x in io.read_flows_from_paths(
+            [Path(test_dir / "data/flows/websocket.mitm")]
+        ):
+            a.websocket_end(x)
+        a.done()
+        out, _ = capfd.readouterr()
+        out_har = json.loads(out)
+        out_har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
+        assert out_har == json.loads(
+            Path(test_dir / f"data/flows/websocket.har").read_bytes()
+        )
 
-            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-            assert a
-            tctx.configure(a, hardump="-")
-            
-            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/websocket.mitm")]):
-                a.websocket_end(x)
-            a.done()
-            out, _ = capfd.readouterr()
-            out_har = json.loads(out)
-            out_har['log']['creator']['comment'] = 'mitmproxy version 1.2.3'
-            assert out_har == json.loads(Path(test_dir / f"data/flows/websocket.har").read_bytes())
 
 def test_zhar(tmpdir, tdata):
+    with taddons.context() as tctx:
+        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+        assert a
+        path = str(tmpdir.join("somefile.zhar"))
+        tctx.configure(a, hardump=path)
 
-        with taddons.context() as tctx:
+        for x in io.read_flows_from_paths(
+            [Path(test_dir / "data/flows/successful_log.mitm")]
+        ):
+            a.websocket_end(x)
+        a.done()
 
-            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-            assert a
-            path = str(tmpdir.join("somefile.zhar"))
-            tctx.configure(a, hardump=path)
-            
-            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/successful_log.mitm")]):
-                a.websocket_end(x)
-            a.done()
+    with open(path, "rb") as inp:
+        try:
+            decompressed_data = zlib.decompress(inp.read())
+            har = json.loads(decompressed_data.decode())
+        except zlib.error as e:
+            print(f"Error decompressing: {e}")
+            har = None
 
-        with open(path, 'rb') as inp:
+    if har:
+        har["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
 
-            try:
-                decompressed_data = zlib.decompress(inp.read())
-                har = json.loads(decompressed_data.decode())
-            except zlib.error as e:
+    expected_path = test_dir / "data/flows/compressed.zhar"
+    with open(expected_path, "rb") as expected_file:
+        try:
+            decompressed_expected = zlib.decompress(expected_file.read())
+            expected_data = json.loads(decompressed_expected.decode())
+        except zlib.error as e:
+            print(f"Error decompressing: {e}")
+            expected_data = None
+        if expected_data:
+            expected_data["log"]["creator"]["comment"] = "mitmproxy version 1.2.3"
 
-                print(f"Error decompressing: {e}")
-                har = None
-                
-        if har:
-            har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
-
-      
-        expected_path = test_dir / "data/flows/compressed.zhar"
-        with open(expected_path, 'rb') as expected_file:
-
-            try:
-                decompressed_expected = zlib.decompress(expected_file.read())
-                expected_data = json.loads(decompressed_expected.decode())
-            except zlib.error as e:
-                
-                print(f"Error decompressing: {e}")
-                expected_data = None
-            if expected_data:
-                expected_data["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
-
-        
-        assert har == expected_data
+    assert har == expected_data
 
 
 def test_base64(tmpdir, tdata):
@@ -289,9 +284,7 @@ def test_base64(tmpdir, tdata):
         a.done()
         with open(path) as inp:
             har = json.load(inp)
-        assert (
-            har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
-        )
+        assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
 
 if __name__ == "__main__":
@@ -302,15 +295,16 @@ if __name__ == "__main__":
             path = open(file, "rb")
             flows = list(io.FlowReader(path).stream())
             s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
-    
+
     # Loads compressed har file
     with taddons.context() as tctx:
-
         a = tctx.script(str(mitmproxy_dir / "mitmproxy/addons/savehar.py"))
         assert a
-    
+
         tctx.configure(a, hardump="test/mitmproxy/data/flows/compressed.zhar")
-        
-        for x in io.read_flows_from_paths([Path(test_dir / "data/flows/successful_log.mitm")]):
+
+        for x in io.read_flows_from_paths(
+            [Path(test_dir / "data/flows/successful_log.mitm")]
+        ):
             a.websocket_end(x)
-        a.done()   
+        a.done()

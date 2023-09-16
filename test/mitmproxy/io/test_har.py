@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from mitmproxy import exceptions
-from mitmproxy.io.har import request_to_flow, fix_headers
+from mitmproxy.io.har import fix_headers
+from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
 
 here = Path(__file__).parent.parent / "data"
@@ -18,7 +19,6 @@ def hardcode_variable_fields_for_tests(flow: dict) -> None:
 
 
 def file_to_flows(path_name: Path) -> list[dict]:
-    
     file_json = json.loads(path_name.read_bytes())["log"]["entries"]
     flows = []
 
@@ -32,7 +32,6 @@ def file_to_flows(path_name: Path) -> list[dict]:
 
 
 def test_corrupt():
-
     file_json = json.loads(
         Path(here / "corrupted_har/broken_headers.json").read_bytes()
     )
@@ -53,6 +52,7 @@ def test_har_to_flow(har_file: Path):
         actual = json.loads(json.dumps(actual))
 
         assert actual == expected
+
 
 if __name__ == "__main__":
     for path_name in here.glob("har_files/*.har"):
