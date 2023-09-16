@@ -258,16 +258,18 @@ def done():
     """
     Called once on script shutdown, after any other events.
     """
-    har =   {"log": {
-        "version": "1.2",
-        "creator": {
-            "name": "mitmproxy exporthar",
-            "version": "0.1",
-            "comment": "mitmproxy version %s" % version.VERSION,
-        },
-        "pages": [],
-        "entries": ENTRIES,
-    }}
+    har = {
+        "log": {
+            "version": "1.2",
+            "creator": {
+                "name": "mitmproxy exporthar",
+                "version": "0.1",
+                "comment": "mitmproxy version %s" % version.VERSION,
+            },
+            "pages": [],
+            "entries": ENTRIES,
+        }
+    }
     if ctx.options.hardump:
         json_dump: str = json.dumps(har, indent=2)
 

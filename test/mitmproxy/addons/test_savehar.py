@@ -198,7 +198,6 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 def test_savehar_dump(tmpdir, tdata, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
-        
         a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
         assert a
         path = str(tmpdir.join("somefile"))
@@ -208,7 +207,7 @@ def test_savehar_dump(tmpdir, tdata, monkeypatch):
             [Path(test_dir / "data/flows/websocket.mitm")]
         ):
             a.websocket_end(x)
-        
+
         a.done()
 
         with open(path) as inp:
@@ -259,7 +258,6 @@ def test_zhar(tmpdir, tdata, monkeypatch):
             print(f"Error decompressing: {e}")
             har = None
 
-
     expected_path = test_dir / "data/flows/compressed.zhar"
     with open(expected_path, "rb") as expected_file:
         try:
@@ -268,7 +266,6 @@ def test_zhar(tmpdir, tdata, monkeypatch):
         except zlib.error as e:
             print(f"Error decompressing: {e}")
             expected_data = None
-
 
     assert har == expected_data
 
