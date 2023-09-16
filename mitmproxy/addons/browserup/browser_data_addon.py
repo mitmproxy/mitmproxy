@@ -15,7 +15,7 @@ class BrowserDataAddOn:
     def __init__(self, har_capture_addon):
         self.handshaked = False
         file_dir = pathlib.Path(__file__).parent.parent.parent.parent.resolve()
-        filepath = os.path.normpath(os.path.join(file_dir, "scripts/browsertime/browser-data.js"))
+        filepath = os.path.normpath(os.path.join(file_dir, "scripts/browsertime/browser-data.min.js"))
         with open(filepath, 'r') as file:
             self.browser_data_script = f'<script data-browserup=true>' + file.read() + '</script>'
             self.browser_data_script_len = len(self.browser_data_script)
@@ -72,8 +72,8 @@ class BrowserDataAddOn:
         assert f.response is not None
         assert f.response.content is not None
         html = f.response.content.decode('utf-8')
+        # html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
         html = re.sub('</body', self.browser_data_script + '</body', html)
-        html = re.sub('(?i)<meta[^>]+content-security-policy[^>]+>', '', html)
         f.metadata['injected_script_len'] = self.browser_data_script_len
 
         # <meta http-equiv="Content-Security-Policy" content="default-src 'self'">

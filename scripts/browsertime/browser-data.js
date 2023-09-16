@@ -447,8 +447,6 @@
         });
     }
 
-
-
     function init() {
         if (window.browserUp) { console.error('BrowserUp Double load Error!!!'); return; }
 

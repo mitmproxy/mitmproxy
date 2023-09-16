@@ -16,13 +16,13 @@ SERVERS_SEEN: typing.Set[connection.Server] = set()
 
 REQUEST_SUBMITTED_FLAG = "_submitted"
 
-STATIC_MIME_TYPES = [
+STATIC_MIME_TYPES = {
     'application/javascript', 'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
     'image/webp', 'image/bmp', 'image/tiff', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'video/mp4',
     'video/webm', 'video/ogg', 'video/quicktime', 'font/woff', 'font/woff2', 'font/ttf', 'image/x-icon',
     'application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/x-7z-compressed',
     'application/octet-stream', 'application/x-shockwave-flash', 'text/css'
-]
+}
 
 
 class FlowCaptureMixin(object):
