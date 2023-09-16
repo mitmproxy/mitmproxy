@@ -215,7 +215,6 @@ def test_savehar_dump(tmpdir, tdata):
 
             with open(path) as inp:
                 har = json.load(inp)
-               
                 har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
             assert har == json.loads(Path(test_dir / f"data/flows/websocket.har").read_bytes())
 
@@ -249,27 +248,24 @@ def test_zhar(tmpdir, tdata):
             a.done()
 
         with open(path, 'rb') as inp:
-            compressed_data = inp.read()
 
-        
-        try:
-            decompressed_data = zlib.decompress(compressed_data)
-            har = json.loads(decompressed_data.decode())
-        except zlib.error as e:
+            try:
+                decompressed_data = zlib.decompress(inp.read())
+                har = json.loads(decompressed_data.decode())
+            except zlib.error as e:
 
-            print(f"Error decompressing: {e}")
-            har = None
-
-
+                print(f"Error decompressing: {e}")
+                har = None
+                
         if har:
             har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
 
       
         expected_path = test_dir / "data/flows/compressed.zhar"
         with open(expected_path, 'rb') as expected_file:
-            compressed_expected = expected_file.read()
+
             try:
-                decompressed_expected = zlib.decompress(compressed_expected)
+                decompressed_expected = zlib.decompress(expected_file.read())
                 expected_data = json.loads(decompressed_expected.decode())
             except zlib.error as e:
                 
@@ -306,6 +302,8 @@ if __name__ == "__main__":
             path = open(file, "rb")
             flows = list(io.FlowReader(path).stream())
             s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
+    
+    # Loads compressed har file
     with taddons.context() as tctx:
 
         a = tctx.script(str(mitmproxy_dir / "mitmproxy/addons/savehar.py"))
