@@ -50,7 +50,7 @@ class SaveHar:
                 entries.append(self.flow_entry(f, servers_seen))
             else:
                 skipped+=1
-                logger.info(skipped)
+
         if skipped > 0:
             logger.info(f"Skipped {skipped} flows that werent HTTPFlows.")
 
@@ -256,26 +256,9 @@ def response(flow: http.HTTPFlow):
 
 def websocket_end(flow: http.HTTPFlow):
     s = SaveHar()
-    entry = s.flow_entry(flow,SERVERS_SEEN)
+    s.flow_entry(flow,SERVERS_SEEN)
 
-    websocket_messages = []
-    if flow.websocket:
-        for message in flow.websocket.messages:
-            if message.is_text:
-                data = message.text
-            else:
-                data = base64.b64encode(message.content).decode()
-            websocket_message = {
-                "type": "send" if message.from_client else "receive",
-                "time": message.timestamp,
-                "opcode": message.type.value,
-                "data": data,
-            }
-            websocket_messages.append(websocket_message)
-
-    entry["_resourceType"] = "websocket"
-    entry["_webSocketMessages"] = websocket_messages
-
+    
 def done():
     """
     Called once on script shutdown, after any other events.

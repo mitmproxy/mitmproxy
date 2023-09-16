@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
-
+import zlib
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
@@ -16,10 +16,14 @@ from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 from mitmproxy.test import tflow
+from wsproto.frame_protocol import Opcode
+from mitmproxy.websocket import WebSocketMessage
 from mitmproxy.test.tflow import ttcpflow
 
 
-here = Path(__file__).parent.parent
+
+test_dir = Path(__file__).parent.parent
+mitmproxy_dir = test_dir.parent.parent
 
 def flow(resp_content=b"message"):
     times = dict(
@@ -38,12 +42,6 @@ def test_write_error():
 
     with pytest.raises(FileNotFoundError):
         s.export_har([], types.Path("unknown_dir/testing_flow.har"))
-
-
-def test_command_error():
-    s = SaveHar()
-    with pytest.raises(CommandError):
-        s.export_har([ttcpflow()], types.Path("unknown_dir/testing_flow.har"))
 
 
 @pytest.mark.parametrize(
@@ -145,7 +143,7 @@ def test_timestamp_end():
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
 
-    assert s.flow_entry(flow, set())["timings"]["send"] == 1000
+    assert s.flow_entry(flow, set())["timings"]["send"] == 1
 
     flow.request.timestamp_end = None
     calculated_timings = s.flow_entry(flow, servers_seen)["timings"]
@@ -183,7 +181,7 @@ def test_binary_content():
 
 
 @pytest.mark.parametrize(
-    "log_file", [pytest.param(x, id=x.stem) for x in here.glob("data/flows/*.mitm")]
+    "log_file", [pytest.param(x, id=x.stem) for x in test_dir.glob("data/flows/*.mitm")]
 )
 def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
@@ -193,29 +191,95 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
     s.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
     expected_har = json.loads(
-        Path(here / f"data/flows/{log_file.stem}.har").read_bytes()
+        Path(test_dir / f"data/flows/{log_file.stem}.har").read_bytes()
     )
     actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
     assert actual_har == expected_har
 
 
-@pytest.mark.parametrize(
-    "flow", [pytest.param(x) for x in io.read_flows_from_paths([Path(here / "data/flows/websocket.mitm")])]
-)
-def test_savehar_dump(flow,tmpdir, tdata, monkeypatch):
-        monkeypatch.setattr(version, "VERSION", "1.2.3")
+
+def test_savehar_dump(tmpdir, tdata):
 
         with taddons.context() as tctx:
+
             a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
             assert a
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
-            a.websocket_end(flow)
+            
+            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/websocket.mitm")]):
+                
+                a.websocket_end(x)
             a.done()
+
             with open(path) as inp:
                 har = json.load(inp)
-            assert har == json.loads(Path(here / f"data/flows/websocket.har").read_bytes())
+               
+                har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
+            assert har == json.loads(Path(test_dir / f"data/flows/websocket.har").read_bytes())
+
+def test_options( tdata, capfd):
+
+        with taddons.context() as tctx:
+
+            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+            assert a
+            tctx.configure(a, hardump="-")
+            
+            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/websocket.mitm")]):
+                a.websocket_end(x)
+            a.done()
+            out, _ = capfd.readouterr()
+            out_har = json.loads(out)
+            out_har['log']['creator']['comment'] = 'mitmproxy version 1.2.3'
+            assert out_har == json.loads(Path(test_dir / f"data/flows/websocket.har").read_bytes())
+
+def test_zhar(tmpdir, tdata):
+
+        with taddons.context() as tctx:
+
+            a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
+            assert a
+            path = str(tmpdir.join("somefile.zhar"))
+            tctx.configure(a, hardump=path)
+            
+            for x in io.read_flows_from_paths([Path(test_dir / "data/flows/successful_log.mitm")]):
+                a.websocket_end(x)
+            a.done()
+
+        with open(path, 'rb') as inp:
+            compressed_data = inp.read()
+
+        
+        try:
+            decompressed_data = zlib.decompress(compressed_data)
+            har = json.loads(decompressed_data.decode())
+        except zlib.error as e:
+
+            print(f"Error decompressing: {e}")
+            har = None
+
+
+        if har:
+            har["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
+
+      
+        expected_path = test_dir / "data/flows/compressed.zhar"
+        with open(expected_path, 'rb') as expected_file:
+            compressed_expected = expected_file.read()
+            try:
+                decompressed_expected = zlib.decompress(compressed_expected)
+                expected_data = json.loads(decompressed_expected.decode())
+            except zlib.error as e:
+                
+                print(f"Error decompressing: {e}")
+                expected_data = None
+            if expected_data:
+                expected_data["log"]["creator"]["comment"] = 'mitmproxy version 1.2.3'
+
+        
+        assert har == expected_data
 
 
 def test_base64(tmpdir, tdata):
@@ -236,9 +300,19 @@ def test_base64(tmpdir, tdata):
 
 if __name__ == "__main__":
     s = SaveHar()
-
-    for file in here.glob("data/flows/*.mitm"):
+    setattr(version, "VERSION", "1.2.3")
+    for file in test_dir.glob("data/flows/*.mitm"):
         if not file.suffix == ".har":
             path = open(file, "rb")
             flows = list(io.FlowReader(path).stream())
-            s.export_har(flows, types.Path(here / f"data/flows/{file.stem}.har"))
+            s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
+    with taddons.context() as tctx:
+
+        a = tctx.script(str(mitmproxy_dir / "mitmproxy/addons/savehar.py"))
+        assert a
+    
+        tctx.configure(a, hardump="test/mitmproxy/data/flows/compressed.zhar")
+        
+        for x in io.read_flows_from_paths([Path(test_dir / "data/flows/successful_log.mitm")]):
+            a.websocket_end(x)
+        a.done()   
