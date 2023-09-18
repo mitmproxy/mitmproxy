@@ -27,7 +27,6 @@ def flow(resp_content=b"message"):
         timestamp_end=746203272,
     )
 
-    # Create a dummy flow for testing
     return tflow.tflow(
         req=tutils.treq(method=b"GET", **times),
         resp=tutils.tresp(content=resp_content, **times),
@@ -293,7 +292,6 @@ if __name__ == "__main__":
             flows = list(io.FlowReader(path).stream())
             s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
 
-    # Loads compressed har file
     with taddons.context() as tctx:
         a = tctx.script(str(mitmproxy_dir / "mitmproxy/addons/savehar.py"))
         assert a
