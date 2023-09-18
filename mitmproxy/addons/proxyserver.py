@@ -108,7 +108,7 @@ class Proxyserver(ServerManager):
     This addon runs the actual proxy server.
     """
 
-    connections: dict[tuple, ProxyConnectionHandler]
+    connections: dict[tuple | str, ProxyConnectionHandler]
     servers: Servers
 
     is_running: bool
@@ -125,7 +125,7 @@ class Proxyserver(ServerManager):
 
     @contextmanager
     def register_connection(
-        self, connection_id: tuple, handler: ProxyConnectionHandler
+        self, connection_id: tuple | str, handler: ProxyConnectionHandler
     ):
         self.connections[connection_id] = handler
         try:
@@ -278,6 +278,7 @@ class Proxyserver(ServerManager):
                 self._update_task = asyncio.create_task(self.servers.update(modes))
 
     async def setup_servers(self) -> bool:
+        """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""
         return await self.servers.update(
             [mode_specs.ProxyMode.parse(m) for m in ctx.options.mode]
         )
@@ -286,11 +287,15 @@ class Proxyserver(ServerManager):
         return [addr for server in self.servers for addr in server.listen_addrs]
 
     def inject_event(self, event: events.MessageInjected):
-        connection_id = (
-            event.flow.client_conn.transport_protocol,
-            event.flow.client_conn.peername,
-            event.flow.client_conn.sockname,
-        )
+        connection_id: str | tuple
+        if event.flow.client_conn.transport_protocol != "udp":
+            connection_id = event.flow.client_conn.id
+        else:  # pragma: no cover
+            # temporary workaround: for UDP we don't have persistent client IDs yet.
+            connection_id = (
+                event.flow.client_conn.peername,
+                event.flow.client_conn.sockname,
+            )
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
         self.connections[connection_id].server_event(event)

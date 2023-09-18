@@ -76,11 +76,12 @@ M = TypeVar("M", bound=mode_specs.ProxyMode)
 
 
 class ServerManager(typing.Protocol):
-    connections: dict[tuple, ProxyConnectionHandler]
+    # temporary workaround: for UDP, we use the 4-tuple because we don't have a uuid.
+    connections: dict[tuple | str, ProxyConnectionHandler]
 
     @contextmanager
     def register_connection(
-        self, connection_id: tuple, handler: ProxyConnectionHandler
+        self, connection_id: tuple | str, handler: ProxyConnectionHandler
     ):
         ...  # pragma: no cover
 
@@ -200,14 +201,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
         elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.OsProxyMode)):
-            handler.layer.context.server.address = handler.layer.context.client.sockname
+            handler.layer.context.server.address = writer.get_extra_info(
+                "destination_address", handler.layer.context.client.sockname
+            )
 
-        connection_id = (
-            handler.layer.context.client.transport_protocol,
-            handler.layer.context.client.peername,
-            handler.layer.context.client.sockname,
-        )
-        with self.manager.register_connection(connection_id, handler):
+        with self.manager.register_connection(handler.layer.context.client.id, handler):
             await handler.handle_client()
 
     def handle_udp_datagram(
@@ -217,7 +215,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         remote_addr: Address,
         local_addr: Address,
     ) -> None:
-        connection_id = ("udp", remote_addr, local_addr)
+        # temporary workaround: we don't have a client uuid here.
+        connection_id = (remote_addr, local_addr)
         if connection_id not in self.manager.connections:
             reader = udp.DatagramReader()
             writer = udp.DatagramWriter(transport, remote_addr, reader)

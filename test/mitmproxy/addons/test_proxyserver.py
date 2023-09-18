@@ -301,9 +301,7 @@ async def test_dns(caplog_async) -> None:
         resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        dns_layer = ps.connections[
-            ("udp", w.get_extra_info("sockname"), dns_addr)
-        ].layer
+        dns_layer = ps.connections[(w.get_extra_info("sockname"), dns_addr)].layer
         assert isinstance(dns_layer, layers.DNSLayer)
         assert len(dns_layer.flows) == 2
 
