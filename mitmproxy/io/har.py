@@ -23,7 +23,6 @@ def fix_headers(
             key = header["name"]
             value = header["value"]
 
-
         # Application that uses the [name, value] notation is Slack
 
         else:
@@ -35,7 +34,6 @@ def fix_headers(
         flow_headers.append((key.encode(), value.encode()))
 
     return http.Headers(flow_headers)
-
 
 
 def request_to_flow(request_json: dict) -> http.HTTPFlow:
