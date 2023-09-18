@@ -35,7 +35,6 @@ def fix_headers(
     return http.Headers(flow_headers)
 
 
-# Don't know how to make a type annotation for the request json
 def request_to_flow(request_json: dict) -> http.HTTPFlow:
     """
     Creates a HTTPFlow object from a given entry in HAR file

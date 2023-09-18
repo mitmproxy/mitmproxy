@@ -17,7 +17,6 @@ from mitmproxy.io.har import request_to_flow
 
 class FlowWriter:
     def __init__(self, fo):
-        print(type(fo))
         self.fo = fo
 
     def add(self, f: flow.Flow) -> None:
