@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add support for reading HAR files using the existing flow loading APIs, e.g. `mitmproxy -r example.har`.
+  ([#6335](https://github.com/mitmproxy/mitmproxy/pull/6335), @stanleygvi)
 
 
 ## 04 August 2023: mitmproxy 10.0.0
