@@ -287,6 +287,7 @@ class Proxyserver(ServerManager):
         return [addr for server in self.servers for addr in server.listen_addrs]
 
     def inject_event(self, event: events.MessageInjected):
+        connection_id: str | tuple
         if event.flow.client_conn.transport_protocol != "udp":
             connection_id = event.flow.client_conn.id
         else:
