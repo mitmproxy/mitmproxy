@@ -73,7 +73,6 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
 
     new_flow = http.HTTPFlow(client_conn, server_conn)
 
-    .
     if "postData" in request_json["request"]:
         request_content = request_json["request"]["postData"]["text"]
 
