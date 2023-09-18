@@ -53,10 +53,13 @@ class Master:
                 await ec.shutdown_if_errored()
             if ps := self.addons.get("proxyserver"):
                 # This may block for some proxy modes, so we also monitor should_exit.
-                await asyncio.wait([
-                    asyncio.create_task(ps.setup_servers()),
-                    asyncio.create_task(self.should_exit.wait())
-                ], return_when=asyncio.FIRST_COMPLETED)
+                await asyncio.wait(
+                    [
+                        asyncio.create_task(ps.setup_servers()),
+                        asyncio.create_task(self.should_exit.wait()),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
                 ec.finish()
