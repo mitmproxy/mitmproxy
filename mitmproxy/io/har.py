@@ -65,7 +65,7 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
         # TODO Get time info from HAR File
         timestamp_start=time.time(),
     )
-    
+
     if server_address:
         server_conn = connection.Server(address=(server_address, port))
     else:
