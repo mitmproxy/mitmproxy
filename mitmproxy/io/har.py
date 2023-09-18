@@ -23,7 +23,7 @@ def fix_headers(
             key = header["name"]
             value = header["value"]
 
-        # Application that use the [name, value] notation is Slack
+        # Application that uses the [name, value] notation is Slack
         else:
             try:
                 key = header[0]
@@ -65,7 +65,7 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
         # TODO Get time info from HAR File
         timestamp_start=time.time(),
     )
-    # TODO find server address if "serverIPAddress" == ""
+    
     if server_address:
         server_conn = connection.Server(address=(server_address, port))
     else:
@@ -73,7 +73,7 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
 
     new_flow = http.HTTPFlow(client_conn, server_conn)
 
-    # FIXME: Handle request body.
+    .
     if "postData" in request_json["request"]:
         request_content = request_json["request"]["postData"]["text"]
 
