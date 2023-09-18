@@ -290,7 +290,7 @@ class Proxyserver(ServerManager):
         connection_id: str | tuple
         if event.flow.client_conn.transport_protocol != "udp":
             connection_id = event.flow.client_conn.id
-        else:
+        else:  # pragma: no cover
             # temporary workaround: for UDP we don't have persistent client IDs yet.
             connection_id = (
                 event.flow.client_conn.peername,
