@@ -202,8 +202,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.server.address = original_dst
         elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.OsProxyMode)):
             handler.layer.context.server.address = writer.get_extra_info(
-                "destination_address",
-                handler.layer.context.client.sockname
+                "destination_address", handler.layer.context.client.sockname
             )
 
         with self.manager.register_connection(handler.layer.context.client.id, handler):
