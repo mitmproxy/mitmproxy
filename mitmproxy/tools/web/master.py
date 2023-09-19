@@ -97,7 +97,7 @@ class WebMaster(master.Master):
         tornado.ioloop.IOLoop.current()
 
         # Add our web app.
-        http_server = tornado.httpserver.HTTPServer(self.app)
+        http_server = tornado.httpserver.HTTPServer(self.app, max_buffer_size=2**32) # 4GB
         try:
             http_server.listen(self.options.web_port, self.options.web_host)
         except OSError as e:
