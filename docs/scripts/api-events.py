@@ -60,7 +60,8 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
             raise RuntimeError(f"Already documented: {hook}")
         known.add(hook.name)
         doc = inspect.getdoc(hook)
-        print(f"    def {hook.name}({', '.join(str(p) for p in ['self'] + params)}):")
+        print(f"    @staticmethod")
+        print(f"    def {hook.name}({', '.join(str(p) for p in params)}):")
         print(textwrap.indent(f'"""\n{doc}\n"""', "        "))
         if params:
             print(
