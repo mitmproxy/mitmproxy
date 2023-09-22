@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 
 class SaveHar:
     def __init__(self) -> None:
-        self.ENTRIES_DUMP:list[dict] = []
+        self.ENTRIES_DUMP: list[dict] = []
         self.SERVERS_SEEN: set[Server] = set()
+
     @command.command("save.har")
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
@@ -233,8 +234,7 @@ class SaveHar:
     def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
         return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
 
-
-    def load(self,l):
+    def load(self, l):
         l.add_option(
             "hardump",
             str,
@@ -242,18 +242,15 @@ class SaveHar:
             "HAR dump path.",
         )
 
-
-    def response(self,flow: http.HTTPFlow):
+    def response(self, flow: http.HTTPFlow):
         """
         Called when a server response has been received.
         """
-        
+
         self.flow_entry(flow, self.SERVERS_SEEN)
 
-
-    def websocket_end(self,flow: http.HTTPFlow):
+    def websocket_end(self, flow: http.HTTPFlow):
         self.flow_entry(flow, self.SERVERS_SEEN)
-
 
     def done(self):
         """
@@ -284,7 +281,9 @@ class SaveHar:
                 with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
                     f.write(raw)
 
-                logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+                logging.info(
+                    "HAR dump finished (wrote %s bytes to file)" % len(json_dump)
+                )
 
 
 addons = [SaveHar()]

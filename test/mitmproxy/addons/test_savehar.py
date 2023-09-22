@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
+from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.addons.savehar import SaveHar
-from mitmproxy import http
 from mitmproxy.connection import Server
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
