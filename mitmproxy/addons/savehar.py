@@ -93,7 +93,9 @@ class SaveHar:
             wait = 0
 
         if flow.response and flow.response.timestamp_end:
-            receive = 1000 * (flow.response.timestamp_end - flow.response.timestamp_start)
+            receive = 1000 * (
+                flow.response.timestamp_end - flow.response.timestamp_start
+            )
 
         else:
             receive = 0
