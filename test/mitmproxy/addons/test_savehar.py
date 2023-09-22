@@ -8,6 +8,7 @@ from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.addons.savehar import SaveHar
+from mitmproxy import http
 from mitmproxy.connection import Server
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
@@ -194,20 +195,21 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
-def test_savehar_dump(tmpdir, tdata, monkeypatch):
+def test_savehar_dump(tmpdir, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
-        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-        assert a
+        s = SaveHar()
+        assert s
         path = str(tmpdir.join("somefile"))
-        tctx.configure(a, hardump=path)
+        tctx.configure(s, hardump=path)
 
         for x in io.read_flows_from_paths(
             [Path(test_dir / "data/flows/websocket.mitm")]
         ):
-            a.websocket_end(x)
+            assert isinstance(x, http.HTTPFlow)
+            s.websocket_end(x)
 
-        a.done()
+        s.done()
 
         with open(path) as inp:
             har = json.load(inp)
@@ -216,18 +218,19 @@ def test_savehar_dump(tmpdir, tdata, monkeypatch):
         )
 
 
-def test_options(tdata, capfd, monkeypatch):
+def test_options(capfd, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
-        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-        assert a
-        tctx.configure(a, hardump="-")
+        s = SaveHar()
+        assert s
+        tctx.configure(s, hardump="-")
 
         for x in io.read_flows_from_paths(
             [Path(test_dir / "data/flows/websocket.mitm")]
         ):
-            a.websocket_end(x)
-        a.done()
+            assert isinstance(x, http.HTTPFlow)
+            s.websocket_end(x)
+        s.done()
         out, _ = capfd.readouterr()
         out_har = json.loads(out)
         assert out_har == json.loads(
@@ -235,19 +238,20 @@ def test_options(tdata, capfd, monkeypatch):
         )
 
 
-def test_zhar(tmpdir, tdata, monkeypatch):
+def test_zhar(tmpdir, monkeypatch):
     monkeypatch.setattr(version, "VERSION", "1.2.3")
     with taddons.context() as tctx:
-        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-        assert a
+        s = SaveHar()
+        assert s
         path = str(tmpdir.join("somefile.zhar"))
-        tctx.configure(a, hardump=path)
+        tctx.configure(s, hardump=path)
 
         for x in io.read_flows_from_paths(
             [Path(test_dir / "data/flows/successful_log.mitm")]
         ):
-            a.websocket_end(x)
-        a.done()
+            assert isinstance(x, http.HTTPFlow)
+            s.websocket_end(x)
+        s.done()
 
     with open(path, "rb") as inp:
         try:
@@ -269,15 +273,15 @@ def test_zhar(tmpdir, tdata, monkeypatch):
     assert har == expected_data
 
 
-def test_base64(tmpdir, tdata):
+def test_base64(tmpdir):
     with taddons.context() as tctx:
-        a = tctx.script(tdata.path("../mitmproxy/addons/savehar.py"))
-        assert a
+        s = SaveHar()
+        assert s
         path = str(tmpdir.join("somefile"))
-        tctx.configure(a, hardump=path)
+        tctx.configure(s, hardump=path)
 
-        a.response(flow(resp_content=b"foo" + b"\xFF" * 10))
-        a.done()
+        s.response(flow(resp_content=b"foo" + b"\xFF" * 10))
+        s.done()
         with open(path) as inp:
             har = json.load(inp)
         assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
@@ -293,13 +297,14 @@ if __name__ == "__main__":
             s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
 
     with taddons.context() as tctx:
-        a = tctx.script(str(mitmproxy_dir / "mitmproxy/addons/savehar.py"))
-        assert a
+        s = SaveHar()
+        assert s
 
-        tctx.configure(a, hardump="test/mitmproxy/data/flows/compressed.zhar")
+        tctx.configure(s, hardump="test/mitmproxy/data/flows/compressed.zhar")
 
         for x in io.read_flows_from_paths(
             [Path(test_dir / "data/flows/successful_log.mitm")]
         ):
-            a.websocket_end(x)
-        a.done()
+            assert isinstance(x, http.HTTPFlow)
+            s.websocket_end(x)
+        s.done()

@@ -20,11 +20,12 @@ from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
-ENTRIES_DUMP = []
-SERVERS_SEEN: set[Server] = set()
 
 
 class SaveHar:
+    def __init__(self) -> None:
+        self.ENTRIES_DUMP:list[dict] = []
+        self.SERVERS_SEEN: set[Server] = set()
     @command.command("save.har")
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
@@ -203,7 +204,7 @@ class SaveHar:
 
             entry["_resourceType"] = "websocket"
             entry["_webSocketMessages"] = websocket_messages
-        ENTRIES_DUMP.append(entry)
+        self.ENTRIES_DUMP.append(entry)
         return entry
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
@@ -246,12 +247,12 @@ class SaveHar:
         """
         Called when a server response has been received.
         """
-        if flow.websocket is None:
-            self.flow_entry(flow, SERVERS_SEEN)
+        
+        self.flow_entry(flow, self.SERVERS_SEEN)
 
 
     def websocket_end(self,flow: http.HTTPFlow):
-        self.flow_entry(flow, SERVERS_SEEN)
+        self.flow_entry(flow, self.SERVERS_SEEN)
 
 
     def done(self):
@@ -267,7 +268,7 @@ class SaveHar:
                     "comment": "mitmproxy version %s" % version.VERSION,
                 },
                 "pages": [],
-                "entries": ENTRIES_DUMP,
+                "entries": self.ENTRIES_DUMP,
             }
         }
         if ctx.options.hardump:
