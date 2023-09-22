@@ -139,7 +139,7 @@ def test_timestamp_end():
     servers_seen: set[Server] = set()
     flow = tflow.twebsocketflow()
 
-    assert s.flow_entry(flow, set())["timings"]["send"] == 1
+    assert s.flow_entry(flow, set())["timings"]["send"] == 1000
 
     flow.request.timestamp_end = None
     calculated_timings = s.flow_entry(flow, servers_seen)["timings"]

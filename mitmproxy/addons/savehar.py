@@ -66,12 +66,12 @@ class SaveHar:
             ssl_time = -1.0
         elif flow.server_conn.timestamp_tcp_setup:
             assert flow.server_conn.timestamp_start
-            connect_time = (
+            connect_time = 1000 * (
                 flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
             )
 
             if flow.server_conn.timestamp_tls_setup:
-                ssl_time = (
+                ssl_time = 1000 * (
                     flow.server_conn.timestamp_tls_setup
                     - flow.server_conn.timestamp_tcp_setup
                 )
@@ -83,17 +83,17 @@ class SaveHar:
             ssl_time = None
 
         if flow.request.timestamp_end:
-            send = flow.request.timestamp_end - flow.request.timestamp_start
+            send = 1000 * (flow.request.timestamp_end - flow.request.timestamp_start)
         else:
             send = 0
 
         if flow.response and flow.request.timestamp_end:
-            wait = flow.response.timestamp_start - flow.request.timestamp_end
+            wait = 1000 * (flow.response.timestamp_start - flow.request.timestamp_end)
         else:
             wait = 0
 
         if flow.response and flow.response.timestamp_end:
-            receive = flow.response.timestamp_end - flow.response.timestamp_start
+            receive = 1000 * (flow.response.timestamp_end - flow.response.timestamp_start)
 
         else:
             receive = 0
