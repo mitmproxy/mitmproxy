@@ -20,7 +20,7 @@ from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
-ENTRIES = []
+ENTRIES_DUMP = []
 SERVERS_SEEN: set[Server] = set()
 
 
@@ -203,7 +203,7 @@ class SaveHar:
 
             entry["_resourceType"] = "websocket"
             entry["_webSocketMessages"] = websocket_messages
-        ENTRIES.append(entry)
+        ENTRIES_DUMP.append(entry)
         return entry
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
@@ -233,59 +233,57 @@ class SaveHar:
         return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
 
 
-def load(l):
-    l.add_option(
-        "hardump",
-        str,
-        "",
-        "HAR dump path.",
-    )
+    def load(self,l):
+        l.add_option(
+            "hardump",
+            str,
+            "",
+            "HAR dump path.",
+        )
 
 
-def response(flow: http.HTTPFlow):
-    """
-    Called when a server response has been received.
-    """
-    if flow.websocket is None:
-        s = SaveHar()
-        s.flow_entry(flow, SERVERS_SEEN)
+    def response(self,flow: http.HTTPFlow):
+        """
+        Called when a server response has been received.
+        """
+        if flow.websocket is None:
+            self.flow_entry(flow, SERVERS_SEEN)
 
 
-def websocket_end(flow: http.HTTPFlow):
-    s = SaveHar()
-    s.flow_entry(flow, SERVERS_SEEN)
+    def websocket_end(self,flow: http.HTTPFlow):
+        self.flow_entry(flow, SERVERS_SEEN)
 
 
-def done():
-    """
-    Called once on script shutdown, after any other events.
-    """
-    har = {
-        "log": {
-            "version": "1.2",
-            "creator": {
-                "name": "mitmproxy exporthar",
-                "version": "0.1",
-                "comment": "mitmproxy version %s" % version.VERSION,
-            },
-            "pages": [],
-            "entries": ENTRIES,
+    def done(self):
+        """
+        Called once on script shutdown, after any other events.
+        """
+        har = {
+            "log": {
+                "version": "1.2",
+                "creator": {
+                    "name": "mitmproxy exporthar",
+                    "version": "0.1",
+                    "comment": "mitmproxy version %s" % version.VERSION,
+                },
+                "pages": [],
+                "entries": ENTRIES_DUMP,
+            }
         }
-    }
-    if ctx.options.hardump:
-        json_dump: str = json.dumps(har, indent=2)
+        if ctx.options.hardump:
+            json_dump: str = json.dumps(har, indent=2)
 
-        if ctx.options.hardump == "-":
-            print(json_dump)
-        else:
-            raw: bytes = json_dump.encode()
-            if ctx.options.hardump.endswith(".zhar"):
-                raw = zlib.compress(raw, 9)
+            if ctx.options.hardump == "-":
+                print(json_dump)
+            else:
+                raw: bytes = json_dump.encode()
+                if ctx.options.hardump.endswith(".zhar"):
+                    raw = zlib.compress(raw, 9)
 
-            with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
-                f.write(raw)
+                with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
+                    f.write(raw)
 
-            logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+                logging.info("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
 addons = [SaveHar()]
