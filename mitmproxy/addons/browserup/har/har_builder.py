@@ -29,8 +29,8 @@ class HarBuilder():
     @staticmethod
     def page_timings():
         return {
-            "onContentLoad": 0,
-            "onLoad": 0,
+            "onContentLoad": -1,
+            "onLoad": -1,
             "comment": ""
         }
 

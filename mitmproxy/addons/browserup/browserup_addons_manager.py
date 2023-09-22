@@ -18,13 +18,15 @@ from pathlib import Path
 
 # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
+VERSION = '1.22'
+
 
 class BrowserUpAddonsManagerAddOn:
     initialized = False
 
     def load(self, l):
         logging.info('Loading BrowserUpAddonsManagerAddOn')
-        logging.info('Version 1.22')
+        logging.info('Version {}'.format(VERSION))
 
         ctx.options.update(listen_port = 48080)
 
@@ -56,7 +58,7 @@ class BrowserUpAddonsManagerAddOn:
     def basic_spec(self, app):
         return APISpec(
             title='BrowserUp MitmProxy',
-            version='1.1.5',
+            version=VERSION,
             servers = [{"url": "http://localhost:{port}/",
                         "description": "The development API server",
                         "variables": {"port": {"enum": ["48088"], "default": '48088'}}

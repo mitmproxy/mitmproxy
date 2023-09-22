@@ -113,7 +113,9 @@ class HarManagerMixin():
 
     def add_page_timings_to_har(self, page_info):
         page = self.get_or_create_current_page()
-        page['pageTimings'] = page_info
+        timings = page['pageTimings']
+        timings.update(page_info)
+        page['pageTimings'] = timings
         logging.info(self.get_or_create_current_page())
 
     def add_page_data_to_har(self, page_data):
