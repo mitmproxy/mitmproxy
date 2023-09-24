@@ -143,7 +143,10 @@ class Save:
         except OSError as e:
             raise exceptions.CommandError(e) from e
         if path.endswith(".har") or path.endswith(".zhar"):
-            logging.log(ALERT, f"Saved as mitmproxy dump file. To save HAR files, use the `save.har` command.")
+            logging.log(
+                ALERT,
+                f"Saved as mitmproxy dump file. To save HAR files, use the `save.har` command.",
+            )
         else:
             logging.log(ALERT, f"Saved {len(flows)} flows.")
 
