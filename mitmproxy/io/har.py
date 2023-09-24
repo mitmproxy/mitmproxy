@@ -24,6 +24,7 @@ def fix_headers(
             value = header["value"]
 
         # Application that uses the [name, value] notation is Slack
+
         else:
             try:
                 key = header[0]

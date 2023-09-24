@@ -142,7 +142,13 @@ class Save:
                     stream.add(i)
         except OSError as e:
             raise exceptions.CommandError(e) from e
-        logging.log(ALERT, f"Saved {len(flows)} flows.")
+        if path.endswith(".har") or path.endswith(".zhar"):  # pragma: no cover
+            logging.log(
+                ALERT,
+                f"Saved as mitmproxy dump file. To save HAR files, use the `save.har` command.",
+            )
+        else:
+            logging.log(ALERT, f"Saved {len(flows)} flows.")
 
     def tcp_start(self, flow: tcp.TCPFlow):
         if self.stream:
