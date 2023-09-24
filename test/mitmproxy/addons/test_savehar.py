@@ -1,5 +1,4 @@
 import json
-import zlib
 from pathlib import Path
 
 import pytest
@@ -187,9 +186,7 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     flows = io.read_flows_from_paths([log_file])
 
     s.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
-    expected_har = json.loads(
-        log_file.with_suffix(".har").read_bytes()
-    )
+    expected_har = json.loads(log_file.with_suffix(".har").read_bytes())
     actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
     assert actual_har == expected_har
@@ -245,9 +242,7 @@ def test_base64(tmpdir):
         path = str(tmpdir.join("somefile"))
         tctx.configure(s, hardump=path)
 
-        s.response(
-            tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))
-        )
+        s.response(tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10)))
         s.done()
         with open(path) as inp:
             har = json.load(inp)

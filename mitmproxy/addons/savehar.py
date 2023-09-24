@@ -2,7 +2,6 @@
 import base64
 import json
 import logging
-
 import zlib
 from collections.abc import Sequence
 from datetime import datetime
@@ -35,10 +34,7 @@ class SaveHar:
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
 
-        har = json.dumps(
-            self.make_har(flows),
-            indent=4
-        ).encode()
+        har = json.dumps(self.make_har(flows), indent=4).encode()
 
         if path.endswith(".zhar"):
             har = zlib.compress(har, 9)
@@ -84,7 +80,7 @@ class SaveHar:
             "",
             "Save a HAR file with all flows on exit. "
             "You may select particular flows by setting save_stream_filter.",
-            "For mitmdump, enabling this option will mean that flows are kept in memory. "
+            "For mitmdump, enabling this option will mean that flows are kept in memory. ",
         )
 
     def configure(self, updated):
@@ -115,10 +111,7 @@ class SaveHar:
 
     def _save_flow(self, flow: http.HTTPFlow) -> None:
         if ctx.options.hardump:
-            flow_matches = (
-                self.filt is None
-                or self.filt(flow)
-            )
+            flow_matches = self.filt is None or self.filt(flow)
             if flow_matches:
                 self.flows.append(flow)
 
