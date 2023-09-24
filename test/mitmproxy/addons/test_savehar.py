@@ -1,8 +1,8 @@
 import json
+import zlib
 from pathlib import Path
 
 import pytest
-import zlib
 
 from mitmproxy import io
 from mitmproxy import types
@@ -146,16 +146,14 @@ def test_tls_setup():
 
 def test_binary_content():
     resp_content = SaveHar().make_har(
-        [
-            tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))
-        ]
+        [tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))]
     )["log"]["entries"][0]["response"]["content"]
     assert resp_content == {
-        'compression': 0,
-        'encoding': 'base64',
-        'mimeType': '',
-        'size': 13,
-        'text': 'Zm9v/////////////w=='
+        "compression": 0,
+        "encoding": "base64",
+        "mimeType": "",
+        "size": 13,
+        "text": "Zm9v/////////////w==",
     }
 
 
@@ -197,11 +195,7 @@ class TestHardumpOption:
     def test_filter(self, capsys):
         s = SaveHar()
         with taddons.context(s, Save()) as tctx:
-            tctx.configure(
-                s,
-                hardump="-",
-                save_stream_filter="~b foo"
-            )
+            tctx.configure(s, hardump="-", save_stream_filter="~b foo")
             with pytest.raises(OptionsError):
                 tctx.configure(s, save_stream_filter="~~")
 
