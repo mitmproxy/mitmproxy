@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 24 September 2023: mitmproxy 10.1.0
+
 * Add support for reading HAR files using the existing flow loading APIs, e.g. `mitmproxy -r example.har`.
   ([#6335](https://github.com/mitmproxy/mitmproxy/pull/6335), @stanleygvi)
 * Add support for writing HAR files using the `save.har` command and the `hardump` option for mitmdump.
