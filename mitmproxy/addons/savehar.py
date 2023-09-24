@@ -2,7 +2,7 @@
 import base64
 import json
 import logging
-import os
+
 import zlib
 from collections.abc import Sequence
 from datetime import datetime
@@ -11,12 +11,16 @@ from typing import Any
 
 from mitmproxy import command
 from mitmproxy import ctx
+from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
+from mitmproxy.log import ALERT
+from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -24,12 +28,27 @@ logger = logging.getLogger(__name__)
 
 class SaveHar:
     def __init__(self) -> None:
-        self.ENTRIES_DUMP: list[dict] = []
-        self.SERVERS_SEEN: set[Server] = set()
+        self.flows: list[flow.Flow] = []
+        self.filt: flowfilter.TFilter | None = None
 
     @command.command("save.har")
     def export_har(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to an HAR (HTTP Archive) file."""
+
+        har = json.dumps(
+            self.make_har(flows),
+            indent=4
+        ).encode()
+
+        if path.endswith(".zhar"):
+            har = zlib.compress(har, 9)
+
+        with open(path, "wb") as f:
+            f.write(har)
+
+        logging.log(ALERT, f"HAR file saved ({human.pretty_size(len(har))} bytes).")
+
+    def make_har(self, flows: Sequence[flow.Flow]) -> dict:
         entries = []
         skipped = 0
         # A list of server seen till now is maintained so we can avoid
@@ -43,22 +62,73 @@ class SaveHar:
                 skipped += 1
 
         if skipped > 0:
-            logger.info(f"Skipped {skipped} flows that werent HTTPFlows.")
+            logger.info(f"Skipped {skipped} flows that weren't HTTP flows.")
 
-        har = {
+        return {
             "log": {
                 "version": "1.2",
                 "creator": {
-                    "name": "mitmproxy exporthar",
-                    "version": "0.1",
-                    "comment": f"mitmproxy version {version.VERSION}",
+                    "name": "mitmproxy",
+                    "version": version.VERSION,
+                    "comment": "",
                 },
                 "pages": [],
                 "entries": entries,
             }
         }
-        with open(path, "w") as fp:
-            json.dump(har, fp, indent=4)
+
+    def load(self, l):
+        l.add_option(
+            "hardump",
+            str,
+            "",
+            "Save a HAR file with all flows on exit. "
+            "You may select particular flows by setting save_stream_filter.",
+            "For mitmdump, enabling this option will mean that flows are kept in memory. "
+        )
+
+    def configure(self, updated):
+        if "save_stream_filter" in updated:
+            if ctx.options.save_stream_filter:
+                try:
+                    self.filt = flowfilter.parse(ctx.options.save_stream_filter)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
+            else:
+                self.filt = None
+
+        if "hardump" in updated:
+            if not ctx.options.hardump:
+                self.flows = []
+
+    def response(self, flow: http.HTTPFlow) -> None:
+        # websocket flows will receive a websocket_end,
+        # we don't want to persist them here already
+        if flow.websocket is None:
+            self._save_flow(flow)
+
+    def error(self, flow: http.HTTPFlow) -> None:
+        self.response(flow)
+
+    def websocket_end(self, flow: http.HTTPFlow) -> None:
+        self._save_flow(flow)
+
+    def _save_flow(self, flow: http.HTTPFlow) -> None:
+        if ctx.options.hardump:
+            flow_matches = (
+                self.filt is None
+                or self.filt(flow)
+            )
+            if flow_matches:
+                self.flows.append(flow)
+
+    def done(self):
+        if ctx.options.hardump:
+            if ctx.options.hardump == "-":
+                har = self.make_har(self.flows)
+                print(json.dumps(har, indent=4))
+            else:
+                self.export_har(self.flows, ctx.options.hardump)
 
     def flow_entry(self, flow: http.HTTPFlow, servers_seen: set[Server]) -> dict:
         """Creates HAR entry from flow"""
@@ -205,7 +275,6 @@ class SaveHar:
 
             entry["_resourceType"] = "websocket"
             entry["_webSocketMessages"] = websocket_messages
-        self.ENTRIES_DUMP.append(entry)
         return entry
 
     def format_response_cookies(self, response: http.Response) -> list[dict]:
@@ -233,57 +302,3 @@ class SaveHar:
 
     def format_multidict(self, obj: _MultiDict[str, str]) -> list[dict]:
         return [{"name": k, "value": v} for k, v in obj.items(multi=True)]
-
-    def load(self, l):
-        l.add_option(
-            "hardump",
-            str,
-            "",
-            "HAR dump path.",
-        )
-
-    def response(self, flow: http.HTTPFlow):
-        """
-        Called when a server response has been received.
-        """
-
-        self.flow_entry(flow, self.SERVERS_SEEN)
-
-    def websocket_end(self, flow: http.HTTPFlow):
-        self.flow_entry(flow, self.SERVERS_SEEN)
-
-    def done(self):
-        """
-        Called once on script shutdown, after any other events.
-        """
-        har = {
-            "log": {
-                "version": "1.2",
-                "creator": {
-                    "name": "mitmproxy exporthar",
-                    "version": "0.1",
-                    "comment": "mitmproxy version %s" % version.VERSION,
-                },
-                "pages": [],
-                "entries": self.ENTRIES_DUMP,
-            }
-        }
-        if ctx.options.hardump:
-            json_dump: str = json.dumps(har, indent=2)
-
-            if ctx.options.hardump == "-":
-                print(json_dump)
-            else:
-                raw: bytes = json_dump.encode()
-                if ctx.options.hardump.endswith(".zhar"):
-                    raw = zlib.compress(raw, 9)
-
-                with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
-                    f.write(raw)
-
-                logging.info(
-                    "HAR dump finished (wrote %s bytes to file)" % len(json_dump)
-                )
-
-
-addons = [SaveHar()]

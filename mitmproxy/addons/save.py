@@ -135,6 +135,8 @@ class Save:
         Save flows to a file. If the path starts with a +, flows are
         appended to the file, otherwise it is over-written.
         """
+        if path.endswith(".har") or path.endswith(".zhar"):
+            logging.log(ALERT, f"To save HAR files, use the `save.har` file.")
         try:
             with open(_path(path), _mode(path)) as f:
                 stream = io.FlowWriter(f)

@@ -22,6 +22,7 @@ export interface OptionsState {
     console_focus_follow: boolean;
     content_view_lines_cutoff: number;
     export_preserve_original_ip: boolean;
+    hardump: string;
     http2: boolean;
     http2_ping_keepalive: number;
     http3: boolean;
@@ -116,6 +117,7 @@ export const defaultState: OptionsState = {
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
     export_preserve_original_ip: false,
+    hardump: "",
     http2: true,
     http2_ping_keepalive: 58,
     http3: true,

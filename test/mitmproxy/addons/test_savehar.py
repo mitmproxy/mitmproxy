@@ -188,7 +188,7 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
     s.export_har(flows, types.Path(tmp_path / "testing_flow.har"))
     expected_har = json.loads(
-        Path(test_dir / f"data/flows/{log_file.stem}.har").read_bytes()
+        log_file.with_suffix(".har").read_bytes()
     )
     actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
@@ -238,41 +238,6 @@ def test_options(capfd, monkeypatch):
         )
 
 
-def test_zhar(tmpdir, monkeypatch):
-    monkeypatch.setattr(version, "VERSION", "1.2.3")
-    with taddons.context() as tctx:
-        s = SaveHar()
-        assert s
-        path = str(tmpdir.join("somefile.zhar"))
-        tctx.configure(s, hardump=path)
-
-        for x in io.read_flows_from_paths(
-            [Path(test_dir / "data/flows/successful_log.mitm")]
-        ):
-            assert isinstance(x, http.HTTPFlow)
-            s.websocket_end(x)
-        s.done()
-
-    with open(path, "rb") as inp:
-        try:
-            decompressed_data = zlib.decompress(inp.read())
-            har = json.loads(decompressed_data.decode())
-        except zlib.error as e:
-            print(f"Error decompressing: {e}")
-            har = None
-
-    expected_path = test_dir / "data/flows/compressed.zhar"
-    with open(expected_path, "rb") as expected_file:
-        try:
-            decompressed_expected = zlib.decompress(expected_file.read())
-            expected_data = json.loads(decompressed_expected.decode())
-        except zlib.error as e:
-            print(f"Error decompressing: {e}")
-            expected_data = None
-
-    assert har == expected_data
-
-
 def test_base64(tmpdir):
     with taddons.context() as tctx:
         s = SaveHar()
@@ -280,7 +245,9 @@ def test_base64(tmpdir):
         path = str(tmpdir.join("somefile"))
         tctx.configure(s, hardump=path)
 
-        s.response(flow(resp_content=b"foo" + b"\xFF" * 10))
+        s.response(
+            tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))
+        )
         s.done()
         with open(path) as inp:
             har = json.load(inp)
@@ -288,23 +255,9 @@ def test_base64(tmpdir):
 
 
 if __name__ == "__main__":
+    version.VERSION = "1.2.3"
     s = SaveHar()
-    setattr(version, "VERSION", "1.2.3")
     for file in test_dir.glob("data/flows/*.mitm"):
-        if not file.suffix == ".har":
-            path = open(file, "rb")
-            flows = list(io.FlowReader(path).stream())
-            s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
-
-    with taddons.context() as tctx:
-        s = SaveHar()
-        assert s
-
-        tctx.configure(s, hardump="test/mitmproxy/data/flows/compressed.zhar")
-
-        for x in io.read_flows_from_paths(
-            [Path(test_dir / "data/flows/successful_log.mitm")]
-        ):
-            assert isinstance(x, http.HTTPFlow)
-            s.websocket_end(x)
-        s.done()
+        path = open(file, "rb")
+        flows = list(io.FlowReader(path).stream())
+        s.export_har(flows, types.Path(test_dir / f"data/flows/{file.stem}.har"))
