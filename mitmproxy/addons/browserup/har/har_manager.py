@@ -166,16 +166,20 @@ class HarManagerMixin():
     def decorate_video_data_on_entries(self, video_data):
         page = self.get_or_create_current_page()
         latest_page_entries = self.entries_for_page(page['id'])
+        if len(latest_page_entries) == 0 or len(video_data) == 0:
+            return
 
-        for video in video_data:
-            videosrc = video['_videoSRC']
-            if not videosrc or videosrc == '':
-                continue
-            del video['_videoSRC']
-            for entry in latest_page_entries:
+        for entry in latest_page_entries:
+            for video in video_data:
+                videosrc = video['_videoSRC']
+                if not videosrc or videosrc == '':
+                    continue
+
                 if videosrc in entry['request']['url']:
                     print('found video entry! {}'.format(entry))
+                    del video['_videoSRC']
                     entry['response']['content'].update(video)
+                    video_data.remove(video)  # remove the video from the video_data
                     break
 
     def add_custom_value_to_har(self, item_type, item):

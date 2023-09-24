@@ -18,7 +18,7 @@ from pathlib import Path
 
 # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
-VERSION = '1.22'
+VERSION = '1.23'
 
 
 class BrowserUpAddonsManagerAddOn:

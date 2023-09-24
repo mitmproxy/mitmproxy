@@ -7,7 +7,7 @@
     function inIframe () { try { return window.self !== window.top; } catch (e) { return true; } }
 
     // cumulative layout shift can continue to change after page load, so we need to observe
-     function observeAndSaveCumulativeLayoutShift() {
+    function observeAndSaveCumulativeLayoutShift() {
         try {
             const supported = PerformanceObserver.supportedEntryTypes;
             if (!supported || supported.indexOf('layout-shift') === -1) { return; }
@@ -40,7 +40,7 @@
 
     function observeAndSaveFirstInputDelay() {
         try {
-        // note, may need updating for iframes, can use code here:  https://github.com/GoogleChrome/web-vitals
+            // note, may need updating for iframes, can use code here:  https://github.com/GoogleChrome/web-vitals
             const supported = PerformanceObserver.supportedEntryTypes;
             if (!supported || supported.indexOf("first-input") === -1) { return; }
             new PerformanceObserver((entryList) => {
@@ -67,18 +67,18 @@
             for (let entry of entries) {
                 let element = entry.element;
                 candidates.push({
-                        duration: entry.duration,
-                        id: entry.id,
-                        url: entry.url,
-                        loadTime: Number(entry.loadTime.toFixed(0)),
-                        renderTime: Number(Math.max(entry.renderTime, entry.loadTime).toFixed(0)),
-                        size: entry.size,
-                        startTime: Number(entry.startTime.toFixed(0)),
-                        tagName: element ? element.tagName : '',
-                        className: element ? element.className : '',
-                        domPath: element ? (getDomPath(element)).join(' > ') : '',
-                        tag: element ? (element.cloneNode(false)).outerHTML : ''
-                    });
+                    duration: entry.duration,
+                    id: entry.id,
+                    url: entry.url,
+                    loadTime: Number(entry.loadTime.toFixed(0)),
+                    renderTime: Number(Math.max(entry.renderTime, entry.loadTime).toFixed(0)),
+                    size: entry.size,
+                    startTime: Number(entry.startTime.toFixed(0)),
+                    tagName: element ? element.tagName : '',
+                    className: element ? element.className : '',
+                    domPath: element ? (getDomPath(element)).join(' > ') : '',
+                    tag: element ? (element.cloneNode(false)).outerHTML : ''
+                });
             }
             let lcp = candidates.pop() || {};
             result.startTime = lcp.startTime || result.startTime;
@@ -324,14 +324,19 @@
                         videos.push(vid);
                     }
                 } else {
-                    let src = video.currentSrc;
-                    if (isValidSrc(src)) {
-                        let vid = buildVideoObject(src, video, vidQuality);
-                        videos.push(vid);
+                    // for each source, get the src and build a video object
+                    for (let source of sources) {
+                        console.log(source);
+                        let src = source.src;
+                        if (isValidSrc(src)) {
+                            let vid = buildVideoObject(src, video, vidQuality);
+                            videos.push(vid);
+                        }
                     }
+
                 }
             }
-
+            console.log("VIDEOS --->", videos );
             return videos;
         }
         catch (e) {
@@ -426,12 +431,12 @@
         reconnectInterval = 50;  // Reset reconnect interval on successful connection
     };
 
-     function sendData(operation, data) {
+    function sendData(operation, data) {
         Object.keys(data).forEach(key => data[key] === undefined ? delete data[key] : {});
         let payload = { operation: operation, data: data };
-         waitForOpenSocket(proxyWs).then(_ => {
-             console.log(`Sending ${operation} data to proxy`);
-             proxyWs.send(JSON.stringify(payload));
+        waitForOpenSocket(proxyWs).then(_ => {
+            console.log(`Sending ${operation} data to proxy`);
+            proxyWs.send(JSON.stringify(payload));
         });
     }
 
