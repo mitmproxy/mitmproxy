@@ -142,7 +142,7 @@ class Save:
                     stream.add(i)
         except OSError as e:
             raise exceptions.CommandError(e) from e
-        if path.endswith(".har") or path.endswith(".zhar"):
+        if path.endswith(".har") or path.endswith(".zhar"):  # pragma: no cover
             logging.log(
                 ALERT,
                 f"Saved as mitmproxy dump file. To save HAR files, use the `save.har` command.",

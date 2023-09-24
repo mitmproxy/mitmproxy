@@ -2,13 +2,15 @@ import json
 from pathlib import Path
 
 import pytest
+import zlib
 
-from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
+from mitmproxy.addons.save import Save
 from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.connection import Server
+from mitmproxy.exceptions import OptionsError
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
@@ -16,21 +18,7 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-
 test_dir = Path(__file__).parent.parent
-mitmproxy_dir = test_dir.parent.parent
-
-
-def flow(resp_content=b"message"):
-    times = dict(
-        timestamp_start=746203272,
-        timestamp_end=746203272,
-    )
-
-    return tflow.tflow(
-        req=tutils.treq(method=b"GET", **times),
-        resp=tutils.tresp(content=resp_content, **times),
-    )
 
 
 def test_write_error():
@@ -157,23 +145,18 @@ def test_tls_setup():
 
 
 def test_binary_content():
-    s = SaveHar()
-
-    flow = tflow.twebsocketflow()
-    assert flow.response
-
-    flow.response.set_content(b"\xFF")
-    servers_seen: set[Server] = set()
-
-    assert flow.response.content
-
-    assert {
-        "size": 1,
-        "compression": 0,
-        "mimeType": "",
-        "text": "/w==",
-        "encoding": "base64",
-    } == s.flow_entry(flow, servers_seen)["response"]["content"]
+    resp_content = SaveHar().make_har(
+        [
+            tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))
+        ]
+    )["log"]["entries"][0]["response"]["content"]
+    assert resp_content == {
+        'compression': 0,
+        'encoding': 'base64',
+        'mimeType': '',
+        'size': 13,
+        'text': 'Zm9v/////////////w=='
+    }
 
 
 @pytest.mark.parametrize(
@@ -192,61 +175,63 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
-def test_savehar_dump(tmpdir, monkeypatch):
-    monkeypatch.setattr(version, "VERSION", "1.2.3")
-    with taddons.context() as tctx:
+class TestHardumpOption:
+    def test_simple(self, capsys):
         s = SaveHar()
-        assert s
-        path = str(tmpdir.join("somefile"))
-        tctx.configure(s, hardump=path)
+        with taddons.context(s) as tctx:
+            tctx.configure(s, hardump="-")
 
-        for x in io.read_flows_from_paths(
-            [Path(test_dir / "data/flows/websocket.mitm")]
-        ):
-            assert isinstance(x, http.HTTPFlow)
-            s.websocket_end(x)
+            s.response(tflow.tflow())
 
-        s.done()
+            s.error(tflow.tflow())
 
-        with open(path) as inp:
-            har = json.load(inp)
-        assert har == json.loads(
-            Path(test_dir / f"data/flows/websocket.har").read_bytes()
-        )
+            ws = tflow.twebsocketflow()
+            s.response(ws)
+            s.websocket_end(ws)
 
+            s.done()
 
-def test_options(capfd, monkeypatch):
-    monkeypatch.setattr(version, "VERSION", "1.2.3")
-    with taddons.context() as tctx:
+            out = json.loads(capsys.readouterr().out)
+            assert len(out["log"]["entries"]) == 3
+
+    def test_filter(self, capsys):
         s = SaveHar()
-        assert s
-        tctx.configure(s, hardump="-")
+        with taddons.context(s, Save()) as tctx:
+            tctx.configure(
+                s,
+                hardump="-",
+                save_stream_filter="~b foo"
+            )
+            with pytest.raises(OptionsError):
+                tctx.configure(s, save_stream_filter="~~")
 
-        for x in io.read_flows_from_paths(
-            [Path(test_dir / "data/flows/websocket.mitm")]
-        ):
-            assert isinstance(x, http.HTTPFlow)
-            s.websocket_end(x)
-        s.done()
-        out, _ = capfd.readouterr()
-        out_har = json.loads(out)
-        assert out_har == json.loads(
-            Path(test_dir / f"data/flows/websocket.har").read_bytes()
-        )
+            s.response(tflow.tflow(req=tflow.treq(content=b"foo")))
+            s.response(tflow.tflow())
 
+            s.done()
 
-def test_base64(tmpdir):
-    with taddons.context() as tctx:
+            out = json.loads(capsys.readouterr().out)
+            assert len(out["log"]["entries"]) == 1
+
+    def test_free(self):
         s = SaveHar()
-        assert s
-        path = str(tmpdir.join("somefile"))
-        tctx.configure(s, hardump=path)
+        with taddons.context(s, Save()) as tctx:
+            tctx.configure(s, hardump="-")
+            s.response(tflow.tflow())
+            assert s.flows
+            tctx.configure(s, hardump="")
+            assert not s.flows
 
-        s.response(tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10)))
-        s.done()
-        with open(path) as inp:
-            har = json.load(inp)
-        assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
+    def test_compressed(self, tmp_path):
+        s = SaveHar()
+        with taddons.context(s, Save()) as tctx:
+            tctx.configure(s, hardump=str(tmp_path / "out.zhar"))
+
+            s.response(tflow.tflow())
+            s.done()
+
+            out = json.loads(zlib.decompress((tmp_path / "out.zhar").read_bytes()))
+            assert len(out["log"]["entries"]) == 1
 
 
 if __name__ == "__main__":
