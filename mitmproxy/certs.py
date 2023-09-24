@@ -270,6 +270,7 @@ def dummy_cert(
         try:
             ip = ipaddress.ip_address(x)
         except ValueError:
+            x = x.encode("idna").decode()
             ss.append(x509.DNSName(x))
         else:
             ss.append(x509.IPAddress(ip))

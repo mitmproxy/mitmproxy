@@ -2,6 +2,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix certificate generation for punycode domains.
 
 
 ## 24 September 2023: mitmproxy 10.1.0
