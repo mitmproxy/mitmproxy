@@ -14,6 +14,8 @@
     details.
   - On Windows, `mitmproxy-rs` now depends on `mitmproxy-windows`. We only provide binary wheels for this package to
     simplify our deployment process, see CI for how to build from source.
+  
+  ([#6303](https://github.com/mitmproxy/mitmproxy/issues/6303), @mhils)
 * Increase maximum dump file size accepted by mitmweb
   ([#6373](https://github.com/mitmproxy/mitmproxy/pull/6373), @t-wy)
 
