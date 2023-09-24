@@ -7,6 +7,7 @@
 * Add support for writing HAR files using the `save.har` command and the `hardump` option for mitmdump.
   ([#6368](https://github.com/mitmproxy/mitmproxy/pull/6368), @stanleygvi)
 
+
 ## 04 August 2023: mitmproxy 10.0.0
 
 * Add experimental support for HTTP/3 and QUIC.
