@@ -141,11 +141,17 @@ class TestDummyCert:
             tstore.default_privatekey,
             tstore.default_ca._cert,
             "foo.com",
-            ["one.com", "two.com", "*.three.com", "127.0.0.1"],
+            ["one.com", "two.com", "*.three.com", "127.0.0.1", "bücher.example"],
             "Foo Ltd.",
         )
         assert r.cn == "foo.com"
-        assert r.altnames == ["one.com", "two.com", "*.three.com", "127.0.0.1"]
+        assert r.altnames == [
+            "one.com",
+            "two.com",
+            "*.three.com",
+            "xn--bcher-kva.example",
+            "127.0.0.1",
+        ]
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
