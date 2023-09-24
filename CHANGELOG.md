@@ -6,6 +6,14 @@
   ([#6335](https://github.com/mitmproxy/mitmproxy/pull/6335), @stanleygvi)
 * Add support for writing HAR files using the `save.har` command and the `hardump` option for mitmdump.
   ([#6368](https://github.com/mitmproxy/mitmproxy/pull/6368), @stanleygvi)
+* Packaging changes:
+  - `mitmproxy-rs` does not depend on a protobuf compiler being available anymore,
+    we're now also providing a working source distribution for all platforms.
+  - On macOS, `mitmproxy-rs` now depends on `mitmproxy-macos`. We only provide binary wheels for this package because
+    it contains a code-signed system extension. Building from source requires a valid Apple Developer Id, see CI for
+    details.
+  - On Windows, `mitmproxy-rs` now depends on `mitmproxy-windows`. We only provide binary wheels for this package to
+    simplify our deployment process, see CI for how to build from source.
 * Increase maximum dump file size accepted by mitmweb
   ([#6373](https://github.com/mitmproxy/mitmproxy/pull/6373), @t-wy)
 
