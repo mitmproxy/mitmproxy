@@ -4,7 +4,8 @@
 
 * Add support for reading HAR files using the existing flow loading APIs, e.g. `mitmproxy -r example.har`.
   ([#6335](https://github.com/mitmproxy/mitmproxy/pull/6335), @stanleygvi)
-
+* Add support for writing HAR files using the `save.har` command and the `hardump` option for mitmdump.
+  ([#6368](https://github.com/mitmproxy/mitmproxy/pull/6368), @stanleygvi)
 
 ## 04 August 2023: mitmproxy 10.0.0
 
