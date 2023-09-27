@@ -4,6 +4,7 @@
 
 * Fix certificate generation for punycode domains.
   ([#6382](https://github.com/mitmproxy/mitmproxy/pull/6382), @mhils)
+* Fix a bug that would crash mitmweb when opening options.
 
 
 ## 24 September 2023: mitmproxy 10.1.0
