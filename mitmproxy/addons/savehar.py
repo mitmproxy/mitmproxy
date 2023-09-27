@@ -78,9 +78,11 @@ class SaveHar:
             "hardump",
             str,
             "",
-            "Save a HAR file with all flows on exit. "
-            "You may select particular flows by setting save_stream_filter.",
-            "For mitmdump, enabling this option will mean that flows are kept in memory. ",
+            """
+            Save a HAR file with all flows on exit.
+            You may select particular flows by setting save_stream_filter.
+            For mitmdump, enabling this option will mean that flows are kept in memory.
+            """,
         )
 
     def configure(self, updated):

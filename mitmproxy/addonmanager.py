@@ -82,6 +82,7 @@ class Loader:
         reflowed by tools. Information on the data type should be omitted -
         it will be generated and added by tools as needed.
         """
+        assert not isinstance(choices, str)
         if name in self.master.options:
             existing = self.master.options._options[name]
             same_signature = (
