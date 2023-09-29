@@ -11,7 +11,7 @@ from aioquic.h3.connection import Setting
 
 from . import base
 from ..proxy.layers.http import is_h3_alpn
-from .hex import ViewHex
+from .hex import ViewHexDump
 from mitmproxy import flow
 from mitmproxy import tcp
 
@@ -49,7 +49,7 @@ class Frame:
                 return [[("header", "SETTINGS Frame")], *base.format_pairs(settings)]
         return [
             [("header", frame_name)],
-            *ViewHex._format(self.data),
+            *ViewHexDump._format(self.data),
         ]
 
 
