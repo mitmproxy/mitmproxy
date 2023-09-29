@@ -221,7 +221,8 @@ def get_content_view(
 # The order in which ContentViews are added is important!
 add(auto.ViewAuto())
 add(raw.ViewRaw())
-add(hex.ViewHex())
+add(hex.ViewHexStream())
+add(hex.ViewHexDump())
 add(graphql.ViewGraphQL())
 add(json.ViewJSON())
 add(xml_html.ViewXmlHtml())

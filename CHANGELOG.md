@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add a raw hex stream contentview.
+  ([#6389](https://github.com/mitmproxy/mitmproxy/pull/6389), @mhils)
 
 
 ## 27 September 2023: mitmproxy 10.1.1
