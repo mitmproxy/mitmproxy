@@ -22,7 +22,7 @@ jobs:
     environment: deploy-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PUSH_TOKEN }}  # this token works to push to the protected main branch.
       - uses: actions/setup-node@v3
