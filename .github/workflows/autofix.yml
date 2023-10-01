@@ -13,7 +13,7 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: install-pinned/pyupgrade@af7d65f31bddb01097a24da6c8fb694441f51cba
       - name: Run pyupgrade
@@ -39,7 +39,7 @@ jobs:
       - uses: install-pinned/autoflake@46b4898323be58db319656fe2758f3fd5ddfee32
       - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
 
-      - uses: install-pinned/black@ba55a508f931f1ee71ee049edba55c3382567656
+      - uses: install-pinned/black@cd5d66326da7f8f47500e431cc8cb6d239eea3b5
       - run: black .
 
       - name: Run prettier
