@@ -88,16 +88,18 @@ def version() -> str:
     )
 
 
-def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
-    pf = platform.system()
-    if pf == "Windows":
-        return "windows"
-    elif pf == "Linux":
-        return "linux"
-    elif pf == "Darwin":
-        return "macos"
-    else:
-        return "unknown"
+def operating_system() -> str:
+    match (platform.system(), platform.machine()):
+        case ("Windows", _):
+            return "windows"
+        case ("Linux", _):
+            return "linux"
+        case ("Darwin", "x86_64"):
+            return "macos-x86_64"
+        case ("Darwin", "arm64"):
+            return "macos-arm64"
+        case (sys, mach):
+            return f"{sys}-{mach}"
 
 
 def _pyinstaller(specfile: str) -> None:
@@ -118,7 +120,7 @@ def _pyinstaller(specfile: str) -> None:
 
 @cli.command()
 def standalone_binaries():
-    """All platforms: Build the standalone binaries generated with PyInstaller"""
+    """Windows and Linux: Build the standalone binaries generated with PyInstaller"""
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         _pyinstaller("standalone.spec")
 
@@ -133,11 +135,20 @@ def standalone_binaries():
     print(f"Packed {f.name!r}.")
 
 
+@cli.command()
+def standalone_directory():
+    """macOS: Build into a PyInstaller directory."""
+    _ensure_pyinstaller_onedir()
+
+    with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
+        f.add(str(TEMP_DIR / "pyinstaller/dist/onedir"), ".")
+    print(f"Packed {f.name!r}.")
+
+
 def _ensure_pyinstaller_onedir():
     if not (TEMP_DIR / "pyinstaller/dist/onedir").exists():
-        _pyinstaller("windows-dir.spec")
-
-    _test_binaries(TEMP_DIR / "pyinstaller/dist/onedir")
+        _pyinstaller("onedir.spec")
+        _test_binaries(TEMP_DIR / "pyinstaller/dist/onedir")
 
 
 def _test_binaries(binary_directory: Path) -> None:
