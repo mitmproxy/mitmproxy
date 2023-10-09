@@ -104,15 +104,21 @@ jobs:
           path: release/installbuilder/setup
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
-      - if: matrix.platform != 'macos'
-        run: python -u release/build.py standalone-binaries
+
       - if: matrix.platform == 'macos'
-        run: python -u release/build.py standalone-directory
+        run: python -u release/build.py macos-directory
+
+      - if: matrix.platform == 'linux'
+        run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'linux'
         run: python -u release/build.py --dirty wheel
+
+      - if: matrix.platform == 'windows'
+        run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' &&
             (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
         run: python -u release/build.py --dirty installbuilder-installer msix-installer
+
       - uses: actions/upload-artifact@v3
         with:
           # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24

@@ -9,10 +9,10 @@ import shutil
 import subprocess
 import tarfile
 import urllib.request
+import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
 
 import click
 import cryptography.fernet
@@ -98,8 +98,8 @@ def operating_system() -> str:
             return "macos-x86_64"
         case ("Darwin", "arm64"):
             return "macos-arm64"
-        case (sys, mach):
-            return f"{sys}-{mach}"
+    warnings.warn("Unexpected platform.")
+    return f"{platform.system()}-{platform.machine()}"
 
 
 def _pyinstaller(specfile: str) -> None:
@@ -136,9 +136,26 @@ def standalone_binaries():
 
 
 @cli.command()
-def standalone_directory():
+def macos_directory():
     """macOS: Build into a PyInstaller directory."""
     _ensure_pyinstaller_onedir()
+
+    """
+    subprocess.check_call(
+        [
+            "codesign",
+            "--force",
+            "--timestamp",
+            "--options=runtime",
+            *("--sign", "Developer Id Application"),
+            TEMP_DIR / "pyinstaller/temp",
+            "--distpath",
+            TEMP_DIR / "pyinstaller/dist",
+            specfile,
+        ],
+        cwd=here / "specs",
+    )
+    """
 
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         f.add(str(TEMP_DIR / "pyinstaller/dist/onedir"), ".")
