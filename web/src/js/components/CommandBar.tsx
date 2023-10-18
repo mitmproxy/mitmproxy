@@ -146,7 +146,7 @@ export default function CommandBar() {
     const [currentPos, setCurrentPos] = useState<number | undefined>(undefined);
 
     useEffect(() => {
-        fetchApi("/commands", { method: "GET" })
+        fetchApi("commands", { method: "GET" })
             .then((response) => response.json())
             .then((data: AllCommands) => {
                 setAllCommands(data);

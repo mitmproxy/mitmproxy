@@ -12,7 +12,8 @@
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
 * `ignore_hosts` now waits for the entire HTTP headers if it suspects the connection to be HTTP.
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
-
+* Fix root-relative URLs for flow and other APIs so that mitmweb can run in subdirectories.
+  ([#6562](https://github.com/mitmproxy/mitmproxy/pull/6562), @davet2001)
 
 ## 14 December 2023: mitmproxy 10.1.6
 

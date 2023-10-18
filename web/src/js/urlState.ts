@@ -70,9 +70,9 @@ export function updateUrlFromStore(store) {
 
     let url;
     if (state.flows.selected.length > 0) {
-        url = `/flows/${state.flows.selected[0]}/${state.ui.flow.tab}`;
+        url = `flows/${state.flows.selected[0]}/${state.ui.flow.tab}`;
     } else {
-        url = "/flows";
+        url = "flows";
     }
 
     if (queryStr) {

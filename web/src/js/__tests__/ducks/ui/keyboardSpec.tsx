@@ -124,7 +124,7 @@ describe("onKeyDown", () => {
 
     it("should handle delete action", () => {
         store.dispatch(createKeyEvent("d"));
-        expect(fetchApi).toBeCalledWith("/flows/1", { method: "DELETE" });
+        expect(fetchApi).toBeCalledWith("flows/1", { method: "DELETE" });
     });
 
     it("should handle create action", () => {
@@ -138,7 +138,7 @@ describe("onKeyDown", () => {
 
     it("should handle duplicate action", () => {
         store.dispatch(createKeyEvent("D"));
-        expect(fetchApi).toBeCalledWith("/flows/1/duplicate", {
+        expect(fetchApi).toBeCalledWith("flows/1/duplicate", {
             method: "POST",
         });
     });
@@ -146,18 +146,18 @@ describe("onKeyDown", () => {
     it("should handle resume action", () => {
         // resume all
         store.dispatch(createKeyEvent("A"));
-        expect(fetchApi).toBeCalledWith("/flows/resume", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/resume", { method: "POST" });
         // resume
         store.getState().flows.byId[
             store.getState().flows.selected[0]
         ].intercepted = true;
         store.dispatch(createKeyEvent("a"));
-        expect(fetchApi).toBeCalledWith("/flows/1/resume", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/1/resume", { method: "POST" });
     });
 
     it("should handle replay action", () => {
         store.dispatch(createKeyEvent("r"));
-        expect(fetchApi).toBeCalledWith("/flows/1/replay", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/1/replay", { method: "POST" });
     });
 
     it("should handle revert action", () => {
@@ -165,21 +165,21 @@ describe("onKeyDown", () => {
             store.getState().flows.selected[0]
         ].modified = true;
         store.dispatch(createKeyEvent("v"));
-        expect(fetchApi).toBeCalledWith("/flows/1/revert", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/1/revert", { method: "POST" });
     });
 
     it("should handle kill action", () => {
         // kill all
         store.dispatch(createKeyEvent("X"));
-        expect(fetchApi).toBeCalledWith("/flows/kill", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/kill", { method: "POST" });
         // kill
         store.dispatch(createKeyEvent("x"));
-        expect(fetchApi).toBeCalledWith("/flows/1/kill", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("flows/1/kill", { method: "POST" });
     });
 
     it("should handle clear action", () => {
         store.dispatch(createKeyEvent("z"));
-        expect(fetchApi).toBeCalledWith("/clear", { method: "POST" });
+        expect(fetchApi).toBeCalledWith("clear", { method: "POST" });
     });
 
     it("should stop on some action with no flow is selected", () => {
