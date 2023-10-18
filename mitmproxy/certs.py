@@ -278,6 +278,19 @@ def dummy_cert(
     builder = builder.add_extension(
         x509.SubjectAlternativeName(ss), critical=not is_valid_commonname
     )
+
+    # we just use the same key as the CA for these certs, so put that in the SKI extension
+    builder = builder.add_extension(
+        x509.SubjectKeyIdentifier.from_public_key(privkey.public_key()),
+        critical=False,
+    )
+    # add authority key identifier for the cacert issuing cert for greater acceptance by
+    # client TLS libraries (such as OpenSSL 3.x)
+    builder = builder.add_extension(
+        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
+        critical=False,
+    )
+
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
 
