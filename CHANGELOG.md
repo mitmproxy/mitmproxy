@@ -10,6 +10,8 @@
   ([#6410](https://github.com/mitmproxy/mitmproxy/pull/6410), @mmaxim)
 * Fix path() documentation that the return value might include the query string
   ([#6412](https://github.com/mitmproxy/mitmproxy/pull/6412), @tddschn)
+* Fix root-relative URLs so that mitmweb can run in subdirectories.
+  ([#6411](https://github.com/mitmproxy/mitmproxy/pull/6411), @davet2001)
 
 
 ## 27 September 2023: mitmproxy 10.1.1
