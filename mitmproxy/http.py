@@ -807,7 +807,8 @@ class Request(Message):
         HTTP request path, e.g. "/index.html" or "/index.html?a=b".
         Usually starts with a slash, except for OPTIONS requests, which may just be "*".
 
-        Note: This may differ from the standard definition of a path in RFC 3986 and Python's urllib.parse, where the path and query string are separate components.
+        Note: This may differ from the standard definition of a path in RFC 3986 and Python's urllib.parse, 
+        where the path and query string are separate components.
         """
         return self.data.path.decode("utf-8", "surrogateescape")
 
