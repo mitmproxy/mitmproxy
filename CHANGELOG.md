@@ -8,6 +8,8 @@
   ([#6389](https://github.com/mitmproxy/mitmproxy/pull/6389), @mhils)
 * Fix certificate generation to work with strict mode OpenSSL 3.x clients
   ([#6410](https://github.com/mitmproxy/mitmproxy/pull/6410), @mmaxim)
+* Fix path() documentation that the return value might include the query string
+  ([#6412](https://github.com/mitmproxy/mitmproxy/pull/6412), @tddschn)
 
 
 ## 27 September 2023: mitmproxy 10.1.1
