@@ -804,8 +804,11 @@ class Request(Message):
     @property
     def path(self) -> str:
         """
-        HTTP request path, e.g. "/index.html".
+        HTTP request path, e.g. "/index.html" or "/index.html?a=b".
         Usually starts with a slash, except for OPTIONS requests, which may just be "*".
+
+        This attribute includes both path and query parts of the target URI
+        (see Sections 3.3 and 3.4 of [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)).
         """
         return self.data.path.decode("utf-8", "surrogateescape")
 
