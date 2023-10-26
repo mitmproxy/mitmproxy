@@ -95,7 +95,7 @@ class Master:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
             logger.error(
-                "Unhandled errror in task.",
+                "Unhandled error in task.",
                 exc_info=(type(exc), exc, exc.__traceback__),
             )
 
