@@ -155,20 +155,20 @@ class TestProxyAuth:
 
             ctx.configure(
                 pa,
-                proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
+                proxyauth="ldap:localhost:389:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com:cn",
             )
             assert isinstance(pa.validator, proxyauth.Ldap)
 
             ctx.configure(
                 pa,
-                proxyauth="ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
+                proxyauth="ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com:SamAccountName",
             )
             assert isinstance(pa.validator, proxyauth.Ldap)
 
             with pytest.raises(
                 exceptions.OptionsError, match="Invalid LDAP specification"
             ):
-                ctx.configure(pa, proxyauth="ldap:test:test:test")
+                ctx.configure(pa, proxyauth="ldap:test:test:test:test")
 
             with pytest.raises(
                 exceptions.OptionsError, match="Invalid LDAP specification"
@@ -229,8 +229,8 @@ class TestProxyAuth:
 @pytest.mark.parametrize(
     "spec",
     [
-        "ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
-        "ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com",
+        "ldaps:localhost:389:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com:cn",
+        "ldap:localhost:1234:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com:SamAccountName",
     ],
 )
 def test_ldap(monkeypatch, spec):
