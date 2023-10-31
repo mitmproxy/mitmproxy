@@ -1640,8 +1640,7 @@ def test_connect_unauthorized(tctx):
 
     def require_auth(f: HTTPFlow):
         f.response = Response.make(
-            status_code=407,
-            headers={"Proxy-Authenticate": f'Basic realm="mitmproxy"'}
+            status_code=407, headers={"Proxy-Authenticate": f'Basic realm="mitmproxy"'}
         )
 
     assert (
@@ -1656,11 +1655,14 @@ def test_connect_unauthorized(tctx):
         << SendData(
             tctx.client,
             b"HTTP/1.1 407 Proxy Authentication Required\r\n"
-            b"Proxy-Authenticate: Basic realm=\"mitmproxy\"\r\n"
-            b"content-length: 0\r\n\r\n"
+            b'Proxy-Authenticate: Basic realm="mitmproxy"\r\n'
+            b"content-length: 0\r\n\r\n",
         )
-        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n"
-                                     b"Proxy-Authorization: Basic dGVzdDp0ZXN0\r\n\r\n")
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT example.com:80 HTTP/1.1\r\n"
+            b"Proxy-Authorization: Basic dGVzdDp0ZXN0\r\n\r\n",
+        )
         << http.HttpConnectHook(Placeholder(HTTPFlow))
         >> reply()
         << OpenConnection(Placeholder(Server))
