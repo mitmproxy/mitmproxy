@@ -1,5 +1,4 @@
 from logging import DEBUG
-from test.mitmproxy.proxy import tutils
 
 import pytest
 
@@ -7,6 +6,7 @@ from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
 from mitmproxy.proxy.context import Context
+from test.mitmproxy.proxy import tutils
 
 
 class TestLayer:

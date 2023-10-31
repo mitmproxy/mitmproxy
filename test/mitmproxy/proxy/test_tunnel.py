@@ -1,6 +1,3 @@
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
-
 import pytest
 
 from mitmproxy.connection import ConnectionState
@@ -17,6 +14,8 @@ from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.events import Event
 from mitmproxy.proxy.events import Start
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 
 class TChildLayer(layer.Layer):

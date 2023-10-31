@@ -3,7 +3,6 @@ import time
 from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
-from test.mitmproxy.proxy import tutils
 from typing import Literal
 from typing import TypeVar
 from unittest.mock import MagicMock
@@ -30,6 +29,7 @@ from mitmproxy.tcp import TCPFlow
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import data
+from test.mitmproxy.proxy import tutils
 
 tlsdata = data.Data(__name__)
 

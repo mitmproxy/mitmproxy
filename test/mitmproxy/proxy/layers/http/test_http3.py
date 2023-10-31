@@ -1,7 +1,6 @@
 import collections.abc
 from collections.abc import Callable
 from collections.abc import Iterable
-from test.mitmproxy.proxy import tutils
 
 import pylsqpack
 import pytest
@@ -29,6 +28,7 @@ from mitmproxy.proxy import layers
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers.http._http3 import Http3Client
+from test.mitmproxy.proxy import tutils
 
 example_request_headers = [
     (b":method", b"GET"),

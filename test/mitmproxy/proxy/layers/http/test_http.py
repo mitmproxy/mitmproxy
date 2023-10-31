@@ -1,10 +1,5 @@
 import gc
 from logging import WARNING
-from test.mitmproxy.proxy.tutils import BytesMatching
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
-from test.mitmproxy.proxy.tutils import reply_next_layer
 
 import pytest
 
@@ -29,6 +24,11 @@ from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_http_proxy(tctx):

@@ -1,10 +1,4 @@
 import copy
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
-from test.mitmproxy.proxy.tutils import reply_next_layer
 
 import pytest
 
@@ -41,6 +35,12 @@ from mitmproxy.tcp import TCPFlow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.udp import UDPFlow
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_upstream_https(tctx):
