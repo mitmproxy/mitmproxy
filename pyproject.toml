@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Security",
     "Topic :: Internet :: WWW/HTTP",
@@ -204,13 +205,13 @@ commands =
 
 [testenv:mypy]
 deps =
-  mypy==1.4.1
+  mypy==1.6.1
   types-certifi==2021.10.8.3
   types-Flask==1.1.6
   types-Werkzeug==1.0.9
-  types-requests==2.31.0.2
+  types-requests==2.31.0.10
   types-cryptography==3.3.23.2
-  types-pyOpenSSL==23.2.0.2
+  types-pyOpenSSL==23.3.0.0
   -e .[dev]
 
 commands =
