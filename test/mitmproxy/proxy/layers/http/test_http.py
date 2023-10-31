@@ -678,6 +678,7 @@ def test_server_unreachable(tctx, connect):
         # Our API isn't ideal here, there is no error hook for CONNECT requests currently.
         # We could fix this either by having CONNECT request go through all our regular hooks,
         # or by adding dedicated ok/error hooks.
+        # See also: test_connect_unauthorized
         playbook << http.HttpErrorHook(flow)
         playbook >> reply()
     playbook << SendData(
@@ -1630,6 +1631,42 @@ def test_connect_more_newlines(tctx):
         << layer.NextLayerHook(nl)
     )
     assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"
+
+
+def test_connect_unauthorized(tctx):
+    """Continue a connection after proxyauth returns a 407, https://github.com/mitmproxy/mitmproxy/issues/6420"""
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+    flow = Placeholder(HTTPFlow)
+
+    def require_auth(f: HTTPFlow):
+        f.response = Response.make(
+            status_code=407, headers={"Proxy-Authenticate": f'Basic realm="mitmproxy"'}
+        )
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        << http.HttpConnectHook(flow)
+        >> reply(side_effect=require_auth)
+        # This isn't ideal - we should probably have a custom CONNECT error hook here.
+        # See also: test_server_unreachable
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="mitmproxy"\r\n'
+            b"content-length: 0\r\n\r\n",
+        )
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT example.com:80 HTTP/1.1\r\n"
+            b"Proxy-Authorization: Basic dGVzdDp0ZXN0\r\n\r\n",
+        )
+        << http.HttpConnectHook(Placeholder(HTTPFlow))
+        >> reply()
+        << OpenConnection(Placeholder(Server))
+    )
 
 
 def flows_tracked() -> int:
