@@ -1,8 +1,7 @@
 import pytest
 
-from mitmproxy.contentviews import mqtt
-
 from . import full_eval
+from mitmproxy.contentviews import mqtt
 
 
 @pytest.mark.parametrize(

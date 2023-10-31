@@ -160,11 +160,14 @@ ignore_errors = true
 [tool.ruff]
 select = ["E", "F", "I"]
 extend-exclude = ["mitmproxy/contrib/"]
-ignore = ["F541"]
+ignore = ["F541", "E501"]
+
 
 [tool.ruff.isort]
 force-single-line = true
 order-by-type = false
+section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
+no-lines-before = ["first-party"]
 
 [tool.tox]
 legacy_tox_ini = """

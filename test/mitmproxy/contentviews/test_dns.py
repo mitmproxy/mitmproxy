@@ -1,6 +1,5 @@
-from mitmproxy.contentviews import dns
-
 from . import full_eval
+from mitmproxy.contentviews import dns
 
 DNS_HTTPS_RECORD_RESPONSE = bytes.fromhex(
     "00008180000100010000000107746c732d656368036465760000410001c00c004100010000003c00520001000005004b0049fe0d00"

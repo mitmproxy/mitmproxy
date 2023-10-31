@@ -1,5 +1,8 @@
 import pytest
 
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
@@ -9,10 +12,6 @@ from mitmproxy.proxy.layers import udp
 from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
-
-from ..tutils import Placeholder
-from ..tutils import Playbook
-from ..tutils import reply
 
 
 def test_open_connection(tctx):

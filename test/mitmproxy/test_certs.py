@@ -7,9 +7,8 @@ import pytest
 from cryptography import x509
 from cryptography.x509 import NameOID
 
-from mitmproxy import certs
-
 from ..conftest import skip_windows
+from mitmproxy import certs
 
 # class TestDNTree:
 #     def test_simple(self):

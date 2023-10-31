@@ -7,20 +7,6 @@ from aioquic.h3.events import DataReceived
 from aioquic.h3.events import HeadersReceived
 from aioquic.h3.events import PushPromiseReceived
 
-from mitmproxy import connection
-from mitmproxy import http
-from mitmproxy import version
-from mitmproxy.net.http import status_codes
-from mitmproxy.proxy import commands
-from mitmproxy.proxy import context
-from mitmproxy.proxy import events
-from mitmproxy.proxy import layer
-from mitmproxy.proxy.layers.quic import error_code_to_str
-from mitmproxy.proxy.layers.quic import QuicConnectionClosed
-from mitmproxy.proxy.layers.quic import QuicStreamEvent
-from mitmproxy.proxy.layers.quic import StopQuicStream
-from mitmproxy.proxy.utils import expect
-
 from . import RequestData
 from . import RequestEndOfMessage
 from . import RequestHeaders
@@ -42,6 +28,19 @@ from ._http2 import parse_h2_response_headers
 from ._http_h3 import LayeredH3Connection
 from ._http_h3 import StreamReset
 from ._http_h3 import TrailersReceived
+from mitmproxy import connection
+from mitmproxy import http
+from mitmproxy import version
+from mitmproxy.net.http import status_codes
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers.quic import error_code_to_str
+from mitmproxy.proxy.layers.quic import QuicConnectionClosed
+from mitmproxy.proxy.layers.quic import QuicStreamEvent
+from mitmproxy.proxy.layers.quic import StopQuicStream
+from mitmproxy.proxy.utils import expect
 
 
 class Http3Connection(HttpConnection):

@@ -8,6 +8,18 @@ from h11._readers import ContentLengthReader
 from h11._readers import Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
+from ...context import Context
+from ._base import format_error
+from ._base import HttpConnection
+from ._events import HttpEvent
+from ._events import RequestData
+from ._events import RequestEndOfMessage
+from ._events import RequestHeaders
+from ._events import RequestProtocolError
+from ._events import ResponseData
+from ._events import ResponseEndOfMessage
+from ._events import ResponseHeaders
+from ._events import ResponseProtocolError
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.connection import Connection
@@ -21,19 +33,6 @@ from mitmproxy.proxy.layers.http._base import ReceiveHttp
 from mitmproxy.proxy.layers.http._base import StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
-
-from ...context import Context
-from ._base import format_error
-from ._base import HttpConnection
-from ._events import HttpEvent
-from ._events import RequestData
-from ._events import RequestEndOfMessage
-from ._events import RequestHeaders
-from ._events import RequestProtocolError
-from ._events import ResponseData
-from ._events import ResponseEndOfMessage
-from ._events import ResponseHeaders
-from ._events import ResponseProtocolError
 
 TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 

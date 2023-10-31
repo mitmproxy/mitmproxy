@@ -1,6 +1,5 @@
-from mitmproxy.contentviews import hex
-
 from . import full_eval
+from mitmproxy.contentviews import hex
 
 
 class TestHexDump:

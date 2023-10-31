@@ -1,6 +1,5 @@
-from mitmproxy.contrib.wbxml import ASCommandResponse
-
 from . import base
+from mitmproxy.contrib.wbxml import ASCommandResponse
 
 
 class ViewWBXML(base.View):

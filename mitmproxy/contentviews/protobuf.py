@@ -2,9 +2,8 @@ import io
 
 from kaitaistruct import KaitaiStream
 
-from mitmproxy.contrib.kaitaistruct import google_protobuf
-
 from . import base
+from mitmproxy.contrib.kaitaistruct import google_protobuf
 
 
 def write_buf(out, field_tag, body, indent_level):

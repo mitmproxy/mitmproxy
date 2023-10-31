@@ -4,14 +4,13 @@ from collections.abc import Sequence
 
 import pytest
 
+from . import test_command
 import mitmproxy.exceptions
 import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-
-from . import test_command
 
 
 @contextlib.contextmanager
