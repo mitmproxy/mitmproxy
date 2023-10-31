@@ -48,7 +48,11 @@ async def test_last_exception_and_running(monkeypatch):
     manager = MagicMock()
     err = ValueError("something else")
 
-    async def _raise(*_):
+    def _raise(*_):
+        nonlocal err
+        raise err
+
+    async def _raise_async(*_):
         nonlocal err
         raise err
 
@@ -57,12 +61,12 @@ async def test_last_exception_and_running(monkeypatch):
         await inst1.start()
         assert inst1.last_exception is None
         assert inst1.is_running
-        monkeypatch.setattr(inst1._servers[0], "wait_closed", _raise)
+        monkeypatch.setattr(inst1._servers[0], "close", _raise)
         with pytest.raises(type(err), match=str(err)):
             await inst1.stop()
         assert inst1.last_exception is err
 
-        monkeypatch.setattr(asyncio, "start_server", _raise)
+        monkeypatch.setattr(asyncio, "start_server", _raise_async)
         inst2 = ServerInstance.make("regular@127.0.0.1:0", manager)
         assert inst2.last_exception is None
         with pytest.raises(type(err), match=str(err)):

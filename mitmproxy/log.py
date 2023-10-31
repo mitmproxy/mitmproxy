@@ -71,9 +71,12 @@ class MitmLogHandler(logging.Handler):
 
     def filter(self, record: logging.LogRecord) -> bool:
         # We can't remove stale handlers here because that would modify .handlers during iteration!
-        return super().filter(record) and (
-            not self._initiated_in_test
-            or self._initiated_in_test == os.environ.get("PYTEST_CURRENT_TEST")
+        return bool(
+            super().filter(record)
+            and (
+                not self._initiated_in_test
+                or self._initiated_in_test == os.environ.get("PYTEST_CURRENT_TEST")
+            )
         )
 
     def install(self) -> None:

@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Security",
     "Topic :: Internet :: WWW/HTTP",
@@ -30,7 +31,7 @@ classifiers = [
 # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
-    "aioquic_mitmproxy>=0.9.20,<0.10",
+    "aioquic_mitmproxy>=0.9.21,<0.10",
     "asgiref>=3.2.10,<3.8",
     "Brotli>=1.0,<1.2",
     "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
@@ -204,13 +205,13 @@ commands =
 
 [testenv:mypy]
 deps =
-  mypy==1.4.1
+  mypy==1.6.1
   types-certifi==2021.10.8.3
   types-Flask==1.1.6
   types-Werkzeug==1.0.9
-  types-requests==2.31.0.2
+  types-requests==2.31.0.10
   types-cryptography==3.3.23.2
-  types-pyOpenSSL==23.2.0.2
+  types-pyOpenSSL==23.3.0.0
   -e .[dev]
 
 commands =

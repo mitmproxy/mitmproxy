@@ -281,7 +281,7 @@ class TestNextLayer:
 
 
 @dataclass
-class TestConf:
+class TConf:
     before: list[type[Layer]]
     after: list[type[Layer]]
     proxy_mode: str = "regular"
@@ -296,14 +296,14 @@ class TestConf:
 
 explicit_proxy_configs = [
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.HttpProxy],
             after=[modes.HttpProxy, HttpLayer],
         ),
         id=f"explicit proxy: regular http",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.HttpProxy],
             after=[modes.HttpProxy, ClientTLSLayer, HttpLayer],
             data_client=client_hello_no_extensions,
@@ -311,14 +311,14 @@ explicit_proxy_configs = [
         id=f"explicit proxy: secure web proxy",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.HttpUpstreamProxy],
             after=[modes.HttpUpstreamProxy, HttpLayer],
         ),
         id=f"explicit proxy: upstream proxy",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.HttpUpstreamProxy],
             after=[modes.HttpUpstreamProxy, ClientQuicLayer, HttpLayer],
             transport_protocol="udp",
@@ -326,7 +326,7 @@ explicit_proxy_configs = [
         id=f"explicit proxy: experimental http3",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[
                 modes.HttpProxy,
                 partial(HttpLayer, mode=HTTPMode.regular),
@@ -338,7 +338,7 @@ explicit_proxy_configs = [
         id=f"explicit proxy: HTTP over regular proxy",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[
                 modes.HttpProxy,
                 partial(HttpLayer, mode=HTTPMode.regular),
@@ -356,7 +356,7 @@ explicit_proxy_configs = [
         id=f"explicit proxy: TLS over regular proxy",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[
                 modes.HttpProxy,
                 partial(HttpLayer, mode=HTTPMode.regular),
@@ -377,7 +377,7 @@ explicit_proxy_configs = [
         id=f"explicit proxy: HTTPS over regular proxy",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[
                 modes.HttpProxy,
                 partial(HttpLayer, mode=HTTPMode.regular),
@@ -404,7 +404,7 @@ for proto_plain, proto_enc, app_layer in [
     reverse_proxy_configs.extend(
         [
             pytest.param(
-                TestConf(
+                TConf(
                     before=[modes.ReverseProxy],
                     after=[modes.ReverseProxy, app_layer],
                     proxy_mode=f"reverse:{proto_plain}://example.com:42",
@@ -412,7 +412,7 @@ for proto_plain, proto_enc, app_layer in [
                 id=f"reverse proxy: {proto_plain} -> {proto_plain}",
             ),
             pytest.param(
-                TestConf(
+                TConf(
                     before=[modes.ReverseProxy],
                     after=[
                         modes.ReverseProxy,
@@ -426,7 +426,7 @@ for proto_plain, proto_enc, app_layer in [
                 id=f"reverse proxy: {proto_enc} -> {proto_enc}",
             ),
             pytest.param(
-                TestConf(
+                TConf(
                     before=[modes.ReverseProxy],
                     after=[modes.ReverseProxy, ClientTLSLayer, app_layer],
                     proxy_mode=f"reverse:{proto_plain}://example.com:42",
@@ -435,7 +435,7 @@ for proto_plain, proto_enc, app_layer in [
                 id=f"reverse proxy: {proto_enc} -> {proto_plain}",
             ),
             pytest.param(
-                TestConf(
+                TConf(
                     before=[modes.ReverseProxy],
                     after=[modes.ReverseProxy, ServerTLSLayer, app_layer],
                     proxy_mode=f"reverse:{proto_enc}://example.com:42",
@@ -448,7 +448,7 @@ for proto_plain, proto_enc, app_layer in [
 reverse_proxy_configs.extend(
     [
         pytest.param(
-            TestConf(
+            TConf(
                 before=[modes.ReverseProxy],
                 after=[modes.ReverseProxy, DNSLayer],
                 proxy_mode="reverse:dns://example.com:53",
@@ -456,7 +456,7 @@ reverse_proxy_configs.extend(
             id="reverse proxy: dns",
         ),
         pytest.param(
-            TestConf(
+            TConf(
                 before=[modes.ReverseProxy],
                 after=[modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
                 proxy_mode="reverse:http3://example.com",
@@ -464,7 +464,7 @@ reverse_proxy_configs.extend(
             id="reverse proxy: http3",
         ),
         pytest.param(
-            TestConf(
+            TConf(
                 before=[modes.ReverseProxy],
                 after=[
                     modes.ReverseProxy,
@@ -481,7 +481,7 @@ reverse_proxy_configs.extend(
 
 transparent_proxy_configs = [
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
             data_client=client_hello_no_extensions,
@@ -489,7 +489,7 @@ transparent_proxy_configs = [
         id=f"transparent proxy: tls",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
             data_client=dtls_client_hello_with_extensions,
@@ -498,7 +498,7 @@ transparent_proxy_configs = [
         id=f"transparent proxy: dtls",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
             data_client=quic_client_hello,
@@ -507,7 +507,7 @@ transparent_proxy_configs = [
         id="transparent proxy: quic",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, TCPLayer],
             data_server=b"220 service ready",
@@ -515,7 +515,7 @@ transparent_proxy_configs = [
         id="transparent proxy: raw tcp",
     ),
     pytest.param(
-        http := TestConf(
+        http := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, HttpLayer],
             data_client=b"GET / HTTP/1.1\r\n",
@@ -540,7 +540,7 @@ transparent_proxy_configs = [
         id="transparent proxy: ignore_hosts",
     ),
     pytest.param(
-        dns := TestConf(
+        dns := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, DNSLayer],
             transport_protocol="udp",
@@ -549,7 +549,7 @@ transparent_proxy_configs = [
         id="transparent proxy: dns",
     ),
     pytest.param(
-        TestConf(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, UDPLayer],
             transport_protocol="udp",
@@ -577,7 +577,7 @@ transparent_proxy_configs = [
     ],
 )
 def test_next_layer(
-    test_conf: TestConf,
+    test_conf: TConf,
 ):
     nl = NextLayer()
     with taddons.context(nl) as tctx:
