@@ -25,7 +25,9 @@ class TestResourceRecord:
         assert (
             str(dns.ResourceRecord.PTR("test", "some.other.host")) == "some.other.host"
         )
-        assert str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
+        assert (
+            str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
+        )
         assert (
             str(
                 dns.ResourceRecord(

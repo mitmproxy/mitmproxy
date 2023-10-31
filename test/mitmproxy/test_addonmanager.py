@@ -7,6 +7,7 @@ from mitmproxy import exceptions
 from mitmproxy import hooks
 from mitmproxy import master
 from mitmproxy import options
+from mitmproxy.addonmanager import Loader
 from mitmproxy.proxy.layers.http import HttpRequestHook
 from mitmproxy.proxy.layers.http import HttpResponseHook
 from mitmproxy.test import taddons
@@ -54,8 +55,8 @@ class AsyncTHalt:
 
 
 class AOption:
-    def load(self, l):
-        l.add_option("custom_option", bool, False, "help")
+    def load(self, loader: Loader):
+        loader.add_option("custom_option", bool, False, "help")
 
 
 class AOldAPI:
@@ -155,22 +156,22 @@ async def test_mixed_async_sync(caplog):
 
 async def test_loader(caplog):
     with taddons.context() as tctx:
-        l = addonmanager.Loader(tctx.master)
-        l.add_option("custom_option", bool, False, "help")
-        assert "custom_option" in l.master.options
+        loader = addonmanager.Loader(tctx.master)
+        loader.add_option("custom_option", bool, False, "help")
+        assert "custom_option" in loader.master.options
 
         # calling this again with the same signature is a no-op.
-        l.add_option("custom_option", bool, False, "help")
+        loader.add_option("custom_option", bool, False, "help")
         assert not caplog.text
 
         # a different signature should emit a warning though.
-        l.add_option("custom_option", bool, True, "help")
+        loader.add_option("custom_option", bool, True, "help")
         assert "Over-riding existing option" in caplog.text
 
         def cmd(a: str) -> str:
             return "foo"
 
-        l.add_command("test.command", cmd)
+        loader.add_command("test.command", cmd)
 
 
 async def test_simple(caplog):

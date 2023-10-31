@@ -13,7 +13,6 @@ from mitmproxy.log import ALERT
 from mitmproxy.net.http import status_codes
 from mitmproxy.utils import emoji
 
-
 logger = logging.getLogger(__name__)
 
 CONF_DIR = "~/.mitmproxy"

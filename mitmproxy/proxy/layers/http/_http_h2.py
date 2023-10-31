@@ -9,7 +9,6 @@ import h2.exceptions
 import h2.settings
 import h2.stream
 
-
 logger = logging.getLogger(__name__)
 
 

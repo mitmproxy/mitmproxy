@@ -38,10 +38,10 @@ def get_random_object(random=random, depth=0):
         what = random.randint(0, 1)
         if what == 0:
             n = random.randint(0, 10)
-            l = []
+            lst = []
             for _ in range(n):
-                l.append(get_random_object(random, depth + 1))
-            return l
+                lst.append(get_random_object(random, depth + 1))
+            return lst
         if what == 1:
             n = random.randint(0, 10)
             d = {}

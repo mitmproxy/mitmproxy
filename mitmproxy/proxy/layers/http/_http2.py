@@ -15,16 +15,6 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from . import RequestData
-from . import RequestEndOfMessage
-from . import RequestHeaders
-from . import RequestProtocolError
-from . import RequestTrailers
-from . import ResponseData
-from . import ResponseEndOfMessage
-from . import ResponseHeaders
-from . import ResponseProtocolError
-from . import ResponseTrailers
 from ...commands import CloseConnection
 from ...commands import Log
 from ...commands import RequestWakeup
@@ -37,6 +27,16 @@ from ...events import Start
 from ...events import Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
+from . import RequestData
+from . import RequestEndOfMessage
+from . import RequestHeaders
+from . import RequestProtocolError
+from . import RequestTrailers
+from . import ResponseData
+from . import ResponseEndOfMessage
+from . import ResponseHeaders
+from . import ResponseProtocolError
+from . import ResponseTrailers
 from ._base import format_error
 from ._base import HttpConnection
 from ._base import HttpEvent

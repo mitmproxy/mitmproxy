@@ -48,9 +48,9 @@ def run_tests(src, test, fail):
             e = 0
         else:
             cov = [
-                l
-                for l in stdout.getvalue().split("\n")
-                if (src in l) or ("was never imported" in l)
+                line
+                for line in stdout.getvalue().split("\n")
+                if (src in line) or ("was never imported" in line)
             ]
             if len(cov) == 1:
                 print("FAIL:", cov[0])

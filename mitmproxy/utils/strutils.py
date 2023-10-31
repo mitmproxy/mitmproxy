@@ -4,7 +4,6 @@ import re
 from collections.abc import Iterable
 from typing import overload
 
-
 # https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading
 
 
@@ -59,7 +58,8 @@ def always_str(str_or_bytes: None | str | bytes, *decode_args) -> None | str:
 # (http://unicode.org/charts/PDF/U2400.pdf), but that turned out to render badly
 # with monospace fonts. We are back to "." therefore.
 _control_char_trans = {
-    x: ord(".") for x in range(32)  # x + 0x2400 for unicode control group pictures
+    x: ord(".")
+    for x in range(32)  # x + 0x2400 for unicode control group pictures
 }
 _control_char_trans[127] = ord(".")  # 0x2421
 _control_char_trans_newline = _control_char_trans.copy()

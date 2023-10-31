@@ -16,6 +16,7 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import types
 from mitmproxy import version
+from mitmproxy.addonmanager import Loader
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.log import ALERT
@@ -73,8 +74,8 @@ class SaveHar:
             }
         }
 
-    def load(self, l):
-        l.add_option(
+    def load(self, loader: Loader):
+        loader.add_option(
             "hardump",
             str,
             "",

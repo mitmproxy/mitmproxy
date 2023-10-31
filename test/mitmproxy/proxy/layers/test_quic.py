@@ -31,7 +31,6 @@ from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
 
-
 tlsdata = data.Data(__name__)
 
 

@@ -8,7 +8,8 @@ from functools import cache
 from typing import TypeVar
 
 try:
-    from types import UnionType, NoneType
+    from types import NoneType
+    from types import UnionType
 except ImportError:  # pragma: no cover
 
     class UnionType:  # type: ignore

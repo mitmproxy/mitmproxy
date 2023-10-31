@@ -42,7 +42,6 @@ from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -519,9 +518,9 @@ if __name__ == "__main__":  # pragma: no cover
         ]
 
         def next_layer(nl: layer.NextLayer):
-            l = layer_stack.pop(0)(nl.context)
-            l.debug = "  " * len(nl.context.layers)
-            nl.layer = l
+            layr = layer_stack.pop(0)(nl.context)
+            layr.debug = "  " * len(nl.context.layers)
+            nl.layer = layr
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:

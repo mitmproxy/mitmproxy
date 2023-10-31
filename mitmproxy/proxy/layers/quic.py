@@ -64,9 +64,7 @@ class QuicTlsSettings:
     """The certificate to use for the connection."""
     certificate_chain: list[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
-    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = (
-        None
-    )
+    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = None
     """The certificate's private key."""
     cipher_suites: list[CipherSuite] | None = None
     """An optional list of allowed/advertised cipher suites."""

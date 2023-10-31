@@ -2,7 +2,6 @@
 import screenplays
 from clidirector import CliDirector
 
-
 if __name__ == "__main__":
     director = CliDirector()
     screenplays.record_user_interface(director)

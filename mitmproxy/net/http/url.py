@@ -37,8 +37,8 @@ def parse(url):
 
     # Size of Ascii character after encoding is 1 byte which is same as its size
     # But non-Ascii character's size after encoding will be more than its size
-    def ascii_check(l):
-        if len(l) == len(str(l).encode()):
+    def ascii_check(x):
+        if len(x) == len(str(x).encode()):
             return True
         return False
 

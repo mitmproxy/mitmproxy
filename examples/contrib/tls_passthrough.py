@@ -24,6 +24,7 @@ from enum import Enum
 from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import tls
+from mitmproxy.addonmanager import Loader
 from mitmproxy.utils import human
 
 
@@ -78,8 +79,8 @@ class ProbabilisticStrategy(TlsStrategy):
 class MaybeTls:
     strategy: TlsStrategy
 
-    def load(self, l):
-        l.add_option(
+    def load(self, loader: Loader):
+        loader.add_option(
             "tls_strategy",
             int,
             0,

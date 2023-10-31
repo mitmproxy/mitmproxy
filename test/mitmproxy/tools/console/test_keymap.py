@@ -188,9 +188,8 @@ def test_parse():
                         cmd: cmd
                 """
             )
-        assert (
-            kmc.parse(
-                """
+        assert kmc.parse(
+            """
                 -   key: key1
                     ctx: [one, two]
                     help: one
@@ -198,13 +197,11 @@ def test_parse():
                         foo bar
                         foo bar
             """
-            )
-            == [
-                {
-                    "key": "key1",
-                    "ctx": ["one", "two"],
-                    "help": "one",
-                    "cmd": "foo bar foo bar\n",
-                }
-            ]
-        )
+        ) == [
+            {
+                "key": "key1",
+                "ctx": ["one", "two"],
+                "help": "one",
+                "cmd": "foo bar foo bar\n",
+            }
+        ]

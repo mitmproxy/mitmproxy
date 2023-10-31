@@ -8,7 +8,6 @@ from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
 
-
 logger = logging.getLogger(__name__)
 
 

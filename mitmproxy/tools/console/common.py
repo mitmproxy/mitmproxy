@@ -31,15 +31,15 @@ def is_keypress(k):
         return True
 
 
-def highlight_key(str, key, textattr="text", keyattr="key"):
-    l = []
-    parts = str.split(key, 1)
+def highlight_key(text, key, textattr="text", keyattr="key"):
+    lst = []
+    parts = text.split(key, 1)
     if parts[0]:
-        l.append((textattr, parts[0]))
-    l.append((keyattr, key))
+        lst.append((textattr, parts[0]))
+    lst.append((keyattr, key))
     if parts[1]:
-        l.append((textattr, parts[1]))
-    return l
+        lst.append((textattr, parts[1]))
+    return lst
 
 
 KEY_MAX = 30
