@@ -13,9 +13,6 @@ metadata depend on the protocol in use. Known attributes can be found in
 """
 import traceback
 
-from ..tcp import TCPMessage
-from ..udp import UDPMessage
-from ..websocket import WebSocketMessage
 from . import auto
 from . import css
 from . import dns
@@ -40,6 +37,9 @@ from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
+from ..tcp import TCPMessage
+from ..udp import UDPMessage
+from ..websocket import WebSocketMessage
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp

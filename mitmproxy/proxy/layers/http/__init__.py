@@ -8,10 +8,6 @@ from logging import WARNING
 
 import wsproto.handshake
 
-from ...context import Context
-from ...mode_specs import ReverseMode
-from ...mode_specs import UpstreamMode
-from ..quic import QuicStreamEvent
 from ._base import HttpCommand
 from ._base import HttpConnection
 from ._base import ReceiveHttp
@@ -40,6 +36,10 @@ from ._http2 import Http2Client
 from ._http2 import Http2Server
 from ._http3 import Http3Client
 from ._http3 import Http3Server
+from ..quic import QuicStreamEvent
+from ...context import Context
+from ...mode_specs import ReverseMode
+from ...mode_specs import UpstreamMode
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.connection import Connection

@@ -164,10 +164,13 @@ ignore = ["F541", "E501"]
 
 
 [tool.ruff.isort]
+# these rules are a bit weird, but they mimic our existing reorder_python_imports style.
+# if we break compatibility here, consider removing all customization + enforce absolute imports.
 force-single-line = true
 order-by-type = false
 section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
 no-lines-before = ["first-party"]
+relative-imports-order = "closest-to-furthest"
 
 [tool.tox]
 legacy_tox_ini = """

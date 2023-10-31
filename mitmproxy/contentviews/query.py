@@ -1,5 +1,5 @@
-from .. import http
 from . import base
+from .. import http
 
 
 class ViewQuery(base.View):
