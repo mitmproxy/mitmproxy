@@ -12,6 +12,8 @@
   ([#6412](https://github.com/mitmproxy/mitmproxy/pull/6412), @tddschn)
 * Fix root-relative URLs so that mitmweb can run in subdirectories.
   ([#6411](https://github.com/mitmproxy/mitmproxy/pull/6411), @davet2001)
+* Add an optional parameter(ldap search filter key) to ProxyAuth-LDAP.
+  ([#6428](https://github.com/mitmproxy/mitmproxy/pull/6428), @outlaws-bai)
 
 
 ## 27 September 2023: mitmproxy 10.1.1
