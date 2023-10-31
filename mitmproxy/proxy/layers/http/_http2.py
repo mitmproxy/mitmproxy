@@ -15,6 +15,18 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
+from ...commands import CloseConnection
+from ...commands import Log
+from ...commands import RequestWakeup
+from ...commands import SendData
+from ...context import Context
+from ...events import ConnectionClosed
+from ...events import DataReceived
+from ...events import Event
+from ...events import Start
+from ...events import Wakeup
+from ...layer import CommandGenerator
+from ...utils import expect
 from . import RequestData
 from . import RequestEndOfMessage
 from . import RequestHeaders
@@ -31,18 +43,6 @@ from ._base import HttpEvent
 from ._base import ReceiveHttp
 from ._http_h2 import BufferedH2Connection
 from ._http_h2 import H2ConnectionLogger
-from ...commands import CloseConnection
-from ...commands import Log
-from ...commands import RequestWakeup
-from ...commands import SendData
-from ...context import Context
-from ...events import ConnectionClosed
-from ...events import DataReceived
-from ...events import Event
-from ...events import Start
-from ...events import Wakeup
-from ...layer import CommandGenerator
-from ...utils import expect
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.connection import Connection

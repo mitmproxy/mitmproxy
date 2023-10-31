@@ -170,7 +170,6 @@ force-single-line = true
 order-by-type = false
 section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
 no-lines-before = ["first-party"]
-relative-imports-order = "closest-to-furthest"
 
 [tool.tox]
 legacy_tox_ini = """
