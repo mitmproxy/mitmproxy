@@ -1,5 +1,5 @@
-import struct
 from dataclasses import dataclass
+import struct
 
 from mitmproxy import dns
 from mitmproxy import flow as mflow

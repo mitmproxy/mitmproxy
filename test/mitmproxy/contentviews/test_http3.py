@@ -1,9 +1,10 @@
 import pytest
 
-from . import full_eval
 from mitmproxy.contentviews import http3
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.test import tflow
+
+from . import full_eval
 
 
 @pytest.mark.parametrize(

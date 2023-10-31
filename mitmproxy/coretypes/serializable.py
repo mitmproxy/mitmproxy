@@ -2,13 +2,14 @@ import abc
 import collections.abc
 import dataclasses
 import enum
-import typing
-import uuid
 from functools import cache
+import typing
 from typing import TypeVar
+import uuid
 
 try:
-    from types import UnionType, NoneType
+    from types import NoneType
+    from types import UnionType
 except ImportError:  # pragma: no cover
 
     class UnionType:  # type: ignore

@@ -22,26 +22,26 @@ def format_msgpack(
 
     indent = ("text", "    " * indent_count)
 
-    if type(data) is str:
+    if isinstance(data, str):
         token = [("Token_Literal_String", f'"{data}"')]
         output[-1] += token
 
         # Need to return if single value, but return is discarded in dict/list loop
         return output
 
-    elif type(data) is float or type(data) is int:
-        token = [("Token_Literal_Number", repr(data))]
-        output[-1] += token
-
-        return output
-
-    elif type(data) is bool:
+    elif isinstance(data, bool):
         token = [("Token_Keyword_Constant", repr(data))]
         output[-1] += token
 
         return output
 
-    elif type(data) is dict:
+    elif isinstance(data, float | int):
+        token = [("Token_Literal_Number", repr(data))]
+        output[-1] += token
+
+        return output
+
+    elif isinstance(data, dict):
         output[-1] += [("text", "{")]
         for key in data:
             output.append(
@@ -61,7 +61,7 @@ def format_msgpack(
 
         return output
 
-    elif type(data) is list:
+    elif isinstance(data, list):
         output[-1] += [("text", "[")]
 
         for count, item in enumerate(data):

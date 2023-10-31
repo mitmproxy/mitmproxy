@@ -95,7 +95,7 @@ class Palette:
     low: Mapping[str, Sequence[str]]
 
     def palette(self, transparent: bool):
-        l: list[Sequence[str | None]] = []
+        lst: list[Sequence[str | None]] = []
         highback, lowback = None, None
         if not transparent:
             if self.high and self.high.get("background"):
@@ -104,7 +104,7 @@ class Palette:
 
         for i in self._fields:
             if transparent and i == "background":
-                l.append(["background", "default", "default"])
+                lst.append(["background", "default", "default"])
             else:
                 v: list[str | None] = [i]
                 low = list(self.low[i])
@@ -120,8 +120,8 @@ class Palette:
                 elif highback and self.low[i][1] == "default":
                     high = [None, low[0], highback]
                     v.extend(high)
-                l.append(tuple(v))
-        return l
+                lst.append(tuple(v))
+        return lst
 
 
 def gen_gradient(palette, cols):

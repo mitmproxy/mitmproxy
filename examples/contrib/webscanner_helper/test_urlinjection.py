@@ -3,10 +3,10 @@ from unittest import mock
 
 from examples.contrib.webscanner_helper.urlinjection import HTMLInjection
 from examples.contrib.webscanner_helper.urlinjection import InjectionGenerator
-from examples.contrib.webscanner_helper.urlinjection import logger
 from examples.contrib.webscanner_helper.urlinjection import RobotsInjection
 from examples.contrib.webscanner_helper.urlinjection import SitemapInjection
 from examples.contrib.webscanner_helper.urlinjection import UrlInjectionAddon
+from examples.contrib.webscanner_helper.urlinjection import logger
 from mitmproxy import flowfilter
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils

@@ -1,8 +1,9 @@
 import imghdr
 
-from . import image_parser
 from mitmproxy.contentviews import base
 from mitmproxy.coretypes import multidict
+
+from . import image_parser
 
 
 def test_ico(h, f):

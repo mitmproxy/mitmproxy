@@ -1,5 +1,6 @@
-from . import full_eval
 from mitmproxy.contentviews import multipart
+
+from . import full_eval
 
 
 def test_view_multipart():

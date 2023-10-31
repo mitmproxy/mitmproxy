@@ -4,6 +4,7 @@ protobuf messages based on a user defined rule set.
 
 """
 from mitmproxy import contentviews
+from mitmproxy.addonmanager import Loader
 from mitmproxy.contentviews.grpc import ProtoParser
 from mitmproxy.contentviews.grpc import ViewConfig
 from mitmproxy.contentviews.grpc import ViewGrpcProtobuf
@@ -102,7 +103,7 @@ class ViewGrpcWithRules(ViewGrpcProtobuf):
 view = ViewGrpcWithRules()
 
 
-def load(l):
+def load(loader: Loader):
     contentviews.add(view)
 
 

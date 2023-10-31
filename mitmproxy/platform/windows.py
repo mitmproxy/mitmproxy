@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc
+from collections.abc import Callable
 import contextlib
 import ctypes.wintypes
 import json
@@ -10,11 +11,10 @@ import socket
 import socketserver
 import threading
 import time
-from collections.abc import Callable
-from typing import Any
-from typing import cast
-from typing import ClassVar
 from typing import IO
+from typing import Any
+from typing import ClassVar
+from typing import cast
 
 import pydivert.consts
 

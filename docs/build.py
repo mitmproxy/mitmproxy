@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
-
 
 here = Path(__file__).parent
 

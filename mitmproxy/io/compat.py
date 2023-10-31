@@ -6,8 +6,8 @@ v3.0.0dev) and versioning. Every change or migration gets a new flow file
 version number, this prevents issues with developer builds and snapshots.
 """
 import copy
-import uuid
 from typing import Any
+import uuid
 
 from mitmproxy import version
 from mitmproxy.utils import strutils

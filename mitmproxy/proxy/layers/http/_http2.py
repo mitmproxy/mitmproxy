@@ -1,9 +1,9 @@
 import collections
-import time
 from collections.abc import Sequence
 from enum import Enum
 from logging import DEBUG
 from logging import ERROR
+import time
 from typing import ClassVar
 
 import h2.config
@@ -15,16 +15,13 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from . import RequestData
-from . import RequestEndOfMessage
-from . import RequestHeaders
-from . import RequestProtocolError
-from . import RequestTrailers
-from . import ResponseData
-from . import ResponseEndOfMessage
-from . import ResponseHeaders
-from . import ResponseProtocolError
-from . import ResponseTrailers
+from mitmproxy import http
+from mitmproxy import version
+from mitmproxy.connection import Connection
+from mitmproxy.net.http import status_codes
+from mitmproxy.net.http import url
+from mitmproxy.utils import human
+
 from ...commands import CloseConnection
 from ...commands import Log
 from ...commands import RequestWakeup
@@ -37,18 +34,22 @@ from ...events import Start
 from ...events import Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
-from ._base import format_error
+from . import RequestData
+from . import RequestEndOfMessage
+from . import RequestHeaders
+from . import RequestProtocolError
+from . import RequestTrailers
+from . import ResponseData
+from . import ResponseEndOfMessage
+from . import ResponseHeaders
+from . import ResponseProtocolError
+from . import ResponseTrailers
 from ._base import HttpConnection
 from ._base import HttpEvent
 from ._base import ReceiveHttp
+from ._base import format_error
 from ._http_h2 import BufferedH2Connection
 from ._http_h2 import H2ConnectionLogger
-from mitmproxy import http
-from mitmproxy import version
-from mitmproxy.connection import Connection
-from mitmproxy.net.http import status_codes
-from mitmproxy.net.http import url
-from mitmproxy.utils import human
 
 
 class StreamState(Enum):

@@ -1,6 +1,15 @@
+from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
+from test.mitmproxy.proxy.layers.http.test_http2 import example_request_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
+from test.mitmproxy.proxy.layers.http.test_http2 import start_h2_client
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import _eq
+from test.mitmproxy.proxy.tutils import _TracebackInPlaybook
+from test.mitmproxy.proxy.tutils import reply
 from typing import Any
 
-import pytest
 from h2.settings import SettingCodes
 from hypothesis import example
 from hypothesis import given
@@ -14,6 +23,7 @@ from hypothesis.strategies import lists
 from hypothesis.strategies import sampled_from
 from hypothesis.strategies import sets
 from hypothesis.strategies import text
+import pytest
 
 from mitmproxy import connection
 from mitmproxy import options
@@ -28,18 +38,8 @@ from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.events import Start
 from mitmproxy.proxy.layers import http
-from mitmproxy.proxy.layers.http import _http2
 from mitmproxy.proxy.layers.http import HTTPMode
-from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy.layers.http.test_http2 import example_request_headers
-from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
-from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
-from test.mitmproxy.proxy.layers.http.test_http2 import start_h2_client
-from test.mitmproxy.proxy.tutils import _eq
-from test.mitmproxy.proxy.tutils import _TracebackInPlaybook
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
+from mitmproxy.proxy.layers.http import _http2
 
 opts = options.Options()
 Proxyserver().load(opts)

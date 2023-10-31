@@ -1,16 +1,17 @@
+from collections.abc import Sequence
 import contextlib
 import os
-from collections.abc import Sequence
 
 import pytest
 
-import mitmproxy.exceptions
-import mitmproxy.types
-from . import test_command
 from mitmproxy import command
 from mitmproxy import flow
+import mitmproxy.exceptions
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+import mitmproxy.types
+
+from . import test_command
 
 
 @contextlib.contextmanager

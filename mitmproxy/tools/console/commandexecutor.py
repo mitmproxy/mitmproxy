@@ -1,5 +1,5 @@
-import logging
 from collections.abc import Sequence
+import logging
 
 from mitmproxy import exceptions
 from mitmproxy import flow

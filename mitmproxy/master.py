@@ -1,8 +1,6 @@
 import asyncio
 import logging
 
-from . import ctx as mitmproxy_ctx
-from .proxy.mode_specs import ReverseMode
 from mitmproxy import addonmanager
 from mitmproxy import command
 from mitmproxy import eventsequence
@@ -10,6 +8,9 @@ from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import options
+
+from . import ctx as mitmproxy_ctx
+from .proxy.mode_specs import ReverseMode
 
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,9 @@ from typing import cast
 
 from selenium import webdriver
 
-import mitmproxy.http
 from mitmproxy import flowfilter
 from mitmproxy import master
+import mitmproxy.http
 from mitmproxy.script import concurrent
 
 logger = logging.getLogger(__name__)

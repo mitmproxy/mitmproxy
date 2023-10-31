@@ -1,7 +1,7 @@
 import urwid
 
-import mitmproxy.flow
 from mitmproxy import http
+import mitmproxy.flow
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import searchable
 from mitmproxy.utils import human

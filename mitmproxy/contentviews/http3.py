@@ -3,17 +3,18 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from dataclasses import field
 
-import pylsqpack
 from aioquic.buffer import Buffer
 from aioquic.buffer import BufferReadError
-from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
+from aioquic.h3.connection import parse_settings
+import pylsqpack
 
-from . import base
-from ..proxy.layers.http import is_h3_alpn
-from .hex import ViewHexDump
 from mitmproxy import flow
 from mitmproxy import tcp
+
+from ..proxy.layers.http import is_h3_alpn
+from . import base
+from .hex import ViewHexDump
 
 
 @dataclass(frozen=True)

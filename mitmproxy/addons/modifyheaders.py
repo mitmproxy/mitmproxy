@@ -1,7 +1,7 @@
-import logging
-import re
 from collections.abc import Sequence
+import logging
 from pathlib import Path
+import re
 from typing import NamedTuple
 
 from mitmproxy import ctx

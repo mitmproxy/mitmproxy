@@ -16,12 +16,12 @@ that sets nextlayer.layer works just as well.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
+from collections.abc import Sequence
 import logging
 import re
 import struct
 import sys
-from collections.abc import Iterable
-from collections.abc import Sequence
 from typing import Any
 from typing import cast
 
@@ -40,16 +40,16 @@ from mitmproxy.proxy.layers import ClientQuicLayer
 from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
-from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
 from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import UDPLayer
+from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello
-from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
+from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
 

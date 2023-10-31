@@ -9,13 +9,13 @@ The very high level overview is as follows:
 import abc
 import asyncio
 import collections
-import logging
-import time
 from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+import logging
+import time
 from types import TracebackType
 from typing import Literal
 
@@ -41,7 +41,6 @@ from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
-
 
 logger = logging.getLogger(__name__)
 
@@ -519,9 +518,9 @@ if __name__ == "__main__":  # pragma: no cover
         ]
 
         def next_layer(nl: layer.NextLayer):
-            l = layer_stack.pop(0)(nl.context)
-            l.debug = "  " * len(nl.context.layers)
-            nl.layer = l
+            layr = layer_stack.pop(0)(nl.context)
+            layr.debug = "  " * len(nl.context.layers)
+            nl.layer = layr
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:

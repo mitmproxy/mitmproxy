@@ -1,5 +1,6 @@
-from .. import full_eval
 from mitmproxy.contentviews import image
+
+from .. import full_eval
 
 
 def test_view_image(tdata):

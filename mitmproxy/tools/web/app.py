@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from collections.abc import Sequence
 import hashlib
+from io import BytesIO
+from itertools import islice
 import json
 import logging
 import os.path
 import re
-from collections.abc import Callable
-from collections.abc import Sequence
-from io import BytesIO
-from itertools import islice
 from typing import ClassVar
 
 import tornado.escape
 import tornado.web
 import tornado.websocket
 
-import mitmproxy.flow
-import mitmproxy.tools.web.master
 from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import contentviews
@@ -28,9 +26,11 @@ from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
+import mitmproxy.flow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+import mitmproxy.tools.web.master
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils.emoji import emoji

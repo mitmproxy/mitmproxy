@@ -1,6 +1,6 @@
 import asyncio
-import ssl
 from contextlib import asynccontextmanager
+import ssl
 
 import pytest
 

@@ -1,8 +1,5 @@
 import time
 
-from ..tutils import Placeholder
-from ..tutils import Playbook
-from ..tutils import reply
 from mitmproxy.dns import DNSFlow
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
@@ -13,6 +10,10 @@ from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import dns
 from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.test.tutils import tdnsresp
+
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
 
 
 def test_invalid_and_dummy_end(tctx):

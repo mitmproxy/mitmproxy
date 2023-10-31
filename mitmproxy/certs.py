@@ -1,17 +1,16 @@
 import contextlib
+from dataclasses import dataclass
 import datetime
 import ipaddress
 import os
+from pathlib import Path
 import re
 import sys
-from dataclasses import dataclass
-from pathlib import Path
-from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
+from typing import cast
 
-import OpenSSL
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
@@ -21,6 +20,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
+import OpenSSL
 
 from mitmproxy.coretypes import serializable
 
@@ -360,7 +360,9 @@ class CertStore:
 
         # we could use cryptography for this, but it's unclear how to convert cryptography's object to pyOpenSSL's
         # expected format.
-        bio = OpenSSL.SSL._lib.BIO_new_file(str(path).encode(sys.getfilesystemencoding()), b"r")  # type: ignore
+        bio = OpenSSL.SSL._lib.BIO_new_file(
+            str(path).encode(sys.getfilesystemencoding()), b"r"
+        )  # type: ignore
         if bio != OpenSSL.SSL._ffi.NULL:  # type: ignore
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)  # type: ignore
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(  # type: ignore

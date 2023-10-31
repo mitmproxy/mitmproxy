@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from OpenSSL import crypto
 from OpenSSL import SSL
+from OpenSSL import crypto
 
 from mitmproxy import certs
 from mitmproxy.net import tls

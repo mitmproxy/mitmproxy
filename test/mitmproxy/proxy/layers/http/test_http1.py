@@ -1,3 +1,6 @@
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+
 import pytest
 
 from mitmproxy import http
@@ -12,8 +15,6 @@ from mitmproxy.proxy.layers.http import RequestHeaders
 from mitmproxy.proxy.layers.http import ResponseData
 from mitmproxy.proxy.layers.http import ResponseEndOfMessage
 from mitmproxy.proxy.layers.http import ResponseHeaders
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
 
 
 class TestServer:

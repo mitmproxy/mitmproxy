@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import contextlib
-import copy
-import os
-import pprint
-import textwrap
-import weakref
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Sequence
+import contextlib
+import copy
 from dataclasses import dataclass
+import os
+import pprint
+import textwrap
 from typing import Any
 from typing import Optional
 from typing import TextIO
+import weakref
 
 import ruamel.yaml
 
@@ -415,9 +415,9 @@ class OptManager:
 
         o = self._options[optname]
 
-        def mkf(l, s):
-            l = l.replace("_", "-")
-            f = ["--%s" % l]
+        def mkf(x, s):
+            x = x.replace("_", "-")
+            f = ["--%s" % x]
             if s:
                 f.append("-" + s)
             return f

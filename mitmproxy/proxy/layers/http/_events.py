@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
-from ._base import HttpEvent
 from mitmproxy import http
 from mitmproxy.http import HTTPFlow
+
+from ._base import HttpEvent
 
 
 @dataclass

@@ -210,11 +210,11 @@ def parse(data_type: int, data: bytes) -> TSerializable:
             raise ValueError(f"not a tnetstring: invalid null literal: {data!r}")
         return None
     if data_type == ord(b"]"):
-        l = []
+        lst = []
         while data:
             item, data = pop(data)
-            l.append(item)  # type: ignore
-        return l
+            lst.append(item)  # type: ignore
+        return lst
     if data_type == ord(b"}"):
         d = {}
         while data:

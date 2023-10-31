@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 import copy
 import dataclasses
-import enum
-from collections.abc import Mapping
 from dataclasses import dataclass
+import enum
 from typing import Literal
 
 import pytest
@@ -70,7 +70,7 @@ class TEnum(enum.Enum):
 
 @dataclass
 class TLiteral(SerializableDataclass):
-    l: Literal["foo", "bar"]
+    lit: Literal["foo", "bar"]
 
 
 @dataclass
@@ -130,7 +130,7 @@ class TestSerializableDataclass:
                 },
             ),
             (BuiltinChildren, {"a": None, "b": None, "c": None, "d": [], "e": None}),
-            (TLiteral, {"l": "foo"}),
+            (TLiteral, {"lit": "foo"}),
         ],
     )
     def test_roundtrip(self, cls, state):
@@ -182,9 +182,9 @@ class TestSerializableDataclass:
             Unsupported.from_state({"a": "foo"})
 
     def test_literal(self):
-        assert TLiteral.from_state({"l": "foo"}).get_state() == {"l": "foo"}
+        assert TLiteral.from_state({"lit": "foo"}).get_state() == {"lit": "foo"}
         with pytest.raises(ValueError):
-            TLiteral.from_state({"l": "unknown"})
+            TLiteral.from_state({"lit": "unknown"})
 
     def test_peername(self):
         assert Addr.from_state({"peername": ("addr", 42)}).get_state() == {

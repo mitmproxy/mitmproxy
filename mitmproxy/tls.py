@@ -1,5 +1,5 @@
-import io
 from dataclasses import dataclass
+import io
 
 from kaitaistruct import KaitaiStream
 from OpenSSL import SSL

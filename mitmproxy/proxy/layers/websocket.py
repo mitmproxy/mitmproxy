@@ -1,12 +1,12 @@
-import time
 from collections.abc import Iterator
 from dataclasses import dataclass
+import time
 
+from wsproto import ConnectionState
 import wsproto.extensions
 import wsproto.frame_protocol
-import wsproto.utilities
-from wsproto import ConnectionState
 from wsproto.frame_protocol import Opcode
+import wsproto.utilities
 
 from mitmproxy import connection
 from mitmproxy import http

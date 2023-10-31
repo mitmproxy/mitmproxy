@@ -1,7 +1,8 @@
 import pytest
 
-from . import full_eval
 from mitmproxy.contentviews import protobuf
+
+from . import full_eval
 
 datadir = "mitmproxy/contentviews/test_protobuf_data/"
 

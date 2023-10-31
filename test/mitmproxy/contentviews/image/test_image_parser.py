@@ -189,6 +189,7 @@ def test_parse_jpeg(filename, metadata, tdata):
         assert metadata == image_parser.parse_jpeg(f.read())
 
 
+# fmt: off
 @pytest.mark.parametrize(
     "filename, metadata",
     {
@@ -219,3 +220,4 @@ def test_parse_jpeg(filename, metadata, tdata):
 def test_ico(filename, metadata, tdata):
     with open(tdata.path(filename), "rb") as f:
         assert metadata == image_parser.parse_ico(f.read())
+# fmt: on

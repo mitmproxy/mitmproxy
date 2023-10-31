@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import logging
 import time
-from collections.abc import Sequence
 from types import TracebackType
-from typing import cast
 from typing import Literal
+from typing import cast
 
-import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -28,6 +27,7 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.mode_specs import UpstreamMode
+import mitmproxy.types
 from mitmproxy.utils import asyncio_utils
 
 logger = logging.getLogger(__name__)

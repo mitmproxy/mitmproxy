@@ -11,24 +11,24 @@ Example:
 """
 from __future__ import annotations
 
+from abc import ABCMeta
+from abc import abstractmethod
 import asyncio
+from contextlib import contextmanager
 import errno
 import json
 import logging
 import os
+from pathlib import Path
 import socket
 import sys
 import textwrap
 import typing
-from abc import ABCMeta
-from abc import abstractmethod
-from contextlib import contextmanager
-from pathlib import Path
-from typing import cast
 from typing import ClassVar
 from typing import Generic
-from typing import get_args
 from typing import TypeVar
+from typing import cast
+from typing import get_args
 
 import mitmproxy_rs
 

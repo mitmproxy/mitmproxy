@@ -72,9 +72,9 @@ class NTLMUpstreamAuth:
     def running(self):
         def extract_flow_from_context(context: Context) -> http.HTTPFlow:
             if context and context.layers:
-                for l in context.layers:
-                    if isinstance(l, HttpLayer):
-                        for _, stream in l.streams.items():
+                for x in context.layers:
+                    if isinstance(x, HttpLayer):
+                        for _, stream in x.streams.items():
                             return (
                                 stream.flow if isinstance(stream, HttpStream) else None
                             )

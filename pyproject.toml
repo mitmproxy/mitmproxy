@@ -158,7 +158,6 @@ module = "test.*"
 ignore_errors = true
 
 [tool.ruff]
-line-length = 140
 select = ["E", "F", "I"]
 extend-exclude = ["mitmproxy/contrib/"]
 ignore = ["F541"]

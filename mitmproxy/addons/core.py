@@ -1,8 +1,7 @@
+from collections.abc import Sequence
 import logging
 import os
-from collections.abc import Sequence
 
-import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -11,8 +10,8 @@ from mitmproxy import hooks
 from mitmproxy import optmanager
 from mitmproxy.log import ALERT
 from mitmproxy.net.http import status_codes
+import mitmproxy.types
 from mitmproxy.utils import emoji
-
 
 logger = logging.getLogger(__name__)
 

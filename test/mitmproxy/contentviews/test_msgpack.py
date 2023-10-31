@@ -2,8 +2,9 @@ from hypothesis import given
 from hypothesis.strategies import binary
 from msgpack import packb
 
-from . import full_eval
 from mitmproxy.contentviews import msgpack
+
+from . import full_eval
 
 
 def msgpack_encode(content):

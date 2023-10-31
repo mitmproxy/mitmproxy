@@ -1,7 +1,7 @@
 import asyncio
+from collections.abc import Callable
 import ipaddress
 import socket
-from collections.abc import Callable
 
 import pytest
 

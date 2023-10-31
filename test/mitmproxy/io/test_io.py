@@ -1,10 +1,10 @@
 import io
 from pathlib import Path
 
-import pytest
 from hypothesis import example
 from hypothesis import given
 from hypothesis.strategies import binary
+import pytest
 
 from mitmproxy import exceptions
 from mitmproxy import version

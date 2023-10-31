@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import asyncio
 import collections
-import ipaddress
-import logging
 from collections.abc import Iterable
 from collections.abc import Iterator
 from contextlib import contextmanager
+import ipaddress
+import logging
 from typing import Optional
 
 from wsproto.frame_protocol import Opcode

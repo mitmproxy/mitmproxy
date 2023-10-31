@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import logging
-import struct
 from collections.abc import Generator
 from collections.abc import Iterable
 from collections.abc import Iterator
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
+import logging
+import struct
 
 from mitmproxy import contentviews
 from mitmproxy import flow

@@ -1,13 +1,13 @@
-import dataclasses
-import time
-import uuid
-import warnings
 from abc import ABCMeta
 from collections.abc import Sequence
+import dataclasses
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Flag
+import time
 from typing import Literal
+import uuid
+import warnings
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable

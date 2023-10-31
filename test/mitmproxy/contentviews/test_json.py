@@ -1,8 +1,9 @@
 from hypothesis import given
 from hypothesis.strategies import binary
 
-from . import full_eval
 from mitmproxy.contentviews import json
+
+from . import full_eval
 
 
 def test_parse_json():

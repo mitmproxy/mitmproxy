@@ -52,9 +52,7 @@ def test_parse():
 
 
 def test_ascii_check():
-    test_url = (
-        "https://xyz.tax-edu.net?flag=selectCourse&lc_id=42825&lc_name=茅莽莽猫氓猫氓".encode()
-    )
+    test_url = "https://xyz.tax-edu.net?flag=selectCourse&lc_id=42825&lc_name=茅莽莽猫氓猫氓".encode()
     scheme, host, port, full_path = url.parse(test_url)
     assert scheme == b"https"
     assert host == b"xyz.tax-edu.net"

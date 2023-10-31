@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from dataclasses import field
@@ -8,6 +7,7 @@ from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
+import time
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -19,10 +19,10 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
-from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
-from aioquic.quic.packet import pull_quic_header
 from aioquic.quic.packet import QuicProtocolVersion
+from aioquic.quic.packet import encode_quic_version_negotiation
+from aioquic.quic.packet import pull_quic_header
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -64,9 +64,7 @@ class QuicTlsSettings:
     """The certificate to use for the connection."""
     certificate_chain: list[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
-    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = (
-        None
-    )
+    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = None
     """The certificate's private key."""
     cipher_suites: list[CipherSuite] | None = None
     """An optional list of allowed/advertised cipher suites."""

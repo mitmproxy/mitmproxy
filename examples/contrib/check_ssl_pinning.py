@@ -7,7 +7,6 @@ import mitmproxy
 from mitmproxy import ctx
 from mitmproxy.certs import Cert
 
-
 # Certificate for client connection is generated in dummy_cert() in certs.py. Monkeypatching
 # the function to generate test cases for SSL Pinning.
 

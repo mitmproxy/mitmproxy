@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import socket
-import struct
-import sys
 from abc import ABCMeta
 from collections.abc import Callable
 from dataclasses import dataclass
+import socket
+import struct
+import sys
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands

@@ -1,7 +1,7 @@
+from collections.abc import Iterable
 import io
 import re
 import textwrap
-from collections.abc import Iterable
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import sliding_window

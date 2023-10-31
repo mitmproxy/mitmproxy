@@ -1,11 +1,11 @@
-import json
-import os
 from collections.abc import Iterable
 from io import BufferedReader
+import json
+import os
 from typing import Any
 from typing import BinaryIO
-from typing import cast
 from typing import Union
+from typing import cast
 
 from mitmproxy import exceptions
 from mitmproxy import flow

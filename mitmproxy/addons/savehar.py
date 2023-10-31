@@ -1,12 +1,12 @@
 """Write flow objects to a HAR file"""
 import base64
-import json
-import logging
-import zlib
 from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
+import json
+import logging
 from typing import Any
+import zlib
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -16,6 +16,7 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import types
 from mitmproxy import version
+from mitmproxy.addonmanager import Loader
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
 from mitmproxy.log import ALERT
@@ -73,8 +74,8 @@ class SaveHar:
             }
         }
 
-    def load(self, l):
-        l.add_option(
+    def load(self, loader: Loader):
+        loader.add_option(
             "hardump",
             str,
             "",

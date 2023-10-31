@@ -1,5 +1,5 @@
-import typing
 from collections import abc
+import typing
 
 try:
     from types import UnionType

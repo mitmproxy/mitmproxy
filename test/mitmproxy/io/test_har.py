@@ -8,7 +8,6 @@ from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
 
-
 data_dir = Path(__file__).parent.parent / "data"
 
 

@@ -1,12 +1,34 @@
 import collections
-import enum
-import time
 from dataclasses import dataclass
+import enum
 from functools import cached_property
 from logging import DEBUG
 from logging import WARNING
+import time
 
 import wsproto.handshake
+
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy.connection import Connection
+from mitmproxy.connection import Server
+from mitmproxy.connection import TransportProtocol
+from mitmproxy.net import server_spec
+from mitmproxy.net.http import status_codes
+from mitmproxy.net.http import url
+from mitmproxy.net.http.http1 import expected_http_body_size
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import websocket
+from mitmproxy.proxy.layers.http import _upstream_proxy
+from mitmproxy.proxy.utils import expect
+from mitmproxy.utils import human
+from mitmproxy.websocket import WebSocketData
 
 from ...context import Context
 from ...mode_specs import ReverseMode
@@ -40,27 +62,6 @@ from ._http2 import Http2Client
 from ._http2 import Http2Server
 from ._http3 import Http3Client
 from ._http3 import Http3Server
-from mitmproxy import flow
-from mitmproxy import http
-from mitmproxy.connection import Connection
-from mitmproxy.connection import Server
-from mitmproxy.connection import TransportProtocol
-from mitmproxy.net import server_spec
-from mitmproxy.net.http import status_codes
-from mitmproxy.net.http import url
-from mitmproxy.net.http.http1 import expected_http_body_size
-from mitmproxy.proxy import commands
-from mitmproxy.proxy import events
-from mitmproxy.proxy import layer
-from mitmproxy.proxy import tunnel
-from mitmproxy.proxy.layers import quic
-from mitmproxy.proxy.layers import tcp
-from mitmproxy.proxy.layers import tls
-from mitmproxy.proxy.layers import websocket
-from mitmproxy.proxy.layers.http import _upstream_proxy
-from mitmproxy.proxy.utils import expect
-from mitmproxy.utils import human
-from mitmproxy.websocket import WebSocketData
 
 
 class HTTPMode(enum.Enum):

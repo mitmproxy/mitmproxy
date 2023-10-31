@@ -1,11 +1,11 @@
-import sys
 from pathlib import Path
+import sys
 
 import pytest
 
-from mitmproxy.addons.maplocal import file_candidates
 from mitmproxy.addons.maplocal import MapLocal
 from mitmproxy.addons.maplocal import MapLocalSpec
+from mitmproxy.addons.maplocal import file_candidates
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.utils.spec import parse_spec

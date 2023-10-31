@@ -1,11 +1,10 @@
-import hashlib
-import logging
-import urllib
 from collections.abc import Hashable
 from collections.abc import Sequence
+import hashlib
+import logging
 from typing import Any
+import urllib
 
-import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -13,6 +12,7 @@ from mitmproxy import flow
 from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import io
+import mitmproxy.types
 
 logger = logging.getLogger(__name__)
 

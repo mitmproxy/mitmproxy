@@ -1,13 +1,13 @@
+from collections.abc import Callable
+from collections.abc import Sequence
 import contextlib
+from dataclasses import dataclass
 import inspect
 import logging
 import pprint
 import sys
 import traceback
 import types
-from collections.abc import Callable
-from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import Any
 
 from mitmproxy import exceptions
@@ -185,8 +185,8 @@ class AddonManager:
                 raise exceptions.AddonManagerError(
                     "An addon called '%s' already exists." % name
                 )
-        l = Loader(self.master)
-        self.invoke_addon_sync(addon, LoadHook(l))
+        loader = Loader(self.master)
+        self.invoke_addon_sync(addon, LoadHook(loader))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a

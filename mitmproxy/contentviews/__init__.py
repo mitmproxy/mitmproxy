@@ -13,6 +13,16 @@ metadata depend on the protocol in use. Known attributes can be found in
 """
 import traceback
 
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy.utils import signals
+from mitmproxy.utils import strutils
+
+from ..tcp import TCPMessage
+from ..udp import UDPMessage
+from ..websocket import WebSocketMessage
 from . import auto
 from . import css
 from . import dns
@@ -32,20 +42,11 @@ from . import raw
 from . import urlencoded
 from . import wbxml
 from . import xml_html
-from ..tcp import TCPMessage
-from ..udp import UDPMessage
-from ..websocket import WebSocketMessage
-from .base import format_dict
-from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
-from mitmproxy import flow
-from mitmproxy import http
-from mitmproxy import tcp
-from mitmproxy import udp
-from mitmproxy.utils import signals
-from mitmproxy.utils import strutils
+from .base import format_dict
+from .base import format_text
 
 views: list[View] = []
 

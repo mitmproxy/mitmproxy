@@ -13,9 +13,7 @@ def format_graphql(data):
     return """{header}
 ---
 {query}
-""".format(
-        header=json.dumps(header_data, indent=2), query=query
-    )
+""".format(header=json.dumps(header_data, indent=2), query=query)
 
 
 def format_query_list(data: list[Any]):

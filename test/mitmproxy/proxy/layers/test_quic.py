@@ -1,18 +1,19 @@
-import ssl
-import time
 from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
+import ssl
+from test.mitmproxy.proxy import tutils
+import time
 from typing import Literal
 from typing import TypeVar
 from unittest.mock import MagicMock
 
-import pytest
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import pull_quic_header
 from aioquic.quic.connection import QuicConnection
+from aioquic.quic.connection import pull_quic_header
+import pytest
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands
@@ -29,8 +30,6 @@ from mitmproxy.tcp import TCPFlow
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import data
-from test.mitmproxy.proxy import tutils
-
 
 tlsdata = data.Data(__name__)
 

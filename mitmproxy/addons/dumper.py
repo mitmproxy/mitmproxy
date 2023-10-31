@@ -30,9 +30,9 @@ from mitmproxy.websocket import WebSocketMessage
 
 
 def indent(n: int, text: str) -> str:
-    l = str(text).strip().splitlines()
+    lines = str(text).strip().splitlines()
     pad = " " * n
-    return "\n".join(pad + i for i in l)
+    return "\n".join(pad + i for i in lines)
 
 
 CONTENTVIEW_STYLES: dict[str, dict[str, str | bool]] = {

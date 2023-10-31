@@ -1,5 +1,6 @@
-from . import base
 from mitmproxy.net.http import url
+
+from . import base
 
 
 class ViewURLEncoded(base.View):

@@ -1,10 +1,9 @@
-import json
 from dataclasses import dataclass
+import json
 
 from mitmproxy import ctx
 from mitmproxy.addonmanager import Loader
 from mitmproxy.http import HTTPFlow
-
 
 """
 This extension implements support for domain fronting.

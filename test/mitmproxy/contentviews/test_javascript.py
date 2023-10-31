@@ -1,7 +1,8 @@
 import pytest
 
-from . import full_eval
 from mitmproxy.contentviews import javascript
+
+from . import full_eval
 
 
 def test_view_javascript():

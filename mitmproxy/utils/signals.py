@@ -10,16 +10,15 @@ This is similar to the Blinker library (https://pypi.org/project/blinker/), with
 from __future__ import annotations
 
 import asyncio
-import inspect
-import weakref
 from collections.abc import Awaitable
 from collections.abc import Callable
+import inspect
 from typing import Any
-from typing import cast
 from typing import Generic
 from typing import ParamSpec
 from typing import TypeVar
-
+from typing import cast
+import weakref
 
 P = ParamSpec("P")
 R = TypeVar("R")

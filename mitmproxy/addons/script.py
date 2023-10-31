@@ -1,13 +1,12 @@
 import asyncio
+from collections.abc import Sequence
 import importlib.machinery
 import importlib.util
 import logging
 import os
 import sys
 import types
-from collections.abc import Sequence
 
-import mitmproxy.types as mtypes
 from mitmproxy import addonmanager
 from mitmproxy import command
 from mitmproxy import ctx
@@ -15,6 +14,7 @@ from mitmproxy import eventsequence
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import hooks
+import mitmproxy.types as mtypes
 from mitmproxy.utils import asyncio_utils
 
 logger = logging.getLogger(__name__)

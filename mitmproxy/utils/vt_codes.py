@@ -6,8 +6,12 @@ import sys
 from typing import IO
 
 if os.name == "nt":
-    from ctypes import byref, windll  # type: ignore
-    from ctypes.wintypes import BOOL, DWORD, HANDLE, LPDWORD
+    from ctypes import byref  # type: ignore
+    from ctypes import windll  # type: ignore
+    from ctypes.wintypes import BOOL
+    from ctypes.wintypes import DWORD
+    from ctypes.wintypes import HANDLE
+    from ctypes.wintypes import LPDWORD
 
     ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
     STD_OUTPUT_HANDLE = -11

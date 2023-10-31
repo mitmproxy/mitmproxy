@@ -1,5 +1,6 @@
-from . import base
 from mitmproxy.utils import strutils
+
+from . import base
 
 
 class ViewHexDump(base.View):

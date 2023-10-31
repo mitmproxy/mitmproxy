@@ -32,10 +32,10 @@
         ~c CODE     Response code.
         rex         Equivalent to ~u rex
 """
+from collections.abc import Sequence
 import functools
 import re
 import sys
-from collections.abc import Sequence
 from typing import ClassVar
 from typing import Protocol
 

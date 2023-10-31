@@ -21,12 +21,12 @@ Examples:
 """
 from __future__ import annotations
 
-import dataclasses
-import sys
 from abc import ABCMeta
 from abc import abstractmethod
+import dataclasses
 from dataclasses import dataclass
 from functools import cache
+import sys
 from typing import ClassVar
 from typing import Literal
 

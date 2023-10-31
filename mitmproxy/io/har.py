@@ -1,13 +1,12 @@
 """Reads HAR files into flow objects"""
 import base64
+from datetime import datetime
 import logging
 import time
-from datetime import datetime
 
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
-
 
 logger = logging.getLogger(__name__)
 

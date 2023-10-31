@@ -11,8 +11,8 @@ import tempfile
 import threading
 from typing import TypeVar
 
-import urwid
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
+import urwid
 
 from mitmproxy import addons
 from mitmproxy import log
@@ -29,7 +29,6 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
-
 
 T = TypeVar("T", str, bytes)
 

@@ -1,4 +1,10 @@
 import copy
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 import pytest
 
@@ -35,12 +41,6 @@ from mitmproxy.tcp import TCPFlow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.udp import UDPFlow
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
-from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
-from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_upstream_https(tctx):
@@ -114,9 +114,7 @@ def test_upstream_https(tctx):
     )
     assert (
         # forward serverhello to proxy1
-        proxy1
-        >> DataReceived(upstream, serverhello())
-        << SendData(upstream, request)
+        proxy1 >> DataReceived(upstream, serverhello()) << SendData(upstream, request)
     )
     assert (
         proxy2
@@ -278,9 +276,7 @@ def test_reverse_proxy_tcp_over_tls(
         if connection_strategy == "lazy":
             (
                 # only now we open a connection
-                playbook
-                << OpenConnection(tctx.server)
-                >> reply(None)
+                playbook << OpenConnection(tctx.server) >> reply(None)
             )
         assert (
             playbook << TcpMessageHook(flow) >> reply() << SendData(tctx.server, data)

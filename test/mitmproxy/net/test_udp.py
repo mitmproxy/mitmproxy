@@ -3,9 +3,9 @@ import asyncio
 import pytest
 
 from mitmproxy.connection import Address
+from mitmproxy.net.udp import MAX_DATAGRAM_SIZE
 from mitmproxy.net.udp import DatagramReader
 from mitmproxy.net.udp import DatagramWriter
-from mitmproxy.net.udp import MAX_DATAGRAM_SIZE
 from mitmproxy.net.udp import open_connection
 from mitmproxy.net.udp import start_server
 

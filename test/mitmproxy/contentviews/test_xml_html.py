@@ -1,7 +1,8 @@
 import pytest
 
-from . import full_eval
 from mitmproxy.contentviews import xml_html
+
+from . import full_eval
 
 datadir = "mitmproxy/contentviews/test_xml_html_data/"
 

@@ -1,3 +1,10 @@
+from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
+from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+
 import h2.config
 import h2.connection
 import h2.events
@@ -11,12 +18,6 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import HTTPMode
-from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
-from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
 
 example_request_headers = (
     (b":method", b"GET"),

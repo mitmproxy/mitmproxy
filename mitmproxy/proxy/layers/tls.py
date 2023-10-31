@@ -1,11 +1,11 @@
-import struct
-import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from logging import DEBUG
 from logging import ERROR
 from logging import INFO
 from logging import WARNING
+import struct
+import time
 
 from OpenSSL import SSL
 
@@ -312,7 +312,9 @@ class TLSLayer(tunnel.TunnelLayer):
                 ("SSL routines", "", "certificate verify failed"),  # OpenSSL 3+
             ]:
                 verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)  # type: ignore
-                error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()  # type: ignore
+                error = SSL._ffi.string(
+                    SSL._lib.X509_verify_cert_error_string(verify_result)
+                ).decode()  # type: ignore
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
                 ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),

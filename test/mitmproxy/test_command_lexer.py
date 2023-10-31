@@ -1,8 +1,8 @@
-import pyparsing
-import pytest
 from hypothesis import example
 from hypothesis import given
 from hypothesis.strategies import text
+import pyparsing
+import pytest
 
 from mitmproxy import command_lexer
 

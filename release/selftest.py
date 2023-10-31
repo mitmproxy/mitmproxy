@@ -5,9 +5,9 @@ This addons is used for binaries to perform a minimal selftest. Use like so:
 """
 import asyncio
 import logging
+from pathlib import Path
 import ssl
 import sys
-from pathlib import Path
 
 from mitmproxy import ctx
 

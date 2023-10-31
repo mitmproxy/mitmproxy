@@ -1,8 +1,8 @@
 """
 Server specs are used to describe an upstream proxy or server.
 """
-import re
 from functools import cache
+import re
 from typing import Literal
 
 from mitmproxy.net import check

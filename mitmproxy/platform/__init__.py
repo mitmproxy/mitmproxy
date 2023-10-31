@@ -1,7 +1,7 @@
+from collections.abc import Callable
 import re
 import socket
 import sys
-from collections.abc import Callable
 
 
 def init_transparent_mode() -> None:

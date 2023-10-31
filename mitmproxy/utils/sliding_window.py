@@ -1,6 +1,6 @@
-import itertools
 from collections.abc import Iterable
 from collections.abc import Iterator
+import itertools
 from typing import TypeVar
 
 T = TypeVar("T")

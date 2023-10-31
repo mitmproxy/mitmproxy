@@ -1,10 +1,12 @@
-import ssl
-import time
 from pathlib import Path
+import ssl
+from test.mitmproxy.proxy.layers import test_quic
+from test.mitmproxy.proxy.layers import test_tls
+import time
 
-import pytest
 from cryptography import x509
 from OpenSSL import SSL
+import pytest
 
 from mitmproxy import certs
 from mitmproxy import connection
@@ -16,8 +18,6 @@ from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers import tls as proxy_tls
 from mitmproxy.test import taddons
-from test.mitmproxy.proxy.layers import test_quic
-from test.mitmproxy.proxy.layers import test_tls
 
 
 def test_alpn_select_callback():

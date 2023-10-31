@@ -1,15 +1,15 @@
+from collections.abc import Sequence
 import inspect
 import io
-from collections.abc import Sequence
 
 import pytest
 
-import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+import mitmproxy.types
 
 
 class TAddon:

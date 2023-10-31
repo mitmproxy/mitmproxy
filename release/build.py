@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+from datetime import datetime
 import hashlib
 import os
+from pathlib import Path
 import platform
 import re
 import shutil
 import subprocess
 import tarfile
+from typing import Literal
 import urllib.request
 import zipfile
-from datetime import datetime
-from pathlib import Path
-from typing import Literal
 
 import click
 import cryptography.fernet

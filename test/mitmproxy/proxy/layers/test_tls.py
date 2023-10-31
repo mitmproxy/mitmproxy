@@ -1,10 +1,13 @@
-import ssl
-import time
 from logging import DEBUG
 from logging import WARNING
+import ssl
+from test.mitmproxy.proxy import tutils
+from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import StrMatching
+import time
 
-import pytest
 from OpenSSL import SSL
+import pytest
 
 from mitmproxy import connection
 from mitmproxy.connection import ConnectionState
@@ -17,9 +20,6 @@ from mitmproxy.proxy.layers import tls
 from mitmproxy.tls import ClientHelloData
 from mitmproxy.tls import TlsData
 from mitmproxy.utils import data
-from test.mitmproxy.proxy import tutils
-from test.mitmproxy.proxy.tutils import BytesMatching
-from test.mitmproxy.proxy.tutils import StrMatching
 
 tlsdata = data.Data(__name__)
 

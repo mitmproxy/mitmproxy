@@ -1,6 +1,6 @@
+from collections.abc import Iterable
 import re
 import time
-from collections.abc import Iterable
 
 from mitmproxy.http import Headers
 from mitmproxy.http import Request

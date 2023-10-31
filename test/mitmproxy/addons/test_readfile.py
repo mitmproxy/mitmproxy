@@ -4,9 +4,9 @@ from unittest import mock
 
 import pytest
 
-import mitmproxy.io
 from mitmproxy import exceptions
 from mitmproxy.addons import readfile
+import mitmproxy.io
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 

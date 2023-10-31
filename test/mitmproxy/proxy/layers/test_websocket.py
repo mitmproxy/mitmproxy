@@ -1,5 +1,8 @@
-import secrets
 from dataclasses import dataclass
+import secrets
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 import pytest
 import wsproto.events
@@ -20,9 +23,6 @@ from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.websocket import WebSocketData
 from mitmproxy.websocket import WebSocketMessage
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
-from test.mitmproxy.proxy.tutils import reply
 
 
 @dataclass

@@ -14,16 +14,17 @@ Example:
     3. curl --proxy http://localhost:8080 https://example.com
     // works again, but mitmproxy does not intercept and we do *not* see the contents
 """
-import collections
-import logging
-import random
 from abc import ABC
 from abc import abstractmethod
+import collections
 from enum import Enum
+import logging
+import random
 
 from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import tls
+from mitmproxy.addonmanager import Loader
 from mitmproxy.utils import human
 
 
@@ -78,8 +79,8 @@ class ProbabilisticStrategy(TlsStrategy):
 class MaybeTls:
     strategy: TlsStrategy
 
-    def load(self, l):
-        l.add_option(
+    def load(self, loader: Loader):
+        loader.add_option(
             "tls_strategy",
             int,
             0,

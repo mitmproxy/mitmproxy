@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from examples.contrib.webscanner_helper.proxyauth_selenium import AuthorizationOracle
+from examples.contrib.webscanner_helper.proxyauth_selenium import SeleniumAddon
 from examples.contrib.webscanner_helper.proxyauth_selenium import logger
 from examples.contrib.webscanner_helper.proxyauth_selenium import randomString
-from examples.contrib.webscanner_helper.proxyauth_selenium import SeleniumAddon
 from mitmproxy.http import HTTPFlow
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils

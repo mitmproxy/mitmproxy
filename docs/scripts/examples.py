@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import re
 from pathlib import Path
+import re
 
 here = Path(__file__).absolute().parent
 example_dir = here / ".." / "src" / "examples" / "addons"
