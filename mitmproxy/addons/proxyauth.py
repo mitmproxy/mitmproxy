@@ -247,15 +247,15 @@ class Ldap(Validator):
                 security, url, ldap_user, ldap_pass, dn_subtree = spec.split(":")
                 port = None
 
-            if '?' in dn_subtree:
-                dn_subtree, search_str = dn_subtree.split('?')
-                key, value = search_str.split('=')
-                if key == 'search_filter_key':
+            if "?" in dn_subtree:
+                dn_subtree, search_str = dn_subtree.split("?")
+                key, value = search_str.split("=")
+                if key == "search_filter_key":
                     search_filter_key = value
                 else:
                     raise ValueError
             else:
-                search_filter_key = 'cn'
+                search_filter_key = "cn"
 
             if security == "ldaps":
                 use_ssl = True
