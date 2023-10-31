@@ -15,32 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: install-pinned/pyupgrade@af7d65f31bddb01097a24da6c8fb694441f51cba
-      - name: Run pyupgrade
+      - uses: install-pinned/ruff@f3fd6b89f77ff37a32e69cd2da72e0fc6e21f837
+      - name: Run ruff and ruff format
         run: |
-          shopt -s globstar
-          export GLOBIGNORE='mitmproxy/contrib/**'
-          pyupgrade --exit-zero-even-if-changed --keep-runtime-typing --py310-plus **/*.py
-
-      - uses: install-pinned/reorder_python_imports@9766e7ba4f33497b107014571afe3b5f4c2d946b
-      - name: Run reorder-python-imports
-        run: |
-          shopt -s globstar
-          export GLOBIGNORE='mitmproxy/contrib/**'
-          reorder-python-imports --exit-zero-even-if-changed --py310-plus **/*.py
-
-      - uses: install-pinned/yesqa@e45b0928dd14d5c2a22695e32de8936530ba7a49
-      - name: Run yesqa
-        run: |
-           shopt -s globstar
-           export GLOBIGNORE='mitmproxy/contrib/**'
-           yesqa **/*.py || true
-
-      - uses: install-pinned/autoflake@46b4898323be58db319656fe2758f3fd5ddfee32
-      - run: autoflake --in-place --remove-all-unused-imports --exclude mitmproxy/contrib -r .
-
-      - uses: install-pinned/black@cd5d66326da7f8f47500e431cc8cb6d239eea3b5
-      - run: black .
+          ruff --fix-only .
+          ruff format .
 
       - name: Run prettier
         run: |

@@ -19,7 +19,7 @@ jobs:
   lint:
     uses: mhils/workflows/.github/workflows/python-tox.yml@main
     with:
-      cmd: tox -e flake8
+      cmd: tox -e lint
 
   filename-matching:
     uses: mhils/workflows/.github/workflows/python-tox.yml@main
