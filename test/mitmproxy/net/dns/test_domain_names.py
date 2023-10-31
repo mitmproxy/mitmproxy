@@ -62,9 +62,7 @@ def test_pack():
     name = f"www.{label}.com"
     with pytest.raises(
         ValueError,
-        match=re.escape(
-            "encoding with 'idna' codec failed (UnicodeError: label too long)"
-        ),
+        match="label too long",
     ):
         domain_names.pack(name)
     assert domain_names.pack("www.example.org") == b"\x03www\x07example\x03org\x00"

@@ -11,6 +11,7 @@
 * Fix path() documentation that the return value might include the query string
   ([#6412](https://github.com/mitmproxy/mitmproxy/pull/6412), @tddschn)
 * mitmproxy now officially supports Python 3.12.
+  ([#6434](https://github.com/mitmproxy/mitmproxy/pull/6434), @mhils)
 * Fix root-relative URLs so that mitmweb can run in subdirectories.
   ([#6411](https://github.com/mitmproxy/mitmproxy/pull/6411), @davet2001)
 * Add an optional parameter(ldap search filter key) to ProxyAuth-LDAP.
