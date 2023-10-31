@@ -312,9 +312,9 @@ class TLSLayer(tunnel.TunnelLayer):
                 ("SSL routines", "", "certificate verify failed"),  # OpenSSL 3+
             ]:
                 verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)  # type: ignore
-                error = SSL._ffi.string(
-                    SSL._lib.X509_verify_cert_error_string(verify_result)
-                ).decode()  # type: ignore
+                error = SSL._ffi.string(  # type: ignore
+                    SSL._lib.X509_verify_cert_error_string(verify_result)  # type: ignore
+                ).decode()
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
                 ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),

@@ -360,9 +360,9 @@ class CertStore:
 
         # we could use cryptography for this, but it's unclear how to convert cryptography's object to pyOpenSSL's
         # expected format.
-        bio = OpenSSL.SSL._lib.BIO_new_file(
+        bio = OpenSSL.SSL._lib.BIO_new_file(  # type: ignore
             str(path).encode(sys.getfilesystemencoding()), b"r"
-        )  # type: ignore
+        )
         if bio != OpenSSL.SSL._ffi.NULL:  # type: ignore
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)  # type: ignore
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(  # type: ignore
