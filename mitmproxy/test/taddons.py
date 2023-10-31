@@ -1,12 +1,12 @@
 import asyncio
 
+import mitmproxy.master
+import mitmproxy.options
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy import hooks
 from mitmproxy.addons import core
 from mitmproxy.addons import script
-import mitmproxy.master
-import mitmproxy.options
 
 
 class context:

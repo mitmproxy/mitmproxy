@@ -1,13 +1,14 @@
+import logging
+import os.path
+import sys
 from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
-import logging
-import os.path
 from pathlib import Path
-import sys
 from typing import Literal
 from typing import Optional
 
+import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import dns
@@ -19,7 +20,6 @@ from mitmproxy import io
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy.log import ALERT
-import mitmproxy.types
 
 
 @lru_cache

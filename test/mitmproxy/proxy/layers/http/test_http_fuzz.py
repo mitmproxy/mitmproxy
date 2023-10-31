@@ -10,6 +10,7 @@ from test.mitmproxy.proxy.tutils import _TracebackInPlaybook
 from test.mitmproxy.proxy.tutils import reply
 from typing import Any
 
+import pytest
 from h2.settings import SettingCodes
 from hypothesis import example
 from hypothesis import given
@@ -23,7 +24,6 @@ from hypothesis.strategies import lists
 from hypothesis.strategies import sampled_from
 from hypothesis.strategies import sets
 from hypothesis.strategies import text
-import pytest
 
 from mitmproxy import connection
 from mitmproxy import options

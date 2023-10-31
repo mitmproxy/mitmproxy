@@ -1,16 +1,17 @@
 import contextlib
-from dataclasses import dataclass
 import datetime
 import ipaddress
 import os
-from pathlib import Path
 import re
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from typing import NewType
 from typing import Optional
 from typing import Union
 from typing import cast
 
+import OpenSSL
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
@@ -20,7 +21,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
-import OpenSSL
 
 from mitmproxy.coretypes import serializable
 

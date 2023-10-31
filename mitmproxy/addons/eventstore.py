@@ -1,7 +1,7 @@
 import asyncio
 import collections
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 
 from mitmproxy import command
 from mitmproxy import log

@@ -1,8 +1,8 @@
 import asyncio
-from collections.abc import Callable
-from collections.abc import Iterable
 import ipaddress
 import socket
+from collections.abc import Callable
+from collections.abc import Iterable
 
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs

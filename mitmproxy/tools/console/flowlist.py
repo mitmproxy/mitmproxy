@@ -2,9 +2,9 @@ from functools import lru_cache
 
 import urwid
 
+import mitmproxy.tools.console.master
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master
 
 
 class FlowItem(urwid.WidgetWrap):

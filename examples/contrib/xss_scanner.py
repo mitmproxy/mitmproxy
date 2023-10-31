@@ -34,10 +34,10 @@ Suggested Exploit: <script>alert(0)</script>
 Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
 
 """
-from html.parser import HTMLParser
 import logging
 import re
 import socket
+from html.parser import HTMLParser
 from typing import NamedTuple
 from typing import Optional
 from urllib.parse import urlparse

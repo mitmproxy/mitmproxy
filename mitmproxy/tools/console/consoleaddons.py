@@ -1,7 +1,8 @@
-from collections.abc import Sequence
 import csv
 import logging
+from collections.abc import Sequence
 
+import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import command_lexer
 from mitmproxy import contentviews
@@ -17,7 +18,6 @@ from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
-import mitmproxy.types
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)

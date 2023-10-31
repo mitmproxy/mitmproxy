@@ -16,10 +16,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: install-pinned/ruff@f3fd6b89f77ff37a32e69cd2da72e0fc6e21f837
-      - name: Run ruff and ruff format
-        run: |
-          ruff --fix-only .
-          ruff format .
+      - run: ruff --fix-only .
+      - run: ruff format .
 
       - name: Run prettier
         run: |

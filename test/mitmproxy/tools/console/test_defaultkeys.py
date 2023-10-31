@@ -1,5 +1,5 @@
-from mitmproxy.test.tflow import tflow
 import mitmproxy.types
+from mitmproxy.test.tflow import tflow
 
 
 async def test_commands_exist(console):

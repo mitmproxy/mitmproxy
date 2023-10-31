@@ -1,4 +1,10 @@
 import binascii
+import json
+import os
+import re
+import time
+import urllib.parse
+import warnings
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
@@ -9,14 +15,8 @@ from dataclasses import fields
 from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
-import json
-import os
-import re
-import time
 from typing import Any
 from typing import cast
-import urllib.parse
-import warnings
 
 from mitmproxy import flow
 from mitmproxy.coretypes import multidict

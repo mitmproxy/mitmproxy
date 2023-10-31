@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import zlib
+from pathlib import Path
 
 import pytest
 

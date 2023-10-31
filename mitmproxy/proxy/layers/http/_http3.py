@@ -1,5 +1,5 @@
-from abc import abstractmethod
 import time
+from abc import abstractmethod
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected

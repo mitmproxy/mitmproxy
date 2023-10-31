@@ -164,7 +164,6 @@ ignore = ["F541"]
 
 [tool.ruff.isort]
 force-single-line = true
-force-sort-within-sections = true
 
 [tool.tox]
 legacy_tox_ini = """

@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
 from mitmproxy import ctx
 from mitmproxy.addonmanager import Loader

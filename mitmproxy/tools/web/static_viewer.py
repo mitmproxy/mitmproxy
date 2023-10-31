@@ -1,10 +1,10 @@
-from collections.abc import Iterable
 import json
 import logging
 import os.path
 import pathlib
 import shutil
 import time
+from collections.abc import Iterable
 from typing import Optional
 
 from mitmproxy import contentviews

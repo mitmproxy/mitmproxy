@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import mimetypes
 import re
-from urllib.parse import quote
 import warnings
+from urllib.parse import quote
 
 from mitmproxy.net.http import headers
 

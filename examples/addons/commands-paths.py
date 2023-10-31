@@ -1,6 +1,6 @@
 """Handle file paths as command arguments."""
-from collections.abc import Sequence
 import logging
+from collections.abc import Sequence
 
 from mitmproxy import command
 from mitmproxy import flow

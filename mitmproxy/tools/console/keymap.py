@@ -1,17 +1,17 @@
+import logging
+import os
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import cache
-import logging
-import os
 
 import ruamel.yaml.error
 
+import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import signals
-import mitmproxy.types
 
 
 class KeyBindingError(Exception):

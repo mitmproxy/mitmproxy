@@ -1,11 +1,11 @@
+import os
 from datetime import datetime
 from datetime import timezone
-import os
 from pathlib import Path
 
+import pytest
 from cryptography import x509
 from cryptography.x509 import NameOID
-import pytest
 
 from mitmproxy import certs
 

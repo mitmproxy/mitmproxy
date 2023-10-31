@@ -1,6 +1,6 @@
 import multiprocessing
-from pathlib import Path
 import time
+from pathlib import Path
 from unittest import mock
 
 from examples.contrib.webscanner_helper.watchdog import WatchdogAddon

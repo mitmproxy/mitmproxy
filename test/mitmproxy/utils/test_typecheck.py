@@ -1,6 +1,6 @@
-from collections.abc import Sequence
 import io
 import typing
+from collections.abc import Sequence
 from typing import Any
 from typing import Optional
 from typing import TextIO

@@ -1,13 +1,13 @@
 """
 Base class for protocol layers.
 """
-from abc import abstractmethod
 import collections
+import textwrap
+from abc import abstractmethod
 from collections.abc import Callable
 from collections.abc import Generator
 from dataclasses import dataclass
 from logging import DEBUG
-import textwrap
 from typing import Any
 from typing import ClassVar
 from typing import NamedTuple

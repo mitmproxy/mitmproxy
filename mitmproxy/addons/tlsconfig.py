@@ -1,8 +1,8 @@
 import ipaddress
 import logging
 import os
-from pathlib import Path
 import ssl
+from pathlib import Path
 from typing import Any
 from typing import TypedDict
 

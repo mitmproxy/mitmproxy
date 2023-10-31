@@ -16,12 +16,12 @@ that sets nextlayer.layer works just as well.
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
-from collections.abc import Sequence
 import logging
 import re
 import struct
 import sys
+from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import Any
 from typing import cast
 

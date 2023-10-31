@@ -1,12 +1,12 @@
 """Write flow objects to a HAR file"""
 import base64
+import json
+import logging
+import zlib
 from collections.abc import Sequence
 from datetime import datetime
 from datetime import timezone
-import json
-import logging
 from typing import Any
-import zlib
 
 from mitmproxy import command
 from mitmproxy import ctx

@@ -8,9 +8,9 @@ from unittest.mock import Mock
 import mitmproxy_rs
 import pytest
 
+import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
-import mitmproxy.platform
 from mitmproxy.proxy.mode_servers import DnsInstance
 from mitmproxy.proxy.mode_servers import OsProxyInstance
 from mitmproxy.proxy.mode_servers import ServerInstance

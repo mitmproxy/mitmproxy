@@ -1,7 +1,7 @@
-from collections.abc import Iterator
-from functools import lru_cache
 import json
 import re
+from collections.abc import Iterator
+from functools import lru_cache
 from typing import Any
 
 from mitmproxy.contentviews import base

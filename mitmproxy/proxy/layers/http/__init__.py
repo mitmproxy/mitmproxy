@@ -1,10 +1,10 @@
 import collections
-from dataclasses import dataclass
 import enum
+import time
+from dataclasses import dataclass
 from functools import cached_property
 from logging import DEBUG
 from logging import WARNING
-import time
 
 import wsproto.handshake
 

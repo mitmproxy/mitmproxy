@@ -1,7 +1,7 @@
-from collections.abc import Sequence
 import logging
 import os
 import pathlib
+from collections.abc import Sequence
 
 from mitmproxy import command
 from mitmproxy import ctx

@@ -1,8 +1,8 @@
+import itertools
+import json
 from collections.abc import Callable
 from collections.abc import Generator
 from collections.abc import MutableMapping
-import itertools
-import json
 from typing import Any
 from typing import TextIO
 from typing import cast

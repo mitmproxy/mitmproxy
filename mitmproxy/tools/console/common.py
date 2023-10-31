@@ -1,12 +1,12 @@
-from collections.abc import Iterable
 import enum
-from functools import lru_cache
 import math
 import platform
+from collections.abc import Iterable
+from functools import lru_cache
 
+import urwid.util
 from publicsuffix2 import get_sld
 from publicsuffix2 import get_tld
-import urwid.util
 
 from mitmproxy import dns
 from mitmproxy import flow

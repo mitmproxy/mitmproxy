@@ -2,11 +2,11 @@ import io
 
 import pytest
 
+import mitmproxy.io
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.exceptions import FlowReadException
-import mitmproxy.io
 from mitmproxy.io import tnetstring
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks

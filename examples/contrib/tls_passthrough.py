@@ -14,12 +14,12 @@ Example:
     3. curl --proxy http://localhost:8080 https://example.com
     // works again, but mitmproxy does not intercept and we do *not* see the contents
 """
-from abc import ABC
-from abc import abstractmethod
 import collections
-from enum import Enum
 import logging
 import random
+from abc import ABC
+from abc import abstractmethod
+from enum import Enum
 
 from mitmproxy import connection
 from mitmproxy import ctx

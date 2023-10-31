@@ -1,6 +1,6 @@
+import time
 from enum import Enum
 from enum import auto
-import time
 from typing import Union
 
 from mitmproxy import connection

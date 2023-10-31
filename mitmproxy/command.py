@@ -1,24 +1,24 @@
 """
     This module manages and invokes typed commands.
 """
-from collections.abc import Callable
-from collections.abc import Iterable
-from collections.abc import Sequence
 import functools
 import inspect
 import logging
 import sys
 import textwrap
 import types
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import Any
 from typing import NamedTuple
 
 import pyparsing
 
+import mitmproxy.types
 from mitmproxy import command_lexer
 from mitmproxy import exceptions
 from mitmproxy.command_lexer import unquote
-import mitmproxy.types
 
 
 def verify_arg_signature(f: Callable, args: Iterable[Any], kwargs: dict) -> None:

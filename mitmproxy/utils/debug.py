@@ -1,6 +1,4 @@
 import asyncio
-from collections import Counter
-from contextlib import redirect_stdout
 import gc
 import linecache
 import os
@@ -9,6 +7,8 @@ import signal
 import sys
 import threading
 import traceback
+from collections import Counter
+from contextlib import redirect_stdout
 
 from OpenSSL import SSL
 

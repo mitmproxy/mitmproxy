@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import html
 import textwrap
+from dataclasses import dataclass
 
 from mitmproxy import http
 from mitmproxy.connection import Connection

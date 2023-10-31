@@ -1,6 +1,6 @@
 import asyncio
-from collections.abc import Coroutine
 import time
+from collections.abc import Coroutine
 
 from mitmproxy.utils import human
 

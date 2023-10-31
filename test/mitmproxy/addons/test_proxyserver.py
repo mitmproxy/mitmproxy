@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import socket
+import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-import socket
-import ssl
 from typing import Any
 from typing import ClassVar
 from typing import TypeVar
 from unittest.mock import Mock
 
+import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
 from aioquic.h3 import events as h3_events
@@ -21,8 +22,8 @@ from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection
 from aioquic.quic.connection import QuicConnectionError
-import pytest
 
+import mitmproxy.platform
 from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver
@@ -31,7 +32,6 @@ from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.net import udp
-import mitmproxy.platform
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.test import taddons

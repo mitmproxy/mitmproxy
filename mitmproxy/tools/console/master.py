@@ -11,8 +11,8 @@ import tempfile
 import threading
 from typing import TypeVar
 
-from tornado.platform.asyncio import AddThreadSelectorEventLoop
 import urwid
+from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
 from mitmproxy import addons
 from mitmproxy import log

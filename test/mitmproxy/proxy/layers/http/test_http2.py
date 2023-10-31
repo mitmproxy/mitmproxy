@@ -1,15 +1,15 @@
+import time
 from logging import DEBUG
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 from test.mitmproxy.proxy.tutils import reply
-import time
 
-from h2.errors import ErrorCodes
 import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
+from h2.errors import ErrorCodes
 
 from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server

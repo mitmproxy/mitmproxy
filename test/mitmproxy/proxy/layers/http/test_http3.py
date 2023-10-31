@@ -3,6 +3,8 @@ from collections.abc import Callable
 from collections.abc import Iterable
 from test.mitmproxy.proxy import tutils
 
+import pylsqpack
+import pytest
 from aioquic._buffer import Buffer
 from aioquic.h3.connection import ErrorCode
 from aioquic.h3.connection import FrameType
@@ -13,8 +15,6 @@ from aioquic.h3.connection import encode_frame
 from aioquic.h3.connection import encode_settings
 from aioquic.h3.connection import encode_uint_var
 from aioquic.h3.connection import parse_settings
-import pylsqpack
-import pytest
 
 from mitmproxy import connection
 from mitmproxy import version

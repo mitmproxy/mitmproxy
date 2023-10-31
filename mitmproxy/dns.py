@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from ipaddress import IPv4Address
-from ipaddress import IPv6Address
 import itertools
 import random
 import struct
 import time
+from dataclasses import dataclass
+from ipaddress import IPv4Address
+from ipaddress import IPv6Address
 from typing import ClassVar
 
 from mitmproxy import flow

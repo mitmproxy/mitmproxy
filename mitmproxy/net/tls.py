@@ -1,10 +1,10 @@
+import os
+import threading
 from collections.abc import Callable
 from collections.abc import Iterable
 from enum import Enum
 from functools import lru_cache
-import os
 from pathlib import Path
-import threading
 from typing import Any
 from typing import BinaryIO
 

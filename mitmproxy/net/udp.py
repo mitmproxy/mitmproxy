@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 import socket
+from collections.abc import Callable
 from typing import Any
 from typing import Union
 from typing import cast

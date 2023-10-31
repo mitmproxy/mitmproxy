@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 import copy
 import dataclasses
-from dataclasses import dataclass
 import enum
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Literal
 
 import pytest

@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import secrets
+from dataclasses import dataclass
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 from test.mitmproxy.proxy.tutils import reply

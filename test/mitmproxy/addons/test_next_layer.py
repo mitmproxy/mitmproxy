@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 import dataclasses
+import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-import logging
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import binascii
+import weakref
 from abc import ABC
 from abc import abstractmethod
-import binascii
 from collections.abc import MutableMapping
 from typing import Optional
-import weakref
 
 import ldap3
 import passlib.apache

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from collections.abc import Callable
-from collections.abc import Sequence
 import logging
 import os
 import signal
 import sys
+from collections.abc import Callable
+from collections.abc import Sequence
 from typing import Any
 from typing import TypeVar
 

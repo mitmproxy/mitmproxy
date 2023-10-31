@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import contextlib
 import inspect
-from pathlib import Path
 import textwrap
 import typing
+from pathlib import Path
 
 from mitmproxy import addonmanager
 from mitmproxy import hooks

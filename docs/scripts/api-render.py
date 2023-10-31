@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import os
-from pathlib import Path
 import shutil
 import textwrap
+from pathlib import Path
 
 import pdoc.render_helpers
 

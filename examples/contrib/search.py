@@ -1,7 +1,7 @@
-from collections.abc import Sequence
-from json import dumps
 import logging
 import re
+from collections.abc import Sequence
+from json import dumps
 
 from mitmproxy import command
 from mitmproxy import flow

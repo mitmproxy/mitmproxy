@@ -1,5 +1,5 @@
-from logging import DEBUG
 import time
+from logging import DEBUG
 
 from h11._receivebuffer import ReceiveBuffer
 

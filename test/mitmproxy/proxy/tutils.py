@@ -1,12 +1,12 @@
 import collections.abc
-from collections.abc import Callable
-from collections.abc import Iterable
 import difflib
 import itertools
 import logging
 import re
 import textwrap
 import traceback
+from collections.abc import Callable
+from collections.abc import Iterable
 from typing import Any
 from typing import AnyStr
 from typing import Generic

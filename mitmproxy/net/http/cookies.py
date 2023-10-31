@@ -1,7 +1,7 @@
-from collections.abc import Iterable
 import email.utils
 import re
 import time
+from collections.abc import Iterable
 
 from mitmproxy.coretypes import multidict
 

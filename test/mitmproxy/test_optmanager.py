@@ -1,7 +1,7 @@
 import argparse
-from collections.abc import Sequence
 import copy
 import io
+from collections.abc import Sequence
 from typing import Optional
 
 import pytest

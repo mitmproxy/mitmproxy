@@ -4,9 +4,9 @@ Building and deploying docker images is a bit of a special snowflake as we don't
 as an artifact. So we need to do everything in one job.
 """
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 
 # Security: No third-party dependencies here!
 

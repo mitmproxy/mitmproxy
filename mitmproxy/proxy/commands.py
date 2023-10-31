@@ -7,13 +7,13 @@ possibly to the master and addons.
 The counterpart to commands are events.
 """
 import logging
+import warnings
 from typing import TYPE_CHECKING
 from typing import Union
-import warnings
 
+import mitmproxy.hooks
 from mitmproxy.connection import Connection
 from mitmproxy.connection import Server
-import mitmproxy.hooks
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer

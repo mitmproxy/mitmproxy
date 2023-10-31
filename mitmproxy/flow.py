@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import time
+import uuid
 from dataclasses import dataclass
 from dataclasses import field
-import time
 from typing import Any
 from typing import ClassVar
-import uuid
 
 from mitmproxy import connection
 from mitmproxy import exceptions

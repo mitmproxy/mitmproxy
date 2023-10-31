@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 import os
 import warnings
+from dataclasses import dataclass
 
 from mitmproxy import hooks
 from mitmproxy import master

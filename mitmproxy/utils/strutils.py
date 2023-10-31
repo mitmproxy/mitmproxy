@@ -1,7 +1,7 @@
 import codecs
-from collections.abc import Iterable
 import io
 import re
+from collections.abc import Iterable
 from typing import overload
 
 # https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading

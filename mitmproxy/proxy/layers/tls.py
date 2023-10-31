@@ -1,11 +1,11 @@
+import struct
+import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from logging import DEBUG
 from logging import ERROR
 from logging import INFO
 from logging import WARNING
-import struct
-import time
 
 from OpenSSL import SSL
 

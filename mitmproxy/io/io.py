@@ -1,7 +1,7 @@
-from collections.abc import Iterable
-from io import BufferedReader
 import json
 import os
+from collections.abc import Iterable
+from io import BufferedReader
 from typing import Any
 from typing import BinaryIO
 from typing import Union

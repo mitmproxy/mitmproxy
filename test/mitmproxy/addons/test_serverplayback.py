@@ -2,12 +2,12 @@ import urllib
 
 import pytest
 
+import mitmproxy.test.tutils
 from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy.addons import serverplayback
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-import mitmproxy.test.tutils
 
 
 def tdump(path, flows):

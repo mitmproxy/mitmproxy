@@ -1,5 +1,5 @@
-from collections.abc import Sequence
 import re
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from mitmproxy import ctx

@@ -2,10 +2,10 @@ import abc
 import collections.abc
 import dataclasses
 import enum
-from functools import cache
 import typing
-from typing import TypeVar
 import uuid
+from functools import cache
+from typing import TypeVar
 
 try:
     from types import NoneType

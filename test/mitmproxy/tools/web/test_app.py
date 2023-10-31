@@ -1,19 +1,19 @@
-from collections.abc import Sequence
-from contextlib import redirect_stdout
 import gzip
 import io
 import json
 import logging
-from pathlib import Path
 import textwrap
+from collections.abc import Sequence
+from contextlib import redirect_stdout
+from pathlib import Path
 from typing import Optional
 from unittest import mock
 from unittest.mock import Mock
 
 import pytest
+import tornado.testing
 from tornado import httpclient
 from tornado import websocket
-import tornado.testing
 
 from mitmproxy import certs
 from mitmproxy import log

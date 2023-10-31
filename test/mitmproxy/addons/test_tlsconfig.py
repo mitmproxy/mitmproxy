@@ -1,12 +1,12 @@
-from pathlib import Path
 import ssl
+import time
+from pathlib import Path
 from test.mitmproxy.proxy.layers import test_quic
 from test.mitmproxy.proxy.layers import test_tls
-import time
 
+import pytest
 from cryptography import x509
 from OpenSSL import SSL
-import pytest
 
 from mitmproxy import certs
 from mitmproxy import connection

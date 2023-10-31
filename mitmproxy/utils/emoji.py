@@ -1853,9 +1853,9 @@ emoji = {
 
 if __name__ == "__main__":  # pragma: no cover
     import io
-    from pathlib import Path
     import re
     import string
+    from pathlib import Path
 
     import requests
 

@@ -1,13 +1,13 @@
-from datetime import datetime
 import logging
 import pathlib
 import time
+from datetime import datetime
 
+import mitmproxy.connections
+import mitmproxy.http
 from mitmproxy.addons.export import curl_command
 from mitmproxy.addons.export import raw
-import mitmproxy.connections
 from mitmproxy.exceptions import HttpSyntaxException
-import mitmproxy.http
 
 logger = logging.getLogger(__name__)
 

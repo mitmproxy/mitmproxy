@@ -1,9 +1,9 @@
 import collections
+import time
 from collections.abc import Sequence
 from enum import Enum
 from logging import DEBUG
 from logging import ERROR
-import time
 from typing import ClassVar
 
 import h2.config

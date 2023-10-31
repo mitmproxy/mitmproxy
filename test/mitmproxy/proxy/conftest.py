@@ -1,7 +1,7 @@
 import os
 
-from hypothesis import settings
 import pytest
+from hypothesis import settings
 
 from mitmproxy import connection
 from mitmproxy import options

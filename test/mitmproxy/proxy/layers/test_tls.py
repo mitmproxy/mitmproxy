@@ -1,13 +1,13 @@
+import ssl
+import time
 from logging import DEBUG
 from logging import WARNING
-import ssl
 from test.mitmproxy.proxy import tutils
 from test.mitmproxy.proxy.tutils import BytesMatching
 from test.mitmproxy.proxy.tutils import StrMatching
-import time
 
-from OpenSSL import SSL
 import pytest
+from OpenSSL import SSL
 
 from mitmproxy import connection
 from mitmproxy.connection import ConnectionState

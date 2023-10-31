@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 import re
-from typing import AnyStr
 import urllib.parse
+from collections.abc import Sequence
+from typing import AnyStr
 
 from mitmproxy.net import check
 from mitmproxy.net.check import is_valid_host

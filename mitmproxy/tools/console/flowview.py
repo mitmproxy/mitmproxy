@@ -1,23 +1,23 @@
-from functools import lru_cache
 import logging
 import math
 import sys
+from functools import lru_cache
 
 import urwid
 
+import mitmproxy.flow
+import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
-import mitmproxy.flow
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import tabs
-import mitmproxy.tools.console.master
 from mitmproxy.utils import strutils
 
 

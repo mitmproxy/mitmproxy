@@ -1,5 +1,5 @@
-from pathlib import Path
 import secrets
+from pathlib import Path
 
 import objgraph
 

@@ -9,16 +9,17 @@ The View:
   removed from the store.
 """
 import collections
+import logging
+import re
 from collections.abc import Iterator
 from collections.abc import MutableMapping
 from collections.abc import Sequence
-import logging
-import re
 from typing import Any
 from typing import Optional
 
 import sortedcontainers
 
+import mitmproxy.flow
 from mitmproxy import command
 from mitmproxy import connection
 from mitmproxy import ctx
@@ -30,7 +31,6 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
 from mitmproxy import udp
-import mitmproxy.flow
 from mitmproxy.log import ALERT
 from mitmproxy.utils import human
 from mitmproxy.utils import signals

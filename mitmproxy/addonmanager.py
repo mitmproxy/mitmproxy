@@ -1,13 +1,13 @@
-from collections.abc import Callable
-from collections.abc import Sequence
 import contextlib
-from dataclasses import dataclass
 import inspect
 import logging
 import pprint
 import sys
 import traceback
 import types
+from collections.abc import Callable
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from mitmproxy import exceptions

@@ -4,9 +4,9 @@ Utility functions for decoding response bodies.
 import codecs
 import collections
 import gzip
+import zlib
 from io import BytesIO
 from typing import overload
-import zlib
 
 import brotli
 import zstandard as zstd

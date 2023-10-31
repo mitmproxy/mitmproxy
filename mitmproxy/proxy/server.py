@@ -9,13 +9,13 @@ The very high level overview is as follows:
 import abc
 import asyncio
 import collections
+import logging
+import time
 from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-import logging
-import time
 from types import TracebackType
 from typing import Literal
 

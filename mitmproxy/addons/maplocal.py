@@ -1,10 +1,10 @@
-from collections.abc import Sequence
 import logging
 import mimetypes
-from pathlib import Path
 import re
-from typing import NamedTuple
 import urllib.parse
+from collections.abc import Sequence
+from pathlib import Path
+from typing import NamedTuple
 
 from werkzeug.security import safe_join
 

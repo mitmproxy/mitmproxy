@@ -1,11 +1,11 @@
 import abc
+import copy
+import os
 from collections.abc import Callable
 from collections.abc import Container
 from collections.abc import Iterable
 from collections.abc import MutableSequence
 from collections.abc import Sequence
-import copy
-import os
 from typing import Any
 from typing import ClassVar
 from typing import Literal
@@ -13,10 +13,10 @@ from typing import overload
 
 import urwid
 
+import mitmproxy.tools.console.master
 from mitmproxy import exceptions
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
-import mitmproxy.tools.console.master
 from mitmproxy.utils import strutils
 
 
