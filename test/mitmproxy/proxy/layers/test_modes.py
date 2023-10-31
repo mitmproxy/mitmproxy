@@ -113,8 +113,10 @@ def test_upstream_https(tctx):
         << SendData(tctx2.client, serverhello)
     )
     assert (
+        proxy1
         # forward serverhello to proxy1
-        proxy1 >> DataReceived(upstream, serverhello()) << SendData(upstream, request)
+        >> DataReceived(upstream, serverhello())
+        << SendData(upstream, request)
     )
     assert (
         proxy2
@@ -275,8 +277,10 @@ def test_reverse_proxy_tcp_over_tls(
         )
         if connection_strategy == "lazy":
             (
+                playbook
                 # only now we open a connection
-                playbook << OpenConnection(tctx.server) >> reply(None)
+                << OpenConnection(tctx.server)
+                >> reply(None)
             )
         assert (
             playbook << TcpMessageHook(flow) >> reply() << SendData(tctx.server, data)
