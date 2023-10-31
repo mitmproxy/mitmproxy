@@ -12,8 +12,8 @@ import pytest
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import QuicConnection
 from aioquic.quic.connection import pull_quic_header
+from aioquic.quic.connection import QuicConnection
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands

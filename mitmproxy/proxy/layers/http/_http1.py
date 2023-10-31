@@ -23,8 +23,8 @@ from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 
 from ...context import Context
-from ._base import HttpConnection
 from ._base import format_error
+from ._base import HttpConnection
 from ._events import HttpEvent
 from ._events import RequestData
 from ._events import RequestEndOfMessage

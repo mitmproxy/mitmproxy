@@ -4,8 +4,8 @@ from collections.abc import Callable
 from collections.abc import Generator
 from collections.abc import MutableMapping
 from typing import Any
-from typing import TextIO
 from typing import cast
+from typing import TextIO
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow

@@ -19,8 +19,8 @@ from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
-from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected

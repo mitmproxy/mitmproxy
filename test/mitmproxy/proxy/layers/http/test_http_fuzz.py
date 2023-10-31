@@ -3,10 +3,10 @@ from test.mitmproxy.proxy.layers.http.test_http2 import example_request_headers
 from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
 from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
 from test.mitmproxy.proxy.layers.http.test_http2 import start_h2_client
-from test.mitmproxy.proxy.tutils import Placeholder
-from test.mitmproxy.proxy.tutils import Playbook
 from test.mitmproxy.proxy.tutils import _eq
 from test.mitmproxy.proxy.tutils import _TracebackInPlaybook
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
 from test.mitmproxy.proxy.tutils import reply
 from typing import Any
 
@@ -38,8 +38,8 @@ from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.events import Start
 from mitmproxy.proxy.layers import http
-from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import _http2
+from mitmproxy.proxy.layers.http import HTTPMode
 
 opts = options.Options()
 Proxyserver().load(opts)

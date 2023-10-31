@@ -4,13 +4,13 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import patch
 
-from examples.contrib.webscanner_helper.urlindex import WRITER
+from examples.contrib.webscanner_helper.urlindex import filter_404
 from examples.contrib.webscanner_helper.urlindex import JSONUrlIndexWriter
 from examples.contrib.webscanner_helper.urlindex import SetEncoder
 from examples.contrib.webscanner_helper.urlindex import TextUrlIndexWriter
 from examples.contrib.webscanner_helper.urlindex import UrlIndexAddon
 from examples.contrib.webscanner_helper.urlindex import UrlIndexWriter
-from examples.contrib.webscanner_helper.urlindex import filter_404
+from examples.contrib.webscanner_helper.urlindex import WRITER
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 

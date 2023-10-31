@@ -4,9 +4,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from dataclasses import fields
 from dataclasses import is_dataclass
-from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import TYPE_CHECKING
 
 import mitmproxy.flow
 

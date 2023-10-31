@@ -5,8 +5,8 @@ import logging
 import time
 from collections.abc import Sequence
 from types import TracebackType
-from typing import Literal
 from typing import cast
+from typing import Literal
 
 import mitmproxy.types
 from mitmproxy import command

@@ -24,11 +24,11 @@ from abc import ABCMeta
 from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
+from typing import cast
 from typing import ClassVar
 from typing import Generic
-from typing import TypeVar
-from typing import cast
 from typing import get_args
+from typing import TypeVar
 
 import mitmproxy_rs
 

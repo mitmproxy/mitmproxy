@@ -4,8 +4,8 @@ from collections.abc import Iterable
 from io import BufferedReader
 from typing import Any
 from typing import BinaryIO
-from typing import Union
 from typing import cast
+from typing import Union
 
 from mitmproxy import exceptions
 from mitmproxy import flow

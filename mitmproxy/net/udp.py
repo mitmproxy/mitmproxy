@@ -5,8 +5,8 @@ import logging
 import socket
 from collections.abc import Callable
 from typing import Any
-from typing import Union
 from typing import cast
+from typing import Union
 
 import mitmproxy_rs
 

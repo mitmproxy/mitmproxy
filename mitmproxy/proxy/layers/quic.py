@@ -19,10 +19,10 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
-from aioquic.quic.packet import PACKET_TYPE_INITIAL
-from aioquic.quic.packet import QuicProtocolVersion
 from aioquic.quic.packet import encode_quic_version_negotiation
+from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
+from aioquic.quic.packet import QuicProtocolVersion
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509

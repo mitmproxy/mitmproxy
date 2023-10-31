@@ -3,8 +3,8 @@ import time
 from pathlib import Path
 from unittest import mock
 
-from examples.contrib.webscanner_helper.watchdog import WatchdogAddon
 from examples.contrib.webscanner_helper.watchdog import logger
+from examples.contrib.webscanner_helper.watchdog import WatchdogAddon
 from mitmproxy.connections import ServerConnection
 from mitmproxy.exceptions import HttpSyntaxException
 from mitmproxy.test import tflow

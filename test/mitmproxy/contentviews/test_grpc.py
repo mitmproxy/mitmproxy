@@ -3,10 +3,10 @@ import struct
 import pytest
 
 from mitmproxy.contentviews import grpc
+from mitmproxy.contentviews.grpc import parse_grpc_messages
 from mitmproxy.contentviews.grpc import ProtoParser
 from mitmproxy.contentviews.grpc import ViewConfig
 from mitmproxy.contentviews.grpc import ViewGrpcProtobuf
-from mitmproxy.contentviews.grpc import parse_grpc_messages
 from mitmproxy.net.encoding import encode
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils

@@ -15,10 +15,10 @@ import weakref
 from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import Any
+from typing import cast
 from typing import Generic
 from typing import ParamSpec
 from typing import TypeVar
-from typing import cast
 
 P = ParamSpec("P")
 R = TypeVar("R")

@@ -11,10 +11,10 @@ import socketserver
 import threading
 import time
 from collections.abc import Callable
-from typing import IO
 from typing import Any
-from typing import ClassVar
 from typing import cast
+from typing import ClassVar
+from typing import IO
 
 import pydivert.consts
 

@@ -42,11 +42,11 @@ from . import raw
 from . import urlencoded
 from . import wbxml
 from . import xml_html
+from .base import format_dict
+from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
-from .base import format_dict
-from .base import format_text
 
 views: list[View] = []
 

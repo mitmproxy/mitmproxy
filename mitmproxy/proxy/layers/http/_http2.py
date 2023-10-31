@@ -44,10 +44,10 @@ from . import ResponseEndOfMessage
 from . import ResponseHeaders
 from . import ResponseProtocolError
 from . import ResponseTrailers
+from ._base import format_error
 from ._base import HttpConnection
 from ._base import HttpEvent
 from ._base import ReceiveHttp
-from ._base import format_error
 from ._http_h2 import BufferedH2Connection
 from ._http_h2 import H2ConnectionLogger
 

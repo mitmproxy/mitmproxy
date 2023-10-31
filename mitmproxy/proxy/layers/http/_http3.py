@@ -15,10 +15,10 @@ from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers.quic import error_code_to_str
 from mitmproxy.proxy.layers.quic import QuicConnectionClosed
 from mitmproxy.proxy.layers.quic import QuicStreamEvent
 from mitmproxy.proxy.layers.quic import StopQuicStream
-from mitmproxy.proxy.layers.quic import error_code_to_str
 from mitmproxy.proxy.utils import expect
 
 from . import RequestData
@@ -31,10 +31,10 @@ from . import ResponseEndOfMessage
 from . import ResponseHeaders
 from . import ResponseProtocolError
 from . import ResponseTrailers
+from ._base import format_error
 from ._base import HttpConnection
 from ._base import HttpEvent
 from ._base import ReceiveHttp
-from ._base import format_error
 from ._http2 import format_h2_request_headers
 from ._http2 import format_h2_response_headers
 from ._http2 import parse_h2_request_headers
