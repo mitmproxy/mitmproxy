@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: install-pinned/ruff@f3fd6b89f77ff37a32e69cd2da72e0fc6e21f837
+      - uses: install-pinned/ruff@8876fcad1732d3dc660068908bbf5cdeeaa9d264
       - run: ruff --fix-only .
       - run: ruff format .
 
@@ -27,4 +27,4 @@ jobs:
 
       - uses: mhils/add-pr-ref-in-changelog@main
 
-      - uses: autofix-ci/action@8caa572fd27b0019a65e4c695447089c8d3138b9
+      - uses: autofix-ci/action@d3e591514b99d0fca6779455ff8338516663f7cc
