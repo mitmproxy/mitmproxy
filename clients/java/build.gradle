@@ -4,7 +4,7 @@ apply plugin: 'java'
 apply plugin: 'com.diffplug.spotless'
 
 group = 'com.browserup'
-version = '1.1.4-SNAPSHOT'
+version = '1.1.5-SNAPSHOT'
 
 buildscript {
     repositories {
