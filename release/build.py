@@ -136,30 +136,37 @@ def standalone_binaries():
 
 
 @cli.command()
-@click.option("--keychain-profile")
 @click.option("--keychain")
-def macos_app(keychain_profile: str | None, keychain: str | None) -> None:
-    """macOS: Build into mitmproxy.app."""
+@click.option("--team-id")
+@click.option("--apple-id")
+@click.option("--password")
+def macos_app(
+    keychain: str | None,
+    team_id: str | None,
+    apple_id: str | None,
+    password: str | None,
+) -> None:
+    """
+    macOS: Build into mitmproxy.app.
+
+    If you do not specify options, notarization is skipped.
+    """
 
     _pyinstaller("onedir.spec")
     _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
 
-    # Add a wrapper so that double-clicking works.
-    #subprocess.check_call([
-    #    "plutil",
-    #    "-replace",
-    #    "CFBundleExecutable",
-    #    "-string",
-    #    ".mitmproxy-wrapper",
-    #    TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/Info.plist",
-    #])
-    #shutil.copy(
-    #    here / "specs/.mitmproxy-wrapper",
-    #    TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS/.mitmproxy-wrapper",
-    #)
-
-    if keychain_profile:
+    if keychain:
         # Notarize the app bundle.
+        subprocess.check_call([
+            "xcrun",
+            "notarytool",
+            "store-credentials",
+            "AC_PASSWORD",
+            *(["--keychain", keychain]),
+            *(["--team-id", team_id]),
+            *(["--apple-id", apple_id]),
+            *(["--password", password]),
+        ])
         subprocess.check_call([
             "ditto",
             "-c",
@@ -173,22 +180,22 @@ def macos_app(keychain_profile: str | None, keychain: str | None) -> None:
             "notarytool",
             "submit",
             TEMP_DIR / "notarize.zip",
-            *(["--keychain", keychain] if keychain else []),
-            *(["--keychain-profile", keychain_profile]),
+            *(["--keychain", keychain]),
+            *(["--keychain-profile", "AC_PASSWORD"]),
             "--wait",
         ])
         # 2023: it's not possible to staple to unix executables.
-        #subprocess.check_call([
-        #    "xcrun",
-        #    "stapler",
-        #    "staple",
-        #    TEMP_DIR / "pyinstaller/out/mitmproxy.app",
-        #])
+        # subprocess.check_call([
+        #     "xcrun",
+        #     "stapler",
+        #     "staple",
+        #     TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+        # ])
     else:
         warnings.warn("Notarization skipped.")
 
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
-        f.add(str(TEMP_DIR / "pyinstaller/out/mitmproxy.app"), ".")
+        f.add(str(TEMP_DIR / "pyinstaller/out/mitmproxy.app"), "mitmproxy.app")
     print(f"Packed {f.name!r}.")
 
 

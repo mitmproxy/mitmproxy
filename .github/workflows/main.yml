@@ -105,22 +105,22 @@ jobs:
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
-      - if: matrix.platform == 'macos'
+      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+            && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
         uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
         with:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      - if: matrix.platform == 'macos'
+      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+            && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         run: |
-          xcrun notarytool store-credentials "AC_PASSWORD" \
+          python -u release/build.py macos-app \
+            --keychain "${{ runner.temp }}/temp.keychain" \
             --team-id "S8XHQB96PW" \
             --apple-id "${{ secrets.APPLE_ID }}" \
-            --password "${{ secrets.APPLE_APP_PASSWORD }}" \
-            --keychain "${{ runner.temp }}/temp.keychain"
-      - if: matrix.platform == 'macos'
-        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD --keychain "${{ runner.temp }}/temp.keychain"
+            --password "${{ secrets.APPLE_APP_PASSWORD }}"
 
       - if: matrix.platform == 'linux'
         run: python -u release/build.py standalone-binaries
