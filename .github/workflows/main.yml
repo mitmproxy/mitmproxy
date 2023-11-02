@@ -6,6 +6,7 @@ on:
       - '**'
       - '!dependabot/**'
   pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:
@@ -19,7 +20,7 @@ jobs:
   lint:
     uses: mhils/workflows/.github/workflows/python-tox.yml@main
     with:
-      cmd: tox -e flake8
+      cmd: tox -e lint
 
   filename-matching:
     uses: mhils/workflows/.github/workflows/python-tox.yml@main
@@ -42,10 +43,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.11"
+            py: "3.12"
           - os: windows-latest
-            py: "3.11"
+            py: "3.12"
           - os: macos-latest
+            py: "3.12"
+          - os: ubuntu-latest
             py: "3.11"
           - os: ubuntu-latest
             py: "3.10"
@@ -120,7 +123,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules

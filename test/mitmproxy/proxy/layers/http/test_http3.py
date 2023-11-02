@@ -30,7 +30,6 @@ from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers.http._http3 import Http3Client
 from test.mitmproxy.proxy import tutils
 
-
 example_request_headers = [
     (b":method", b"GET"),
     (b":scheme", b"http"),

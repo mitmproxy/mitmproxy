@@ -27,7 +27,9 @@ export default class WebsocketBackend {
 
     connect() {
         this.socket = new WebSocket(
-            location.origin.replace("http", "ws") + "/updates"
+            location.origin.replace("http", "ws") +
+                location.pathname +
+                "/updates"
         );
         this.socket.addEventListener("open", () => this.onOpen());
         this.socket.addEventListener("close", (event) => this.onClose(event));

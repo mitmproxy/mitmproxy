@@ -9,8 +9,8 @@ from aioquic.buffer import BufferReadError
 from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 
-from . import base
 from ..proxy.layers.http import is_h3_alpn
+from . import base
 from .hex import ViewHexDump
 from mitmproxy import flow
 from mitmproxy import tcp

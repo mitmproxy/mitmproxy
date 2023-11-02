@@ -35,7 +35,6 @@ from mitmproxy.log import ALERT
 from mitmproxy.utils import human
 from mitmproxy.utils import signals
 
-
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
 # the sort order changes as the flow progresses through its lifecycle. We

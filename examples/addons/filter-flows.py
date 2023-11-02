@@ -7,6 +7,7 @@ import logging
 
 from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy.addonmanager import Loader
 
 
 class Filter:
@@ -16,8 +17,8 @@ class Filter:
         if "flowfilter" in updated:
             self.filter = flowfilter.parse(".")
 
-    def load(self, l):
-        l.add_option("flowfilter", str, "", "Check that flow matches filter.")
+    def load(self, loader: Loader):
+        loader.add_option("flowfilter", str, "", "Check that flow matches filter.")
 
     def response(self, flow: http.HTTPFlow) -> None:
         if flowfilter.match(self.filter, flow):

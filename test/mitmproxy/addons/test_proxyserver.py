@@ -41,7 +41,6 @@ from mitmproxy.test.tflow import tserver_conn
 from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.utils import data
 
-
 tlsdata = data.Data(__name__)
 
 
@@ -100,7 +99,9 @@ async def test_start_stop(caplog_async):
             )
             assert repr(ps) == "Proxyserver(1 active conns)"
 
-            await ps.setup_servers()  # assert this can always be called without side effects
+            await (
+                ps.setup_servers()
+            )  # assert this can always be called without side effects
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
             if ps.servers.is_updating:

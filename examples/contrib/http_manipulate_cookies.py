@@ -18,7 +18,6 @@ import json
 
 from mitmproxy import http
 
-
 PATH_TO_COOKIES = "./cookies.json"  # insert your path to the cookie file here
 FILTER_COOKIES = {
     "mycookie",

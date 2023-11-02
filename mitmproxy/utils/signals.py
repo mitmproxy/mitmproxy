@@ -20,7 +20,6 @@ from typing import Generic
 from typing import ParamSpec
 from typing import TypeVar
 
-
 P = ParamSpec("P")
 R = TypeVar("R")
 

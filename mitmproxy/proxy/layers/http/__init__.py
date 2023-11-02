@@ -700,6 +700,7 @@ class HttpStream(layer.Layer):
             return True
 
     def handle_connect(self) -> layer.CommandGenerator[None]:
+        self.client_state = self.state_done
         yield HttpConnectHook(self.flow)
         if (yield from self.check_killed(False)):
             return

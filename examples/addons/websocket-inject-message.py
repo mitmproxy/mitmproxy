@@ -8,7 +8,6 @@ import asyncio
 from mitmproxy import ctx
 from mitmproxy import http
 
-
 # Simple example: Inject a message as a response to an event
 
 

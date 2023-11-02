@@ -2,7 +2,6 @@ from mitmproxy import http
 from mitmproxy.connection import Server
 from mitmproxy.net.server_spec import ServerSpec
 
-
 # This scripts demonstrates how mitmproxy can switch to a second/different upstream proxy
 # in upstream proxy mode.
 #

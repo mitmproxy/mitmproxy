@@ -16,7 +16,7 @@ Usage:
 """
 
 
-def load(l):
+def load(_):
     import pydevd_pycharm
 
     pydevd_pycharm.settrace(

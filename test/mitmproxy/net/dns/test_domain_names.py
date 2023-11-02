@@ -9,7 +9,10 @@ from mitmproxy.net.dns import domain_names
 def test_unpack_from_with_compression():
     assert domain_names.unpack_from_with_compression(
         b"\xFF\x03www\x07example\x03org\x00", 1, domain_names.cache()
-    ) == ("www.example.org", 17)
+    ) == (
+        "www.example.org",
+        17,
+    )
     with pytest.raises(
         struct.error, match=re.escape("unpack encountered domain name loop")
     ):
@@ -59,9 +62,7 @@ def test_pack():
     name = f"www.{label}.com"
     with pytest.raises(
         ValueError,
-        match=re.escape(
-            "encoding with 'idna' codec failed (UnicodeError: label too long)"
-        ),
+        match="label too long",
     ):
         domain_names.pack(name)
     assert domain_names.pack("www.example.org") == b"\x03www\x07example\x03org\x00"

@@ -8,6 +8,7 @@ The content view API is explained in the mitmproxy.contentviews module.
 from mitmproxy import contentviews
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy.addonmanager import Loader
 
 
 class ViewSwapCase(contentviews.View):
@@ -42,7 +43,7 @@ class ViewSwapCase(contentviews.View):
 view = ViewSwapCase()
 
 
-def load(l):
+def load(loader: Loader):
     contentviews.add(view)
 
 

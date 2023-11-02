@@ -14,7 +14,6 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.tools import main
 
-
 # We want this to be speedy for testing
 script.ReloadInterval = 0.1
 

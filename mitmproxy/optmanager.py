@@ -415,9 +415,9 @@ class OptManager:
 
         o = self._options[optname]
 
-        def mkf(l, s):
-            l = l.replace("_", "-")
-            f = ["--%s" % l]
+        def mkf(x, s):
+            x = x.replace("_", "-")
+            f = ["--%s" % x]
             if s:
                 f.append("-" + s)
             return f

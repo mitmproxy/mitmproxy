@@ -286,7 +286,8 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         try:
             for s in self._servers:
                 s.close()
-            await asyncio.gather(*[s.wait_closed() for s in self._servers])
+            # https://github.com/python/cpython/issues/104344
+            # await asyncio.gather(*[s.wait_closed() for s in self._servers])
         finally:
             # we always reset _server and ignore failures
             self._servers = []

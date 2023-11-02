@@ -214,7 +214,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         )
 
     def test_index(self):
-        assert self.fetch("/").code == 200
+        response: httpclient.HTTPResponse = self.fetch("/")
+        assert response.code == 200
+        assert '"/' not in str(
+            response.body
+        ), "HTML content should not contain root-relative paths"
 
     def test_filter_help(self):
         assert self.fetch("/filter-help").code == 200
@@ -483,8 +487,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_options(self):
         j = get_json(self.fetch("/options"))
-        assert type(j) == dict
-        assert type(j["anticache"]) == dict
+        assert isinstance(j, dict)
+        assert isinstance(j["anticache"], dict)
 
     def test_option_update(self):
         assert self.put_json("/options", {"anticache": True}).code == 200

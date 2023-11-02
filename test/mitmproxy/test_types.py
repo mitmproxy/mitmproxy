@@ -4,9 +4,9 @@ from collections.abc import Sequence
 
 import pytest
 
+from . import test_command
 import mitmproxy.exceptions
 import mitmproxy.types
-from . import test_command
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy.test import taddons

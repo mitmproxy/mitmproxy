@@ -35,7 +35,7 @@ from mitmproxy.utils import arg_check
             "Please use `--proxyauth SPEC` instead.\n"
             'SPEC Format: "username:pass", "any" to accept any user/pass combination,\n'
             '"@path" to use an Apache htpasswd file, or\n'
-            '"ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" '
+            '"ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree[?search_filter_key=...]" '
             "for LDAP authentication.",
         ),
         (

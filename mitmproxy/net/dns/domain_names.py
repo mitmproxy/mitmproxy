@@ -1,7 +1,6 @@
 import struct
 from typing import Optional
 
-
 _LABEL_SIZE = struct.Struct("!B")
 _POINTER_OFFSET = struct.Struct("!H")
 _POINTER_INDICATOR = 0b11000000

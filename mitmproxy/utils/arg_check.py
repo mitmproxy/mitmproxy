@@ -127,7 +127,7 @@ def check():
                 "Please use `--proxyauth SPEC` instead.\n"
                 'SPEC Format: "username:pass", "any" to accept any user/pass combination,\n'
                 '"@path" to use an Apache htpasswd file, or\n'
-                '"ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" '
+                '"ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree[?search_filter_key=...]" '
                 "for LDAP authentication.".format(option)
             )
 
@@ -139,8 +139,9 @@ def check():
             else:
                 new_options = [r]
             print(
-                "{} is deprecated.\n"
-                "Please use `{}` instead.".format(option, "` or `".join(new_options))
+                "{} is deprecated.\n" "Please use `{}` instead.".format(
+                    option, "` or `".join(new_options)
+                )
             )
 
     for option in DEPRECATED.splitlines():

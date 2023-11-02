@@ -314,7 +314,9 @@ class TlsConfig:
             except ValueError:
                 host_name = server.sni.encode("idna")
                 tls_start.ssl_conn.set_tlsext_host_name(host_name)
-                ok = SSL._lib.X509_VERIFY_PARAM_set1_host(param, host_name, len(host_name))  # type: ignore
+                ok = SSL._lib.X509_VERIFY_PARAM_set1_host(  # type: ignore
+                    param, host_name, len(host_name)
+                )  # type: ignore
                 SSL._openssl_assert(ok == 1)  # type: ignore
             else:
                 # RFC 6066: Literal IPv4 and IPv6 addresses are not permitted in "HostName",

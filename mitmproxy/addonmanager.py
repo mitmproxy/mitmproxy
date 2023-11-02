@@ -185,8 +185,8 @@ class AddonManager:
                 raise exceptions.AddonManagerError(
                     "An addon called '%s' already exists." % name
                 )
-        l = Loader(self.master)
-        self.invoke_addon_sync(addon, LoadHook(l))
+        loader = Loader(self.master)
+        self.invoke_addon_sync(addon, LoadHook(loader))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a

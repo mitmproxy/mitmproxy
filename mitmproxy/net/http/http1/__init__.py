@@ -9,7 +9,6 @@ from .read import read_request_head
 from .read import read_response_head
 from .read import validate_headers
 
-
 __all__ = [
     "read_request_head",
     "read_response_head",

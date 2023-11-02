@@ -44,10 +44,10 @@ class TestSerialize:
 
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        l = list(r.stream())
-        assert len(l) == 1
+        lst = list(r.stream())
+        assert len(lst) == 1
 
-        f2 = l[0]
+        f2 = lst[0]
         assert f2.get_state() == f.get_state()
         assert f2.request.data == f.request.data
         assert f2.marked

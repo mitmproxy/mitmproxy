@@ -91,7 +91,7 @@ Keeping to a consistent code style throughout the project makes it easier to con
 We enforce the following check for all PRs:
 
 ```shell
-tox -e flake8
+tox -e lint
 ```
 
 If a linting error is detected, the automated pull request checks will fail and block merging.

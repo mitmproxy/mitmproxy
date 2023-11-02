@@ -303,16 +303,16 @@ def test_resolve():
         v.set_filter(f)
         v[0].marked = True
 
-        def m(l):
-            return [i.request.method for i in l]
+        def methods(flows):
+            return [i.request.method for i in flows]
 
-        assert m(tctx.command(v.resolve, "~m get")) == ["GET", "GET"]
-        assert m(tctx.command(v.resolve, "~m put")) == ["PUT", "PUT"]
-        assert m(tctx.command(v.resolve, "@shown")) == ["GET", "GET"]
-        assert m(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
-        assert m(tctx.command(v.resolve, "@marked")) == ["GET"]
-        assert m(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
-        assert m(tctx.command(v.resolve, "@all")) == ["GET", "PUT", "GET", "PUT"]
+        assert methods(tctx.command(v.resolve, "~m get")) == ["GET", "GET"]
+        assert methods(tctx.command(v.resolve, "~m put")) == ["PUT", "PUT"]
+        assert methods(tctx.command(v.resolve, "@shown")) == ["GET", "GET"]
+        assert methods(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
+        assert methods(tctx.command(v.resolve, "@marked")) == ["GET"]
+        assert methods(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
+        assert methods(tctx.command(v.resolve, "@all")) == ["GET", "PUT", "GET", "PUT"]
 
         with pytest.raises(exceptions.CommandError, match="Invalid filter expression"):
             tctx.command(v.resolve, "~")

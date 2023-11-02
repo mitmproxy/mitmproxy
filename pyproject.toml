@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Security",
     "Topic :: Internet :: WWW/HTTP",
@@ -30,7 +31,7 @@ classifiers = [
 # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
-    "aioquic_mitmproxy>=0.9.20,<0.10",
+    "aioquic_mitmproxy>=0.9.21,<0.10",
     "asgiref>=3.2.10,<3.8",
     "Brotli>=1.0,<1.2",
     "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
@@ -46,17 +47,17 @@ dependencies = [
     "passlib>=1.6.5, <1.8",
     "protobuf>=3.14,<5",
     "pydivert>=2.0.3,<2.2; sys_platform == 'win32'",
-    "pyOpenSSL>=22.1,<23.3",
+    "pyOpenSSL>=22.1,<23.4",
     "pyparsing>=2.4.2,<3.2",
     "pyperclip>=1.6.0,<1.9",
-    "ruamel.yaml>=0.16,<0.18",
+    "ruamel.yaml>=0.16,<0.19",
     "sortedcontainers>=2.3,<2.5",
     "tornado>=6.2,<7",
     "typing-extensions>=4.3,<5; python_version<'3.11'",
     "urwid-mitmproxy>=2.1.1,<2.2",
     "wsproto>=1.0,<1.3",
     "publicsuffix2>=2.20190812,<3",
-    "zstandard>=0.11,<0.22",
+    "zstandard>=0.11,<0.23",
 ]
 
 [project.optional-dependencies]
@@ -64,10 +65,10 @@ dev = [
     "click>=7.0,<8.2",
     "hypothesis>=5.8,<7",
     "pdoc>=4.0.0",
-    "pyinstaller==6.0.0",
+    "pyinstaller==6.1.0",
     "pytest-asyncio>=0.17,<0.22",
     "pytest-cov>=2.7.1,<4.2",
-    "pytest-timeout>=1.3.3,<2.2",
+    "pytest-timeout>=1.3.3,<2.3",
     "pytest-xdist>=2.1.0,<3.4",
     "pytest>=6.1.0,<8",
     "requests>=2.9.1,<3",
@@ -157,13 +158,25 @@ ignore_errors = true
 module = "test.*"
 ignore_errors = true
 
-[tool.black]
-extend_exclude = "mitmproxy/contrib/"
+[tool.ruff]
+select = ["E", "F", "I"]
+extend-exclude = ["mitmproxy/contrib/"]
+ignore = ["F541", "E501"]
+
+
+[tool.ruff.isort]
+# these rules are a bit weird, but they mimic our existing reorder_python_imports style.
+# if we break compatibility here, consider removing all customization + enforce absolute imports.
+force-single-line = true
+order-by-type = false
+section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
+no-lines-before = ["first-party"]
+known-first-party = ["test", "mitmproxy"]
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py, flake8, mypy
+envlist = py, lint, mypy
 skipsdist = True
 toxworkdir={env:TOX_WORK_DIR:.tox}
 
@@ -179,12 +192,11 @@ commands =
     --full-cov=mitmproxy/ \
     {posargs}
 
-[testenv:flake8]
+[testenv:lint]
 deps =
-  flake8>=3.8.4,<6.1
-  flake8-tidy-imports>=4.2.0,<5
+  ruff>=0.1.3,<0.2
 commands =
-  flake8 --jobs 8 mitmproxy examples test release {posargs}
+  ruff .
 
 [testenv:filename_matching]
 deps =
@@ -193,13 +205,13 @@ commands =
 
 [testenv:mypy]
 deps =
-  mypy==1.4.1
+  mypy==1.6.1
   types-certifi==2021.10.8.3
   types-Flask==1.1.6
   types-Werkzeug==1.0.9
-  types-requests==2.31.0.2
+  types-requests==2.31.0.10
   types-cryptography==3.3.23.2
-  types-pyOpenSSL==23.2.0.2
+  types-pyOpenSSL==23.3.0.0
   -e .[dev]
 
 commands =

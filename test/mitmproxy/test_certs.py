@@ -10,7 +10,6 @@ from cryptography.x509 import NameOID
 from ..conftest import skip_windows
 from mitmproxy import certs
 
-
 # class TestDNTree:
 #     def test_simple(self):
 #         d = certs.DNTree()

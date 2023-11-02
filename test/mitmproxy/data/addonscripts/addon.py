@@ -20,7 +20,7 @@ def configure(updated):
     event_log.append("scriptconfigure")
 
 
-def load(l):
+def load(loader):
     event_log.append("scriptload")
 
 
