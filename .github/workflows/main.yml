@@ -109,7 +109,7 @@ jobs:
         id: keychain
         uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
         with:
-          keychain: ${{ runner.temp }}/keychain
+          keychain: ${{ runner.temp }}/temp.keychain
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       - if: matrix.platform == 'macos'
@@ -118,9 +118,9 @@ jobs:
             --team-id "S8XHQB96PW" \
             --apple-id "${{ secrets.APPLE_ID }}" \
             --password "${{ secrets.APPLE_APP_PASSWORD }}" \
-            --keychain "${{ runner.temp }}/keychain"
+            --keychain "${{ runner.temp }}/temp.keychain"
       - if: matrix.platform == 'macos'
-        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD --keychain "${{ runner.temp }}/keychain"
+        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD --keychain "${{ runner.temp }}/temp.keychain"
 
       - if: matrix.platform == 'linux'
         run: python -u release/build.py standalone-binaries
