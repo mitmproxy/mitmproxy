@@ -105,6 +105,15 @@ jobs:
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        env:
+          APPLE_TEAM_ID: S8XHQB96PW
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
       - if: matrix.platform == 'macos'
         env:
           APPLE_TEAM_ID: S8XHQB96PW
