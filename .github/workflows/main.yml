@@ -106,50 +106,21 @@ jobs:
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: matrix.platform == 'macos'
+        id: keychain
         uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
         with:
+          keychain: ${{ runner.temp }}/keychain
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        env:
-          APPLE_TEAM_ID: S8XHQB96PW
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-
       - if: matrix.platform == 'macos'
-        env:
-          APPLE_TEAM_ID: S8XHQB96PW
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          KEYCHAIN_PATH=app-signing.keychain
-          security create-keychain -p "app-signing" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
-          security default-keychain -s $KEYCHAIN_PATH
-          
-          
-          echo -n "$APPLE_CERTIFICATE" | base64 -d > "$RUNNER_TEMP/cert.pfx"
-          security import "$RUNNER_TEMP/cert.pfx" -A -P "$APPLE_CERTIFICATE_PASSWORD"
           xcrun notarytool store-credentials "AC_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --keychain "$KEYCHAIN_PATH"
-
-          #default-keychain
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
-          security create-keychain -p "app-signing" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
+            --team-id "S8XHQB96PW" \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --password "${{ secrets.APPLE_APP_PASSWORD }}" \
+            --keychain "${{ runner.temp }}/keychain"
       - if: matrix.platform == 'macos'
-        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD
+        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD --keychain "${{ runner.temp }}/keychain"
 
       - if: matrix.platform == 'linux'
         run: python -u release/build.py standalone-binaries
