@@ -15,6 +15,10 @@ from mitmproxy import ctx
 def load(_):
     # force a random port
     ctx.options.listen_port = 0
+    try:
+        ctx.options.web_open_browser = False
+    except KeyError:
+        pass
 
 
 def running():

@@ -25,7 +25,8 @@ for tool in tools:
         name=tool,
         console=True,
         upx=False,
-        icon='icon.ico'
+        icon='icon.ico',
+        codesign_identity='Developer ID Application',
     ))
 
 COLLECT(
