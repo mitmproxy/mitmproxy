@@ -210,15 +210,19 @@ class RequestHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         super().set_default_headers()
         self.set_header("Server", version.MITMPROXY)
-        self.set_header("X-Frame-Options", "DENY")
-        self.add_header("X-XSS-Protection", "1; mode=block")
-        self.add_header("X-Content-Type-Options", "nosniff")
-        self.add_header(
-            "Content-Security-Policy",
-            "default-src 'self'; "
-            "connect-src 'self' ws:; "
-            "style-src   'self' 'unsafe-inline'",
-        )
+        if self.master.options.allow_cors:
+            self.set_header("Access-Control-Allow-Origin", "*")
+            self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+            self.set_header("Access-Control-Allow-Methods", "*")
+        else:
+            self.add_header("X-XSS-Protection", "1; mode=block")
+            self.add_header("X-Content-Type-Options", "nosniff")
+            self.add_header(
+                "Content-Security-Policy",
+                "default-src 'self'; "
+                "connect-src 'self' ws:; "
+                "style-src   'self' 'unsafe-inline'",
+            )
 
     @property
     def json(self):
@@ -266,6 +270,11 @@ class RequestHandler(tornado.web.RequestHandler):
         else:
             super().write_error(status_code, **kwargs)
 
+    def options(self):
+        # no body
+        self.set_status(204)
+        self.finish()
+
 
 class IndexHandler(RequestHandler):
     def get(self):
@@ -289,6 +298,11 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         self.connections.discard(self)
+
+    def check_origin(self, origin):
+        if self.application.master.options.allow_cors:
+            return True
+        return False
 
     @classmethod
     def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
@@ -498,8 +512,6 @@ class FlowContent(RequestHandler):
         cd = f"attachment; filename={filename}"
         self.set_header("Content-Disposition", cd)
         self.set_header("Content-Type", "application/text")
-        self.set_header("X-Content-Type-Options", "nosniff")
-        self.set_header("X-Frame-Options", "DENY")
         self.write(message.get_content(strict=False))
 
 

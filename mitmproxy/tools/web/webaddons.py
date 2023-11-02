@@ -17,6 +17,12 @@ class WebAddon:
             ["tls", "icon", "path", "method", "status", "size", "time"],
             "Columns to show in the flow list",
         )
+        loader.add_option(
+            "allow_cors",
+            bool,
+            False,
+            "Allow CORS requests in the web interface from any origin.",
+        )
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
