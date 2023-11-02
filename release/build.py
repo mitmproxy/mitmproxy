@@ -156,6 +156,9 @@ def macos_app(
     _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
 
     if keychain:
+        assert isinstance(team_id, str)
+        assert isinstance(apple_id, str)
+        assert isinstance(password, str)
         # Notarize the app bundle.
         subprocess.check_call([
             "xcrun",
