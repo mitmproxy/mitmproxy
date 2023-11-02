@@ -111,8 +111,9 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          security import <(echo -n "$APPLE_CERTIFICATE") -A
+          security import <(echo -n "$APPLE_CERTIFICATE" | base64 -d) -A -P "$APPLE_CERTIFICATE_PASSWORD"
           xcrun notarytool store-credentials "AC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --apple-id "$APPLE_ID" \
