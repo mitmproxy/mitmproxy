@@ -81,7 +81,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: macos-11
+          - image: macos-12
             platform: macos
           - image: windows-2019
             platform: windows
@@ -123,18 +123,26 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          security import <(echo -n "$APPLE_CERTIFICATE" | base64 -d) -A -P "$APPLE_CERTIFICATE_PASSWORD"
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
+          security create-keychain -p "app-signing" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
+          security default-keychain -s $KEYCHAIN_PATH
+          
+          
+          echo -n "$APPLE_CERTIFICATE" | base64 -d > "$RUNNER_TEMP/cert.pfx"
+          security import "$RUNNER_TEMP/cert.pfx" -A -P "$APPLE_CERTIFICATE_PASSWORD"
           xcrun notarytool store-credentials "AC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD"
-            # --keychain "$KEYCHAIN_PATH" \
+            --password "$APPLE_APP_PASSWORD" \
+            --keychain "$KEYCHAIN_PATH"
 
           #default-keychain
-          #KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
-          #security create-keychain -p "app-signing" $KEYCHAIN_PATH
-          #security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          #security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
+          security create-keychain -p "app-signing" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
       - if: matrix.platform == 'macos'
         run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD
 
