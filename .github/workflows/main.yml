@@ -106,7 +106,26 @@ jobs:
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: matrix.platform == 'macos'
-        run: python -u release/build.py macos-app
+        env:
+          APPLE_TEAM_ID: S8XHQB96PW
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        run: |
+          security import -A <(echo -n "$APPLE_CERTIFICATE")
+          xcrun notarytool store-credentials "AC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD"
+            # --keychain "$KEYCHAIN_PATH" \
+
+          #default-keychain
+          #KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
+          #security create-keychain -p "app-signing" $KEYCHAIN_PATH
+          #security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          #security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
+      - if: matrix.platform == 'macos'
+        run: python -u release/build.py macos-app --keychain-profile AC_PASSWORD
 
       - if: matrix.platform == 'linux'
         run: python -u release/build.py standalone-binaries
