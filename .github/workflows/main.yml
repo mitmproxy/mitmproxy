@@ -105,6 +105,11 @@ jobs:
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
+      - if: matrix.platform == 'macos'
+        uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -123,7 +128,7 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain
+          KEYCHAIN_PATH=app-signing.keychain
           security create-keychain -p "app-signing" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "app-signing" $KEYCHAIN_PATH
