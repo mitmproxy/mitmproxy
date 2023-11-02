@@ -213,7 +213,7 @@ class RequestHandler(tornado.web.RequestHandler):
         if self.master.options.allow_cors:
             self.set_header("Access-Control-Allow-Origin", "*")
             self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-            self.set_header('Access-Control-Allow-Methods', '*')
+            self.set_header("Access-Control-Allow-Methods", "*")
         else:
             self.add_header("X-XSS-Protection", "1; mode=block")
             self.add_header("X-Content-Type-Options", "nosniff")
