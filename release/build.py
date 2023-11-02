@@ -111,7 +111,7 @@ def _pyinstaller(specfile: str) -> None:
             "--workpath",
             TEMP_DIR / "pyinstaller/temp",
             "--distpath",
-            TEMP_DIR / "pyinstaller/dist",
+            TEMP_DIR / "pyinstaller/out",
             specfile,
         ],
         cwd=here / "specs",
@@ -124,10 +124,10 @@ def standalone_binaries():
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         _pyinstaller("standalone.spec")
 
-        _test_binaries(TEMP_DIR / "pyinstaller/dist")
+        _test_binaries(TEMP_DIR / "pyinstaller/out")
 
         for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
-            executable = TEMP_DIR / "pyinstaller/dist" / tool
+            executable = TEMP_DIR / "pyinstaller/out" / tool
             if platform.system() == "Windows":
                 executable = executable.with_suffix(".exe")
 
@@ -136,33 +136,66 @@ def standalone_binaries():
 
 
 @cli.command()
-def macos_directory():
-    """macOS: Build into a PyInstaller directory."""
-    _ensure_pyinstaller_onedir()
+@click.option("--keychain-profile")
+@click.option("--keychain")
+def macos_app(keychain_profile: str | None, keychain: str | None) -> None:
+    """macOS: Build into mitmproxy.app."""
 
-    """
-    subprocess.check_call(
-        [
-            "codesign",
-            "--force",
-            "--timestamp",
-            *("--options", "runtime"),
-            *("--sign", "Developer ID Application"),
-            TEMP_DIR / "pyinstaller/dist/onedir",
-        ],
-        cwd=here / "specs",
-    )
-    """
+    _pyinstaller("onedir.spec")
+    _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
+
+    # Add a wrapper so that double-clicking works.
+    #subprocess.check_call([
+    #    "plutil",
+    #    "-replace",
+    #    "CFBundleExecutable",
+    #    "-string",
+    #    ".mitmproxy-wrapper",
+    #    TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/Info.plist",
+    #])
+    #shutil.copy(
+    #    here / "specs/.mitmproxy-wrapper",
+    #    TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS/.mitmproxy-wrapper",
+    #)
+
+    if keychain_profile:
+        # Notarize the app bundle.
+        subprocess.check_call([
+            "ditto",
+            "-c",
+            "-k",
+            "--keepParent",
+            TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+            TEMP_DIR / "notarize.zip",
+        ])
+        subprocess.check_call([
+            "xcrun",
+            "notarytool",
+            "submit",
+            TEMP_DIR / "notarize.zip",
+            *(["--keychain", keychain] if keychain else []),
+            *(["--keychain-profile", keychain_profile]),
+            "--wait",
+        ])
+        # 2023: it's not possible to staple to unix executables.
+        #subprocess.check_call([
+        #    "xcrun",
+        #    "stapler",
+        #    "staple",
+        #    TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+        #])
+    else:
+        warnings.warn("Notarization skipped.")
 
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
-        f.add(str(TEMP_DIR / "pyinstaller/dist/onedir"), ".")
+        f.add(str(TEMP_DIR / "pyinstaller/out/mitmproxy.app"), ".")
     print(f"Packed {f.name!r}.")
 
 
 def _ensure_pyinstaller_onedir():
-    if not (TEMP_DIR / "pyinstaller/dist/onedir").exists():
+    if not (TEMP_DIR / "pyinstaller/out/onedir").exists():
         _pyinstaller("onedir.spec")
-        _test_binaries(TEMP_DIR / "pyinstaller/dist/onedir")
+        _test_binaries(TEMP_DIR / "pyinstaller/out/onedir")
 
 
 def _test_binaries(binary_directory: Path) -> None:
@@ -187,7 +220,7 @@ def msix_installer():
     _ensure_pyinstaller_onedir()
 
     shutil.copytree(
-        TEMP_DIR / "pyinstaller/dist/onedir",
+        TEMP_DIR / "pyinstaller/out/onedir",
         TEMP_DIR / "msix",
         dirs_exist_ok=True,
     )

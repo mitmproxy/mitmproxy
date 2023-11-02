@@ -106,7 +106,7 @@ jobs:
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: matrix.platform == 'macos'
-        run: python -u release/build.py macos-directory
+        run: python -u release/build.py macos-app
 
       - if: matrix.platform == 'linux'
         run: python -u release/build.py standalone-binaries
