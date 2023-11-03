@@ -9,10 +9,10 @@ import shutil
 import subprocess
 import tarfile
 import urllib.request
+import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
 
 import click
 import cryptography.fernet
@@ -88,16 +88,18 @@ def version() -> str:
     )
 
 
-def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
-    pf = platform.system()
-    if pf == "Windows":
-        return "windows"
-    elif pf == "Linux":
-        return "linux"
-    elif pf == "Darwin":
-        return "macos"
-    else:
-        return "unknown"
+def operating_system() -> str:
+    match (platform.system(), platform.machine()):
+        case ("Windows", _):
+            return "windows"
+        case ("Linux", _):
+            return "linux"
+        case ("Darwin", "x86_64"):
+            return "macos-x86_64"
+        case ("Darwin", "arm64"):
+            return "macos-arm64"
+    warnings.warn("Unexpected platform.")
+    return f"{platform.system()}-{platform.machine()}"
 
 
 def _pyinstaller(specfile: str) -> None:
@@ -109,7 +111,7 @@ def _pyinstaller(specfile: str) -> None:
             "--workpath",
             TEMP_DIR / "pyinstaller/temp",
             "--distpath",
-            TEMP_DIR / "pyinstaller/dist",
+            TEMP_DIR / "pyinstaller/out",
             specfile,
         ],
         cwd=here / "specs",
@@ -118,14 +120,14 @@ def _pyinstaller(specfile: str) -> None:
 
 @cli.command()
 def standalone_binaries():
-    """All platforms: Build the standalone binaries generated with PyInstaller"""
+    """Windows and Linux: Build the standalone binaries generated with PyInstaller"""
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         _pyinstaller("standalone.spec")
 
-        _test_binaries(TEMP_DIR / "pyinstaller/dist")
+        _test_binaries(TEMP_DIR / "pyinstaller/out")
 
         for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
-            executable = TEMP_DIR / "pyinstaller/dist" / tool
+            executable = TEMP_DIR / "pyinstaller/out" / tool
             if platform.system() == "Windows":
                 executable = executable.with_suffix(".exe")
 
@@ -133,11 +135,83 @@ def standalone_binaries():
     print(f"Packed {f.name!r}.")
 
 
-def _ensure_pyinstaller_onedir():
-    if not (TEMP_DIR / "pyinstaller/dist/onedir").exists():
-        _pyinstaller("windows-dir.spec")
+@cli.command()
+@click.option("--keychain")
+@click.option("--team-id")
+@click.option("--apple-id")
+@click.option("--password")
+def macos_app(
+    keychain: str | None,
+    team_id: str | None,
+    apple_id: str | None,
+    password: str | None,
+) -> None:
+    """
+    macOS: Build into mitmproxy.app.
 
-    _test_binaries(TEMP_DIR / "pyinstaller/dist/onedir")
+    If you do not specify options, notarization is skipped.
+    """
+
+    _pyinstaller("onedir.spec")
+    _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
+
+    if keychain:
+        assert isinstance(team_id, str)
+        assert isinstance(apple_id, str)
+        assert isinstance(password, str)
+        # Notarize the app bundle.
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "store-credentials",
+                "AC_PASSWORD",
+                *(["--keychain", keychain]),
+                *(["--team-id", team_id]),
+                *(["--apple-id", apple_id]),
+                *(["--password", password]),
+            ]
+        )
+        subprocess.check_call(
+            [
+                "ditto",
+                "-c",
+                "-k",
+                "--keepParent",
+                TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+                TEMP_DIR / "notarize.zip",
+            ]
+        )
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                TEMP_DIR / "notarize.zip",
+                *(["--keychain", keychain]),
+                *(["--keychain-profile", "AC_PASSWORD"]),
+                "--wait",
+            ]
+        )
+        # 2023: it's not possible to staple to unix executables.
+        # subprocess.check_call([
+        #     "xcrun",
+        #     "stapler",
+        #     "staple",
+        #     TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+        # ])
+    else:
+        warnings.warn("Notarization skipped.")
+
+    with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
+        f.add(str(TEMP_DIR / "pyinstaller/out/mitmproxy.app"), "mitmproxy.app")
+    print(f"Packed {f.name!r}.")
+
+
+def _ensure_pyinstaller_onedir():
+    if not (TEMP_DIR / "pyinstaller/out/onedir").exists():
+        _pyinstaller("onedir.spec")
+        _test_binaries(TEMP_DIR / "pyinstaller/out/onedir")
 
 
 def _test_binaries(binary_directory: Path) -> None:
@@ -162,7 +236,7 @@ def msix_installer():
     _ensure_pyinstaller_onedir()
 
     shutil.copytree(
-        TEMP_DIR / "pyinstaller/dist/onedir",
+        TEMP_DIR / "pyinstaller/out/onedir",
         TEMP_DIR / "msix",
         dirs_exist_ok=True,
     )

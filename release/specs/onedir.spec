@@ -1,10 +1,16 @@
 from pathlib import Path
+import platform
 
 from PyInstaller.building.api import PYZ, EXE, COLLECT
 from PyInstaller.building.build_main import Analysis
 
 here = Path(r".")
 tools = ["mitmproxy", "mitmdump", "mitmweb"]
+
+if platform.system() == "Darwin":
+    icon = "icon.icns"
+else:
+    icon = "icon.ico"
 
 analysis = Analysis(
     tools,
@@ -25,10 +31,11 @@ for tool in tools:
         name=tool,
         console=True,
         upx=False,
-        icon='icon.ico'
+        icon=icon,
+        codesign_identity='Developer ID Application',
     ))
 
-COLLECT(
+coll = COLLECT(
     *executables,
     analysis.binaries,
     analysis.zipfiles,
@@ -37,3 +44,15 @@ COLLECT(
     upx=False,
     name="onedir"
 )
+
+if platform.system() == "Darwin":
+    from PyInstaller.building.osx import BUNDLE
+    app = BUNDLE(
+        # hack: add dummy executable that opens the terminal,
+        # workaround for https://github.com/pyinstaller/pyinstaller/pull/5419
+        [(".mitmproxy-wrapper", str(here / ".mitmproxy-wrapper"), "EXECUTABLE")],
+        coll,
+        name='mitmproxy.app',
+        icon=icon,
+        bundle_identifier="org.mitmproxy",
+    )

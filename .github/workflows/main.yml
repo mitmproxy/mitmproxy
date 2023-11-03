@@ -81,7 +81,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: macos-11
+          - image: macos-12
             platform: macos
           - image: windows-2019
             platform: windows
@@ -104,12 +104,36 @@ jobs:
           path: release/installbuilder/setup
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
-      - run: python -u release/build.py standalone-binaries
+
+      # macOS x64. Due to GHA limitations, we are currently building the Apple Silicon app bundle outside of CI.
+      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+            && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
+        id: keychain
+        uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
+        with:
+          keychain: ${{ runner.temp }}/temp
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+            && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
+        run: |
+          python -u release/build.py macos-app \
+            --keychain "${{ runner.temp }}/temp.keychain" \
+            --team-id "S8XHQB96PW" \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --password "${{ secrets.APPLE_APP_PASSWORD }}"
+
+      # Linux
       - if: matrix.platform == 'linux'
-        run: python -u release/build.py --dirty wheel
+        run: python -u release/build.py standalone-binaries wheel
+
+      # Windows
+      - if: matrix.platform == 'windows'
+        run: python -u release/build.py standalone-binaries
       - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' &&
             (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
         run: python -u release/build.py --dirty installbuilder-installer msix-installer
+
       - uses: actions/upload-artifact@v3
         with:
           # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24

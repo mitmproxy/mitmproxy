@@ -4,8 +4,9 @@
 2. Invoke the [release workflow](https://github.com/mitmproxy/mitmproxy/actions/workflows/release.yml) from the GitHub UI.
 3. The spawned workflow runs will require manual confirmation on GitHub which you need to approve twice: 
    https://github.com/mitmproxy/mitmproxy/actions
-4. Once everything has been deployed, update the website.
-5. Verify that the front-page download links for all platforms are working.
+4. Build the macOS ARM binaries outside of CI and upload them to the download server: `./build.py macos-app`.
+5. Once everything has been deployed, update the website.
+6. Verify that the front-page download links for all platforms are working.
 
 ### GitHub Releases
 
@@ -40,10 +41,7 @@
 
 ### Homebrew
 
-- The Homebrew maintainers are typically very fast and detect our new relese
-  within a day.
-- If you feel the need, you can run this from a macOS machine:
-  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/<version number here>.tar.gz mitmproxy`
+TODO: This is not current and needs to be replaced with Cask instructions.
 
 ### Website
 
