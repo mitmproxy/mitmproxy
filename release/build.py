@@ -160,33 +160,39 @@ def macos_app(
         assert isinstance(apple_id, str)
         assert isinstance(password, str)
         # Notarize the app bundle.
-        subprocess.check_call([
-            "xcrun",
-            "notarytool",
-            "store-credentials",
-            "AC_PASSWORD",
-            *(["--keychain", keychain]),
-            *(["--team-id", team_id]),
-            *(["--apple-id", apple_id]),
-            *(["--password", password]),
-        ])
-        subprocess.check_call([
-            "ditto",
-            "-c",
-            "-k",
-            "--keepParent",
-            TEMP_DIR / "pyinstaller/out/mitmproxy.app",
-            TEMP_DIR / "notarize.zip",
-        ])
-        subprocess.check_call([
-            "xcrun",
-            "notarytool",
-            "submit",
-            TEMP_DIR / "notarize.zip",
-            *(["--keychain", keychain]),
-            *(["--keychain-profile", "AC_PASSWORD"]),
-            "--wait",
-        ])
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "store-credentials",
+                "AC_PASSWORD",
+                *(["--keychain", keychain]),
+                *(["--team-id", team_id]),
+                *(["--apple-id", apple_id]),
+                *(["--password", password]),
+            ]
+        )
+        subprocess.check_call(
+            [
+                "ditto",
+                "-c",
+                "-k",
+                "--keepParent",
+                TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+                TEMP_DIR / "notarize.zip",
+            ]
+        )
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                TEMP_DIR / "notarize.zip",
+                *(["--keychain", keychain]),
+                *(["--keychain-profile", "AC_PASSWORD"]),
+                "--wait",
+            ]
+        )
         # 2023: it's not possible to staple to unix executables.
         # subprocess.check_call([
         #     "xcrun",

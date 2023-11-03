@@ -10,6 +10,7 @@
   that contains the mitmproxy/mitmweb/mitmdump CLI tools.
   This change was necessary to support macOS code signing requirements.
   Homebrew remains the recommended installation method.
+  ([#6447](https://github.com/mitmproxy/mitmproxy/pull/6447), @mhils)
 * Fix certificate generation to work with strict mode OpenSSL 3.x clients
   ([#6410](https://github.com/mitmproxy/mitmproxy/pull/6410), @mmaxim)
 * Fix path() documentation that the return value might include the query string
