@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 03 November 2023: mitmproxy 10.1.2
+
 * Add a raw hex stream contentview.
   ([#6389](https://github.com/mitmproxy/mitmproxy/pull/6389), @mhils)
 * Add a contentview for DNS-over-HTTPS.
