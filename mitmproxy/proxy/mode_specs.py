@@ -304,4 +304,6 @@ class OsProxyMode(ProxyMode):  # pragma: no cover
     transport_protocol = None
 
     def __post_init__(self) -> None:
-        raise ValueError("osproxy mode has been renamed to local mode. Thanks for trying our experimental features!")
+        raise ValueError(
+            "osproxy mode has been renamed to local mode. Thanks for trying our experimental features!"
+        )

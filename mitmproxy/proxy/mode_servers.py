@@ -227,9 +227,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
-            if isinstance(
-                self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)
-            ):
+            if isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
                 handler.layer.context.server.address = local_addr
 
             # pre-register here - we may get datagrams before the task is executed.
@@ -460,7 +458,9 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         return layers.modes.TransparentProxy(context)
 
     @classmethod
-    async def redirector_handle_tcp_connection(cls, stream: mitmproxy_rs.TcpStream) -> None:
+    async def redirector_handle_tcp_connection(
+        cls, stream: mitmproxy_rs.TcpStream
+    ) -> None:
         if cls._instance is not None:
             await cls._instance.handle_tcp_connection(stream, stream)
 

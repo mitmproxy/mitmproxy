@@ -367,7 +367,9 @@ async def test_local_redirector(patched_local_redirector, caplog_async):
 
 
 async def test_local_redirector_startup_err(patched_local_redirector):
-    patched_local_redirector.side_effect = RuntimeError("Local redirector startup error")
+    patched_local_redirector.side_effect = RuntimeError(
+        "Local redirector startup error"
+    )
 
     with taddons.context():
         inst = ServerInstance.make(f"local:!curl", MagicMock())
