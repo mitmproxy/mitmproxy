@@ -28,7 +28,7 @@ export default class WebsocketBackend {
     connect() {
         this.socket = new WebSocket(
             location.origin.replace("http", "ws") +
-                location.pathname +
+                location.pathname.replace(/\/$/, "") +
                 "/updates"
         );
         this.socket.addEventListener("open", () => this.onOpen());
