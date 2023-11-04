@@ -286,12 +286,22 @@ class WireGuardMode(ProxyMode):
         pass
 
 
-class OsProxyMode(ProxyMode):
+class LocalMode(ProxyMode):
     """OS-level transparent proxy."""
 
-    description = "OS proxy"
+    description = "Local redirector"
     transport_protocol = None
 
     def __post_init__(self) -> None:
         # should not raise
-        mitmproxy_rs.OsProxy.describe_spec(self.data)
+        mitmproxy_rs.LocalRedirector.describe_spec(self.data)
+
+
+class OsProxyMode(ProxyMode):  # pragma: no cover
+    """Deprecated alias for LocalMode"""
+
+    description = "Deprecated alias for LocalMode"
+    transport_protocol = None
+
+    def __post_init__(self) -> None:
+        raise ValueError("osproxy mode has been renamed to local mode. Thanks for trying our experimental features!")
