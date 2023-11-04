@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 04 November 2023: mitmproxy 10.1.3
+
 * Fix a bug introduced in mitmproxy 10.1.2 where mitmweb would fail to establish
   a WebSocket connection. Affected users may need to clear their browser cache
   or hard-reload mitmweb (Ctrl+Shift+R).
