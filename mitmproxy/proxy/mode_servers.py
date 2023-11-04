@@ -200,7 +200,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             else:
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
-        elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.OsProxyMode)):
+        elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
             handler.layer.context.server.address = writer.get_extra_info(
                 "destination_address", handler.layer.context.client.sockname
             )
@@ -227,9 +227,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             handler.layer = self.make_top_layer(handler.layer.context)
             handler.layer.context.client.transport_protocol = "udp"
             handler.layer.context.server.transport_protocol = "udp"
-            if isinstance(
-                self.mode, (mode_specs.WireGuardMode, mode_specs.OsProxyMode)
-            ):
+            if isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
                 handler.layer.context.server.address = local_addr
 
             # pre-register here - we may get datagrams before the task is executed.
@@ -445,11 +443,11 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         await self.handle_tcp_connection(stream, stream)
 
 
-class OsProxyInstance(ServerInstance[mode_specs.OsProxyMode]):
-    _server: ClassVar[mitmproxy_rs.OsProxy | None] = None
-    """The OsProxy server. Will be started once and then reused for all future instances."""
-    _instance: ClassVar[OsProxyInstance | None] = None
-    """The current OsProxy Instance. Will be unset again if an instance is stopped."""
+class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
+    _server: ClassVar[mitmproxy_rs.LocalRedirector | None] = None
+    """The local redirector daemon. Will be started once and then reused for all future instances."""
+    _instance: ClassVar[LocalRedirectorInstance | None] = None
+    """The current LocalRedirectorInstance. Will be unset again if an instance is stopped."""
     listen_addrs = ()
 
     @property
@@ -460,12 +458,14 @@ class OsProxyInstance(ServerInstance[mode_specs.OsProxyMode]):
         return layers.modes.TransparentProxy(context)
 
     @classmethod
-    async def os_handle_tcp_connection(cls, stream: mitmproxy_rs.TcpStream) -> None:
+    async def redirector_handle_tcp_connection(
+        cls, stream: mitmproxy_rs.TcpStream
+    ) -> None:
         if cls._instance is not None:
             await cls._instance.handle_tcp_connection(stream, stream)
 
     @classmethod
-    def os_handle_datagram(
+    def redirector_handle_datagram(
         cls,
         transport: mitmproxy_rs.DatagramTransport,
         data: bytes,
@@ -482,7 +482,7 @@ class OsProxyInstance(ServerInstance[mode_specs.OsProxyMode]):
 
     async def _start(self) -> None:
         if self._instance:
-            raise RuntimeError("Cannot spawn more than one OS proxy instance.")
+            raise RuntimeError("Cannot spawn more than one local redirector.")
 
         if self.mode.data.startswith("!"):
             spec = f"{self.mode.data},{os.getpid()}"
@@ -495,9 +495,9 @@ class OsProxyInstance(ServerInstance[mode_specs.OsProxyMode]):
         cls._instance = self  # assign before awaiting to avoid races
         if cls._server is None:
             try:
-                cls._server = await mitmproxy_rs.start_os_proxy(
-                    cls.os_handle_tcp_connection,
-                    cls.os_handle_datagram,
+                cls._server = await mitmproxy_rs.start_local_redirector(
+                    cls.redirector_handle_tcp_connection,
+                    cls.redirector_handle_datagram,
                 )
             except Exception:
                 cls._instance = None

@@ -70,7 +70,7 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
     assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
 
-    assert ProxyMode.parse("osproxy")
+    assert ProxyMode.parse("local")
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")
@@ -91,4 +91,4 @@ def test_parse_specific_modes():
         ProxyMode.parse("reverse:dtls://127.0.0.1")
 
     with pytest.raises(ValueError, match="invalid intercept spec"):
-        ProxyMode.parse("osproxy:,,,")
+        ProxyMode.parse("local:,,,")

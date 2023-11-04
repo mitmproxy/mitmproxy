@@ -12,7 +12,7 @@ import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.net import udp
 from mitmproxy.proxy.mode_servers import DnsInstance
-from mitmproxy.proxy.mode_servers import OsProxyInstance
+from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
@@ -337,70 +337,72 @@ async def test_udp_dual_stack(caplog_async):
 
 
 @pytest.fixture()
-def patched_os_proxy(monkeypatch):
-    start_os_proxy = AsyncMock()
-    monkeypatch.setattr(mitmproxy_rs, "start_os_proxy", start_os_proxy)
+def patched_local_redirector(monkeypatch):
+    start_local_redirector = AsyncMock()
+    monkeypatch.setattr(mitmproxy_rs, "start_local_redirector", start_local_redirector)
     # make sure _server and _instance are restored after this test
-    monkeypatch.setattr(OsProxyInstance, "_server", None)
-    monkeypatch.setattr(OsProxyInstance, "_instance", None)
-    return start_os_proxy
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    return start_local_redirector
 
 
-async def test_os_proxy(patched_os_proxy, caplog_async):
+async def test_local_redirector(patched_local_redirector, caplog_async):
     caplog_async.set_level("INFO")
 
     with taddons.context():
-        inst = ServerInstance.make(f"osproxy", MagicMock())
+        inst = ServerInstance.make(f"local", MagicMock())
         assert not inst.is_running
 
         await inst.start()
-        assert patched_os_proxy.called
-        assert await caplog_async.await_log("OS proxy started.")
+        assert patched_local_redirector.called
+        assert await caplog_async.await_log("Local redirector started.")
         assert inst.is_running
 
         await inst.stop()
-        assert await caplog_async.await_log("OS proxy stopped")
+        assert await caplog_async.await_log("Local redirector stopped")
         assert not inst.is_running
 
         # just called for coverage
         inst.make_top_layer(MagicMock())
 
 
-async def test_os_proxy_startup_err(patched_os_proxy):
-    patched_os_proxy.side_effect = RuntimeError("OS proxy startup error")
+async def test_local_redirector_startup_err(patched_local_redirector):
+    patched_local_redirector.side_effect = RuntimeError(
+        "Local redirector startup error"
+    )
 
     with taddons.context():
-        inst = ServerInstance.make(f"osproxy:!curl", MagicMock())
+        inst = ServerInstance.make(f"local:!curl", MagicMock())
         with pytest.raises(RuntimeError):
             await inst.start()
         assert not inst.is_running
 
 
-async def test_multiple_os_proxies(patched_os_proxy):
+async def test_multiple_local_redirectors(patched_local_redirector):
     manager = MagicMock()
 
     with taddons.context():
-        inst1 = ServerInstance.make(f"osproxy:curl", manager)
+        inst1 = ServerInstance.make(f"local:curl", manager)
         await inst1.start()
 
-        inst2 = ServerInstance.make(f"osproxy:wget", manager)
+        inst2 = ServerInstance.make(f"local:wget", manager)
         with pytest.raises(
-            RuntimeError, match="Cannot spawn more than one OS proxy instance"
+            RuntimeError, match="Cannot spawn more than one local redirector"
         ):
             await inst2.start()
 
 
-async def test_always_uses_current_instance(patched_os_proxy, monkeypatch):
+async def test_always_uses_current_instance(patched_local_redirector, monkeypatch):
     manager = MagicMock()
 
     with taddons.context():
-        inst1 = ServerInstance.make(f"osproxy:curl", manager)
+        inst1 = ServerInstance.make(f"local:curl", manager)
         await inst1.start()
         await inst1.stop()
 
-        handle_tcp, handle_udp = patched_os_proxy.await_args[0]
+        handle_tcp, handle_udp = patched_local_redirector.await_args[0]
 
-        inst2 = ServerInstance.make(f"osproxy:wget", manager)
+        inst2 = ServerInstance.make(f"local:wget", manager)
         await inst2.start()
 
         monkeypatch.setattr(inst2, "handle_tcp_connection", h_tcp := AsyncMock())
