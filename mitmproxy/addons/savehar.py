@@ -205,7 +205,11 @@ class SaveHar:
                 ).decode()
                 response["content"]["encoding"] = "base64"
             else:
-                response["content"]["text"] = flow.response.get_text(strict=False)
+                text_content = flow.response.get_text(strict=False)
+                if text_content is None:
+                    response["content"]["text"] = ''
+                else:
+                    response["content"]["text"] = text_content
         else:
             response = {
                 "status": 0,
