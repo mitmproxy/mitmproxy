@@ -2,7 +2,9 @@
 
 ## Unreleased: mitmproxy next
 
-
+* Update savehar addon to handle scenarios where "path" key in cookie
+  attrs dict is missing.
+  ([#6458](https://github.com/mitmproxy/mitmproxy/pull/6458), @pogzyb)
 
 ## 04 November 2023: mitmproxy 10.1.3
 
