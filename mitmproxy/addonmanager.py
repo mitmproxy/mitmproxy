@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import inspect
 import logging
@@ -70,7 +72,7 @@ class Loader:
     def add_option(
         self,
         name: str,
-        typespec: type,
+        typespec: type | object,
         default: Any,
         help: str,
         choices: Sequence[str] | None = None,
