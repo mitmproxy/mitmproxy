@@ -33,6 +33,12 @@ class ServerPlayback:
             "Kill extra requests during replay (for which no replayable response was found).",
         )
         loader.add_option(
+            "server_replay_404_extra",
+            bool,
+            False,
+            "Return 404 for extra requests during replay (for which no replayable response was found).",
+        )
+        loader.add_option(
             "server_replay_reuse",
             bool,
             False,
@@ -259,3 +265,11 @@ class ServerPlayback:
                     )
                 )
                 f.kill()
+            elif ctx.options.server_replay_404_extra:
+                logging.warning(
+                    "server_playback: returned 404 non-replay request {}".format(
+                        f.request.url
+                    )
+                )
+                f.response = http.Response.make(404)
+                f.is_replay = "response"

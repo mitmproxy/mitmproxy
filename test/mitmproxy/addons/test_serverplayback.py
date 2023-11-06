@@ -364,6 +364,21 @@ async def test_server_playback_kill():
         assert f.error
 
 
+async def test_server_playback_404():
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_404_extra=True)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        s.request(f)
+        assert f.response.status_code == 404
+
+
 def test_server_playback_response_deleted():
     """
     The server playback addon holds references to flows that can be modified by the user in the meantime.
