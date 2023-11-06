@@ -2,9 +2,13 @@
 
 ## Unreleased: mitmproxy next
 
+* Update savehar addon to fix creating corrupt har files caused by empty response content
+  ([#6459](https://github.com/mitmproxy/mitmproxy/pull/6459), @lain3d)
+
 * Update savehar addon to handle scenarios where "path" key in cookie
   attrs dict is missing.
   ([#6458](https://github.com/mitmproxy/mitmproxy/pull/6458), @pogzyb)
+
 
 ## 04 November 2023: mitmproxy 10.1.3
 
