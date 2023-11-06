@@ -8,24 +8,42 @@ flows should be saved and also allows you to rotate files or log
 to multiple files in parallel.
 """
 import random
-import sys
 from typing import BinaryIO
+from typing import Optional
 
+from mitmproxy import ctx
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy.addonmanager import Loader
 
 
 class Writer:
-    def __init__(self, path: str) -> None:
-        self.f: BinaryIO = open(path, "wb")
-        self.w = io.FlowWriter(self.f)
+    f: Optional[BinaryIO] = None
+    w: Optional[io.FlowWriter] = None
+
+    def configure(self, updated):
+        if "flowpath" in updated and ctx.options.flowpath is not None:
+            if self.f is not None:
+                self.f.close()
+
+            self.f: BinaryIO = open(ctx.options.flowpath, "wb")
+            self.w = io.FlowWriter(self.f)
+
+    def load(self, loader: Loader):
+        loader.add_option(
+            name="flowpath",
+            typespec=Optional[str],
+            default=None,
+            help="Path to write dump file out to",
+        )
 
     def response(self, flow: http.HTTPFlow) -> None:
-        if random.choice([True, False]):
+        if self.w is not None and random.choice([True, False]):
             self.w.add(flow)
 
     def done(self):
-        self.f.close()
+        if self.f is not None:
+            self.f.close()
 
 
-addons = [Writer(sys.argv[1])]
+addons = [Writer()]
