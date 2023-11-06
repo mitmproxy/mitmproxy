@@ -285,7 +285,7 @@ class SaveHar:
             cookie = {
                 "name": name,
                 "value": value,
-                "path": attrs["path"],
+                "path": attrs.get("path", "/"),
                 "domain": attrs.get("domain", ""),
                 "httpOnly": "httpOnly" in attrs,
                 "secure": "secure" in attrs,
