@@ -38,7 +38,7 @@ class ServerPlayback:
             str,
             "forward",
             "Behaviour for extra requests during replay for which no replayable response was found.",
-            choices=["forward", "kill", "204", "400", "404", "500"]
+            choices=["forward", "kill", "204", "400", "404", "500"],
         )
         loader.add_option(
             "server_replay_reuse",
@@ -260,14 +260,17 @@ class ServerPlayback:
                     response.refresh()
                 f.response = response
                 f.is_replay = "response"
-            elif ctx.options.server_replay_kill_extra or ctx.options.server_replay_extra == "kill":
+            elif (
+                ctx.options.server_replay_kill_extra
+                or ctx.options.server_replay_extra == "kill"
+            ):
                 logging.warning(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url
                     )
                 )
                 f.kill()
-            elif ctx.options.server_replay_extra != 'forward':
+            elif ctx.options.server_replay_extra != "forward":
                 logging.warning(
                     "server_playback: returned {} non-replay request {}".format(
                         ctx.options.server_replay_extra, f.request.url

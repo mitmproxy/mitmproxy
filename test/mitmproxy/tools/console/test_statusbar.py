@@ -18,7 +18,7 @@ async def test_statusbar(console, monkeypatch):
         anticomp=True,
         showhost=True,
         server_replay_refresh=False,
-        server_replay_extra='kill',
+        server_replay_extra="kill",
         upstream_cert=False,
         stream_large_bodies="3m",
         mode=["transparent"],
