@@ -280,8 +280,8 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("norefresh")
         if self.master.options.server_replay_kill_extra:
             opts.append("killextra")
-        if self.master.options.server_replay_404_extra:
-            opts.append("404extra")
+        if self.master.options.server_replay_extra:
+            opts.append("replay-extra")
         if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")
         if self.master.options.console_focus_follow:

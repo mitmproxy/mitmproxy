@@ -51,7 +51,7 @@ export interface OptionsState {
     scripts: string[];
     server: boolean;
     server_replay: string[];
-    server_replay_404_extra: boolean;
+    server_replay_extra: string;
     server_replay_ignore_content: boolean;
     server_replay_ignore_host: boolean;
     server_replay_ignore_params: string[];
@@ -147,7 +147,7 @@ export const defaultState: OptionsState = {
     scripts: [],
     server: true,
     server_replay: [],
-    server_replay_404_extra: false,
+    server_replay_extra: "forward",
     server_replay_ignore_content: false,
     server_replay_ignore_host: false,
     server_replay_ignore_params: [],

@@ -30,13 +30,15 @@ class ServerPlayback:
             "server_replay_kill_extra",
             bool,
             False,
-            "Kill extra requests during replay (for which no replayable response was found).",
+            "Kill extra requests during replay (for which no replayable response was found)."
+            "[Deprecated, prefer to use server_replay_extra='kill']",
         )
         loader.add_option(
-            "server_replay_404_extra",
-            bool,
-            False,
-            "Return 404 for extra requests during replay (for which no replayable response was found).",
+            "server_replay_extra",
+            str,
+            "forward",
+            "Behaviour for extra requests during replay for which no replayable response was found.",
+            choices=["forward", "kill", "204", "400", "404", "500"]
         )
         loader.add_option(
             "server_replay_reuse",
@@ -258,18 +260,18 @@ class ServerPlayback:
                     response.refresh()
                 f.response = response
                 f.is_replay = "response"
-            elif ctx.options.server_replay_kill_extra:
+            elif ctx.options.server_replay_kill_extra or ctx.options.server_replay_extra == "kill":
                 logging.warning(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url
                     )
                 )
                 f.kill()
-            elif ctx.options.server_replay_404_extra:
+            elif ctx.options.server_replay_extra != 'forward':
                 logging.warning(
-                    "server_playback: returned 404 non-replay request {}".format(
-                        f.request.url
+                    "server_playback: returned {} non-replay request {}".format(
+                        ctx.options.server_replay_extra, f.request.url
                     )
                 )
-                f.response = http.Response.make(404)
+                f.response = http.Response.make(int(ctx.options.server_replay_extra))
                 f.is_replay = "response"

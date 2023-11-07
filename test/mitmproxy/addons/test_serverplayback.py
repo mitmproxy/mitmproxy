@@ -364,10 +364,34 @@ async def test_server_playback_kill():
         assert f.error
 
 
-async def test_server_playback_404():
+async def test_server_playback_kill_new_option():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
-        tctx.configure(s, server_replay_refresh=True, server_replay_404_extra=True)
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra="kill")
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        await tctx.cycle(s, f)
+        assert f.error
+
+
+@pytest.mark.parametrize(
+    "option,status",
+    [
+        ("204", 204),
+        ("400", 400),
+        ("404", 404),
+        ("500", 500),
+    ],
+)
+async def test_server_playback_404(option, status):
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra=option)
 
         f = tflow.tflow()
         f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
@@ -376,7 +400,7 @@ async def test_server_playback_404():
         f = tflow.tflow()
         f.request.host = "nonexistent"
         s.request(f)
-        assert f.response.status_code == 404
+        assert f.response.status_code == status
 
 
 def test_server_playback_response_deleted():
