@@ -37,7 +37,8 @@ class ServerPlayback:
             "server_replay_extra",
             str,
             "forward",
-            "Behaviour for extra requests during replay for which no replayable response was found.",
+            "Behaviour for extra requests during replay for which no replayable response was found. "
+            "Setting a numeric string value will return an empty HTTP response with the respective status code.",
             choices=["forward", "kill", "204", "400", "404", "500"],
         )
         loader.add_option(
