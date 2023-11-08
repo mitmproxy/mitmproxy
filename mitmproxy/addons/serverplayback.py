@@ -238,6 +238,11 @@ class ServerPlayback:
             return None
 
     def configure(self, updated):
+        if ctx.options.server_replay_kill_extra:
+            logger.warning(
+                "server_replay_kill_extra has been deprecated, "
+                "please update your config to use server_replay_extra='kill'."
+            )
         if ctx.options.server_replay_nopop:  # pragma: no cover
             logger.error(
                 "server_replay_nopop has been renamed to server_replay_reuse, please update your config."
