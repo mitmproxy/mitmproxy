@@ -8,6 +8,9 @@
 * Update savehar addon to handle scenarios where "path" key in cookie
   attrs dict is missing.
   ([#6458](https://github.com/mitmproxy/mitmproxy/pull/6458), @pogzyb)
+* Add `server_replay_extra` option to serverplayback to define behaviour
+  when replayable response is missing.
+  ([#6465](https://github.com/mitmproxy/mitmproxy/pull/6465), @dkarandikar)
 
 
 ## 04 November 2023: mitmproxy 10.1.3

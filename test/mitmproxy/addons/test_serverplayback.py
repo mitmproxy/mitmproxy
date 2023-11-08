@@ -364,6 +364,45 @@ async def test_server_playback_kill():
         assert f.error
 
 
+async def test_server_playback_kill_new_option():
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra="kill")
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        await tctx.cycle(s, f)
+        assert f.error
+
+
+@pytest.mark.parametrize(
+    "option,status",
+    [
+        ("204", 204),
+        ("400", 400),
+        ("404", 404),
+        ("500", 500),
+    ],
+)
+async def test_server_playback_404(option, status):
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra=option)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        s.request(f)
+        assert f.response.status_code == status
+
+
 def test_server_playback_response_deleted():
     """
     The server playback addon holds references to flows that can be modified by the user in the meantime.
