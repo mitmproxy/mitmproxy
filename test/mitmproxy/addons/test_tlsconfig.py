@@ -349,6 +349,51 @@ class TestTlsConfig:
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
 
+    def test_tls_start_server_with_client_cert(self, tdata):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            with pytest.raises(
+                RuntimeError, match="Cannot load TLS client certificate"
+            ):
+                tctx.options.client_certs = tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.key"
+                )
+
+                ctx = _ctx(tctx.options)
+                ctx.server.address = ("example.mitmproxy.org", 443)
+
+                tctx.configure(
+                    ta,
+                    ssl_verify_upstream_trusted_ca=None,
+                    ssl_insecure=True,
+                    http2=False,
+                    ciphers_server="ALL",
+                )
+
+                tls_start = tls.TlsData(ctx.server, context=ctx)
+                ta.tls_start_server(tls_start)
+
+            tctx.options.client_certs = tdata.path(
+                "mitmproxy/net/data/verificationcerts/trusted-leaf.pem"
+            )
+
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
+
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=None,
+                ssl_insecure=True,
+                http2=False,
+                ciphers_server="ALL",
+            )
+
+            tls_start = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start)
+            tssl_client = tls_start.ssl_conn
+            tssl_server = test_tls.SSLTest(server_side=True)
+            assert self.do_handshake(tssl_client, tssl_server)
+
     def test_quic_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:

@@ -93,6 +93,30 @@ def alpn_select_callback(conn: SSL.Connection, options: list[bytes]) -> Any:
         return SSL.NO_OVERLAPPING_PROTOCOLS
 
 
+def use_client_cert(context: SSL.Context, server: connection.Server):
+    """
+    If provided client certificates, load to the SSL context.
+    """
+    client_cert: str | None = None
+    if ctx.options.client_certs:
+        client_certs = os.path.expanduser(ctx.options.client_certs)
+        if os.path.isfile(client_certs):
+            client_cert = client_certs
+        else:
+            assert server.address is not None
+            server_name: str = server.sni or server.address[0]
+            p = os.path.join(client_certs, f"{server_name}.pem")
+            if os.path.isfile(p):
+                client_cert = p
+
+    if client_cert:
+        try:
+            context.use_privatekey_file(client_cert)
+            context.use_certificate_chain_file(client_cert)
+        except SSL.Error as e:
+            raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
+
+
 class TlsConfig:
     """
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
@@ -157,6 +181,13 @@ class TlsConfig:
             help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
             'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
         )
+        loader.add_option(
+            name="tls_request_client_cert",
+            typespec=bool,
+            default=False,
+            help="Request the client certificate. If the client has no cert to present, "
+            "we're notified and proceed as usual.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -196,7 +227,7 @@ class TlsConfig:
             cipher_list=tuple(cipher_list),
             ecdh_curve=ctx.options.tls_ecdh_curve_client,
             chain_file=entry.chain_file,
-            request_client_cert=False,
+            request_client_cert=ctx.options.tls_request_client_cert,
             alpn_select_callback=alpn_select_callback,
             extra_chain_certs=tuple(extra_chain_certs),
             dhparams=self.certstore.dhparams,
@@ -271,17 +302,6 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
-        client_cert: str | None = None
-        if ctx.options.client_certs:
-            client_certs = os.path.expanduser(ctx.options.client_certs)
-            if os.path.isfile(client_certs):
-                client_cert = client_certs
-            else:
-                server_name: str = server.sni or server.address[0]
-                p = os.path.join(client_certs, f"{server_name}.pem")
-                if os.path.isfile(p):
-                    client_cert = p
-
         ssl_ctx = net_tls.create_proxy_server_context(
             method=net_tls.Method.DTLS_CLIENT_METHOD
             if tls_start.is_dtls
@@ -293,9 +313,9 @@ class TlsConfig:
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
-            client_cert=client_cert,
             legacy_server_connect=ctx.options.ssl_insecure,
         )
+        use_client_cert(ssl_ctx, server)
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         if server.sni:

@@ -44,6 +44,8 @@
   ([#6428](https://github.com/mitmproxy/mitmproxy/pull/6428), @outlaws-bai)
 * Fix a regression when using the proxyauth addon with clients that (rightfully) reuse connections.
   ([#6432](https://github.com/mitmproxy/mitmproxy/pull/6432), @mhils)
+* Add mTLS addon to dynamically generate client certificates (instead of using a hardcoded one).
+  ([#6430](https://github.com/mitmproxy/mitmproxy/pull/6430), @fungaren)
 
 
 ## 27 September 2023: mitmproxy 10.1.1
