@@ -155,7 +155,7 @@ def macos_app(
     _pyinstaller("onedir.spec")
     _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
 
-    if keychain:
+    if False:
         assert isinstance(team_id, str)
         assert isinstance(apple_id, str)
         assert isinstance(password, str)

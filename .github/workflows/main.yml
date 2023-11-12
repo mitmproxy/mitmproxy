@@ -28,6 +28,11 @@ jobs:
     env:
       CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       - uses: actions/checkout@v4
         with:
           persist-credentials: false

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import faulthandler
 import signal
-import sys
 faulthandler.enable()
 faulthandler.register(signal.SIGUSR1.value)
 
