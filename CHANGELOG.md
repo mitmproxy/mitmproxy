@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 13 November 2023: mitmproxy 10.1.4
+
 * Fix a hang/freeze in the macOS distributions when doing TLS negotiation.
   ([#6480](https://github.com/mitmproxy/mitmproxy/pull/6480), @mhils)
 * Update savehar addon to fix creating corrupt har files caused by empty response content
