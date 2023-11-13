@@ -33,6 +33,7 @@ for tool in tools:
         upx=False,
         icon=icon,
         codesign_identity='Developer ID Application',
+        entitlements_file=str(here / "macos-entitlements.plist"),
     ))
 
 coll = COLLECT(
