@@ -206,6 +206,15 @@ class MutualTLS(tlsconfig.TlsConfig):
         else:
             logging.info("tls_start_server: no client cert")
 
+            # If we go the original path, I found that even we never set the client certificate,
+            # it still provides a client cert for the server, then the server will accept the request.
+
+            # To address the problem, we construct a normal connection so that the server can reject
+            # the anonymous request.
+            data.ssl_conn = SSL.Connection(SSL.Context(SSL.TLS_CLIENT_METHOD))
+            data.ssl_conn.set_connect_state()
+            return
+
         super().tls_start_server(data)
 
 
