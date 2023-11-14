@@ -206,8 +206,14 @@ class MutualTLS(tlsconfig.TlsConfig):
         else:
             logging.info("tls_start_server: no client cert")
 
-            # If we go the original path, I found that even we never set the client certificate,
-            # it still provides a client cert for the server, then the server will accept the request.
+            def monkey_use_client_cert(context: SSL.Context, server: connection.Server):
+                # Here we never set the client certificate, it still provides a client cert for the
+                # server, then the server will accept the request.
+                # This is because mitmproxy have a LRU cache applied to
+                # create_proxy_server_context() which leads to the SSL context reuse.
+                pass
+
+            tlsconfig.use_client_cert = monkey_use_client_cert
 
             # To address the problem, we construct a normal connection so that the server can reject
             # the anonymous request.
