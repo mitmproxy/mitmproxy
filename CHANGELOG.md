@@ -2,6 +2,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 14 November 2023: mitmproxy 10.1.5
+
 * Remove stray `replay-extra` from CLI status bar.
   ([37d62ce](https://github.com/mitmproxy/mitmproxy/commit/37d62ce73ebd57780cff5ecf8b2ee57ec7d8ab30), @mhils)
 
