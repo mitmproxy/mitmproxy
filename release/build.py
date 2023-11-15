@@ -359,7 +359,9 @@ def installbuilder_installer():
     assert installer.exists()
 
     # unify filenames
-    installer = installer.rename(installer.with_name(installer.name.replace("x64", "x86_64")))
+    installer = installer.rename(
+        installer.with_name(installer.name.replace("x64", "x86_64"))
+    )
 
     print("Run installer...")
     subprocess.run(
