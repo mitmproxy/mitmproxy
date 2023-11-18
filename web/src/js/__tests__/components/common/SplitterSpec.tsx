@@ -27,6 +27,7 @@ describe.each([
         });
         return;
     }
+
     it("should render correctly with specified axis", () => {
         const splitter = renderer.create(<Splitter axis={axisLower} />),
             tree = splitter.toJSON();
@@ -42,6 +43,7 @@ describe.each([
 </div>
 `);
     });
+
     const splitter = TestUtils.renderIntoDocument(
             <Splitter axis={axisLower} />
         ),
