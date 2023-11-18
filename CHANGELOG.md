@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix `mitmweb` splitter becoming drag and drop.
+  ([#6492](https://github.com/mitmproxy/mitmproxy/pull/6492), @xBZZZZ)
 
 
 ## 14 November 2023: mitmproxy 10.1.5
