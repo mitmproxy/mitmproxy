@@ -43,6 +43,27 @@ class TestBlockList:
             else:
                 assert not f.response
 
+    @pytest.mark.parametrize(
+        "filter,should_block",
+        [
+            ("/~u AccountsSignInUi/444", True),
+            ("/~u accountssigninui/444", True),
+            ("/~u .ccounts.ign.n.i/444", True),
+            ("/~u example.com/444", False),
+        ],
+    )
+    def test_uppercase(self, filter, should_block):
+        bl = blocklist.BlockList()
+        with taddons.context(bl) as tctx:
+            tctx.configure(bl, block_list=[filter])
+            f = tflow.tflow()
+            f.request.url = b"https://accounts.google.com/v3/signin/_/AccountsSignInUi/data/batchexecute"
+            bl.request(f)
+            if should_block:
+                assert f.metadata["blocklisted"]
+            else:
+                assert not f.metadata.get("blocklisted")
+
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:

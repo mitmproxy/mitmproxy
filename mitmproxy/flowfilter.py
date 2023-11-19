@@ -402,6 +402,7 @@ class FUrl(_Rex):
     code = "u"
     help = "URL"
     is_binary = False
+    flags = re.IGNORECASE
 
     # FUrl is special, because it can be "naked".
 
