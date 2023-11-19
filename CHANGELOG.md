@@ -3,6 +3,7 @@
 ## Unreleased: mitmproxy next
 
 * Fix case sensitivity of URL added to blocklist
+  ([#6493](https://github.com/mitmproxy/mitmproxy/pull/6493), @emanuele-em)
 
 ## 14 November 2023: mitmproxy 10.1.5
 
