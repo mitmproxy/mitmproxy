@@ -317,13 +317,7 @@ class OptManager:
         May raise an `OptionsError` if a value is malformed or an option is unknown and defer is False.
         """
         # First, group specs by option name.
-        unprocessed: dict[str, list[str]] = {}
-        for spec in specs:
-            if "=" in spec:
-                name, value = spec.split("=", maxsplit=1)
-                unprocessed.setdefault(name, []).append(value)
-            else:
-                unprocessed.setdefault(spec, [])
+        unprocessed: dict[str, list[str]] = specs_to_dict(specs)
 
         # Second, convert values to the correct type.
         processed: dict[str, Any] = {}
@@ -517,6 +511,21 @@ def dump_dicts(opts, keys: Iterable[str] | None = None) -> dict:
         }
         options_dict[k] = option
     return options_dict
+
+
+def specs_to_dict(specs: Sequence[str]) -> dict[str, list[str]]:
+    """
+    Takes a sequence of set specification in standard form (option=value).
+    Returns a dict of option names to a list of string values.
+    """
+    options: dict[str, list[str]] = {}
+    for spec in specs:
+        if "=" in spec:
+            name, value = spec.split("=", maxsplit=1)
+            options.setdefault(name, []).append(value)
+        else:
+            options.setdefault(spec, [])
+    return options
 
 
 def parse(text):
