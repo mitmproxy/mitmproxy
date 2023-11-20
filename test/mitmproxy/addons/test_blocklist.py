@@ -22,47 +22,27 @@ def test_parse_spec_err(filter, err):
 
 class TestBlockList:
     @pytest.mark.parametrize(
-        "filter,status_code",
+        "filter,request_url,status_code",
         [
-            (":~u example.org:404", 404),
-            (":~u example.com:404", None),
-            ("/!jpg/418", None),
-            ("/!png/418", 418),
+            (":~u example.org:404", b"https://example.org/images/test.jpg", 404),
+            (":~u example.com:404", b"https://example.org/images/test.jpg", None),
+            (":~u test:404", b"https://example.org/images/TEST.jpg", 404),
+            ("/!jpg/418", b"https://example.org/images/test.jpg", None),
+            ("/!png/418", b"https://example.org/images/test.jpg", 418),
         ],
     )
-    def test_block(self, filter, status_code):
+    def test_block(self, filter, request_url, status_code):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=[filter])
             f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
+            f.request.url = request_url
             bl.request(f)
             if status_code is not None:
                 assert f.response.status_code == status_code
                 assert f.metadata["blocklisted"]
             else:
                 assert not f.response
-
-    @pytest.mark.parametrize(
-        "filter,should_block",
-        [
-            ("/~u AccountsSignInUi/444", True),
-            ("/~u accountssigninui/444", True),
-            ("/~u .ccounts.ign.n.i/444", True),
-            ("/~u example.com/444", False),
-        ],
-    )
-    def test_uppercase(self, filter, should_block):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[filter])
-            f = tflow.tflow()
-            f.request.url = b"https://accounts.google.com/v3/signin/_/AccountsSignInUi/data/batchexecute"
-            bl.request(f)
-            if should_block:
-                assert f.metadata["blocklisted"]
-            else:
-                assert not f.metadata.get("blocklisted")
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
