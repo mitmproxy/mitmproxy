@@ -3,6 +3,7 @@
 ## Unreleased: mitmproxy next
 
 * Fix a bug in windows management in mitmproxy TUI whereby the help window does not appear if "?" is pressed within the overlay
+  ([#6500](https://github.com/mitmproxy/mitmproxy/pull/6500), @emanuele-em)
 
 ## 14 November 2023: mitmproxy 10.1.5
 
