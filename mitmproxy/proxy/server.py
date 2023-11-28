@@ -204,16 +204,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer: asyncio.StreamWriter | udp.DatagramWriter
             try:
                 command.connection.timestamp_start = time.time()
-                if command.connection.transport_protocol == "tcp":                    
+                if command.connection.transport_protocol == "tcp":
                     host, port = command.connection.address
                     split_host = host.split("@", 1)
-                    
+
                     # this can only be 1 or 2, no other value is possible.
-                    if len(split_host) == 2: 
+                    if len(split_host) == 2:
                         host = split_host[1]
-                        
+
                     reader, writer = await asyncio.open_connection(
-                        host, 
+                        host,
                         port,
                         local_addr=command.connection.sockname,
                     )
