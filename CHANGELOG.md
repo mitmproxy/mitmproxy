@@ -2,7 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
-
+* Allow passing a hostname which includes authentication credentials.
+    ([#6504](https://github.com/mitmproxy/mitmproxy/pull/6504), @seidnerj)
 
 ## 14 November 2023: mitmproxy 10.1.5
 
