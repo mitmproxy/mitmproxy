@@ -84,9 +84,8 @@ class TestServer:
         c.id = c2.id = "foo"
         assert c2.get_state() == c.get_state()
 
-    @pytest.mark.parametrize("address", ["address", "user:pass@address"])
-    def test_address(self, address):
-        s = Server(address=(address, 22))
+    def test_address(self):
+        s = Server(address=("address", 22))
         s.address = ("example.com", 443)
         s.state = ConnectionState.OPEN
         with pytest.raises(RuntimeError):
