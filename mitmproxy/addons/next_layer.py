@@ -252,7 +252,7 @@ class NextLayer:
         pattern = rb"Host:\s+(.*?)\r\n"
         match = re.search(pattern, http_request)
         return match.group(1).decode() if match else ""
-    
+
     def _get_client_hello(
         self, context: Context, data_client: bytes
     ) -> ClientHello | None:
