@@ -361,8 +361,8 @@ indicated manipulations on it, and then send the message on to the other party.
 This can be problematic when downloading or uploading large files. When
 streaming is enabled, message bodies are not buffered on the proxy but instead
 sent directly to the server/client. This currently means that the message body
-will not be accessible within mitmproxy. HTTP headers are still fully buffered before
-being sent.
+will not be accessible within mitmproxy, and body modifications will have no
+effect. HTTP headers are still fully buffered before being sent.
 
 Request/response streaming is enabled by specifying a size cutoff in the
 `stream_large_bodies` option.
