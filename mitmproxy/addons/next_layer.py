@@ -220,10 +220,18 @@ class NextLayer:
             client_hello := self._get_client_hello(context, data_client)
         ) and client_hello.sni:
             hostnames.append(client_hello.sni)
+        # If the client data is not a TLS record, try to extract the domain from the HTTP request
+        else:
+            host = self._extract_host(data_client)
+            if host:
+                hostnames.append(host)
 
         if not hostnames:
             return False
 
+        # Special handling for wireguard mode: if the hostname is "10.0.0.53", do not ignore the connection
+        if "wireguard" in ctx.options.mode and "10.0.0.53" in hostnames:
+            return False
         if ctx.options.ignore_hosts:
             return any(
                 re.search(rex, host, re.IGNORECASE)
@@ -238,6 +246,12 @@ class NextLayer:
             )
         else:  # pragma: no cover
             raise AssertionError()
+
+    @staticmethod
+    def _extract_host(http_request: bytes) -> str:
+        pattern = br"Host:\s+(.*?)\r\n"
+        match = re.search(pattern, http_request)
+        return match.group(1).decode() if match else None
 
     def _get_client_hello(
         self, context: Context, data_client: bytes
