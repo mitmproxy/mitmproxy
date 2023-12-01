@@ -205,7 +205,9 @@ if a modify hook is triggered on server response, the replacement is
 only run on the Response object leaving the Request intact. You control
 whether the hook triggers on the request, response or both using the
 filter pattern. If you need finer-grained control than this, it's simple
-to create a script using the replacement API on Flow components.
+to create a script using the replacement API on Flow components. Body
+modifications have no effect on streamed bodies. See
+[Streaming]({{< relref "#streaming" >}}) for more detail.
 
 #### Examples
 
