@@ -1,8 +1,7 @@
 # Release History
 
 ## Unreleased: mitmproxy next
-
-
+* Fix for --allow-hosts/--ignore-hosts options in WireGuard mode (#5930)
 
 ## 14 November 2023: mitmproxy 10.1.5
 
