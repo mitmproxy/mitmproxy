@@ -279,6 +279,22 @@ class TestNextLayer:
             assert not m.layer
             assert "Deferring layer decision" in caplog.text
 
+            # Now we simulate a non-TLS HTTP request that contains a Host header
+            m.layer = None
+            monkeypatch.setattr(
+                m, "data_client", lambda: b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+            )
+            nl.next_layer(m)
+            assert m.layer
+
+            # Now we simulate a non-TLS HTTP request that doesn't contain a Host header
+            m.layer = None
+            monkeypatch.setattr(
+                m, "data_client", lambda: b"GET / HTTP/1.1\r\n\r\n"
+            )
+            nl.next_layer(m)
+            assert m.layer
+
 
 @dataclass
 class TConf:
