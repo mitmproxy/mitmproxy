@@ -222,10 +222,10 @@ class NextLayer:
             hostnames.append(client_hello.sni)
         # If the client data is not a TLS record, try to extract the domain from the HTTP request
         else:
-            host = self._extract_host(data_client)
-            if host:
-                hostnames.append(host)
-
+            if isinstance(data_client, bytes):
+                host = self._extract_host(data_client)
+                if host:
+                    hostnames.append(host)
         if not hostnames:
             return False
 
@@ -247,12 +247,14 @@ class NextLayer:
         else:  # pragma: no cover
             raise AssertionError()
 
-    @staticmethod
-    def _extract_host(http_request: bytes) -> str:
-        pattern = rb"Host:\s+(.*?)\r\n"
-        match = re.search(pattern, http_request)
-        return match.group(1).decode() if match else ""
-    
+    def _extract_host(self, http_request: bytes) -> str:
+        try:
+            pattern = rb"Host:\s+(.*?)\r\n"
+            match = re.search(pattern, http_request)
+            return match.group(1).decode() if match else ""
+        except ValueError:
+            return ""
+
     def _get_client_hello(
         self, context: Context, data_client: bytes
     ) -> ClientHello | None:
