@@ -106,12 +106,24 @@ class TestNextLayer:
         "mode, ignore, allow, transport_protocol, server_address, data_client, result",
         [
             pytest.param(
-                [], [], ["example.com"], "tcp", "example.org", http_query, False,
-                id="extract host from http request"
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.org",
+                http_query,
+                False,
+                id="extract host from http request",
             ),
             pytest.param(
-                ["wireguard"], ["example.com"], [], "udp", "10.0.0.53", dns_query, False,
-                id="special handling for wireguard mode"
+                ["wireguard"],
+                ["example.com"],
+                [],
+                "udp",
+                "10.0.0.53",
+                dns_query,
+                False,
+                id="special handling for wireguard mode",
             ),
             # ignore
             pytest.param(
@@ -134,7 +146,14 @@ class TestNextLayer:
                 id="partial address match",
             ),
             pytest.param(
-                [], ["example.com"], [], "tcp", None, b"", False, id="no destination info"
+                [],
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                b"",
+                False,
+                id="no destination info",
             ),
             pytest.param(
                 [],
@@ -217,14 +236,35 @@ class TestNextLayer:
                 id="invalid dtls client hello",
             ),
             pytest.param(
-                [], ["example.com"], [], "udp", None, quic_client_hello, True, id="quic sni"
+                [],
+                ["example.com"],
+                [],
+                "udp",
+                None,
+                quic_client_hello,
+                True,
+                id="quic sni",
             ),
             # allow
             pytest.param(
-                [], [], ["example.com"], "tcp", "example.com", b"", False, id="allow: allow"
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow: allow",
             ),
             pytest.param(
-                [], [], ["example.com"], "tcp", "example.org", b"", True, id="allow: ignore"
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.org",
+                b"",
+                True,
+                id="allow: ignore",
             ),
             pytest.param(
                 [],
@@ -236,18 +276,17 @@ class TestNextLayer:
                 False,
                 id="allow: sni mismatch",
             ),
-
         ],
     )
     def test_ignore_connection(
-            self,
-            mode: list[str],
-            ignore: list[str],
-            allow: list[str],
-            transport_protocol: TransportProtocol,
-            server_address: str,
-            data_client: bytes,
-            result: bool | type[NeedsMoreData],
+        self,
+        mode: list[str],
+        ignore: list[str],
+        allow: list[str],
+        transport_protocol: TransportProtocol,
+        server_address: str,
+        data_client: bytes,
+        result: bool | type[NeedsMoreData],
     ):
         nl = NextLayer()
         with taddons.context(nl) as tctx:
@@ -601,7 +640,7 @@ transparent_proxy_configs = [
     ],
 )
 def test_next_layer(
-        test_conf: TConf,
+    test_conf: TConf,
 ):
     nl = NextLayer()
     with taddons.context(nl) as tctx:
