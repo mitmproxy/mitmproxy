@@ -151,8 +151,9 @@ class Proxyserver(ServerManager):
             None,
             """
             Stream data to the client if response body exceeds the given
-            threshold. If streamed, the body will not be stored in any way.
-            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            threshold. If streamed, the body will not be stored in any way,
+            and such respones cannot be modified. Understands k/m/g
+            suffixes, i.e. 3m for 3 megabytes.
             """,
         )
         loader.add_option(
