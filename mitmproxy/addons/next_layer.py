@@ -247,14 +247,12 @@ class NextLayer:
         else:  # pragma: no cover
             raise AssertionError()
 
-    def _extract_host(self, http_request: bytes) -> str:
-        try:
-            pattern = rb"Host:\s+(.*?)\r\n"
-            match = re.search(pattern, http_request)
-            return match.group(1).decode() if match else ""
-        except ValueError:
-            return ""
-
+    @staticmethod
+    def _extract_host(http_request: bytes) -> str:
+        pattern = rb"Host:\s+(.*?)\r\n"
+        match = re.search(pattern, http_request)
+        return match.group(1).decode() if match else ""
+    
     def _get_client_hello(
         self, context: Context, data_client: bytes
     ) -> ClientHello | None:
