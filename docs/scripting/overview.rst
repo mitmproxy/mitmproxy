@@ -59,9 +59,37 @@ and is replaced by the class instance.
 
 Handling arguments
 ------------------
+Mitmproxy is a powerful tool for intercepting, inspecting, and modifying HTTP/HTTPS traffic. It has a wide range of features, including the ability to handle arguments. This allows you to customize Mitmproxy's behavior and tailor it to your specific needs.
 
+How to Handle Arguments in Mitmproxy
 
-FIXME
+There are two main ways to handle arguments in Mitmproxy:
+
+Command-line arguments: You can pass arguments to Mitmproxy when you start it from the command line. For example, you can use the -p argument to specify the port that Mitmproxy should listen on, or the -w argument to specify a file to save flow data to.
+
+Addon options: Mitmproxy addons can define options that can be set programmatically or through configuration files. This allows you to control the behavior of addons without having to modify the addon code itself.
+
+Example of Handling Arguments in a Script
+
+Here is an example of how to handle arguments in a Mitmproxy script:
+
+import sys
+
+filename = sys.argv[1]
+url = sys.argv[2]
+
+print('Filename:', filename)
+print('URL:', url)
+
+This script takes two arguments: a filename and a URL. The script prints the filename and URL to the console.
+
+To run this script, you would save it as a Python file and then execute it using the mitmproxy command along with the filename and URL as arguments. For example, the following command would run the script and pass the filename my_file.txt and the URL https://example.com as arguments:
+
+mitmproxy -s my_script.py my_file.txt https://example.com
+This would print the following output to the console:
+
+Filename: my_file.txt
+URL: https://example.com
 
 
 Logging and the context
