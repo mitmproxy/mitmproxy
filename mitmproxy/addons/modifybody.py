@@ -20,7 +20,7 @@ class ModifyBody:
             """
             Replacement pattern of the form "[/flow-filter]/regex/[@]replacement", where
             the separator can be any character. The @ allows to provide a file path that
-            is used to read the replacement string.  Streamed bodies cannot be modified.
+            is used to read the replacement string.
             """,
         )
 
