@@ -1,9 +1,17 @@
 # Release History
 
+<!-- 
+✨ Please add a bullet point describing your change.                                                             ✨
+✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
+-->
+
 ## Unreleased: mitmproxy next
 
+* Fix empty cookie attributes being set to `Key=` instead of `Key`
+  ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
 
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
+  ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
 
 ## 14 November 2023: mitmproxy 10.1.5
 
