@@ -3,7 +3,7 @@
 ## Unreleased: mitmproxy next
 
 
-Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set (#6479)
+* Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
 
 ## 14 November 2023: mitmproxy 10.1.5
 
