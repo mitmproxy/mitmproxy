@@ -93,23 +93,23 @@ def test_cookie_roundtrips():
 
 def test_parse_set_cookie_pairs():
     pairs = [
-        ["=", [[["", ""]]]],
-        ["=;foo=bar", [[["", ""], ["foo", "bar"]]]],
-        ["=;=;foo=bar", [[["", ""], ["", ""], ["foo", "bar"]]]],
-        ["=uno", [[["", "uno"]]]],
-        ["one=uno", [[["one", "uno"]]]],
-        ["one=un\x20", [[["one", "un\x20"]]]],
-        ["one=uno; foo", [[["one", "uno"], ["foo", ""]]]],
+        ["=", [[("", "")]]],
+        ["=;foo=bar", [[("", ""), ("foo", "bar")]]],
+        ["=;=;foo=bar", [[("", ""), ("", ""), ("foo", "bar")]]],
+        ["=uno", [[("", "uno")]]],
+        ["one=uno", [[("one", "uno")]]],
+        ["one=un\x20", [[("one", "un\x20")]]],
+        ["one=uno; foo", [[("one", "uno"), ("foo", None)]]],
         [
             "mun=1.390.f60; "
             "expires=sun, 11-oct-2015 12:38:31 gmt; path=/; "
             "domain=b.aol.com",
             [
                 [
-                    ["mun", "1.390.f60"],
-                    ["expires", "sun, 11-oct-2015 12:38:31 gmt"],
-                    ["path", "/"],
-                    ["domain", "b.aol.com"],
+                    ("mun", "1.390.f60"),
+                    ("expires", "sun, 11-oct-2015 12:38:31 gmt"),
+                    ("path", "/"),
+                    ("domain", "b.aol.com"),
                 ]
             ],
         ],
@@ -120,10 +120,10 @@ def test_parse_set_cookie_pairs():
             "path=/",
             [
                 [
-                    ["rpb", r"190%3d1%2616726%3d1%2634832%3d1%2634874%3d1"],
-                    ["domain", ".rubiconproject.com"],
-                    ["expires", "mon, 11-may-2015 21:54:57 gmt"],
-                    ["path", "/"],
+                    ("rpb", r"190%3d1%2616726%3d1%2634832%3d1%2634874%3d1"),
+                    ("domain", ".rubiconproject.com"),
+                    ("expires", "mon, 11-may-2015 21:54:57 gmt"),
+                    ("path", "/"),
                 ]
             ],
         ],
