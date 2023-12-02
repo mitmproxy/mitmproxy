@@ -78,7 +78,7 @@ For speedier testing, you can also run [pytest](http://pytest.org/) directly on 
 
 ```shell
 cd test/mitmproxy/addons
-pytest --cov mitmproxy.addons.anticache --cov-report term-missing --looponfail test_anticache.py
+pytest --looponfail test_anticache.py
 ```
 
 Please ensure that all patches are accompanied by matching changes in the test suite. The project tries to maintain 100%
