@@ -248,7 +248,7 @@ class NextLayer:
             raise AssertionError()
 
     @staticmethod
-    def _extract_host(data_client: bytes) -> str:
+    def _extract_http1_host_header(data_client: bytes) -> str:
         pattern = rb"Host:\s+(.+?)\r\n"
         match = re.search(pattern, data_client)
         return match.group(1).decode() if match else ""
