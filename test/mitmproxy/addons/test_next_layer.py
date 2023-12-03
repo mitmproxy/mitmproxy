@@ -306,6 +306,8 @@ class TestNextLayer:
                 ctx.server.peername = ("1.2.3.4", 443)
             if "wireguard" in tctx.options.mode:
                 ctx.server.peername = ("10.0.0.53", 53)
+                ctx.server.address = ("10.0.0.53", 53)
+                ctx.client.proxy_mode = ProxyMode.parse("wireguard")
             if result is NeedsMoreData:
                 with pytest.raises(NeedsMoreData):
                     nl._ignore_connection(ctx, data_client)
