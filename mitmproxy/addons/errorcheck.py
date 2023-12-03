@@ -29,8 +29,8 @@ class ErrorCheck:
         if self.logger.has_errored:
             plural = "s" if len(self.logger.has_errored) > 1 else ""
             if self.repeat_errors_on_stderr:
-                msg = "\n".join(r.msg for r in self.logger.has_errored)
-                print(f"Error{plural} logged during startup: {msg}", file=sys.stderr)
+                msg = "\n".join(self.logger.format(r) for r in self.logger.has_errored)
+                print(f"Error{plural} logged during startup:\n{msg}", file=sys.stderr)
             else:
                 print(
                     f"Error{plural} logged during startup, exiting...", file=sys.stderr
