@@ -225,7 +225,8 @@ class NextLayer:
         ) and client_hello.sni:
             hostnames.append(client_hello.sni)
         # If the client data is not a TLS record, try to extract the domain from the HTTP request
-        elif host := self._extract_http1_host_header(data_client):
+        elif isinstance(data_client, (bytes, bytearray, memoryview)) and \
+                (host := self._extract_http1_host_header(data_client)):
             hostnames.append(host)
         if not hostnames:
             return False
@@ -250,7 +251,6 @@ class NextLayer:
         pattern = rb"Host:\s+(.+?)\r\n"
         match = re.search(pattern, data_client)
         return match.group(1).decode() if match else ""
-
     def _get_client_hello(
         self, context: Context, data_client: bytes
     ) -> ClientHello | None:

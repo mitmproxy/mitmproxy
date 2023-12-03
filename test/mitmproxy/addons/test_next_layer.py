@@ -333,7 +333,6 @@ class TestNextLayer:
             assert m.layer is preexisting
 
             m.layer = None
-            monkeypatch.setattr(m, "data_client", lambda: b"example string")
             nl.next_layer(m)
             assert m.layer
 
