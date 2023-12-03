@@ -249,7 +249,7 @@ class NextLayer:
 
     @staticmethod
     def _extract_host(data_client: bytes) -> str:
-        pattern = rb"Host:\s+(.*?)\r\n"
+        pattern = rb"Host:\s+(.+?)\r\n"
         match = re.search(pattern, data_client)
         return match.group(1).decode() if match else ""
 
