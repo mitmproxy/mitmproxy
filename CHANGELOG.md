@@ -1,6 +1,7 @@
 # Release History
 
 ## Unreleased: mitmproxy next
+
 * Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
 * For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
