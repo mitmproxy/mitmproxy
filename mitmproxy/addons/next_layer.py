@@ -211,8 +211,9 @@ class NextLayer:
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
         # Special handling for wireguard mode: if the hostname is "10.0.0.53", do not ignore the connection
-        if isinstance(context.client.proxy_mode, mode_specs.WireGuardMode) and context.server.address == (
-        "10.0.0.53", 53):
+        if isinstance(
+            context.client.proxy_mode, mode_specs.WireGuardMode
+        ) and context.server.address == ("10.0.0.53", 53):
             return False
         hostnames: list[str] = []
         if context.server.peername and (peername := context.server.peername[0]):
@@ -228,7 +229,6 @@ class NextLayer:
             hostnames.append(host)
         if not hostnames:
             return False
-
 
         if ctx.options.ignore_hosts:
             return any(
