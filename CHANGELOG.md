@@ -1,10 +1,21 @@
 # Release History
 
+<!-- 
+✨ Please add a bullet point describing your change.                                                             ✨
+✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
+-->
+
 ## Unreleased: mitmproxy next
 
 * Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix empty cookie attributes being set to `Key=` instead of `Key`
+  ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
+
 
 ## 14 November 2023: mitmproxy 10.1.5
 
