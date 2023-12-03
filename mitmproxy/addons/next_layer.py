@@ -221,11 +221,8 @@ class NextLayer:
         ) and client_hello.sni:
             hostnames.append(client_hello.sni)
         # If the client data is not a TLS record, try to extract the domain from the HTTP request
-        else:
-            if isinstance(data_client, bytes):
-                host = self._extract_host(data_client)
-                if host:
-                    hostnames.append(host)
+        elif host := self._extract_http1_host_header(data_client):
+            hostnames.append(host)
         if not hostnames:
             return False
 
