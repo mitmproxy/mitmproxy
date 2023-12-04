@@ -221,5 +221,12 @@ class Options(optmanager.OptManager):
             TLS key size for certificates and CA.
             """,
         )
+        self.add_option(
+            name="certstore",
+            typespec=str | None,
+            default=None,
+            help="Path to certstore"
+            "Specify to store your certificates somewhere other than your confdir",
+        )
 
         self.update(**kwargs)

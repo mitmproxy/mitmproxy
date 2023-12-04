@@ -159,6 +159,13 @@ class TlsConfig:
             help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
             'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
         )
+        loader.add_option(
+            name="certstore",
+            typespec=str | None,
+            default=None,
+            help="Path to certstore"
+            "Specify to store your certificates somewhere other than your confdir",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -435,6 +442,7 @@ class TlsConfig:
                 "cert_passphrase",
                 "tls_ecdh_curve_client",
                 "tls_ecdh_curve_server",
+                "certstore",
             ]
         ],
     ):
@@ -443,8 +451,10 @@ class TlsConfig:
             or "confdir" in updated
             or "key_size" in updated
             or "cert_passphrase" in updated
+            or "certstore" in updated
         ):
-            certstore_path = os.path.expanduser(ctx.options.confdir)
+            certstore_path = ctx.options.certstore or ctx.options.confdir
+            certstore_path = os.path.expanduser(certstore_path)
             self.certstore = certs.CertStore.from_store(
                 path=certstore_path,
                 basename=CONF_BASENAME,

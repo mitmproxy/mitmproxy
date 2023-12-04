@@ -11,6 +11,7 @@
   ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
 * Scripts with relative paths are now loaded relative to the config file and not where the command is ran
   ([#4860](https://github.com/mitmproxy/mitmproxy/pull/4860), @Speedlulu)
+* Add certstore option to store mitmproxy CA certs somewhere other than confdir
 
 
 ## 14 November 2023: mitmproxy 10.1.5

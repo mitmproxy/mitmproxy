@@ -106,6 +106,34 @@ class TestTlsConfig:
             )
             assert ta.certstore.certs
 
+    def test_configure_confdir(self, tmp_path):
+        confdir = tmp_path / 'confdir'
+
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, confdir=str(confdir))
+            assert confdir.exists() and confdir.is_dir()
+
+    def test_configure_certstore(self, tmp_path):
+        confdir = tmp_path / 'confdir'
+        certstore = tmp_path / 'certstore'
+
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, certstore=str(certstore))
+            assert certstore.exists() and certstore.is_dir()
+            assert not confdir.exists()
+
+    def test_configure_confdir_certstore(self, tmp_path):
+        confdir = tmp_path / 'confdir'
+        certstore = tmp_path / 'certstore'
+
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, certstore=str(certstore), confdir=str(confdir))
+            assert certstore.exists() and certstore.is_dir()
+            assert not confdir.exists()
+
     def test_get_cert(self, tdata):
         """Test that we generate a certificate matching the connection's context."""
         ta = tlsconfig.TlsConfig()

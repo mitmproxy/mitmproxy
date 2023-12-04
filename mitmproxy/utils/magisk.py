@@ -73,7 +73,7 @@ exit 0
 
 def get_ca_from_files() -> x509.Certificate:
     # Borrowed from tlsconfig
-    certstore_path = os.path.expanduser(ctx.options.confdir)
+    certstore_path = os.path.expanduser(ctx.options.certstore or ctx.options.confdir)
     certstore = certs.CertStore.from_store(
         path=certstore_path,
         basename=CONF_BASENAME,
