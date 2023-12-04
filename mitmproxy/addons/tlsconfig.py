@@ -4,6 +4,8 @@ import os
 import ssl
 from pathlib import Path
 from typing import Any
+from typing import Literal
+from typing import Sequence
 from typing import TypedDict
 
 from aioquic.h3.connection import H3_ALPN
@@ -421,9 +423,21 @@ class TlsConfig:
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
         # confdir or command_history as updated.
-        self.configure("confdir")  # pragma: no cover
+        self.configure(("confdir", ))  # pragma: no cover
 
-    def configure(self, updated):
+    def configure(
+        self,
+        updated: Sequence[
+            Literal[
+                "certs",
+                "confdir",
+                "key_size",
+                "cert_passphrase",
+                "tls_ecdh_curve_client",
+                "tls_ecdh_curve_server",
+            ]
+        ],
+    ):
         if (
             "certs" in updated
             or "confdir" in updated
