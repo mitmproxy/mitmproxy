@@ -6,6 +6,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy.addons.modifyheaders import ModifySpec
 from mitmproxy.addons.modifyheaders import parse_modify_spec
+from mitmproxy.log import ALERT
 
 
 class ModifyBody:
@@ -30,6 +31,9 @@ class ModifyBody:
             for option in ctx.options.modify_body:
                 try:
                     spec = parse_modify_spec(option, True)
+                    #only emit alert if both stream_large_bodies and modify_body is set
+                    if ctx.options.stream_large_bodies:
+                        logging.log(ALERT, "Cannot modify streamed bodies.")
                 except ValueError as e:
                     raise exceptions.OptionsError(
                         f"Cannot parse modify_body option {option}: {e}"
