@@ -213,7 +213,9 @@ class Proxyserver(ServerManager):
         if "stream_large_bodies" in updated:
             try:
                 human.parse_size(ctx.options.stream_large_bodies)
-                logging.log(ALERT, "Cannot modify streamed bodies.")
+                #only emit alert if both stream_large_bodies and modify_body is set
+                if len(ctx.options.modify_body) > 0:
+                    logging.log(ALERT, "Cannot modify streamed bodies.")
             except ValueError:
                 raise exceptions.OptionsError(
                     f"Invalid stream_large_bodies specification: "
