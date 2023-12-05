@@ -6,6 +6,9 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy.addons.modifyheaders import ModifySpec
 from mitmproxy.addons.modifyheaders import parse_modify_spec
+from mitmproxy.log import ALERT
+
+logger = logging.getLogger(__name__)
 
 
 class ModifyBody:
@@ -36,6 +39,18 @@ class ModifyBody:
                     ) from e
 
                 self.replacements.append(spec)
+
+        stream_and_modify_conflict = (
+            ctx.options.modify_body
+            and ctx.options.stream_large_bodies
+            and ("modify_body" in updated or "stream_large_bodies" in updated)
+        )
+        if stream_and_modify_conflict:
+            logger.log(
+                ALERT,
+                "Both modify_body and stream_large_bodies are active. "
+                "Streamed bodies will not be modified.",
+            )
 
     def request(self, flow):
         if flow.response or flow.error or not flow.live:
