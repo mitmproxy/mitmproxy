@@ -1,6 +1,7 @@
 import pytest
 
-from mitmproxy.addons import modifybody, proxyserver
+from mitmproxy.addons import modifybody
+from mitmproxy.addons import proxyserver
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tutils import tresp
