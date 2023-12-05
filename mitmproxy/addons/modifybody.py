@@ -8,6 +8,8 @@ from mitmproxy.addons.modifyheaders import ModifySpec
 from mitmproxy.addons.modifyheaders import parse_modify_spec
 from mitmproxy.log import ALERT
 
+logger = logging.getLogger(__name__)
+
 
 class ModifyBody:
     def __init__(self) -> None:
@@ -44,7 +46,7 @@ class ModifyBody:
             and ("modify_body" in updated or "stream_large_bodies" in updated)
         )
         if stream_and_modify_conflict:
-            logging.log(
+            logger.log(
                 ALERT,
                 "Both modify_body and stream_large_bodies are active. "
                 "Streamed bodies will not be modified.",

@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.addons import modifybody
+from mitmproxy.addons import modifybody, proxyserver
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tutils import tresp
@@ -13,6 +13,13 @@ class TestModifyBody:
             tctx.configure(mb, modify_body=["one/two/three"])
             with pytest.raises(Exception, match="Cannot parse modify_body"):
                 tctx.configure(mb, modify_body=["/"])
+
+    def test_warn_conflict(self, caplog):
+        caplog.set_level("DEBUG")
+        mb = modifybody.ModifyBody()
+        with taddons.context(mb, proxyserver.Proxyserver()) as tctx:
+            tctx.configure(mb, stream_large_bodies="3m", modify_body=["one/two/three"])
+            assert "Streamed bodies will not be modified" in caplog.text
 
     def test_simple(self):
         mb = modifybody.ModifyBody()
