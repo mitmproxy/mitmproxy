@@ -9,7 +9,8 @@
 
 * Fix empty cookie attributes being set to `Key=` instead of `Key`
   ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
-
+* Scripts with relative paths are now loaded relative to the config file and not where the command is ran
+  ([#4860](https://github.com/mitmproxy/mitmproxy/pull/4860), @Speedlulu)
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
   ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
 
