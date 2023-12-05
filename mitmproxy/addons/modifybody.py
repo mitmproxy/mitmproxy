@@ -39,14 +39,15 @@ class ModifyBody:
                 self.replacements.append(spec)
 
         stream_and_modify_conflict = (
-            ctx.options.modify_body and ctx.options.stream_large_bodies
+            ctx.options.modify_body
+            and ctx.options.stream_large_bodies
             and ("modify_body" in updated or "stream_large_bodies" in updated)
         )
         if stream_and_modify_conflict:
             logging.log(
                 ALERT,
                 "Both modify_body and stream_large_bodies are active. "
-                "Streamed bodies will not be modified."
+                "Streamed bodies will not be modified.",
             )
 
     def request(self, flow):
