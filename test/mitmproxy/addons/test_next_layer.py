@@ -90,6 +90,8 @@ quic_client_hello = bytes.fromhex(
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
 
+http_query = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+
 
 class TestNextLayer:
     def test_configure(self):
@@ -101,19 +103,40 @@ class TestNextLayer:
                 )
 
     @pytest.mark.parametrize(
-        "ignore, allow, transport_protocol, server_address, data_client, result",
+        "mode, ignore, allow, transport_protocol, server_address, data_client, result",
         [
+            pytest.param(
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.org",
+                http_query,
+                False,
+                id="extract host from http request",
+            ),
+            pytest.param(
+                ["wireguard"],
+                ["example.com"],
+                [],
+                "udp",
+                "10.0.0.53",
+                dns_query,
+                False,
+                id="special handling for wireguard mode",
+            ),
             # ignore
             pytest.param(
-                [], [], "example.com", "tcp", b"", False, id="nothing ignored"
+                [], [], [], "example.com", "tcp", b"", False, id="nothing ignored"
             ),
             pytest.param(
-                ["example.com"], [], "tcp", "example.com", b"", True, id="address"
+                [], ["example.com"], [], "tcp", "example.com", b"", True, id="address"
             ),
             pytest.param(
-                ["1.2.3.4"], [], "tcp", "example.com", b"", True, id="ip address"
+                [], ["1.2.3.4"], [], "tcp", "example.com", b"", True, id="ip address"
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -123,9 +146,17 @@ class TestNextLayer:
                 id="partial address match",
             ),
             pytest.param(
-                ["example.com"], [], "tcp", None, b"", False, id="no destination info"
+                [],
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                b"",
+                False,
+                id="no destination info",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -135,6 +166,7 @@ class TestNextLayer:
                 id="no sni",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -144,6 +176,7 @@ class TestNextLayer:
                 id="sni",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -153,6 +186,7 @@ class TestNextLayer:
                 id="incomplete client hello",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -162,6 +196,7 @@ class TestNextLayer:
                 id="invalid client hello",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "tcp",
@@ -171,6 +206,7 @@ class TestNextLayer:
                 id="sni mismatch",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "udp",
@@ -180,6 +216,7 @@ class TestNextLayer:
                 id="dtls sni",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "udp",
@@ -189,6 +226,7 @@ class TestNextLayer:
                 id="incomplete dtls client hello",
             ),
             pytest.param(
+                [],
                 ["example.com"],
                 [],
                 "udp",
@@ -198,16 +236,38 @@ class TestNextLayer:
                 id="invalid dtls client hello",
             ),
             pytest.param(
-                ["example.com"], [], "udp", None, quic_client_hello, True, id="quic sni"
+                [],
+                ["example.com"],
+                [],
+                "udp",
+                None,
+                quic_client_hello,
+                True,
+                id="quic sni",
             ),
             # allow
             pytest.param(
-                [], ["example.com"], "tcp", "example.com", b"", False, id="allow: allow"
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow: allow",
             ),
             pytest.param(
-                [], ["example.com"], "tcp", "example.org", b"", True, id="allow: ignore"
+                [],
+                [],
+                ["example.com"],
+                "tcp",
+                "example.org",
+                b"",
+                True,
+                id="allow: ignore",
             ),
             pytest.param(
+                [],
                 [],
                 ["example.com"],
                 "tcp",
@@ -220,6 +280,7 @@ class TestNextLayer:
     )
     def test_ignore_connection(
         self,
+        mode: list[str],
         ignore: list[str],
         allow: list[str],
         transport_protocol: TransportProtocol,
@@ -233,7 +294,8 @@ class TestNextLayer:
                 tctx.configure(nl, ignore_hosts=ignore)
             if allow:
                 tctx.configure(nl, allow_hosts=allow)
-
+            if mode:
+                tctx.options.mode = mode
             ctx = Context(
                 Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
                 tctx.options,
@@ -242,7 +304,10 @@ class TestNextLayer:
             if server_address:
                 ctx.server.address = (server_address, 443)
                 ctx.server.peername = ("1.2.3.4", 443)
-
+            if "wireguard" in tctx.options.mode:
+                ctx.server.peername = ("10.0.0.53", 53)
+                ctx.server.address = ("10.0.0.53", 53)
+                ctx.client.proxy_mode = ProxyMode.parse("wireguard")
             if result is NeedsMoreData:
                 with pytest.raises(NeedsMoreData):
                     nl._ignore_connection(ctx, data_client)
@@ -268,6 +333,7 @@ class TestNextLayer:
             assert m.layer is preexisting
 
             m.layer = None
+            monkeypatch.setattr(m, "data_client", lambda: http_query)
             nl.next_layer(m)
             assert m.layer
 
