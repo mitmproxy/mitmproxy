@@ -92,15 +92,14 @@ export default class FilterInput extends Component<
             value.includes("~bq ")
         ) {
             // Use the new fetchFilterData function
-            this.fetchFilterData(value)
-                .then((data) => {
-                    // @ts-ignore
-                    window.filtFilterList = data;
-                    // Only propagate valid filters upwards.
-                    if (this.isValid(value)) {
-                        this.props.onChange(value);
-                    }
-                })
+            this.fetchFilterData(value).then((data) => {
+                // @ts-ignore
+                window.filtFilterList = data;
+                // Only propagate valid filters upwards.
+                if (this.isValid(value)) {
+                    this.props.onChange(value);
+                }
+            });
         } else {
             // Only propagate valid filters upwards.
             if (this.isValid(value)) {
