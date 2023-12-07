@@ -223,7 +223,7 @@ class RequestHandler(tornado.web.RequestHandler):
     @property
     def json(self):
         if not self.request.headers.get("Content-Type", "").startswith(
-                "application/json"
+            "application/json"
         ):
             raise APIError(400, "Invalid Content-Type, expected application/json.")
         try:
@@ -332,8 +332,8 @@ class DumpFlows(RequestHandler):
         except ValueError:  # thrown py flowfilter.parse if filter is invalid
             raise APIError(400, f"Invalid filter argument / regex")
         except (
-                KeyError,
-                IndexError,
+            KeyError,
+            IndexError,
         ):  # Key+Index: ["filter"][0] can fail, if it's not set
 
             def match(_) -> bool:
@@ -523,11 +523,11 @@ class FlowContent(RequestHandler):
 
 class FlowContentView(RequestHandler):
     def message_to_json(
-            self,
-            viewname: str,
-            message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
-            flow: HTTPFlow | TCPFlow | UDPFlow,
-            max_lines: int | None = None,
+        self,
+        viewname: str,
+        message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+        flow: HTTPFlow | TCPFlow | UDPFlow,
+        max_lines: int | None = None,
     ):
         description, lines, error = contentviews.get_message_content_view(
             viewname, message, flow
@@ -648,7 +648,7 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
+            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
@@ -676,7 +676,7 @@ class Application(tornado.web.Application):
     master: mitmproxy.tools.web.master.WebMaster
 
     def __init__(
-            self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
+        self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
         super().__init__(
