@@ -83,7 +83,7 @@ class TestCertStore:
     def test_sans_change(self, tstore):
         tstore.get_cert("foo.com", [x509.DNSName("*.bar.com")])
         entry = tstore.get_cert("foo.bar.com", [x509.DNSName("*.baz.com")])
-        assert "*.baz.com" in entry.cert.altnames
+        assert x509.DNSName("*.baz.com") in entry.cert.altnames
 
     def test_expire(self, tstore):
         tstore.STORE_CAP = 3
@@ -168,13 +168,15 @@ class TestDummyCert:
             "Foo Ltd.",
         )
         assert r.cn == "foo.com"
-        assert r.altnames == [
-            "one.com",
-            "two.com",
-            "*.three.com",
-            "xn--bcher-kva.example",
-            "127.0.0.1",
-        ]
+        assert r.altnames == x509.GeneralNames(
+            [
+                x509.DNSName("one.com"),
+                x509.DNSName("two.com"),
+                x509.DNSName("*.three.com"),
+                x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                x509.DNSName("xn--bcher-kva.example"),
+            ]
+        )
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
@@ -182,7 +184,7 @@ class TestDummyCert:
         )
         assert r.cn is None
         assert r.organization is None
-        assert r.altnames == []
+        assert r.altnames == x509.GeneralNames([])
 
 
 class TestCert:

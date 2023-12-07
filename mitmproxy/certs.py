@@ -61,7 +61,8 @@ class Cert(serializable.Serializable):
         return self.fingerprint() == other.fingerprint()
 
     def __repr__(self):
-        return f"<Cert(cn={self.cn!r}, altnames={self.altnames!r})>"
+        altnames = [str(x.value) for x in self.altnames]
+        return f"<Cert(cn={self.cn!r}, altnames={altnames!r})>"
 
     def __hash__(self):
         return self._cert.__hash__()
@@ -150,20 +151,18 @@ class Cert(serializable.Serializable):
         return None
 
     @property
-    def altnames(self) -> list[str]:
+    def altnames(self) -> x509.GeneralNames:
         """
         Get all SubjectAlternativeName DNS altnames.
         """
         try:
-            ext = self._cert.extensions.get_extension_for_class(
+            sans = self._cert.extensions.get_extension_for_class(
                 x509.SubjectAlternativeName
             ).value
         except x509.ExtensionNotFound:
-            return []
+            return x509.GeneralNames([])
         else:
-            return ext.get_values_for_type(x509.DNSName) + [
-                str(x) for x in ext.get_values_for_type(x509.IPAddress)
-            ]
+            return x509.GeneralNames(sans)
 
 
 def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
@@ -519,7 +518,7 @@ class CertStore:
         if entry.cert.cn:
             self.certs[entry.cert.cn] = entry
         for i in entry.cert.altnames:
-            self.certs[i] = entry
+            self.certs[str(i.value)] = entry
         for i in names:
             self.certs[i] = entry
 
