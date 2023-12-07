@@ -134,6 +134,23 @@ class TestCertStore:
         # TODO: How do we actually attempt to read that file as another user?
         assert os.stat(filename).st_mode & 0o77 == 0
 
+    @pytest.mark.parametrize(
+        "input,output",
+        [
+            (
+                "subdomain.example.com",
+                ["subdomain.example.com", "*.example.com", "*.com"],
+            ),
+            (
+                x509.DNSName("subdomain.example.com"),
+                ["subdomain.example.com", "*.example.com", "*.com"],
+            ),
+            (x509.IPAddress(ipaddress.ip_address("127.0.0.1")), ["127.0.0.1"]),
+        ],
+    )
+    def test_asterisk_forms(self, input, output):
+        assert certs.CertStore.asterisk_forms(input) == output
+
 
 class TestDummyCert:
     def test_with_ca(self, tstore):

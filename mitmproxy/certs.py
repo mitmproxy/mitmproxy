@@ -520,16 +520,21 @@ class CertStore:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: str) -> list[str]:
+    def asterisk_forms(dn: str | x509.GeneralName) -> list[str]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
         """
-        parts = dn.split(".")
-        ret = [dn]
-        for i in range(1, len(parts)):
-            ret.append("*." + ".".join(parts[i:]))
-        return ret
+        if isinstance(dn, str):
+            parts = dn.split(".")
+            ret = [dn]
+            for i in range(1, len(parts)):
+                ret.append("*." + ".".join(parts[i:]))
+            return ret
+        elif isinstance(dn, x509.DNSName):
+            return CertStore.asterisk_forms(dn.value)
+        else:
+            return [str(dn.value)]
 
     def get_cert(
         self,
