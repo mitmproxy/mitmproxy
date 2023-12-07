@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
@@ -20,10 +20,8 @@ type FilterInputState = {
     mousefocus: boolean;
 };
 
-export default class FilterInput extends Component<
-    FilterInputProps,
-    FilterInputState
-> {
+export default class FilterInput extends Component<FilterInputProps,
+    FilterInputState> {
     constructor(props, context) {
         super(props, context);
 
@@ -46,7 +44,7 @@ export default class FilterInput extends Component<
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
-        this.setState({ value: nextProps.value });
+        this.setState({value: nextProps.value});
     }
 
     isValid(filt) {
@@ -62,7 +60,7 @@ export default class FilterInput extends Component<
 
     getDesc() {
         if (!this.state.value) {
-            return <FilterDocs selectHandler={this.selectFilter} />;
+            return <FilterDocs selectHandler={this.selectFilter}/>;
         }
         try {
             return Filt.parse(this.state.value).desc;
@@ -71,43 +69,73 @@ export default class FilterInput extends Component<
         }
     }
 
+
+    fetchFilterData(filterParam) {
+        return fetch(`/flows/filter?filter=${encodeURIComponent(filterParam)}`)
+            .then(response => {
+                if (!response.ok) {
+                    return []
+                }
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
     onChange(e) {
         const value = e.target.value;
-        this.setState({ value });
+        this.setState({value});
 
-        // Only propagate valid filters upwards.
-        if (this.isValid(value)) {
-            this.props.onChange(value);
+        // Check if input starts with "~bs", "~b" or "~bq" and has more characters after it
+        if ((value.includes("~bs ") || value.includes("~b ") || value.includes("~bq ")) && !value.trim().endsWith("~bs") && !value.trim().endsWith("~b") && !value.trim().endsWith("~bq")) {
+            // Use the new fetchFilterData function
+            this.fetchFilterData(value)
+                .then(data => {
+                    // @ts-ignore
+                    window.filtFilterList = data
+                    // Only propagate valid filters upwards.
+                    if (this.isValid(value)) {
+                        this.props.onChange(value);
+                    }
+                }).catch(error => {
+                console.log(error)
+            });
+        } else {
+            // Only propagate valid filters upwards.
+            if (this.isValid(value)) {
+                this.props.onChange(value);
+            }
         }
     }
 
     onFocus() {
-        this.setState({ focus: true });
+        this.setState({focus: true});
     }
 
     onBlur() {
-        this.setState({ focus: false });
+        this.setState({focus: false});
     }
 
     onMouseEnter() {
-        this.setState({ mousefocus: true });
+        this.setState({mousefocus: true});
     }
 
     onMouseLeave() {
-        this.setState({ mousefocus: false });
+        this.setState({mousefocus: false});
     }
 
     onKeyDown(e) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
-            this.setState({ mousefocus: false });
+            this.setState({mousefocus: false});
         }
         e.stopPropagation();
     }
 
     selectFilter(cmd) {
-        this.setState({ value: cmd });
+        this.setState({value: cmd});
         ReactDOM.findDOMNode(this.refs.input).focus();
     }
 
@@ -119,9 +147,15 @@ export default class FilterInput extends Component<
         ReactDOM.findDOMNode(this.refs.input).select();
     }
 
+    componentDidMount() {
+        if (this.state.value) {
+            this.onChange({target: {value: this.state.value}});
+        }
+    }
+
     render() {
-        const { type, color, placeholder } = this.props;
-        const { value, focus, mousefocus } = this.state;
+        const {type, color, placeholder} = this.props;
+        const {value, focus, mousefocus} = this.state;
         return (
             <div
                 className={classnames("filter-input input-group", {
@@ -129,7 +163,7 @@ export default class FilterInput extends Component<
                 })}
             >
                 <span className="input-group-addon">
-                    <i className={"fa fa-fw fa-" + type} style={{ color }} />
+                    <i className={"fa fa-fw fa-" + type} style={{color}}/>
                 </span>
                 <input
                     type="text"
@@ -148,7 +182,7 @@ export default class FilterInput extends Component<
                         onMouseEnter={this.onMouseEnter}
                         onMouseLeave={this.onMouseLeave}
                     >
-                        <div className="arrow" />
+                        <div className="arrow"/>
                         <div className="popover-content">{this.getDesc()}</div>
                     </div>
                 )}
