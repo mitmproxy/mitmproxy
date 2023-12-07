@@ -1,7 +1,27 @@
 # Release History
 
+<!-- 
+✨ Please add a bullet point describing your change.                                                             ✨
+✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
+-->
+
 ## Unreleased: mitmproxy next
-- Added support for `~b`, `~bq`, and `~bs` filters in `mitmweb`.
+
+* Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix empty cookie attributes being set to `Key=` instead of `Key`
+  ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
+* Scripts with relative paths are now loaded relative to the config file and not where the command is ran
+  ([#4860](https://github.com/mitmproxy/mitmproxy/pull/4860), @Speedlulu)
+* Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
+  ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
+* Added support for `~b`, `~bq`, and `~bs` filters in `mitmweb`.
+  ([#6538](https://github.com/mitmproxy/mitmproxy/pull/6538), @dsphper)
+
 
 
 ## 14 November 2023: mitmproxy 10.1.5

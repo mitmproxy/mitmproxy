@@ -352,6 +352,8 @@ class DumpFlows(RequestHandler):
         for f in io.FlowReader(bio).stream():
             await self.master.load_flow(f)
         bio.close()
+
+
 class FilterFlows(RequestHandler):
     def get(self):
         self.set_header("Content-Type", "application/json")
@@ -359,7 +361,10 @@ class FilterFlows(RequestHandler):
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except ValueError:  # thrown by flowfilter.parse if filter is invalid
             raise APIError(400, f"Invalid filter argument / regex")
-        except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
+        except (
+            KeyError,
+            IndexError,
+        ):  # Key+Index: ["filter"][0] can fail, if it's not set
             match = lambda f: True  # returns always true
 
         matched_ids = []
@@ -369,6 +374,7 @@ class FilterFlows(RequestHandler):
         self.set_status(200)
         # Write the list of incrIds to the response
         self.write(json.dumps(matched_ids))
+
 
 class ClearAll(RequestHandler):
     def post(self):
