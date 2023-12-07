@@ -1,7 +1,7 @@
 # Release History
 
 ## Unreleased: mitmproxy next
-
+- Added support for `~b`, `~bq`, and `~bs` filters in `mitmweb`.
 
 
 ## 14 November 2023: mitmproxy 10.1.5
