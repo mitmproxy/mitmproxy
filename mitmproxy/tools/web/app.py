@@ -355,7 +355,7 @@ class DumpFlows(RequestHandler):
 
 
 class FilterFlows(RequestHandler):
-    def get(self):
+    def get(self) -> None:
         self.set_header("Content-Type", "application/json")
 
         def get_matched_ids(match):
