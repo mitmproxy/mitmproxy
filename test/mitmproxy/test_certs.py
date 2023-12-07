@@ -74,15 +74,15 @@ class TestCertStore:
         assert len(ca.default_chain_certs) == 2
 
     def test_sans(self, tstore):
-        c1 = tstore.get_cert("foo.com", ["*.bar.com"])
+        c1 = tstore.get_cert("foo.com", [x509.DNSName("*.bar.com")])
         tstore.get_cert("foo.bar.com", [])
         # assert c1 == c2
         c3 = tstore.get_cert("bar.com", [])
         assert not c1 == c3
 
     def test_sans_change(self, tstore):
-        tstore.get_cert("foo.com", ["*.bar.com"])
-        entry = tstore.get_cert("foo.bar.com", ["*.baz.com"])
+        tstore.get_cert("foo.com", [x509.DNSName("*.bar.com")])
+        entry = tstore.get_cert("foo.bar.com", [x509.DNSName("*.baz.com")])
         assert "*.baz.com" in entry.cert.altnames
 
     def test_expire(self, tstore):
@@ -91,29 +91,29 @@ class TestCertStore:
         tstore.get_cert("two.com", [])
         tstore.get_cert("three.com", [])
 
-        assert ("one.com", ()) in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
 
         tstore.get_cert("one.com", [])
 
-        assert ("one.com", ()) in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
 
         tstore.get_cert("four.com", [])
 
-        assert ("one.com", ()) not in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
-        assert ("four.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) not in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
+        assert ("four.com", x509.GeneralNames([])) in tstore.certs
 
     def test_overrides(self, tmp_path):
         ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
         ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
         assert not ca1.default_ca.serial == ca2.default_ca.serial
 
-        dc = ca2.get_cert("foo.com", ["sans.example.com"])
+        dc = ca2.get_cert("foo.com", [x509.DNSName("sans.example.com")])
         dcp = tmp_path / "dc"
         dcp.write_bytes(dc.cert.to_pem())
         ca1.add_cert_file("foo.com", dcp)

@@ -227,18 +227,21 @@ def create_ca(
     return private_key, cert
 
 
-def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> list[x509.GeneralName]:
+def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.GeneralNames:
     """
     SANs used to be a list of strings in mitmproxy 10.1 and below, but now they're a list of GeneralNames.
     This function converts the old format to the new one.
     """
-    is_legacy_type = (
-        isinstance(sans, list)
-        and len(sans) > 0
-        and isinstance(sans[0], str)
-    )
-    if is_legacy_type:
-        warnings.warn("Passing SANs as a list of strings is deprecated.", DeprecationWarning, stacklevel=2)
+    if isinstance(sans, x509.GeneralNames):
+        return sans
+    elif (
+        isinstance(sans, list) and len(sans) > 0 and isinstance(sans[0], str)
+    ):  # pragma: no cover
+        warnings.warn(
+            "Passing SANs as a list of strings is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         ss: list[x509.GeneralName] = []
         for x in cast(list[str], sans):
@@ -249,8 +252,9 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> list[x509.
                 ss.append(x509.DNSName(x))
             else:
                 ss.append(x509.IPAddress(ip))
-        return ss
-    return sans
+        return x509.GeneralNames(ss)
+    else:
+        return x509.GeneralNames(sans)
 
 
 def dummy_cert(
@@ -296,7 +300,7 @@ def dummy_cert(
     # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
     builder = builder.add_extension(
         x509.SubjectAlternativeName(_fix_legacy_sans(sans)),
-        critical=not is_valid_commonname
+        critical=not is_valid_commonname,
     )
 
     # we just use the same key as the CA for these certs, so put that in the SKI extension
@@ -324,7 +328,7 @@ class CertStoreEntry:
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = tuple[Optional[str], tuple[str, ...]]  # (common_name, sans)
+TGeneratedCertId = tuple[Optional[str], x509.GeneralNames]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 DHParams = NewType("DHParams", bytes)
@@ -539,7 +543,7 @@ class CertStore:
     def get_cert(
         self,
         commonname: str | None,
-        sans: list[str],
+        sans: Iterable[x509.GeneralName],
         organization: str | None = None,
     ) -> CertStoreEntry:
         """
@@ -550,6 +554,7 @@ class CertStore:
 
         organization: Organization name for the generated certificate.
         """
+        sans = _fix_legacy_sans(sans)
 
         potential_keys: list[TCertId] = []
         if commonname:
@@ -557,7 +562,7 @@ class CertStore:
         for s in sans:
             potential_keys.extend(self.asterisk_forms(s))
         potential_keys.append("*")
-        potential_keys.append((commonname, tuple(sans)))
+        potential_keys.append((commonname, sans))
 
         name = next(filter(lambda key: key in self.certs, potential_keys), None)
         if name:
@@ -575,7 +580,7 @@ class CertStore:
                 chain_file=self.default_chain_file,
                 chain_certs=self.default_chain_certs,
             )
-            self.certs[(commonname, tuple(sans))] = entry
+            self.certs[(commonname, sans)] = entry
             self.expire(entry)
 
         return entry
