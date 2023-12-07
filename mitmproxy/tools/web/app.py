@@ -374,6 +374,7 @@ class FilterFlows(RequestHandler):
         # Write the list of incrIds to the response
         self.write(json.dumps(matched_ids))
 
+
 class ClearAll(RequestHandler):
     def post(self):
         self.view.clear()
