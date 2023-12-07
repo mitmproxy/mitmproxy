@@ -48,8 +48,8 @@ class CookieAttrs(multidict.MultiDict):
         return values[-1]
 
 
-TSetCookie = tuple[str, str, CookieAttrs]
-TPairs = list[list[str]]  # TODO: Should be List[Tuple[str,str]]?
+TSetCookie = tuple[str, str | None, CookieAttrs]
+TPairs = list[tuple[str, str | None]]
 
 
 def _read_until(s, start, term):
@@ -169,10 +169,10 @@ def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
                     rhs = rhs + "," + trail
 
             # as long as there's a "=", we consider it a pair
-            pairs.append([lhs, rhs])
+            pairs.append((lhs, rhs))
 
         elif lhs:
-            pairs.append([lhs, rhs])
+            pairs.append((lhs, None))
 
         # comma marks the beginning of a new cookie
         if off < len(s) and s[off] == ",":
@@ -206,10 +206,15 @@ def _format_pairs(pairs, specials=(), sep="; "):
     """
     vals = []
     for k, v in pairs:
-        if k.lower() not in specials and _has_special(v):
+        if v is None:
+            val = k
+        elif k.lower() not in specials and _has_special(v):
             v = ESCAPE.sub(r"\\\1", v)
             v = '"%s"' % v
-        vals.append(f"{k}={v}")
+            val = f"{k}={v}"
+        else:
+            val = f"{k}={v}"
+        vals.append(val)
     return sep.join(vals)
 
 
