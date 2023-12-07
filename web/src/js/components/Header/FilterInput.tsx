@@ -90,9 +90,9 @@ export default class FilterInput extends Component<
 
         // Check if input starts with "~bs", "~b" or "~bq" and has more characters after it
         if (
-            (value.includes("~bs ") ||
-                value.includes("~b ") ||
-                value.includes("~bq "))
+            value.includes("~bs ") ||
+            value.includes("~b ") ||
+            value.includes("~bq ")
         ) {
             // Use the new fetchFilterData function
             this.fetchFilterData(value)
