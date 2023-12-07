@@ -4,6 +4,8 @@ import ipaddress
 import os
 import re
 import sys
+import warnings
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -225,11 +227,37 @@ def create_ca(
     return private_key, cert
 
 
+def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> list[x509.GeneralName]:
+    """
+    SANs used to be a list of strings in mitmproxy 10.1 and below, but now they're a list of GeneralNames.
+    This function converts the old format to the new one.
+    """
+    is_legacy_type = (
+        isinstance(sans, list)
+        and len(sans) > 0
+        and isinstance(sans[0], str)
+    )
+    if is_legacy_type:
+        warnings.warn("Passing SANs as a list of strings is deprecated.", DeprecationWarning, stacklevel=2)
+
+        ss: list[x509.GeneralName] = []
+        for x in cast(list[str], sans):
+            try:
+                ip = ipaddress.ip_address(x)
+            except ValueError:
+                x = x.encode("idna").decode()
+                ss.append(x509.DNSName(x))
+            else:
+                ss.append(x509.IPAddress(ip))
+        return ss
+    return sans
+
+
 def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: str | None,
-    sans: list[str],
+    sans: Iterable[x509.GeneralName],
     organization: str | None = None,
 ) -> Cert:
     """
@@ -265,18 +293,10 @@ def dummy_cert(
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
-    ss: list[x509.GeneralName] = []
-    for x in sans:
-        try:
-            ip = ipaddress.ip_address(x)
-        except ValueError:
-            x = x.encode("idna").decode()
-            ss.append(x509.DNSName(x))
-        else:
-            ss.append(x509.IPAddress(ip))
     # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
     builder = builder.add_extension(
-        x509.SubjectAlternativeName(ss), critical=not is_valid_commonname
+        x509.SubjectAlternativeName(_fix_legacy_sans(sans)),
+        critical=not is_valid_commonname
     )
 
     # we just use the same key as the CA for these certs, so put that in the SKI extension

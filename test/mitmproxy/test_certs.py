@@ -1,3 +1,4 @@
+import ipaddress
 import os
 from datetime import datetime
 from datetime import timezone
@@ -140,7 +141,13 @@ class TestDummyCert:
             tstore.default_privatekey,
             tstore.default_ca._cert,
             "foo.com",
-            ["one.com", "two.com", "*.three.com", "127.0.0.1", "bücher.example"],
+            [
+                x509.DNSName("one.com"),
+                x509.DNSName("two.com"),
+                x509.DNSName("*.three.com"),
+                x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                x509.DNSName("bücher.example".encode("idna").decode("ascii")),
+            ],
             "Foo Ltd.",
         )
         assert r.cn == "foo.com"
