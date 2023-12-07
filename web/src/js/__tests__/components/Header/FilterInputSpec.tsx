@@ -111,9 +111,11 @@ describe("FilterInput Component", () => {
         filterInput.select();
         expect(input.select).toBeCalled();
     });
+
     it("should handle fetchFilterData", async () => {
         expect(filterInput.fetchFilterData("~bs ")).toEqual(Promise.resolve({}));
     });
+
     it("should handle change2", () => {
         fetchMock.mockOnceIf("/flows/filter?filter=~b%20x", "[]");
         fetchMock.mockResponses("{}");

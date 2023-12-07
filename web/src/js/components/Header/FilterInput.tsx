@@ -100,9 +100,6 @@ export default class FilterInput extends Component<
                         this.props.onChange(value);
                     }
                 })
-                .catch((error) => {
-                    console.log(error);
-                });
         } else {
             // Only propagate valid filters upwards.
             if (this.isValid(value)) {
