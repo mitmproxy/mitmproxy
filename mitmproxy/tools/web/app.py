@@ -358,18 +358,16 @@ class FilterFlows(RequestHandler):
     def get(self):
         self.set_header("Content-Type", "application/json")
 
-        def always_false(f):
-            return False
-
         try:
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except (ValueError, KeyError, IndexError):
-            match = always_false
+            match = False
 
         matched_ids = []
-        for f in self.view:
-            if match(f):
-                matched_ids.append(f.id)
+        if match:
+            for f in self.view:
+                if match(f):
+                    matched_ids.append(f.id)
         self.set_status(200)
         # Write the list of incrIds to the response
         self.write(json.dumps(matched_ids))
