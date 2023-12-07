@@ -75,9 +75,6 @@ export default class FilterInput extends Component<
     fetchFilterData(filterParam) {
         return fetchApi(`/flows/filter?filter=${encodeURIComponent(filterParam)}`)
             .then((response) => {
-                if (!response.ok) {
-                    return [];
-                }
                 return response.json();
             })
             .catch((error) => {
