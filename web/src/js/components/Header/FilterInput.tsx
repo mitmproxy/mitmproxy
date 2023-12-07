@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
+import {fetchApi} from "../../utils";
 
 type FilterInputProps = {
     type: string;
@@ -72,7 +73,7 @@ export default class FilterInput extends Component<
     }
 
     fetchFilterData(filterParam) {
-        return fetch(`/flows/filter?filter=${encodeURIComponent(filterParam)}`)
+        return fetchApi(`/flows/filter?filter=${encodeURIComponent(filterParam)}`)
             .then((response) => {
                 if (!response.ok) {
                     return [];
@@ -80,14 +81,12 @@ export default class FilterInput extends Component<
                 return response.json();
             })
             .catch((error) => {
-                console.error("Error:", error);
             });
     }
 
     onChange(e) {
         const value = e.target.value;
         this.setState({ value });
-
         // Check if input starts with "~bs", "~b" or "~bq" and has more characters after it
         if (
             value.includes("~bs ") ||
