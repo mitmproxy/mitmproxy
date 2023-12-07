@@ -240,10 +240,12 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_flows_dump_filter_error(self):
         resp = self.fetch("/flows/dump?filter=[")
         assert resp.code == 400
-    def test_flows_dump_filter(self):
+    def test_flows_filter(self):
         resp = self.fetch("/flows/filter?filter=foo")
         assert b"[]" == resp.body
-
+    def test_flows_filter_error(self):
+        resp = self.fetch("/flows/filter?filter=~b")
+        assert b"[]" == resp.body
     def test_clear(self):
         events = self.events.data.copy()
         flows = list(self.view)
