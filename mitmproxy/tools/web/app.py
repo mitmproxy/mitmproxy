@@ -360,7 +360,7 @@ class FilterFlows(RequestHandler):
         except ValueError:  # thrown by flowfilter.parse if filter is invalid
             raise APIError(400, f"Invalid filter argument / regex")
         except (KeyError, IndexError):  # Key+Index: ["filter"][0] can fail, if it's not set
-            match = bool  # returns always true
+            match = lambda f: True  # returns always true
 
         matched_ids = []
         for f in self.view:
@@ -369,7 +369,6 @@ class FilterFlows(RequestHandler):
         self.set_status(200)
         # Write the list of incrIds to the response
         self.write(json.dumps(matched_ids))
-
 
 class ClearAll(RequestHandler):
     def post(self):
