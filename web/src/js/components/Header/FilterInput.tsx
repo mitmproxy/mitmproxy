@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
-import {fetchApi} from "../../utils";
+import { fetchApi } from "../../utils";
 
 type FilterInputProps = {
     type: string;
@@ -73,15 +73,16 @@ export default class FilterInput extends Component<
     }
 
     fetchFilterData(filterParam) {
-        return fetchApi(`/flows/filter?filter=${encodeURIComponent(filterParam)}`)
+        return fetchApi(
+            `/flows/filter?filter=${encodeURIComponent(filterParam)}`
+        )
             .then((response) => {
                 if (!response.ok) {
                     return [];
                 }
                 return response.json();
             })
-            .catch((error) => {
-            });
+            .catch((error) => {});
     }
 
     onChange(e) {
