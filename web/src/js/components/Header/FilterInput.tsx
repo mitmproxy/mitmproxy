@@ -92,10 +92,7 @@ export default class FilterInput extends Component<
         if (
             (value.includes("~bs ") ||
                 value.includes("~b ") ||
-                value.includes("~bq ")) &&
-            !value.trim().endsWith("~bs") &&
-            !value.trim().endsWith("~b") &&
-            !value.trim().endsWith("~bq")
+                value.includes("~bq "))
         ) {
             // Use the new fetchFilterData function
             this.fetchFilterData(value)
