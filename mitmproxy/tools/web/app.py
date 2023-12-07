@@ -357,12 +357,14 @@ class DumpFlows(RequestHandler):
 class FilterFlows(RequestHandler):
     def get(self):
         self.set_header("Content-Type", "application/json")
+
+        def always_false(f):
+            return False
+
         try:
             match = flowfilter.parse(self.request.arguments["filter"][0].decode())
         except (ValueError, KeyError, IndexError):
-            # ValueError: thrown by flowfilter.parse if filter is invalid
-            # KeyError, IndexError: ["filter"][0] can fail, if it's not set
-            match = lambda f: False  # returns always false
+            match = always_false
 
         matched_ids = []
         for f in self.view:
