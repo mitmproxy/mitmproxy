@@ -11,6 +11,7 @@ from aioquic.tls import CipherSuite
 from cryptography import x509
 from OpenSSL import crypto
 from OpenSSL import SSL
+from cryptography import x509
 
 from mitmproxy import certs
 from mitmproxy import connection
@@ -489,31 +490,42 @@ class TlsConfig:
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
         """
-        altnames: list[str] = []
+        altnames: list[x509.GeneralName] = []
         organization: str | None = None
 
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:
             upstream_cert = conn_context.server.certificate_list[0]
             if upstream_cert.cn:
-                altnames.append(upstream_cert.cn)
+                altnames.append(_ip_or_dns_name(upstream_cert.cn))
             altnames.extend(upstream_cert.altnames)
             if upstream_cert.organization:
                 organization = upstream_cert.organization
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
-            altnames.append(conn_context.client.sni)
+            altnames.append(_ip_or_dns_name(conn_context.client.sni))
         else:
-            altnames.append(conn_context.client.sockname[0])
+            altnames.append(_ip_or_dns_name(conn_context.client.sockname[0]))
 
         # If we already know of a server address, include that in the SANs as well.
         if conn_context.server.address:
-            altnames.append(conn_context.server.address[0])
+            altnames.append(_ip_or_dns_name(conn_context.server.address[0]))
 
         # only keep first occurrence of each hostname
         altnames = list(dict.fromkeys(altnames))
 
         # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
         # In other words, the Common Name is irrelevant then.
-        return self.certstore.get_cert(altnames[0], altnames, organization)
+        cn = next((str(x.value) for x in altnames), None)
+        return self.certstore.get_cert(cn, altnames, organization)
+
+
+def _ip_or_dns_name(val: str) -> x509.GeneralName:
+    """Convert a string into either an x509.IPAddress or x509.DNSName object."""
+    try:
+        ip = ipaddress.ip_address(val)
+    except ValueError:
+        return x509.DNSName(val)
+    else:
+        return x509.IPAddress(ip)
