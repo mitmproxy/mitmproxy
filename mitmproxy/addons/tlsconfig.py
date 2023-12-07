@@ -11,7 +11,6 @@ from aioquic.tls import CipherSuite
 from cryptography import x509
 from OpenSSL import crypto
 from OpenSSL import SSL
-from cryptography import x509
 
 from mitmproxy import certs
 from mitmproxy import connection
