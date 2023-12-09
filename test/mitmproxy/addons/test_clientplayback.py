@@ -55,7 +55,6 @@ async def tcp_server(handle_conn, **server_args) -> Address:
 @pytest.mark.parametrize("mode", ["http", "https", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
 async def test_playback(tdata, mode, concurrency):
-
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         if mode == "err":
             return

@@ -10,6 +10,7 @@
 * Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix a bug where TCP connections were not closed properly.
+  ([#6543](https://github.com/mitmproxy/mitmproxy/pull/6543), @mhils)
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix a bug where logging was stopped prematurely during shutdown.
