@@ -20,4 +20,6 @@ async def test_reuse():
     with pytest.raises(OSError, match=f"--set web_port={port + 2}"):
         await master.running()
     server.close()
+    # tornado registers some callbacks,
+    # we want to run them to avoid fatal warnings.
     await asyncio.sleep(0)

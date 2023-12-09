@@ -778,6 +778,11 @@ async def test_reverse_http3_and_quic_stream(
                 await _test_echo(client, strict=scheme == "http3")
                 assert len(ps.connections) == 1
 
+            # dirty hack: forcibly close all connections so that there are no unexpected asyncio tasks
+            # that may cause test failures because they have not been run.
+            for conn in ps.servers[mode].manager.connections.values():
+                await conn.on_timeout()
+
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"stopped")
 
