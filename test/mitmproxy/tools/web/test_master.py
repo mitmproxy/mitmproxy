@@ -1,5 +1,4 @@
 import asyncio
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -8,7 +7,7 @@ from mitmproxy.tools.web.master import WebMaster
 
 
 async def test_reuse():
-    async def handler(r,w):
+    async def handler(r, w):
         pass
 
     server = await asyncio.start_server(
