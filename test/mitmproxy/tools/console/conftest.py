@@ -4,10 +4,10 @@ import sys
 import pytest
 
 from mitmproxy import options
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
 from mitmproxy.tools.console.master import ConsoleMaster
 from mitmproxy.utils.signals import _SignalMixin
-from mitmproxy.tools.console import signals
 
 
 def tokenize(input: str) -> list[str]:
@@ -23,10 +23,7 @@ def tokenize(input: str) -> list[str]:
 class ConsoleTestMaster(ConsoleMaster):
     def __init__(self, opts: options.Options) -> None:
         super().__init__(opts)
-        self.addons.remove(
-            self.addons.get("tlsconfig")
-        )
-
+        self.addons.remove(self.addons.get("tlsconfig"))
 
     def type(self, input: str) -> None:
         for key in tokenize(input):
