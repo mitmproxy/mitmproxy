@@ -9,9 +9,6 @@ from mitmproxy.utils import signals as utils_signals
 HELP_HEIGHT = 5
 
 
-keybinding_focus_change = utils_signals.SyncSignal(lambda text: None)
-
-
 class KeyItem(urwid.WidgetWrap):
     def __init__(self, walker, binding, focused):
         self.walker, self.binding, self.focused = walker, binding, focused
@@ -39,7 +36,8 @@ class KeyItem(urwid.WidgetWrap):
 
 
 class KeyListWalker(urwid.ListWalker):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
+        self.keybinding_focus_change = keybinding_focus_change
         self.master = master
 
         self.index = 0
@@ -67,7 +65,7 @@ class KeyListWalker(urwid.ListWalker):
         binding = self.bindings[index]
         self.index = index
         self.focus_obj = self._get(self.index)
-        keybinding_focus_change.send(binding.help or "")
+        self.keybinding_focus_change.send(binding.help or "")
         self._modified()
 
     def get_next(self, pos):
@@ -90,9 +88,9 @@ class KeyListWalker(urwid.ListWalker):
 
 
 class KeyList(urwid.ListBox):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
         self.master = master
-        self.walker = KeyListWalker(master)
+        self.walker = KeyListWalker(master, keybinding_focus_change)
         super().__init__(self.walker)
 
     def keypress(self, size, key):
@@ -109,7 +107,7 @@ class KeyList(urwid.ListBox):
 
 
 class KeyHelp(urwid.Frame):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
         self.master = master
         super().__init__(self.widget(""))
         self.set_active(False)
@@ -134,10 +132,12 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
     focus_position: int
 
     def __init__(self, master):
-        oh = KeyHelp(master)
+        keybinding_focus_change = utils_signals.SyncSignal(lambda text: None)
+
+        oh = KeyHelp(master, keybinding_focus_change)
         super().__init__(
             [
-                KeyList(master),
+                KeyList(master, keybinding_focus_change),
                 (HELP_HEIGHT, oh),
             ]
         )
