@@ -328,6 +328,7 @@ def test_order(tdata, capsys):
         ]
     )
     time = r"\[[\d:.]+\] "
+    out = capsys.readouterr().out
     assert re.match(
         rf"{time}Loading script.+recorder.py\n"
         rf"{time}\('recorder', 'load', .+\n"
@@ -335,5 +336,5 @@ def test_order(tdata, capsys):
         rf"{time}Loading script.+shutdown.py\n"
         rf"{time}\('recorder', 'running', .+\n"
         rf"{time}\('recorder', 'done', .+\n$",
-        capsys.readouterr().out,
+        out,
     )

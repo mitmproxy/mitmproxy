@@ -308,7 +308,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             # we may still use this connection to *send* stuff,
             # even though the remote has closed their side of the connection.
             # to make this work we keep this task running and wait for cancellation.
-            await asyncio.Event().wait()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                pass
 
         try:
             writer = self.transports[connection].writer
