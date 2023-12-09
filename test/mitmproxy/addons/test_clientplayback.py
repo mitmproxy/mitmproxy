@@ -25,6 +25,8 @@ async def tcp_server(handle_conn, **server_args) -> Address:
 
     Spawning a TCP server is relatively slow. Consider using in-memory networking for faster tests.
     """
+    if not hasattr(asyncio, "TaskGroup"):
+        pytest.skip("Skipped because asyncio.TaskGroup is unavailable.")
 
     tasks = asyncio.TaskGroup()
 
