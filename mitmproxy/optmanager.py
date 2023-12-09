@@ -523,7 +523,7 @@ def parse(text):
     if not text:
         return {}
     try:
-        yaml = ruamel.yaml.YAML(typ="unsafe", pure=True)
+        yaml = ruamel.yaml.YAML(typ="safe", pure=True)
         data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):

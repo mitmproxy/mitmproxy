@@ -8,8 +8,11 @@ from mitmproxy.tools.web.master import WebMaster
 
 
 async def test_reuse():
+    async def handler(r,w):
+        pass
+
     server = await asyncio.start_server(
-        MagicMock(), host="127.0.0.1", port=0, reuse_address=False
+        handler, host="127.0.0.1", port=0, reuse_address=False
     )
     port = server.sockets[0].getsockname()[1]
     master = WebMaster(Options(), with_termlog=False)
@@ -18,3 +21,4 @@ async def test_reuse():
     with pytest.raises(OSError, match=f"--set web_port={port + 2}"):
         await master.running()
     server.close()
+    await asyncio.sleep(0)
