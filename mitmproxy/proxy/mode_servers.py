@@ -28,6 +28,7 @@ from typing import cast
 from typing import ClassVar
 from typing import Generic
 from typing import get_args
+from typing import TYPE_CHECKING
 from typing import TypeVar
 
 import mitmproxy_rs
@@ -36,7 +37,6 @@ from mitmproxy import ctx
 from mitmproxy import flow
 from mitmproxy import platform
 from mitmproxy.connection import Address
-from mitmproxy.master import Master
 from mitmproxy.net import local_ip
 from mitmproxy.net import udp
 from mitmproxy.proxy import commands
@@ -51,6 +51,9 @@ if sys.version_info < (3, 11):
     from typing_extensions import Self  # pragma: no cover
 else:
     from typing import Self
+
+if TYPE_CHECKING:
+    from mitmproxy.master import Master
 
 logger = logging.getLogger(__name__)
 
