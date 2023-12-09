@@ -228,6 +228,7 @@ def create_ca(
 def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
+    caprivatekey: rsa.RSAPrivateKey,
     commonname: str | None,
     sans: list[str],
     organization: str | None = None,
@@ -235,8 +236,9 @@ def dummy_cert(
     """
     Generates a dummy certificate.
 
-    privkey: CA private key
+    privkey: Private key for the generated certificate
     cacert: CA certificate
+    caprivatekey: CA private key
     commonname: Common name for the generated certificate.
     sans: A list of Subject Alternate Names.
     organization: Organization name for the generated certificate.
@@ -248,7 +250,7 @@ def dummy_cert(
     builder = builder.add_extension(
         x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False
     )
-    builder = builder.public_key(cacert.public_key())
+    builder = builder.public_key(privkey.public_key())
 
     now = datetime.datetime.now()
     builder = builder.not_valid_before(now - datetime.timedelta(days=2))
@@ -279,7 +281,6 @@ def dummy_cert(
         x509.SubjectAlternativeName(ss), critical=not is_valid_commonname
     )
 
-    # we just use the same key as the CA for these certs, so put that in the SKI extension
     builder = builder.add_extension(
         x509.SubjectKeyIdentifier.from_public_key(privkey.public_key()),
         critical=False,
@@ -291,7 +292,7 @@ def dummy_cert(
         critical=False,
     )
 
-    cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
+    cert = builder.sign(private_key=caprivatekey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
 
 
@@ -323,11 +324,13 @@ class CertStore:
         self,
         default_privatekey: rsa.RSAPrivateKey,
         default_ca: Cert,
+        default_ca_privatekey: rsa.RSAPrivateKey,
         default_chain_file: Path | None,
         dhparams: DHParams,
     ):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
+        self.default_ca_privatekey = default_ca_privatekey
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
             [
@@ -403,7 +406,16 @@ class CertStore:
             chain_file: Path | None = ca_file
         else:
             chain_file = None
-        return cls(key, ca, chain_file, dh)
+        return cls(
+            rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=key.key_size,
+            ),
+            ca,
+            key,
+            chain_file,
+            dh
+        )
 
     @staticmethod
     @contextlib.contextmanager
@@ -542,6 +554,7 @@ class CertStore:
                 cert=dummy_cert(
                     self.default_privatekey,
                     self.default_ca._cert,
+                    self.default_ca_privatekey,
                     commonname,
                     sans,
                     organization,
