@@ -72,6 +72,7 @@ dev = [
     "pytest-xdist>=2.1.0,<3.6",
     "pytest>=6.1.0,<8",
     "requests>=2.9.1,<3",
+    "taskgroup==0.0.0a4; python_version<'3.11'",
     "tox>=3.5,<5",
     "wheel>=0.36.2,<0.43",
     "build>=0.10.0",
