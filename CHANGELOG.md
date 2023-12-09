@@ -11,6 +11,8 @@
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix a bug where logging was stopped prematurely during shutdown.
+  ([#6541](https://github.com/mitmproxy/mitmproxy/pull/6541), @mhils)
 * For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix empty cookie attributes being set to `Key=` instead of `Key`
