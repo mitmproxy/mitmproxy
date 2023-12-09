@@ -1,7 +1,11 @@
-import mitmproxy.log
-import mitmproxy.master
-import mitmproxy.options
+from __future__ import annotations
+import typing
 
-log: "mitmproxy.log.Log"
-master: "mitmproxy.master.Master"
-options: "mitmproxy.options.Options"
+if typing.TYPE_CHECKING:
+    import mitmproxy.log
+    import mitmproxy.master
+    import mitmproxy.options
+
+log: mitmproxy.log.Log
+master: mitmproxy.master.Master
+options: mitmproxy.options.Options
