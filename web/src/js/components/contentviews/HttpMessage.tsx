@@ -141,6 +141,7 @@ type ViewImageProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
 };
+//added svg and other format image previes support
 export function ViewImage({ flow, message }: ViewImageProps) {
     const imageContentURL: string = MessageUtils.getContentURL(flow, message);
 
