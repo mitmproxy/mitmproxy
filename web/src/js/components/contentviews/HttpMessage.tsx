@@ -152,7 +152,7 @@ type ViewImageProps = {
 //  * @param {Object} props.message - The message object containing image details.
 //  * @returns {JSX.Element} - The rendered ViewImage component.
 //  */
-export function ViewImage({ flow, message }:ViewImageProps) {
+export function ViewImage({ flow, message }: ViewImageProps) {
     // /**
     //  * Get the content URL for the image.
     //  *
