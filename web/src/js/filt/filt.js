@@ -2077,21 +2077,9 @@ export default (function() {
         return false;
     }
     assetFilter.desc = "is asset";
-    function filterData() {
-        return {
-            data: [],
-            set: function(data) {
-                this.data = data;
-            },
-            get: function() {
-                return this.data;
-            }
-        }
-    }
     // ~b
     function body(regex){
         regex = new RegExp(regex, "i");
-        bodyFilter.filterData = filterData();
         function bodyFilter(flow){
             if (window.filtFilterList && window.filtFilterList.includes(flow.id)) {
                 return true
