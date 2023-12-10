@@ -142,14 +142,19 @@ type ViewImageProps = {
     message: HTTPMessage;
 };
 
-export function ViewImage({ flow, message }: ViewImageProps) {
+export function ViewImage({ flow, message }) {
+    const imageContentURL = MessageUtils.getContentURL(flow, message);
+
     return (
         <div className="flowview-image">
-            <img
-                src={MessageUtils.getContentURL(flow, message)}
-                alt="preview"
-                className="img-thumbnail"
-            />
+            <object
+                data={imageContentURL}
+                type="image/*"
+                width="100%"
+                height="100%"
+            >
+                <p>Image not supported</p>
+            </object>
         </div>
     );
 }
