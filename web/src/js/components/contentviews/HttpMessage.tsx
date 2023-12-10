@@ -153,12 +153,12 @@ type ViewImageProps = {
 //  * @returns {JSX.Element} - The rendered ViewImage component.
 //  */
 export function ViewImage({ flow, message }:ViewImageProps) {
-    /**
-     * Get the content URL for the image.
-     *
-     * @type {string}
-     */
-    const imageContentURL = MessageUtils.getContentURL(flow, message);
+    // /**
+    //  * Get the content URL for the image.
+    //  *
+    //  * @type {string}
+    //  */
+    const imageContentURL: string = MessageUtils.getContentURL(flow, message);
 
     return (
         <div className="flowview-image">
