@@ -175,5 +175,3 @@ export function ViewImage({ flow, message }:ViewImageProps) {
         </div>
     );
 }
-
-
