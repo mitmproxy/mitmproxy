@@ -73,6 +73,7 @@ export interface OptionsState {
     termlog_verbosity: string;
     tls_ecdh_curve_client: string | undefined;
     tls_ecdh_curve_server: string | undefined;
+    tls_request_client_cert: boolean;
     tls_version_client_max: string;
     tls_version_client_min: string;
     tls_version_server_max: string;
@@ -169,6 +170,7 @@ export const defaultState: OptionsState = {
     termlog_verbosity: "info",
     tls_ecdh_curve_client: undefined,
     tls_ecdh_curve_server: undefined,
+    tls_request_client_cert: false,
     tls_version_client_max: "UNBOUNDED",
     tls_version_client_min: "TLS1_2",
     tls_version_server_max: "UNBOUNDED",

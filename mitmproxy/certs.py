@@ -225,15 +225,15 @@ def create_ca(
     return private_key, cert
 
 
-def dummy_cert(
+def make_certificate_builder(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: str | None,
     sans: list[str],
     organization: str | None = None,
-) -> Cert:
+) -> x509.CertificateBuilder:
     """
-    Generates a dummy certificate.
+    Generates a dummy certificate builder.
 
     privkey: CA private key
     cacert: CA certificate
@@ -290,7 +290,17 @@ def dummy_cert(
         x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
         critical=False,
     )
+    return builder
 
+
+def dummy_cert(
+    privkey: rsa.RSAPrivateKey,
+    cacert: x509.Certificate,
+    commonname: str | None,
+    sans: list[str],
+    organization: str | None = None,
+) -> Cert:
+    builder = make_certificate_builder(privkey, cacert, commonname, sans, organization)
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
 
