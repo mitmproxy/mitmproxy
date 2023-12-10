@@ -141,20 +141,39 @@ type ViewImageProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
 };
-
-export function ViewImage({ flow, message }) {
+// **
+//  * ViewImage Component
+//  *
+//  * Displays an image from the provided content URL with support for various image formats.
+//  *
+//  * @component
+//  * @param {Object} props - The component props.
+//  * @param {Object} props.flow - The flow object containing image information.
+//  * @param {Object} props.message - The message object containing image details.
+//  * @returns {JSX.Element} - The rendered ViewImage component.
+//  */
+export function ViewImage({ flow, message }:ViewImageProps) {
+    /**
+     * Get the content URL for the image.
+     *
+     * @type {string}
+     */
     const imageContentURL = MessageUtils.getContentURL(flow, message);
 
     return (
         <div className="flowview-image">
+            {/* Object element to dynamically handle various image formats */}
             <object
                 data={imageContentURL}
                 type="image/*"
                 width="100%"
                 height="100%"
             >
+                {/* Fallback content in case the browser doesn't support the object tag */}
                 <p>Image not supported</p>
             </object>
         </div>
     );
 }
+
+
