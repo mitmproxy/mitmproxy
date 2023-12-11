@@ -1,13 +1,15 @@
 import asyncio
+import logging
 import os.path
 import sys
-from typing import BinaryIO, Optional
+from typing import BinaryIO
+from typing import Optional
 
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
-from mitmproxy import command
 
 
 class ReadFile:
@@ -17,7 +19,7 @@ class ReadFile:
 
     def __init__(self):
         self.filter = None
-        self.is_reading = False
+        self._read_task: asyncio.Task | None = None
 
     def load(self, loader):
         loader.add_option("rfile", Optional[str], None, "Read flows from file.")
@@ -46,9 +48,9 @@ class ReadFile:
                 cnt += 1
         except (OSError, exceptions.FlowReadException) as e:
             if cnt:
-                ctx.log.warn("Flow file corrupted - loaded %i flows." % cnt)
+                logging.warning("Flow file corrupted - loaded %i flows." % cnt)
             else:
-                ctx.log.error("Flow file corrupted.")
+                logging.error("Flow file corrupted.")
             raise exceptions.FlowReadException(str(e)) from e
         else:
             return cnt
@@ -59,25 +61,24 @@ class ReadFile:
             with open(path, "rb") as f:
                 return await self.load_flows(f)
         except OSError as e:
-            ctx.log.error(f"Cannot load flows: {e}")
+            logging.error(f"Cannot load flows: {e}")
             raise exceptions.FlowReadException(str(e)) from e
 
-    async def doread(self, rfile):
-        self.is_reading = True
+    async def doread(self, rfile: str) -> None:
         try:
-            await self.load_flows_from_path(ctx.options.rfile)
+            await self.load_flows_from_path(rfile)
         except exceptions.FlowReadException as e:
             raise exceptions.OptionsError(e) from e
         finally:
-            self.is_reading = False
+            self._read_task = None
 
     def running(self):
         if ctx.options.rfile:
-            asyncio.get_running_loop().create_task(self.doread(ctx.options.rfile))
+            self._read_task = asyncio.create_task(self.doread(ctx.options.rfile))
 
     @command.command("readfile.reading")
     def reading(self) -> bool:
-        return self.is_reading
+        return bool(self._read_task)
 
 
 class ReadFileStdin(ReadFile):

@@ -4,8 +4,10 @@ from typing import Any
 
 import pytest
 
-from mitmproxy.proxy import commands, events, layer
 from . import tutils
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 
 
 class TEvent(events.Event):

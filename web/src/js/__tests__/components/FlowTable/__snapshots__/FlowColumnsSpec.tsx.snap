@@ -214,9 +214,7 @@ exports[`should render columns: quickactions 1`] = `
       <tr>
         <td
           class="col-quickactions"
-        >
-          <div />
-        </td>
+        />
       </tr>
     </tbody>
   </table>
@@ -296,6 +294,22 @@ exports[`should render columns: tls 1`] = `
         <td
           class="col-tls col-tls-https"
         />
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;
+
+exports[`should render columns: version 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-http-version"
+        >
+          HTTP/1.1
+        </td>
       </tr>
     </tbody>
   </table>

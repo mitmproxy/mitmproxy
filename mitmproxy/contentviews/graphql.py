@@ -1,8 +1,9 @@
 import json
-from typing import Any, Optional
+from typing import Any
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import parse_json, PARSE_ERROR
+from mitmproxy.contentviews.json import PARSE_ERROR
+from mitmproxy.contentviews.json import parse_json
 
 
 def format_graphql(data):
@@ -12,9 +13,7 @@ def format_graphql(data):
     return """{header}
 ---
 {query}
-""".format(
-        header=json.dumps(header_data, indent=2), query=query
-    )
+""".format(header=json.dumps(header_data, indent=2), query=query)
 
 
 def format_query_list(data: list[Any]):
@@ -46,7 +45,7 @@ class ViewGraphQL(base.View):
                 return "GraphQL", base.format_text(format_query_list(data))
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if content_type != "application/json" or not data:
             return 0

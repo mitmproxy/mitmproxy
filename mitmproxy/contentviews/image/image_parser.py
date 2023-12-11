@@ -105,9 +105,7 @@ def parse_ico(data: bytes) -> Metadata:
         parts.append(
             (
                 f"Image {i + 1}",
-                "Size: {} x {}\n"
-                "{: >18}Bits per pixel: {}\n"
-                "{: >18}PNG: {}".format(
+                "Size: {} x {}\n" "{: >18}Bits per pixel: {}\n" "{: >18}PNG: {}".format(
                     256 if not image.width else image.width,
                     256 if not image.height else image.height,
                     "",

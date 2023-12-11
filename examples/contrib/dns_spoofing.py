@@ -35,7 +35,7 @@ class Rerouter:
     def request(self, flow):
         if flow.client_conn.tls_established:
             flow.request.scheme = "https"
-            sni = flow.client_conn.connection.get_servername()
+            sni = flow.client_conn.sni
             port = 443
         else:
             flow.request.scheme = "http"

@@ -1,25 +1,34 @@
 import gc
+from logging import WARNING
 
 import pytest
 
-from mitmproxy.connection import ConnectionState, Server
-from mitmproxy.http import HTTPFlow, Response
-from mitmproxy.net.server_spec import ServerSpec
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Response
 from mitmproxy.proxy import layer
-from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layers import TCPLayer, http, tls
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import TCPLayer
+from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
+from mitmproxy.proxy.layers.tcp import TcpMessageInjected
+from mitmproxy.proxy.layers.tcp import TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from test.mitmproxy.proxy.tutils import (
-    BytesMatching,
-    Placeholder,
-    Playbook,
-    reply,
-    reply_next_layer,
-)
+from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
+from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_http_proxy(tctx):
@@ -669,6 +678,7 @@ def test_server_unreachable(tctx, connect):
         # Our API isn't ideal here, there is no error hook for CONNECT requests currently.
         # We could fix this either by having CONNECT request go through all our regular hooks,
         # or by adding dedicated ok/error hooks.
+        # See also: test_connect_unauthorized
         playbook << http.HttpErrorHook(flow)
         playbook >> reply()
     playbook << SendData(
@@ -729,7 +739,7 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
     server = Placeholder(Server)
     server2 = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    tctx.options.mode = "upstream:http://proxy:8080"
+    tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.upstream), hooks=False)
 
     if scheme == "http":
@@ -742,7 +752,8 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
             << OpenConnection(server)
             >> reply(None)
             << SendData(
-                server, b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
+                server,
+                b"GET http://%s/ HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
             )
         )
 
@@ -782,7 +793,7 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         flow().request.host = domain + b".test"
         flow().request.host_header = domain
     elif redirect == "change-proxy":
-        flow().server_conn.via = ServerSpec("http", address=("other-proxy", 1234))
+        flow().server_conn.via = ("http", ("other-proxy", 1234))
     playbook >> reply()
 
     if redirect:
@@ -797,7 +808,8 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         if redirect == "change-destination":
             playbook << SendData(
                 server2,
-                b"GET http://%s.test/two HTTP/1.1\r\nHost: %s\r\n\r\n" % (domain, domain),
+                b"GET http://%s.test/two HTTP/1.1\r\nHost: %s\r\n\r\n"
+                % (domain, domain),
             )
         else:
             playbook << SendData(
@@ -806,7 +818,9 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
             )
     else:
         if redirect == "change-destination":
-            playbook << SendData(server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain)
+            playbook << SendData(
+                server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain
+            )
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
@@ -828,11 +842,9 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
         assert flow().server_conn.address[0] == domain.decode("idna")
 
     if redirect == "change-proxy":
-        assert (
-            server2().address == flow().server_conn.via.address == ("other-proxy", 1234)
-        )
+        assert server2().address == flow().server_conn.via[1] == ("other-proxy", 1234)
     else:
-        assert server2().address == flow().server_conn.via.address == ("proxy", 8080)
+        assert server2().address == flow().server_conn.via[1] == ("proxy", 8080)
 
     playbook >> ConnectionClosed(tctx.client)
     playbook << CloseConnection(tctx.client)
@@ -848,10 +860,10 @@ def test_http_proxy_tcp(tctx, mode, close_first):
     tctx.options.connection_strategy = "lazy"
 
     if mode == "upstream":
-        tctx.options.mode = "upstream:http://proxy:8080"
+        tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
         toplayer = http.HttpLayer(tctx, HTTPMode.upstream)
     else:
-        tctx.options.mode = "regular"
+        tctx.client.proxy_mode = ProxyMode.parse("regular")
         toplayer = http.HttpLayer(tctx, HTTPMode.regular)
 
     playbook = Playbook(toplayer, hooks=False)
@@ -956,8 +968,12 @@ def test_http_proxy_without_empty_chunk_in_head_request(tctx):
         << OpenConnection(server)
         >> reply(None)
         << SendData(server, b"HEAD / HTTP/1.1\r\n\r\n")
-        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
-        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+        >> DataReceived(
+            server, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+        )
+        << SendData(
+            tctx.client, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+        )
     )
 
 
@@ -1348,7 +1364,7 @@ def test_upgrade(tctx, proto):
             playbook
             << Log(
                 "Sent HTTP 101 response, but no protocol is enabled to upgrade to.",
-                "warn",
+                WARNING,
             )
             << CloseConnection(tctx.client)
         )
@@ -1415,6 +1431,29 @@ def test_transparent_sni(tctx):
     )
     assert server().address == ("192.0.2.42", 443)
     assert server().sni == "example.com"
+
+
+def test_reverse_sni(tctx):
+    """Test that we use the destination address as SNI in reverse mode."""
+    tctx.client.sni = "localhost"
+    tctx.server.address = ("192.0.2.42", 443)
+    tctx.server.tls = True
+    tctx.server.sni = "example.local"
+
+    flow = Placeholder(HTTPFlow)
+
+    server = Placeholder(Server)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+        >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+    )
+    assert server().address == ("192.0.2.42", 443)
+    assert server().sni == "example.local"
 
 
 def test_original_server_disconnects(tctx):
@@ -1594,6 +1633,42 @@ def test_connect_more_newlines(tctx):
     assert nl().data_client() == b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03"
 
 
+def test_connect_unauthorized(tctx):
+    """Continue a connection after proxyauth returns a 407, https://github.com/mitmproxy/mitmproxy/issues/6420"""
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+    flow = Placeholder(HTTPFlow)
+
+    def require_auth(f: HTTPFlow):
+        f.response = Response.make(
+            status_code=407, headers={"Proxy-Authenticate": f'Basic realm="mitmproxy"'}
+        )
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        << http.HttpConnectHook(flow)
+        >> reply(side_effect=require_auth)
+        # This isn't ideal - we should probably have a custom CONNECT error hook here.
+        # See also: test_server_unreachable
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="mitmproxy"\r\n'
+            b"content-length: 0\r\n\r\n",
+        )
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT example.com:80 HTTP/1.1\r\n"
+            b"Proxy-Authorization: Basic dGVzdDp0ZXN0\r\n\r\n",
+        )
+        << http.HttpConnectHook(Placeholder(HTTPFlow))
+        >> reply()
+        << OpenConnection(Placeholder(Server))
+    )
+
+
 def flows_tracked() -> int:
     return sum(isinstance(x, HTTPFlow) for x in gc.get_objects())
 
@@ -1656,7 +1731,7 @@ def test_drop_stream_with_paused_events(tctx):
         << http.HttpRequestHeadersHook(flow)
         >> reply()
         << OpenConnection(server)
-        >> reply('Connection killed: error')
+        >> reply("Connection killed: error")
         << http.HttpErrorHook(flow)
         >> reply()
         << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection killed"))

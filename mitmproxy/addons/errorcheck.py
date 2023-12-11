@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sys
 
 from mitmproxy import log
@@ -7,23 +8,41 @@ from mitmproxy import log
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
 
-    def __init__(self, log_to_stderr: bool = False):
-        self.has_errored: list[str] = []
-        self.log_to_stderr = log_to_stderr
+    repeat_errors_on_stderr: bool
+    """
+    Repeat all errors on stderr before exiting.
+    This is useful for the console UI, which otherwise swallows all output.
+    """
 
-    def add_log(self, e: log.LogEntry):
-        if e.level == "error":
-            self.has_errored.append(e.msg)
+    def __init__(self, repeat_errors_on_stderr: bool = False) -> None:
+        self.repeat_errors_on_stderr = repeat_errors_on_stderr
 
-    async def running(self):
+        self.logger = ErrorCheckHandler()
+        self.logger.install()
+
+    def finish(self):
+        self.logger.uninstall()
+
+    async def shutdown_if_errored(self):
         # don't run immediately, wait for all logging tasks to finish.
-        asyncio.create_task(self._shutdown_if_errored())
-
-    async def _shutdown_if_errored(self):
-        if self.has_errored:
-            if self.log_to_stderr:
-                plural = "s" if len(self.has_errored) > 1 else ""
-                msg = "\n".join(self.has_errored)
-                print(f"Error{plural} on startup: {msg}", file=sys.stderr)
+        await asyncio.sleep(0)
+        if self.logger.has_errored:
+            plural = "s" if len(self.logger.has_errored) > 1 else ""
+            if self.repeat_errors_on_stderr:
+                msg = "\n".join(self.logger.format(r) for r in self.logger.has_errored)
+                print(f"Error{plural} logged during startup:\n{msg}", file=sys.stderr)
+            else:
+                print(
+                    f"Error{plural} logged during startup, exiting...", file=sys.stderr
+                )
 
             sys.exit(1)
+
+
+class ErrorCheckHandler(log.MitmLogHandler):
+    def __init__(self) -> None:
+        super().__init__(logging.ERROR)
+        self.has_errored: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.has_errored.append(record)

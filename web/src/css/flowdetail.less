@@ -5,7 +5,7 @@
     flex-direction: column;
 
     nav {
-        background-color: #F2F2F2;
+        background-color: #f2f2f2;
     }
 
     section {
@@ -20,7 +20,6 @@
             height: 23px;
         }
     }
-
 
     .first-line {
         font-family: @font-family-monospace;
@@ -59,7 +58,6 @@
     }
 }
 
-
 .inline-input {
     display: inline;
     margin: 0 -3px;
@@ -68,7 +66,8 @@
     border: solid transparent 1px;
 
     &:hover {
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 1.25%), 0 2px 4px rgba(0, 0, 0, 5%), 0 2px 6px rgba(0, 0, 0, 2.5%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 1.25%), 0 2px 4px rgba(0, 0, 0, 5%),
+            0 2px 6px rgba(0, 0, 0, 2.5%);
         background-color: rgba(255, 255, 255, 0.1);
     }
 
@@ -80,9 +79,9 @@
 
     &[contenteditable] {
         outline-width: 0;
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 5%), 0 2px 4px rgba(0, 0, 0, 20%), 0 2px 6px rgba(0, 0, 0, 10%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 5%), 0 2px 4px rgba(0, 0, 0, 20%),
+            0 2px 6px rgba(0, 0, 0, 10%);
         background-color: rgba(255, 255, 255, 0.2);
-
 
         &.has-warning {
             color: rgb(255, 184, 184);
@@ -94,7 +93,9 @@
     }
 }
 
-.connection-table, .timing-table, .certificate-table {
+.connection-table,
+.timing-table,
+.certificate-table {
     td:nth-child(2) {
         font-family: @font-family-monospace;
         width: 70%;
@@ -125,9 +126,10 @@
     }
 }
 
-.headers, .trailers {
+.headers,
+.trailers {
     .kv-row {
-        margin-bottom: .3em;
+        margin-bottom: 0.3em;
         max-height: 12.4ex;
         overflow-y: auto;
     }
@@ -162,7 +164,8 @@
     overflow-wrap: break-word;
 }
 
-.connection-table, .timing-table {
+.connection-table,
+.timing-table {
     td {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -176,7 +179,8 @@ dl.cert-attributes {
     flex-wrap: wrap;
     margin-bottom: 0;
 
-    dt, dd {
+    dt,
+    dd {
         text-overflow: ellipsis;
         overflow: hidden;
     }
@@ -190,8 +194,10 @@ dl.cert-attributes {
     }
 }
 
-.dns-request table, .dns-response table  {
-    th, td {
+.dns-request table,
+.dns-response table {
+    th,
+    td {
         padding-right: 1rem;
     }
 }

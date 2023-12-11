@@ -1,16 +1,17 @@
+import logging
 import os
+from collections import defaultdict
 from collections.abc import Sequence
-from typing import Optional
+from functools import cache
 
-import ruamel.yaml
 import ruamel.yaml.error
 
+import mitmproxy.types
 from mitmproxy import command
-from mitmproxy.tools.console import commandexecutor
-from mitmproxy.tools.console import signals
 from mitmproxy import ctx
 from mitmproxy import exceptions
-import mitmproxy.types
+from mitmproxy.tools.console import commandexecutor
+from mitmproxy.tools.console import signals
 
 
 class KeyBindingError(Exception):
@@ -59,6 +60,11 @@ class Binding:
         """
         return self.key.replace("space", " ")
 
+    def key_short(self) -> str:
+        return (
+            self.key.replace("enter", "⏎").replace("right", "→").replace("space", "␣")
+        )
+
     def sortkey(self):
         return self.key + ",".join(self.contexts)
 
@@ -66,9 +72,7 @@ class Binding:
 class Keymap:
     def __init__(self, master):
         self.executor = commandexecutor.CommandExecutor(master)
-        self.keys = {}
-        for c in Contexts:
-            self.keys[c] = {}
+        self.keys: dict[str, dict[str, Binding]] = defaultdict(dict)
         self.bindings = []
 
     def _check_contexts(self, contexts):
@@ -77,6 +81,10 @@ class Keymap:
         for c in contexts:
             if c not in Contexts:
                 raise ValueError("Unsupported context: %s" % c)
+
+    def _on_change(self) -> None:
+        signals.keybindings_change.send()
+        self.binding_for_help.cache_clear()
 
     def add(self, key: str, command: str, contexts: Sequence[str], help="") -> None:
         """
@@ -96,7 +104,7 @@ class Keymap:
             b = Binding(key=key, command=command, contexts=contexts, help=help)
             self.bindings.append(b)
             self.bind(b)
-        signals.keybindings_change.send(self)
+        self._on_change()
 
     def remove(self, key: str, contexts: Sequence[str]) -> None:
         """
@@ -111,7 +119,7 @@ class Keymap:
                 if b.contexts:
                     self.bindings.append(b)
                     self.bind(b)
-        signals.keybindings_change.send(self)
+        self._on_change()
 
     def bind(self, binding: Binding) -> None:
         for c in binding.contexts:
@@ -124,10 +132,18 @@ class Keymap:
         for c in binding.contexts:
             del self.keys[c][binding.keyspec()]
             self.bindings = [b for b in self.bindings if b != binding]
+        self._on_change()
 
-    def get(self, context: str, key: str) -> Optional[Binding]:
+    def get(self, context: str, key: str) -> Binding | None:
         if context in self.keys:
             return self.keys[context].get(key, None)
+        return None
+
+    @cache
+    def binding_for_help(self, help: str) -> Binding | None:
+        for b in self.bindings:
+            if b.help == help:
+                return b
         return None
 
     def list(self, context: str) -> Sequence[Binding]:
@@ -138,23 +154,25 @@ class Keymap:
         multi.sort(key=lambda x: x.sortkey())
         return single + multi
 
-    def handle(self, context: str, key: str) -> Optional[str]:
+    def handle(self, context: str, key: str) -> str | None:
         """
         Returns the key if it has not been handled, or None.
         """
         b = self.get(context, key) or self.get("global", key)
         if b:
-            return self.executor(b.command)
+            self.executor(b.command)
+            return None
         return key
 
-    def handle_only(self, context: str, key: str) -> Optional[str]:
+    def handle_only(self, context: str, key: str) -> str | None:
         """
         Like handle, but ignores global bindings. Returns the key if it has
         not been handled, or None.
         """
         b = self.get(context, key)
         if b:
-            return self.executor(b.command)
+            self.executor(b.command)
+            return None
         return key
 
 
@@ -170,10 +188,13 @@ requiredKeyAttrs = {"key", "cmd"}
 class KeymapConfig:
     defaultFile = "keys.yaml"
 
+    def __init__(self, master):
+        self.master = master
+
     @command.command("console.keymap.load")
     def keymap_load_path(self, path: mitmproxy.types.Path) -> None:
         try:
-            self.load_path(ctx.master.keymap, path)  # type: ignore
+            self.load_path(self.master.keymap, path)  # type: ignore
         except (OSError, KeyBindingError) as e:
             raise exceptions.CommandError("Could not load key bindings - %s" % e) from e
 
@@ -181,9 +202,9 @@ class KeymapConfig:
         p = os.path.join(os.path.expanduser(ctx.options.confdir), self.defaultFile)
         if os.path.exists(p):
             try:
-                self.load_path(ctx.master.keymap, p)
+                self.load_path(self.master.keymap, p)
             except KeyBindingError as e:
-                ctx.log.error(e)
+                logging.error(e)
 
     def load_path(self, km, p):
         if os.path.exists(p) and os.path.isfile(p):

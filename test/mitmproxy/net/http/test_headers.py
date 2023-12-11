@@ -1,6 +1,7 @@
 import collections
 
-from mitmproxy.net.http.headers import parse_content_type, assemble_content_type
+from mitmproxy.net.http.headers import assemble_content_type
+from mitmproxy.net.http.headers import parse_content_type
 
 
 def test_parse_content_type():

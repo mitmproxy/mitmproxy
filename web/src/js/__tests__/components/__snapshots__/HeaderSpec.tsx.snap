@@ -375,7 +375,17 @@ exports[`Header 3`] = `
             <i
               class="fa fa-fw fa-floppy-o"
             />
-             Save...
+             Save
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+          >
+            <i
+              class="fa fa-fw fa-floppy-o"
+            />
+             Save filtered
           </a>
         </li>
         <li>

@@ -1,8 +1,8 @@
-import re
 import json
+import re
 from collections.abc import Iterator
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 from mitmproxy.contentviews import base
 
@@ -28,11 +28,18 @@ def format_json(data: Any) -> Iterator[base.TViewLine]:
             yield current_line
             current_line = []
         if re.match(r'\s*"', chunk):
-            current_line.append(("json_string", chunk))
+            if (
+                len(current_line) == 1
+                and current_line[0][0] == "text"
+                and current_line[0][1].isspace()
+            ):
+                current_line.append(("Token_Name_Tag", chunk))
+            else:
+                current_line.append(("Token_Literal_String", chunk))
         elif re.match(r"\s*\d", chunk):
-            current_line.append(("json_number", chunk))
+            current_line.append(("Token_Literal_Number", chunk))
         elif re.match(r"\s*(true|null|false)", chunk):
-            current_line.append(("json_boolean", chunk))
+            current_line.append(("Token_Keyword_Constant", chunk))
         else:
             current_line.append(("text", chunk))
     yield current_line
@@ -47,7 +54,7 @@ class ViewJSON(base.View):
             return "JSON", format_json(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if not data:
             return 0

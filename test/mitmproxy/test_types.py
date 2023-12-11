@@ -1,17 +1,16 @@
+import contextlib
+import os
 from collections.abc import Sequence
 
 import pytest
-import os
-import contextlib
-
-import mitmproxy.exceptions
-import mitmproxy.types
-from mitmproxy.test import taddons
-from mitmproxy.test import tflow
-from mitmproxy import command
-from mitmproxy import flow
 
 from . import test_command
+import mitmproxy.exceptions
+import mitmproxy.types
+from mitmproxy import command
+from mitmproxy import flow
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 @contextlib.contextmanager
@@ -30,7 +29,7 @@ def test_bool():
         assert b.parse(tctx.master.commands, bool, "false") is False
         assert b.is_valid(tctx.master.commands, bool, True) is True
         assert b.is_valid(tctx.master.commands, bool, "foo") is False
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, bool, "foo")
 
 
@@ -43,7 +42,7 @@ def test_str():
         assert b.parse(tctx.master.commands, str, "foo") == "foo"
         assert b.parse(tctx.master.commands, str, r"foo\nbar") == "foo\nbar"
         assert b.parse(tctx.master.commands, str, r"\N{BELL}") == "🔔"
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, bool, r"\N{UNKNOWN UNICODE SYMBOL!}")
 
 
@@ -54,7 +53,7 @@ def test_bytes():
         assert b.is_valid(tctx.master.commands, bytes, 1) is False
         assert b.completion(tctx.master.commands, bytes, "") == []
         assert b.parse(tctx.master.commands, bytes, "foo") == b"foo"
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, bytes, "incomplete escape sequence\\")
 
 
@@ -75,7 +74,7 @@ def test_int():
         assert b.completion(tctx.master.commands, int, "b") == []
         assert b.parse(tctx.master.commands, int, "1") == 1
         assert b.parse(tctx.master.commands, int, "999") == 999
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, int, "foo")
 
 
@@ -120,7 +119,7 @@ def test_cmd():
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "foo") is False
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "cmd1") is True
         assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "cmd1") == "cmd1"
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "foo")
         assert len(b.completion(tctx.master.commands, mitmproxy.types.Cmd, "")) == len(
             tctx.master.commands.commands.keys()
@@ -164,7 +163,7 @@ def test_marker():
         )
         assert b.parse(tctx.master.commands, mitmproxy.types.Marker, "false") == ""
 
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, mitmproxy.types.Marker, ":bogus:")
 
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, "true") is True
@@ -232,11 +231,11 @@ def test_flow():
         assert b.parse(tctx.master.commands, flow.Flow, "has space")
         assert b.is_valid(tctx.master.commands, flow.Flow, tflow.tflow()) is True
         assert b.is_valid(tctx.master.commands, flow.Flow, "xx") is False
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, flow.Flow, "0")
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, flow.Flow, "2")
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, flow.Flow, "err")
 
 
@@ -257,7 +256,7 @@ def test_flows():
         assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "1")) == 1
         assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "2")) == 2
         assert len(b.parse(tctx.master.commands, Sequence[flow.Flow], "has space")) == 1
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, Sequence[flow.Flow], "err")
 
 
@@ -269,9 +268,9 @@ def test_data():
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [["x"]]) is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [[b"x"]]) is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [[1]]) is False
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, mitmproxy.types.Data, "foo")
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, mitmproxy.types.Data, "foo")
 
 
@@ -309,7 +308,7 @@ def test_choice():
             b.parse(tctx.master.commands, mitmproxy.types.Choice("options"), "one")
             == "one"
         )
-        with pytest.raises(mitmproxy.exceptions.TypeError):
+        with pytest.raises(ValueError):
             b.parse(tctx.master.commands, mitmproxy.types.Choice("options"), "invalid")
 
 

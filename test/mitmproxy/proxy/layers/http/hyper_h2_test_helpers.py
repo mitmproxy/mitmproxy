@@ -1,6 +1,5 @@
 # This file has been copied from https://github.com/python-hyper/hyper-h2/blob/master/test/helpers.py,
 # MIT License
-
 # -*- coding: utf-8 -*-
 """
 helpers
@@ -9,19 +8,17 @@ helpers
 This module contains helpers for the h2 tests.
 """
 from hpack.hpack import Encoder
-from hyperframe.frame import (
-    HeadersFrame,
-    DataFrame,
-    SettingsFrame,
-    WindowUpdateFrame,
-    PingFrame,
-    GoAwayFrame,
-    RstStreamFrame,
-    PushPromiseFrame,
-    PriorityFrame,
-    ContinuationFrame,
-    AltSvcFrame,
-)
+from hyperframe.frame import AltSvcFrame
+from hyperframe.frame import ContinuationFrame
+from hyperframe.frame import DataFrame
+from hyperframe.frame import GoAwayFrame
+from hyperframe.frame import HeadersFrame
+from hyperframe.frame import PingFrame
+from hyperframe.frame import PriorityFrame
+from hyperframe.frame import PushPromiseFrame
+from hyperframe.frame import RstStreamFrame
+from hyperframe.frame import SettingsFrame
+from hyperframe.frame import WindowUpdateFrame
 
 SAMPLE_SETTINGS = {
     SettingsFrame.HEADER_TABLE_SIZE: 4096,

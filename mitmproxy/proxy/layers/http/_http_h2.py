@@ -1,5 +1,6 @@
 import collections
-from typing import Dict, List, NamedTuple, Tuple
+import logging
+from typing import NamedTuple
 
 import h2.config
 import h2.connection
@@ -8,17 +9,27 @@ import h2.exceptions
 import h2.settings
 import h2.stream
 
+logger = logging.getLogger(__name__)
+
 
 class H2ConnectionLogger(h2.config.DummyLogger):
-    def __init__(self, name: str):
+    def __init__(self, peername: tuple, conn_type: str):
         super().__init__()
-        self.name = name
+        self.peername = peername
+        self.conn_type = conn_type
 
     def debug(self, fmtstr, *args):
-        print(f"{self.name} h2 (debug): {fmtstr % args}")
+        logger.debug(
+            f"{self.conn_type} {fmtstr}", *args, extra={"client": self.peername}
+        )
 
     def trace(self, fmtstr, *args):
-        print(f"{self.name} h2 (trace): {fmtstr % args}")
+        logger.log(
+            logging.DEBUG - 1,
+            f"{self.conn_type} {fmtstr}",
+            *args,
+            extra={"client": self.peername},
+        )
 
 
 class SendH2Data(NamedTuple):
@@ -34,7 +45,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
     """
 
     stream_buffers: collections.defaultdict[int, collections.deque[SendH2Data]]
-    stream_trailers: Dict[int, List[Tuple[bytes, bytes]]]
+    stream_trailers: dict[int, list[tuple[bytes, bytes]]]
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
@@ -79,7 +90,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
                 # We can't send right now, so we buffer.
                 self.stream_buffers[stream_id].append(SendH2Data(data, end_stream))
 
-    def send_trailers(self, stream_id: int, trailers: List[Tuple[bytes, bytes]]):
+    def send_trailers(self, stream_id: int, trailers: list[tuple[bytes, bytes]]):
         if self.stream_buffers.get(stream_id, None):
             # Though trailers are not subject to flow control, we need to queue them and send strictly after data frames
             self.stream_trailers[stream_id] = trailers
@@ -159,7 +170,9 @@ class BufferedH2Connection(h2.connection.H2Connection):
             if not self.stream_buffers[stream_id]:
                 del self.stream_buffers[stream_id]
                 if stream_id in self.stream_trailers:
-                    self.send_headers(stream_id, self.stream_trailers.pop(stream_id), end_stream=True)
+                    self.send_headers(
+                        stream_id, self.stream_trailers.pop(stream_id), end_stream=True
+                    )
             sent_any_data = True
 
         return sent_any_data

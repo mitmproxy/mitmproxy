@@ -1,5 +1,6 @@
-from mitmproxy.test import tflow, taddons
 from mitmproxy.addons.comment import Comment
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def test_comment():

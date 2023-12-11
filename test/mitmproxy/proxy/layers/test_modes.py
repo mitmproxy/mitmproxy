@@ -2,33 +2,45 @@ import copy
 
 import pytest
 
-from mitmproxy import platform
+from mitmproxy import dns
 from mitmproxy.addons.proxyauth import ProxyAuth
-from mitmproxy.connection import Client, Server
-from mitmproxy.proxy.commands import (
-    CloseConnection,
-    GetSocket,
-    Log,
-    OpenConnection,
-    SendData,
-)
+from mitmproxy.connection import Client
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.proxy import layers
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import RequestWakeup
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layer import NextLayer, NextLayerHook
-from mitmproxy.proxy.layers import http, modes, tcp, tls
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layer import NextLayer
+from mitmproxy.proxy.layer import NextLayerHook
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import udp
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
-from mitmproxy.proxy.layers.tls import (
-    ClientTLSLayer,
-    TlsStartClientHook,
-    TlsStartServerHook,
-)
+from mitmproxy.proxy.layers.tcp import TcpMessageHook
+from mitmproxy.proxy.layers.tcp import TcpStartHook
+from mitmproxy.proxy.layers.tls import ClientTLSLayer
+from mitmproxy.proxy.layers.tls import TlsStartClientHook
+from mitmproxy.proxy.layers.tls import TlsStartServerHook
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
-from test.mitmproxy.proxy.layers.test_tls import (
-    reply_tls_start_client,
-    reply_tls_start_server,
-)
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.udp import UDPFlow
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_upstream_https(tctx):
@@ -41,18 +53,30 @@ def test_upstream_https(tctx):
     curl -x localhost:8080 -k http://example.com
     """
     tctx1 = Context(
-        Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+        Client(
+            peername=("client", 1234),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
-    tctx1.options.mode = "upstream:https://example.mitmproxy.org:8081"
+    tctx1.client.proxy_mode = ProxyMode.parse(
+        "upstream:https://example.mitmproxy.org:8081"
+    )
     tctx2 = Context(
-        Client(("client", 4321), ("127.0.0.1", 8080), 1605699329),
+        Client(
+            peername=("client", 4321),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
-    assert tctx2.options.mode == "regular"
+    assert tctx2.client.proxy_mode == ProxyMode.parse("regular")
     del tctx
 
-    proxy1 = Playbook(modes.HttpProxy(tctx1), hooks=False)
+    proxy1 = Playbook(modes.HttpUpstreamProxy(tctx1), hooks=False)
     proxy2 = Playbook(modes.HttpProxy(tctx2), hooks=False)
 
     upstream = Placeholder(Server)
@@ -89,8 +113,8 @@ def test_upstream_https(tctx):
         << SendData(tctx2.client, serverhello)
     )
     assert (
-        # forward serverhello to proxy1
         proxy1
+        # forward serverhello to proxy1
         >> DataReceived(upstream, serverhello())
         << SendData(upstream, request)
     )
@@ -124,7 +148,7 @@ def test_reverse_proxy(tctx, keep_host_header):
     - make sure that we include non-standard ports in the host header (#4280)
     """
     server = Placeholder(Server)
-    tctx.options.mode = "reverse:http://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:http://localhost:8000")
     tctx.options.connection_strategy = "lazy"
     tctx.options.keep_host_header = keep_host_header
     assert (
@@ -149,6 +173,75 @@ def test_reverse_proxy(tctx, keep_host_header):
     assert server().address == ("localhost", 8000)
 
 
+def test_reverse_dns(tctx):
+    f = Placeholder(dns.DNSFlow)
+    server = Placeholder(Server)
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8:53")
+    tctx.options.connection_strategy = "lazy"
+    assert (
+        Playbook(modes.ReverseProxy(tctx), hooks=False)
+        >> DataReceived(tctx.client, tflow.tdnsreq().packed)
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.DNSLayer)
+        << layers.dns.DnsRequestHook(f)
+        >> reply(None)
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(tctx.server, tflow.tdnsreq().packed)
+    )
+    assert server().address == ("8.8.8.8", 53)
+
+
+@pytest.mark.parametrize("keep_host_header", [True, False])
+def test_quic(tctx: Context, keep_host_header: bool):
+    with taddons.context():
+        tctx.options.keep_host_header = keep_host_header
+        tctx.server.sni = "other"
+        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://1.2.3.4:5")
+        client_hello = Placeholder(bytes)
+
+        def set_settings(data: quic.QuicTlsData):
+            data.settings = quic.QuicTlsSettings()
+
+        assert (
+            Playbook(modes.ReverseProxy(tctx))
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            >> DataReceived(tctx.client, b"\x00")
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(layers.ServerQuicLayer)
+            << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
+            >> reply(side_effect=set_settings)
+            << SendData(tctx.server, client_hello)
+            << RequestWakeup(Placeholder(float))
+        )
+        assert tctx.server.address == ("1.2.3.4", 5)
+        assert quic.quic_parse_client_hello(client_hello()).sni == (
+            "other" if keep_host_header else "1.2.3.4"
+        )
+
+
+def test_udp(tctx: Context):
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:udp://1.2.3.4:5")
+    flow = Placeholder(UDPFlow)
+    assert (
+        Playbook(modes.ReverseProxy(tctx))
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> DataReceived(tctx.client, b"test-input")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow)
+        >> reply()
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(tctx.server, b"test-input")
+    )
+    assert tctx.server.address == ("1.2.3.4", 5)
+    assert len(flow().messages) == 1
+    assert flow().messages[0].content == b"test-input"
+
+
 @pytest.mark.parametrize("patch", [True, False])
 @pytest.mark.parametrize("connection_strategy", ["eager", "lazy"])
 def test_reverse_proxy_tcp_over_tls(
@@ -160,12 +253,9 @@ def test_reverse_proxy_tcp_over_tls(
     reverse proxying.
     """
 
-    if patch:
-        monkeypatch.setattr(tls, "ServerTLSLayer", tls.MockTLSLayer)
-
     flow = Placeholder(TCPFlow)
     data = Placeholder(bytes)
-    tctx.options.mode = "reverse:https://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:https://localhost:8000")
     tctx.options.connection_strategy = connection_strategy
     playbook = Playbook(modes.ReverseProxy(tctx))
     if connection_strategy == "eager":
@@ -187,8 +277,8 @@ def test_reverse_proxy_tcp_over_tls(
         )
         if connection_strategy == "lazy":
             (
-                # only now we open a connection
                 playbook
+                # only now we open a connection
                 << OpenConnection(tctx.server)
                 >> reply(None)
             )
@@ -197,6 +287,11 @@ def test_reverse_proxy_tcp_over_tls(
         )
         assert data() == b"\x01\x02\x03"
     else:
+        (
+            playbook
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(tls.ServerTLSLayer)
+        )
         if connection_strategy == "lazy":
             (
                 playbook
@@ -217,16 +312,12 @@ def test_reverse_proxy_tcp_over_tls(
 
 
 @pytest.mark.parametrize("connection_strategy", ["eager", "lazy"])
-def test_transparent_tcp(tctx: Context, monkeypatch, connection_strategy):
-    monkeypatch.setattr(platform, "original_addr", lambda sock: ("address", 22))
-
+def test_transparent_tcp(tctx: Context, connection_strategy):
     flow = Placeholder(TCPFlow)
     tctx.options.connection_strategy = connection_strategy
+    tctx.server.address = ("address", 22)
 
-    sock = object()
     playbook = Playbook(modes.TransparentProxy(tctx))
-    playbook << GetSocket(tctx.client)
-    playbook >> reply(sock)
     if connection_strategy == "lazy":
         assert playbook
     else:
@@ -249,23 +340,6 @@ def test_transparent_tcp(tctx: Context, monkeypatch, connection_strategy):
     assert tctx.server.address == ("address", 22)
 
 
-def test_transparent_failure(tctx: Context, monkeypatch):
-    """Test that we recover from a transparent mode resolve error."""
-
-    def raise_err(sock):
-        raise RuntimeError("platform-specific error")
-
-    monkeypatch.setattr(platform, "original_addr", raise_err)
-    assert (
-        Playbook(modes.TransparentProxy(tctx), logs=True)
-        << GetSocket(tctx.client)
-        >> reply(object())
-        << Log(
-            "Transparent mode failure: RuntimeError('platform-specific error')", "info"
-        )
-    )
-
-
 def test_reverse_eager_connect_failure(tctx: Context):
     """
     Test
@@ -273,7 +347,7 @@ def test_reverse_eager_connect_failure(tctx: Context):
     reverse proxying.
     """
 
-    tctx.options.mode = "reverse:https://localhost:8000"
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:https://localhost:8000")
     tctx.options.connection_strategy = "eager"
     playbook = Playbook(modes.ReverseProxy(tctx))
     assert (
@@ -285,15 +359,13 @@ def test_reverse_eager_connect_failure(tctx: Context):
     )
 
 
-def test_transparent_eager_connect_failure(tctx: Context, monkeypatch):
-    """Test that we recover from a transparent mode resolve error."""
+def test_transparent_eager_connect_failure(tctx: Context):
+    """Test that we recover from a transparent mode connect error."""
     tctx.options.connection_strategy = "eager"
-    monkeypatch.setattr(platform, "original_addr", lambda sock: ("address", 22))
+    tctx.server.address = ("address", 22)
 
     assert (
         Playbook(modes.TransparentProxy(tctx), logs=True)
-        << GetSocket(tctx.client)
-        >> reply(object())
         << OpenConnection(tctx.server)
         >> reply("something something")
         << CloseConnection(tctx.client)

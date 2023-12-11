@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import asyncio
 
-from mitmproxy import options, optmanager
-from mitmproxy.tools import dump, console, web
+from mitmproxy import options
+from mitmproxy import optmanager
+from mitmproxy.tools import console
+from mitmproxy.tools import dump
+from mitmproxy.tools import web
 
 masters = {
     "mitmproxy": console.master.ConsoleMaster,

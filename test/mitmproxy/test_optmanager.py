@@ -1,14 +1,15 @@
+import argparse
 import copy
 import io
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Optional
 
 import pytest
-import argparse
 
+from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import optmanager
-from mitmproxy import exceptions
 
 
 class TO(optmanager.OptManager):
@@ -39,6 +40,13 @@ class TM(optmanager.OptManager):
         super().__init__()
         self.add_option("two", Sequence[str], ["foo"], "help")
         self.add_option("one", Optional[str], None, "help")
+
+
+class TS(optmanager.OptManager):
+    def __init__(self):
+        super().__init__()
+        self.add_option("scripts", Sequence[str], [], "help")
+        self.add_option("not_scripts", Sequence[str], [], "help")
 
 
 def test_defaults():
@@ -100,8 +108,8 @@ def test_options():
 
     rec = []
 
-    def sub(opts, updated):
-        rec.append(copy.copy(opts))
+    def sub(updated):
+        rec.append(copy.copy(o))
 
     o.changed.connect(sub)
 
@@ -159,7 +167,7 @@ def test_subscribe():
     else:
         raise AssertionError
 
-    assert len(o.changed.receivers) == 0
+    assert len(o._subscriptions) == 0
 
     o.subscribe(r, ["two"])
     o.one = 2
@@ -170,7 +178,7 @@ def test_subscribe():
     assert len(o.changed.receivers) == 1
     del r
     o.two = 4
-    assert len(o.changed.receivers) == 0
+    assert len(o._subscriptions) == 0
 
     class binder:
         def __init__(self):
@@ -193,18 +201,18 @@ def test_rollback():
 
     rec = []
 
-    def sub(opts, updated):
-        rec.append(copy.copy(opts))
+    def sub(updated):
+        rec.append(copy.copy(o))
 
     recerr = []
 
-    def errsub(opts, **kwargs):
+    def errsub(**kwargs):
         recerr.append(kwargs)
 
-    def err(opts, updated):
-        if opts.one == 10:
+    def err(updated):
+        if o.one == 10:
             raise exceptions.OptionsError()
-        if opts.bool is True:
+        if o.bool is True:
             raise exceptions.OptionsError()
 
     o.changed.connect(sub)
@@ -233,8 +241,12 @@ def test_rollback():
 
 
 def test_simple():
-    assert repr(TO())
-    assert "one" in TO()
+    o = TO()
+    assert repr(o)
+    assert "one" in o
+
+    with pytest.raises(Exception, match="No such option"):
+        assert o.unknown
 
 
 def test_items():
@@ -298,7 +310,7 @@ def test_serialize_defaults():
 def test_saving(tmpdir):
     o = TD2()
     o.three = "set"
-    dst = str(tmpdir.join("conf"))
+    dst = Path(tmpdir.join("conf"))
     optmanager.save(o, dst, defaults=True)
 
     o2 = TD2()
@@ -465,3 +477,43 @@ def test_set():
     opts.process_deferred()
     assert "deferredsequenceoption" not in opts.deferred
     assert opts.deferredsequenceoption == ["a", "b"]
+
+
+def test_load_paths(tdata):
+    opts = TS()
+    conf_path = tdata.path("mitmproxy/data/test_config.yml")
+    optmanager.load_paths(opts, conf_path)
+    assert opts.scripts == [
+        str(Path.home().absolute().joinpath("abc")),
+        str(Path(conf_path).parent.joinpath("abc")),
+        str(Path(conf_path).parent.joinpath("../abc")),
+        str(Path("/abc").absolute()),
+    ]
+    assert opts.not_scripts == ["~/abc", "abc", "../abc", "/abc"]
+
+
+@pytest.mark.parametrize(
+    "script_path, relative_to, expected",
+    (
+        ("~/abc", ".", Path.home().joinpath("abc")),
+        ("/abc", ".", Path("/abc")),
+        ("abc", ".", Path(".").joinpath("abc")),
+        ("../abc", ".", Path(".").joinpath("../abc")),
+        ("~/abc", "/tmp", Path.home().joinpath("abc")),
+        ("/abc", "/tmp", Path("/abc")),
+        ("abc", "/tmp", Path("/tmp").joinpath("abc")),
+        ("../abc", "/tmp", Path("/tmp").joinpath("../abc")),
+        ("~/abc", "foo", Path.home().joinpath("abc")),
+        ("/abc", "foo", Path("/abc")),
+        ("abc", "foo", Path("foo").joinpath("abc")),
+        ("../abc", "foo", Path("foo").joinpath("../abc")),
+    ),
+)
+def test_relative_path(script_path, relative_to, expected):
+    assert (
+        optmanager.relative_path(
+            script_path,
+            relative_to=relative_to,
+        )
+        == expected.absolute()
+    )

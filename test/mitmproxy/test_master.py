@@ -1,16 +1,23 @@
 import asyncio
 
-from mitmproxy.test.taddons import RecordingMaster
+from mitmproxy.master import Master
 
 
 async def err():
     raise RuntimeError
 
 
-async def test_exception_handler():
-    m = RecordingMaster(None)
+class TaskError:
+    def running(self):
+        # not assigned to anything
+        asyncio.create_task(err())
+
+
+async def test_exception_handler(caplog_async):
+    caplog_async.set_level("ERROR")
+    m = Master(None)
+    m.addons.add(TaskError())
     running = asyncio.create_task(m.run())
-    asyncio.create_task(err())
-    await m.await_log("Traceback", level="error")
+    await caplog_async.await_log("Traceback")
     m.shutdown()
     await running

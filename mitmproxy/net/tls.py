@@ -1,23 +1,34 @@
 import os
 import threading
+from collections.abc import Callable
+from collections.abc import Iterable
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Iterable, Optional
+from typing import Any
+from typing import BinaryIO
 
 import certifi
-
+from OpenSSL import crypto
+from OpenSSL import SSL
 from OpenSSL.crypto import X509
-from cryptography.hazmat.primitives.asymmetric import rsa
 
-from OpenSSL import SSL, crypto
 from mitmproxy import certs
+
+# Remove once pyOpenSSL 23.3.0 is released and bump version in pyproject.toml.
+try:  # pragma: no cover
+    from OpenSSL.SSL import OP_LEGACY_SERVER_CONNECT  # type: ignore
+except ImportError:
+    OP_LEGACY_SERVER_CONNECT = 0x4
 
 
 # redeclared here for strict type checking
 class Method(Enum):
     TLS_SERVER_METHOD = SSL.TLS_SERVER_METHOD
     TLS_CLIENT_METHOD = SSL.TLS_CLIENT_METHOD
+    # Type-pyopenssl does not know about these DTLS constants.
+    DTLS_SERVER_METHOD = SSL.DTLS_SERVER_METHOD  # type: ignore
+    DTLS_CLIENT_METHOD = SSL.DTLS_CLIENT_METHOD  # type: ignore
 
 
 try:
@@ -50,7 +61,7 @@ DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 class MasterSecretLogger:
     def __init__(self, filename: Path):
         self.filename = filename.expanduser()
-        self.f: Optional[BinaryIO] = None
+        self.f: BinaryIO | None = None
         self.lock = threading.Lock()
 
     # required for functools.wraps, which pyOpenSSL uses.
@@ -71,7 +82,7 @@ class MasterSecretLogger:
                 self.f.close()
 
 
-def make_master_secret_logger(filename: Optional[str]) -> Optional[MasterSecretLogger]:
+def make_master_secret_logger(filename: str | None) -> MasterSecretLogger | None:
     if filename:
         return MasterSecretLogger(Path(filename))
     return None
@@ -87,7 +98,8 @@ def _create_ssl_context(
     method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[Iterable[str]],
+    cipher_list: Iterable[str] | None,
+    ecdh_curve: str | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -101,6 +113,13 @@ def _create_ssl_context(
 
     # Options
     context.set_options(DEFAULT_OPTIONS)
+
+    # ECDHE for Key exchange
+    if ecdh_curve is not None:
+        try:
+            context.set_tmp_ecdh(crypto.get_elliptic_curve(ecdh_curve))
+        except ValueError as e:
+            raise RuntimeError(f"Elliptic curve specification error: {e}") from e
 
     # Cipher List
     if cipher_list is not None:
@@ -119,19 +138,23 @@ def _create_ssl_context(
 @lru_cache(256)
 def create_proxy_server_context(
     *,
+    method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[tuple[str, ...]],
+    cipher_list: tuple[str, ...] | None,
+    ecdh_curve: str | None,
     verify: Verify,
-    ca_path: Optional[str],
-    ca_pemfile: Optional[str],
-    client_cert: Optional[str],
+    ca_path: str | None,
+    ca_pemfile: str | None,
+    client_cert: str | None,
+    legacy_server_connect: bool,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_CLIENT_METHOD,
+        method=method,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
+        ecdh_curve=ecdh_curve,
     )
     context.set_verify(verify.value, None)
 
@@ -152,32 +175,34 @@ def create_proxy_server_context(
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
 
+    if legacy_server_connect:
+        context.set_options(OP_LEGACY_SERVER_CONNECT)
+
     return context
 
 
 @lru_cache(256)
 def create_client_proxy_context(
     *,
+    method: Method,
     min_version: Version,
     max_version: Version,
-    cipher_list: Optional[tuple[str, ...]],
-    cert: certs.Cert,
-    key: rsa.RSAPrivateKey,
-    chain_file: Optional[Path],
-    alpn_select_callback: Optional[Callable[[SSL.Connection, list[bytes]], Any]],
+    cipher_list: tuple[str, ...] | None,
+    ecdh_curve: str | None,
+    chain_file: Path | None,
+    alpn_select_callback: Callable[[SSL.Connection, list[bytes]], Any] | None,
     request_client_cert: bool,
     extra_chain_certs: tuple[certs.Cert, ...],
     dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_SERVER_METHOD,
+        method=method,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
+        ecdh_curve=ecdh_curve,
     )
 
-    context.use_certificate(cert.to_pyopenssl())
-    context.use_privatekey(crypto.PKey.from_cryptography_key(key))
     if chain_file is not None:
         try:
             context.load_verify_locations(str(chain_file), None)
@@ -222,15 +247,28 @@ def accept_all(
     return True
 
 
-def is_tls_record_magic(d):
+def starts_like_tls_record(d: bytes) -> bool:
     """
     Returns:
-        True, if the passed bytes start with the TLS record magic bytes.
+        True, if the passed bytes could be the start of a TLS record
         False, otherwise.
     """
-    d = d[:3]
-
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     # https://tls13.ulfheim.net/
-    return len(d) == 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03
+    # We assume that a client sending less than 3 bytes initially is not a TLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0x03 and 0x00 <= d[2] <= 0x03
+
+
+def starts_like_dtls_record(d: bytes) -> bool:
+    """
+    Returns:
+        True, if the passed bytes could be the start of a DTLS record
+        False, otherwise.
+    """
+    # TLS ClientHello magic, works for DTLS 1.1, DTLS 1.2, and DTLS 1.3.
+    # https://www.rfc-editor.org/rfc/rfc4347#section-4.1
+    # https://www.rfc-editor.org/rfc/rfc6347#section-4.1
+    # https://www.rfc-editor.org/rfc/rfc9147#section-4-6.2
+    # We assume that a client sending less than 3 bytes initially is not a DTLS client.
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0xFE and 0xFD <= d[2] <= 0xFE

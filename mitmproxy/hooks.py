@@ -1,8 +1,12 @@
 import re
 import warnings
 from collections.abc import Sequence
-from dataclasses import dataclass, is_dataclass, fields
-from typing import Any, ClassVar, TYPE_CHECKING
+from dataclasses import dataclass
+from dataclasses import fields
+from dataclasses import is_dataclass
+from typing import Any
+from typing import ClassVar
+from typing import TYPE_CHECKING
 
 import mitmproxy.flow
 
@@ -16,7 +20,7 @@ class Hook:
 
     def args(self) -> list[Any]:
         args = []
-        for field in fields(self):
+        for field in fields(self):  # type: ignore[arg-type]
             args.append(getattr(self, field.name))
         return args
 
@@ -43,8 +47,8 @@ class Hook:
         all_hooks[cls.name] = cls
 
         # define a custom hash and __eq__ function so that events are hashable and not comparable.
-        cls.__hash__ = object.__hash__
-        cls.__eq__ = object.__eq__
+        cls.__hash__ = object.__hash__  # type: ignore
+        cls.__eq__ = object.__eq__  # type: ignore
 
 
 all_hooks: dict[str, type[Hook]] = {}

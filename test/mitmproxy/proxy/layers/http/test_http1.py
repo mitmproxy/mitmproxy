@@ -3,18 +3,17 @@ import pytest
 from mitmproxy import http
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
-from mitmproxy.proxy.layers.http import (
-    Http1Server,
-    ReceiveHttp,
-    RequestHeaders,
-    RequestEndOfMessage,
-    ResponseHeaders,
-    ResponseEndOfMessage,
-    RequestData,
-    Http1Client,
-    ResponseData,
-)
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook
+from mitmproxy.proxy.layers.http import Http1Client
+from mitmproxy.proxy.layers.http import Http1Server
+from mitmproxy.proxy.layers.http import ReceiveHttp
+from mitmproxy.proxy.layers.http import RequestData
+from mitmproxy.proxy.layers.http import RequestEndOfMessage
+from mitmproxy.proxy.layers.http import RequestHeaders
+from mitmproxy.proxy.layers.http import ResponseData
+from mitmproxy.proxy.layers.http import ResponseEndOfMessage
+from mitmproxy.proxy.layers.http import ResponseHeaders
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
 
 
 class TestServer:

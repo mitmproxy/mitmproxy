@@ -1,13 +1,15 @@
+import logging
 import os.path
 import sys
 from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
+from typing import Optional
 
 import mitmproxy.types
-from mitmproxy import command, tcp
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
@@ -15,6 +17,9 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy.log import ALERT
 
 
 @lru_cache
@@ -36,10 +41,10 @@ def _mode(path: str) -> Literal["ab", "wb"]:
 
 class Save:
     def __init__(self) -> None:
-        self.stream: Optional[io.FilteredFlowWriter] = None
-        self.filt: Optional[flowfilter.TFilter] = None
+        self.stream: io.FilteredFlowWriter | None = None
+        self.filt: flowfilter.TFilter | None = None
         self.active_flows: set[flow.Flow] = set()
-        self.current_path: Optional[str] = None
+        self.current_path: str | None = None
 
     def load(self, loader):
         loader.add_option(
@@ -75,6 +80,7 @@ class Save:
                     self.maybe_rotate_to_new_file()
                 except OSError as e:
                     raise exceptions.OptionsError(str(e)) from e
+                assert self.stream
                 self.stream.flt = self.filt
             else:
                 self.done()
@@ -136,7 +142,13 @@ class Save:
                     stream.add(i)
         except OSError as e:
             raise exceptions.CommandError(e) from e
-        ctx.log.alert(f"Saved {len(flows)} flows.")
+        if path.endswith(".har") or path.endswith(".zhar"):  # pragma: no cover
+            logging.log(
+                ALERT,
+                f"Saved as mitmproxy dump file. To save HAR files, use the `save.har` command.",
+            )
+        else:
+            logging.log(ALERT, f"Saved {len(flows)} flows.")
 
     def tcp_start(self, flow: tcp.TCPFlow):
         if self.stream:
@@ -147,6 +159,16 @@ class Save:
 
     def tcp_error(self, flow: tcp.TCPFlow):
         self.tcp_end(flow)
+
+    def udp_start(self, flow: udp.UDPFlow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def udp_end(self, flow: udp.UDPFlow):
+        self.save_flow(flow)
+
+    def udp_error(self, flow: udp.UDPFlow):
+        self.udp_end(flow)
 
     def websocket_end(self, flow: http.HTTPFlow):
         self.save_flow(flow)

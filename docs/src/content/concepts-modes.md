@@ -9,9 +9,11 @@ menu:
 
 - [Regular](#regular-proxy) (the default)
 - [Transparent](#transparent-proxy)
+- [WireGuard](#wireguard-transparent-proxy)
 - [Reverse Proxy](#reverse-proxy)
 - [Upstream Proxy](#upstream-proxy)
 - [SOCKS Proxy](#socks-proxy)
+- [DNS Server](#dns-server)
 
 Now, which one should you pick? Use this flow chart:
 
@@ -137,19 +139,115 @@ most cases, the configuration will look like this:
 
 {{< figure src="/schematics/proxy-modes-transparent-3.png" >}}
 
+## WireGuard (transparent proxy)
+
+```shell
+mitmdump --mode wireguard
+```
+
+The WireGuard mode works in the same way as transparent mode, except that setup
+and routing client traffic to mitmproxy are different. In this mode, mitmproxy
+runs an internal WireGuard server, which devices can be connected to by using
+standard WireGuard client applications:
+
+1. Start `mitmweb --mode wireguard`.
+2. Install a WireGuard client on target device.
+3. Import the WireGuard client configuration provided by mitmproxy.
+
+No additional routing configuration is required for this mode, since WireGuard
+operates by exchanging UDP packets between client and server (with encrypted IP
+packets as their payload) instead of routing IP packets directly. Additionally,
+the WireGuard server runs entirely in userspace, so no administrative privileges
+are necessary for setup or operation of mitmproxy in this mode.
+
+### Configuration
+
+#### WireGuard server
+
+By default, the WireGuard server will listen on port `51820/udp`, the default
+port for WireGuard servers. This can be changed by setting the `listen_port`
+option or by specifying an explicit port (`--mode wireguard@51821`).
+
+The encryption keys for WireGuard connections are stored in
+`~/.mitmproxy/wireguard.conf`. It is possible to specify a custom path with
+`--mode wireguard:path`. New keys will be generated automatically if the
+specified file does not yet exist. For example, to connect two clients
+simultaneously, you can run
+`mitmdump --mode wireguard:wg-keys-1.conf --mode wireguard:wg-keys-2.conf@51821`.
+
+#### WireGuard clients
+
+It is possible to limit the IP addresses for which traffic is sent over the
+WireGuard tunnel to specific ranges. In this case, the `AllowedIPs` setting
+in the WireGuard client configuration can be changed from `0.0.0.0/0` (i.e
+"route *all* IPv4 traffic through the WireGuard tunnel") to the desired ranges
+of IP addresses (this setting allows multiple, comma-separated values).
+
+For more complex network layouts it might also be necessary to override the
+automatically detected `Endpoint` IP address (i.e. the address of the host on
+which mitmproxy and its WireGuard server are running).
+
+### Limitations
+
+#### Transparently proxying mitmproxy host traffic
+
+With the current implementation, it is not possible to proxy all traffic of the
+host that mitmproxy itself is running on, since this would result in outgoing
+WireGuard packets being sent over the WireGuard tunnel themselves.
+
+#### Limited support for IPv6 traffic
+
+The WireGuard server internal to mitmproxy supports receiving IPv6 packets from
+client devices, but support for proxying IPv6 packets themselves is still
+limited. For this reason, the `AllowedIPs` setting in generated WireGuard client
+configurations does not list any IPv6 addresses yet. To enable the incomplete
+support for IPv6 traffic, `::/0` (i.e. "route *all* IPv6 traffic through the
+WireGuard tunnel") or other IPv6 address ranges can be added to the list of
+allowed IP addresses.
+
 ## Reverse Proxy
 
 ```shell
 mitmdump --mode reverse:https://example.com
 ```
 
-mitmproxy is usually used with a client that uses the proxy to access
-the Internet. Using reverse proxy mode, you can use mitmproxy to act
-like a normal HTTP server:
+In reverse proxy mode, mitmproxy acts as a normal server.
+Requests by clients will be forwarded to a preconfigured target server,
+and responses will be forwarded back to the client:
 
 {{< figure src="/schematics/proxy-modes-reverse.png" >}}
 
-There are various use-cases:
+### Listen Port
+
+With the exception of DNS, reverse proxy servers will listen on port 8080 by default (DNS uses 53).
+To listen on a different port, append `@portnumber` to the mode. You can
+also pass `--mode` repeatedly to run multiple reverse proxy servers on different ports. For example,
+the following command will run a reverse proxy server to example.com on port 80 and 443:
+
+```text
+mitmdump --mode reverse:https://example.com@80 --mode reverse:https://example.com@443
+```
+
+### Protocol Specification
+
+The examples above have focused on HTTP reverse proxying, but mitmproxy can also reverse proxy other protocols.
+To adjust the protocol, adjust the scheme in the proxy specification. For example, `--mode reverse:tcp://example.com:80`
+would establish a raw TCP proxy.
+
+| Scheme   | client ↔ mitmproxy                      | mitmproxy ↔ server |
+|----------|-----------------------------------------|--------------------|
+| http://  | HTTP or HTTPS (autodetected)            | HTTP               |
+| https:// | HTTP or HTTPS (autodetected)            | HTTPS              |
+| dns://   | DNS                                     | DNS                |
+| http3:// | HTTP/3                                  | HTTP/3             |
+| quic://  | Raw QUIC                                | Raw QUIC           |
+| tcp://   | Raw TCP or TCP-over-TLS (autodetected)  | Raw TCP            |
+| tls://   | Raw TCP or TCP-over-TLS (autodetected)  | Raw TCP-over-TLS   |
+| udp://   | Raw UDP or UDP-over-DTLS (autodetected) | Raw UDP            |
+| dtls://  | Raw UDP or UDP-over-DTLS (autodetected) | Raw UDP-over-DTLS  |
+
+
+### Reverse Proxy Examples
 
 - Say you have an internal API running at <http://example.local/>. You could now
     set up mitmproxy in reverse proxy mode at <http://debug.example.local/> and
@@ -162,16 +260,24 @@ There are various use-cases:
     your hosts file so that example.com points to 127.0.0.1 and then run
     mitmproxy in reverse proxy mode on port 80. You can test your app on the
     example.com domain and get all requests recorded in mitmproxy.
-- Say you have some toy project that should get SSL support. Simply set up
+- Say you have some toy project that should get TLS support. Simply set up
     mitmproxy as a reverse proxy on port 443 and you're done (`mitmdump -p 443
     --mode reverse:http://localhost:80/`). Mitmproxy auto-detects TLS traffic and intercepts
     it dynamically. There are better tools for this specific task, but mitmproxy
-    is very quick and simple way to set up an SSL-speaking server.
-- Want to add a non-SSL-capable compression proxy in front of your server? You
-    could even spawn a mitmproxy instance that terminates SSL (`--mode reverse:http://...`),
-    point it to the compression proxy and let the compression proxy point to a
-    SSL-initiating mitmproxy (`--mode reverse:https://...`), which then points to the real
-    server. As you see, it's a fairly flexible thing.
+    is very quick and simple way to set up an TLS-speaking server.
+- Want to know what goes on over (D)TLS (without HTTP)? With mitmproxy's raw
+    traffic support you can. Use `--mode reverse:tls://example.com:1234` to
+    spawn a TCP instance that connects to `example.com:1234` using TLS, and
+    `--mode reverse:dtls://example.com:1234` to use UDP and DTLS respectively instead.  
+    Incoming client connections can either use (D)TLS themselves or raw TCP/UDP.
+    In case you want to inspect raw traffic only for some hosts and HTTP for
+    others, have a look at the [tcp_hosts]({{< relref "concepts-options" >}}#tcp_hosts)
+    and [udp_hosts]({{< relref "concepts-options" >}}#udp_hosts) options.
+- Say you want to capture DNS traffic to Google's Public DNS server? Then you
+    can spawn a reverse instance with `--mode reverse:dns://8.8.8.8`. In case
+    you want to resolve queries locally (ie. using the resolve capabilities
+    provided and configured by your operating system), use [DNS Server](#dns-server)
+    mode instead.
 
 ### Host Header
 
@@ -228,3 +334,21 @@ mitmdump --mode socks5
 In this mode, mitmproxy acts as a SOCKS5 proxy.
 This is similar to the regular proxy mode, but using SOCKS5 instead of HTTP for connection establishment
 with the proxy.
+
+
+## DNS Server
+
+```shell
+mitmdump --mode dns
+```
+
+This mode will listen for incoming DNS queries and use the resolve
+capabilities of your operation system to return an answer.
+By default port 53 will be used. To specify a different port, say 5353,
+use `--mode dns@5353`.
+
+Since the lookup API is limited to turning host names into IP addresses
+and vice-versa, only A, AAAA, PTR and CNAME queries are supported.
+You can, however, use reverse mode to specify an upstream server and
+unlock all query types. For example, to use Google's Public DNS server
+specify `--mode reverse:dns://8.8.8.8`.

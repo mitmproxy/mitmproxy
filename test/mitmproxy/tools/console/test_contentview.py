@@ -1,6 +1,6 @@
-from mitmproxy.test import tflow
 from mitmproxy import contentviews
 from mitmproxy.contentviews.base import format_text
+from mitmproxy.test import tflow
 
 
 class TContentView(contentviews.View):

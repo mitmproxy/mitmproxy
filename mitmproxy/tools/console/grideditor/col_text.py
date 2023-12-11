@@ -4,7 +4,6 @@ Welcome to the encoding dance!
 In a nutshell, text columns are actually a proxy class for byte columns,
 which just encode/decodes contents.
 """
-
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import col_bytes
 
@@ -28,14 +27,14 @@ class Column(col_bytes.Column):
 class EncodingMixin:
     def __init__(self, data, encoding_args):
         self.encoding_args = encoding_args
-        super().__init__(data.__str__().encode(*self.encoding_args))
+        super().__init__(str(data).encode(*self.encoding_args))  # type: ignore
 
     def get_data(self):
-        data = super().get_data()
+        data = super().get_data()  # type: ignore
         try:
             return data.decode(*self.encoding_args)
         except ValueError:
-            signals.status_message.send(self, message="Invalid encoding.", expire=1000)
+            signals.status_message.send(message="Invalid encoding.")
             raise
 
 

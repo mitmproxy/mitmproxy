@@ -11,7 +11,8 @@ import random
 import sys
 from typing import BinaryIO
 
-from mitmproxy import io, http
+from mitmproxy import http
+from mitmproxy import io
 
 
 class Writer:

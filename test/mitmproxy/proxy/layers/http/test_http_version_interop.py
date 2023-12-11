@@ -2,19 +2,21 @@ import h2.config
 import h2.connection
 import h2.events
 
-from mitmproxy.http import HTTPFlow
-from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.connection import Server
+from mitmproxy.http import HTTPFlow
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers.http import HTTPMode
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy.layers.http.test_http2 import (
-    example_response_headers,
-    make_h2,
-)
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
+from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
+from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 example_request_headers = (
     (b":method", b"GET"),
@@ -77,7 +79,9 @@ def test_h2_to_h1(tctx):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\ncookie: a=1; b=2\r\n\r\n")
+        << SendData(
+            server, b"GET / HTTP/1.1\r\nHost: example.com\r\ncookie: a=1; b=2\r\n\r\n"
+        )
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\n")
         << http.HttpResponseHeadersHook(flow)
         >> reply()

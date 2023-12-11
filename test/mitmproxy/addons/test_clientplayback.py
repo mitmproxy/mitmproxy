@@ -1,18 +1,23 @@
 import asyncio
+import ssl
 from contextlib import asynccontextmanager
 
 import pytest
 
-from mitmproxy.addons.clientplayback import ClientPlayback, ReplayHandler
+from mitmproxy.addons.clientplayback import ClientPlayback
+from mitmproxy.addons.clientplayback import ReplayHandler
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.exceptions import CommandError, OptionsError
+from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
-from mitmproxy.test import taddons, tflow
+from mitmproxy.exceptions import CommandError
+from mitmproxy.exceptions import OptionsError
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 @asynccontextmanager
-async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
+async def tcp_server(handle_conn, **server_args) -> Address:
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0, **server_args)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -20,9 +25,9 @@ async def tcp_server(handle_conn) -> Address:
         server.close()
 
 
-@pytest.mark.parametrize("mode", ["regular", "upstream", "err"])
+@pytest.mark.parametrize("mode", ["http", "https", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
-async def test_playback(mode, concurrency):
+async def test_playback(tdata, mode, concurrency):
     handler_ok = asyncio.Event()
 
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -36,7 +41,11 @@ async def test_playback(mode, concurrency):
         else:
             assert req == b"GET /path HTTP/1.1\r\n"
         req = await reader.readuntil(b"data")
-        assert req == (b"header: qvalue\r\n" b"content-length: 4\r\n" b"\r\n" b"data")
+        assert req == (
+            b"header: qvalue\r\n"
+            b"content-length: 4\r\nHost: example.mitmproxy.org\r\n\r\n"
+            b"data"
+        )
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
@@ -44,19 +53,42 @@ async def test_playback(mode, concurrency):
 
     cp = ClientPlayback()
     ps = Proxyserver()
-    with taddons.context(cp, ps) as tctx:
+    tls = TlsConfig()
+    with taddons.context(cp, ps, tls) as tctx:
         tctx.configure(cp, client_replay_concurrency=concurrency)
-        async with tcp_server(handler) as addr:
 
+        server_args = {}
+        if mode == "https":
+            server_args["ssl"] = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            server_args["ssl"].load_cert_chain(
+                certfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.crt"
+                ),
+                keyfile=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-leaf.key"
+                ),
+            )
+            tctx.configure(
+                tls,
+                ssl_verify_upstream_trusted_ca=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+
+        async with tcp_server(handler, **server_args) as addr:
             cp.running()
             flow = tflow.tflow(live=False)
             flow.request.content = b"data"
             if mode == "upstream":
-                tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+                tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
                 flow.request.authority = f"{addr[0]}:{addr[1]}"
                 flow.request.host, flow.request.port = "address", 22
             else:
                 flow.request.host, flow.request.port = addr
+            if mode == "https":
+                flow.request.scheme = "https"
+            # Used for SNI
+            flow.request.host_header = "example.mitmproxy.org"
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
@@ -86,7 +118,7 @@ async def test_playback_https_upstream():
             flow = tflow.tflow(live=False)
             flow.request.scheme = b"https"
             flow.request.content = b"data"
-            tctx.options.mode = f"upstream:http://{addr[0]}:{addr[1]}"
+            tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
@@ -99,16 +131,16 @@ async def test_playback_https_upstream():
             )
 
 
-async def test_playback_crash(monkeypatch):
+async def test_playback_crash(monkeypatch, caplog_async):
     async def raise_err():
         raise ValueError("oops")
 
     monkeypatch.setattr(ReplayHandler, "replay", raise_err)
     cp = ClientPlayback()
-    with taddons.context(cp) as tctx:
+    with taddons.context(cp):
         cp.running()
         cp.start_replay([tflow.tflow(live=False)])
-        await tctx.master.await_log("Client replay has crashed!", level="error")
+        await caplog_async.await_log("Client replay has crashed!")
         assert cp.count() == 0
         cp.done()
 
@@ -131,21 +163,21 @@ def test_check():
     f.request.raw_content = None
     assert "missing content" in cp.check(f)
 
-    f = tflow.ttcpflow()
-    f.live = False
-    assert "Can only replay HTTP" in cp.check(f)
+    for f in (tflow.ttcpflow(), tflow.tudpflow()):
+        f.live = False
+        assert "Can only replay HTTP" in cp.check(f)
 
 
-async def test_start_stop(tdata):
+async def test_start_stop(tdata, caplog_async):
     cp = ClientPlayback()
-    with taddons.context(cp) as tctx:
+    with taddons.context(cp):
         cp.start_replay([tflow.tflow(live=False)])
         assert cp.count() == 1
 
         ws_flow = tflow.twebsocketflow()
         ws_flow.live = False
         cp.start_replay([ws_flow])
-        await tctx.master.await_log("Can't replay WebSocket flows.", level="warn")
+        await caplog_async.await_log("Can't replay WebSocket flows.")
         assert cp.count() == 1
 
         cp.stop_replay()

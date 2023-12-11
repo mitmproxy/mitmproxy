@@ -1,12 +1,13 @@
 from typing import Optional
 
-from mitmproxy import flow, flowfilter
-from mitmproxy import exceptions
 from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import flowfilter
 
 
 class Intercept:
-    filt: Optional[flowfilter.TFilter] = None
+    filt: flowfilter.TFilter | None = None
 
     def load(self, loader):
         loader.add_option("intercept_active", bool, False, "Intercept toggle")
@@ -47,6 +48,9 @@ class Intercept:
         self.process_flow(f)
 
     def tcp_message(self, f):
+        self.process_flow(f)
+
+    def udp_message(self, f):
         self.process_flow(f)
 
     def dns_request(self, f):

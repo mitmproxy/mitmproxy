@@ -31,7 +31,7 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <origin>../build/binaries/windows/onedir/*</origin>
+                            <origin>../build/pyinstaller/out/onedir/*</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>run.ps1</origin>
@@ -130,4 +130,3 @@
         </directoryParameter>
     </parameterList>
 </project>
-

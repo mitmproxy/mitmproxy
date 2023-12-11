@@ -1,6 +1,7 @@
 import pyparsing
 import pytest
-from hypothesis import given, example
+from hypothesis import example
+from hypothesis import given
 from hypothesis.strategies import text
 
 from mitmproxy import command_lexer

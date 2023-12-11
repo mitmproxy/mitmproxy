@@ -1,9 +1,8 @@
 import pytest
 
-from mitmproxy.test import tflow
-from mitmproxy.test import taddons
-
 from mitmproxy.addons import stickycookie
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 from mitmproxy.test import tutils as ntutils
 
 

@@ -1,12 +1,12 @@
-import React, {useState} from 'react'
-import classnames from 'classnames'
-import StartMenu from './Header/StartMenu'
-import OptionMenu from './Header/OptionMenu'
-import FileMenu from './Header/FileMenu'
-import FlowMenu from './Header/FlowMenu'
-import ConnectionIndicator from "./Header/ConnectionIndicator"
-import HideInStatic from './common/HideInStatic'
-import {useAppSelector} from "../ducks";
+import React, { useState } from "react";
+import classnames from "classnames";
+import StartMenu from "./Header/StartMenu";
+import OptionMenu from "./Header/OptionMenu";
+import FileMenu from "./Header/FileMenu";
+import FlowMenu from "./Header/FlowMenu";
+import ConnectionIndicator from "./Header/ConnectionIndicator";
+import HideInStatic from "./common/HideInStatic";
+import { useAppSelector } from "../ducks";
 
 interface Menu {
     (): JSX.Element;
@@ -15,7 +15,9 @@ interface Menu {
 }
 
 export default function Header() {
-    const selectedFlows = useAppSelector(state => state.flows.selected.filter(id => id in state.flows.byId)),
+    const selectedFlows = useAppSelector((state) =>
+            state.flows.selected.filter((id) => id in state.flows.byId)
+        ),
         [ActiveMenu, setActiveMenu] = useState<Menu>(() => StartMenu),
         [wasFlowSelected, setWasFlowSelected] = useState(false);
 
@@ -25,40 +27,42 @@ export default function Header() {
             setActiveMenu(() => FlowMenu);
             setWasFlowSelected(true);
         }
-        entries.push(FlowMenu)
+        entries.push(FlowMenu);
     } else {
         if (wasFlowSelected) {
             setWasFlowSelected(false);
         }
         if (ActiveMenu === FlowMenu) {
-            setActiveMenu(() => StartMenu)
+            setActiveMenu(() => StartMenu);
         }
     }
 
     function handleClick(active: Menu, e) {
-        e.preventDefault()
-        setActiveMenu(() => active)
+        e.preventDefault();
+        setActiveMenu(() => active);
     }
 
     return (
         <header>
             <nav className="nav-tabs nav-tabs-lg">
-                <FileMenu/>
-                {entries.map(Entry => (
-                    <a key={Entry.title}
-                       href="#"
-                       className={classnames({active: Entry === ActiveMenu})}
-                       onClick={e => handleClick(Entry, e)}>
+                <FileMenu />
+                {entries.map((Entry) => (
+                    <a
+                        key={Entry.title}
+                        href="#"
+                        className={classnames({ active: Entry === ActiveMenu })}
+                        onClick={(e) => handleClick(Entry, e)}
+                    >
                         {Entry.title}
                     </a>
                 ))}
                 <HideInStatic>
-                    <ConnectionIndicator/>
+                    <ConnectionIndicator />
                 </HideInStatic>
             </nav>
             <div>
-                <ActiveMenu/>
+                <ActiveMenu />
             </div>
         </header>
-    )
+    );
 }

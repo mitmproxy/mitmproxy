@@ -1,23 +1,24 @@
+from __future__ import annotations
+
 import mimetypes
 import re
-from typing import Optional
+import warnings
 from urllib.parse import quote
 
 from mitmproxy.net.http import headers
 
 
-def encode(head, l):
-    k = head.get("content-type")
-    if k:
-        k = headers.parse_content_type(k)
-        if k is not None:
+def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> bytes:
+    if content_type:
+        ct = headers.parse_content_type(content_type)
+        if ct is not None:
             try:
-                boundary = k[2]["boundary"].encode("ascii")
-                boundary = quote(boundary)
+                raw_boundary = ct[2]["boundary"].encode("ascii")
+                boundary = quote(raw_boundary)
             except (KeyError, UnicodeError):
                 return b""
             hdrs = []
-            for key, value in l:
+            for key, value in parts:
                 file_type = (
                     mimetypes.guess_type(str(key))[0] or "text/plain; charset=utf-8"
                 )
@@ -41,9 +42,12 @@ def encode(head, l):
             hdrs.append(b"--%b--\r\n" % boundary.encode("utf-8"))
             temp = b"\r\n".join(hdrs)
             return temp
+    return b""
 
 
-def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, bytes]]:
+def decode_multipart(
+    content_type: str | None, content: bytes
+) -> list[tuple[bytes, bytes]]:
     """
     Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
@@ -56,7 +60,7 @@ def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, byt
         except (KeyError, UnicodeError):
             return []
 
-        rx = re.compile(br'\bname="([^"]+)"')
+        rx = re.compile(rb'\bname="([^"]+)"')
         r = []
         if content is not None:
             for i in content.split(b"--" + boundary):
@@ -69,3 +73,23 @@ def decode(content_type: Optional[str], content: bytes) -> list[tuple[bytes, byt
                         r.append((key, value))
         return r
     return []
+
+
+def encode(ct, parts):  # pragma: no cover
+    # 2023-02
+    warnings.warn(
+        "multipart.encode is deprecated, use multipart.encode_multipart instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return encode_multipart(ct, parts)
+
+
+def decode(ct, content):  # pragma: no cover
+    # 2023-02
+    warnings.warn(
+        "multipart.decode is deprecated, use multipart.decode_multipart instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return encode_multipart(ct, content)

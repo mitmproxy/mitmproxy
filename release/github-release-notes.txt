@@ -1,0 +1,3 @@
+Changes: See [CHANGELOG.md](https://github.com/mitmproxy/mitmproxy/blob/main/CHANGELOG.md).
+
+You can find the latest release packages at https://mitmproxy.org/downloads/.

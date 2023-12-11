@@ -1,25 +1,29 @@
 """
 Use mitmproxy's filter pattern in scripts.
 """
+from __future__ import annotations
+
+import logging
+
 from mitmproxy import flowfilter
-from mitmproxy import ctx, http
+from mitmproxy import http
+from mitmproxy.addonmanager import Loader
 
 
 class Filter:
-    def __init__(self):
-        self.filter: flowfilter.TFilter = None
+    filter: flowfilter.TFilter
 
     def configure(self, updated):
         if "flowfilter" in updated:
-            self.filter = flowfilter.parse(ctx.options.flowfilter)
+            self.filter = flowfilter.parse(".")
 
-    def load(self, l):
-        l.add_option("flowfilter", str, "", "Check that flow matches filter.")
+    def load(self, loader: Loader):
+        loader.add_option("flowfilter", str, "", "Check that flow matches filter.")
 
     def response(self, flow: http.HTTPFlow) -> None:
         if flowfilter.match(self.filter, flow):
-            ctx.log.info("Flow matches filter:")
-            ctx.log.info(flow)
+            logging.info("Flow matches filter:")
+            logging.info(flow)
 
 
 addons = [Filter()]

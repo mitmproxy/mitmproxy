@@ -1,6 +1,6 @@
+from . import full_eval
 from mitmproxy.contentviews import query
 from mitmproxy.test import tutils
-from . import full_eval
 
 
 def test_view_query():

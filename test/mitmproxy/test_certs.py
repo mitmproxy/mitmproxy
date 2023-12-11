@@ -1,14 +1,14 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
+
+import pytest
 from cryptography import x509
 from cryptography.x509 import NameOID
 
-import pytest
-
-from mitmproxy import certs
 from ..conftest import skip_windows
-
+from mitmproxy import certs
 
 # class TestDNTree:
 #     def test_simple(self):
@@ -65,10 +65,12 @@ class TestCertStore:
         (tmp_path / "mitmproxy-ca.pem").write_bytes(cert)
         ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
         assert ca.default_chain_file is None
+        assert len(ca.default_chain_certs) == 1
 
         (tmp_path / "mitmproxy-ca.pem").write_bytes(2 * cert)
         ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
         assert ca.default_chain_file == (tmp_path / "mitmproxy-ca.pem")
+        assert len(ca.default_chain_certs) == 2
 
     def test_sans(self, tstore):
         c1 = tstore.get_cert("foo.com", ["*.bar.com"])
@@ -138,11 +140,17 @@ class TestDummyCert:
             tstore.default_privatekey,
             tstore.default_ca._cert,
             "foo.com",
-            ["one.com", "two.com", "*.three.com", "127.0.0.1"],
+            ["one.com", "two.com", "*.three.com", "127.0.0.1", "bücher.example"],
             "Foo Ltd.",
         )
         assert r.cn == "foo.com"
-        assert r.altnames == ["one.com", "two.com", "*.three.com", "127.0.0.1"]
+        assert r.altnames == [
+            "one.com",
+            "two.com",
+            "*.three.com",
+            "xn--bcher-kva.example",
+            "127.0.0.1",
+        ]
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(

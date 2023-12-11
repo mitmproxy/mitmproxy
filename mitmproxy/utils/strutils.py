@@ -1,8 +1,8 @@
 import codecs
 import io
 import re
-from typing import Iterable, Union, overload
-
+from collections.abc import Iterable
+from typing import overload
 
 # https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading
 
@@ -13,13 +13,11 @@ def always_bytes(str_or_bytes: None, *encode_args) -> None:
 
 
 @overload
-def always_bytes(str_or_bytes: Union[str, bytes], *encode_args) -> bytes:
+def always_bytes(str_or_bytes: str | bytes, *encode_args) -> bytes:
     ...
 
 
-def always_bytes(
-    str_or_bytes: Union[None, str, bytes], *encode_args
-) -> Union[None, bytes]:
+def always_bytes(str_or_bytes: None | str | bytes, *encode_args) -> None | bytes:
     if str_or_bytes is None or isinstance(str_or_bytes, bytes):
         return str_or_bytes
     elif isinstance(str_or_bytes, str):
@@ -36,11 +34,11 @@ def always_str(str_or_bytes: None, *encode_args) -> None:
 
 
 @overload
-def always_str(str_or_bytes: Union[str, bytes], *encode_args) -> str:
+def always_str(str_or_bytes: str | bytes, *encode_args) -> str:
     ...
 
 
-def always_str(str_or_bytes: Union[None, str, bytes], *decode_args) -> Union[None, str]:
+def always_str(str_or_bytes: None | str | bytes, *decode_args) -> None | str:
     """
     Returns,
         str_or_bytes unmodified, if
@@ -60,7 +58,8 @@ def always_str(str_or_bytes: Union[None, str, bytes], *decode_args) -> Union[Non
 # (http://unicode.org/charts/PDF/U2400.pdf), but that turned out to render badly
 # with monospace fonts. We are back to "." therefore.
 _control_char_trans = {
-    x: ord(".") for x in range(32)  # x + 0x2400 for unicode control group pictures
+    x: ord(".")
+    for x in range(32)  # x + 0x2400 for unicode control group pictures
 }
 _control_char_trans[127] = ord(".")  # 0x2421
 _control_char_trans_newline = _control_char_trans.copy()
@@ -236,7 +235,7 @@ def escape_special_areas(
     """
     buf = io.StringIO()
     parts = split_special_areas(data, area_delimiter)
-    rex = re.compile(fr"[{control_characters}]")
+    rex = re.compile(rf"[{control_characters}]")
     for i, x in enumerate(parts):
         if i % 2:
             x = rex.sub(_move_to_private_code_plane, x)

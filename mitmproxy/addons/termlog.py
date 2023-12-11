@@ -1,44 +1,50 @@
+from __future__ import annotations
+
+import asyncio
+import logging
 import sys
-from typing import IO, Optional
+from typing import IO
 
 from mitmproxy import ctx
 from mitmproxy import log
-from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
-
-LOG_COLORS = {"error": "red", "warn": "yellow", "alert": "magenta"}
 
 
 class TermLog:
-    def __init__(
-        self,
-        out: Optional[IO[str]] = None,
-        err: Optional[IO[str]] = None,
-    ):
-        self.out_file: IO[str] = out or sys.stdout
-        self.out_has_vt_codes = vt_codes.ensure_supported(self.out_file)
-        self.err_file: IO[str] = err or sys.stderr
-        self.err_has_vt_codes = vt_codes.ensure_supported(self.err_file)
+    _teardown_task: asyncio.Task | None = None
+
+    def __init__(self, out: IO[str] | None = None):
+        self.logger = TermLogHandler(out)
+        self.logger.install()
 
     def load(self, loader):
         loader.add_option(
-            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogTierOrder
+            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogLevels
         )
+        self.logger.setLevel(logging.INFO)
 
-    def add_log(self, e: log.LogEntry):
-        if log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier(e.level):
-            if e.level == "error":
-                f = self.err_file
-                has_vt_codes = self.err_has_vt_codes
-            else:
-                f = self.out_file
-                has_vt_codes = self.out_has_vt_codes
+    def configure(self, updated):
+        if "termlog_verbosity" in updated:
+            self.logger.setLevel(ctx.options.termlog_verbosity.upper())
 
-            msg = e.msg
-            if has_vt_codes:
-                msg = miniclick.style(
-                    e.msg,
-                    fg=LOG_COLORS.get(e.level),
-                    dim=(e.level == "debug"),
-                )
-            print(msg, file=f)
+    def uninstall(self) -> None:
+        # uninstall the log dumper.
+        # This happens at the very very end after done() is completed,
+        # because we don't want to uninstall while other addons are still logging.
+        self.logger.uninstall()
+
+
+class TermLogHandler(log.MitmLogHandler):
+    def __init__(self, out: IO[str] | None = None):
+        super().__init__()
+        self.file: IO[str] = out or sys.stdout
+        self.has_vt_codes = vt_codes.ensure_supported(self.file)
+        self.formatter = log.MitmFormatter(self.has_vt_codes)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            print(self.format(record), file=self.file)
+        except OSError:
+            # We cannot print, exit immediately.
+            # See https://github.com/mitmproxy/mitmproxy/issues/4669
+            sys.exit(1)

@@ -1,4 +1,6 @@
-from mitmproxy import ctx, http
+import logging
+
+from mitmproxy import http
 
 
 class ServerSideEvents:
@@ -15,7 +17,7 @@ class ServerSideEvents:
             "text/event-stream"
         )
         if is_sse and not flow.response.stream:
-            ctx.log.warn(
+            logging.warning(
                 "mitmproxy currently does not support server side events. As a workaround, you can enable response "
                 "streaming for such flows: https://github.com/mitmproxy/mitmproxy/issues/4469"
             )

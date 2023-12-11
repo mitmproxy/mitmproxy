@@ -9,23 +9,40 @@ The very high level overview is as follows:
 import abc
 import asyncio
 import collections
+import logging
 import time
-import traceback
-from collections.abc import Awaitable, Callable, MutableMapping
+from collections.abc import Awaitable
+from collections.abc import Callable
+from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional, Union
+from types import TracebackType
+from typing import Literal
 
+import mitmproxy_rs
 from OpenSSL import SSL
-from mitmproxy import http, options as moptions, tls
+
+from mitmproxy import http
+from mitmproxy import options as moptions
+from mitmproxy import tls
+from mitmproxy.connection import Address
+from mitmproxy.connection import Client
+from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
+from mitmproxy.net import udp
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.connection import Address, Client, Connection, ConnectionState
-from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
+
+logger = logging.getLogger(__name__)
 
 
 class TimeoutWatchdog:
@@ -72,9 +89,13 @@ class TimeoutWatchdog:
 
 @dataclass
 class ConnectionIO:
-    handler: Optional[asyncio.Task] = None
-    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader]] = None
-    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
+    handler: asyncio.Task | None = None
+    reader: None | (
+        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.TcpStream
+    ) = None
+    writer: None | (
+        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.TcpStream
+    ) = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -82,14 +103,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
-    layer: layer.Layer
+    layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
+    hook_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
+        self.hook_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -127,6 +150,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
+            if not handler.cancelled() and (e := handler.exception()):
+                self.log(
+                    f"connection handler has crashed: {e}",
+                    logging.ERROR,
+                    exc_info=(type(e), e, e.__traceback__),
+                )
 
         watch.cancel()
         while self.wakeup_timer:
@@ -138,14 +167,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         await self.handle_hook(server_hooks.ClientDisconnectedHook(self.client))
 
         if self.transports:
-            self.log("closing transports...", "debug")
+            self.log("closing transports...", logging.DEBUG)
             for io in self.transports.values():
                 if io.handler:
                     io.handler.cancel("client disconnected")
             await asyncio.wait(
                 [x.handler for x in self.transports.values() if x.handler]
             )
-            self.log("transports closed!", "debug")
+            self.log("transports closed!", logging.DEBUG)
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
@@ -171,8 +200,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: Union[asyncio.StreamReader, udp.DatagramReader]
-            writer: Union[asyncio.StreamWriter, udp.DatagramWriter]
+            reader: asyncio.StreamReader | udp.DatagramReader
+            writer: asyncio.StreamWriter | udp.DatagramWriter
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -298,7 +327,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
         async with self._drain_lock:
-            for transport in self.transports.values():
+            for transport in list(self.transports.values()):
                 if transport.writer is not None:
                     try:
                         await transport.writer.drain()
@@ -321,15 +350,23 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def handle_hook(self, hook: commands.StartHook) -> None:
         pass
 
-    def log(self, message: str, level: str = "info") -> None:
-        print(message)
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+        exc_info: Literal[True]
+        | tuple[type[BaseException], BaseException, TracebackType | None]
+        | None = None,
+    ) -> None:
+        logger.log(
+            level, message, extra={"client": self.client.peername}, exc_info=exc_info
+        )
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
         try:
             layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
-
                 if isinstance(command, commands.OpenConnection):
                     assert command.connection not in self.transports
                     handler = asyncio_utils.create_task(
@@ -354,26 +391,27 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
                     assert writer
-                    writer.write(command.data)
-                elif isinstance(command, commands.CloseConnection):
+                    if not writer.is_closing():
+                        writer.write(command.data)
+                elif isinstance(command, commands.CloseTcpConnection):
                     self.close_connection(command.connection, command.half_close)
-                elif isinstance(command, commands.GetSocket):
-                    writer = self.transports[command.connection].writer
-                    assert writer
-                    socket = writer.get_extra_info("socket")
-                    self.server_event(events.GetSocketCompleted(command, socket))
+                elif isinstance(command, commands.CloseConnection):
+                    self.close_connection(command.connection, False)
                 elif isinstance(command, commands.StartHook):
-                    asyncio_utils.create_task(
+                    t = asyncio_utils.create_task(
                         self.hook_task(command),
                         name=f"handle_hook({command.name})",
                         client=self.client.peername,
                     )
+                    # Python 3.11 Use TaskGroup instead.
+                    self.hook_tasks.add(t)
+                    t.add_done_callback(self.hook_tasks.remove)
                 elif isinstance(command, commands.Log):
                     self.log(command.message, command.level)
                 else:
                     raise RuntimeError(f"Unexpected command: {command}")
         except Exception:
-            self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
+            self.log(f"mitmproxy has crashed!", logging.ERROR, exc_info=True)
 
     def close_connection(
         self, connection: Connection, half_close: bool = False
@@ -381,11 +419,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if half_close:
             if not connection.state & ConnectionState.CAN_WRITE:
                 return
-            self.log(f"half-closing {connection}", "debug")
+            self.log(f"half-closing {connection}", logging.DEBUG)
             try:
                 writer = self.transports[connection].writer
                 assert writer
-                writer.write_eof()
+                if not writer.is_closing():
+                    writer.write_eof()
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
@@ -403,14 +442,26 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: asyncio.StreamReader,
-        writer: asyncio.StreamWriter,
+        reader: asyncio.StreamReader | mitmproxy_rs.TcpStream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.TcpStream,
         options: moptions.Options,
+        mode: mode_specs.ProxyMode,
     ) -> None:
+        # mitigate impact of https://github.com/mitmproxy/mitmproxy/issues/6204:
+        # For UDP, we don't get an accurate sockname from the transport when binding to all interfaces,
+        # however we would later need that to generate matching certificates.
+        # Until this is fixed properly, we can at least make the localhost case work.
+        sockname = writer.get_extra_info("sockname")
+        if sockname == "::":
+            sockname = "::1"
+        elif sockname == "0.0.0.0":
+            sockname = "127.0.0.1"
         client = Client(
-            writer.get_extra_info("peername"),
-            writer.get_extra_info("sockname"),
-            time.time(),
+            peername=writer.get_extra_info("peername"),
+            sockname=sockname,
+            timestamp_start=time.time(),
+            proxy_mode=mode,
+            state=ConnectionState.OPEN,
         )
         context = Context(client, options)
         super().__init__(context)
@@ -424,17 +475,13 @@ class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
 
     hook_handlers: dict[str, Callable]
 
-    def __init__(self, reader, writer, options, hooks):
-        super().__init__(reader, writer, options)
+    def __init__(self, reader, writer, options, mode, hooks):
+        super().__init__(reader, writer, options, mode)
         self.hook_handlers = hooks
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](*hook.args())
-
-    def log(self, message: str, level: str = "info"):
-        if "Hook" not in message:
-            pass  # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -459,7 +506,6 @@ if __name__ == "__main__":  # pragma: no cover
         to the reverse proxy target.
         """,
     )
-    opts.mode = "reverse:http://127.0.0.1:3000/"
 
     async def handle(reader, writer):
         layer_stack = [
@@ -472,9 +518,9 @@ if __name__ == "__main__":  # pragma: no cover
         ]
 
         def next_layer(nl: layer.NextLayer):
-            l = layer_stack.pop(0)(nl.context)
-            l.debug = "  " * len(nl.context.layers)
-            nl.layer = l
+            layr = layer_stack.pop(0)(nl.context)
+            layr.debug = "  " * len(nl.context.layers)
+            nl.layer = layr
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
@@ -517,6 +563,7 @@ if __name__ == "__main__":  # pragma: no cover
             reader,
             writer,
             opts,
+            mode_specs.ProxyMode.parse("reverse:http://127.0.0.1:3000/"),
             {
                 "next_layer": next_layer,
                 "request": request,

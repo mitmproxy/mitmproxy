@@ -1,8 +1,11 @@
 import asyncio
 import ipaddress
 import socket
-from typing import Callable, Iterable, Union
-from mitmproxy import ctx, dns
+from collections.abc import Callable
+from collections.abc import Iterable
+
+from mitmproxy import dns
+from mitmproxy.proxy import mode_specs
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -20,7 +23,7 @@ async def resolve_question_by_name(
     question: dns.Question,
     loop: asyncio.AbstractEventLoop,
     family: socket.AddressFamily,
-    ip: Callable[[str], Union[ipaddress.IPv4Address, ipaddress.IPv6Address]],
+    ip: Callable[[str], ipaddress.IPv4Address | ipaddress.IPv6Address],
 ) -> Iterable[dns.ResourceRecord]:
     try:
         addrinfos = await loop.getaddrinfo(host=question.name, port=0, family=family)
@@ -30,7 +33,7 @@ async def resolve_question_by_name(
         else:
             # NOTE might fail on Windows for IPv6 queries:
             # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
-            raise ResolveError(dns.response_codes.SERVFAIL)
+            raise ResolveError(dns.response_codes.SERVFAIL)  # pragma: no cover
     return map(
         lambda addrinfo: dns.ResourceRecord(
             name=question.name,
@@ -47,7 +50,7 @@ async def resolve_question_by_addr(
     question: dns.Question,
     loop: asyncio.AbstractEventLoop,
     suffix: str,
-    sockaddr: Callable[[list[str]], Union[tuple[str, int], tuple[str, int, int, int]]],
+    sockaddr: Callable[[list[str]], tuple[str, int] | tuple[str, int, int, int]],
 ) -> Iterable[dns.ResourceRecord]:
     try:
         addr = sockaddr(question.name[: -len(suffix)].split(".")[::-1])
@@ -138,12 +141,19 @@ async def resolve_message(
 class DnsResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         should_resolve = (
-            flow.live
+            (
+                isinstance(flow.client_conn.proxy_mode, mode_specs.DnsMode)
+                or (
+                    isinstance(flow.client_conn.proxy_mode, mode_specs.WireGuardMode)
+                    and flow.server_conn.address == ("10.0.0.53", 53)
+                )
+            )
+            and flow.live
             and not flow.response
             and not flow.error
-            and ctx.options.dns_mode == "regular"
         )
         if should_resolve:
+            # TODO: We need to handle overly long responses here.
             flow.response = await resolve_message(
                 flow.request, asyncio.get_running_loop()
             )

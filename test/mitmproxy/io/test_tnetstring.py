@@ -1,8 +1,8 @@
-import unittest
-import random
-import math
 import io
+import math
+import random
 import struct
+import unittest
 
 from mitmproxy.io import tnetstring
 
@@ -38,10 +38,10 @@ def get_random_object(random=random, depth=0):
         what = random.randint(0, 1)
         if what == 0:
             n = random.randint(0, 10)
-            l = []
+            lst = []
             for _ in range(n):
-                l.append(get_random_object(random, depth + 1))
-            return l
+                lst.append(get_random_object(random, depth + 1))
+            return lst
         if what == 1:
             n = random.randint(0, 10)
             d = {}
@@ -87,7 +87,8 @@ class Test_Format(unittest.TestCase):
             self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
 
     def test_roundtrip_big_integer(self):
-        i1 = math.factorial(30000)
+        # Recent Python versions do not like ints above 4300 digits, https://github.com/python/cpython/issues/95778
+        i1 = math.factorial(1557)
         s = tnetstring.dumps(i1)
         i2 = tnetstring.loads(s)
         self.assertEqual(i1, i2)

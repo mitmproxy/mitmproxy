@@ -1,6 +1,6 @@
+from . import full_eval
 from mitmproxy.contentviews import urlencoded
 from mitmproxy.net.http import url
-from . import full_eval
 
 
 def test_view_urlencoded():

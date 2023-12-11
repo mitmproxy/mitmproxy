@@ -14,6 +14,7 @@ To document all event hooks, we do a bit of hackery:
     {% macro view_source_state(doc) %}{% endmacro %}
     {% macro view_source_button(doc) %}{% endmacro %}
     {% macro view_source_code(doc) %}{% endmacro %}
+    {% macro decorators(doc) %}{% endmacro %}
     {% macro is_public(doc) %}
         {% if doc.name != "__init__" %}
             {{ default_is_public(doc) }}

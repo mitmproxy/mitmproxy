@@ -1,5 +1,5 @@
-from mitmproxy.contentviews import wbxml
 from . import full_eval
+from mitmproxy.contentviews import wbxml
 
 datadir = "mitmproxy/contentviews/test_wbxml_data/"
 

@@ -1,19 +1,36 @@
 import abc
 import copy
 import os
-from collections.abc import Callable, Container, Iterable, Sequence
-from typing import Any, AnyStr, Optional
+from collections.abc import Callable
+from collections.abc import Container
+from collections.abc import Iterable
+from collections.abc import MutableSequence
+from collections.abc import Sequence
+from typing import Any
+from typing import ClassVar
+from typing import Literal
+from typing import overload
 
 import urwid
 
-from mitmproxy.utils import strutils
-from mitmproxy import exceptions
-from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master
+from mitmproxy import exceptions
+from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import signals
+from mitmproxy.utils import strutils
 
 
-def read_file(filename: str, escaped: bool) -> AnyStr:
+@overload
+def read_file(filename: str, escaped: Literal[True]) -> bytes:
+    ...
+
+
+@overload
+def read_file(filename: str, escaped: Literal[False]) -> str:
+    ...
+
+
+def read_file(filename: str, escaped: bool) -> bytes | str:
     filename = os.path.expanduser(filename)
     try:
         with open(filename, "r" if escaped else "rb") as f:
@@ -58,21 +75,21 @@ class Column(metaclass=abc.ABCMeta):
     def blank(self) -> Any:
         pass
 
-    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
+    def keypress(self, key: str, editor: "GridEditor") -> str | None:
         return key
 
 
 class GridRow(urwid.WidgetWrap):
     def __init__(
         self,
-        focused: Optional[int],
+        focused: int | None,
         editing: bool,
         editor: "GridEditor",
         values: tuple[Iterable[bytes], Container[int]],
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col: Optional[Cell] = None
+        self.edit_col: Cell | None = None
 
         errors = values[1]
         self.fields: Sequence[Any] = []
@@ -117,11 +134,11 @@ class GridWalker(urwid.ListWalker):
     """
 
     def __init__(self, lst: Iterable[list], editor: "GridEditor") -> None:
-        self.lst: Sequence[tuple[Any, set]] = [(i, set()) for i in lst]
+        self.lst: MutableSequence[tuple[Any, set]] = [(i, set()) for i in lst]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row: Optional[GridRow] = None
+        self.edit_row: GridRow | None = None
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -135,11 +152,11 @@ class GridWalker(urwid.ListWalker):
         if self.lst:
             return self.lst[self.focus][0][self.focus_col]
 
-    def set_current_value(self, val):
+    def set_current_value(self, val) -> None:
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
-            signals.status_message.send(message=emsg, expire=5)
+            signals.status_message.send(message=emsg)
             errors.add(self.focus_col)
         else:
             errors.discard(self.focus_col)
@@ -150,7 +167,7 @@ class GridWalker(urwid.ListWalker):
             errors = set()
         row = list(self.lst[focus][0])
         row[focus_col] = val
-        self.lst[focus] = [tuple(row), errors]
+        self.lst[focus] = [tuple(row), errors]  # type: ignore
         self._modified()
 
     def delete_focus(self):
@@ -180,7 +197,7 @@ class GridWalker(urwid.ListWalker):
             self._modified()
 
     def stop_edit(self):
-        if self.edit_row:
+        if self.edit_row and self.edit_row.edit_col:
             try:
                 val = self.edit_row.edit_col.get_data()
             except ValueError:
@@ -242,7 +259,7 @@ FIRST_WIDTH_MAX = 40
 
 class BaseGridEditor(urwid.WidgetWrap):
     title: str = ""
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(
         self,
@@ -252,7 +269,7 @@ class BaseGridEditor(urwid.WidgetWrap):
         value: Any,
         callback: Callable[..., None],
         *cb_args,
-        **cb_kwargs
+        **cb_kwargs,
     ) -> None:
         value = self.data_in(copy.deepcopy(value))
         self.master = master
@@ -353,7 +370,7 @@ class BaseGridEditor(urwid.WidgetWrap):
         """
         return data
 
-    def is_error(self, col: int, val: Any) -> Optional[str]:
+    def is_error(self, col: int, val: Any) -> str | None:
         """
         Return None, or a string error message.
         """
@@ -388,7 +405,7 @@ class BaseGridEditor(urwid.WidgetWrap):
 class GridEditor(BaseGridEditor):
     title = ""
     columns: Sequence[Column] = ()
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(
         self,
@@ -396,7 +413,7 @@ class GridEditor(BaseGridEditor):
         value: Any,
         callback: Callable[..., None],
         *cb_args,
-        **cb_kwargs
+        **cb_kwargs,
     ) -> None:
         super().__init__(
             master, self.title, self.columns, value, callback, *cb_args, **cb_kwargs
@@ -408,7 +425,7 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     A specialised GridEditor that edits the current focused flow.
     """
 
-    keyctx = "grideditor"
+    keyctx: ClassVar[str] = "grideditor"
 
     def __init__(self, master):
         self.master = master
@@ -430,9 +447,9 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         """
         raise NotImplementedError
 
-    def set_data_update(self, vals, flow):
+    def set_data_update(self, vals, flow) -> None:
         self.set_data(vals, flow)
-        signals.flow_change.send(self, flow=flow)
+        signals.flow_change.send(flow=flow)
 
     def key_responder(self):
         return self._w

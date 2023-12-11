@@ -1,4 +1,5 @@
 import urwid
+
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.utils import strutils
@@ -44,5 +45,5 @@ class Edit(base.Cell):
         try:
             return strutils.escaped_str_to_bytes(txt)
         except ValueError:
-            signals.status_message.send(self, message="Invalid data.", expire=1000)
+            signals.status_message.send(message="Invalid data.")
             raise

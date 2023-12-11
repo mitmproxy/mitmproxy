@@ -6,7 +6,6 @@ the body is fully transmitted. Such trailers need to be announced in the initial
 headers by name, so the receiving endpoint can wait and read them after the
 body.
 """
-
 from mitmproxy import http
 from mitmproxy.http import Headers
 
@@ -34,6 +33,7 @@ def request(flow: http.HTTPFlow):
 
 
 def response(flow: http.HTTPFlow):
+    assert flow.response
     if flow.response.trailers:
         print("HTTP Trailers detected! Response contains:", flow.response.trailers)
 

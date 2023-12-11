@@ -1,6 +1,5 @@
 import re
 import time
-from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import strutils
@@ -58,7 +57,7 @@ class ViewCSS(base.View):
         return "CSS", base.format_text(beautified)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type == "text/css")
 
