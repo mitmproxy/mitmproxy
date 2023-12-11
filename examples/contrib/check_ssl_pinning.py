@@ -11,7 +11,7 @@ from mitmproxy.certs import Cert
 # the function to generate test cases for SSL Pinning.
 
 
-def monkey_dummy_cert(privkey, cacert, commonname, sans):
+def monkey_dummy_cert(privkey, cacert, caprivatekey, commonname, sans):
     ss = []
     for i in sans:
         try:
@@ -56,8 +56,8 @@ def monkey_dummy_cert(privkey, cacert, commonname, sans):
         cert.add_extensions(
             [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)]
         )
-        cert.set_pubkey(cacert.get_pubkey())
-        cert.sign(privkey, "sha256")
+        cert.set_pubkey(privkey.get_pubkey())
+        cert.sign(caprivatekey, "sha256")
         return Cert(cert)
 
 

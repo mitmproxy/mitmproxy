@@ -139,6 +139,7 @@ class TestDummyCert:
         r = certs.dummy_cert(
             tstore.default_privatekey,
             tstore.default_ca._cert,
+            tstore.default_ca_privatekey,
             "foo.com",
             ["one.com", "two.com", "*.three.com", "127.0.0.1", "bücher.example"],
             "Foo Ltd.",
@@ -154,7 +155,12 @@ class TestDummyCert:
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
-            tstore.default_privatekey, tstore.default_ca._cert, None, [], None
+            tstore.default_privatekey,
+            tstore.default_ca._cert,
+            tstore.default_ca_privatekey,
+            None,
+            [],
+            None
         )
         assert r.cn is None
         assert r.organization is None
