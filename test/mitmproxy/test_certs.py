@@ -160,7 +160,7 @@ class TestDummyCert:
             tstore.default_ca_privatekey,
             None,
             [],
-            None
+            None,
         )
         assert r.cn is None
         assert r.organization is None

@@ -414,7 +414,7 @@ class CertStore:
             ca,
             key,
             chain_file,
-            dh
+            dh,
         )
 
     @staticmethod

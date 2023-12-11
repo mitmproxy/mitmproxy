@@ -22,6 +22,7 @@
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
   ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
 * Generating separate private key for dummy certificate generation
+  ([#6546](https://github.com/mitmproxy/mitmproxy/pull/6546), @driuba)
 
 
 ## 14 November 2023: mitmproxy 10.1.5
