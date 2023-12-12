@@ -17,11 +17,11 @@ from mitmproxy.test import tflow
 
 @asynccontextmanager
 async def tcp_server(handle_conn, **server_args) -> Address:
-    """TCP server context manager that
+    """TCP server context manager that...
 
     1. Exits only after all handlers have returned.
     2. Ensures that all handlers are closed properly. If we don't do that,
-       we get ghost errors in others tests from StreamWriter.__dell__.
+       we get ghost errors in others tests from StreamWriter.__del__.
 
     Spawning a TCP server is relatively slow. Consider using in-memory networking for faster tests.
     """
