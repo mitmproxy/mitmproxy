@@ -2,7 +2,6 @@ import contextlib
 import datetime
 import ipaddress
 import os
-import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -330,14 +329,9 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
-            [
-                Cert.from_pem(chunk)
-                for chunk in re.split(
-                    rb"(?=-----BEGIN( [A-Z]+)+-----)",
-                    self.default_chain_file.read_bytes(),
-                )
-                if chunk.startswith(b"-----BEGIN CERTIFICATE-----")
-            ]
+            x509.load_pem_x509_certificates(
+                self.default_chain_file.read_bytes()
+            )
             if self.default_chain_file
             else [default_ca]
         )
@@ -397,9 +391,9 @@ class CertStore:
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
         dh = cls.load_dhparam(dhparam_file)
-        certs = re.split(rb"(?=-----BEGIN CERTIFICATE-----)", raw)
-        ca = Cert.from_pem(certs[1])
-        if len(certs) > 2:
+        certs = x509.load_pem_x509_certificates(raw)
+        ca = Cert(certs[-1])
+        if len(certs) > 1:
             chain_file: Path | None = ca_file
         else:
             chain_file = None
