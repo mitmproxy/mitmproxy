@@ -52,10 +52,10 @@ class FlowReader:
                 for request_json in har_file["log"]["entries"]:
                     yield request_to_flow(request_json)
 
-            except Exception:
+            except Exception as exc:
                 raise exceptions.FlowReadException(
-                    "Unable to read HAR file. Please provide a valid HAR file"
-                )
+                    f"Unable to read HAR file. Please provide a valid HAR file: {exc}"
+                ) from exc
 
         else:
             try:
