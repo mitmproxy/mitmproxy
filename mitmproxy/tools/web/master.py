@@ -14,7 +14,6 @@ from mitmproxy.addons import errorcheck
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
-from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.tools.web import app
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class WebMaster(master.Master):
     def __init__(self, opts: options.Options, with_termlog: bool = True):
-        super().__init__(opts)
+        super().__init__(opts, with_termlog=with_termlog)
         self.view = view.View()
         self.view.sig_view_add.connect(self._sig_view_add)
         self.view.sig_view_remove.connect(self._sig_view_remove)
@@ -39,8 +38,6 @@ class WebMaster(master.Master):
 
         self.options.changed.connect(self._sig_options_update)
 
-        if with_termlog:
-            self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
         self.addons.add(
             webaddons.WebAddon(),

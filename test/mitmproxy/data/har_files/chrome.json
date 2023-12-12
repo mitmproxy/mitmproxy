@@ -194,10 +194,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "23866"
                 ]
             ],
             "contentLength": 23866,
@@ -326,12 +322,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 0,
             "reason": "",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1689251552.676,

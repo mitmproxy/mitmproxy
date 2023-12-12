@@ -308,7 +308,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             # we may still use this connection to *send* stuff,
             # even though the remote has closed their side of the connection.
             # to make this work we keep this task running and wait for cancellation.
-            await asyncio.Event().wait()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError as e:
+                cancelled = e
 
         try:
             writer = self.transports[connection].writer
@@ -336,10 +339,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                             transport.handler.cancel(f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
-        self.log(f"Closing connection due to inactivity: {self.client}")
-        handler = self.transports[self.client].handler
-        assert handler
-        handler.cancel("timeout")
+        try:
+            handler = self.transports[self.client].handler
+        except KeyError:  # pragma: no cover
+            # there is a super short window between connection close and watchdog cancellation
+            pass
+        else:
+            self.log(f"Closing connection due to inactivity: {self.client}")
+            assert handler
+            handler.cancel("timeout")
 
     async def hook_task(self, hook: commands.StartHook) -> None:
         await self.handle_hook(hook)

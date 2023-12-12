@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from . import ctx as mitmproxy_ctx
+from .addons import termlog
 from .proxy.mode_specs import ReverseMode
 from mitmproxy import addonmanager
 from mitmproxy import command
@@ -20,15 +21,21 @@ class Master:
     """
 
     event_loop: asyncio.AbstractEventLoop
+    _termlog_addon: termlog.TermLog | None = None
 
     def __init__(
         self,
         opts: options.Options,
         event_loop: asyncio.AbstractEventLoop | None = None,
+        with_termlog: bool = False,
     ):
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
+
+        if with_termlog:
+            self._termlog_addon = termlog.TermLog()
+            self.addons.add(self._termlog_addon)
 
         self.log = log.Log(self)  # deprecated, do not use.
         self._legacy_log_events = log.LegacyLogEvents(self)
@@ -85,6 +92,8 @@ class Master:
     async def done(self) -> None:
         await self.addons.trigger_event(hooks.DoneHook())
         self._legacy_log_events.uninstall()
+        if self._termlog_addon is not None:
+            self._termlog_addon.uninstall()
 
     def _asyncio_exception_handler(self, loop, context) -> None:
         try:

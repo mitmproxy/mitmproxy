@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import logging
 import os
+import typing
 import warnings
 from dataclasses import dataclass
 
 from mitmproxy import hooks
-from mitmproxy import master
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import human
+
+if typing.TYPE_CHECKING:
+    from mitmproxy import master
 
 ALERT = logging.INFO + 1
 """

@@ -4,8 +4,10 @@ import sys
 import pytest
 
 from mitmproxy import options
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
 from mitmproxy.tools.console.master import ConsoleMaster
+from mitmproxy.utils.signals import _SignalMixin
 
 
 def tokenize(input: str) -> list[str]:
@@ -19,6 +21,10 @@ def tokenize(input: str) -> list[str]:
 
 
 class ConsoleTestMaster(ConsoleMaster):
+    def __init__(self, opts: options.Options) -> None:
+        super().__init__(opts)
+        self.addons.remove(self.addons.get("tlsconfig"))
+
     def type(self, input: str) -> None:
         for key in tokenize(input):
             self.window.keypress(self.ui.get_cols_rows(), key)
@@ -38,6 +44,13 @@ async def console(monkeypatch) -> ConsoleTestMaster:  # noqa
     monkeypatch.setattr(window.Screen, "start", lambda *_: True)
     monkeypatch.setattr(ConsoleTestMaster, "sig_call_in", lambda *_, **__: True)
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+    # extremely hacky: the console UI heavily depends on global signals
+    # that are unfortunately shared across tests
+    # Here we clear all existing signals so that we don't interact with previous instantiations.
+    for sig in signals.__dict__.values():
+        if isinstance(sig, _SignalMixin):
+            sig.receivers.clear()
 
     opts = options.Options()
     m = ConsoleTestMaster(opts)

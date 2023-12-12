@@ -7,6 +7,7 @@ from datetime import datetime
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy.net.http.headers import infer_content_encoding
 
 logger = logging.getLogger(__name__)
 
@@ -85,23 +86,51 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
     # In Firefox HAR files images don't include response bodies
     response_content = request_json["response"]["content"].get("text", "")
     content_encoding = request_json["response"]["content"].get("encoding", None)
-    if content_encoding == "base64":
-        response_content = base64.b64decode(response_content)
     response_headers = fix_headers(request_json["response"]["headers"])
 
-    new_flow.response = http.Response.make(
-        response_code, response_content, response_headers
+    if content_encoding == "base64":
+        response_content = base64.b64decode(response_content)
+    elif isinstance(response_content, str):
+        # Convert text to bytes, as in `Response.set_text`
+        try:
+            response_content = http.encoding.encode(
+                response_content,
+                (
+                    content_encoding
+                    or infer_content_encoding(response_headers.get("content-type", ""))
+                ),
+            )
+        except ValueError:
+            # Fallback to UTF-8
+            response_content = response_content.encode(
+                "utf-8", errors="surrogateescape"
+            )
+
+    # Then encode the content, as in `Response.set_content`
+    response_content = http.encoding.encode(
+        response_content, response_headers.get("content-encoding") or "identity"
     )
 
-    # Change time to match HAR file
+    new_flow.response = http.Response(
+        b"HTTP/1.1",
+        response_code,
+        http.status_codes.RESPONSES.get(response_code, "").encode(),
+        response_headers,
+        response_content,
+        None,
+        timestamp_start,
+        timestamp_end,
+    )
+
+    # Update timestamps
+
     new_flow.request.timestamp_start = timestamp_start
     new_flow.request.timestamp_end = timestamp_end
 
-    new_flow.response.timestamp_start = timestamp_start
-    new_flow.response.timestamp_end = timestamp_end
-
     new_flow.client_conn.timestamp_start = timestamp_start
     new_flow.client_conn.timestamp_end = timestamp_end
+
+    # Update HTTP version
 
     match http_version_req:
         case "http/2.0":
