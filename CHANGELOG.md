@@ -18,6 +18,8 @@
   ([#6543](https://github.com/mitmproxy/mitmproxy/pull/6543), @mhils)
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix case sensitivity of URL added to blocklist
+  ([#6493](https://github.com/mitmproxy/mitmproxy/pull/6493), @emanuele-em)
 * Fix a bug where logging was stopped prematurely during shutdown.
   ([#6541](https://github.com/mitmproxy/mitmproxy/pull/6541), @mhils)
 * For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
