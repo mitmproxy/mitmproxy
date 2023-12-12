@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix bug where response flows from HAR files had incorrect `content-length` headers
+  ([#6548](https://github.com/mitmproxy/mitmproxy/pull/6548), @zanieb)
 * Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
