@@ -174,14 +174,6 @@
                 [
                     "x-amz-cf-id",
                     "DPEkuUbeK1ZXMsRuUHqgk6iE4l7ShgyrJntkqIbLaSJ5646Ptc2Xew=="
-                ],
-                [
-                    "content-type",
-                    "text/plain; charset=utf-8"
-                ],
-                [
-                    "content-length",
-                    "23866"
                 ]
             ],
             "contentLength": 23866,
@@ -282,12 +274,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 200,
             "reason": "OK",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134339.418,
@@ -386,12 +373,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 200,
             "reason": "OK",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134339.456,
@@ -490,12 +472,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 200,
             "reason": "OK",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134339.457,
@@ -594,12 +571,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 200,
             "reason": "OK",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134339.457,
@@ -698,12 +670,7 @@
             "http_version": "HTTP/1.1",
             "status_code": 200,
             "reason": "OK",
-            "headers": [
-                [
-                    "content-length",
-                    "0"
-                ]
-            ],
+            "headers": [],
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134339.458,
@@ -878,10 +845,6 @@
                 [
                     "x-amz-cf-id",
                     "EufbwzXQheESUTNil_OCjKK8cvVL51cQpYfmF7iZSHloCTvVhfZ8yQ=="
-                ],
-                [
-                    "content-length",
-                    "3969"
                 ]
             ],
             "contentLength": 3969,
@@ -1058,10 +1021,6 @@
                 [
                     "x-amz-cf-id",
                     "UuHHTyGhTqqTO07G_oZCw7rxjb9RJUGTN3OW0EUS77RH4GiQ-LkAvw=="
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -1238,10 +1197,6 @@
                 [
                     "x-amz-cf-id",
                     "TOLqHpQWMFHQDWnv2yHHFWI5xkA3R13TTJQDJe1ARViKrgihxZdhxA=="
-                ],
-                [
-                    "content-length",
-                    "794"
                 ]
             ],
             "contentLength": 794,
@@ -1425,10 +1380,6 @@
                 [
                     "x-amz-cf-id",
                     "nnIrWtgAMt42ua4HYBtNAao6m_iD9WjIzLAFyURb8mjOr5MriSQXRA=="
-                ],
-                [
-                    "content-length",
-                    "9689"
                 ]
             ],
             "contentLength": 9689,
@@ -1612,10 +1563,6 @@
                 [
                     "x-amz-cf-id",
                     "PMTLvP_yUCVocnhd1i1ir7_FRAJRw0ayMhK3KaZKELDO3pxxoqLWjg=="
-                ],
-                [
-                    "content-length",
-                    "9689"
                 ]
             ],
             "contentLength": 9689,
@@ -1958,10 +1905,6 @@
                 [
                     "x-amz-cf-id",
                     "0okGWJw6nYo7R-4egQWE-WfonThN2EXyRSLO9MlCNKyMfD-2v1AU0Q=="
-                ],
-                [
-                    "content-length",
-                    "6986"
                 ]
             ],
             "contentLength": 6986,
