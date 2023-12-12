@@ -3,16 +3,11 @@ import base64
 import logging
 import time
 from datetime import datetime
-from typing import cast
 
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy.net.http.headers import (
-    infer_content_encoding,
-    assemble_content_type,
-    parse_content_type,
-)
+from mitmproxy.net.http.headers import infer_content_encoding
 
 logger = logging.getLogger(__name__)
 
