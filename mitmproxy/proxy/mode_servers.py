@@ -199,6 +199,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 original_dst = platform.original_addr(s)
             except Exception as e:
                 logger.error(f"Transparent mode failure: {e!r}")
+                writer.close()
                 return
             else:
                 handler.layer.context.client.sockname = original_dst

@@ -161,9 +161,13 @@ class ClientPlayback:
         )
         self.options = ctx.options
 
-    def done(self):
+    async def done(self):
         if self.playback_task:
             self.playback_task.cancel()
+            try:
+                await self.playback_task
+            except asyncio.CancelledError:
+                pass
 
     async def playback(self):
         while True:

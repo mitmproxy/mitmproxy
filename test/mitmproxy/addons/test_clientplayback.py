@@ -17,23 +17,48 @@ from mitmproxy.test import tflow
 
 @asynccontextmanager
 async def tcp_server(handle_conn, **server_args) -> Address:
-    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0, **server_args)
+    """TCP server context manager that...
+
+    1. Exits only after all handlers have returned.
+    2. Ensures that all handlers are closed properly. If we don't do that,
+       we get ghost errors in others tests from StreamWriter.__del__.
+
+    Spawning a TCP server is relatively slow. Consider using in-memory networking for faster tests.
+    """
+    if not hasattr(asyncio, "TaskGroup"):
+        pytest.skip("Skipped because asyncio.TaskGroup is unavailable.")
+
+    tasks = asyncio.TaskGroup()
+
+    async def handle_conn_wrapper(
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> None:
+        try:
+            await handle_conn(reader, writer)
+        except Exception as e:
+            print(f"!!! TCP handler failed: {e}")
+            raise
+        finally:
+            if not writer.is_closing():
+                writer.close()
+            await writer.wait_closed()
+
+    async def _handle(r, w):
+        tasks.create_task(handle_conn_wrapper(r, w))
+
+    server = await asyncio.start_server(_handle, "127.0.0.1", 0, **server_args)
     await server.start_serving()
-    try:
-        yield server.sockets[0].getsockname()
-    finally:
-        server.close()
+    async with server:
+        async with tasks:
+            yield server.sockets[0].getsockname()
 
 
 @pytest.mark.parametrize("mode", ["http", "https", "upstream", "err"])
 @pytest.mark.parametrize("concurrency", [-1, 1])
 async def test_playback(tdata, mode, concurrency):
-    handler_ok = asyncio.Event()
-
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         if mode == "err":
-            writer.close()
-            handler_ok.set()
             return
         req = await reader.readline()
         if mode == "upstream":
@@ -49,7 +74,6 @@ async def test_playback(tdata, mode, concurrency):
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
-        handler_ok.set()
 
     cp = ClientPlayback()
     ps = Proxyserver()
@@ -92,22 +116,20 @@ async def test_playback(tdata, mode, concurrency):
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
-            await asyncio.wait_for(handler_ok.wait(), 5)
-            cp.done()
-            if mode != "err":
-                assert flow.response.status_code == 204
+            while cp.replay_tasks:
+                await asyncio.sleep(0.001)
+        if mode != "err":
+            assert flow.response.status_code == 204
+        await cp.done()
 
 
 async def test_playback_https_upstream():
-    handler_ok = asyncio.Event()
-
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         conn_req = await reader.readuntil(b"\r\n\r\n")
         assert conn_req == b"CONNECT address:22 HTTP/1.1\r\n\r\n"
         writer.write(b"HTTP/1.1 502 Bad Gateway\r\n\r\n")
         await writer.drain()
         assert not await reader.read()
-        handler_ok.set()
 
     cp = ClientPlayback()
     ps = Proxyserver()
@@ -122,17 +144,17 @@ async def test_playback_https_upstream():
             cp.start_replay([flow])
             assert cp.count() == 1
             await asyncio.wait_for(cp.queue.join(), 5)
-            await asyncio.wait_for(handler_ok.wait(), 5)
-            cp.done()
-            assert flow.response is None
-            assert (
-                str(flow.error)
-                == f"Upstream proxy {addr[0]}:{addr[1]} refused HTTP CONNECT request: 502 Bad Gateway"
-            )
+
+        assert flow.response is None
+        assert (
+            str(flow.error)
+            == f"Upstream proxy {addr[0]}:{addr[1]} refused HTTP CONNECT request: 502 Bad Gateway"
+        )
+        await cp.done()
 
 
 async def test_playback_crash(monkeypatch, caplog_async):
-    async def raise_err():
+    async def raise_err(*_, **__):
         raise ValueError("oops")
 
     monkeypatch.setattr(ReplayHandler, "replay", raise_err)
@@ -141,8 +163,9 @@ async def test_playback_crash(monkeypatch, caplog_async):
         cp.running()
         cp.start_replay([tflow.tflow(live=False)])
         await caplog_async.await_log("Client replay has crashed!")
+        assert "oops" in caplog_async.caplog.text
         assert cp.count() == 0
-        cp.done()
+        await cp.done()
 
 
 def test_check():

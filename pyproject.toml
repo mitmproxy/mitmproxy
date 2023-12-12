@@ -130,6 +130,8 @@ testpaths = "test"
 addopts = "--capture=no --color=yes"
 filterwarnings = [
     "ignore::DeprecationWarning:tornado.*:",
+    "error::RuntimeWarning",
+    "error::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.mypy]
