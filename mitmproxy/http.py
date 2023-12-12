@@ -402,12 +402,6 @@ class Message(serializable.Serializable):
         else:
             return self.raw_content
 
-    def _get_content_type_charset(self) -> str | None:
-        ct = parse_content_type(self.headers.get("content-type", ""))
-        if ct:
-            return ct[2].get("charset")
-        return None
-
     def set_text(self, text: str | None) -> None:
         if text is None:
             self.content = None
