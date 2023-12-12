@@ -26,6 +26,8 @@
   ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
 * Scripts with relative paths are now loaded relative to the config file and not where the command is ran
   ([#4860](https://github.com/mitmproxy/mitmproxy/pull/4860), @Speedlulu)
+* Fix `mitmweb` splitter becoming drag and drop.
+  ([#6492](https://github.com/mitmproxy/mitmproxy/pull/6492), @xBZZZZ)
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
   ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
 
