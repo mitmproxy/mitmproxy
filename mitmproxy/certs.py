@@ -329,9 +329,7 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
-            x509.load_pem_x509_certificates(
-                self.default_chain_file.read_bytes()
-            )
+            x509.load_pem_x509_certificates(self.default_chain_file.read_bytes())
             if self.default_chain_file
             else [default_ca]
         )
