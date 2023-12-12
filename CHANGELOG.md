@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix compatibility with Windows Schannel clients, which previously got
+  confused by CA and leaf certificate sharing the same Subject Key Identifier.
+  ([#6549](https://github.com/mitmproxy/mitmproxy/pull/6549), @driuba and @mhils)
 * Fix bug where response flows from HAR files had incorrect `content-length` headers
   ([#6548](https://github.com/mitmproxy/mitmproxy/pull/6548), @zanieb)
 * Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
