@@ -375,7 +375,9 @@ class ConsoleAddon:
         flow = self.master.view.focus.flow
         focus_options = []
 
-        if isinstance(flow, tcp.TCPFlow):
+        if flow is None:
+            raise exceptions.CommandError("No flow selected.")
+        elif isinstance(flow, tcp.TCPFlow):
             focus_options = ["tcp-message"]
         elif isinstance(flow, udp.UDPFlow):
             focus_options = ["udp-message"]

@@ -156,7 +156,7 @@ def map(km: Keymap) -> None:
         console.choose.cmd Part console.edit.focus.options
         console.edit.focus {choice}
         """,
-        ["flowview"],
+        ["flowlist", "flowview"],
         "Edit a flow component",
     )
     km.add(
