@@ -133,7 +133,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     }
 }
 
-const isImage = /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon)$/i;
+const isImage =
+    /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon|svg\+xml)$/i;
 ViewImage.matches = (msg) =>
     isImage.test(MessageUtils.getContentType(msg) || "");
 
