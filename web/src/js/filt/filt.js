@@ -2077,14 +2077,16 @@ export default (function() {
         return false;
     }
     assetFilter.desc = "is asset";
-
     // ~b
     function body(regex){
         regex = new RegExp(regex, "i");
         function bodyFilter(flow){
-            return true;
+            if (window.filtFilterList && window.filtFilterList.includes(flow.id)) {
+                return true
+            }
+            return false;
         }
-        bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
+        bodyFilter.desc = "body filters " + regex;
         return bodyFilter;
     }
 
@@ -2092,9 +2094,12 @@ export default (function() {
     function requestBody(regex){
         regex = new RegExp(regex, "i");
         function requestBodyFilter(flow){
-            return true;
+            if (window.filtFilterList && window.filtFilterList.includes(flow.id)) {
+                return true
+            }
+            return false;
         }
-        requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
+        requestBodyFilter.desc = "request body filters " + regex;
         return requestBodyFilter;
     }
 
@@ -2102,9 +2107,12 @@ export default (function() {
     function responseBody(regex){
         regex = new RegExp(regex, "i");
         function responseBodyFilter(flow){
-            return true;
+            if (window.filtFilterList && window.filtFilterList.includes(flow.id)) {
+                return true
+            }
+            return false;
         }
-        responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmproxy/issues/3609";
+        responseBodyFilter.desc = "response body filters " + regex;
         return responseBodyFilter;
     }
 

@@ -34,6 +34,9 @@
   ([#6492](https://github.com/mitmproxy/mitmproxy/pull/6492), @xBZZZZ)
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
   ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
+* Added support for `~b`, `~bq`, and `~bs` filters in `mitmweb`.
+  ([#6538](https://github.com/mitmproxy/mitmproxy/pull/6538), @dsphper)
+
 
 
 ## 14 November 2023: mitmproxy 10.1.5

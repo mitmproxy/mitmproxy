@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
+import { fetchApi } from "../../utils";
 
 type FilterInputProps = {
     type: string;
@@ -71,13 +72,39 @@ export default class FilterInput extends Component<
         }
     }
 
+    fetchFilterData(filterParam) {
+        return fetchApi(
+            `/flows/filter?filter=${encodeURIComponent(filterParam)}`
+        )
+            .then((response) => {
+                return response.json();
+            })
+            .catch((error) => {});
+    }
+
     onChange(e) {
         const value = e.target.value;
         this.setState({ value });
-
-        // Only propagate valid filters upwards.
-        if (this.isValid(value)) {
-            this.props.onChange(value);
+        // Check if input starts with "~bs", "~b" or "~bq" and has more characters after it
+        if (
+            value.includes("~bs ") ||
+            value.includes("~b ") ||
+            value.includes("~bq ")
+        ) {
+            // Use the new fetchFilterData function
+            this.fetchFilterData(value).then((data) => {
+                // @ts-ignore
+                window.filtFilterList = data;
+                // Only propagate valid filters upwards.
+                if (this.isValid(value)) {
+                    this.props.onChange(value);
+                }
+            });
+        } else {
+            // Only propagate valid filters upwards.
+            if (this.isValid(value)) {
+                this.props.onChange(value);
+            }
         }
     }
 
@@ -117,6 +144,12 @@ export default class FilterInput extends Component<
 
     select() {
         ReactDOM.findDOMNode(this.refs.input).select();
+    }
+
+    componentDidMount() {
+        if (this.state.value) {
+            this.onChange({ target: { value: this.state.value } });
+        }
     }
 
     render() {

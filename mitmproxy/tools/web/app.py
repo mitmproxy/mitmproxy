@@ -354,6 +354,24 @@ class DumpFlows(RequestHandler):
         bio.close()
 
 
+class FilterFlows(RequestHandler):
+    def get(self) -> None:
+        self.set_header("Content-Type", "application/json")
+
+        def get_matched_ids(match):
+            return [f.id for f in self.view if match(f)]
+
+        try:
+            match = flowfilter.parse(self.request.arguments["filter"][0].decode())
+            matched_ids = get_matched_ids(match)
+        except (ValueError, KeyError, IndexError):
+            matched_ids = []  # return empty list if error occurs
+
+        self.set_status(200)
+        # Write the list of incrIds to the response
+        self.write(json.dumps(matched_ids))
+
+
 class ClearAll(RequestHandler):
     def post(self):
         self.view.clear()
@@ -685,6 +703,7 @@ class Application(tornado.web.Application):
                 (r"/events(?:\.json)?", Events),
                 (r"/flows(?:\.json)?", Flows),
                 (r"/flows/dump", DumpFlows),
+                (r"/flows/filter", FilterFlows),
                 (r"/flows/resume", ResumeFlows),
                 (r"/flows/kill", KillFlows),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),

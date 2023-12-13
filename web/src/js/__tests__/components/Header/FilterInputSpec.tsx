@@ -4,6 +4,10 @@ import FilterInput from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import TestUtil from "react-dom/test-utils";
 import ReactDOM from "react-dom";
+import { fetchApi } from "../../../utils";
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
+
+enableFetchMocks();
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
@@ -105,5 +109,19 @@ describe("FilterInput Component", () => {
         input.select = jest.fn();
         filterInput.select();
         expect(input.select).toBeCalled();
+    });
+
+    it("should handle fetchFilterData", async () => {
+        expect(filterInput.fetchFilterData("~bs ")).toEqual(
+            Promise.resolve({})
+        );
+    });
+
+    it("should handle change2", () => {
+        fetchMock.mockOnceIf("/flows/filter?filter=~b%20x", "[]");
+        fetchMock.mockResponses("{}");
+        let mockEvent = { target: { value: "~b x" } };
+        filterInput.onChange(mockEvent);
+        expect(filterInput.state.value).toEqual("~b x");
     });
 });
