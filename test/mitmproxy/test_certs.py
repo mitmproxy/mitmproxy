@@ -1,3 +1,4 @@
+import ipaddress
 import os
 from datetime import datetime
 from datetime import timezone
@@ -73,16 +74,16 @@ class TestCertStore:
         assert len(ca.default_chain_certs) == 2
 
     def test_sans(self, tstore):
-        c1 = tstore.get_cert("foo.com", ["*.bar.com"])
+        c1 = tstore.get_cert("foo.com", [x509.DNSName("*.bar.com")])
         tstore.get_cert("foo.bar.com", [])
         # assert c1 == c2
         c3 = tstore.get_cert("bar.com", [])
         assert not c1 == c3
 
     def test_sans_change(self, tstore):
-        tstore.get_cert("foo.com", ["*.bar.com"])
-        entry = tstore.get_cert("foo.bar.com", ["*.baz.com"])
-        assert "*.baz.com" in entry.cert.altnames
+        tstore.get_cert("foo.com", [x509.DNSName("*.bar.com")])
+        entry = tstore.get_cert("foo.bar.com", [x509.DNSName("*.baz.com")])
+        assert x509.DNSName("*.baz.com") in entry.cert.altnames
 
     def test_expire(self, tstore):
         tstore.STORE_CAP = 3
@@ -90,29 +91,29 @@ class TestCertStore:
         tstore.get_cert("two.com", [])
         tstore.get_cert("three.com", [])
 
-        assert ("one.com", ()) in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
 
         tstore.get_cert("one.com", [])
 
-        assert ("one.com", ()) in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
 
         tstore.get_cert("four.com", [])
 
-        assert ("one.com", ()) not in tstore.certs
-        assert ("two.com", ()) in tstore.certs
-        assert ("three.com", ()) in tstore.certs
-        assert ("four.com", ()) in tstore.certs
+        assert ("one.com", x509.GeneralNames([])) not in tstore.certs
+        assert ("two.com", x509.GeneralNames([])) in tstore.certs
+        assert ("three.com", x509.GeneralNames([])) in tstore.certs
+        assert ("four.com", x509.GeneralNames([])) in tstore.certs
 
     def test_overrides(self, tmp_path):
         ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
         ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
         assert not ca1.default_ca.serial == ca2.default_ca.serial
 
-        dc = ca2.get_cert("foo.com", ["sans.example.com"])
+        dc = ca2.get_cert("foo.com", [x509.DNSName("sans.example.com")])
         dcp = tmp_path / "dc"
         dcp.write_bytes(dc.cert.to_pem())
         ca1.add_cert_file("foo.com", dcp)
@@ -133,6 +134,23 @@ class TestCertStore:
         # TODO: How do we actually attempt to read that file as another user?
         assert os.stat(filename).st_mode & 0o77 == 0
 
+    @pytest.mark.parametrize(
+        "input,output",
+        [
+            (
+                "subdomain.example.com",
+                ["subdomain.example.com", "*.example.com", "*.com"],
+            ),
+            (
+                x509.DNSName("subdomain.example.com"),
+                ["subdomain.example.com", "*.example.com", "*.com"],
+            ),
+            (x509.IPAddress(ipaddress.ip_address("127.0.0.1")), ["127.0.0.1"]),
+        ],
+    )
+    def test_asterisk_forms(self, input, output):
+        assert certs.CertStore.asterisk_forms(input) == output
+
 
 class TestDummyCert:
     def test_with_ca(self, tstore):
@@ -140,17 +158,25 @@ class TestDummyCert:
             tstore.default_privatekey,
             tstore.default_ca._cert,
             "foo.com",
-            ["one.com", "two.com", "*.three.com", "127.0.0.1", "bücher.example"],
+            [
+                x509.DNSName("one.com"),
+                x509.DNSName("two.com"),
+                x509.DNSName("*.three.com"),
+                x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                x509.DNSName("bücher.example".encode("idna").decode("ascii")),
+            ],
             "Foo Ltd.",
         )
         assert r.cn == "foo.com"
-        assert r.altnames == [
-            "one.com",
-            "two.com",
-            "*.three.com",
-            "xn--bcher-kva.example",
-            "127.0.0.1",
-        ]
+        assert r.altnames == x509.GeneralNames(
+            [
+                x509.DNSName("one.com"),
+                x509.DNSName("two.com"),
+                x509.DNSName("*.three.com"),
+                x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                x509.DNSName("xn--bcher-kva.example"),
+            ]
+        )
         assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
@@ -158,7 +184,7 @@ class TestDummyCert:
         )
         assert r.cn is None
         assert r.organization is None
-        assert r.altnames == []
+        assert r.altnames == x509.GeneralNames([])
 
 
 class TestCert:

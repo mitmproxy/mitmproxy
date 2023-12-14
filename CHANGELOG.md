@@ -34,6 +34,9 @@
   ([#6492](https://github.com/mitmproxy/mitmproxy/pull/6492), @xBZZZZ)
 * Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
   ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
+* Subject Alternative Names are now represented as `cryptography.x509.GeneralNames` instead of `list[str]`
+  across the codebase. This fixes a regression introduced in mitmproxy 10.1.1 related to punycode domain encoding.
+  ([#6537](https://github.com/mitmproxy/mitmproxy/pull/6537), @mhils)
 
 
 ## 14 November 2023: mitmproxy 10.1.5

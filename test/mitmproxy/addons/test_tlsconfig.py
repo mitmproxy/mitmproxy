@@ -1,3 +1,4 @@
+import ipaddress
 import ssl
 import time
 from pathlib import Path
@@ -128,20 +129,24 @@ class TestTlsConfig:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
             entry = ta.get_cert(ctx)
             assert entry.cert.cn == "example.mitmproxy.org"
-            assert entry.cert.altnames == [
-                "example.mitmproxy.org",
-                "server-address.example",
-                "127.0.0.1",
-            ]
+            assert entry.cert.altnames == x509.GeneralNames(
+                [
+                    x509.DNSName("example.mitmproxy.org"),
+                    x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                    x509.DNSName("server-address.example"),
+                ]
+            )
 
             # And now we also incorporate SNI.
             ctx.client.sni = "sni.example"
             entry = ta.get_cert(ctx)
-            assert entry.cert.altnames == [
-                "example.mitmproxy.org",
-                "sni.example",
-                "server-address.example",
-            ]
+            assert entry.cert.altnames == x509.GeneralNames(
+                [
+                    x509.DNSName("example.mitmproxy.org"),
+                    x509.DNSName("sni.example"),
+                    x509.DNSName("server-address.example"),
+                ]
+            )
 
             with open(tdata.path("mitmproxy/data/invalid-subject.pem"), "rb") as f:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
