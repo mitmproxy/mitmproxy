@@ -25,8 +25,7 @@ them to keys in the interactive tools.
 {{< example src="examples/addons/anatomy.py" lang="py" >}}
 
 Above is a simple addon that keeps track of the number of flows (or more
-specifically HTTP requests) we've seen. Every time it sees a new flow, it uses
-mitmproxy's internal logging mechanism to announce its tally. The output can be
+specifically HTTP requests) we've seen. Every time it sees a new flow, it increments and logs its tally. The output can be
 found in the event log in the interactive tools, or on the console in mitmdump.
 
 Take it for a spin and make sure that it does what it's supposed to, by loading
@@ -45,11 +44,6 @@ Here are a few things to note about the code above:
 - The `request` method is an example of an *event*. Addons simply implement a
   method for each event they want to handle. Each event and its signature are documented
   in the [API documentation]({{< relref "addons-api" >}}).
-- Finally, the `ctx` module is a holdall module that exposes a set of standard
-  objects that are commonly used in addons. We could pass a `ctx` object as the
-  first parameter to every event, but we've found it neater to just expose it as
-  an importable global. In this case, we're using the `ctx.log` object to do our
-  logging.
 
 # Abbreviated Scripting Syntax
 
