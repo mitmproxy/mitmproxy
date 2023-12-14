@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 * Remove stale reference to `ctx.log` in addon documentation.
+  ([#6552](https://github.com/mitmproxy/mitmproxy/pull/6552), @brojonat)
 
 
 ## 14 December 2023: mitmproxy 10.1.6
