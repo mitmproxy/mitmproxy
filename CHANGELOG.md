@@ -1,12 +1,12 @@
 # Release History
 
-<!-- 
+<!--
 ✨ Please add a bullet point describing your change.                                                             ✨
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
 
 ## Unreleased: mitmproxy next
-
+* Remove stale reference to `ctx.log` in addon documentation.
 
 
 ## 14 December 2023: mitmproxy 10.1.6
@@ -118,7 +118,7 @@
     details.
   - On Windows, `mitmproxy-rs` now depends on `mitmproxy-windows`. We only provide binary wheels for this package to
     simplify our deployment process, see CI for how to build from source.
-  
+
   ([#6303](https://github.com/mitmproxy/mitmproxy/issues/6303), @mhils)
 * Increase maximum dump file size accepted by mitmweb
   ([#6373](https://github.com/mitmproxy/mitmproxy/pull/6373), @t-wy)
@@ -128,7 +128,7 @@
 
 * Add experimental support for HTTP/3 and QUIC.
   ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
-* ASGI/WSGI apps can now listen on all ports for a specific hostname. 
+* ASGI/WSGI apps can now listen on all ports for a specific hostname.
   This makes it simpler to accept both HTTP and HTTPS.
   ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
 * Add `replay.server.add` command for adding flows to server replay buffer
@@ -200,7 +200,7 @@
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
 * Add WireGuard mode to enable transparent proxying via WireGuard.
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
-* Add DTLS support. 
+* Add DTLS support.
   ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
 * Add a quick help bar to mitmproxy.
   ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
@@ -213,7 +213,7 @@
 * Deprecate `mitmproxy.ctx.log` in favor of Python's builtin `logging` module.
   See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
-  
+
 ### Breaking Changes
 
  * The `mode` option is now a list of server specs instead of a single spec.
@@ -230,7 +230,7 @@
   ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
 * Add MQTT content view.
   ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
-* Setting `connection_strategy` to `lazy` now also disables early 
+* Setting `connection_strategy` to `lazy` now also disables early
   upstream connections to fetch TLS certificate details.
   ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix order of event hooks on startup.
@@ -300,7 +300,7 @@
   ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
-* Add example addon to dump contents to files based on a filter expression 
+* Add example addon to dump contents to files based on a filter expression
   ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
 * Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
@@ -310,14 +310,14 @@
   ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 * Improve cut addon to better handle binary contents
   ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
-* Fix text truncation for full-width characters 
+* Fix text truncation for full-width characters
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
 * Add example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
-* When opening an external viewer for message contents, mailcap files are not considered anymore.  
-  This preempts the upcoming deprecation of Python's `mailcap` module. 
+* When opening an external viewer for message contents, mailcap files are not considered anymore.
+  This preempts the upcoming deprecation of Python's `mailcap` module.
   ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
 * Fix hostname encoding for IDNA domains in upstream mode.
   ([#5316](https://github.com/mitmproxy/mitmproxy/issues/5316), @nneonneo)
@@ -378,7 +378,7 @@
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
 * Add support for rotating saved streams every hour or day (@EndUser509)
 * Console Improvements on Windows (@mhils)
-* Fix processing of `--set` options (#5067, @marwinxxii) 
+* Fix processing of `--set` options (#5067, @marwinxxii)
 * Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
 * Exit early if there are errors on startup (#4544, @mhils)
 * Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)
