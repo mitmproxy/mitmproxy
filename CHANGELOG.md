@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 14 December 2023: mitmproxy 10.1.6
+
 * Fix compatibility with Windows Schannel clients, which previously got
   confused by CA and leaf certificate sharing the same Subject Key Identifier.
   ([#6549](https://github.com/mitmproxy/mitmproxy/pull/6549), @driuba and @mhils)
