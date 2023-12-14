@@ -25,8 +25,9 @@ them to keys in the interactive tools.
 {{< example src="examples/addons/anatomy.py" lang="py" >}}
 
 Above is a simple addon that keeps track of the number of flows (or more
-specifically HTTP requests) we've seen. Every time it sees a new flow, it increments and logs its tally. The output can be
-found in the event log in the interactive tools, or on the console in mitmdump.
+specifically HTTP requests) we've seen. Every time it sees a new flow, it
+increments and logs its tally. The output can be found in the event log in the
+interactive tools, or on the console in mitmdump.
 
 Take it for a spin and make sure that it does what it's supposed to, by loading
 it into your mitmproxy tool of choice. We'll use mitmdump in these examples,
