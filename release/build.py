@@ -89,17 +89,25 @@ def version() -> str:
 
 
 def operating_system() -> str:
-    match (platform.system(), platform.machine()):
-        case ("Windows", _):
-            return "windows"
-        case ("Linux", _):
-            return "linux"
-        case ("Darwin", "x86_64"):
-            return "macos-x86_64"
-        case ("Darwin", "arm64"):
-            return "macos-arm64"
-    warnings.warn("Unexpected platform.")
-    return f"{platform.system()}-{platform.machine()}"
+    match platform.system():
+        case "Windows":
+            system = "windows"
+        case "Linux":
+            system = "linux"
+        case "Darwin":
+            system = "macos"
+        case other:
+            warnings.warn("Unexpected system.")
+            system = other
+    match platform.machine():
+        case "AMD64" | "x86_64":
+            machine = "x86_64"
+        case "arm64":
+            machine = "arm64"
+        case other:
+            warnings.warn("Unexpected platform.")
+            machine = other
+    return f"{system}-{machine}"
 
 
 def _pyinstaller(specfile: str) -> None:
@@ -349,6 +357,11 @@ def installbuilder_installer():
     )
     installer = DIST_DIR / f"mitmproxy-{version()}-windows-x64-installer.exe"
     assert installer.exists()
+
+    # unify filenames
+    installer = installer.rename(
+        installer.with_name(installer.name.replace("x64", "x86_64"))
+    )
 
     print("Run installer...")
     subprocess.run(
