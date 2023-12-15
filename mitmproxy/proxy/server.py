@@ -47,11 +47,12 @@ logger = logging.getLogger(__name__)
 
 class TimeoutWatchdog:
     last_activity: float
-    CONNECTION_TIMEOUT = 10 * 60
+    timeout: float
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, callback: Callable[[], Awaitable]):
+    def __init__(self, timeout: float, callback: Callable[[], Awaitable]):
+        self.timeout = timeout
         self.callback = callback
         self.last_activity = time.time()
         self.can_timeout = asyncio.Event()
@@ -66,9 +67,9 @@ class TimeoutWatchdog:
             while True:
                 await self.can_timeout.wait()
                 await asyncio.sleep(
-                    self.CONNECTION_TIMEOUT - (time.time() - self.last_activity)
+                    self.timeout - (time.time() - self.last_activity)
                 )
-                if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
+                if self.last_activity + self.timeout < time.time():
                     await self.callback()
                     return
         except asyncio.CancelledError:
@@ -91,10 +92,10 @@ class TimeoutWatchdog:
 class ConnectionIO:
     handler: asyncio.Task | None = None
     reader: None | (
-        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.TcpStream
+        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.Stream
     ) = None
     writer: None | (
-        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.TcpStream
+        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.Stream
     ) = None
 
 
@@ -118,7 +119,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
         # on protocols that start with a server greeting.
         self.layer = layer.NextLayer(context, ask_on_start=True)
-        self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
+        if self.client.transport_protocol == "tcp":
+            timeout = 10 * 60
+        else:
+            timeout = 20
+        self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
 
         # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
         self._drain_lock = asyncio.Lock()
@@ -450,23 +455,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: asyncio.StreamReader | mitmproxy_rs.TcpStream,
-        writer: asyncio.StreamWriter | mitmproxy_rs.TcpStream,
+        reader: asyncio.StreamReader | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:
-        # mitigate impact of https://github.com/mitmproxy/mitmproxy/issues/6204:
-        # For UDP, we don't get an accurate sockname from the transport when binding to all interfaces,
-        # however we would later need that to generate matching certificates.
-        # Until this is fixed properly, we can at least make the localhost case work.
-        sockname = writer.get_extra_info("sockname")
-        if sockname == "::":
-            sockname = "::1"
-        elif sockname == "0.0.0.0":
-            sockname = "127.0.0.1"
         client = Client(
+            transport_protocol=writer.get_extra_info("transport_protocol", "tcp"),
             peername=writer.get_extra_info("peername"),
-            sockname=sockname,
+            sockname=writer.get_extra_info("sockname"),
             timestamp_start=time.time(),
             proxy_mode=mode,
             state=ConnectionState.OPEN,

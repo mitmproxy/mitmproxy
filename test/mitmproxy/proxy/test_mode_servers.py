@@ -408,7 +408,7 @@ async def test_always_uses_current_instance(patched_local_redirector, monkeypatc
         inst2 = ServerInstance.make(f"local:wget", manager)
         await inst2.start()
 
-        monkeypatch.setattr(inst2, "handle_tcp_connection", h_tcp := AsyncMock())
+        monkeypatch.setattr(inst2, "handle_stream", h_tcp := AsyncMock())
         await handle_tcp(Mock())
         assert h_tcp.await_count
 
