@@ -269,9 +269,18 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        return tuple(
-            sock.getsockname() for serv in self._servers for sock in serv.sockets
-        )
+        addrs = []
+        for s in self._servers:
+            if isinstance(s, mitmproxy_rs.UdpServer):
+                addrs.append(
+                    s.getsockname()
+                )
+            else:
+                addrs.extend(
+                    sock.getsockname()
+                    for sock in s.sockets
+                )
+        return tuple(addrs)
 
     async def _start(self) -> None:
         assert not self._servers
