@@ -311,9 +311,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     fixed_port = s.getsockname()[1]
                     s.close()
                     return [
-                        await asyncio.start_server(
-                            self.handle_stream, host, fixed_port
-                        )
+                        await asyncio.start_server(self.handle_stream, host, fixed_port)
                     ]
                 except Exception as e:
                     logger.debug(

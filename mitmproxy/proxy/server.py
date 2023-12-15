@@ -66,9 +66,7 @@ class TimeoutWatchdog:
         try:
             while True:
                 await self.can_timeout.wait()
-                await asyncio.sleep(
-                    self.timeout - (time.time() - self.last_activity)
-                )
+                await asyncio.sleep(self.timeout - (time.time() - self.last_activity))
                 if self.last_activity + self.timeout < time.time():
                     await self.callback()
                     return
