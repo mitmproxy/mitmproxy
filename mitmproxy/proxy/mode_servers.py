@@ -24,12 +24,12 @@ from abc import ABCMeta
 from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import cast
 from typing import ClassVar
 from typing import Generic
-from typing import get_args
 from typing import TYPE_CHECKING
 from typing import TypeVar
+from typing import cast
+from typing import get_args
 
 import mitmproxy_rs
 
@@ -212,6 +212,9 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         with self.manager.register_connection(handler.layer.context.client.id, handler):
             await handler.handle_client()
 
+    async def handle_udp_stream(self, stream: mitmproxy_rs.Stream) -> None:
+        await self.handle_stream(stream, stream)
+
     def handle_udp_datagram(
         self,
         transport: asyncio.DatagramTransport,
@@ -254,7 +257,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | udp.UdpServer]
+    _servers: list[asyncio.Server | mitmproxy_rs.UdpServer]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -319,29 +322,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     )
             return [await asyncio.start_server(self.handle_stream, host, port)]
         elif self.mode.transport_protocol == "udp":
-            # create_datagram_endpoint only creates one (non-dual-stack) socket, so we spawn two servers instead.
-            if not host:
-                ipv4 = await udp.start_server(
-                    self.handle_udp_datagram,
-                    "0.0.0.0",
-                    port,
-                )
-                try:
-                    ipv6 = await udp.start_server(
-                        self.handle_udp_datagram,
-                        "::",
-                        port or ipv4.sockets[0].getsockname()[1],
-                    )
-                except Exception:  # pragma: no cover
-                    logger.debug("Failed to listen on '::', listening on IPv4 only.")
-                    return [ipv4]
-                else:  # pragma: no cover
-                    return [ipv4, ipv6]
             return [
-                await udp.start_server(
-                    self.handle_udp_datagram,
+                await mitmproxy_rs.start_udp_server(
                     host,
                     port,
+                    self.handle_udp_stream
                 )
             ]
         else:
@@ -530,7 +515,6 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
-
 
 # class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
 #     def make_top_layer(self, context: Context) -> Layer:
