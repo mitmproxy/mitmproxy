@@ -12,6 +12,7 @@ from typing import ClassVar
 from typing import TypeVar
 from unittest.mock import Mock
 
+import mitmproxy_rs
 import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
@@ -32,7 +33,6 @@ from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
-from mitmproxy.net import udp
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.test import taddons
@@ -280,32 +280,32 @@ async def test_dns(caplog_async) -> None:
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
-        r, w = await udp.open_connection(*dns_addr)
+        s = await mitmproxy_rs.open_udp_connection(*dns_addr)
         req = tdnsreq()
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
         req.id = req.id + 1
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        dns_layer = ps.connections[(w.get_extra_info("sockname"), dns_addr)].layer
-        assert isinstance(dns_layer, layers.DNSLayer)
-        assert len(dns_layer.flows) == 2
+        (dns_conn,) = ps.connections.values()
+        assert isinstance(dns_conn.layer, layers.DNSLayer)
+        assert len(dns_conn.layer.flows) == 2
 
-        w.write(b"\x00")
+        s.write(b"\x00")
         await caplog_async.await_log("sent an invalid message")
         tctx.configure(ps, server=False)
         await caplog_async.await_log("stopped")
 
-        w.close()
-        await w.wait_closed()
+        s.close()
+        await s.wait_closed()
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -327,22 +327,38 @@ def test_transparent_init(monkeypatch):
 
 
 @asynccontextmanager
-async def udp_server(handle_conn) -> Address:
-    server = await udp.start_server(handle_conn, "127.0.0.1", 0)
+async def udp_server(
+    handle_datagram: Callable[
+        [asyncio.DatagramTransport, bytes, tuple[str, int]], None
+    ],
+) -> Address:
+    class ServerProtocol(asyncio.DatagramProtocol):
+        def connection_made(self, transport):
+            self.transport = transport
+
+        def datagram_received(self, data, addr):
+            handle_datagram(self.transport, data, addr)
+
+    loop = asyncio.get_running_loop()
+    transport, _ = await loop.create_datagram_endpoint(
+        lambda: ServerProtocol(),
+        local_addr=("127.0.0.1", 0),
+    )
+    socket = transport.get_extra_info("socket")
+
     try:
-        yield server.sockets[0].getsockname()
+        yield socket.getsockname()
     finally:
-        server.close()
+        transport.close()
 
 
 async def test_udp(caplog_async) -> None:
     caplog_async.set_level("INFO")
 
-    def server_handler(
+    def handle_datagram(
         transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
-        _: Address,
     ):
         assert data == b"\x16"
         transport.sendto(b"\x01", remote_addr)
@@ -351,7 +367,7 @@ async def test_udp(caplog_async) -> None:
     nl = NextLayer()
 
     with taddons.context(ps, nl) as tctx:
-        async with udp_server(server_handler) as server_addr:
+        async with udp_server(handle_datagram) as server_addr:
             mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
@@ -361,16 +377,16 @@ async def test_udp(caplog_async) -> None:
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            r, w = await udp.open_connection(*addr)
-            w.write(b"\x16")
-            assert b"\x01" == await r.read(udp.MAX_DATAGRAM_SIZE)
+            stream = await mitmproxy_rs.open_udp_connection(*addr)
+            stream.write(b"\x16")
+            assert b"\x01" == await stream.read(65535)
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
 
-            w.close()
-            await w.wait_closed()
+        stream.close()
+        await stream.wait_closed()
 
 
 class H3EchoServer(QuicConnectionProtocol):
@@ -832,17 +848,19 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
     with taddons.context(ps, nl, ta) as tctx:
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
-            orig_open_connection = udp.open_connection
+            orig_open_connection = mitmproxy_rs.open_udp_connection
 
-            def open_connection_path(
+            async def open_connection_path(
                 host: str, port: int, *args, **kwargs
-            ) -> udp.UdpClient:
+            ) -> mitmproxy_rs.Stream:
                 if host == "example.mitmproxy.org" and port == 443:
                     host = server_addr[0]
                     port = server_addr[1]
                 return orig_open_connection(host, port, *args, **kwargs)
 
-            monkeypatch.setattr(udp, "open_connection", open_connection_path)
+            monkeypatch.setattr(
+                mitmproxy_rs, "open_udp_connection", open_connection_path
+            )
             mode = f"http3@127.0.0.1:0"
             tctx.configure(
                 ta,

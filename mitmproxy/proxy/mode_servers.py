@@ -24,12 +24,12 @@ from abc import ABCMeta
 from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
+from typing import cast
 from typing import ClassVar
 from typing import Generic
+from typing import get_args
 from typing import TYPE_CHECKING
 from typing import TypeVar
-from typing import cast
-from typing import get_args
 
 import mitmproxy_rs
 
@@ -38,7 +38,6 @@ from mitmproxy import flow
 from mitmproxy import platform
 from mitmproxy.connection import Address
 from mitmproxy.net import local_ip
-from mitmproxy.net import udp
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
@@ -193,6 +192,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         )
         handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
+            assert isinstance(writer, asyncio.StreamWriter)
             s = cast(socket.socket, writer.get_extra_info("socket"))
             try:
                 assert platform.original_addr
@@ -206,7 +206,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.server.address = original_dst
         elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
             handler.layer.context.server.address = writer.get_extra_info(
-                "destination_address", handler.layer.context.client.sockname
+                "remote_endpoint", handler.layer.context.client.sockname
             )
 
         with self.manager.register_connection(handler.layer.context.client.id, handler):
@@ -214,46 +214,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
     async def handle_udp_stream(self, stream: mitmproxy_rs.Stream) -> None:
         await self.handle_stream(stream, stream)
-
-    def handle_udp_datagram(
-        self,
-        transport: asyncio.DatagramTransport,
-        data: bytes,
-        remote_addr: Address,
-        local_addr: Address,
-    ) -> None:
-        """FIXME: transition to Rust."""
-        # temporary workaround: we don't have a client uuid here.
-        connection_id = (remote_addr, local_addr)
-        if connection_id not in self.manager.connections:
-            reader = udp.DatagramReader()
-            writer = udp.DatagramWriter(transport, remote_addr, reader)
-            handler = ProxyConnectionHandler(
-                ctx.master, reader, writer, ctx.options, self.mode
-            )
-            handler.timeout_watchdog.CONNECTION_TIMEOUT = 20
-            handler.layer = self.make_top_layer(handler.layer.context)
-            handler.layer.context.client.transport_protocol = "udp"
-            handler.layer.context.server.transport_protocol = "udp"
-            if isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
-                handler.layer.context.server.address = local_addr
-
-            # pre-register here - we may get datagrams before the task is executed.
-            self.manager.connections[connection_id] = handler
-            t = asyncio.create_task(self.handle_udp_connection(connection_id, handler))
-            # assign it somewhere so that it does not get garbage-collected.
-            handler._handle_udp_task = t  # type: ignore
-        else:
-            handler = self.manager.connections[connection_id]
-            reader = cast(udp.DatagramReader, handler.transports[handler.client].reader)
-        reader.feed_data(data, remote_addr)
-
-    async def handle_udp_connection(
-        self, connection_id: tuple, handler: ProxyConnectionHandler
-    ) -> None:
-        """FIXME: transition to Rust."""
-        with self.manager.register_connection(connection_id, handler):
-            await handler.handle_client()
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
@@ -272,14 +232,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         addrs = []
         for s in self._servers:
             if isinstance(s, mitmproxy_rs.UdpServer):
-                addrs.append(
-                    s.getsockname()
-                )
+                addrs.append(s.getsockname())
             else:
-                addrs.extend(
-                    sock.getsockname()
-                    for sock in s.sockets
-                )
+                addrs.extend(sock.getsockname() for sock in s.sockets)
         return tuple(addrs)
 
     async def _start(self) -> None:
@@ -310,7 +265,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | udp.UdpServer]:
+    ) -> list[asyncio.Server | mitmproxy_rs.UdpServer]:
         if self.mode.transport_protocol == "tcp":
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
@@ -331,11 +286,30 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     )
             return [await asyncio.start_server(self.handle_stream, host, port)]
         elif self.mode.transport_protocol == "udp":
+            # we start two servers for dual-stack support.
+            # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
+            if host == "":
+                ipv4 = await mitmproxy_rs.start_udp_server(
+                    "0.0.0.0",
+                    port,
+                    self.handle_udp_stream,
+                )
+                try:
+                    ipv6 = await mitmproxy_rs.start_udp_server(
+                        "::",
+                        ipv4.getsockname()[1],
+                        self.handle_udp_stream,
+                    )
+                except Exception:  # pragma: no cover
+                    logger.debug("Failed to listen on '::', listening on IPv4 only.")
+                    return [ipv4]
+                else:  # pragma: no cover
+                    return [ipv4, ipv6]
             return [
                 await mitmproxy_rs.start_udp_server(
                     host,
                     port,
-                    self.handle_udp_stream
+                    self.handle_udp_stream,
                 )
             ]
         else:
@@ -524,6 +498,7 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
+
 
 # class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
 #     def make_top_layer(self, context: Context) -> Layer:

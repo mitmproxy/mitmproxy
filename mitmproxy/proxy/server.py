@@ -29,7 +29,6 @@ from mitmproxy.connection import Address
 from mitmproxy.connection import Client
 from mitmproxy.connection import Connection
 from mitmproxy.connection import ConnectionState
-from mitmproxy.net import udp
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -89,12 +88,8 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: asyncio.Task | None = None
-    reader: None | (
-        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.Stream
-    ) = None
-    writer: None | (
-        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.Stream
-    ) = None
+    reader: asyncio.StreamReader | mitmproxy_rs.Stream | None = None
+    writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -203,8 +198,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: asyncio.StreamReader | udp.DatagramReader
-            writer: asyncio.StreamWriter | udp.DatagramWriter
+            reader: asyncio.StreamReader | mitmproxy_rs.Stream
+            writer: asyncio.StreamWriter | mitmproxy_rs.Stream
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -213,7 +208,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
-                    reader, writer = await udp.open_connection(
+                    reader = writer = await mitmproxy_rs.open_udp_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
                     )
