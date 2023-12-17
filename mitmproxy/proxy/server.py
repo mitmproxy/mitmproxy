@@ -343,7 +343,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             # there is a super short window between connection close and watchdog cancellation
             pass
         else:
-            self.log(f"Closing connection due to inactivity: {self.client}")
+            if self.client.transport_protocol == "tcp":
+                self.log(f"Closing connection due to inactivity: {self.client}")
             assert handler
             handler.cancel("timeout")
 
