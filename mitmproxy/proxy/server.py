@@ -43,14 +43,17 @@ from mitmproxy.utils.data import pkg_data
 
 logger = logging.getLogger(__name__)
 
+TCP_TIMEOUT = 60 * 10
+UDP_TIMEOUT = 20
+
 
 class TimeoutWatchdog:
     last_activity: float
-    timeout: float
+    timeout: int
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, timeout: float, callback: Callable[[], Awaitable]):
+    def __init__(self, timeout: int, callback: Callable[[], Awaitable]):
         self.timeout = timeout
         self.callback = callback
         self.last_activity = time.time()
@@ -113,9 +116,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # on protocols that start with a server greeting.
         self.layer = layer.NextLayer(context, ask_on_start=True)
         if self.client.transport_protocol == "tcp":
-            timeout = 10 * 60
+            timeout = TCP_TIMEOUT
         else:
-            timeout = 20
+            timeout = UDP_TIMEOUT
         self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
 
         # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
