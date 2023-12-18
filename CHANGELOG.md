@@ -13,6 +13,7 @@
 * `ignore_hosts` now waits for the entire HTTP headers if it suspects the connection to be HTTP.
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
 
+
 ## 14 December 2023: mitmproxy 10.1.6
 
 * Fix compatibility with Windows Schannel clients, which previously got
