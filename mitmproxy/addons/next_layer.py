@@ -49,6 +49,7 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
+from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
@@ -129,7 +130,7 @@ class NextLayer:
         udp_based = context.client.transport_protocol == "udp"
 
         # 1)  check for --ignore/--allow
-        if self._ignore_connection(context, data_client):
+        if self._ignore_connection(context, data_client, data_server):
             return (
                 layers.TCPLayer(context, ignore=True)
                 if tcp_based
@@ -182,7 +183,7 @@ class NextLayer:
         if udp_based:
             return layers.UDPLayer(context)
         # 5b) Check for raw tcp mode.
-        very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
+        very_likely_http = context.client.alpn in HTTP_ALPNS
         probably_no_http = not very_likely_http and (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
@@ -199,6 +200,7 @@ class NextLayer:
         self,
         context: Context,
         data_client: bytes,
+        data_server: bytes,
     ) -> bool | None:
         """
         Returns:
@@ -220,13 +222,15 @@ class NextLayer:
             hostnames.append(peername)
         if context.server.address and (server_address := context.server.address[0]):
             hostnames.append(server_address)
+            # If we already have a destination address, we can also check for HTTP Host headers.
+            # But we do need the destination, otherwise we don't know where this connection is going to.
+            if host_header := self._get_host_header(context, data_client, data_server):
+                hostnames.append(host_header)
         if (
             client_hello := self._get_client_hello(context, data_client)
         ) and client_hello.sni:
             hostnames.append(client_hello.sni)
-        # If the client data is not a TLS record, try to extract the domain from the HTTP request
-        elif host := self._extract_http1_host_header(data_client):
-            hostnames.append(host)
+
         if not hostnames:
             return False
 
@@ -246,14 +250,39 @@ class NextLayer:
             raise AssertionError()
 
     @staticmethod
-    def _extract_http1_host_header(data_client: bytes) -> str:
-        pattern = rb"Host:\s+(.+?)\r\n"
-        match = re.search(pattern, data_client)
-        return match.group(1).decode() if match else ""
+    def _get_host_header(
+        context: Context,
+        data_client: bytes,
+        data_server: bytes,
+    ) -> str | None:
+        """
+        Try to read a host header from data_client.
 
-    def _get_client_hello(
-        self, context: Context, data_client: bytes
-    ) -> ClientHello | None:
+        Returns:
+            The host header value, or None, if no host header was found.
+
+        Raises:
+            NeedsMoreData, if the HTTP request is incomplete.
+        """
+        if context.client.transport_protocol != "tcp" or data_server:
+            return None
+
+        host_header_expected = context.client.alpn in HTTP1_ALPNS or re.match(
+            rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
+        )
+        if host_header_expected:
+            if m := re.search(rb"\r\n(?:Host: (.+))?\r\n", data_client, re.IGNORECASE):
+                if host := m.group(1):
+                    return host.decode("utf-8", "surrogateescape")
+                else:
+                    return None  # \r\n\r\n - header end came first.
+            else:
+                raise NeedsMoreData
+        else:
+            return None
+
+    @staticmethod
+    def _get_client_hello(context: Context, data_client: bytes) -> ClientHello | None:
         """
         Try to read a TLS/DTLS/QUIC ClientHello from data_client.
 
@@ -293,7 +322,8 @@ class NextLayer:
             case _:  # pragma: no cover
                 assert_never(context.client.transport_protocol)
 
-    def _setup_reverse_proxy(self, context: Context, data_client: bytes) -> Layer:
+    @staticmethod
+    def _setup_reverse_proxy(context: Context, data_client: bytes) -> Layer:
         spec = cast(mode_specs.ReverseMode, context.client.proxy_mode)
         stack = tunnel.LayerStack()
 
@@ -353,7 +383,8 @@ class NextLayer:
 
         return stack[0]
 
-    def _setup_explicit_http_proxy(self, context: Context, data_client: bytes) -> Layer:
+    @staticmethod
+    def _setup_explicit_http_proxy(context: Context, data_client: bytes) -> Layer:
         stack = tunnel.LayerStack()
 
         if context.client.transport_protocol == "udp":
@@ -368,9 +399,8 @@ class NextLayer:
 
         return stack[0]
 
-    def _is_destination_in_hosts(
-        self, context: Context, hosts: Iterable[re.Pattern]
-    ) -> bool:
+    @staticmethod
+    def _is_destination_in_hosts(context: Context, hosts: Iterable[re.Pattern]) -> bool:
         return any(
             (context.server.address and rex.search(context.server.address[0]))
             or (context.client.sni and rex.search(context.client.sni))
