@@ -7,10 +7,10 @@ import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
+from typing import cast
 
 import OpenSSL
 from cryptography import x509
@@ -109,6 +109,8 @@ class Cert(serializable.Serializable):
         return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
 
     def has_expired(self) -> bool:
+        if sys.version_info < (3, 11):
+            return datetime.datetime.utcnow() > self._cert.not_valid_after
         return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property
