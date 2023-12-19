@@ -109,7 +109,7 @@ class Cert(serializable.Serializable):
         return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
 
     def has_expired(self) -> bool:
-        return datetime.datetime.now(datetime.UTC) > self._cert.not_valid_after
+        return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property
     def subject(self) -> list[tuple[str, str]]:
