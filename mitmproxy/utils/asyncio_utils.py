@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 from collections.abc import Coroutine
 
@@ -27,6 +28,8 @@ def set_task_debug_info(
 ) -> None:
     """Set debug info for an externally-spawned task."""
     task.created = time.time()  # type: ignore
+    if test := os.environ.get("PYTEST_CURRENT_TEST", None):
+        name = f"{name} ({test})"
     task.set_name(name)
     if client:
         task.client = client  # type: ignore

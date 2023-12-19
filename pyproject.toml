@@ -130,6 +130,7 @@ testpaths = "test"
 addopts = "--capture=no --color=yes"
 filterwarnings = [
     "ignore::DeprecationWarning:tornado.*:",
+    "ignore:datetime.datetime.utcnow:DeprecationWarning:aioquic.*:",
     "error::RuntimeWarning",
     "error::pytest.PytestUnraisableExceptionWarning",
 ]
