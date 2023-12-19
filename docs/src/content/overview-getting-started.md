@@ -49,4 +49,3 @@ new flow and you can inspect it.
 
 * [**GitHub**](https://github.com/mitmproxy/mitmproxy): If you want to ask usage questions, contribute
   to mitmproxy, or submit a bug report, please use GitHub.
-* [**Slack**](https://mitmproxy.slack.com): For ephemeral development questions/coordination, please use our Slack channel.
