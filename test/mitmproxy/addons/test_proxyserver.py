@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import socket
 import ssl
 from collections.abc import AsyncGenerator
@@ -690,6 +691,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
         else:
             assert not response.data
 
+    logging.info("=== R1 ===")
+
     headers = [
         (b":scheme", b"https"),
         (b":authority", b"example.mitmproxy.org"),
@@ -708,6 +711,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert_no_data(r1)
     assert r1.trailers is None
 
+    logging.info("=== R2 ===")
+
     r2 = await client.request(
         headers=headers + [(b"x-request", b"hasdata")],
         data=b"echo",
@@ -719,6 +724,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     ]
     assert r2.data == b"echo"
     assert r2.trailers is None
+
+    logging.info("=== R3 ===")
 
     r3 = await client.request(
         headers=headers + [(b"x-request", b"nodata")],
@@ -732,6 +739,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert_no_data(r3)
     assert r3.trailers == [(b"x-response", b"buttrailers")]
 
+    logging.info("=== R4 ===")
+
     r4 = await client.request(
         headers=headers + [(b"x-request", b"this")],
         data=b"has",
@@ -743,6 +752,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     ]
     assert r4.data == b"has"
     assert r4.trailers == [(b"x-response", b"everything")]
+
+    logging.info("=== R5 ===")
 
     # the following test makes sure that we behave properly if end_stream is sent separately
     r5 = client.request(
