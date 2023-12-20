@@ -608,6 +608,7 @@ class H3Client(QuicClient):
             response.waiter.set_result(response)
 
     def http_event_received(self, event: h3_events.H3Event) -> None:
+        logging.info(f"http_event_received {event=}")
         if isinstance(event, h3_events.HeadersReceived):
             self.http_headers_received(event)
         elif isinstance(event, h3_events.DataReceived):
@@ -616,6 +617,7 @@ class H3Client(QuicClient):
             raise AssertionError(event)
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
+        logging.info(f"quic_event_received {event=}")
         super().quic_event_received(event)
         for http_event in self.http.handle_event(event):
             self.http_event_received(http_event)
@@ -796,7 +798,7 @@ async def test_reverse_http3_and_quic_stream(
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        tctx.options.proxy_debug = True
+        # tctx.options.proxy_debug = True
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
