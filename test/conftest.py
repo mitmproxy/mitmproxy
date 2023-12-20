@@ -28,6 +28,18 @@ else:
 skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
 
+class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    def new_event_loop(self):
+        loop = super().new_event_loop()
+        loop.set_task_factory(asyncio.eager_task_factory)
+        return loop
+
+
+@pytest.fixture()
+def event_loop_policy(request):
+    return EagerTaskCreationEventLoopPolicy()
+
+
 @pytest.fixture()
 def tdata():
     return data.Data(__name__)

@@ -1,7 +1,8 @@
 import asyncio
-import os
+import sys
 import time
 from collections.abc import Coroutine
+from contextlib import contextmanager
 
 from mitmproxy.utils import human
 
@@ -28,8 +29,6 @@ def set_task_debug_info(
 ) -> None:
     """Set debug info for an externally-spawned task."""
     task.created = time.time()  # type: ignore
-    if test := os.environ.get("PYTEST_CURRENT_TEST", None):
-        name = f"{name} ({test})"
     task.set_name(name)
     if client:
         task.client = client  # type: ignore
@@ -58,3 +57,28 @@ def task_repr(task: asyncio.Task) -> str:
     if client:
         client = f"{human.format_address(client)}: "
     return f"{client}{name}{age}"
+
+
+@contextmanager
+def install_exception_handler(handler) -> None:
+    loop = asyncio.get_running_loop()
+    existing = loop.get_exception_handler()
+    loop.set_exception_handler(handler)
+    try:
+        yield
+    finally:
+        loop.set_exception_handler(existing)
+
+
+@contextmanager
+def set_eager_task_factory() -> None:
+    loop = asyncio.get_running_loop()
+    if sys.version_info < (3, 12):
+        yield
+    else:
+        existing = loop.get_task_factory()
+        loop.set_task_factory(asyncio.eager_task_factory)
+        try:
+            yield
+        finally:
+            loop.set_task_factory(existing)

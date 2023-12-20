@@ -7,10 +7,10 @@ import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
-from typing import cast
 
 import OpenSSL
 from cryptography import x509
