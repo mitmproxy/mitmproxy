@@ -101,7 +101,7 @@ jobs:
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
-      # macOS x64. Due to GHA limitations, we are currently building the Apple Silicon app bundle outside of CI.
+      # macOS x64.
       - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain

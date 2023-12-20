@@ -337,11 +337,11 @@ class TestRawQuicLayer:
             << quic.SendQuicStreamData(tctx.server, 2, b"msg2", end_stream=False)
             >> quic.QuicConnectionClosed(tctx.client, 42, None, "bye")
             << quic.CloseQuicConnection(tctx.server, 42, None, "bye")
-            << tcp.TcpEndHook(tcpflow)
-            >> tutils.reply()
-            >> quic.QuicConnectionClosed(tctx.server, 42, None, "bye")
             << udp.UdpEndHook(udpflow)
-            >> tutils.reply()
+            << tcp.TcpEndHook(tcpflow)
+            >> tutils.reply(to=-2)
+            >> tutils.reply(to=-2)
+            >> quic.QuicConnectionClosed(tctx.server, 42, None, "bye")
         )
 
     def test_invalid_stream_event(self, tctx: context.Context):

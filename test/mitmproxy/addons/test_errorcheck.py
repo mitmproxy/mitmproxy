@@ -11,6 +11,7 @@ def test_errorcheck(tdata, capsys):
     with pytest.raises(SystemExit):
         main.mitmdump(
             [
+                "-n",
                 "-s",
                 tdata.path("mitmproxy/data/addonscripts/load_error.py"),
             ]

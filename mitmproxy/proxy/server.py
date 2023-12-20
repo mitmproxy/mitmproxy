@@ -298,14 +298,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-        if cancelled is None:
+        if cancelled is None and connection.transport_protocol == "tcp":
+            # TCP connections can be half-closed.
             connection.state &= ~ConnectionState.CAN_READ
         else:
             connection.state = ConnectionState.CLOSED
 
         self.server_event(events.ConnectionClosed(connection))
 
-        if cancelled is None and connection.state is ConnectionState.CAN_WRITE:
+        if connection.state is ConnectionState.CAN_WRITE:
             # we may still use this connection to *send* stuff,
             # even though the remote has closed their side of the connection.
             # to make this work we keep this task running and wait for cancellation.

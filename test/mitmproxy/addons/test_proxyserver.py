@@ -102,19 +102,27 @@ async def test_start_stop(caplog_async):
             assert state.flows[0].request.path == "/hello"
             assert state.flows[0].response.status_code == 204
 
-            # Waiting here until everything is really torn down... takes some effort.
-            conn_handler = list(ps.connections.values())[0]
-            client_handler = conn_handler.transports[conn_handler.client].handler
             writer.close()
             await writer.wait_closed()
-            try:
-                await client_handler
-            except asyncio.CancelledError:
-                pass
-            for _ in range(5):
-                # Get all other scheduled coroutines to run.
-                await asyncio.sleep(0)
-            assert repr(ps) == "Proxyserver(0 active conns)"
+            await _wait_for_connection_closes(ps)
+
+
+async def _wait_for_connection_closes(ps: Proxyserver):
+    # Waiting here until everything is really torn down... takes some effort.
+    client_handlers = [
+        conn_handler.transports[conn_handler.client].handler
+        for conn_handler in ps.connections.values()
+        if conn_handler.client in conn_handler.transports
+    ]
+    for client_handler in client_handlers:
+        try:
+            await asyncio.wait_for(client_handler, 5)
+        except asyncio.CancelledError:
+            pass
+    for _ in range(5):
+        # Get all other scheduled coroutines to run.
+        await asyncio.sleep(0)
+    assert not ps.connections
 
 
 async def test_inject() -> None:
@@ -152,6 +160,7 @@ async def test_inject() -> None:
 
             writer.close()
             await writer.wait_closed()
+            await _wait_for_connection_closes(ps)
 
 
 async def test_inject_fail(caplog) -> None:
@@ -200,6 +209,7 @@ async def test_self_connect():
         assert "Request destination unknown" in server.error
         tctx.configure(ps, server=False)
         assert await ps.setup_servers()
+        await _wait_for_connection_closes(ps)
 
 
 def test_options():
@@ -253,6 +263,7 @@ async def test_shutdown_err(caplog_async) -> None:
             setattr(server, "stop", _raise)
         tctx.configure(ps, server=False)
         await caplog_async.await_log("cannot close")
+        await _wait_for_connection_closes(ps)
 
 
 class DummyResolver:
@@ -306,6 +317,7 @@ async def test_dns(caplog_async) -> None:
 
         s.close()
         await s.wait_closed()
+        await _wait_for_connection_closes(ps)
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -387,6 +399,7 @@ async def test_udp(caplog_async) -> None:
 
         stream.close()
         await stream.wait_closed()
+        await _wait_for_connection_closes(ps)
 
 
 class H3EchoServer(QuicConnectionProtocol):
@@ -801,6 +814,7 @@ async def test_reverse_http3_and_quic_stream(
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"stopped")
+            await _wait_for_connection_closes(ps)
 
 
 @pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
@@ -837,6 +851,7 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
+            await _wait_for_connection_closes(ps)
 
 
 @pytest.mark.skip("HTTP/3 for regular mode is not fully supported yet")
@@ -880,3 +895,4 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
+            await _wait_for_connection_closes(ps)
