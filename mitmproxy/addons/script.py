@@ -128,6 +128,9 @@ class Script:
                 ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
 
     async def watcher(self):
+        # Script loading is terminally confused at the moment.
+        # This here is a stopgap workaround to defer loading.
+        await asyncio.sleep(0)
         last_mtime = 0.0
         while True:
             try:

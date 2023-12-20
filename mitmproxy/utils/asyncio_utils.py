@@ -2,6 +2,7 @@ import asyncio
 import sys
 import time
 from collections.abc import Coroutine
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 from mitmproxy.utils import human
@@ -60,7 +61,7 @@ def task_repr(task: asyncio.Task) -> str:
 
 
 @contextmanager
-def install_exception_handler(handler) -> None:
+def install_exception_handler(handler) -> Iterator[None]:
     loop = asyncio.get_running_loop()
     existing = loop.get_exception_handler()
     loop.set_exception_handler(handler)
@@ -71,7 +72,7 @@ def install_exception_handler(handler) -> None:
 
 
 @contextmanager
-def set_eager_task_factory() -> None:
+def set_eager_task_factory() -> Iterator[None]:
     loop = asyncio.get_running_loop()
     if sys.version_info < (3, 12):
         yield

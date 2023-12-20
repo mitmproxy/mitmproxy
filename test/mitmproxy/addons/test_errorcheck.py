@@ -9,7 +9,7 @@ from mitmproxy.tools import main
 def test_errorcheck(tdata, capsys):
     """Integration test: Make sure that we catch errors on startup an exit."""
     with pytest.raises(SystemExit):
-        main.mitmproxy(
+        main.mitmdump(
             [
                 "-s",
                 tdata.path("mitmproxy/data/addonscripts/load_error.py"),
