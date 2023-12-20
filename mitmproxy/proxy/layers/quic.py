@@ -766,7 +766,7 @@ class RawQuicLayer(layer.Layer):
         self.next_stream_id[index] = stream_id + 4
         return stream_id
 
-    def done(self, _) -> layer.CommandGenerator[None]:
+    def done(self, _) -> layer.CommandGenerator[None]:  # pragma: no cover
         yield from ()
 
 
