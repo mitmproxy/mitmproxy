@@ -136,6 +136,9 @@ filterwarnings = [
     # The following warning should only appear on Python 3.11 and below where eager_task_factory is not present
     "default:coroutine 'ConnectionHandler.hook_task' was never awaited:RuntimeWarning",
 ]
+log_cli = true
+log_cli_format = "%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
+log_cli_level = "DEBUG"
 
 [tool.mypy]
 check_untyped_defs = true

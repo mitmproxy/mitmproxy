@@ -815,11 +815,7 @@ async def test_reverse_http3_and_quic_stream(
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
-
-                try:
-                    await _test_echo(client, strict=scheme == "http3")
-                except BaseException as e:
-                    raise RuntimeError(caplog_async.caplog.text) from e
+                await _test_echo(client, strict=scheme == "http3")
                 assert len(ps.connections) == 1
 
             tctx.configure(ps, server=False)
