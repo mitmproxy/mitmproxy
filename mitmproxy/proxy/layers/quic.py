@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -529,6 +530,8 @@ class RawQuicLayer(layer.Layer):
         self.next_stream_id = [0, 1, 2, 3]
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+
+        logging.info(f"RawQuicLayer._handle_event {event=}")
         # we treat the datagram layer as child layer, so forward Start
         if isinstance(event, events.Start):
             if self.context.server.timestamp_start is None:

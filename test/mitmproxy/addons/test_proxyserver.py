@@ -506,7 +506,6 @@ class QuicClient(QuicConnectionProtocol):
         self._waiter = self._loop.create_future()
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
-        super().quic_event_received(event)
         if not self._waiter.done():
             if isinstance(event, quic_events.ConnectionTerminated):
                 self._waiter.set_exception(
