@@ -796,7 +796,7 @@ async def test_reverse_http3_and_quic_stream(
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        # tctx.options.proxy_debug = True
+        tctx.options.proxy_debug = True
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
