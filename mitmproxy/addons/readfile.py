@@ -11,7 +11,6 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
 
-
 logger = logging.getLogger(__name__)
 
 
