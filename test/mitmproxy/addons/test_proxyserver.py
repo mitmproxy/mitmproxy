@@ -824,6 +824,7 @@ async def test_reverse_http3_and_quic_stream(
 
 
 async def test_reverse_quic_datagram(caplog_async) -> None:
+    logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s")
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
