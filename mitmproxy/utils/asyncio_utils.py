@@ -74,7 +74,7 @@ def install_exception_handler(handler) -> Iterator[None]:
 @contextmanager
 def set_eager_task_factory() -> Iterator[None]:
     loop = asyncio.get_running_loop()
-    if sys.version_info < (3, 12):
+    if sys.version_info < (3, 12):  # pragma: no cover
         yield
     else:
         existing = loop.get_task_factory()

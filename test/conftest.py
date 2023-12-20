@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import socket
+import sys
 
 import pytest
 
@@ -31,7 +32,8 @@ skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self):
         loop = super().new_event_loop()
-        loop.set_task_factory(asyncio.eager_task_factory)
+        if sys.version_info >= (3, 12):
+            loop.set_task_factory(asyncio.eager_task_factory)
         return loop
 
 
