@@ -78,7 +78,7 @@ def set_eager_task_factory() -> Iterator[None]:
         yield
     else:
         existing = loop.get_task_factory()
-        loop.set_task_factory(asyncio.eager_task_factory)
+        loop.set_task_factory(asyncio.eager_task_factory)  # type: ignore
         try:
             yield
         finally:
