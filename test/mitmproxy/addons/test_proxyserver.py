@@ -774,17 +774,18 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
 
-@pytest.mark.parametrize('execution_number', range(50))
+@pytest.mark.parametrize('execution_number', range(100))
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
 async def test_reverse_http3_and_quic_stream(
     caplog_async, scheme: str, execution_number: int
 ) -> None:
-    caplog_async.set_level("INFO")
+    caplog_async.set_level("DEBUG")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
+        tctx.options.proxy_debug = True
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
@@ -803,7 +804,11 @@ async def test_reverse_http3_and_quic_stream(
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
             async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
-                await _test_echo(client, strict=scheme == "http3")
+
+                try:
+                    await _test_echo(client, strict=scheme == "http3")
+                except BaseException as e:
+                    raise RuntimeError(caplog_async.caplog.text) from e
                 assert len(ps.connections) == 1
 
             tctx.configure(ps, server=False)
