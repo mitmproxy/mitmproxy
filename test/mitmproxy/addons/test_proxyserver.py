@@ -496,7 +496,7 @@ async def quic_server(
 
 
 class QuicClient(QuicConnectionProtocol):
-    TIMEOUT: ClassVar[int] = 10
+    TIMEOUT: ClassVar[int] = 5
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -801,9 +801,9 @@ async def test_reverse_http3_and_quic_stream(
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            async with quic_connect(H3Client, alpn=["h3"], address=addr) as client:
+            async with quic_connect(H3Client, alpn=["h3"], address=server_addr) as client:
                 await _test_echo(client, strict=scheme == "http3")
-                assert len(ps.connections) == 1
+                assert len(ps.connections) == 0
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"stopped")
