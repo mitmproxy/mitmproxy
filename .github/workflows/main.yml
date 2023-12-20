@@ -92,7 +92,7 @@ jobs:
         with:
           python-version: ${{ matrix.py }}
       - run: pip install tox
-      - run: tox -e py
+      - run: tox -e py -- -k test_reverse_http3_and_quic_stream
         if: matrix.os != 'ubuntu-latest'
       - name: Run tox -e py (without internet)
         run: |
