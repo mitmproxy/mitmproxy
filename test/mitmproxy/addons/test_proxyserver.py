@@ -447,6 +447,7 @@ class H3EchoServer(QuicConnectionProtocol):
         self.transmit()
 
     def http_event_received(self, event: h3_events.H3Event) -> None:
+        logging.info(f"server.http_event_received {event=}")
         if isinstance(event, h3_events.HeadersReceived):
             self.http_headers_received(event)
         elif isinstance(event, h3_events.DataReceived):
@@ -455,6 +456,7 @@ class H3EchoServer(QuicConnectionProtocol):
             raise AssertionError(event)
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
+        logging.info(f"server.quic_event_received {event=}")
         if isinstance(event, quic_events.ProtocolNegotiated):
             self.http = H3Connection(self._quic)
         if self.http is not None:
@@ -608,7 +610,7 @@ class H3Client(QuicClient):
             response.waiter.set_result(response)
 
     def http_event_received(self, event: h3_events.H3Event) -> None:
-        logging.info(f"http_event_received {event=}")
+        logging.info(f"client.http_event_received {event=}")
         if isinstance(event, h3_events.HeadersReceived):
             self.http_headers_received(event)
         elif isinstance(event, h3_events.DataReceived):
@@ -617,7 +619,7 @@ class H3Client(QuicClient):
             raise AssertionError(event)
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
-        logging.info(f"quic_event_received {event=}")
+        logging.info(f"client.quic_event_received {event=}")
         super().quic_event_received(event)
         for http_event in self.http.handle_event(event):
             self.http_event_received(http_event)
