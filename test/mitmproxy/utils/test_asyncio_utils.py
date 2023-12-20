@@ -12,9 +12,13 @@ async def ttask():
     await asyncio.sleep(999)
 
 
-async def test_simple():
+async def test_simple(monkeypatch):
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "test_foo")
     task = asyncio_utils.create_task(ttask(), name="ttask", client=("127.0.0.1", 42313))
-    assert asyncio_utils.task_repr(task) == "127.0.0.1:42313: ttask (age: 0s)"
+    assert (
+        asyncio_utils.task_repr(task)
+        == "127.0.0.1:42313: ttask [created in test_foo] (age: 0s)"
+    )
     await asyncio.sleep(0)
     assert "newname" in asyncio_utils.task_repr(task)
     delattr(task, "created")
