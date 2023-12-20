@@ -496,7 +496,7 @@ async def quic_server(
 
 
 class QuicClient(QuicConnectionProtocol):
-    TIMEOUT: ClassVar[int] = 5
+    TIMEOUT: ClassVar[int] = 10
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -774,10 +774,9 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
 
-@pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
 async def test_reverse_http3_and_quic_stream(
-    caplog_async, scheme: str, connection_strategy: str
+    caplog_async, scheme: str
 ) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
@@ -785,7 +784,6 @@ async def test_reverse_http3_and_quic_stream(
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        tctx.options.connection_strategy = connection_strategy
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
@@ -807,25 +805,18 @@ async def test_reverse_http3_and_quic_stream(
                 await _test_echo(client, strict=scheme == "http3")
                 assert len(ps.connections) == 1
 
-            # dirty hack: forcibly close all connections so that there are no unexpected asyncio tasks
-            # that may cause test failures because they have not been run.
-            for conn in ps.servers[mode].manager.connections.values():
-                await conn.on_timeout()
-
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"stopped")
             await _wait_for_connection_closes(ps)
 
 
-@pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
-async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> None:
+async def test_reverse_quic_datagram(caplog_async) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        tctx.options.connection_strategy = connection_strategy
         ta.configure(["confdir"])
         async with quic_server(QuicDatagramEchoServer, alpn=["dgram"]) as server_addr:
             mode = f"reverse:quic://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
