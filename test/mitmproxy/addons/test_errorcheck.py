@@ -30,4 +30,12 @@ async def test_error_message(capsys):
     logging.error("wat")
     with pytest.raises(SystemExit):
         await e.shutdown_if_errored()
-    assert "Errors logged during startup" in capsys.readouterr().err
+    assert "Errors logged during startup, exiting..." in capsys.readouterr().err
+
+
+async def test_repeat_error_on_stderr(capsys):
+    e = ErrorCheck(repeat_errors_on_stderr=True)
+    logging.error("wat")
+    with pytest.raises(SystemExit):
+        await e.shutdown_if_errored()
+    assert "Error logged during startup:\nwat" in capsys.readouterr().err
