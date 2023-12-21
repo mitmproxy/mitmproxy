@@ -887,17 +887,9 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        sent = False
         for data, addr in self.quic.datagrams_to_send(now=self._time()):
-            sent = True
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
-        if not sent:
-            time.sleep(0.01)
-            for data, addr in self.quic.datagrams_to_send(now=self._time()):
-                logging.error("BINGO")
-                assert addr == self.conn.peername
-                yield commands.SendData(self.tunnel_connection, data)
 
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
