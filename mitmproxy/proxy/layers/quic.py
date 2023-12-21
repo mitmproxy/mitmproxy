@@ -523,7 +523,7 @@ class RawQuicLayer(layer.Layer):
     """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
-        self.debug = "  "
+        self.debug = "    "
         super().__init__(context)
         self.ignore = ignore
         self.datagram_layer = (
@@ -794,6 +794,7 @@ class QuicLayer(tunnel.TunnelLayer):
         time: Callable[[], float] | None,
     ) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
+        self.debug = "  "
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
         self._time = time or ctx.master.event_loop.time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
