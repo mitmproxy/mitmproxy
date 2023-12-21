@@ -523,7 +523,7 @@ class RawQuicLayer(layer.Layer):
     """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
-        self.debug = "    "
+        self.debug = "  "
         super().__init__(context)
         self.ignore = ignore
         self.datagram_layer = (
@@ -827,6 +827,7 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
+                logging.info("_handle_command: self.quic.send_stream_data")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
@@ -882,6 +883,8 @@ class QuicLayer(tunnel.TunnelLayer):
 
     def tls_interact(self) -> layer.CommandGenerator[None]:
         """Retrieves all pending outgoing packets from aioquic and sends the data."""
+
+        logging.warning("tls_interact")
 
         # send all queued datagrams
         assert self.quic
@@ -1131,7 +1134,6 @@ class ClientQuicLayer(QuicLayer):
             context.client.cipher_list = []
 
         super().__init__(context, context.client, time)
-        self.debug = "  "
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
