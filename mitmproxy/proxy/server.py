@@ -298,7 +298,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-        if cancelled is None and connection.transport_protocol == "tcp":
+        if cancelled is None: # FIXME and connection.transport_protocol == "tcp":
             # TCP connections can be half-closed.
             connection.state &= ~ConnectionState.CAN_READ
         else:
