@@ -831,6 +831,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
+                yield from self.tls_interact()  # wat
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
