@@ -513,6 +513,7 @@ class RawQuicLayer(layer.Layer):
     """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
+        self.debug = "  "
         super().__init__(context)
         self.ignore = ignore
         self.datagram_layer = (
@@ -531,7 +532,6 @@ class RawQuicLayer(layer.Layer):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
 
-        logging.info(f"RawQuicLayer._handle_event {event=}")
         # we treat the datagram layer as child layer, so forward Start
         if isinstance(event, events.Start):
             if self.context.server.timestamp_start is None:
