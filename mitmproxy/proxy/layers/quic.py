@@ -442,7 +442,6 @@ class QuicStreamLayer(layer.Layer):
 
         # ignored connections will be assigned a TCPLayer immediately
         super().__init__(context)
-        self.debug = "  "
         self.child_layer = (
             TCPLayer(context, ignore=True)
             if ignore
@@ -1132,6 +1131,7 @@ class ClientQuicLayer(QuicLayer):
             context.client.cipher_list = []
 
         super().__init__(context, context.client, time)
+        self.debug = "  "
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
