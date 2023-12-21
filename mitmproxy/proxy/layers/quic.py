@@ -884,8 +884,6 @@ class QuicLayer(tunnel.TunnelLayer):
     def tls_interact(self) -> layer.CommandGenerator[None]:
         """Retrieves all pending outgoing packets from aioquic and sends the data."""
 
-        logging.warning("tls_interact")
-
         # send all queued datagrams
         assert self.quic
         for data, addr in self.quic.datagrams_to_send(now=self._time()):
