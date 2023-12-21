@@ -442,6 +442,7 @@ class QuicStreamLayer(layer.Layer):
 
         # ignored connections will be assigned a TCPLayer immediately
         super().__init__(context)
+        self.debug = "  "
         self.child_layer = (
             TCPLayer(context, ignore=True)
             if ignore
@@ -794,7 +795,6 @@ class QuicLayer(tunnel.TunnelLayer):
         time: Callable[[], float] | None,
     ) -> None:
         super().__init__(context, tunnel_connection=conn, conn=conn)
-        self.debug = "  "
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
         self._time = time or ctx.master.event_loop.time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
