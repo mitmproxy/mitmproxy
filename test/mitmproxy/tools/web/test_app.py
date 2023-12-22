@@ -219,16 +219,16 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert '"/' not in str(
             response.body
         ), "HTML content should not contain root-relative paths"
-    
+
     def test_app_js(self):
         response: httpclient.HTTPResponse = self.fetch("/static/app.js")
         assert response.code == 200
         result = (
-            '"/flows' not in str( response.body )
-            and '"/commands' not in str( response.body )
-            and '"/filter' not in str( response.body )
-            and '"/clear' not in str( response.body )
-            and '"/options' not in str( response.body )
+            '"/flows' not in str(response.body)
+            and '"/commands' not in str(response.body)
+            and '"/filter' not in str(response.body)
+            and '"/clear' not in str(response.body)
+            and '"/options' not in str(response.body)
         )
         assert result, "app.js content should not contain root-relative paths"
 
