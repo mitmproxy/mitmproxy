@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Added a cli argument that will disable the "Edit options" button.
+  ([#6568](https://github.com/mitmproxy/mitmproxy/pull/6568), @Peacexoom)
 * Fix a regression from mitmproxy 10.1.6 where `ignore_hosts` would terminate requests
   instead of forwarding them.
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
