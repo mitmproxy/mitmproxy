@@ -4,29 +4,34 @@ import Button from "../common/Button";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal";
-import { useAppDispatch } from "../../ducks";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 
 OptionMenu.title = "Options";
 
 export default function OptionMenu() {
+    const disableEditOptions = useAppSelector(
+        (state) => state.options.disable_edit_options
+    );
     const dispatch = useAppDispatch();
     const openOptions = () => modalActions.setActiveModal("OptionModal");
 
     return (
         <div>
             <HideInStatic>
-                <div className="menu-group">
-                    <div className="menu-content">
-                        <Button
-                            title="Open Options"
-                            icon="fa-cogs text-primary"
-                            onClick={() => dispatch(openOptions())}
-                        >
-                            Edit Options <sup>alpha</sup>
-                        </Button>
+                {!disableEditOptions && (
+                    <div className="menu-group">
+                        <div className="menu-content">
+                            <Button
+                                title="Open Options"
+                                icon="fa-cogs text-primary"
+                                onClick={() => dispatch(openOptions())}
+                            >
+                                Edit Options <sup>alpha</sup>
+                            </Button>
+                        </div>
+                        <div className="menu-legend">Options Editor</div>
                     </div>
-                    <div className="menu-legend">Options Editor</div>
-                </div>
+                )}
 
                 <div className="menu-group">
                     <div className="menu-content">

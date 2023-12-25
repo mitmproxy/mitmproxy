@@ -21,6 +21,7 @@ export interface OptionsState {
     connection_strategy: string;
     console_focus_follow: boolean;
     content_view_lines_cutoff: number;
+    disable_edit_options: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
     http2: boolean;
@@ -117,6 +118,7 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    disable_edit_options: false,
     export_preserve_original_ip: false,
     hardump: "",
     http2: true,

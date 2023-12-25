@@ -11,6 +11,7 @@ class WebAddon:
         loader.add_option("web_debug", bool, False, "Enable mitmweb debugging.")
         loader.add_option("web_port", int, 8081, "Web UI port.")
         loader.add_option("web_host", str, "127.0.0.1", "Web UI host.")
+        loader.add_option("disable_edit_options", bool, False, "Disable the 'Edit options' button in the Web UI.")
         loader.add_option(
             "web_columns",
             Sequence[str],
