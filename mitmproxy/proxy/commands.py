@@ -51,6 +51,9 @@ class RequestWakeup(Command):
     delay: float
 
     def __init__(self, delay: float):
+        if delay < 0:
+            logging.error("DELAY < 0")
+        assert delay >= 0, "oops"
         self.delay = delay
 
 
