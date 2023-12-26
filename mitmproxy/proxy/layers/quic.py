@@ -831,7 +831,7 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                logging.info(f"_handle_command: {command}")
+                logging.info(f"_handle_command: SendQuicStreamData({command.connection.__class__.__name__.lower()}, eof={command.end_stream})")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
