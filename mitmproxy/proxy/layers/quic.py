@@ -831,12 +831,12 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                logging.info(f"_handle_command: SendQuicStreamData({command.connection.__class__.__name__.lower()}, eof={command.end_stream})")
+                logging.info(f"_handle_command:SendQuicStreamData eof={command.end_stream}")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
                 if command.end_stream:
-                    self._eofsent = True
+                    self._eofsent = 2
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -899,11 +899,12 @@ class QuicLayer(tunnel.TunnelLayer):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
 
-        if hasattr(self, "_eofsent"):
+        if getattr(self, "_eofsent", 0):
+            self._eofsent -= 1
             logging.warning(f"interacted after EOF. {sent=}")
 
         # request a new wakeup if all pending requests trigger at a later time
-        timer = self.quic.get_timer() + 0.002  # add two milliseconds to smooth.
+        timer = self.quic.get_timer()  # FIXME + 0.002  # add two milliseconds to smooth.
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
