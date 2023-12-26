@@ -800,12 +800,15 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.Wakeup) and event.command in self._wakeup_commands:
+        wakeup_for_this_layer = (
+            isinstance(event, events.Wakeup)
+            and
+            self._wakeup_commands.pop(event.command, False)
+        )
+        if wakeup_for_this_layer:
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
-            timer = self._wakeup_commands.pop(event.command)
-            logging.warning(f"wakeup {self.quic._state}")
             if self.quic._state is not QuicConnectionState.TERMINATED:
                 self.quic.handle_timer(now=self._time())
                 yield from super()._handle_event(
@@ -828,10 +831,12 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                logging.info("_handle_command: self.quic.send_stream_data")
+                logging.info(f"_handle_command: {command}")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
+                if command.end_stream:
+                    self._eofsent = True
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -888,9 +893,14 @@ class QuicLayer(tunnel.TunnelLayer):
         # send all queued datagrams
         assert self.quic
         now = self._time()
+        sent = False
         for data, addr in self.quic.datagrams_to_send(now=now):
+            sent = True
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
+
+        if hasattr(self, "_eofsent"):
+            logging.warning(f"interacted after EOF. {sent=}")
 
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
