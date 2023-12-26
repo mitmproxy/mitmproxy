@@ -903,7 +903,7 @@ class QuicLayer(tunnel.TunnelLayer):
             logging.warning(f"interacted after EOF. {sent=}")
 
         # request a new wakeup if all pending requests trigger at a later time
-        timer = self.quic.get_timer()
+        timer = self.quic.get_timer() + 0.002  # add two milliseconds to smooth.
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
