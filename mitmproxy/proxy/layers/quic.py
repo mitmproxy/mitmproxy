@@ -806,7 +806,7 @@ class QuicLayer(tunnel.TunnelLayer):
             assert self.quic
             timer = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(now=max(timer, self._time()))
+                self.quic.handle_timer(now=self._time())
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -886,23 +886,17 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        sent = False
-        for data, addr in self.quic.datagrams_to_send(now=self._time()):
-            sent = True
+        now = self._time()
+        for data, addr in self.quic.datagrams_to_send(now=now):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
-        if not sent:
-            for data, addr in self.quic.datagrams_to_send(now=self._time() + 0.1):
-                logging.error("BINGO")
-                assert addr == self.conn.peername
-                yield commands.SendData(self.tunnel_connection, data)
 
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
-            command = commands.RequestWakeup(timer - self._time())
+            command = commands.RequestWakeup(timer - now)
             self._wakeup_commands[command] = timer
             yield command
 
