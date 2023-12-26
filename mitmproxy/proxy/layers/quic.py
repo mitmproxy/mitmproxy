@@ -805,6 +805,7 @@ class QuicLayer(tunnel.TunnelLayer):
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             timer = self._wakeup_commands.pop(event.command)
+            logging.warning(f"wakeup {self.quic._state}")
             if self.quic._state is not QuicConnectionState.TERMINATED:
                 self.quic.handle_timer(now=self._time())
                 yield from super()._handle_event(
