@@ -840,7 +840,7 @@ class TestServerTLS:
             playbook
             >> events.Wakeup(playbook.actual[9])
             << commands.Log(
-                "Server QUIC handshake failed. Certificate does not match hostname 'wrong.host.mitmproxy.org'",
+                tutils.StrMatching("Server QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match"),
                 WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
@@ -848,12 +848,13 @@ class TestServerTLS:
             << commands.CloseConnection(tctx.server)
             << commands.SendData(
                 tctx.client,
-                b"open-connection failed: Certificate does not match hostname 'wrong.host.mitmproxy.org'",
+                tutils.BytesMatching(b"open-connection failed: hostname 'wrong.host.mitmproxy.org' doesn't match"),
             )
         )
         assert (
-            tls_hook_data().conn.error
-            == "Certificate does not match hostname 'wrong.host.mitmproxy.org'"
+            tls_hook_data().conn.error.startswith(
+                "hostname 'wrong.host.mitmproxy.org' doesn't match"
+            )
         )
         assert not tctx.server.tls_established
 
@@ -1133,7 +1134,7 @@ class TestClientTLS:
             playbook
             >> events.Wakeup(playbook.actual[7])
             << commands.Log(
-                "Client QUIC handshake failed. Certificate does not match hostname 'wrong.host.mitmproxy.org'",
+                tutils.StrMatching("Client QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match"),
                 WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
