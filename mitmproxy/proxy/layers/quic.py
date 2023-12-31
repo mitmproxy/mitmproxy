@@ -975,7 +975,7 @@ class QuicLayer(tunnel.TunnelLayer):
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
         if timer is not None:
-            timer += 0.001
+            timer += 0.002
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
