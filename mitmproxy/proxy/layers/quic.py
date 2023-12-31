@@ -10,6 +10,7 @@ from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
 
+import aioquic
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
@@ -24,6 +25,7 @@ from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
 from aioquic.quic.packet import QuicProtocolVersion
+from aioquic.quic.packet_builder import QuicPacketBuilder
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -913,9 +915,36 @@ class QuicLayer(tunnel.TunnelLayer):
                 logging.warning(
                     f"{stream.is_finished= } "
                     f"{stream.is_blocked=} "
-                    f"{stream.sender.buffer_is_empty=}"
-                    f"{stream=} "
+                    f"{stream.sender.buffer_is_empty=} "
+                    f"{stream.sender.__dict__=}"
                     )
+                space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
+                max_offset = min(
+                    stream.sender.highest_offset
+                    + quic._remote_max_data
+                    - quic._remote_max_data_used,
+                    stream.max_stream_data_remote,
+                )
+                builder = QuicPacketBuilder(
+                    host_cid=quic.host_cid,
+                    is_client=quic._is_client,
+                    max_datagram_size=quic._max_datagram_size,
+                    packet_number=quic._packet_number,
+                    peer_cid=quic._peer_cid.cid,
+                    peer_token=quic._peer_token,
+                    quic_logger=quic._quic_logger,
+                    spin_bit=quic._spin_bit,
+                    version=quic._version,
+                )
+                written = quic._write_stream_frame(
+                    builder=builder,
+                    space=space,
+                    stream=stream,
+                    max_offset=max_offset,
+                )
+                logging.warning(f"{written=} {max_offset=}")
+
+
             else:
                 logging.warning("No stream 0.")
 
