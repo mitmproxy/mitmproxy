@@ -910,6 +910,8 @@ class QuicLayer(tunnel.TunnelLayer):
                             f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
                             f"{network_path.is_validated=} "
                             f"{network_path.bytes_received * 3 - self.quic._network_paths[0].bytes_sent=} "
+                            f"{quic._handshake_confirmed=} "
+                            f"{quic._handshake_complete=} "
                             )
             if stream := quic._streams.get(0):
                 logging.warning(
@@ -926,6 +928,10 @@ class QuicLayer(tunnel.TunnelLayer):
                     f"{stream.sender._reset_error_code=} "
                     )
                 space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
+                logging.warning(f"{space.ack_at=} {now=} "
+                                f"{space.ack_at >= now=} "
+                                f"{quic._pacing_at=} "
+                                f"{quic._datagrams_pending=}")
                 max_offset = min(
                     stream.sender.highest_offset
                     + quic._remote_max_data
