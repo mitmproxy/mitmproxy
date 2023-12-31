@@ -814,9 +814,7 @@ class QuicLayer(tunnel.TunnelLayer):
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                now = self._time()
-                logging.warning(f"woken up {now=} after {event.command.delay}s. {type(self).__name__=} {hash(self)=} {hash(event.command)=} {self.tunnel_state=}")
-                self.quic.handle_timer(now=now)
+                logging.warning(f"woken up at {self._time()} after {event.command.delay}s. {type(self).__name__=} {hash(self)=} {hash(event.command)=} {self.tunnel_state=}")
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -899,6 +897,12 @@ class QuicLayer(tunnel.TunnelLayer):
         # send all queued datagrams
         assert self.quic
         now = self._time()
+
+        timer = self.quic.get_timer()  # this may return a float < now!
+        if timer <= now:
+            self.quic.handle_timer(now)
+            timer = None
+
         sent = False
         for data, addr in self.quic.datagrams_to_send(now=now):
             sent = True
@@ -978,17 +982,17 @@ class QuicLayer(tunnel.TunnelLayer):
             else:
                 logging.warning("No stream 0.")
 
-        # request a new wakeup if all pending requests trigger at a later time
-        timer = self.quic.get_timer()
         if timer is not None:
-            timer += 0.002
-        if timer is not None and not any(
-            existing <= timer for existing in self._wakeup_commands.values()
-        ):
-            command = commands.RequestWakeup(timer - now)
-            logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}")
-            self._wakeup_commands[command] = timer
-            yield command
+            # smooth wakeups a bit.
+            timer += 0.001
+            # request a new wakeup if all pending requests trigger at a later time
+            if not any(
+                existing <= timer for existing in self._wakeup_commands.values()
+            ):
+                command = commands.RequestWakeup(timer - now)
+                logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}")
+                self._wakeup_commands[command] = timer
+                yield command
 
     def receive_handshake_data(
         self, data: bytes
