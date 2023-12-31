@@ -21,6 +21,8 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
+from aioquic.quic.packet import PACKET_TYPE_ONE_RTT
+from aioquic.quic.packet import PACKET_TYPE_ZERO_RTT
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
@@ -927,6 +929,14 @@ class QuicLayer(tunnel.TunnelLayer):
                     f"{stream.sender._pending_eof=} "
                     f"{stream.sender._reset_error_code=} "
                     )
+                if quic._cryptos[aioquic.tls.Epoch.ONE_RTT].send.is_valid():
+                    crypto = quic._cryptos[aioquic.tls.Epoch.ONE_RTT]
+                    packet_type = PACKET_TYPE_ONE_RTT
+                elif quic._cryptos[aioquic.tls.Epoch.ZERO_RTT].send.is_valid():
+                    crypto = quic._cryptos[aioquic.tls.Epoch.ZERO_RTT]
+                    packet_type = PACKET_TYPE_ZERO_RTT
+                else:
+                    raise RuntimeError("wat")
                 space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
                 logging.warning(f"{space.ack_at=} {now=} "
                                 f"{space.ack_at >= now=} "
@@ -949,6 +959,7 @@ class QuicLayer(tunnel.TunnelLayer):
                     spin_bit=quic._spin_bit,
                     version=quic._version,
                 )
+                builder.start_packet(packet_type, crypto)
                 written = quic._write_stream_frame(
                     builder=builder,
                     space=space,
