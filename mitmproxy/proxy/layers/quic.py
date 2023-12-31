@@ -913,10 +913,17 @@ class QuicLayer(tunnel.TunnelLayer):
                             )
             if stream := quic._streams.get(0):
                 logging.warning(
-                    f"{stream.is_finished= } "
+                    f"{stream.is_finished=} "
                     f"{stream.is_blocked=} "
                     f"{stream.sender.buffer_is_empty=} "
-                    f"{stream.sender.__dict__=}"
+                    f"{stream.sender.highest_offset=} "
+                    f"{stream.sender.is_finished=} "
+                    f"{stream.sender.reset_pending=} "
+                    f"{stream.sender._buffer_fin=} "
+                    f"{stream.sender._buffer_start=} "
+                    f"{stream.sender._buffer_stop=} "
+                    f"{stream.sender._pending_eof=} "
+                    f"{stream.sender._reset_error_code=} "
                     )
                 space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
                 max_offset = min(
