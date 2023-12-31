@@ -901,7 +901,19 @@ class QuicLayer(tunnel.TunnelLayer):
 
         if getattr(self, "_eofsent", 0):
             self._eofsent -= 1
-            logging.warning(f"interacted after EOF. {sent=}")
+            quic = self.quic
+            network_path = quic._network_paths[0]
+            stream = quic._streams[0]
+            logging.warning(f"interacted after EOF. {sent=} "
+                            f"{quic._close_pending=} "
+                            f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
+                            f"{network_path.is_validated=} "
+                            f"{network_path.bytes_received * 3 - self.quic._network_paths[0].bytes_sent=} "
+                            f"{stream.is_finished= } "
+                            f"{stream.is_blocked=} "
+                            f"{stream.sender.buffer_is_empty=}"
+                            f"{stream=} "
+                            )
 
         # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()

@@ -59,7 +59,7 @@ def run(
         logging.getLogger("asyncio").setLevel(logging.WARNING)
         logging.getLogger("hpack").setLevel(logging.WARNING)
         logging.getLogger("quic").setLevel(
-            logging.DEBUG
+            logging.WARNING
         )  # aioquic uses a different prefix...
         debug.register_info_dumpers()
 
