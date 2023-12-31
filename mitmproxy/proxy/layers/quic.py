@@ -932,6 +932,7 @@ class QuicLayer(tunnel.TunnelLayer):
                     - quic._remote_max_data_used,
                     stream.max_stream_data_remote,
                 )
+                """
                 builder = QuicPacketBuilder(
                     host_cid=quic.host_cid,
                     is_client=quic._is_client,
@@ -949,6 +950,8 @@ class QuicLayer(tunnel.TunnelLayer):
                     stream=stream,
                     max_offset=max_offset,
                 )
+                """
+                written = None
                 logging.warning(f"{written=} {max_offset=}")
 
 
