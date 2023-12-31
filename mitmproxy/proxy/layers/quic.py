@@ -939,7 +939,6 @@ class QuicLayer(tunnel.TunnelLayer):
                     raise RuntimeError("wat")
                 space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
                 logging.warning(f"{space.ack_at=} {now=} "
-                                f"{space.ack_at >= now=} "
                                 f"{quic._pacing_at=} "
                                 f"{quic._datagrams_pending=}")
                 max_offset = min(
