@@ -814,7 +814,9 @@ class QuicLayer(tunnel.TunnelLayer):
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(now=self._time())
+                now = self._time()
+                logging.warning(f"woken up {now=}")
+                self.quic.handle_timer(now=now)
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -938,15 +940,18 @@ class QuicLayer(tunnel.TunnelLayer):
                 else:
                     raise RuntimeError("wat")
                 space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
-                logging.warning(f"{space.ack_at=} {now=} "
-                                f"{quic._pacing_at=} "
-                                f"{quic._datagrams_pending=}")
                 max_offset = min(
                     stream.sender.highest_offset
                     + quic._remote_max_data
                     - quic._remote_max_data_used,
                     stream.max_stream_data_remote,
                 )
+                logging.warning(f"{space.ack_at=} {now=} "
+                                f"{quic._pacing_at=} "
+                                f"{quic._datagrams_pending=} "
+                                f"{max_offset=}")
+
+                """
                 builder = QuicPacketBuilder(
                     host_cid=quic.host_cid,
                     is_client=quic._is_client,
@@ -968,6 +973,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 logging.warning(f"{written=} {max_offset=}")
                 if written:
                     raise RuntimeError(f"{written=}")
+                """
 
             else:
                 logging.warning("No stream 0.")
@@ -979,6 +985,7 @@ class QuicLayer(tunnel.TunnelLayer):
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
+            logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=}")
             command = commands.RequestWakeup(timer - now)
             self._wakeup_commands[command] = timer
             yield command
