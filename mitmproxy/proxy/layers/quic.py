@@ -815,7 +815,7 @@ class QuicLayer(tunnel.TunnelLayer):
             assert self.quic
             if self.quic._state is not QuicConnectionState.TERMINATED:
                 now = self._time()
-                logging.warning(f"woken up {now=}")
+                logging.warning(f"woken up {now=} after {event.command.delay}s. {type(self).__name__=} {hash(self)=} {hash(event.command)=} {self.tunnel_state=}")
                 self.quic.handle_timer(now=now)
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
@@ -985,8 +985,8 @@ class QuicLayer(tunnel.TunnelLayer):
         if timer is not None and not any(
             existing <= timer for existing in self._wakeup_commands.values()
         ):
-            logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=}")
             command = commands.RequestWakeup(timer - now)
+            logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}")
             self._wakeup_commands[command] = timer
             yield command
 
