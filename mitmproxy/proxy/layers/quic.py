@@ -840,7 +840,7 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
                 if command.end_stream:
-                    self._eofsent = 1
+                    self._eofsent = 3
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -913,6 +913,7 @@ class QuicLayer(tunnel.TunnelLayer):
             self._eofsent -= 1
             quic = self.quic
             network_path = quic._network_paths[0]
+            """
             logging.warning(f"interacted after EOF. {sent=} "
                             f"{quic._close_pending=} "
                             f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
@@ -921,8 +922,10 @@ class QuicLayer(tunnel.TunnelLayer):
                             f"{quic._handshake_confirmed=} "
                             f"{quic._handshake_complete=} "
                             )
+            """
             if stream := quic._streams.get(0):
                 logging.warning(
+                    f"interacted after EOF: Stream Info."
                     f"{stream.is_finished=} "
                     f"{stream.is_blocked=} "
                     f"{stream.sender.buffer_is_empty=} "
