@@ -59,7 +59,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py }}
       - run: pip install tox
@@ -95,7 +95,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
       - if: matrix.platform == 'windows'
@@ -134,7 +134,7 @@ jobs:
             (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
         run: python -u release/build.py --dirty installbuilder-installer msix-installer
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
           name: binaries.${{ matrix.platform }}
@@ -173,7 +173,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
       - run: |
@@ -182,7 +182,7 @@ jobs:
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: docs
           path: docs/public
@@ -192,7 +192,7 @@ jobs:
         env:
           DOCS_ARCHIVE: true
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docs-archive
           path: docs/public
@@ -229,10 +229,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries.linux
           path: release/dist
@@ -266,7 +266,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
       - run: sudo apt-get update
@@ -274,24 +274,24 @@ jobs:
       - if: startsWith(github.ref, 'refs/tags/')
         run: sudo apt-get install -y twine
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: docs
           path: docs/public
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docs-archive
           path: docs/archive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries.windows
           path: release/dist
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries.linux
           path: release/dist
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries.macos
           path: release/dist
