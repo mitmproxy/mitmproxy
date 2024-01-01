@@ -10,7 +10,6 @@ from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
 
-import aioquic
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
@@ -21,13 +20,10 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
-from aioquic.quic.packet import PACKET_TYPE_ONE_RTT
-from aioquic.quic.packet import PACKET_TYPE_ZERO_RTT
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
 from aioquic.quic.packet import QuicProtocolVersion
-from aioquic.quic.packet_builder import QuicPacketBuilder
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -527,7 +523,6 @@ class RawQuicLayer(layer.Layer):
     """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
     def __init__(self, context: context.Context, ignore: bool = False) -> None:
-        self.debug = "  "
         super().__init__(context)
         self.ignore = ignore
         self.datagram_layer = (
@@ -545,7 +540,6 @@ class RawQuicLayer(layer.Layer):
         self.next_stream_id = [0, 1, 2, 3]
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-
         # we treat the datagram layer as child layer, so forward Start
         if isinstance(event, events.Start):
             if self.context.server.timestamp_start is None:
@@ -804,17 +798,14 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        wakeup_for_this_layer = (
-            isinstance(event, events.Wakeup)
-            and
-            self._wakeup_commands.pop(event.command, False)
-        )
+        wakeup_for_this_layer = isinstance(
+            event, events.Wakeup
+        ) and self._wakeup_commands.pop(event.command, False)
         if wakeup_for_this_layer:
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                logging.warning(f"woken up at {self._time()} after {event.command.delay}s. {type(self).__name__=} {hash(self)=} {hash(event.command)=} {self.tunnel_state=}")
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -835,12 +826,9 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                logging.info(f"_handle_command:SendQuicStreamData eof={command.end_stream}")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
-                if command.end_stream:
-                    self._eofsent = 3
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -903,99 +891,9 @@ class QuicLayer(tunnel.TunnelLayer):
             self.quic.handle_timer(now)
             timer = None
 
-        sent = False
         for data, addr in self.quic.datagrams_to_send(now=now):
-            sent = True
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
-
-        if getattr(self, "_eofsent", 0):
-            self._eofsent -= 1
-            if True:
-                quic = self.quic
-                """
-                network_path = quic._network_paths[0]
-                logging.warning(f"interacted after EOF. {sent=} "
-                                f"{quic._close_pending=} "
-                                f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
-                                f"{network_path.is_validated=} "
-                                f"{network_path.bytes_received * 3 - self.quic._network_paths[0].bytes_sent=} "
-                                f"{quic._handshake_confirmed=} "
-                                f"{quic._handshake_complete=} "
-                                )
-                """
-                if stream := quic._streams.get(0):
-                    logging.warning(
-                        f"interacted after EOF: "
-                        f"{stream.sender.is_finished=} "
-                        f"{stream.sender._buffer_fin=} "
-                        f"{stream.sender._buffer_start=} "
-                        f"{stream.sender._buffer_stop=} "
-                        f"{stream.sender._pending_eof=} "
-                    )
-                    '''
-                    logging.warning(
-                        f"interacted after EOF: Stream Info."
-                        f"{stream.stream_id=} "
-                        f"{stream.is_finished=} "
-                        f"{stream.is_blocked=} "
-                        f"{stream.sender.buffer_is_empty=} "
-                        f"{stream.sender.highest_offset=} "
-                        f"{stream.sender.is_finished=} "
-                        f"{stream.sender.reset_pending=} "
-                        f"{stream.sender._buffer_fin=} "
-                        f"{stream.sender._buffer_start=} "
-                        f"{stream.sender._buffer_stop=} "
-                        f"{stream.sender._pending_eof=} "
-                        f"{stream.sender._reset_error_code=} "
-                        )
-                    if quic._cryptos[aioquic.tls.Epoch.ONE_RTT].send.is_valid():
-                        crypto = quic._cryptos[aioquic.tls.Epoch.ONE_RTT]
-                        packet_type = PACKET_TYPE_ONE_RTT
-                    elif quic._cryptos[aioquic.tls.Epoch.ZERO_RTT].send.is_valid():
-                        crypto = quic._cryptos[aioquic.tls.Epoch.ZERO_RTT]
-                        packet_type = PACKET_TYPE_ZERO_RTT
-                    else:
-                        raise RuntimeError("wat")
-                    space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
-                    max_offset = min(
-                        stream.sender.highest_offset
-                        + quic._remote_max_data
-                        - quic._remote_max_data_used,
-                        stream.max_stream_data_remote,
-                    )
-                    logging.warning(f"{space.ack_at=} {now=} "
-                                    f"{quic._pacing_at=} "
-                                    f"{quic._datagrams_pending=} "
-                                    f"{max_offset=}")
-
-                    """
-                    builder = QuicPacketBuilder(
-                        host_cid=quic.host_cid,
-                        is_client=quic._is_client,
-                        max_datagram_size=quic._max_datagram_size,
-                        packet_number=quic._packet_number,
-                        peer_cid=quic._peer_cid.cid,
-                        peer_token=quic._peer_token,
-                        quic_logger=quic._quic_logger,
-                        spin_bit=quic._spin_bit,
-                        version=quic._version,
-                    )
-                    builder.start_packet(packet_type, crypto)
-                    written = quic._write_stream_frame(
-                        builder=builder,
-                        space=space,
-                        stream=stream,
-                        max_offset=max_offset,
-                    )
-                    logging.warning(f"{written=} {max_offset=}")
-                    if written:
-                        raise RuntimeError(f"{written=}")
-                    """
-                    '''
-
-                else:
-                    logging.warning("No stream 0.")
 
         if timer is not None:
             # smooth wakeups a bit.
@@ -1005,7 +903,9 @@ class QuicLayer(tunnel.TunnelLayer):
                 existing <= timer for existing in self._wakeup_commands.values()
             ):
                 command = commands.RequestWakeup(timer - now)
-                logging.warning(f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}")
+                logging.warning(
+                    f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}"
+                )
                 self._wakeup_commands[command] = timer
                 yield command
 

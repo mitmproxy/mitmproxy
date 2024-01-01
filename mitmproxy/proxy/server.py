@@ -401,7 +401,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     pass  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
-                    logging.warning(f"{command!r} {len(command.data)=} {writer.is_closing()=}")
                     assert writer
                     if not writer.is_closing():
                         writer.write(command.data)
