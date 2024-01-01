@@ -840,7 +840,7 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
                 if command.end_stream:
-                    self._eofsent = 3
+                    self._eofsent = 2
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -911,80 +911,81 @@ class QuicLayer(tunnel.TunnelLayer):
 
         if getattr(self, "_eofsent", 0):
             self._eofsent -= 1
-            quic = self.quic
-            network_path = quic._network_paths[0]
-            """
-            logging.warning(f"interacted after EOF. {sent=} "
-                            f"{quic._close_pending=} "
-                            f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
-                            f"{network_path.is_validated=} "
-                            f"{network_path.bytes_received * 3 - self.quic._network_paths[0].bytes_sent=} "
-                            f"{quic._handshake_confirmed=} "
-                            f"{quic._handshake_complete=} "
-                            )
-            """
-            if stream := quic._streams.get(0):
-                logging.warning(
-                    f"interacted after EOF: Stream Info."
-                    f"{stream.stream_id=} "
-                    f"{stream.is_finished=} "
-                    f"{stream.is_blocked=} "
-                    f"{stream.sender.buffer_is_empty=} "
-                    f"{stream.sender.highest_offset=} "
-                    f"{stream.sender.is_finished=} "
-                    f"{stream.sender.reset_pending=} "
-                    f"{stream.sender._buffer_fin=} "
-                    f"{stream.sender._buffer_start=} "
-                    f"{stream.sender._buffer_stop=} "
-                    f"{stream.sender._pending_eof=} "
-                    f"{stream.sender._reset_error_code=} "
+            if self._eofsent == 0:
+                quic = self.quic
+                network_path = quic._network_paths[0]
+                """
+                logging.warning(f"interacted after EOF. {sent=} "
+                                f"{quic._close_pending=} "
+                                f"{quic._loss.congestion_window - self.quic._loss.bytes_in_flight=} "
+                                f"{network_path.is_validated=} "
+                                f"{network_path.bytes_received * 3 - self.quic._network_paths[0].bytes_sent=} "
+                                f"{quic._handshake_confirmed=} "
+                                f"{quic._handshake_complete=} "
+                                )
+                """
+                if stream := quic._streams.get(0):
+                    logging.warning(
+                        f"interacted after EOF: Stream Info."
+                        f"{stream.stream_id=} "
+                        f"{stream.is_finished=} "
+                        f"{stream.is_blocked=} "
+                        f"{stream.sender.buffer_is_empty=} "
+                        f"{stream.sender.highest_offset=} "
+                        f"{stream.sender.is_finished=} "
+                        f"{stream.sender.reset_pending=} "
+                        f"{stream.sender._buffer_fin=} "
+                        f"{stream.sender._buffer_start=} "
+                        f"{stream.sender._buffer_stop=} "
+                        f"{stream.sender._pending_eof=} "
+                        f"{stream.sender._reset_error_code=} "
+                        )
+                    if quic._cryptos[aioquic.tls.Epoch.ONE_RTT].send.is_valid():
+                        crypto = quic._cryptos[aioquic.tls.Epoch.ONE_RTT]
+                        packet_type = PACKET_TYPE_ONE_RTT
+                    elif quic._cryptos[aioquic.tls.Epoch.ZERO_RTT].send.is_valid():
+                        crypto = quic._cryptos[aioquic.tls.Epoch.ZERO_RTT]
+                        packet_type = PACKET_TYPE_ZERO_RTT
+                    else:
+                        raise RuntimeError("wat")
+                    space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
+                    max_offset = min(
+                        stream.sender.highest_offset
+                        + quic._remote_max_data
+                        - quic._remote_max_data_used,
+                        stream.max_stream_data_remote,
                     )
-                if quic._cryptos[aioquic.tls.Epoch.ONE_RTT].send.is_valid():
-                    crypto = quic._cryptos[aioquic.tls.Epoch.ONE_RTT]
-                    packet_type = PACKET_TYPE_ONE_RTT
-                elif quic._cryptos[aioquic.tls.Epoch.ZERO_RTT].send.is_valid():
-                    crypto = quic._cryptos[aioquic.tls.Epoch.ZERO_RTT]
-                    packet_type = PACKET_TYPE_ZERO_RTT
+                    logging.warning(f"{space.ack_at=} {now=} "
+                                    f"{quic._pacing_at=} "
+                                    f"{quic._datagrams_pending=} "
+                                    f"{max_offset=}")
+
+                    """
+                    builder = QuicPacketBuilder(
+                        host_cid=quic.host_cid,
+                        is_client=quic._is_client,
+                        max_datagram_size=quic._max_datagram_size,
+                        packet_number=quic._packet_number,
+                        peer_cid=quic._peer_cid.cid,
+                        peer_token=quic._peer_token,
+                        quic_logger=quic._quic_logger,
+                        spin_bit=quic._spin_bit,
+                        version=quic._version,
+                    )
+                    builder.start_packet(packet_type, crypto)
+                    written = quic._write_stream_frame(
+                        builder=builder,
+                        space=space,
+                        stream=stream,
+                        max_offset=max_offset,
+                    )
+                    logging.warning(f"{written=} {max_offset=}")
+                    if written:
+                        raise RuntimeError(f"{written=}")
+                    """
+
                 else:
-                    raise RuntimeError("wat")
-                space = quic._spaces[aioquic.tls.Epoch.ONE_RTT]
-                max_offset = min(
-                    stream.sender.highest_offset
-                    + quic._remote_max_data
-                    - quic._remote_max_data_used,
-                    stream.max_stream_data_remote,
-                )
-                logging.warning(f"{space.ack_at=} {now=} "
-                                f"{quic._pacing_at=} "
-                                f"{quic._datagrams_pending=} "
-                                f"{max_offset=}")
-
-                """
-                builder = QuicPacketBuilder(
-                    host_cid=quic.host_cid,
-                    is_client=quic._is_client,
-                    max_datagram_size=quic._max_datagram_size,
-                    packet_number=quic._packet_number,
-                    peer_cid=quic._peer_cid.cid,
-                    peer_token=quic._peer_token,
-                    quic_logger=quic._quic_logger,
-                    spin_bit=quic._spin_bit,
-                    version=quic._version,
-                )
-                builder.start_packet(packet_type, crypto)
-                written = quic._write_stream_frame(
-                    builder=builder,
-                    space=space,
-                    stream=stream,
-                    max_offset=max_offset,
-                )
-                logging.warning(f"{written=} {max_offset=}")
-                if written:
-                    raise RuntimeError(f"{written=}")
-                """
-
-            else:
-                logging.warning("No stream 0.")
+                    logging.warning("No stream 0.")
 
         if timer is not None:
             # smooth wakeups a bit.
