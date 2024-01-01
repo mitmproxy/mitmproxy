@@ -926,6 +926,7 @@ class QuicLayer(tunnel.TunnelLayer):
             if stream := quic._streams.get(0):
                 logging.warning(
                     f"interacted after EOF: Stream Info."
+                    f"{stream.stream_id=} "
                     f"{stream.is_finished=} "
                     f"{stream.is_blocked=} "
                     f"{stream.sender.buffer_is_empty=} "
