@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def fix_headers(
-    request_headers: list[dict[str, str]] | list[tuple[str, str]]
+    request_headers: list[dict[str, str]] | list[tuple[str, str]],
 ) -> http.Headers:
     """Converts provided headers into (b"header-name", b"header-value") tuples"""
     flow_headers: list[tuple[bytes, bytes]] = []

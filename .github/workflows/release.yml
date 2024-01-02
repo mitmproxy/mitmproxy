@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
       - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}
