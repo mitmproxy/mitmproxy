@@ -797,10 +797,7 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        wakeup_for_this_layer = (
-            isinstance(event, events.Wakeup) and event.command in self._wakeup_commands
-        )
-        if wakeup_for_this_layer:
+        if isinstance(event, events.Wakeup) and event.command in self._wakeup_commands:
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
