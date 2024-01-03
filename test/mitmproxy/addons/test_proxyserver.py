@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import socket
 import ssl
 from collections.abc import AsyncGenerator
@@ -447,7 +446,6 @@ class H3EchoServer(QuicConnectionProtocol):
         self.transmit()
 
     def http_event_received(self, event: h3_events.H3Event) -> None:
-        logging.info(f"server.http_event_received {event=}")
         if isinstance(event, h3_events.HeadersReceived):
             self.http_headers_received(event)
         elif isinstance(event, h3_events.DataReceived):
@@ -456,7 +454,6 @@ class H3EchoServer(QuicConnectionProtocol):
             raise AssertionError(event)
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
-        logging.info(f"server.quic_event_received {event=}")
         if isinstance(event, quic_events.ProtocolNegotiated):
             self.http = H3Connection(self._quic)
         if self.http is not None:
@@ -610,7 +607,6 @@ class H3Client(QuicClient):
             response.waiter.set_result(response)
 
     def http_event_received(self, event: h3_events.H3Event) -> None:
-        logging.info(f"client.http_event_received {event=}")
         if isinstance(event, h3_events.HeadersReceived):
             self.http_headers_received(event)
         elif isinstance(event, h3_events.DataReceived):
@@ -619,7 +615,6 @@ class H3Client(QuicClient):
             raise AssertionError(event)
 
     def quic_event_received(self, event: quic_events.QuicEvent) -> None:
-        logging.info(f"client.quic_event_received {event=}")
         super().quic_event_received(event)
         for http_event in self.http.handle_event(event):
             self.http_event_received(http_event)
@@ -695,8 +690,6 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
         else:
             assert not response.data
 
-    logging.info("=== R1 ===")
-
     headers = [
         (b":scheme", b"https"),
         (b":authority", b"example.mitmproxy.org"),
@@ -715,8 +708,6 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert_no_data(r1)
     assert r1.trailers is None
 
-    logging.info("=== R2 ===")
-
     r2 = await client.request(
         headers=headers + [(b"x-request", b"hasdata")],
         data=b"echo",
@@ -728,8 +719,6 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     ]
     assert r2.data == b"echo"
     assert r2.trailers is None
-
-    logging.info("=== R3 ===")
 
     r3 = await client.request(
         headers=headers + [(b"x-request", b"nodata")],
@@ -743,8 +732,6 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert_no_data(r3)
     assert r3.trailers == [(b"x-response", b"buttrailers")]
 
-    logging.info("=== R4 ===")
-
     r4 = await client.request(
         headers=headers + [(b"x-request", b"this")],
         data=b"has",
@@ -756,8 +743,6 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     ]
     assert r4.data == b"has"
     assert r4.trailers == [(b"x-response", b"everything")]
-
-    logging.info("=== R5 ===")
 
     # the following test makes sure that we behave properly if end_stream is sent separately
     r5 = client.request(
@@ -789,18 +774,16 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
 
-@pytest.mark.parametrize("execution_number", range(100))
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
 async def test_reverse_http3_and_quic_stream(
-    caplog_async, scheme: str, execution_number: int
+    caplog_async, scheme: str
 ) -> None:
-    caplog_async.set_level("DEBUG")
+    caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        # tctx.options.proxy_debug = True
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
@@ -828,7 +811,6 @@ async def test_reverse_http3_and_quic_stream(
 
 
 async def test_reverse_quic_datagram(caplog_async) -> None:
-    logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s")
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()

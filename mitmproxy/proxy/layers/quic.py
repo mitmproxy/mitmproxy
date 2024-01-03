@@ -887,7 +887,7 @@ class QuicLayer(tunnel.TunnelLayer):
         now = self._time()
 
         timer = self.quic.get_timer()  # this may return a float < now!
-        if timer <= now:
+        if timer is not None and timer <= now:
             self.quic.handle_timer(now)
             timer = None
 
@@ -897,15 +897,12 @@ class QuicLayer(tunnel.TunnelLayer):
 
         if timer is not None:
             # smooth wakeups a bit.
-            timer += 0.001
+            smoothed = timer + 0.002
             # request a new wakeup if all pending requests trigger at a later time
             if not any(
-                existing <= timer for existing in self._wakeup_commands.values()
+                existing <= smoothed for existing in self._wakeup_commands.values()
             ):
                 command = commands.RequestWakeup(timer - now)
-                logging.warning(
-                    f"requesting wakeup {timer=} {now=} {timer - now=} {type(self).__name__=} {hash(self)=} {hash(command)=}"
-                )
                 self._wakeup_commands[command] = timer
                 yield command
 
