@@ -775,9 +775,7 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
 
 
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
-async def test_reverse_http3_and_quic_stream(
-    caplog_async, scheme: str
-) -> None:
+async def test_reverse_http3_and_quic_stream(caplog_async, scheme: str) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()

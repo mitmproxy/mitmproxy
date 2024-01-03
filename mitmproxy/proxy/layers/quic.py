@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -806,6 +805,7 @@ class QuicLayer(tunnel.TunnelLayer):
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             if self.quic._state is not QuicConnectionState.TERMINATED:
+                self.quic.handle_timer(self._time())
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -886,15 +886,11 @@ class QuicLayer(tunnel.TunnelLayer):
         assert self.quic
         now = self._time()
 
-        timer = self.quic.get_timer()  # this may return a float < now!
-        if timer is not None and timer <= now:
-            self.quic.handle_timer(now)
-            timer = None
-
         for data, addr in self.quic.datagrams_to_send(now=now):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
 
+        timer = self.quic.get_timer()
         if timer is not None:
             # smooth wakeups a bit.
             smoothed = timer + 0.002

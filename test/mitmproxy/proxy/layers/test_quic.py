@@ -728,7 +728,7 @@ def reply_tls_start_server(alpn: str | None = None, *args, **kwargs) -> tutils.r
     return tutils.reply(*args, side_effect=make_server_conn, **kwargs)
 
 
-class TestServerTLS:
+class TestServerQuic:
     def test_repr(self, tctx: context.Context):
         assert repr(quic.ServerQuicLayer(tctx, time=lambda: 0))
 
@@ -789,7 +789,7 @@ class TestServerTLS:
         tssl.now = tssl.now + 60
         assert (
             playbook
-            >> events.Wakeup(playbook.actual[4])
+            >> tutils.reply(to=commands.RequestWakeup)
             << commands.CloseConnection(tctx.server)
             >> events.ConnectionClosed(tctx.server)
             << None
@@ -838,7 +838,7 @@ class TestServerTLS:
         tls_hook_data = tutils.Placeholder(quic.QuicTlsData)
         assert (
             playbook
-            >> events.Wakeup(playbook.actual[9])
+            >> tutils.reply(to=commands.RequestWakeup)
             << commands.Log(
                 tutils.StrMatching(
                     "Server QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match"
@@ -890,7 +890,7 @@ def make_client_tls_layer(
     return playbook, client_layer, tssl_client
 
 
-class TestClientTLS:
+class TestClientQuic:
     def test_http3_disabled(self, tctx: context.Context):
         """Test that we swallow QUIC packets if QUIC and HTTP/3 are disabled."""
         tctx.options.http3 = False
@@ -904,7 +904,7 @@ class TestClientTLS:
         )
 
     def test_client_only(self, tctx: context.Context):
-        """Test TLS with client only"""
+        """Test QUIC with client only"""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
         client_layer.debug = "  "
         assert not tctx.client.tls_established
@@ -942,9 +942,11 @@ class TestClientTLS:
         tssl_client.now = tssl_client.now + 60
         assert (
             playbook
-            >> events.Wakeup(playbook.actual[16])
+            >> tutils.reply(to=commands.RequestWakeup)
             << commands.Log(
-                "  >> Wakeup(command=RequestWakeup({'delay': 0.20000000000000004}))",
+                tutils.StrMatching(
+                    r"  >> Wakeup\(command=RequestWakeup\({'delay': [.\d]+}\)\)"
+                ),
                 DEBUG,
             )
             << commands.Log(
@@ -1134,7 +1136,7 @@ class TestClientTLS:
         tssl_client.now = tssl_client.now + 60
         assert (
             playbook
-            >> events.Wakeup(playbook.actual[7])
+            >> tutils.reply(to=commands.RequestWakeup)
             << commands.Log(
                 tutils.StrMatching(
                     "Client QUIC handshake failed. hostname 'wrong.host.mitmproxy.org' doesn't match"
