@@ -797,15 +797,18 @@ class QuicLayer(tunnel.TunnelLayer):
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        wakeup_for_this_layer = isinstance(
-            event, events.Wakeup
-        ) and self._wakeup_commands.pop(event.command, False)
+        wakeup_for_this_layer = (
+            isinstance(event, events.Wakeup) and event.command in self._wakeup_commands
+        )
         if wakeup_for_this_layer:
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
+            scheduled_time = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(self._time())
+                # weird quirk: asyncio sometimes returns a bit ahead of time.
+                now = max(scheduled_time, self._time())
+                self.quic.handle_timer(now)
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
