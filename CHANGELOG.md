@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 04 January 2024: mitmproxy 10.2.0
+
 * *Local Redirect Mode* is now officially available on
   [macOS](https://mitmproxy.org/posts/local-redirect/macos/)
   and [Windows](https://mitmproxy.org/posts/local-redirect/windows/).
