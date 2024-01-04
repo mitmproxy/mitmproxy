@@ -130,6 +130,11 @@ class QuicStreamDataReceived(QuicStreamEvent):
     end_stream: bool
     """Whether the STREAM frame had the FIN bit set."""
 
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        end_stream = "[end_stream] " if self.end_stream else ""
+        return f"QuicStreamDataReceived({target} on {self.stream_id}, {end_stream}{self.data!r})"
+
 
 @dataclass
 class QuicStreamReset(QuicStreamEvent):
@@ -168,6 +173,11 @@ class SendQuicStreamData(QuicStreamCommand):
         super().__init__(connection, stream_id)
         self.data = data
         self.end_stream = end_stream
+
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        end_stream = "[end_stream] " if self.end_stream else ""
+        return f"SendQuicStreamData({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
 
 class ResetQuicStream(QuicStreamCommand):
@@ -766,7 +776,7 @@ class RawQuicLayer(layer.Layer):
         self.next_stream_id[index] = stream_id + 4
         return stream_id
 
-    def done(self, _) -> layer.CommandGenerator[None]:
+    def done(self, _) -> layer.CommandGenerator[None]:  # pragma: no cover
         yield from ()
 
 
@@ -791,9 +801,11 @@ class QuicLayer(tunnel.TunnelLayer):
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
-            timer = self._wakeup_commands.pop(event.command)
+            scheduled_time = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(now=max(timer, self._time()))
+                # weird quirk: asyncio sometimes returns a bit ahead of time.
+                now = max(scheduled_time, self._time())
+                self.quic.handle_timer(now)
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -872,18 +884,23 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        for data, addr in self.quic.datagrams_to_send(now=self._time()):
+        now = self._time()
+
+        for data, addr in self.quic.datagrams_to_send(now=now):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
 
-        # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
-        if timer is not None and not any(
-            existing <= timer for existing in self._wakeup_commands.values()
-        ):
-            command = commands.RequestWakeup(timer - self._time())
-            self._wakeup_commands[command] = timer
-            yield command
+        if timer is not None:
+            # smooth wakeups a bit.
+            smoothed = timer + 0.002
+            # request a new wakeup if all pending requests trigger at a later time
+            if not any(
+                existing <= smoothed for existing in self._wakeup_commands.values()
+            ):
+                command = commands.RequestWakeup(timer - now)
+                self._wakeup_commands[command] = timer
+                yield command
 
     def receive_handshake_data(
         self, data: bytes

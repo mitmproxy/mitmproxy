@@ -114,6 +114,12 @@ def test_command_reply(tplaybook):
     assert tplaybook
     assert tplaybook.actual[1] == tplaybook.actual[2].command
 
+    tplaybook >> TEvent((42,))
+    tplaybook << TCommand(42)
+    tplaybook >> tutils.reply(to=TCommand)
+    assert tplaybook
+    assert tplaybook.actual[4] == tplaybook.actual[5].command
+
 
 def test_default_playbook(tctx):
     p = tutils.Playbook(TLayer(tctx))

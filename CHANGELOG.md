@@ -10,6 +10,22 @@
   ([#6552](https://github.com/mitmproxy/mitmproxy/pull/6552), @brojonat)
 
 
+## 04 January 2024: mitmproxy 10.2.0
+
+* *Local Redirect Mode* is now officially available on
+  [macOS](https://mitmproxy.org/posts/local-redirect/macos/)
+  and [Windows](https://mitmproxy.org/posts/local-redirect/windows/).
+  See the linked blog posts for details. (@emanuele-em, @mhils)
+* UDP streams are now backed by a new implementation in `mitmproxy_rs`.
+  This represents a major API change as UDP traffic is now exposed as streams
+  instead of a callback for each packet. (@mhils)
+* Fix a regression from mitmproxy 10.1.6 where `ignore_hosts` would terminate requests
+  instead of forwarding them.
+  ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
+* `ignore_hosts` now waits for the entire HTTP headers if it suspects the connection to be HTTP.
+  ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
+
+
 ## 14 December 2023: mitmproxy 10.1.6
 
 * Fix compatibility with Windows Schannel clients, which previously got
@@ -19,17 +35,17 @@
   ([#6225](https://github.com/mitmproxy/mitmproxy/issues/6225), @Llama1412)
 * Fix bug where response flows from HAR files had incorrect `content-length` headers
   ([#6548](https://github.com/mitmproxy/mitmproxy/pull/6548), @zanieb)
-* Improved handling for `--allow-hosts`/`--ignore-hosts` options in WireGuard mode (#5930).
+* Improved handling for `allow_hosts`/`ignore_hosts` options in WireGuard mode (#5930).
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix a bug where TCP connections were not closed properly.
   ([#6543](https://github.com/mitmproxy/mitmproxy/pull/6543), @mhils)
-* DNS resolution is now exempted from `--ignore-hosts` in WireGuard Mode.
+* DNS resolution is now exempted from `ignore_hosts` in WireGuard Mode.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix case sensitivity of URL added to blocklist
   ([#6493](https://github.com/mitmproxy/mitmproxy/pull/6493), @emanuele-em)
 * Fix a bug where logging was stopped prematurely during shutdown.
   ([#6541](https://github.com/mitmproxy/mitmproxy/pull/6541), @mhils)
-* For plaintext traffic, `--ignore-hosts` now also takes HTTP/1 host headers into account.
+* For plaintext traffic, `ignore_hosts` now also takes HTTP/1 host headers into account.
   ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
 * Fix empty cookie attributes being set to `Key=` instead of `Key`
   ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)

@@ -59,7 +59,6 @@ def test_simple(tctx):
         << SendData(tctx.client, b"hi")
         >> ConnectionClosed(tctx.server)
         << CloseConnection(tctx.client)
-        >> ConnectionClosed(tctx.client)
         << udp.UdpEndHook(f)
         >> reply()
         >> DataReceived(tctx.server, b"ignored")

@@ -14,7 +14,6 @@ tapp = flask.Flask(__name__)
 
 @tapp.route("/")
 def hello():
-    print("CALLED")
     return "testapp"
 
 

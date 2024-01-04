@@ -33,6 +33,7 @@ from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import ServerManager
+from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils import signals
 
@@ -276,7 +277,9 @@ class Proxyserver(ServerManager):
                     )
 
             if self.is_running:
-                self._update_task = asyncio.create_task(self.servers.update(modes))
+                self._update_task = asyncio_utils.create_task(
+                    self.servers.update(modes), name="update servers"
+                )
 
     async def setup_servers(self) -> bool:
         """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""

@@ -12,6 +12,7 @@ from typing import ClassVar
 from typing import TypeVar
 from unittest.mock import Mock
 
+import mitmproxy_rs
 import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
@@ -32,7 +33,6 @@ from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
-from mitmproxy.net import udp
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.test import taddons
@@ -102,19 +102,27 @@ async def test_start_stop(caplog_async):
             assert state.flows[0].request.path == "/hello"
             assert state.flows[0].response.status_code == 204
 
-            # Waiting here until everything is really torn down... takes some effort.
-            conn_handler = list(ps.connections.values())[0]
-            client_handler = conn_handler.transports[conn_handler.client].handler
             writer.close()
             await writer.wait_closed()
-            try:
-                await client_handler
-            except asyncio.CancelledError:
-                pass
-            for _ in range(5):
-                # Get all other scheduled coroutines to run.
-                await asyncio.sleep(0)
-            assert repr(ps) == "Proxyserver(0 active conns)"
+            await _wait_for_connection_closes(ps)
+
+
+async def _wait_for_connection_closes(ps: Proxyserver):
+    # Waiting here until everything is really torn down... takes some effort.
+    client_handlers = [
+        conn_handler.transports[conn_handler.client].handler
+        for conn_handler in ps.connections.values()
+        if conn_handler.client in conn_handler.transports
+    ]
+    for client_handler in client_handlers:
+        try:
+            await asyncio.wait_for(client_handler, 5)
+        except asyncio.CancelledError:
+            pass
+    for _ in range(5):
+        # Get all other scheduled coroutines to run.
+        await asyncio.sleep(0)
+    assert not ps.connections
 
 
 async def test_inject() -> None:
@@ -152,6 +160,7 @@ async def test_inject() -> None:
 
             writer.close()
             await writer.wait_closed()
+            await _wait_for_connection_closes(ps)
 
 
 async def test_inject_fail(caplog) -> None:
@@ -200,6 +209,7 @@ async def test_self_connect():
         assert "Request destination unknown" in server.error
         tctx.configure(ps, server=False)
         assert await ps.setup_servers()
+        await _wait_for_connection_closes(ps)
 
 
 def test_options():
@@ -253,6 +263,7 @@ async def test_shutdown_err(caplog_async) -> None:
             setattr(server, "stop", _raise)
         tctx.configure(ps, server=False)
         await caplog_async.await_log("cannot close")
+        await _wait_for_connection_closes(ps)
 
 
 class DummyResolver:
@@ -280,32 +291,33 @@ async def test_dns(caplog_async) -> None:
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
-        r, w = await udp.open_connection(*dns_addr)
+        s = await mitmproxy_rs.open_udp_connection(*dns_addr)
         req = tdnsreq()
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
         req.id = req.id + 1
-        w.write(req.packed)
-        resp = dns.Message.unpack(await r.read(udp.MAX_DATAGRAM_SIZE))
+        s.write(req.packed)
+        resp = dns.Message.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
-        dns_layer = ps.connections[(w.get_extra_info("sockname"), dns_addr)].layer
-        assert isinstance(dns_layer, layers.DNSLayer)
-        assert len(dns_layer.flows) == 2
+        (dns_conn,) = ps.connections.values()
+        assert isinstance(dns_conn.layer, layers.DNSLayer)
+        assert len(dns_conn.layer.flows) == 2
 
-        w.write(b"\x00")
+        s.write(b"\x00")
         await caplog_async.await_log("sent an invalid message")
         tctx.configure(ps, server=False)
         await caplog_async.await_log("stopped")
 
-        w.close()
-        await w.wait_closed()
+        s.close()
+        await s.wait_closed()
+        await _wait_for_connection_closes(ps)
 
 
 def test_validation_no_transparent(monkeypatch):
@@ -327,22 +339,38 @@ def test_transparent_init(monkeypatch):
 
 
 @asynccontextmanager
-async def udp_server(handle_conn) -> Address:
-    server = await udp.start_server(handle_conn, "127.0.0.1", 0)
+async def udp_server(
+    handle_datagram: Callable[
+        [asyncio.DatagramTransport, bytes, tuple[str, int]], None
+    ],
+) -> Address:
+    class ServerProtocol(asyncio.DatagramProtocol):
+        def connection_made(self, transport):
+            self.transport = transport
+
+        def datagram_received(self, data, addr):
+            handle_datagram(self.transport, data, addr)
+
+    loop = asyncio.get_running_loop()
+    transport, _ = await loop.create_datagram_endpoint(
+        lambda: ServerProtocol(),
+        local_addr=("127.0.0.1", 0),
+    )
+    socket = transport.get_extra_info("socket")
+
     try:
-        yield server.sockets[0].getsockname()
+        yield socket.getsockname()
     finally:
-        server.close()
+        transport.close()
 
 
 async def test_udp(caplog_async) -> None:
     caplog_async.set_level("INFO")
 
-    def server_handler(
+    def handle_datagram(
         transport: asyncio.DatagramTransport,
         data: bytes,
         remote_addr: Address,
-        _: Address,
     ):
         assert data == b"\x16"
         transport.sendto(b"\x01", remote_addr)
@@ -351,7 +379,7 @@ async def test_udp(caplog_async) -> None:
     nl = NextLayer()
 
     with taddons.context(ps, nl) as tctx:
-        async with udp_server(server_handler) as server_addr:
+        async with udp_server(handle_datagram) as server_addr:
             mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
@@ -361,16 +389,17 @@ async def test_udp(caplog_async) -> None:
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            r, w = await udp.open_connection(*addr)
-            w.write(b"\x16")
-            assert b"\x01" == await r.read(udp.MAX_DATAGRAM_SIZE)
+            stream = await mitmproxy_rs.open_udp_connection(*addr)
+            stream.write(b"\x16")
+            assert b"\x01" == await stream.read(65535)
             assert repr(ps) == "Proxyserver(1 active conns)"
             assert len(ps.connections) == 1
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
 
-            w.close()
-            await w.wait_closed()
+        stream.close()
+        await stream.wait_closed()
+        await _wait_for_connection_closes(ps)
 
 
 class H3EchoServer(QuicConnectionProtocol):
@@ -467,7 +496,7 @@ async def quic_server(
 
 
 class QuicClient(QuicConnectionProtocol):
-    TIMEOUT: ClassVar[int] = 5
+    TIMEOUT: ClassVar[int] = 10
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -745,18 +774,14 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
 
-@pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
 @pytest.mark.parametrize("scheme", ["http3", "quic"])
-async def test_reverse_http3_and_quic_stream(
-    caplog_async, scheme: str, connection_strategy: str
-) -> None:
+async def test_reverse_http3_and_quic_stream(caplog_async, scheme: str) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        tctx.options.connection_strategy = connection_strategy
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
             mode = f"reverse:{scheme}://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
@@ -778,24 +803,18 @@ async def test_reverse_http3_and_quic_stream(
                 await _test_echo(client, strict=scheme == "http3")
                 assert len(ps.connections) == 1
 
-            # dirty hack: forcibly close all connections so that there are no unexpected asyncio tasks
-            # that may cause test failures because they have not been run.
-            for conn in ps.servers[mode].manager.connections.values():
-                await conn.on_timeout()
-
             tctx.configure(ps, server=False)
             await caplog_async.await_log(f"stopped")
+            await _wait_for_connection_closes(ps)
 
 
-@pytest.mark.parametrize("connection_strategy", ["lazy", "eager"])
-async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> None:
+async def test_reverse_quic_datagram(caplog_async) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     nl = NextLayer()
     ta = TlsConfig()
     with taddons.context(ps, nl, ta) as tctx:
         tctx.options.keep_host_header = True
-        tctx.options.connection_strategy = connection_strategy
         ta.configure(["confdir"])
         async with quic_server(QuicDatagramEchoServer, alpn=["dgram"]) as server_addr:
             mode = f"reverse:quic://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
@@ -821,6 +840,7 @@ async def test_reverse_quic_datagram(caplog_async, connection_strategy: str) -> 
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
+            await _wait_for_connection_closes(ps)
 
 
 @pytest.mark.skip("HTTP/3 for regular mode is not fully supported yet")
@@ -832,17 +852,19 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
     with taddons.context(ps, nl, ta) as tctx:
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
-            orig_open_connection = udp.open_connection
+            orig_open_connection = mitmproxy_rs.open_udp_connection
 
-            def open_connection_path(
+            async def open_connection_path(
                 host: str, port: int, *args, **kwargs
-            ) -> udp.UdpClient:
+            ) -> mitmproxy_rs.Stream:
                 if host == "example.mitmproxy.org" and port == 443:
                     host = server_addr[0]
                     port = server_addr[1]
                 return orig_open_connection(host, port, *args, **kwargs)
 
-            monkeypatch.setattr(udp, "open_connection", open_connection_path)
+            monkeypatch.setattr(
+                mitmproxy_rs, "open_udp_connection", open_connection_path
+            )
             mode = f"http3@127.0.0.1:0"
             tctx.configure(
                 ta,
@@ -862,3 +884,4 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
 
             tctx.configure(ps, server=False)
             await caplog_async.await_log("stopped")
+            await _wait_for_connection_closes(ps)
