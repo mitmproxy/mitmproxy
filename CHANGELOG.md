@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a bug where a traceback is shown during shutdown.
 
 
 ## 04 January 2024: mitmproxy 10.2.0
