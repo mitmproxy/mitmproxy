@@ -7,6 +7,8 @@ if typing.TYPE_CHECKING:
     import mitmproxy.master
     import mitmproxy.options
 
-log: mitmproxy.log.Log
 master: mitmproxy.master.Master
 options: mitmproxy.options.Options
+
+log: mitmproxy.log.Log
+"""Deprecated: Use Python's builtin `logging` module instead."""
