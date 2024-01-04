@@ -6,8 +6,11 @@
 -->
 
 ## Unreleased: mitmproxy next
+
 * Remove stale reference to `ctx.log` in addon documentation.
   ([#6552](https://github.com/mitmproxy/mitmproxy/pull/6552), @brojonat)
+* Fix a bug where a traceback is shown during shutdown.
+  ([#6581](https://github.com/mitmproxy/mitmproxy/pull/6581), @mhils)
 
 
 ## 04 January 2024: mitmproxy 10.2.0
