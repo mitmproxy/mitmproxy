@@ -7,6 +7,13 @@
 
 ## Unreleased: mitmproxy next
 
+* *Local Redirect Mode* is now officially available on
+  [macOS](https://mitmproxy.org/posts/local-redirect/macos/)
+  and [Windows](https://mitmproxy.org/posts/local-redirect/windows/).
+  See the linked blog posts for details. (@emanuele-em, @mhils)
+* UDP streams are now backed by a new implementation in `mitmproxy_rs`.
+  This represents a major API change as UDP traffic is now exposed as streams
+  instead of a callback for each packet. (@mhils)
 * Fix a regression from mitmproxy 10.1.6 where `ignore_hosts` would terminate requests
   instead of forwarding them.
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
