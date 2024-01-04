@@ -19,6 +19,8 @@
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
 * `ignore_hosts` now waits for the entire HTTP headers if it suspects the connection to be HTTP.
   ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
+* Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
+  ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
 
 
 ## 14 December 2023: mitmproxy 10.1.6
