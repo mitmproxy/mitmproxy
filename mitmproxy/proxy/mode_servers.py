@@ -234,7 +234,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             if isinstance(s, mitmproxy_rs.UdpServer):
                 addrs.append(s.getsockname())
             else:
-                addrs.extend(sock.getsockname() for sock in s.sockets)
+                try:
+                    addrs.extend(sock.getsockname() for sock in s.sockets)
+                except OSError:  # pragma: no cover
+                    pass  # this can fail during shutdown, see https://github.com/mitmproxy/mitmproxy/issues/6529
         return tuple(addrs)
 
     async def _start(self) -> None:
