@@ -9,8 +9,9 @@ from mitmproxy.tools import main
 def test_errorcheck(tdata, capsys):
     """Integration test: Make sure that we catch errors on startup an exit."""
     with pytest.raises(SystemExit):
-        main.mitmproxy(
+        main.mitmdump(
             [
+                "-n",
                 "-s",
                 tdata.path("mitmproxy/data/addonscripts/load_error.py"),
             ]
@@ -30,4 +31,12 @@ async def test_error_message(capsys):
     logging.error("wat")
     with pytest.raises(SystemExit):
         await e.shutdown_if_errored()
-    assert "Errors logged during startup" in capsys.readouterr().err
+    assert "Errors logged during startup, exiting..." in capsys.readouterr().err
+
+
+async def test_repeat_error_on_stderr(capsys):
+    e = ErrorCheck(repeat_errors_on_stderr=True)
+    logging.error("wat")
+    with pytest.raises(SystemExit):
+        await e.shutdown_if_errored()
+    assert "Error logged during startup:\nwat" in capsys.readouterr().err

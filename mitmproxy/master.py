@@ -4,6 +4,7 @@ import logging
 from . import ctx as mitmproxy_ctx
 from .addons import termlog
 from .proxy.mode_specs import ReverseMode
+from .utils import asyncio_utils
 from mitmproxy import addonmanager
 from mitmproxy import command
 from mitmproxy import eventsequence
@@ -51,9 +52,10 @@ class Master:
         mitmproxy_ctx.options = self.options
 
     async def run(self) -> None:
-        old_handler = self.event_loop.get_exception_handler()
-        self.event_loop.set_exception_handler(self._asyncio_exception_handler)
-        try:
+        with (
+            asyncio_utils.install_exception_handler(self._asyncio_exception_handler),
+            asyncio_utils.set_eager_task_factory(),
+        ):
             self.should_exit.clear()
 
             if ec := self.addons.get("errorcheck"):
@@ -67,17 +69,15 @@ class Master:
                     ],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
+            await self.running()
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
                 ec.finish()
-            await self.running()
             try:
                 await self.should_exit.wait()
             finally:
                 # .wait might be cancelled (e.g. by sys.exit)
                 await self.done()
-        finally:
-            self.event_loop.set_exception_handler(old_handler)
 
     def shutdown(self):
         """

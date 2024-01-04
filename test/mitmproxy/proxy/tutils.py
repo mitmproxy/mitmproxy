@@ -298,13 +298,13 @@ class Playbook:
 
 class reply(events.Event):
     args: tuple[Any, ...]
-    to: commands.Command | int
+    to: commands.Command | type[commands.Command] | int
     side_effect: Callable[[Any], Any]
 
     def __init__(
         self,
         *args,
-        to: commands.Command | int = -1,
+        to: commands.Command | type[commands.Command] | int = -1,
         side_effect: Callable[[Any], None] = lambda x: None,
     ):
         """Utility method to reply to the latest hook in playbooks."""
@@ -322,6 +322,14 @@ class reply(events.Event):
                 raise AssertionError(f"There is no command at offset {self.to}: {to}")
             else:
                 self.to = to
+        elif isinstance(self.to, type):
+            for cmd in reversed(playbook.actual):
+                if isinstance(cmd, self.to):
+                    assert isinstance(cmd, commands.Command)
+                    self.to = cmd
+                    break
+            else:
+                raise AssertionError(f"There is no command of type {self.to}.")
         for cmd in reversed(playbook.actual):
             if eq(self.to, cmd):
                 self.to = cmd
