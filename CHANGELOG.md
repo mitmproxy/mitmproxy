@@ -6,6 +6,7 @@
 -->
 ## Unreleased: mitmproxy next
 * Decrement max version of zstandard to 0.21.x to fix #6582
+  ([#6583](https://github.com/mitmproxy/mitmproxy/pull/6583), @jcomeauictx)
 
 ## Unreleased: mitmproxy next
 
