@@ -4,6 +4,8 @@
 ✨ Please add a bullet point describing your change.                                                             ✨
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
+## Unreleased: mitmproxy next
+* Decrement max version of zstandard to 0.21.x to fix #6582
 
 ## Unreleased: mitmproxy next
 
