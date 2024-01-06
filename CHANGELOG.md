@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 06 January 2024: mitmproxy 10.2.1
+
 * Fix a regression introduced in mitmproxy 10.2.0: WireGuard servers
   now bind to all interfaces again.
   ([#6587](https://github.com/mitmproxy/mitmproxy/pull/6587), @mhils)
