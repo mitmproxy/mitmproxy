@@ -372,7 +372,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         _ = mitmproxy_rs.pubkey(self.server_key)
 
         self._server = await mitmproxy_rs.start_wireguard_server(
-            host or "127.0.0.1",
+            host or "0.0.0.0",
             port,
             self.server_key,
             [p],

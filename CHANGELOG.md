@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a regression introduced in mitmproxy 10.2.0: WireGuard servers
+  now bind to all interfaces again.
+  ([#6587](https://github.com/mitmproxy/mitmproxy/pull/6587), @mhils)
 * Remove stale reference to `ctx.log` in addon documentation.
   ([#6552](https://github.com/mitmproxy/mitmproxy/pull/6552), @brojonat)
 * Fix a bug where a traceback is shown during shutdown.
