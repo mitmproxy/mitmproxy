@@ -144,11 +144,11 @@ class SaveHar:
                     - flow.server_conn.timestamp_tcp_setup
                 )
             else:
-                ssl_time = None
+                ssl_time = -1.0
             servers_seen.add(flow.server_conn)
         else:
-            connect_time = None
-            ssl_time = None
+            connect_time = -1.0
+            ssl_time = -1.0
 
         if flow.request.timestamp_end:
             send = 1000 * (flow.request.timestamp_end - flow.request.timestamp_start)

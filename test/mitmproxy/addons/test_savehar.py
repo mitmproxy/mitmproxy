@@ -141,7 +141,7 @@ def test_tls_setup():
     flow = tflow.twebsocketflow()
     flow.server_conn.timestamp_tls_setup = None
 
-    assert s.flow_entry(flow, servers_seen)["timings"]["ssl"] is None
+    assert s.flow_entry(flow, servers_seen)["timings"]["ssl"] == -1.0
 
 
 def test_binary_content():
