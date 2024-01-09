@@ -9,6 +9,8 @@
 
 * Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
   ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
+* `allow_hosts`/`ignore_hosts` option now matches against the full `host:port` string.
+  ([#6594](https://github.com/mitmproxy/mitmproxy/pull/6594), @LouisAsanaka)
 
 
 ## 06 January 2024: mitmproxy 10.2.1
