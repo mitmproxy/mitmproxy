@@ -220,8 +220,9 @@ class NextLayer:
         hostnames: list[str] = []
         if context.server.peername and (peername := context.server.peername[0]):
             hostnames.append(peername)
-        if context.server.address and (server_address := context.server.address[0]):
-            hostnames.append(server_address)
+        if context.server.address:
+            host, port = context.server.address
+            hostnames.append(f"{host}:{port}")
             # If we already have a destination address, we can also check for HTTP Host headers.
             # But we do need the destination, otherwise we don't know where this connection is going to.
             if host_header := self._get_host_header(context, data_client, data_server):
