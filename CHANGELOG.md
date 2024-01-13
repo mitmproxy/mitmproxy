@@ -9,6 +9,8 @@
 
 * Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
   ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
+* Fix bug where failed CONNECT request URLs are saved to HAR files incorrectly.
+  ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
 
 
 ## 06 January 2024: mitmproxy 10.2.1
