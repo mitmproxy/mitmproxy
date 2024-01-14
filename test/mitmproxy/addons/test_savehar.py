@@ -173,6 +173,17 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
+def test_flow_entry():
+    s = SaveHar()
+    flow = tflow.twebsocketflow(method="CONNECT", host="test.test", port=443, scheme="https")
+    servers_seen: set[Server] = set()
+
+    flow_entry = s.flow_entry(flow, servers_seen)
+
+    if flow_entry["request"]["method"] == "CONNECT":
+        assert flow_entry["request"]["url"].startswith("https")
+
+
 class TestHardumpOption:
     def test_simple(self, capsys):
         s = SaveHar()
