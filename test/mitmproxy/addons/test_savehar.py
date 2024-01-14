@@ -175,7 +175,9 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
 def test_flow_entry():
     s = SaveHar()
-    flow = tflow.twebsocketflow(method="CONNECT", host="test.test", port=443, scheme="https")
+    flow = tflow.twebsocketflow(
+        method="CONNECT", host="test.test", port=443, scheme="https"
+    )
     servers_seen: set[Server] = set()
 
     flow_entry = s.flow_entry(flow, servers_seen)

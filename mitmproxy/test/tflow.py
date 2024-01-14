@@ -64,7 +64,14 @@ def tudpflow(
 
 
 def twebsocketflow(
-    messages=True, err=None, close_code=None, close_reason="", method="GET", host="example.com", port=80, scheme="http"
+    messages=True,
+    err=None,
+    close_code=None,
+    close_reason="",
+    method="GET",
+    host="example.com",
+    port=80,
+    scheme="http",
 ) -> http.HTTPFlow:
     flow = http.HTTPFlow(tclient_conn(), tserver_conn())
     flow.request = http.Request(
