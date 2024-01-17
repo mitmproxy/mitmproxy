@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a regression where clientplayback would break due to eager task execution.
 * Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
   ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
 
