@@ -182,8 +182,7 @@ def test_flow_entry():
 
     flow_entry = s.flow_entry(flow, servers_seen)
 
-    if flow_entry["request"]["method"] == "CONNECT":
-        assert flow_entry["request"]["url"].startswith("https")
+    assert flow_entry["request"]["url"].startswith("https")
 
 
 class TestHardumpOption:
