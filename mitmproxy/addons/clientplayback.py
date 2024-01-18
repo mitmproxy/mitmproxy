@@ -156,10 +156,10 @@ class ClientPlayback:
         self.replay_tasks = set()
 
     def running(self):
+        self.options = ctx.options
         self.playback_task = asyncio_utils.create_task(
             self.playback(), name="client playback"
         )
-        self.options = ctx.options
 
     async def done(self):
         if self.playback_task:
