@@ -117,7 +117,25 @@ class TestNextLayer:
                 ["example.com"], [], "tcp", "example.com", b"", True, id="address"
             ),
             pytest.param(
-                ["1.2.3.4"], [], "tcp", "example.com", b"", True, id="ip address"
+                ["192.0.2.1"], [], "tcp", "example.com", b"", True, id="ip address"
+            ),
+            pytest.param(
+                ["example.com:443"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                True,
+                id="port matches",
+            ),
+            pytest.param(
+                ["example.com:123"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="port does not match",
             ),
             pytest.param(
                 ["example.com"],
@@ -177,7 +195,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_with_extensions,
                 True,
                 id="sni",
@@ -186,7 +204,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_with_extensions[:-5],
                 NeedsMoreData,
                 id="incomplete client hello",
@@ -195,7 +213,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_no_extensions[:9] + b"\x00" * 200,
                 False,
                 id="invalid client hello",
@@ -213,7 +231,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions,
                 True,
                 id="dtls sni",
@@ -222,7 +240,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions[:-5],
                 NeedsMoreData,
                 id="incomplete dtls client hello",
@@ -231,7 +249,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions[:9] + b"\x00" * 200,
                 False,
                 id="invalid dtls client hello",
@@ -240,7 +258,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 quic_client_hello,
                 True,
                 id="quic sni",
@@ -297,7 +315,7 @@ class TestNextLayer:
             ctx.client.transport_protocol = transport_protocol
             if server_address:
                 ctx.server.address = (server_address, 443)
-                ctx.server.peername = ("1.2.3.4", 443)
+                ctx.server.peername = ("192.0.2.1", 443)
             if result is NeedsMoreData:
                 with pytest.raises(NeedsMoreData):
                     nl._ignore_connection(ctx, data_client, b"")
