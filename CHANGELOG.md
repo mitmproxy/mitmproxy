@@ -9,6 +9,7 @@
 
 * Fix a regression where clientplayback would break due to eager task execution.
   ([#6605](https://github.com/mitmproxy/mitmproxy/pull/6605), @mhils)
+* Fix a regression where WebSocket connections would break due to eager task execution.
 * Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
   ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
 
