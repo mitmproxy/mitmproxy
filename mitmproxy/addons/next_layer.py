@@ -277,7 +277,9 @@ class NextLayer:
             rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
         )
         if host_header_expected:
-            if m := re.search(rb"\r\n(?:Host:\s+(.+?)\s*)?\r\n", data_client, re.IGNORECASE):
+            if m := re.search(
+                rb"\r\n(?:Host:\s+(.+?)\s*)?\r\n", data_client, re.IGNORECASE
+            ):
                 if host := m.group(1):
                     return host.decode("utf-8", "surrogateescape")
                 else:

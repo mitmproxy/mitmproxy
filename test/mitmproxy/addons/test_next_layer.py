@@ -120,10 +120,22 @@ class TestNextLayer:
                 ["192.0.2.1"], [], "tcp", "example.com", b"", True, id="ip address"
             ),
             pytest.param(
-                ["example.com:443"], [], "tcp", "example.com", b"", True, id="port matches"
+                ["example.com:443"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                True,
+                id="port matches",
             ),
             pytest.param(
-                ["example.com:123"], [], "tcp", "example.com", b"", False, id="port does not match"
+                ["example.com:123"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="port does not match",
             ),
             pytest.param(
                 ["example.com"],
