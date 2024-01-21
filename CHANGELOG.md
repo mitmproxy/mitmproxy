@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 21 January 2024: mitmproxy 10.2.2
+
 * Fix a regression where clientplayback would break due to eager task execution.
   ([#6605](https://github.com/mitmproxy/mitmproxy/pull/6605), @mhils)
 * Fix a regression where WebSocket connections would break due to eager task execution.
