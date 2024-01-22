@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a regression where `allow_hosts`/`ignore_hosts` would break with IPv6 connections.
+  ([#6614](https://github.com/mitmproxy/mitmproxy/pull/6614), @dqxpb)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
