@@ -219,7 +219,7 @@ class NextLayer:
             return False
         hostnames: list[str] = []
         if context.server.peername:
-            host, port = context.server.peername
+            host, port, *_ = context.server.peername
             hostnames.append(f"{host}:{port}")
         if context.server.address:
             host, port = context.server.address
