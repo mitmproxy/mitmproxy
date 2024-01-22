@@ -7,10 +7,18 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 21 January 2024: mitmproxy 10.2.2
+
 * Fix a regression where clientplayback would break due to eager task execution.
   ([#6605](https://github.com/mitmproxy/mitmproxy/pull/6605), @mhils)
+* Fix a regression where WebSocket connections would break due to eager task execution.
+  ([#6609](https://github.com/mitmproxy/mitmproxy/pull/6609), @mhils)
 * Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
   ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
+* `allow_hosts`/`ignore_hosts` option now matches against the full `host:port` string.
+  ([#6594](https://github.com/mitmproxy/mitmproxy/pull/6594), @LouisAsanaka)
 * Fix bug where failed CONNECT request URLs are saved to HAR files incorrectly.
   ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
 

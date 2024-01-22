@@ -528,8 +528,8 @@ class HttpStream(layer.Layer):
                 yield commands.Log(
                     f"{self.debug}[http] upgrading to {self.child_layer}", DEBUG
                 )
-            yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+            yield from self.child_layer.handle_event(events.Start())
         else:
             yield DropStream(self.stream_id)
 
@@ -749,8 +749,8 @@ class HttpStream(layer.Layer):
 
         if 200 <= self.flow.response.status_code < 300:
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
-            yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+            yield from self.child_layer.handle_event(events.Start())
             yield SendHttp(
                 ResponseHeaders(self.stream_id, self.flow.response, True),
                 self.context.client,

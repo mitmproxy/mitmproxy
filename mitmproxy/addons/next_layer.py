@@ -218,18 +218,24 @@ class NextLayer:
         ) and context.server.address == ("10.0.0.53", 53):
             return False
         hostnames: list[str] = []
-        if context.server.peername and (peername := context.server.peername[0]):
-            hostnames.append(peername)
-        if context.server.address and (server_address := context.server.address[0]):
-            hostnames.append(server_address)
-            # If we already have a destination address, we can also check for HTTP Host headers.
-            # But we do need the destination, otherwise we don't know where this connection is going to.
+        if context.server.peername:
+            host, port = context.server.peername
+            hostnames.append(f"{host}:{port}")
+        if context.server.address:
+            host, port = context.server.address
+            hostnames.append(f"{host}:{port}")
+
+            # We also want to check for TLS SNI and HTTP host headers, but in order to ignore connections based on that
+            # they must have a destination address. If they don't, we don't know how to establish an upstream connection
+            # if we ignore.
             if host_header := self._get_host_header(context, data_client, data_server):
+                if not re.search(r":\d+$", host_header):
+                    host_header = f"{host_header}:{port}"
                 hostnames.append(host_header)
-        if (
-            client_hello := self._get_client_hello(context, data_client)
-        ) and client_hello.sni:
-            hostnames.append(client_hello.sni)
+            if (
+                client_hello := self._get_client_hello(context, data_client)
+            ) and client_hello.sni:
+                hostnames.append(f"{client_hello.sni}:{port}")
 
         if not hostnames:
             return False
@@ -271,7 +277,9 @@ class NextLayer:
             rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
         )
         if host_header_expected:
-            if m := re.search(rb"\r\n(?:Host: (.+))?\r\n", data_client, re.IGNORECASE):
+            if m := re.search(
+                rb"\r\n(?:Host:\s+(.+?)\s*)?\r\n", data_client, re.IGNORECASE
+            ):
                 if host := m.group(1):
                     return host.decode("utf-8", "surrogateescape")
                 else:
