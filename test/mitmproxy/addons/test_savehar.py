@@ -174,6 +174,7 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
 
 def test_flow_entry():
+    """https://github.com/mitmproxy/mitmproxy/issues/6579"""
     s = SaveHar()
     req = Request.make("CONNECT", "https://test.test/")
     flow = tflow.tflow(req=req)
