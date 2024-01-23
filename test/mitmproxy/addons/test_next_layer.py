@@ -120,6 +120,9 @@ class TestNextLayer:
                 ["192.0.2.1"], [], "tcp", "example.com", b"", True, id="ip address"
             ),
             pytest.param(
+                ["2001:db8::1"], [], "tcp", "ipv6.example.com", b"", True, id="ipv6 address"
+            ),
+            pytest.param(
                 ["example.com:443"],
                 [],
                 "tcp",
@@ -315,7 +318,11 @@ class TestNextLayer:
             ctx.client.transport_protocol = transport_protocol
             if server_address:
                 ctx.server.address = (server_address, 443)
-                ctx.server.peername = ("192.0.2.1", 443)
+                ctx.server.peername = (
+                    ("2001:db8::1", 443, 0, 0)
+                    if server_address.startswith("ipv6")
+                    else ("192.0.2.1", 443)
+                )
             if result is NeedsMoreData:
                 with pytest.raises(NeedsMoreData):
                     nl._ignore_connection(ctx, data_client, b"")
