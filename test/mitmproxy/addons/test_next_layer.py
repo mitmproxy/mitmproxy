@@ -120,7 +120,13 @@ class TestNextLayer:
                 ["192.0.2.1"], [], "tcp", "example.com", b"", True, id="ip address"
             ),
             pytest.param(
-                ["2001:db8::1"], [], "tcp", "ipv6.example.com", b"", True, id="ipv6 address"
+                ["2001:db8::1"],
+                [],
+                "tcp",
+                "ipv6.example.com",
+                b"",
+                True,
+                id="ipv6 address",
             ),
             pytest.param(
                 ["example.com:443"],
