@@ -222,7 +222,7 @@ class NextLayer:
             host, port, *_ = context.server.peername
             hostnames.append(f"{host}:{port}")
         if context.server.address:
-            host, port = context.server.address
+            host, port, *_ = context.server.address
             hostnames.append(f"{host}:{port}")
 
             # We also want to check for TLS SNI and HTTP host headers, but in order to ignore connections based on that
