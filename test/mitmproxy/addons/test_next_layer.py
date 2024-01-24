@@ -111,7 +111,7 @@ class TestNextLayer:
         [
             # ignore
             pytest.param(
-                [], [], "example.com", "tcp", b"", False, id="nothing ignored"
+                [], [], "tcp", "example.com", b"", False, id="nothing ignored"
             ),
             pytest.param(
                 ["example.com"], [], "tcp", "example.com", b"", True, id="address"
