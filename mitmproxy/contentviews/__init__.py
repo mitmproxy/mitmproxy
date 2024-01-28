@@ -189,7 +189,7 @@ def get_content_view(
         )
         if ret is None:
             ret = (
-                "No view: Couldn't parse: falling back to Raw",
+                "No view: Couldn't parse: Falling back to Raw",
                 get("Raw")(
                     data,
                     content_type=content_type,
@@ -203,7 +203,7 @@ def get_content_view(
         error = None
     # Third-party viewers can fail in unexpected ways...
     except Exception as e:
-        desc = "Exception: Couldn't parse: falling back to Raw" + str(e)
+        desc = str(e) + ": Couldn't parse: Falling back to Raw"
         raw = get("Raw")
         assert raw
         content = raw(
