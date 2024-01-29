@@ -30,6 +30,8 @@ def is_graphql_query(data):
 
 
 def is_graphql_batch_query(data):
+    if len(data) == 0:
+        return
     return isinstance(data, list) and isinstance(data[0], dict) and "query" in data[0]
 
 

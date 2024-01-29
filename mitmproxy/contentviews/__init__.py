@@ -204,6 +204,7 @@ def get_content_view(
     # Third-party viewers can fail in unexpected ways...
     except Exception as e:
         desc = str(e) + ": Couldn't parse: Falling back to Raw"
+        traceback.print_exc()
         raw = get("Raw")
         assert raw
         content = raw(
