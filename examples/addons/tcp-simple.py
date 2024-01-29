@@ -8,7 +8,7 @@ However, it is sometimes good enough as a quick hack.
 
 Example Invocation:
 
-    mitmdump --rawtcp --tcp-hosts ".*" -s examples/tcp-simple.py
+    mitmdump --tcp-hosts ".*" -s examples/tcp-simple.py
 """
 import logging
 
