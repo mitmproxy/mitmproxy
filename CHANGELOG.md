@@ -12,6 +12,7 @@
 * Fix bug where failed CONNECT request URLs are saved to HAR files incorrectly.
   ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
 * Add an arm64 variant for the precompiled macOS app.
+  ([#6633](https://github.com/mitmproxy/mitmproxy/pull/6633), @mhils)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
