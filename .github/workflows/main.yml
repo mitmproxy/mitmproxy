@@ -81,8 +81,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - image: macos-14
+            platform: macos-arm64
           - image: macos-12
-            platform: macos
+            platform: macos-x86_64
           - image: windows-2019
             platform: windows
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
@@ -105,8 +107,7 @@ jobs:
           key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
-      # macOS x64. Due to GHA limitations, we are currently building the Apple Silicon app bundle outside of CI.
-      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+      - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
         uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
@@ -114,7 +115,7 @@ jobs:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      - if: matrix.platform == 'macos' && github.repository == 'mitmproxy/mitmproxy'
+      - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         run: |
           python -u release/build.py macos-app \
@@ -293,7 +294,11 @@ jobs:
           path: release/dist
       - uses: actions/download-artifact@v4
         with:
-          name: binaries.macos
+          name: binaries.macos-x86_64
+          path: release/dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: binaries.macos-arm64
           path: release/dist
       - run: ls docs/public
       - run: ls release/dist
