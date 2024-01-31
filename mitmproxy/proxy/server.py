@@ -196,6 +196,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.log(
                 f"server connection to {human.format_address(command.connection.address)} killed before connect: {err}"
             )
+            await self.handle_hook(server_hooks.ServerConnectionErrorHook(hook_data))
             self.server_event(
                 events.OpenConnectionCompleted(command, f"Connection killed: {err}")
             )
@@ -224,6 +225,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     err = "connection cancelled"
                 self.log(f"error establishing server connection: {err}")
                 command.connection.error = err
+                await self.handle_hook(server_hooks.ServerConnectionErrorHook(hook_data))
                 self.server_event(events.OpenConnectionCompleted(command, err))
                 if isinstance(e, asyncio.CancelledError):
                     # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
