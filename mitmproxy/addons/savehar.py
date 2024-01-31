@@ -227,6 +227,11 @@ class SaveHar:
             if flow.error:
                 response["_error"] = flow.error.msg
 
+        if flow.request.method == "CONNECT":
+            url = f"https://{flow.request.pretty_url}/"
+        else:
+            url = flow.request.pretty_url
+
         entry: dict[str, Any] = {
             "startedDateTime": datetime.fromtimestamp(
                 flow.request.timestamp_start, timezone.utc
@@ -234,7 +239,7 @@ class SaveHar:
             "time": sum(v for v in timings.values() if v is not None and v >= 0),
             "request": {
                 "method": flow.request.method,
-                "url": flow.request.pretty_url,
+                "url": url,
                 "httpVersion": flow.request.http_version,
                 "cookies": self.format_multidict(flow.request.cookies),
                 "headers": self.format_multidict(flow.request.headers),

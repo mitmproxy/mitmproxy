@@ -173,6 +173,18 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     assert actual_har == expected_har
 
 
+def test_flow_entry():
+    """https://github.com/mitmproxy/mitmproxy/issues/6579"""
+    s = SaveHar()
+    req = Request.make("CONNECT", "https://test.test/")
+    flow = tflow.tflow(req=req)
+    servers_seen: set[Server] = set()
+
+    flow_entry = s.flow_entry(flow, servers_seen)
+
+    assert flow_entry["request"]["url"].startswith("https")
+
+
 class TestHardumpOption:
     def test_simple(self, capsys):
         s = SaveHar()
