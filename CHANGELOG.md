@@ -13,6 +13,7 @@
   ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
 * Add an arm64 variant for the precompiled macOS app.
 
+
 ## 21 January 2024: mitmproxy 10.2.2
 
 * Fix a regression where clientplayback would break due to eager task execution.
