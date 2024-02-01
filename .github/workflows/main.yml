@@ -101,7 +101,7 @@ jobs:
         with:
           python-version-file: .github/python-version.txt
       - if: matrix.platform == 'windows'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: release/installbuilder/setup
           key: installbuilder
@@ -152,7 +152,7 @@ jobs:
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
