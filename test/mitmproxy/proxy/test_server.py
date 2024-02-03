@@ -18,7 +18,7 @@ def test_server_connect_error(monkeypatch):
     monkeypatch.setattr(asyncio, "open_connection", mock_OSError)
     asyncio.run(s.open_connection(initialize_command()))
 
-    assert server_hooks.ServerConnectionErrorHook in server_hooks.all_hooks.values()
+    assert server_hooks.ServerConnectErrorHook in server_hooks.all_hooks.values()
 
 def mock_simple_connection_handler_init(self):
     self.client = Client()
