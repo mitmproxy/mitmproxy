@@ -28,7 +28,7 @@ def mock_simple_connection_handler_init(self):
 def mock_client_init(self):
     pass
 
-def mock_OSError(**kwds):
+def mock_OSError():
     raise OSError
 
 def initialize_command() -> commands.OpenConnection:
