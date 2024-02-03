@@ -66,7 +66,7 @@ class ServerDisconnectedHook(commands.StartHook):
 
 
 @dataclass
-class ServerConnectionErrorHook(commands.StartHook):
+class ServerConnectErrorHook(commands.StartHook):
     """
     A server connection error has happened.
     """
