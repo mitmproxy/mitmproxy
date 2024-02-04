@@ -80,7 +80,13 @@ def test_format_json():
     ]
     assert list(json.format_json({"list": []})) == [
         [("text", "{"), ("text", "")],
-        [('text', '    '), ('Token_Name_Tag', '"list"'), ('text', ': '), ('text', '[]'), ('text', '')],
+        [
+            ("text", "    "),
+            ("Token_Name_Tag", '"list"'),
+            ("text", ": "),
+            ("text", "[]"),
+            ("text", ""),
+        ],
         [("text", ""), ("text", "}")],
     ]
     assert list(json.format_json(None)) == [[("Token_Keyword_Constant", "null")]]
