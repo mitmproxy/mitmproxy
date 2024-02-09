@@ -130,8 +130,8 @@ def get_message_content_view(
     if isinstance(message, http.Message):
         http_message = message
         if ctype := message.headers.get("content-type"):
-            if ct := http.parse_content_type(ctype):
-                content_type = f"{ct[0]}/{ct[1]}"
+            if http.parse_content_type(ctype):
+                content_type = ctype
 
     tcp_message = None
     if isinstance(message, TCPMessage):
