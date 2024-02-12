@@ -12,6 +12,9 @@ class ViewMultipart(base.View):
         yield from base.format_dict(multidict.MultiDict(v))
 
     def __call__(self, data: bytes, content_type: str | None = None, **metadata):
+        # The content_type doesn't have the boundary, so we get it from the header again
+        if http_message := metadata.get("http_message"):
+            content_type = http_message.headers.get("content-type")
         if content_type is None:
             return
         v = multipart.decode_multipart(content_type, data)
