@@ -270,9 +270,9 @@ class DummyResolver:
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         flow.response = await dns_resolver.resolve_message(flow.request, self)
 
-    async def getaddrinfo(self, host: str, port: int, *, family: int):
+    async def getaddrinfo(self, host: str, port: int, *, family: int, type: int):
         if family == socket.AF_INET and host == "dns.google":
-            return [(socket.AF_INET, None, None, None, ("8.8.8.8", port))]
+            return [(socket.AF_INET, type, None, None, ("8.8.8.8", port))]
         e = socket.gaierror()
         e.errno = socket.EAI_NONAME
         raise e

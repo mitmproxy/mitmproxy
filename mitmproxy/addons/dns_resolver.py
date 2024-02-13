@@ -26,7 +26,9 @@ async def resolve_question_by_name(
     ip: Callable[[str], ipaddress.IPv4Address | ipaddress.IPv6Address],
 ) -> Iterable[dns.ResourceRecord]:
     try:
-        addrinfos = await loop.getaddrinfo(host=question.name, port=0, family=family)
+        addrinfos = await loop.getaddrinfo(
+            host=question.name, port=0, family=family, type=socket.SOCK_STREAM
+        )
     except socket.gaierror as e:
         if e.errno == socket.EAI_NONAME:
             raise ResolveError(dns.response_codes.NXDOMAIN)

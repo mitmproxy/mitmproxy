@@ -13,6 +13,8 @@
   ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
 * Add an arm64 variant for the precompiled macOS app.
   ([#6633](https://github.com/mitmproxy/mitmproxy/pull/6633), @mhils)
+* Fix duplicate answers being returned in DNS queries.
+  ([#6648](https://github.com/mitmproxymitmproxy/pull/6648), @sujaldev)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
