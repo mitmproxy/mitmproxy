@@ -318,9 +318,9 @@ class TLSLayer(tunnel.TunnelLayer):
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
                 ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),
-                ("SSL routines", "ssl3_read_bytes", "sslv3 alert bad certificate"),
+                ("SSL routines", "ssl3_read_bytes", "ssl/tls alert bad certificate"),
                 ("SSL routines", "", "tlsv1 alert unknown ca"),  # OpenSSL 3+
-                ("SSL routines", "", "sslv3 alert bad certificate"),  # OpenSSL 3+
+                ("SSL routines", "", "ssl/tls alert bad certificate"),  # OpenSSL 3+
             ]:
                 assert isinstance(last_err, tuple)
                 err = last_err[2]
@@ -329,6 +329,8 @@ class TLSLayer(tunnel.TunnelLayer):
                 in [
                     ("SSL routines", "ssl3_get_record", "wrong version number"),
                     ("SSL routines", "", "wrong version number"),  # OpenSSL 3+
+                    ("SSL routines", "", "packet length too long"),  # OpenSSL 3+
+                    ("SSL routines", "", "record layer failure"),  # OpenSSL 3+
                 ]
                 and data[:4].isascii()
             ):
