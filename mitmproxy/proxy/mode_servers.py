@@ -387,7 +387,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     def client_conf(self) -> str | None:
         if not self._server:
             return None
-        host = self.mode.listen_host(ctx.options.listen_host)
+        host: str | None = self.mode.listen_host(ctx.options.listen_host)
         if host == "":
             host = local_ip.get_local_ip() or local_ip.get_local_ip6()
         port = self.mode.listen_port(ctx.options.listen_port)
