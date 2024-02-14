@@ -388,9 +388,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         if not self._server:
             return None
         host = (
-            self.mode.listen_host(ctx.options.listen_host) or
-            local_ip.get_local_ip() or
-            local_ip.get_local_ip6()
+            self.mode.listen_host(ctx.options.listen_host)
+            or local_ip.get_local_ip()
+            or local_ip.get_local_ip6()
         )
         port = self.mode.listen_port(ctx.options.listen_port)
         return textwrap.dedent(
