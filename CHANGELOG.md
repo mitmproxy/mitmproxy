@@ -15,6 +15,8 @@
   ([#6633](https://github.com/mitmproxy/mitmproxy/pull/6633), @mhils)
 * Fix duplicate answers being returned in DNS queries.
   ([#6648](https://github.com/mitmproxymitmproxy/pull/6648), @sujaldev)
+* Fix bug where wireguard config is generated with incorrect endpoint when two or more NICs are active.
+  ([#6659](https://github.com/mitmproxy/mitmproxy/pull/6659), @basedBaba)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
