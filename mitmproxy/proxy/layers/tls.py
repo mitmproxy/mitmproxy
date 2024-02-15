@@ -319,11 +319,7 @@ class TLSLayer(tunnel.TunnelLayer):
             elif last_err in [
                 ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),
                 ("SSL routines", "ssl3_read_bytes", "sslv3 alert bad certificate"),
-                (
-                    "SSL routines",
-                    "ssl3_read_bytes",
-                    "ssl/tls alert bad certificate",
-                ),  # OpenSSL 3.2+
+                ("SSL routines", "ssl3_read_bytes", "ssl/tls alert bad certificate"),
                 ("SSL routines", "", "tlsv1 alert unknown ca"),  # OpenSSL 3+
                 ("SSL routines", "", "sslv3 alert bad certificate"),  # OpenSSL 3+
                 ("SSL routines", "", "ssl/tls alert bad certificate"),  # OpenSSL 3.2+
