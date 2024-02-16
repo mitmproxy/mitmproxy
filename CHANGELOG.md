@@ -17,6 +17,8 @@
   ([#6648](https://github.com/mitmproxymitmproxy/pull/6648), @sujaldev)
 * Fix bug where wireguard config is generated with incorrect endpoint when two or more NICs are active.
   ([#6659](https://github.com/mitmproxy/mitmproxy/pull/6659), @basedBaba)
+* Fix a regression when leaf cert creation would fail with intermediate CAs in `ca_file`.
+  ([#6666](https://github.com/mitmproxy/mitmproxy/pull/6666), @manselmi)
 
 
 ## 21 January 2024: mitmproxy 10.2.2

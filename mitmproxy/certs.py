@@ -415,7 +415,7 @@ class CertStore:
         key = load_pem_private_key(raw, passphrase)
         dh = cls.load_dhparam(dhparam_file)
         certs = x509.load_pem_x509_certificates(raw)
-        ca = Cert(certs[-1])
+        ca = Cert(certs[0])
         if len(certs) > 1:
             chain_file: Path | None = ca_file
         else:
