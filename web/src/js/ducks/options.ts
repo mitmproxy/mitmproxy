@@ -33,15 +33,20 @@ export default function reducer(state = defaultState, action): OptionsState {
 }
 
 export async function pureSendUpdate(option: Option, value, dispatch) {
-    try {
-        const response = await fetchApi.put("/options", { [option]: value });
-        if (response.status === 200) {
-            dispatch(optionsEditorActions.updateSuccess(option));
-        } else {
-            throw await response.text();
+    //value is an array of strings, we need to check that the last element( path ) is not empty
+    if (value[value.length - 1] !== "") {
+        try {
+            const response = await fetchApi.put("/options", {
+                [option]: value,
+            });
+            if (response.status === 200) {
+                dispatch(optionsEditorActions.updateSuccess(option));
+            } else {
+                throw await response.text();
+            }
+        } catch (error) {
+            dispatch(optionsEditorActions.updateError(option, error));
         }
-    } catch (error) {
-        dispatch(optionsEditorActions.updateError(option, error));
     }
 }
 
