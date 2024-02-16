@@ -34,7 +34,7 @@ export default function reducer(state = defaultState, action): OptionsState {
 
 export async function pureSendUpdate(option: Option, value, dispatch) {
     try {
-        const response = await fetchApi.put("/options", { [option]: value });
+        const response = await fetchApi.put("options", { [option]: value });
         if (response.status === 200) {
             dispatch(optionsEditorActions.updateSuccess(option));
         } else {
@@ -55,7 +55,7 @@ export function update(name: Option, value: any): AppThunk {
 }
 
 export function save() {
-    return (dispatch) => fetchApi("/options/save", { method: "POST" });
+    return (dispatch) => fetchApi("options/save", { method: "POST" });
 }
 
 export function addInterceptFilter(example) {

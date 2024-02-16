@@ -29,12 +29,12 @@ export default React.memo(function FileMenu() {
                     }}
                 />
             </li>
-            <MenuItem onClick={() => location.replace("/flows/dump")}>
+            <MenuItem onClick={() => location.replace("flows/dump")}>
                 <i className="fa fa-fw fa-floppy-o" />
                 &nbsp;Save
             </MenuItem>
             <MenuItem
-                onClick={() => location.replace("/flows/dump?filter=" + filter)}
+                onClick={() => location.replace("flows/dump?filter=" + filter)}
             >
                 <i className="fa fa-fw fa-floppy-o" />
                 &nbsp;Save filtered

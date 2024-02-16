@@ -25,7 +25,7 @@ export default class FilterDocs extends Component<
 
     componentDidMount() {
         if (!FilterDocs.xhr) {
-            FilterDocs.xhr = fetchApi("/filter-help").then((response) =>
+            FilterDocs.xhr = fetchApi("filter-help").then((response) =>
                 response.json()
             );
             FilterDocs.xhr.catch(() => {
