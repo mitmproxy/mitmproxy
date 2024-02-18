@@ -33,20 +33,17 @@ export default function reducer(state = defaultState, action): OptionsState {
 }
 
 export async function pureSendUpdate(option: Option, value, dispatch) {
-    //value is an array of strings, we need to check that the last element( path ) is not empty
-    if (value[value.length - 1] !== "") {
-        try {
-            const response = await fetchApi.put("/options", {
-                [option]: value,
-            });
-            if (response.status === 200) {
-                dispatch(optionsEditorActions.updateSuccess(option));
-            } else {
-                throw await response.text();
-            }
-        } catch (error) {
-            dispatch(optionsEditorActions.updateError(option, error));
+    try {
+        const response = await fetchApi.put("/options", {
+            [option]: value,
+        });
+        if (response.status === 200) {
+            dispatch(optionsEditorActions.updateSuccess(option));
+        } else {
+            throw await response.text();
         }
+    } catch (error) {
+        dispatch(optionsEditorActions.updateError(option, error));
     }
 }
 
@@ -54,8 +51,12 @@ let sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: tr
 
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
+        console.log(value);
         dispatch(optionsEditorActions.startUpdate(name, value));
-        sendUpdate(name, value, dispatch);
+        if (value[value.length - 1] !== "") { //we send the value to the backend only if it is not empty
+            console.log("send value to backend");
+            sendUpdate(name, value, dispatch);
+        }
     };
 }
 
