@@ -8,13 +8,13 @@ export const SET_TAB = "UI_FLOWVIEW_SET_TAB",
 interface UiFlowState {
     tab: string;
     contentViewFor: { [messageId: string]: string };
-    isTreeOpened: boolean;
+    isTreeView: boolean;
 }
 
 export const defaultState: UiFlowState = {
     tab: "request",
     contentViewFor: {},
-    isTreeOpened: false,
+    isTreeView: false,
 };
 
 export default function reducer(state = defaultState, action): UiFlowState {
@@ -36,7 +36,7 @@ export default function reducer(state = defaultState, action): UiFlowState {
         case TOGGLE_FLOW_VIEW_TYPE:
             return {
                 ...state,
-                isTreeOpened: !state.isTreeOpened,
+                isTreeView: !state.isTreeView,
             };
 
         default:
