@@ -52,7 +52,8 @@ let sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: tr
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
         dispatch(optionsEditorActions.startUpdate(name, value));
-        if (value[value.length - 1] !== "") { //we send the value to the backend only if it is not empty
+        if (value[value.length - 1] !== "") {
+            //we send the value to the backend only if it is not empty
             sendUpdate(name, value, dispatch);
         }
     };
