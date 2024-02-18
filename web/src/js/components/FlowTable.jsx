@@ -138,8 +138,4 @@ class FlowTable extends React.Component {
 
 export const PureFlowTable = AutoScroll(FlowTable);
 
-export default connect((state) => ({
-    flows: state.flows.view,
-    highlight: state.flows.highlight,
-    selected: state.flows.byId[state.flows.selected[0]],
-}))(PureFlowTable);
+export default PureFlowTable;

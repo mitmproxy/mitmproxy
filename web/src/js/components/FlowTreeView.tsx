@@ -1,60 +1,55 @@
 import * as React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useAppSelector } from "../ducks";
 import { RequestUtils } from "../flow/utils";
 import classnames from "classnames";
-import { select } from "../ducks/flows";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
+import FlowTable from "./FlowTable";
 
-interface TreeViewFlowWrapper {
-    path: string;
-    child: Map<string, TreeViewFlowWrapper>;
-    flow: Flow | null;
-    highlight: boolean | undefined;
-}
-
-interface FlowRowProps {
+interface TreeView {
+    host: string;
+    flows: Flow[];
+    highlight?: boolean;
     active?: boolean;
-    flowTree: TreeViewFlowWrapper;
-    text: string;
 }
 
-function FlowTreeView() {
-    const flows = useAppSelector((state) => state.flows.view);
-    const newFlows: Map<string, TreeViewFlowWrapper> = new Map(); //we group the flows by host
-    const highlightFilter = useAppSelector((state) => state.flows.highlight);
-    const isHighlightedFn = highlightFilter
-        ? Filt.parse(highlightFilter)
-        : () => false;
+function FlowTreeView({
+    flows,
+    highlight,
+}: {
+    flows: Flow[];
+    highlight?: string;
+}) {
+    const treeViewFlows: TreeView[] = []; //we group the flows by host
+    const isHighlightedFn = highlight ? Filt.parse(highlight) : () => false;
 
-    //create tree
+    //create the tree
     flows.map((flow) => {
-        if (flow.server_conn?.address) {
-            if (flow.type === "http") {
-                try {
-                    const url = new URL(RequestUtils.pretty_url(flow.request));
-                    // if the host hasn't been inserted yet
-                    if (!newFlows.has(url.host)) {
-                        newFlows.set(url.host, {
-                            path: url.href,
-                            child: new Map(),
-                            flow: null,
-                            highlight: false,
-                        });
-                    }
-                    const isHighlighted = flow && isHighlightedFn(flow);
-                    //add the flow to the respective host
-                    newFlows.get(url.host)?.child.set(url.pathname, {
-                        path: url.href,
-                        child: new Map(),
-                        flow: flow,
-                        highlight: isHighlighted,
+        if (flow.server_conn?.address && flow.type === "http") {
+            try {
+                const url = new URL(RequestUtils.pretty_url(flow.request));
+
+                //check for the index
+                const existingIndex = treeViewFlows.findIndex(
+                    (item) => item.host === url.host
+                );
+
+                if (existingIndex !== -1) {
+                    // If host already exists, append the flow
+                    treeViewFlows[existingIndex].flows.push(flow);
+                    treeViewFlows[existingIndex].highlight =
+                        flow && isHighlightedFn(flow);
+                } else {
+                    // If host doesn't exist, add the entire object
+                    treeViewFlows.push({
+                        host: url.host,
+                        flows: [flow],
+                        highlight: flow && isHighlightedFn(flow),
                     });
-                    if (isHighlighted) newFlows.get(url.host)!.highlight = true;
-                } catch (error) {
-                    console.error(error);
                 }
+            } catch (error) {
+                console.error(error);
             }
         }
     });
@@ -71,11 +66,11 @@ function FlowTreeView() {
                 className="list-group w-100 overflow-auto"
                 style={{ width: "100%", height: "100%" }}
             >
-                {Array.from(newFlows).map((el, index) => (
+                {treeViewFlows.map((el, index) => (
                     <FlowRow
-                        key={el[0] + "-" + index}
-                        flowTree={el[1]}
-                        text={el[0]}
+                        key={el.host + "-" + index}
+                        flows={el.flows}
+                        host={el.host}
                     />
                 ))}
             </ul>
@@ -83,23 +78,25 @@ function FlowTreeView() {
     );
 }
 
-function FlowRow({ active, flowTree, text }: FlowRowProps) {
+function FlowRow({ active, host, highlight, flows }: TreeView) {
     const [show, setShow] = React.useState(false);
-    const children = Array.from(flowTree.child ?? []);
+
     const dispatch = useDispatch();
     const selected = useAppSelector((state) => state.flows.selected);
+
+    React.useEffect(() => console.log(flows));
 
     return (
         <>
             <li
                 onClick={() => {
-                    if (children.length !== 0) setShow(!show);
-                    if (flowTree.flow) dispatch(select(flowTree.flow.id));
+                    if (flows.length !== 0) setShow(!show);
+                    //if (flowTree.flow) dispatch(select(flowTree.flow.id));
                 }}
                 style={{
                     backgroundColor: active
                         ? "#7bbefc"
-                        : flowTree.highlight
+                        : highlight
                         ? "#ffeb99"
                         : "",
                     cursor: "pointer",
@@ -109,20 +106,15 @@ function FlowRow({ active, flowTree, text }: FlowRowProps) {
                     active ? "active" : "",
                 ])}
             >
-                <span>{text}</span>
+                <span>{host}</span>
             </li>
-            <div style={{ display: show ? "block" : "none" }}>
-                <pre>
-                    {children.map((el, index) => (
-                        <FlowRow
-                            key={el[0] + "-" + index}
-                            flowTree={el[1]}
-                            text={el[1].path}
-                            active={selected.includes(el[1].flow?.id ?? "")}
-                        />
-                    ))}
-                </pre>
-            </div>
+            {show && (
+                <FlowTable
+                    flows={flows}
+                    highlight={highlight}
+                    selected={selected}
+                />
+            )}
         </>
     );
 }
