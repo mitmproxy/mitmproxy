@@ -109,11 +109,13 @@ function FlowRow({ active, host, highlight, flows }: TreeView) {
                 <span>{host}</span>
             </li>
             {show && (
-                <FlowTable
-                    flows={flows}
-                    highlight={highlight}
-                    selected={selected}
-                />
+                <div style={{ padding: 10, backgroundColor: "lightgray" }}>
+                    <FlowTable
+                        flows={flows}
+                        highlight={highlight}
+                        selected={selected}
+                    />
+                </div>
             )}
         </>
     );
