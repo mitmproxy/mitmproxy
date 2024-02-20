@@ -82,7 +82,7 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
     const selected = useAppSelector(
         (state) => state.flows.byId[state.flows.selected[0]]
     );
-    
+
     //to manage the highlighting of a group (row)
     const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
     const isRowHighlighted =
@@ -110,7 +110,7 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                 <span>{host}</span>
             </li>
             {show && (
-                <div style={{ padding: 0 }}>
+                <div style={{ padding: 10, backgroundColor: "#e0e0e0" }}>
                     <FlowTable
                         flows={flows}
                         highlight={highlight}
