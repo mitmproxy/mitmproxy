@@ -36,7 +36,7 @@ T = TypeVar("T", str, bytes)
 def try_unlink(name: str) -> None:
     try:
         os.unlink(name)
-    except:
+    except Exception:
         return
 
 
