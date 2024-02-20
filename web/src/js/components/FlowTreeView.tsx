@@ -21,36 +21,43 @@ function FlowTreeView({
     flows: Flow[];
     highlight?: string;
 }) {
-    const treeViewFlows: TreeView[] = []; //we group the flows by host
+    /*
+    Note for the SORTING: 
+        The idea is that we get the initial order of the hosts and we save it.
+        Then, every time the flows order change (due to the sorting) we simply modify the flows of the related host.
+    */
 
-    //create the tree
-    flows.map((flow) => {
-        if (flow.server_conn?.address && flow.type === "http") {
-            try {
+    const [initialHosts, setInitialHosts] = React.useState<string[]>([]); //to keep track of the initial hosts (useful when sorting)
+
+    // Initialize the initialHosts when the component mounts
+    React.useEffect(() => {
+        const hosts = new Set<string>();
+        flows.forEach((flow) => {
+            if (flow.server_conn?.address && flow.type === "http") {
                 const url = new URL(RequestUtils.pretty_url(flow.request));
-
-                //check for the index
-                const existingIndex = treeViewFlows.findIndex(
-                    (item) => item.host === url.host
-                );
-
-                if (existingIndex !== -1) {
-                    // If host already exists, append the flow
-                    treeViewFlows[existingIndex].flows.push(flow);
-                    treeViewFlows[existingIndex].highlight = highlight;
-                } else {
-                    // If host doesn't exist, add the entire object
-                    treeViewFlows.push({
-                        host: url.host,
-                        flows: [flow],
-                        highlight: highlight,
-                    });
-                }
-            } catch (error) {
-                console.error(error);
+                hosts.add(url.host);
             }
-        }
-    });
+        });
+        setInitialHosts(Array.from(hosts));
+    }, []);
+
+    // Group the flows by host
+    const groupedFlows = React.useMemo(() => {
+        const groups: { [host: string]: Flow[] } = {};
+
+        flows.forEach((flow) => {
+            if (flow.server_conn?.address && flow.type === "http") {
+                const url = new URL(RequestUtils.pretty_url(flow.request));
+                const host = url.host;
+                if (!groups[host]) {
+                    groups[host] = [];
+                }
+                groups[host].push(flow);
+            }
+        });
+
+        return groups;
+    }, [flows]);
 
     return (
         <div
@@ -63,12 +70,12 @@ function FlowTreeView({
                 className="list-group w-100 overflow-auto"
                 style={{ width: "100%", height: "100%" }}
             >
-                {treeViewFlows.map((el, index) => (
+                {initialHosts.map((host, index) => (
                     <FlowGroup
-                        key={el.host + "-" + index}
-                        flows={el.flows}
-                        host={el.host}
-                        highlight={el.highlight}
+                        key={host + "-" + index}
+                        flows={groupedFlows[host] || []}
+                        host={host}
+                        highlight={highlight}
                     />
                 ))}
             </ul>
