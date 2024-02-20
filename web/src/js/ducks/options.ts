@@ -34,7 +34,9 @@ export default function reducer(state = defaultState, action): OptionsState {
 
 export async function pureSendUpdate(option: Option, value, dispatch) {
     try {
-        const response = await fetchApi.put("/options", { [option]: value });
+        const response = await fetchApi.put("/options", {
+            [option]: value,
+        });
         if (response.status === 200) {
             dispatch(optionsEditorActions.updateSuccess(option));
         } else {

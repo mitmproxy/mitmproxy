@@ -99,11 +99,26 @@ StringSequenceOption.propTypes = {
 
 function StringSequenceOption({ value, onChange, ...props }) {
     const height = Math.max(value.length, 1);
+
+    const [textAreaValue, setTextAreaValue] = React.useState(value.join("\n"));
+
+    const handleChange = (e) => {
+        const newValue = e.target.value;
+        setTextAreaValue(newValue); //save in the state the current input value
+        onChange(
+            //we send to the backend only the strings that are not empty
+            newValue
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line !== "")
+        );
+    };
+
     return (
         <textarea
             rows={height}
-            value={value.join("\n")}
-            onChange={(e) => onChange(e.target.value.split("\n"))}
+            value={textAreaValue}
+            onChange={handleChange}
             {...props}
         />
     );
