@@ -54,7 +54,6 @@ function FlowTreeView({
 
     return (
         <div
-            className="flow-table"
             style={{
                 width: "100%",
                 maxHeight: "90vh",
