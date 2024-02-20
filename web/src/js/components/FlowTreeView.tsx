@@ -67,7 +67,7 @@ function FlowTreeView({
                 style={{ width: "100%", height: "100%" }}
             >
                 {treeViewFlows.map((el, index) => (
-                    <FlowRow
+                    <FlowGroup
                         key={el.host + "-" + index}
                         flows={el.flows}
                         host={el.host}
@@ -78,20 +78,19 @@ function FlowTreeView({
     );
 }
 
-function FlowRow({ active, host, highlight, flows }: TreeView) {
+function FlowGroup({ active, host, highlight, flows }: TreeView) {
     const [show, setShow] = React.useState(false);
 
     const dispatch = useDispatch();
-    const selected = useAppSelector((state) => state.flows.selected);
-
-    React.useEffect(() => console.log(flows));
+    const selected = useAppSelector(
+        (state) => state.flows.byId[state.flows.selected[0]]
+    );
 
     return (
         <>
             <li
                 onClick={() => {
                     if (flows.length !== 0) setShow(!show);
-                    //if (flowTree.flow) dispatch(select(flowTree.flow.id));
                 }}
                 style={{
                     backgroundColor: active
@@ -109,7 +108,7 @@ function FlowRow({ active, host, highlight, flows }: TreeView) {
                 <span>{host}</span>
             </li>
             {show && (
-                <div style={{ padding: 10, backgroundColor: "lightgray" }}>
+                <div style={{ padding: 0 }}>
                     <FlowTable
                         flows={flows}
                         highlight={highlight}
