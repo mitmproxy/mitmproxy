@@ -33,6 +33,13 @@ from mitmproxy.tools.console import window
 T = TypeVar("T", str, bytes)
 
 
+def try_unlink(name: str) -> None:
+    try:
+        os.unlink(name)
+    except:
+        return
+
+
 class ConsoleMaster(master.Master):
     def __init__(self, opts: options.Options) -> None:
         super().__init__(opts)
@@ -171,7 +178,7 @@ class ConsoleMaster(master.Master):
                     message="Can't start external viewer: %s" % " ".join(c)
                 )
         # add a small delay before deletion so that the file is not removed before being loaded by the viewer
-        t = threading.Timer(1.0, os.unlink, args=[name])
+        t = threading.Timer(1.0, try_unlink, args=[name])
         t.start()
 
     def set_palette(self, *_) -> None:
