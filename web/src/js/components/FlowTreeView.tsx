@@ -10,7 +10,7 @@ import FlowTable from "./FlowTable";
 interface TreeView {
     host: string;
     flows: Flow[];
-    highlight?: boolean;
+    highlight?: string;
     active?: boolean;
 }
 
@@ -22,7 +22,6 @@ function FlowTreeView({
     highlight?: string;
 }) {
     const treeViewFlows: TreeView[] = []; //we group the flows by host
-    const isHighlightedFn = highlight ? Filt.parse(highlight) : () => false;
 
     //create the tree
     flows.map((flow) => {
@@ -38,14 +37,13 @@ function FlowTreeView({
                 if (existingIndex !== -1) {
                     // If host already exists, append the flow
                     treeViewFlows[existingIndex].flows.push(flow);
-                    treeViewFlows[existingIndex].highlight =
-                        flow && isHighlightedFn(flow);
+                    treeViewFlows[existingIndex].highlight = highlight;
                 } else {
                     // If host doesn't exist, add the entire object
                     treeViewFlows.push({
                         host: url.host,
                         flows: [flow],
-                        highlight: flow && isHighlightedFn(flow),
+                        highlight: highlight,
                     });
                 }
             } catch (error) {
@@ -71,6 +69,7 @@ function FlowTreeView({
                         key={el.host + "-" + index}
                         flows={el.flows}
                         host={el.host}
+                        highlight={el.highlight}
                     />
                 ))}
             </ul>
@@ -81,10 +80,14 @@ function FlowTreeView({
 function FlowGroup({ active, host, highlight, flows }: TreeView) {
     const [show, setShow] = React.useState(false);
 
-    const dispatch = useDispatch();
     const selected = useAppSelector(
         (state) => state.flows.byId[state.flows.selected[0]]
     );
+    
+    //to manage the highlighting of a group (row)
+    const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
+    const isRowHighlighted =
+        flows.filter((flow) => isHighlighted(flow)).length > 0;
 
     return (
         <>
@@ -95,7 +98,7 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                 style={{
                     backgroundColor: active
                         ? "#7bbefc"
-                        : highlight
+                        : isRowHighlighted
                         ? "#ffeb99"
                         : "",
                     cursor: "pointer",
