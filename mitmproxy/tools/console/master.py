@@ -9,7 +9,8 @@ import subprocess
 import sys
 import tempfile
 import threading
-from typing import TypeVar, cast
+from typing import cast
+from typing import TypeVar
 
 import urwid
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
