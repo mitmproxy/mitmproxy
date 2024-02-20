@@ -122,7 +122,8 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
-    def get_binary_editor(self) -> str:
+    @staticmethod
+    def get_binary_editor() -> str:
         if m := os.environ.get("MITMPROXY_BINARY_EDITOR"):
             return m
         for editor in "hexedit", "hexer":
