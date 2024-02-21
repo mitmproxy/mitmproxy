@@ -69,15 +69,16 @@ function FlowTreeView({
                 className="list-group w-100 overflow-auto"
                 style={{ width: "100%", height: "100%" }}
             >
-                {initialHosts.map((host, index) =>
-                    groupedFlows[host] && groupedFlows[host].length > 0 ? (
-                        <FlowGroup
-                            key={host + "-" + index}
-                            flows={groupedFlows[host]}
-                            host={host}
-                            highlight={highlight}
-                        />
-                    ) : undefined // display a message "No Results" ? 
+                {initialHosts.map(
+                    (host, index) =>
+                        groupedFlows[host] && groupedFlows[host].length > 0 ? (
+                            <FlowGroup
+                                key={host + "-" + index}
+                                flows={groupedFlows[host]}
+                                host={host}
+                                highlight={highlight}
+                            />
+                        ) : undefined // display a message "No Results" ?
                 )}
             </ul>
         </div>
