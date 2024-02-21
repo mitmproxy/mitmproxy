@@ -130,13 +130,13 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                     active ? "active" : "",
                 ])}
             >
-                <span>{host}</span>
+                <span style={{ fontWeight: 500 }}>{host}</span>
                 <span ref={rotateSymbolRef} className="rotate-symbol">
                     {">"}
                 </span>
             </li>
             {show && (
-                <div style={{ padding: 10, backgroundColor: "#e0e0e0" }}>
+                <div style={{ padding: 20, backgroundColor: "#e0e0e0" }}>
                     <FlowTable
                         flows={flows}
                         highlight={highlight}
