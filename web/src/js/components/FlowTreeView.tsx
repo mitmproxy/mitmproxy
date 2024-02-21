@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useDispatch } from "react-redux";
 import { useAppSelector } from "../ducks";
 import { RequestUtils } from "../flow/utils";
 import classnames from "classnames";
@@ -83,8 +82,19 @@ function FlowTreeView({
     );
 }
 
+function rotateSymbol(symbol: HTMLElement | null) {
+    if (symbol) {
+        if (symbol.style.transform === "rotate(90deg)") {
+            symbol.style.transform = "rotate(0deg)";
+        } else {
+            symbol.style.transform = "rotate(90deg)";
+        }
+    }
+}
+
 function FlowGroup({ active, host, highlight, flows }: TreeView) {
     const [show, setShow] = React.useState(false);
+    const rotateSymbolRef = React.useRef<HTMLElement>(null);
 
     const selected = useAppSelector(
         (state) => state.flows.byId[state.flows.selected[0]]
@@ -99,7 +109,10 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
         <>
             <li
                 onClick={() => {
-                    if (flows.length !== 0) setShow(!show);
+                    if (flows.length !== 0) {
+                        setShow(!show);
+                        rotateSymbol(rotateSymbolRef.current);
+                    }
                 }}
                 style={{
                     backgroundColor: active
@@ -108,6 +121,9 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                         ? "#ffeb99"
                         : "",
                     cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 10,
                 }}
                 className={classnames([
                     "list-group-item",
@@ -115,6 +131,9 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                 ])}
             >
                 <span>{host}</span>
+                <span ref={rotateSymbolRef} className="rotate-symbol">
+                    {">"}
+                </span>
             </li>
             {show && (
                 <div style={{ padding: 10, backgroundColor: "#e0e0e0" }}>
