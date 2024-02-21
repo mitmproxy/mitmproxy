@@ -135,7 +135,7 @@ function FlowGroup({ active, host, highlight, flows }: TreeView) {
                     {">"}
                 </span>
             </li>
-            {show && (
+            {show && flows.length > 0 && (
                 <div style={{ padding: 20, backgroundColor: "#e0e0e0" }}>
                     <FlowTable
                         flows={flows}
