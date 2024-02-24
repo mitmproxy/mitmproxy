@@ -5,6 +5,7 @@ import FlowView from "./FlowView";
 import { useAppSelector } from "../ducks";
 import CaptureSetup from "./CaptureSetup";
 import FlowTreeView from "./FlowTreeView";
+import FlowTreeView_2 from "./FlowTreeView_2";
 
 export default function MainView() {
     const flows = useAppSelector((state) => state.flows.view);
@@ -21,7 +22,10 @@ export default function MainView() {
         <div className="main-view">
             {hasFlows ? (
                 isTreeView ? (
-                    <FlowTreeView flows={flows} highlight={highlight} />
+                    <>
+                        {/*<FlowTreeView flows={flows} highlight={highlight} />*/}
+                        <FlowTreeView_2 flows={flows} />
+                    </>
                 ) : (
                     <FlowTable
                         flows={flows}
