@@ -2,25 +2,38 @@ import * as React from "react";
 import { Flow } from "../flow";
 import { RequestUtils } from "../flow/utils";
 import classnames from "classnames";
+import Filt from "../filt/filt";
+import { select } from "../ducks/flows";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "../ducks";
 
 interface TreeElement {
     address: string;
     flow: Flow | null;
     children: TreeElement[];
     hidden?: boolean;
+    isHighlighted?: boolean;
+    active?: boolean;
 }
 
 interface FlowTreeViewProps {
     flows: Flow[];
+    highlight?: string;
 }
 
 interface FlowRowProps {
     treeElement: TreeElement;
     toggleNode: (treeElement: TreeElement) => void;
+    active?: boolean;
 }
 
-function FlowTreeView({ flows }: FlowTreeViewProps) {
+function FlowTreeView({ flows, highlight }: FlowTreeViewProps) {
     const [treeView, setTreeView] = React.useState<TreeElement[]>([]);
+
+    //to manage the highlighting of a group (row)
+    const isHighlightedFn = highlight ? Filt.parse(highlight) : () => false;
+
+    const selected = useAppSelector((state) => state.flows.selected);
 
     function buildTree(flows: Flow[]): TreeElement[] {
         const flowsTree: TreeElement = {
@@ -55,6 +68,7 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
                             flow: index === path.length - 1 ? flow : null,
                             children: [],
                             hidden: true,
+                            isHighlighted: flow && isHighlightedFn(flow),
                         });
                         current = current.children[current.children.length - 1];
                     }
@@ -68,7 +82,7 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
     React.useEffect(() => {
         const tree = buildTree(flows);
         setTreeView(tree);
-    }, [flows]);
+    }, [flows, highlight]);
 
     const toggleNode = (treeElement: TreeElement) => {
         treeElement.children.forEach((child) => {
@@ -96,6 +110,7 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
                         key={index}
                         treeElement={element}
                         toggleNode={toggleNode}
+                        active={selected.includes(element.flow?.id ?? "")}
                     />
                 ))}
             </ul>
@@ -113,18 +128,27 @@ function rotateSymbol(symbol: HTMLElement | null) {
     }
 }
 
-function FlowRow({ treeElement, toggleNode }: FlowRowProps) {
+function FlowRow({ treeElement, toggleNode, active }: FlowRowProps) {
     const rotateSymbolRef = React.useRef<HTMLElement>(null);
 
-    const handleToggle = () => {
+    const handleToggle = (
+        event: React.MouseEvent<HTMLLIElement, MouseEvent>
+    ) => {
+        event.preventDefault();
         toggleNode(treeElement);
         rotateSymbol(rotateSymbolRef.current);
     };
 
+    const dispatch = useDispatch();
+    const selected = useAppSelector((state) => state.flows.selected);
+
     return (
         <>
             <li
-                onClick={handleToggle}
+                onClick={() => {
+                    if (treeElement.flow) dispatch(select(treeElement.flow.id));
+                }}
+                onDoubleClick={handleToggle}
                 className={classnames("list-group-item", {
                     "has-children": treeElement.children.length > 0,
                 })}
@@ -134,11 +158,21 @@ function FlowRow({ treeElement, toggleNode }: FlowRowProps) {
                     flexDirection: "row",
                     gap: treeElement.children.length > 0 ? 15 : 25,
                     marginBottom: 10,
-                    backgroundColor:
-                        treeElement.children.length > 0 ? "#f5f5f5" : "",
+                    backgroundColor: active
+                        ? "#7bbefc"
+                        : treeElement.isHighlighted
+                        ? "#ffeb99"
+                        : treeElement.children.length > 0
+                        ? "#f5f5f5"
+                        : "",
+                    userSelect: "none",
                 }}
             >
-                <span ref={rotateSymbolRef} className="rotate-symbol">
+                <span
+                    ref={rotateSymbolRef}
+                    className="rotate-symbol"
+                    onClick={handleToggle}
+                >
                     {treeElement.children.length > 0 ? "^" : ""}
                 </span>
                 <span>{treeElement.address}</span>
@@ -149,6 +183,7 @@ function FlowRow({ treeElement, toggleNode }: FlowRowProps) {
                         <FlowRow
                             treeElement={element}
                             toggleNode={toggleNode}
+                            active={selected.includes(element.flow?.id ?? "")}
                         />
                     )}
                 </div>

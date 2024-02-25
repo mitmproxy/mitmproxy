@@ -24,7 +24,7 @@ export default function MainView() {
                 isTreeView ? (
                     <>
                         {/*<FlowTreeView flows={flows} highlight={highlight} />*/}
-                        <FlowTreeView_2 flows={flows} />
+                        <FlowTreeView_2 flows={flows} highlight={highlight} />
                     </>
                 ) : (
                     <FlowTable
