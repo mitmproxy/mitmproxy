@@ -156,8 +156,8 @@ function FlowRow({ treeElement, toggleNode, active }: FlowRowProps) {
                     cursor: "pointer",
                     display: "flex",
                     flexDirection: "row",
-                    gap: treeElement.children.length > 0 ? 15 : 25,
-                    marginBottom: 10,
+                    //gap: treeElement.children.length > 0 ? 15 : 25,
+                    marginBottom: 5,
                     backgroundColor: active
                         ? "#7bbefc"
                         : treeElement.isHighlighted
@@ -168,17 +168,20 @@ function FlowRow({ treeElement, toggleNode, active }: FlowRowProps) {
                     userSelect: "none",
                 }}
             >
-                <span
-                    ref={rotateSymbolRef}
-                    className="rotate-symbol"
-                    onClick={handleToggle}
-                >
-                    {treeElement.children.length > 0 ? "^" : ""}
-                </span>
+                {treeElement.children.length > 0 ? (
+                    <span
+                        ref={rotateSymbolRef}
+                        className="rotate-symbol"
+                        onClick={handleToggle}
+                        style={{ marginRight: 10, marginLeft: -2 }}
+                    >
+                        {"^"}
+                    </span>
+                ) : undefined}
                 <span>{treeElement.address}</span>
             </li>
             {treeElement.children.map((element, index) => (
-                <div key={index} style={{ paddingLeft: 30 }}>
+                <div key={index} style={{ paddingLeft: 20 }}>
                     {!element.hidden && (
                         <FlowRow
                             treeElement={element}
