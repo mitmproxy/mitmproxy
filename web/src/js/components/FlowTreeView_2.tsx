@@ -33,7 +33,7 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
             if (flow.server_conn?.address && flow.type === "http") {
                 const url = new URL(RequestUtils.pretty_url(flow.request));
                 const address = url.href;
-
+                const origin = url.origin;
                 const path = address.match(/\/[^\/]+/g);
 
                 let current = flowsTree;
@@ -41,14 +41,14 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
                 path?.forEach((_, index) => {
                     const currPath = path.slice(0, index + 1).join("");
                     const child = current.children.find(
-                        (e) => e.address === currPath
+                        (e) => e.address === origin + currPath
                     );
 
                     if (child) {
                         current = child;
                     } else {
                         current.children.push({
-                            address: currPath,
+                            address: origin + currPath,
                             flow: index === path.length - 1 ? flow : null,
                             children: [],
                             hidden: true,
@@ -129,7 +129,7 @@ function FlowRow({ treeElement, toggleNode }: FlowRowProps) {
                     cursor: "pointer",
                     display: "flex",
                     flexDirection: "row",
-                    gap: 15,
+                    gap: treeElement.children.length > 0 ? 15 : 25,
                     marginBottom: 10,
                     backgroundColor:
                         treeElement.children.length > 0 ? "#f5f5f5" : "",
