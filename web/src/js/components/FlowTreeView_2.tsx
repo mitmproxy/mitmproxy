@@ -33,22 +33,25 @@ function FlowTreeView({ flows }: FlowTreeViewProps) {
             if (flow.server_conn?.address && flow.type === "http") {
                 const url = new URL(RequestUtils.pretty_url(flow.request));
                 const address = url.href;
-                const origin = url.origin;
+                const protocol = url.protocol;
                 const path = address.match(/\/[^\/]+/g);
 
                 let current = flowsTree;
 
                 path?.forEach((_, index) => {
                     const currPath = path.slice(0, index + 1).join("");
+
+                    const currPathComplete = protocol + "/" + currPath;
+
                     const child = current.children.find(
-                        (e) => e.address === origin + currPath
+                        (e) => e.address === currPathComplete
                     );
 
                     if (child) {
                         current = child;
                     } else {
                         current.children.push({
-                            address: origin + currPath,
+                            address: currPathComplete,
                             flow: index === path.length - 1 ? flow : null,
                             children: [],
                             hidden: true,
