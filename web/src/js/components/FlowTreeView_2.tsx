@@ -131,6 +131,8 @@ function FlowRow({ treeElement, toggleNode }: FlowRowProps) {
                     flexDirection: "row",
                     gap: 15,
                     marginBottom: 10,
+                    backgroundColor:
+                        treeElement.children.length > 0 ? "#f5f5f5" : "",
                 }}
             >
                 <span ref={rotateSymbolRef} className="rotate-symbol">
