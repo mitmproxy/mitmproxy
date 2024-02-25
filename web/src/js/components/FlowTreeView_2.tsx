@@ -6,6 +6,7 @@ import Filt from "../filt/filt";
 import { select } from "../ducks/flows";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../ducks";
+import FlowTableHead from "./FlowTable/FlowTableHead";
 
 interface TreeElement {
     address: string;
@@ -100,6 +101,7 @@ function FlowTreeView({ flows, highlight }: FlowTreeViewProps) {
                 width: "100%",
                 maxHeight: "90vh",
             }}
+            className="flow-table"
         >
             <ul
                 className="list-group w-100 overflow-auto"
@@ -156,8 +158,9 @@ function FlowRow({ treeElement, toggleNode, active }: FlowRowProps) {
                     cursor: "pointer",
                     display: "flex",
                     flexDirection: "row",
-                    //gap: treeElement.children.length > 0 ? 15 : 25,
+                    height: 32,
                     marginBottom: 5,
+                    padding: 5,
                     backgroundColor: active
                         ? "#7bbefc"
                         : treeElement.isHighlighted
