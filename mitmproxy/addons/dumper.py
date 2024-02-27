@@ -18,6 +18,7 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.net.dns import response_codes
+from mitmproxy.options import CONTENT_VIEW_LINES_CUTOFF
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.udp import UDPFlow
@@ -54,12 +55,12 @@ class Dumper:
             "flow_detail",
             int,
             1,
-            """
+            f"""
             The display detail level for flows in mitmdump: 0 (quiet) to 4 (very verbose).
               0: no output
               1: shortened request URL with response status code
               2: full request URL with response status code and HTTP headers
-              3: 2 + truncated response content, content of WebSocket and TCP messages (default cutoff lines: 70)
+              3: 2 + truncated response content, content of WebSocket and TCP messages (content_view_lines_cutoff: {CONTENT_VIEW_LINES_CUTOFF})
               4: 3 + nothing is truncated
             """,
         )
@@ -73,7 +74,6 @@ class Dumper:
         loader.add_option(
             "dumper_filter", Optional[str], None, "Limit which flows are dumped."
         )
-        ctx.options.content_view_lines_cutoff = 70
 
     def configure(self, updated):
         if "dumper_filter" in updated:
