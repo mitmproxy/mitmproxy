@@ -126,7 +126,9 @@ class Dumper:
             logging.debug(error)
 
         if ctx.options.flow_detail == 3:
-            lines_to_echo = itertools.islice(lines, ctx.options.content_view_lines_cutoff)
+            lines_to_echo = itertools.islice(
+                lines, ctx.options.content_view_lines_cutoff
+            )
         else:
             lines_to_echo = lines
 

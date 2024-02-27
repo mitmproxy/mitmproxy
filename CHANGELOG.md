@@ -20,6 +20,7 @@
 * Fix a regression when leaf cert creation would fail with intermediate CAs in `ca_file`.
   ([#6666](https://github.com/mitmproxy/mitmproxy/pull/6666), @manselmi)
 * Add `content_view_lines_cutoff` option to mitmdump
+  ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
