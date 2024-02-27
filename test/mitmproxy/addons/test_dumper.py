@@ -97,7 +97,7 @@ def test_simple():
 def test_echo_body():
     f = tflow.tflow(resp=True)
     f.response.headers["content-type"] = "text/html"
-    f.response.content = b"foo bar voing\n" * 100
+    f.response.content = b"foo bar voing\n" * 600
 
     sio = io.StringIO()
     d = dumper.Dumper(sio)
@@ -108,7 +108,7 @@ def test_echo_body():
         assert "cut off" in t
 
 
-def test_echo_body_cutoff():
+def test_echo_body_custom_cutoff():
     f = tflow.tflow(resp=True)
     f.response.headers["content-type"] = "text/html"
     f.response.content = b"foo bar voing\n" * 4
@@ -133,7 +133,7 @@ def test_echo_trailer():
         f.request.headers["content-type"] = "text/html"
         f.request.headers["transfer-encoding"] = "chunked"
         f.request.headers["trailer"] = "my-little-request-trailer"
-        f.request.content = b"some request content\n" * 100
+        f.request.content = b"some request content\n" * 600
         f.request.trailers = Headers(
             [(b"my-little-request-trailer", b"foobar-request-trailer")]
         )
