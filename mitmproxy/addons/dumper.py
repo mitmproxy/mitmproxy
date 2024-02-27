@@ -59,7 +59,7 @@ class Dumper:
               0: no output
               1: shortened request URL with response status code
               2: full request URL with response status code and HTTP headers
-              3: 2 + truncated response content, content of WebSocket and TCP messages
+              3: 2 + truncated response content, content of WebSocket and TCP messages (default cutoff lines: 70)
               4: 3 + nothing is truncated
             """,
         )
@@ -73,6 +73,7 @@ class Dumper:
         loader.add_option(
             "dumper_filter", Optional[str], None, "Limit which flows are dumped."
         )
+        ctx.options.content_view_lines_cutoff = 70
 
     def configure(self, updated):
         if "dumper_filter" in updated:
@@ -125,7 +126,7 @@ class Dumper:
             logging.debug(error)
 
         if ctx.options.flow_detail == 3:
-            lines_to_echo = itertools.islice(lines, 70)
+            lines_to_echo = itertools.islice(lines, ctx.options.content_view_lines_cutoff)
         else:
             lines_to_echo = lines
 
