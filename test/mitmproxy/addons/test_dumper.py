@@ -108,6 +108,21 @@ def test_echo_body():
         assert "cut off" in t
 
 
+def test_echo_body_cutoff():
+    f = tflow.tflow(resp=True)
+    f.response.headers["content-type"] = "text/html"
+    f.response.content = b"foo bar voing\n" * 4
+
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3)
+        ctx.configure(d, content_view_lines_cutoff=3)
+        d._echo_message(f.response, f)
+        t = sio.getvalue()
+        assert "cut off" in t
+
+
 def test_echo_trailer():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
