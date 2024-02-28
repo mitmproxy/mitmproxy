@@ -16,6 +16,12 @@ from mitmproxy import io
 
 logger = logging.getLogger(__name__)
 
+HASH_OPTIONS = ['server_replay_ignore_content',
+                'server_replay_ignore_host',
+                'server_replay_ignore_params',
+                'server_replay_ignore_payload_params'
+                'server_replay_ignore_port',
+                'server_replay_use_headers']
 
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
@@ -255,6 +261,15 @@ class ServerPlayback:
             except exceptions.FlowReadException as e:
                 raise exceptions.OptionsError(str(e))
             self.load_flows(flows)
+        if any(option in updated for option in HASH_OPTIONS):
+            self.recompute_hashes()
+
+    def recompute_hashes(self) -> None:
+        flows = []
+        for _, fs in self.flowmap.items():
+            for f in fs:
+                flows.append(f)
+        self.load_flows(flows)
 
     def request(self, f: http.HTTPFlow) -> None:
         if self.flowmap:
