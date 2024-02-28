@@ -20,7 +20,8 @@ HASH_OPTIONS = [
     "server_replay_ignore_content",
     "server_replay_ignore_host",
     "server_replay_ignore_params",
-    "server_replay_ignore_payload_params" "server_replay_ignore_port",
+    "server_replay_ignore_payload_params",
+    "server_replay_ignore_port",
     "server_replay_use_headers",
 ]
 
