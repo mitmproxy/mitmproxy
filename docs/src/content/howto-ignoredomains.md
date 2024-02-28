@@ -15,7 +15,7 @@ mitmproxy's interception mechanism:
   and mitmproxy's interception leads to errors. For example, the Twitter app,
   Windows Update or the Apple App Store fail to work if mitmproxy is active.
 - **Convenience:** You really don't care about some parts of the traffic and
-  just want them to go away. Note that mitmproxy's "Limit" option is often the
+  just want them to go away. Note that mitmproxy's [view_filter](https://docs.mitmproxy.org/stable/concepts-options/#view_filter) option is often the
   better alternative here, as it is not affected by the limitations listed
   below.
 
