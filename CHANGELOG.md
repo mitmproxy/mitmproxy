@@ -22,6 +22,7 @@
 * Add `content_view_lines_cutoff` option to mitmdump
   ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
 * Allow runtime modifications of HTTP flow filters for server replays
+  ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
 
 
 ## 21 January 2024: mitmproxy 10.2.2

@@ -16,12 +16,14 @@ from mitmproxy import io
 
 logger = logging.getLogger(__name__)
 
-HASH_OPTIONS = ['server_replay_ignore_content',
-                'server_replay_ignore_host',
-                'server_replay_ignore_params',
-                'server_replay_ignore_payload_params'
-                'server_replay_ignore_port',
-                'server_replay_use_headers']
+HASH_OPTIONS = [
+    "server_replay_ignore_content",
+    "server_replay_ignore_host",
+    "server_replay_ignore_params",
+    "server_replay_ignore_payload_params" "server_replay_ignore_port",
+    "server_replay_use_headers",
+]
+
 
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
