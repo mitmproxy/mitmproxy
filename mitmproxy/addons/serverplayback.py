@@ -268,10 +268,15 @@ class ServerPlayback:
             self.recompute_hashes()
 
     def recompute_hashes(self) -> None:
-        flows = []
-        for _, fs in self.flowmap.items():
-            for f in fs:
-                flows.append(f)
+        """
+        Rebuild flowmap if the hashing method has changed during execution,
+        see https://github.com/mitmproxy/mitmproxy/issues/4506
+        """
+        flows = [
+            flow
+            for lst in self.flowmap.values()
+            for flow in lst
+        ]
         self.load_flows(flows)
 
     def request(self, f: http.HTTPFlow) -> None:
