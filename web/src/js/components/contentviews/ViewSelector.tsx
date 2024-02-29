@@ -23,7 +23,7 @@ export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
         <Dropdown
             text={inner}
             className="btn btn-default btn-xs"
-            options={{ placement: "top-start" }}
+            options={{ placement: "top-end" }}
         >
             {contentViews.map((name) => (
                 <MenuItem key={name} onClick={() => onChange(name)}>
