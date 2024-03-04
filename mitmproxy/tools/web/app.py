@@ -448,6 +448,8 @@ class FlowHandler(RequestHandler):
                             raise APIError(400, f"Unknown update response.{k}: {v}")
                 elif a == "marked":
                     flow.marked = b
+                elif a == "comment":
+                    flow.comment = b
                 else:
                     raise APIError(400, f"Unknown update {a}: {b}")
         except APIError:
