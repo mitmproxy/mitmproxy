@@ -191,3 +191,7 @@ export const getTotalSize = (flow: Flow): number => {
 export const canReplay = (flow: Flow): boolean => {
     return flow.type === "http" && !flow.websocket;
 };
+
+export const getComment = (flow: Flow): string => {
+    return flow.comment;
+};
