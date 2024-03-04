@@ -93,10 +93,6 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.udp_hosts
             ]
         if "allow_hosts" in updated or "ignore_hosts" in updated:
-            if ctx.options.allow_hosts and ctx.options.ignore_hosts:
-                raise exceptions.OptionsError(
-                    "The allow_hosts and ignore_hosts options are mutually exclusive."
-                )
             self.ignore_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.ignore_hosts
             ]
@@ -240,18 +236,22 @@ class NextLayer:
         if not hostnames:
             return False
 
+        is_allowed = True
+        if ctx.options.allow_hosts:
+            is_allowed = any(
+                re.search(rex, host, re.IGNORECASE)
+                for host in hostnames
+                for rex in ctx.options.allow_hosts
+            )
+
         if ctx.options.ignore_hosts:
-            return any(
+            return not is_allowed or any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.ignore_hosts
             )
         elif ctx.options.allow_hosts:
-            return not any(
-                re.search(rex, host, re.IGNORECASE)
-                for host in hostnames
-                for rex in ctx.options.allow_hosts
-            )
+            return not is_allowed
         else:  # pragma: no cover
             raise AssertionError()
 

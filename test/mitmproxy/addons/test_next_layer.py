@@ -98,14 +98,6 @@ http_connect = b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r
 
 
 class TestNextLayer:
-    def test_configure(self):
-        nl = NextLayer()
-        with taddons.context(nl) as tctx:
-            with pytest.raises(Exception, match="mutually exclusive"):
-                tctx.configure(
-                    nl, allow_hosts=["example.org"], ignore_hosts=["example.com"]
-                )
-
     @pytest.mark.parametrize(
         "ignore, allow, transport_protocol, server_address, data_client, result",
         [
@@ -299,6 +291,25 @@ class TestNextLayer:
                 client_hello_with_extensions,
                 False,
                 id="allow: sni mismatch",
+            ),
+            # allow with ignore
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow+ignore: allowed and not ignored",
+            ),
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "binary.example.org",
+                b"",
+                True,
+                id="allow+ignore: allowed but ignored",
             ),
         ],
     )
