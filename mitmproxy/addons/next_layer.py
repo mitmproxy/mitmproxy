@@ -27,7 +27,6 @@ from typing import cast
 
 from mitmproxy import ctx
 from mitmproxy import dns
-from mitmproxy import exceptions
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import layer
