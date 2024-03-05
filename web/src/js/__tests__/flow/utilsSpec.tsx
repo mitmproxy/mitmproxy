@@ -105,3 +105,8 @@ it("should be possible to get a total size", () => {
     expect(utils.getTotalSize(TUDPFlow())).toEqual(12);
     expect(utils.getTotalSize(TDNSFlow())).toEqual(8);
 });
+
+it("should be possible to get a comment", () => {
+    let tflow = TFlow();
+    expect(tflow.comment).toEqual("I'm a comment!");
+});
