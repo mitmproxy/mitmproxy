@@ -23,7 +23,8 @@
   ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
 * Allow runtime modifications of HTTP flow filters for server replays
   ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
-
+* Add section in mitmweb for rendering, adding and removing a comment
+  ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
 
 ## 21 January 2024: mitmproxy 10.2.2
 
