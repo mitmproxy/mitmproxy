@@ -4,7 +4,6 @@ import classnames from "classnames";
 import {
     canReplay,
     endTime,
-    getComment,
     getTotalSize,
     RequestUtils,
     ResponseUtils,
@@ -293,11 +292,11 @@ export const quickactions: FlowColumn = ({ flow }) => {
 };
 
 export const comment: FlowColumn = ({ flow }) => {
-    const text = getComment(flow);
-    return <td className="col-comment">{text ? text : "..."}</td>;
+    const text = flow.comment;
+    return <td className="col-comment">{text}</td>;
 };
 comment.headerName = "Comment";
-comment.sortKey = (flow) => getComment(flow);
+comment.sortKey = (flow) => flow.comment;
 
 quickactions.headerName = "";
 quickactions.sortKey = (flow) => 0;

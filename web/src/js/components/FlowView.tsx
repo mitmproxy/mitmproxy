@@ -16,7 +16,6 @@ import { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
-import { tab } from "@testing-library/user-event/dist/tab";
 
 type TabProps = {
     flow: Flow;
