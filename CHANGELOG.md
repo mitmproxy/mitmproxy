@@ -23,6 +23,8 @@
   ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
 * Allow runtime modifications of HTTP flow filters for server replays
   ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
+* Allow --allow-hosts and --ignore-hosts to work together
+  ([#6711](https://github.com/mitmproxy/mitmproxy/pull/6711), @dstd)
 
 
 ## 21 January 2024: mitmproxy 10.2.2
