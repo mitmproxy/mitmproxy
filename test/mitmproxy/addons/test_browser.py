@@ -6,9 +6,11 @@ from mitmproxy.test import taddons
 
 def test_browser(caplog):
     caplog.set_level("INFO")
-    with mock.patch("subprocess.Popen") as po, mock.patch(
-        "shutil.which"
-    ) as which, taddons.context():
+    with (
+        mock.patch("subprocess.Popen") as po,
+        mock.patch("shutil.which") as which,
+        taddons.context(),
+    ):
         which.return_value = "chrome"
         b = browser.Browser()
         b.start()
@@ -48,9 +50,10 @@ async def test_get_browser_cmd_flatpak():
         returncode = 0 if cmd == ["flatpak", "info", "com.google.Chrome"] else 1
         return mock.Mock(returncode=returncode)
 
-    with mock.patch("shutil.which") as which, mock.patch(
-        "subprocess.run"
-    ) as subprocess_run:
+    with (
+        mock.patch("shutil.which") as which,
+        mock.patch("subprocess.run") as subprocess_run,
+    ):
         which.side_effect = lambda cmd: cmd == "flatpak"
         subprocess_run.side_effect = subprocess_run_mock
         assert browser.get_browser_cmd() == [
@@ -62,9 +65,10 @@ async def test_get_browser_cmd_flatpak():
 
 
 async def test_get_browser_cmd_no_flatpak():
-    with mock.patch("shutil.which") as which, mock.patch(
-        "subprocess.run"
-    ) as subprocess_run:
+    with (
+        mock.patch("shutil.which") as which,
+        mock.patch("subprocess.run") as subprocess_run,
+    ):
         which.side_effect = lambda cmd: cmd == "flatpak"
         subprocess_run.return_value = mock.Mock(returncode=1)
         assert browser.get_browser_cmd() is None

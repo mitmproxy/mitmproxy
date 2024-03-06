@@ -1,4 +1,5 @@
 """React to configuration changes."""
+
 from typing import Optional
 
 from mitmproxy import ctx

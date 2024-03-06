@@ -1,6 +1,7 @@
 """
 Utility functions for decoding response bodies.
 """
+
 import codecs
 import collections
 import gzip
@@ -20,18 +21,15 @@ _cache = CachedDecode(None, None, None, None)
 
 
 @overload
-def decode(encoded: None, encoding: str, errors: str = "strict") -> None:
-    ...
+def decode(encoded: None, encoding: str, errors: str = "strict") -> None: ...
 
 
 @overload
-def decode(encoded: str, encoding: str, errors: str = "strict") -> str:
-    ...
+def decode(encoded: str, encoding: str, errors: str = "strict") -> str: ...
 
 
 @overload
-def decode(encoded: bytes, encoding: str, errors: str = "strict") -> str | bytes:
-    ...
+def decode(encoded: bytes, encoding: str, errors: str = "strict") -> str | bytes: ...
 
 
 def decode(
@@ -81,18 +79,15 @@ def decode(
 
 
 @overload
-def encode(decoded: None, encoding: str, errors: str = "strict") -> None:
-    ...
+def encode(decoded: None, encoding: str, errors: str = "strict") -> None: ...
 
 
 @overload
-def encode(decoded: str, encoding: str, errors: str = "strict") -> str | bytes:
-    ...
+def encode(decoded: str, encoding: str, errors: str = "strict") -> str | bytes: ...
 
 
 @overload
-def encode(decoded: bytes, encoding: str, errors: str = "strict") -> bytes:
-    ...
+def encode(decoded: bytes, encoding: str, errors: str = "strict") -> bytes: ...
 
 
 def encode(

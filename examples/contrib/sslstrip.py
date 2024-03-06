@@ -2,6 +2,7 @@
 This script implements an sslstrip-like attack based on mitmproxy.
 https://moxie.org/software/sslstrip/
 """
+
 import re
 import urllib.parse
 

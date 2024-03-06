@@ -36,7 +36,7 @@ def test_assemble_content_type():
         ("", b"", "latin-1"),
         ("", b"foo", "latin-1"),
         ("", b"\xfc", "latin-1"),
-        ("", b"\xF0\xE2", "latin-1"),
+        ("", b"\xf0\xe2", "latin-1"),
         ("text/html; charset=latin1", b"\xc3\xbc", "latin1"),
         ("text/html; charset=utf8", b"\xc3\xbc", "utf8"),
         # json

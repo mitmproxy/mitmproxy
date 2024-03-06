@@ -10,8 +10,7 @@ StatusMessage = Union[tuple[str, str], str]
 
 # Show a status message in the action bar
 # Instead of using this signal directly, consider emitting a log event.
-def _status_message(message: StatusMessage, expire: int = 5) -> None:
-    ...
+def _status_message(message: StatusMessage, expire: int = 5) -> None: ...
 
 
 status_message = signals.SyncSignal(_status_message)
@@ -20,8 +19,7 @@ status_message = signals.SyncSignal(_status_message)
 # Prompt for input
 def _status_prompt(
     prompt: str, text: str | None, callback: Callable[[str], None]
-) -> None:
-    ...
+) -> None: ...
 
 
 status_prompt = signals.SyncSignal(_status_prompt)
@@ -30,24 +28,21 @@ status_prompt = signals.SyncSignal(_status_prompt)
 # Prompt for a single keystroke
 def _status_prompt_onekey(
     prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]
-) -> None:
-    ...
+) -> None: ...
 
 
 status_prompt_onekey = signals.SyncSignal(_status_prompt_onekey)
 
 
 # Prompt for a command
-def _status_prompt_command(partial: str = "", cursor: int | None = None) -> None:
-    ...
+def _status_prompt_command(partial: str = "", cursor: int | None = None) -> None: ...
 
 
 status_prompt_command = signals.SyncSignal(_status_prompt_command)
 
 
 # Call a callback in N seconds
-def _call_in(seconds: float, callback: Callable[[], None]) -> None:
-    ...
+def _call_in(seconds: float, callback: Callable[[], None]) -> None: ...
 
 
 call_in = signals.SyncSignal(_call_in)

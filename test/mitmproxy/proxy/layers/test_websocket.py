@@ -410,9 +410,9 @@ def test_close_code(ws_testdata):
 
 def test_deflate(ws_testdata):
     tctx, playbook, flow = ws_testdata
-    flow.response.headers[
-        "Sec-WebSocket-Extensions"
-    ] = "permessage-deflate; server_max_window_bits=10"
+    flow.response.headers["Sec-WebSocket-Extensions"] = (
+        "permessage-deflate; server_max_window_bits=10"
+    )
     assert (
         playbook
         << websocket.WebsocketStartHook(flow)

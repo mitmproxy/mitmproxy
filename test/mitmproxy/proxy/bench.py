@@ -6,6 +6,7 @@ Usage:
 See also:
   - https://github.com/mitmproxy/proxybench
 """
+
 import copy
 
 from .layers import test_tcp

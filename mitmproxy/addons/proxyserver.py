@@ -1,6 +1,7 @@
 """
 This addon is responsible for starting/stopping the proxy server sockets/instances specified by the mode option.
 """
+
 from __future__ import annotations
 
 import asyncio

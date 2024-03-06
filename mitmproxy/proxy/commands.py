@@ -6,6 +6,7 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
+
 import logging
 import warnings
 from typing import TYPE_CHECKING

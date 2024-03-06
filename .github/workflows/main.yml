@@ -110,7 +110,7 @@ jobs:
       - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
-        uses: apple-actions/import-codesign-certs@5565bb656f60c98c8fc515f3444dd8db73545dc2
+        uses: apple-actions/import-codesign-certs@493007ed063995cf2d4fbca064704150548f8bb5
         with:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
@@ -238,7 +238,7 @@ jobs:
           name: binaries.linux
           path: release/dist
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
-      - uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v1.6.0
+      - uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c # v1.6.0
       - run: python release/build-and-deploy-docker.py
 
   deploy:

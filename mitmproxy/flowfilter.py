@@ -1,37 +1,38 @@
 """
-    The following operators are understood:
+The following operators are understood:
 
-        ~q          Request
-        ~s          Response
+    ~q          Request
+    ~s          Response
 
-    Headers:
+Headers:
 
-        Patterns are matched against "name: value" strings. Field names are
-        all-lowercase.
+    Patterns are matched against "name: value" strings. Field names are
+    all-lowercase.
 
-        ~a          Asset content-type in response. Asset content types are:
-                        text/javascript
-                        application/x-javascript
-                        application/javascript
-                        text/css
-                        image/*
-                        font/*
-                        application/font-*
-        ~h rex      Header line in either request or response
-        ~hq rex     Header in request
-        ~hs rex     Header in response
+    ~a          Asset content-type in response. Asset content types are:
+                    text/javascript
+                    application/x-javascript
+                    application/javascript
+                    text/css
+                    image/*
+                    font/*
+                    application/font-*
+    ~h rex      Header line in either request or response
+    ~hq rex     Header in request
+    ~hs rex     Header in response
 
-        ~b rex      Expression in the body of either request or response
-        ~bq rex     Expression in the body of request
-        ~bs rex     Expression in the body of response
-        ~t rex      Shortcut for content-type header.
+    ~b rex      Expression in the body of either request or response
+    ~bq rex     Expression in the body of request
+    ~bs rex     Expression in the body of response
+    ~t rex      Shortcut for content-type header.
 
-        ~d rex      Request domain
-        ~m rex      Method
-        ~u rex      URL
-        ~c CODE     Response code.
-        rex         Equivalent to ~u rex
+    ~d rex      Request domain
+    ~m rex      Method
+    ~u rex      URL
+    ~c CODE     Response code.
+    rex         Equivalent to ~u rex
 """
+
 import functools
 import re
 import sys
@@ -643,8 +644,7 @@ bnf = _make()
 class TFilter(Protocol):
     pattern: str
 
-    def __call__(self, f: flow.Flow) -> bool:
-        ...  # pragma: no cover
+    def __call__(self, f: flow.Flow) -> bool: ...  # pragma: no cover
 
 
 def parse(s: str) -> TFilter:

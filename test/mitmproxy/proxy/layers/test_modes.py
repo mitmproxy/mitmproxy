@@ -448,7 +448,7 @@ def test_socks5_trickle(tctx: Context):
             r"Unsupported SOCKS5 request: b'\x05\x02\x00\x01\x7f\x00\x00\x01\x124'",
         ),
         (
-            CLIENT_HELLO + b"\x05\x01\x00\xFF\x00\x00",
+            CLIENT_HELLO + b"\x05\x01\x00\xff\x00\x00",
             SERVER_HELLO + b"\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00",
             r"Unknown address type: 255",
         ),
@@ -527,7 +527,7 @@ def test_socks5_auth_success(
             b"\x05\x01\x00",
             None,
             None,
-            b"\x05\xFF\x00\x01\x00\x00\x00\x00\x00\x00",
+            b"\x05\xff\x00\x01\x00\x00\x00\x00\x00\x00",
             "Client does not support SOCKS5 with user/password authentication.",
         ),
         (

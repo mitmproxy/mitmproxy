@@ -2,7 +2,6 @@ import logging
 
 
 class DisableH2C:
-
     """
     We currently only support HTTP/2 over a TLS connection.
 
