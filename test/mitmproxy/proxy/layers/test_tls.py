@@ -665,8 +665,10 @@ class TestClientTLS:
             playbook
             >> events.DataReceived(tctx.client, tssl_client.bio_read())
             << commands.Log(
-                "Client TLS handshake failed. The client does not trust the proxy's certificate "
-                "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)",
+                tutils.StrMatching(
+                    "Client TLS handshake failed. The client does not trust the proxy's certificate "
+                    "for wrong.host.mitmproxy.org"
+                ),
                 WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)

@@ -16,6 +16,15 @@ from mitmproxy import io
 
 logger = logging.getLogger(__name__)
 
+HASH_OPTIONS = [
+    "server_replay_ignore_content",
+    "server_replay_ignore_host",
+    "server_replay_ignore_params",
+    "server_replay_ignore_payload_params",
+    "server_replay_ignore_port",
+    "server_replay_use_headers",
+]
+
 
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
@@ -30,7 +39,16 @@ class ServerPlayback:
             "server_replay_kill_extra",
             bool,
             False,
-            "Kill extra requests during replay (for which no replayable response was found).",
+            "Kill extra requests during replay (for which no replayable response was found)."
+            "[Deprecated, prefer to use server_replay_extra='kill']",
+        )
+        loader.add_option(
+            "server_replay_extra",
+            str,
+            "forward",
+            "Behaviour for extra requests during replay for which no replayable response was found. "
+            "Setting a numeric string value will return an empty HTTP response with the respective status code.",
+            choices=["forward", "kill", "204", "400", "404", "500"],
         )
         loader.add_option(
             "server_replay_reuse",
@@ -230,6 +248,11 @@ class ServerPlayback:
             return None
 
     def configure(self, updated):
+        if ctx.options.server_replay_kill_extra:
+            logger.warning(
+                "server_replay_kill_extra has been deprecated, "
+                "please update your config to use server_replay_extra='kill'."
+            )
         if ctx.options.server_replay_nopop:  # pragma: no cover
             logger.error(
                 "server_replay_nopop has been renamed to server_replay_reuse, please update your config."
@@ -241,6 +264,16 @@ class ServerPlayback:
             except exceptions.FlowReadException as e:
                 raise exceptions.OptionsError(str(e))
             self.load_flows(flows)
+        if any(option in updated for option in HASH_OPTIONS):
+            self.recompute_hashes()
+
+    def recompute_hashes(self) -> None:
+        """
+        Rebuild flowmap if the hashing method has changed during execution,
+        see https://github.com/mitmproxy/mitmproxy/issues/4506
+        """
+        flows = [flow for lst in self.flowmap.values() for flow in lst]
+        self.load_flows(flows)
 
     def request(self, f: http.HTTPFlow) -> None:
         if self.flowmap:
@@ -252,10 +285,21 @@ class ServerPlayback:
                     response.refresh()
                 f.response = response
                 f.is_replay = "response"
-            elif ctx.options.server_replay_kill_extra:
+            elif (
+                ctx.options.server_replay_kill_extra
+                or ctx.options.server_replay_extra == "kill"
+            ):
                 logging.warning(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url
                     )
                 )
                 f.kill()
+            elif ctx.options.server_replay_extra != "forward":
+                logging.warning(
+                    "server_playback: returned {} non-replay request {}".format(
+                        ctx.options.server_replay_extra, f.request.url
+                    )
+                )
+                f.response = http.Response.make(int(ctx.options.server_replay_extra))
+                f.is_replay = "response"

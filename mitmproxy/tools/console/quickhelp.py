@@ -1,6 +1,7 @@
 """
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
+
 from dataclasses import dataclass
 from typing import Union
 
@@ -73,6 +74,7 @@ def make(
                     top_items["Unmark"] = "Toggle mark on this flow"
                 else:
                     top_items["Mark"] = "Toggle mark on this flow"
+                top_items["Edit"] = "Edit a flow component"
             if focused_flow.intercepted:
                 top_items["Resume"] = "Resume this intercepted flow"
             if focused_flow.modified():

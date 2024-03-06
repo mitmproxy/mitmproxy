@@ -1,6 +1,6 @@
 """
-    A small collection of useful user-agent header strings. These should be
-    kept reasonably current to reflect common usage.
+A small collection of useful user-agent header strings. These should be
+kept reasonably current to reflect common usage.
 """
 # pylint: line-too-long
 # A collection of (name, shortcut, string) tuples.

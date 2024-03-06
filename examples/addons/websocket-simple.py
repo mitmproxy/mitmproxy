@@ -1,4 +1,5 @@
 """Process individual messages from a WebSocket connection."""
+
 import logging
 import re
 

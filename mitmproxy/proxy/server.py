@@ -6,6 +6,7 @@ The very high level overview is as follows:
     - Process any commands from layer (such as opening a server connection)
     - Wait for any IO and send it as events to top layer.
 """
+
 import abc
 import asyncio
 import collections
@@ -29,7 +30,6 @@ from mitmproxy.connection import Address
 from mitmproxy.connection import Client
 from mitmproxy.connection import Connection
 from mitmproxy.connection import ConnectionState
-from mitmproxy.net import udp
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -44,14 +44,18 @@ from mitmproxy.utils.data import pkg_data
 
 logger = logging.getLogger(__name__)
 
+TCP_TIMEOUT = 60 * 10
+UDP_TIMEOUT = 20
+
 
 class TimeoutWatchdog:
     last_activity: float
-    CONNECTION_TIMEOUT = 10 * 60
+    timeout: int
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, callback: Callable[[], Awaitable]):
+    def __init__(self, timeout: int, callback: Callable[[], Awaitable]):
+        self.timeout = timeout
         self.callback = callback
         self.last_activity = time.time()
         self.can_timeout = asyncio.Event()
@@ -65,10 +69,8 @@ class TimeoutWatchdog:
         try:
             while True:
                 await self.can_timeout.wait()
-                await asyncio.sleep(
-                    self.CONNECTION_TIMEOUT - (time.time() - self.last_activity)
-                )
-                if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
+                await asyncio.sleep(self.timeout - (time.time() - self.last_activity))
+                if self.last_activity + self.timeout < time.time():
                     await self.callback()
                     return
         except asyncio.CancelledError:
@@ -90,12 +92,8 @@ class TimeoutWatchdog:
 @dataclass
 class ConnectionIO:
     handler: asyncio.Task | None = None
-    reader: None | (
-        asyncio.StreamReader | udp.DatagramReader | mitmproxy_rs.TcpStream
-    ) = None
-    writer: None | (
-        asyncio.StreamWriter | udp.DatagramWriter | mitmproxy_rs.TcpStream
-    ) = None
+    reader: asyncio.StreamReader | mitmproxy_rs.Stream | None = None
+    writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -118,7 +116,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
         # on protocols that start with a server greeting.
         self.layer = layer.NextLayer(context, ask_on_start=True)
-        self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
+        if self.client.transport_protocol == "tcp":
+            timeout = TCP_TIMEOUT
+        else:
+            timeout = UDP_TIMEOUT
+        self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
 
         # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
         self._drain_lock = asyncio.Lock()
@@ -200,8 +202,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: asyncio.StreamReader | udp.DatagramReader
-            writer: asyncio.StreamWriter | udp.DatagramWriter
+            reader: asyncio.StreamReader | mitmproxy_rs.Stream
+            writer: asyncio.StreamWriter | mitmproxy_rs.Stream
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -210,7 +212,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
-                    reader, writer = await udp.open_connection(
+                    reader = writer = await mitmproxy_rs.open_udp_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
                     )
@@ -297,18 +299,22 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-        if cancelled is None:
+        if cancelled is None and connection.transport_protocol == "tcp":
+            # TCP connections can be half-closed.
             connection.state &= ~ConnectionState.CAN_READ
         else:
             connection.state = ConnectionState.CLOSED
 
         self.server_event(events.ConnectionClosed(connection))
 
-        if cancelled is None and connection.state is ConnectionState.CAN_WRITE:
+        if connection.state is ConnectionState.CAN_WRITE:
             # we may still use this connection to *send* stuff,
             # even though the remote has closed their side of the connection.
             # to make this work we keep this task running and wait for cancellation.
-            await asyncio.Event().wait()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError as e:
+                cancelled = e
 
         try:
             writer = self.transports[connection].writer
@@ -336,10 +342,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                             transport.handler.cancel(f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
-        self.log(f"Closing connection due to inactivity: {self.client}")
-        handler = self.transports[self.client].handler
-        assert handler
-        handler.cancel("timeout")
+        try:
+            handler = self.transports[self.client].handler
+        except KeyError:  # pragma: no cover
+            # there is a super short window between connection close and watchdog cancellation
+            pass
+        else:
+            if self.client.transport_protocol == "tcp":
+                self.log(f"Closing connection due to inactivity: {self.client}")
+            assert handler
+            handler.cancel("timeout")
 
     async def hook_task(self, hook: commands.StartHook) -> None:
         await self.handle_hook(hook)
@@ -442,23 +454,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: asyncio.StreamReader | mitmproxy_rs.TcpStream,
-        writer: asyncio.StreamWriter | mitmproxy_rs.TcpStream,
+        reader: asyncio.StreamReader | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
         options: moptions.Options,
         mode: mode_specs.ProxyMode,
     ) -> None:
-        # mitigate impact of https://github.com/mitmproxy/mitmproxy/issues/6204:
-        # For UDP, we don't get an accurate sockname from the transport when binding to all interfaces,
-        # however we would later need that to generate matching certificates.
-        # Until this is fixed properly, we can at least make the localhost case work.
-        sockname = writer.get_extra_info("sockname")
-        if sockname == "::":
-            sockname = "::1"
-        elif sockname == "0.0.0.0":
-            sockname = "127.0.0.1"
         client = Client(
+            transport_protocol=writer.get_extra_info("transport_protocol", "tcp"),
             peername=writer.get_extra_info("peername"),
-            sockname=sockname,
+            sockname=writer.get_extra_info("sockname"),
             timestamp_start=time.time(),
             proxy_mode=mode,
             state=ConnectionState.OPEN,

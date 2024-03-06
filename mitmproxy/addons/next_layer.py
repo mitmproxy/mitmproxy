@@ -14,6 +14,7 @@ Sometimes it's useful to hardcode specific logic in next_layer when one wants to
 In that case it's not necessary to modify mitmproxy's source, adding a custom addon with a next_layer event hook
 that sets nextlayer.layer works just as well.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,6 @@ from typing import cast
 
 from mitmproxy import ctx
 from mitmproxy import dns
-from mitmproxy import exceptions
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import layer
@@ -49,6 +49,7 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
+from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
@@ -92,10 +93,6 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.udp_hosts
             ]
         if "allow_hosts" in updated or "ignore_hosts" in updated:
-            if ctx.options.allow_hosts and ctx.options.ignore_hosts:
-                raise exceptions.OptionsError(
-                    "The allow_hosts and ignore_hosts options are mutually exclusive."
-                )
             self.ignore_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.ignore_hosts
             ]
@@ -129,7 +126,7 @@ class NextLayer:
         udp_based = context.client.transport_protocol == "udp"
 
         # 1)  check for --ignore/--allow
-        if self._ignore_connection(context, data_client):
+        if self._ignore_connection(context, data_client, data_server):
             return (
                 layers.TCPLayer(context, ignore=True)
                 if tcp_based
@@ -182,7 +179,7 @@ class NextLayer:
         if udp_based:
             return layers.UDPLayer(context)
         # 5b) Check for raw tcp mode.
-        very_likely_http = context.client.alpn and context.client.alpn in HTTP_ALPNS
+        very_likely_http = context.client.alpn in HTTP_ALPNS
         probably_no_http = not very_likely_http and (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
@@ -199,6 +196,7 @@ class NextLayer:
         self,
         context: Context,
         data_client: bytes,
+        data_server: bytes,
     ) -> bool | None:
         """
         Returns:
@@ -210,38 +208,90 @@ class NextLayer:
         """
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
-
+        # Special handling for wireguard mode: if the hostname is "10.0.0.53", do not ignore the connection
+        if isinstance(
+            context.client.proxy_mode, mode_specs.WireGuardMode
+        ) and context.server.address == ("10.0.0.53", 53):
+            return False
         hostnames: list[str] = []
-        if context.server.peername and (peername := context.server.peername[0]):
-            hostnames.append(peername)
-        if context.server.address and (server_address := context.server.address[0]):
-            hostnames.append(server_address)
-        if (
-            client_hello := self._get_client_hello(context, data_client)
-        ) and client_hello.sni:
-            hostnames.append(client_hello.sni)
+        if context.server.peername:
+            host, port, *_ = context.server.peername
+            hostnames.append(f"{host}:{port}")
+        if context.server.address:
+            host, port, *_ = context.server.address
+            hostnames.append(f"{host}:{port}")
+
+            # We also want to check for TLS SNI and HTTP host headers, but in order to ignore connections based on that
+            # they must have a destination address. If they don't, we don't know how to establish an upstream connection
+            # if we ignore.
+            if host_header := self._get_host_header(context, data_client, data_server):
+                if not re.search(r":\d+$", host_header):
+                    host_header = f"{host_header}:{port}"
+                hostnames.append(host_header)
+            if (
+                client_hello := self._get_client_hello(context, data_client)
+            ) and client_hello.sni:
+                hostnames.append(f"{client_hello.sni}:{port}")
 
         if not hostnames:
             return False
 
-        if ctx.options.ignore_hosts:
-            return any(
-                re.search(rex, host, re.IGNORECASE)
-                for host in hostnames
-                for rex in ctx.options.ignore_hosts
-            )
-        elif ctx.options.allow_hosts:
-            return not any(
+        if ctx.options.allow_hosts:
+            not_allowed = not any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
-        else:  # pragma: no cover
-            raise AssertionError()
+            if not_allowed:
+                return True
 
-    def _get_client_hello(
-        self, context: Context, data_client: bytes
-    ) -> ClientHello | None:
+        if ctx.options.ignore_hosts:
+            ignored = any(
+                re.search(rex, host, re.IGNORECASE)
+                for host in hostnames
+                for rex in ctx.options.ignore_hosts
+            )
+            if ignored:
+                return True
+
+        return False
+
+    @staticmethod
+    def _get_host_header(
+        context: Context,
+        data_client: bytes,
+        data_server: bytes,
+    ) -> str | None:
+        """
+        Try to read a host header from data_client.
+
+        Returns:
+            The host header value, or None, if no host header was found.
+
+        Raises:
+            NeedsMoreData, if the HTTP request is incomplete.
+        """
+        if context.client.transport_protocol != "tcp" or data_server:
+            return None
+
+        host_header_expected = context.client.alpn in HTTP1_ALPNS or re.match(
+            rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
+        )
+        if host_header_expected:
+            if m := re.search(
+                rb"\r\n(?:Host:\s+(.+?)\s*)?\r\n", data_client, re.IGNORECASE
+            ):
+                if host := m.group(1):
+                    return host.decode("utf-8", "surrogateescape")
+                else:
+                    return None  # \r\n\r\n - header end came first.
+            else:
+                raise NeedsMoreData
+        else:
+            return None
+
+    @staticmethod
+    def _get_client_hello(context: Context, data_client: bytes) -> ClientHello | None:
         """
         Try to read a TLS/DTLS/QUIC ClientHello from data_client.
 
@@ -281,7 +331,8 @@ class NextLayer:
             case _:  # pragma: no cover
                 assert_never(context.client.transport_protocol)
 
-    def _setup_reverse_proxy(self, context: Context, data_client: bytes) -> Layer:
+    @staticmethod
+    def _setup_reverse_proxy(context: Context, data_client: bytes) -> Layer:
         spec = cast(mode_specs.ReverseMode, context.client.proxy_mode)
         stack = tunnel.LayerStack()
 
@@ -341,7 +392,8 @@ class NextLayer:
 
         return stack[0]
 
-    def _setup_explicit_http_proxy(self, context: Context, data_client: bytes) -> Layer:
+    @staticmethod
+    def _setup_explicit_http_proxy(context: Context, data_client: bytes) -> Layer:
         stack = tunnel.LayerStack()
 
         if context.client.transport_protocol == "udp":
@@ -356,9 +408,8 @@ class NextLayer:
 
         return stack[0]
 
-    def _is_destination_in_hosts(
-        self, context: Context, hosts: Iterable[re.Pattern]
-    ) -> bool:
+    @staticmethod
+    def _is_destination_in_hosts(context: Context, hosts: Iterable[re.Pattern]) -> bool:
         return any(
             (context.server.address and rex.search(context.server.address[0]))
             or (context.client.sni and rex.search(context.client.sni))

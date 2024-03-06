@@ -15,9 +15,7 @@ mitmproxy's interception mechanism:
   and mitmproxy's interception leads to errors. For example, the Twitter app,
   Windows Update or the Apple App Store fail to work if mitmproxy is active.
 - **Convenience:** You really don't care about some parts of the traffic and
-  just want them to go away. Note that mitmproxy's "Limit" option is often the
-  better alternative here, as it is not affected by the limitations listed
-  below.
+  just want them to go away. Note that mitmproxy's [view_filter]({{< relref "concepts-options/#view_filter" >}}) option is often the better alternative here, as it is not affected by the limitations listed below.
 
 If you want to peek into (SSL-protected) non-HTTP connections, check out the
 **tcp_proxy** feature. If you want to ignore traffic from mitmproxy's processing

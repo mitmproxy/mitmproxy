@@ -196,8 +196,8 @@ def test_reverse_dns(tctx):
 def test_quic(tctx: Context, keep_host_header: bool):
     with taddons.context():
         tctx.options.keep_host_header = keep_host_header
-        tctx.server.sni = "other"
-        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://1.2.3.4:5")
+        tctx.server.sni = "other.example.com"
+        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://example.org:443")
         client_hello = Placeholder(bytes)
 
         def set_settings(data: quic.QuicTlsData):
@@ -215,9 +215,9 @@ def test_quic(tctx: Context, keep_host_header: bool):
             << SendData(tctx.server, client_hello)
             << RequestWakeup(Placeholder(float))
         )
-        assert tctx.server.address == ("1.2.3.4", 5)
+        assert tctx.server.address == ("example.org", 443)
         assert quic.quic_parse_client_hello(client_hello()).sni == (
-            "other" if keep_host_header else "1.2.3.4"
+            "other.example.com" if keep_host_header else "example.org"
         )
 
 
@@ -448,7 +448,7 @@ def test_socks5_trickle(tctx: Context):
             r"Unsupported SOCKS5 request: b'\x05\x02\x00\x01\x7f\x00\x00\x01\x124'",
         ),
         (
-            CLIENT_HELLO + b"\x05\x01\x00\xFF\x00\x00",
+            CLIENT_HELLO + b"\x05\x01\x00\xff\x00\x00",
             SERVER_HELLO + b"\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00",
             r"Unknown address type: 255",
         ),
@@ -527,7 +527,7 @@ def test_socks5_auth_success(
             b"\x05\x01\x00",
             None,
             None,
-            b"\x05\xFF\x00\x01\x00\x00\x00\x00\x00\x00",
+            b"\x05\xff\x00\x01\x00\x00\x00\x00\x00\x00",
             "Client does not support SOCKS5 with user/password authentication.",
         ),
         (

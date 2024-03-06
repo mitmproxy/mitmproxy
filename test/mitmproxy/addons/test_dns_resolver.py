@@ -41,18 +41,18 @@ class DummyLoop:
         e.errno = socket.EAI_NONAME
         raise e
 
-    async def getaddrinfo(self, host: str, port: int, *, family: int):
+    async def getaddrinfo(self, host: str, port: int, *, family: int, type: int):
         e = socket.gaierror()
         e.errno = socket.EAI_NONAME
         if family == socket.AF_INET:
             if host == "dns.google":
-                return [(socket.AF_INET, None, None, None, ("8.8.8.8", port))]
+                return [(socket.AF_INET, type, None, None, ("8.8.8.8", port))]
         elif family == socket.AF_INET6:
             if host == "dns.google":
                 return [
                     (
                         socket.AF_INET6,
-                        None,
+                        type,
                         None,
                         None,
                         ("2001:4860:4860::8888", port, None, None),

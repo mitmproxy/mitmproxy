@@ -4,87 +4,155 @@ import renderer from "react-test-renderer";
 import Splitter from "../../../components/common/Splitter";
 import TestUtils from "react-dom/test-utils";
 
-describe("Splitter Component", () => {
-    it("should render correctly", () => {
-        let splitter = renderer.create(<Splitter />),
+describe.each([
+    ["", ""],
+    ["x", "X"],
+    ["y", "Y"],
+])("Splitter Component", (axisLower, axisUpper) => {
+    if (axisLower === "") {
+        it("should render correctly with default (x) axis", () => {
+            const splitter = renderer.create(<Splitter />),
+                tree = splitter.toJSON();
+            expect(tree).toMatchInlineSnapshot(`
+<div
+  className="splitter splitter-x"
+>
+  <div
+    onLostPointerCapture={[Function]}
+    onPointerDown={[Function]}
+    onPointerMove={[Function]}
+  />
+</div>
+`);
+        });
+        return;
+    }
+
+    it("should render correctly with specified axis", () => {
+        const splitter = renderer.create(<Splitter axis={axisLower} />),
             tree = splitter.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(tree).toMatchInlineSnapshot(`
+<div
+  className="splitter splitter-${axisLower}"
+>
+  <div
+    onLostPointerCapture={[Function]}
+    onPointerDown={[Function]}
+    onPointerMove={[Function]}
+  />
+</div>
+`);
     });
 
-    let splitter = TestUtils.renderIntoDocument(<Splitter />),
+    const splitter = TestUtils.renderIntoDocument(
+            <Splitter axis={axisLower} />
+        ),
         dom = ReactDOM.findDOMNode(splitter),
         previousElementSibling = {
-            offsetHeight: 0,
-            offsetWidth: 0,
+            offsetWidth: 300,
+            offsetHeight: 500,
             style: { flex: "" },
         },
         nextElementSibling = {
             style: { flex: "" },
         };
 
-    it("should handle mouseDown ", () => {
-        window.addEventListener = jest.fn();
-        splitter.onMouseDown({ pageX: 1, pageY: 2 });
-        expect(splitter.state.startX).toEqual(1);
-        expect(splitter.state.startY).toEqual(2);
-        expect(window.addEventListener).toBeCalledWith(
-            "mousemove",
-            splitter.onMouseMove
-        );
-        expect(window.addEventListener).toBeCalledWith(
-            "mouseup",
-            splitter.onMouseUp
-        );
-        expect(window.addEventListener).toBeCalledWith(
-            "dragend",
-            splitter.onDragEnd
+    Object.defineProperties(dom, {
+        previousElementSibling: { value: previousElementSibling },
+        nextElementSibling: { value: nextElementSibling },
+    });
+    dom.firstElementChild.setPointerCapture = jest.fn();
+
+    it("should handle pointerdown", () => {
+        const e = {
+            pageX: 13,
+            pageY: 22,
+            pointerId: -4618,
+            target: dom.firstElementChild,
+        };
+        expect(splitter.state.dragPointer).toEqual(0.1);
+        splitter.onPointerDown(e);
+        expect(e.target.setPointerCapture).toBeCalledWith(-4618);
+        expect(splitter.state.dragPointer).toEqual(-4618);
+        expect(splitter.state.startPos).toEqual(e[`page${axisUpper}`]);
+    });
+
+    it("should handle pointermove", () => {
+        const e = {
+            pageX: 62,
+            pageY: 21,
+            pointerId: -4618,
+            target: dom.firstElementChild,
+        };
+        splitter.onPointerMove(e);
+        expect(dom.style.transform).toEqual(
+            axisLower === "x"
+                ? `translateX(${62 - 13}px)`
+                : `translateY(${21 - 22}px)`
         );
     });
 
-    it("should handle dragEnd", () => {
-        window.removeEventListener = jest.fn();
-        splitter.onDragEnd();
+    it("should handle lostpointercapture", () => {
+        const e = {
+            pageX: 56,
+            pageY: 82,
+            pointerId: -4618,
+            target: dom.firstElementChild,
+        };
+        splitter.onLostPointerCapture(e);
+        expect(splitter.state.dragPointer).toEqual(0.1);
         expect(dom.style.transform).toEqual("");
-        expect(window.removeEventListener).toBeCalledWith(
-            "dragend",
-            splitter.onDragEnd
+        expect(previousElementSibling.style.flex).toEqual(
+            `0 0 ${axisLower === "x" ? 300 + 56 - 13 : 500 + 82 - 22}px`
         );
-        expect(window.removeEventListener).toBeCalledWith(
-            "mouseup",
-            splitter.onMouseUp
-        );
-        expect(window.removeEventListener).toBeCalledWith(
-            "mousemove",
-            splitter.onMouseMove
-        );
-    });
-
-    it("should handle mouseUp", () => {
-        Object.defineProperty(dom, "previousElementSibling", {
-            value: previousElementSibling,
-        });
-        Object.defineProperty(dom, "nextElementSibling", {
-            value: nextElementSibling,
-        });
-        splitter.onMouseUp({ pageX: 3, pageY: 4 });
-        expect(splitter.state.applied).toBeTruthy();
         expect(nextElementSibling.style.flex).toEqual("1 1 auto");
-        expect(previousElementSibling.style.flex).toEqual("0 0 2px");
     });
 
-    it("should handle mouseMove", () => {
-        splitter.onMouseMove({ pageX: 10, pageY: 10 });
-        expect(dom.style.transform).toEqual("translate(9px, 0px)");
+    it("should not resize previousElementSibling negative", () => {
+        const e = {
+            pageX: 56,
+            pageY: 82,
+            pointerId: 47,
+            target: dom.firstElementChild,
+        };
+        splitter.onPointerDown(e);
+        e[`page${axisUpper}`] = -1234;
+        splitter.onLostPointerCapture(e);
+        expect(previousElementSibling.style.flex).toEqual("0 0 0px");
+    });
 
-        let splitterY = TestUtils.renderIntoDocument(<Splitter axis="y" />);
-        splitterY.onMouseMove({ pageX: 10, pageY: 10 });
-        expect(ReactDOM.findDOMNode(splitterY).style.transform).toEqual(
-            "translate(0px, 10px)"
+    it("should ignore other pointers", () => {
+        splitter.onPointerDown({
+            pageX: 70,
+            pageY: 60,
+            pointerId: 47,
+            target: dom.firstElementChild,
+        });
+        splitter.onPointerDown({
+            pageX: 70,
+            pageY: 60,
+            pointerId: 46,
+            target: dom.firstElementChild,
+        });
+        expect(splitter.state.dragPointer).toEqual(47);
+        splitter.onPointerMove({ pageX: 75, pageY: 55, pointerId: 46 });
+        expect(dom.style.transform).toEqual("");
+        splitter.onPointerMove({
+            pageX: 74,
+            pageY: 54,
+            pointerId: 47,
+            target: dom.firstElementChild,
+        });
+        splitter.onLostPointerCapture({ pageX: 76, pageY: 56, pointerId: 46 });
+        expect(dom.style.transform).toEqual(
+            axisLower === "x"
+                ? `translateX(${74 - 70}px)`
+                : `translateY(${54 - 60}px)`
         );
     });
 
     it("should handle resize", () => {
-        let x = jest.spyOn(window, "setTimeout");
+        const x = jest.spyOn(window, "setTimeout");
         splitter.onResize();
         expect(x).toHaveBeenCalled();
     });
@@ -99,7 +167,6 @@ describe("Splitter Component", () => {
     it("should handle reset", () => {
         splitter.reset(false);
         expect(splitter.state.applied).toBeFalsy();
-
         expect(splitter.reset(true)).toEqual(undefined);
     });
 });

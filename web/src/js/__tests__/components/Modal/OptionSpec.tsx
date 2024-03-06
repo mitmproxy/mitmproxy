@@ -97,6 +97,6 @@ describe("StringOption Component", () => {
     it("should handle onChange", () => {
         let mockEvent = { target: { value: "a\nb\nc\n" } };
         tree.props.onChange(mockEvent);
-        expect(onChangeFn).toBeCalledWith(["a", "b", "c", ""]);
+        expect(onChangeFn).toBeCalledWith(["a", "b", "c"]);
     });
 });

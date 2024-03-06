@@ -1,6 +1,7 @@
 """
 Base class for protocol layers.
 """
+
 import collections
 import textwrap
 from abc import abstractmethod

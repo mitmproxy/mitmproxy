@@ -1,4 +1,5 @@
 """Handle file paths as command arguments."""
+
 import logging
 from collections.abc import Sequence
 

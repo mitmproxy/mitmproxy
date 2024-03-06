@@ -101,7 +101,7 @@
             "headers": [
                 [
                     "Content-Type",
-                    "text/html; charset=utf-8"
+                    "text/html"
                 ],
                 [
                     "Last-Modified",
@@ -150,10 +150,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "4946"
                 ]
             ],
             "contentLength": 4946,
@@ -282,10 +278,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "36819"
                 ]
             ],
             "contentLength": 36819,
@@ -926,10 +918,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "5167"
                 ]
             ],
             "contentLength": 5167,
@@ -1058,10 +1046,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -1190,10 +1174,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "794"
                 ]
             ],
             "contentLength": 794,
@@ -1334,10 +1314,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -1478,10 +1454,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -1622,10 +1594,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -1766,10 +1734,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3346"
                 ]
             ],
             "contentLength": 3346,
@@ -2282,10 +2246,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "3969"
                 ]
             ],
             "contentLength": 3969,
@@ -2596,10 +2556,6 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
-                ],
-                [
-                    "content-length",
-                    "1421"
                 ]
             ],
             "contentLength": 1421,

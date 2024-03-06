@@ -5,7 +5,6 @@ from mitmproxy.addons import dumper
 from mitmproxy.addons import errorcheck
 from mitmproxy.addons import keepserving
 from mitmproxy.addons import readfile
-from mitmproxy.addons import termlog
 
 
 class DumpMaster(master.Master):
@@ -16,9 +15,7 @@ class DumpMaster(master.Master):
         with_termlog=True,
         with_dumper=True,
     ) -> None:
-        super().__init__(options, event_loop=loop)
-        if with_termlog:
-            self.addons.add(termlog.TermLog())
+        super().__init__(options, event_loop=loop, with_termlog=with_termlog)
         self.addons.add(*addons.default_addons())
         if with_dumper:
             self.addons.add(dumper.Dumper())

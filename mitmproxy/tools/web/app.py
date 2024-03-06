@@ -50,7 +50,7 @@ def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
         "serial": str(cert.serial),
         "subject": cert.subject,
         "issuer": cert.issuer,
-        "altnames": cert.altnames,
+        "altnames": [str(x.value) for x in cert.altnames],
     }
 
 

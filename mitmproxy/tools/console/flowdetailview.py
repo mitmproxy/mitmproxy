@@ -80,7 +80,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             ]
 
             if c.altnames:
-                parts.append(("Alt names", ", ".join(c.altnames)))
+                parts.append(("Alt names", ", ".join(str(x.value) for x in c.altnames)))
             text.extend(common.format_keyvals(parts, indent=4))
 
     if cc is not None:

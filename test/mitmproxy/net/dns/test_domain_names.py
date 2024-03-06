@@ -8,7 +8,7 @@ from mitmproxy.net.dns import domain_names
 
 def test_unpack_from_with_compression():
     assert domain_names.unpack_from_with_compression(
-        b"\xFF\x03www\x07example\x03org\x00", 1, domain_names.cache()
+        b"\xff\x03www\x07example\x03org\x00", 1, domain_names.cache()
     ) == (
         "www.example.org",
         17,
@@ -20,7 +20,7 @@ def test_unpack_from_with_compression():
             b"\x03www\xc0\x00", 0, domain_names.cache()
         )
     assert domain_names.unpack_from_with_compression(
-        b"\xFF\xFF\xFF\x07example\x03org\x00\xFF\xFF\xFF\x03www\xc0\x03",
+        b"\xff\xff\xff\x07example\x03org\x00\xff\xff\xff\x03www\xc0\x03",
         19,
         domain_names.cache(),
     ) == ("www.example.org", 6)
@@ -31,7 +31,7 @@ def test_unpack():
     with pytest.raises(
         struct.error, match=re.escape("unpack requires a buffer of 17 bytes")
     ):
-        domain_names.unpack(b"\x03www\x07example\x03org\x00\xFF")
+        domain_names.unpack(b"\x03www\x07example\x03org\x00\xff")
     with pytest.raises(
         struct.error,
         match=re.escape("unpack encountered a pointer which is not supported in RDATA"),

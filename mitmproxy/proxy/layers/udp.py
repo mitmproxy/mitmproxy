@@ -119,13 +119,11 @@ class UDPLayer(layer.Layer):
                 yield commands.SendData(send_to, event.data)
 
         elif isinstance(event, events.ConnectionClosed):
-            if send_to.connected:
-                yield commands.CloseConnection(send_to)
-            else:
-                self._handle_event = self.done
-                if self.flow:
-                    yield UdpEndHook(self.flow)
-                    self.flow.live = False
+            self._handle_event = self.done
+            yield commands.CloseConnection(send_to)
+            if self.flow:
+                yield UdpEndHook(self.flow)
+                self.flow.live = False
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

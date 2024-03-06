@@ -42,7 +42,7 @@ class TestJSONDump:
         with taddons.context() as tctx:
             a = tctx.script(example_dir.path("complex/jsondump.py"))
             path = str(tmpdir.join("jsondump.out"))
-            content = b"foo" + b"\xFF" * 10
+            content = b"foo" + b"\xff" * 10
             tctx.configure(a, dump_destination=path, dump_encodecontent=True)
 
             tctx.invoke(a, "response", self.flow(resp_content=content))

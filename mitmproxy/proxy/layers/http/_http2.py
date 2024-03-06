@@ -604,7 +604,7 @@ class Http2Client(Http2Connection):
 
 
 def split_pseudo_headers(
-    h2_headers: Sequence[tuple[bytes, bytes]]
+    h2_headers: Sequence[tuple[bytes, bytes]],
 ) -> tuple[dict[bytes, bytes], http.Headers]:
     pseudo_headers: dict[bytes, bytes] = {}
     i = 0
@@ -624,7 +624,7 @@ def split_pseudo_headers(
 
 
 def parse_h2_request_headers(
-    h2_headers: Sequence[tuple[bytes, bytes]]
+    h2_headers: Sequence[tuple[bytes, bytes]],
 ) -> tuple[str, int, bytes, bytes, bytes, bytes, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
@@ -654,7 +654,7 @@ def parse_h2_request_headers(
 
 
 def parse_h2_response_headers(
-    h2_headers: Sequence[tuple[bytes, bytes]]
+    h2_headers: Sequence[tuple[bytes, bytes]],
 ) -> tuple[int, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)

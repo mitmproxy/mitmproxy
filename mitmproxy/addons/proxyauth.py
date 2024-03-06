@@ -25,9 +25,9 @@ class ProxyAuth:
     validator: Validator | None = None
 
     def __init__(self) -> None:
-        self.authenticated: MutableMapping[
-            connection.Client, tuple[str, str]
-        ] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[connection.Client, tuple[str, str]] = (
+            weakref.WeakKeyDictionary()
+        )
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):

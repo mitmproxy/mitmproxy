@@ -1,6 +1,5 @@
 import asyncio
 import platform
-from typing import cast
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
@@ -10,8 +9,6 @@ import pytest
 
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.net import udp
-from mitmproxy.proxy.mode_servers import DnsInstance
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
@@ -263,12 +260,13 @@ async def test_udp_start_stop(caplog_async):
         assert await caplog_async.await_log("server listening")
 
         host, port, *_ = inst.listen_addrs[0]
-        reader, writer = await udp.open_connection(host, port)
+        stream = await mitmproxy_rs.open_udp_connection(host, port)
 
-        writer.write(b"\x00\x00\x01")
+        stream.write(b"\x00\x00\x01")
         assert await caplog_async.await_log("sent an invalid message")
 
-        writer.close()
+        stream.close()
+        await stream.wait_closed()
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
@@ -283,30 +281,10 @@ async def test_udp_start_error():
         port = inst.listen_addrs[0][1]
         inst2 = ServerInstance.make(f"dns@127.0.0.1:{port}", manager)
         with pytest.raises(
-            OSError, match=f"server failed to listen on 127\\.0\\.0\\.1:{port}"
+            Exception, match=f"Failed to bind UDP socket to 127.0.0.1:{port}"
         ):
             await inst2.start()
         await inst.stop()
-
-
-async def test_udp_connection_reuse(monkeypatch):
-    manager = MagicMock()
-    manager.connections = {}
-
-    monkeypatch.setattr(udp, "DatagramWriter", MagicMock())
-    monkeypatch.setattr(DnsInstance, "handle_udp_connection", AsyncMock())
-
-    with taddons.context():
-        inst = cast(DnsInstance, ServerInstance.make("dns", manager))
-        inst.handle_udp_datagram(
-            MagicMock(), b"\x00\x00\x01", ("remoteaddr", 0), ("localaddr", 0)
-        )
-        inst.handle_udp_datagram(
-            MagicMock(), b"\x00\x00\x02", ("remoteaddr", 0), ("localaddr", 0)
-        )
-        await asyncio.sleep(0)
-
-        assert len(inst.manager.connections) == 1
 
 
 async def test_udp_dual_stack(caplog_async):
@@ -320,17 +298,19 @@ async def test_udp_dual_stack(caplog_async):
         assert await caplog_async.await_log("server listening")
 
         _, port, *_ = inst.listen_addrs[0]
-        reader, writer = await udp.open_connection("127.0.0.1", port)
-        writer.write(b"\x00\x00\x01")
+        stream = await mitmproxy_rs.open_udp_connection("127.0.0.1", port)
+        stream.write(b"\x00\x00\x01")
         assert await caplog_async.await_log("sent an invalid message")
-        writer.close()
+        stream.close()
+        await stream.wait_closed()
 
         if "listening on IPv4 only" not in caplog_async.caplog.text:
             caplog_async.clear()
-            reader, writer = await udp.open_connection("::1", port)
-            writer.write(b"\x00\x00\x01")
+            stream = await mitmproxy_rs.open_udp_connection("::1", port)
+            stream.write(b"\x00\x00\x01")
             assert await caplog_async.await_log("sent an invalid message")
-            writer.close()
+            stream.close()
+            await stream.wait_closed()
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
@@ -338,7 +318,7 @@ async def test_udp_dual_stack(caplog_async):
 
 @pytest.fixture()
 def patched_local_redirector(monkeypatch):
-    start_local_redirector = AsyncMock()
+    start_local_redirector = AsyncMock(return_value=Mock())
     monkeypatch.setattr(mitmproxy_rs, "start_local_redirector", start_local_redirector)
     # make sure _server and _instance are restored after this test
     monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
@@ -396,19 +376,15 @@ async def test_always_uses_current_instance(patched_local_redirector, monkeypatc
     manager = MagicMock()
 
     with taddons.context():
-        inst1 = ServerInstance.make(f"local:curl", manager)
+        inst1 = LocalRedirectorInstance.make(f"local:curl", manager)
         await inst1.start()
         await inst1.stop()
 
-        handle_tcp, handle_udp = patched_local_redirector.await_args[0]
+        handle_stream, _ = patched_local_redirector.await_args[0]
 
-        inst2 = ServerInstance.make(f"local:wget", manager)
+        inst2 = LocalRedirectorInstance.make(f"local:wget", manager)
         await inst2.start()
 
-        monkeypatch.setattr(inst2, "handle_tcp_connection", h_tcp := AsyncMock())
-        await handle_tcp(Mock())
-        assert h_tcp.await_count
-
-        monkeypatch.setattr(inst2, "handle_udp_datagram", h_udp := Mock())
-        handle_udp(Mock(), b"", ("", 0), ("", 0))
-        assert h_udp.called
+        monkeypatch.setattr(inst2, "handle_stream", handler := AsyncMock())
+        await handle_stream(Mock())
+        assert handler.await_count
