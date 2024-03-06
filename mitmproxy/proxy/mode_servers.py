@@ -9,6 +9,7 @@ Example:
     await inst.start()
     # TCP server is running now.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -84,8 +85,7 @@ class ServerManager(typing.Protocol):
     @contextmanager
     def register_connection(
         self, connection_id: tuple | str, handler: ProxyConnectionHandler
-    ):
-        ...  # pragma: no cover
+    ): ...  # pragma: no cover
 
 
 class ServerInstance(Generic[M], metaclass=ABCMeta):

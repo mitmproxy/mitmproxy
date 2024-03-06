@@ -11,6 +11,7 @@ Thus, the View API is very minimalistic. The only arguments are `data` and
 metadata depend on the protocol in use. Known attributes can be found in
 `base.View`.
 """
+
 import traceback
 
 from ..tcp import TCPMessage
@@ -50,8 +51,7 @@ from mitmproxy.utils import strutils
 views: list[View] = []
 
 
-def _update(view: View) -> None:
-    ...
+def _update(view: View) -> None: ...
 
 
 on_add = signals.SyncSignal(_update)

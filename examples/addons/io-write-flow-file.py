@@ -7,6 +7,7 @@ In contrast to `-w`, this gives you full control over which
 flows should be saved and also allows you to rotate files or log
 to multiple files in parallel.
 """
+
 import random
 import sys
 from typing import BinaryIO

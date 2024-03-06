@@ -8,6 +8,7 @@ Usage:
     and then send a HTTP request to trigger the shutdown:
     curl --proxy localhost:8080 http://example.com/path
 """
+
 import logging
 
 from mitmproxy import ctx

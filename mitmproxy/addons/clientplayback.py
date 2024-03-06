@@ -48,9 +48,9 @@ class MockServer(layers.http.HttpConnection):
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
             content = self.flow.request.raw_content
-            self.flow.request.timestamp_start = (
-                self.flow.request.timestamp_end
-            ) = time.time()
+            self.flow.request.timestamp_start = self.flow.request.timestamp_end = (
+                time.time()
+            )
             yield layers.http.ReceiveHttp(
                 layers.http.RequestHeaders(
                     1,

@@ -4,6 +4,7 @@ For example, this functionality can be helpful if mitmproxy is used in between a
 Without this script, if the web application under test crashes, mitmproxy will send 502 Bad Gateway responses.
 These responses are irritating the web application scanner since they obfuscate the actual problem.
 """
+
 from mitmproxy import http
 from mitmproxy.exceptions import HttpSyntaxException
 

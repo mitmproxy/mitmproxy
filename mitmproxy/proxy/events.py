@@ -3,6 +3,7 @@ When IO actions occur at the proxy server, they are passed down to layers as eve
 Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
+
 import typing
 import warnings
 from dataclasses import dataclass

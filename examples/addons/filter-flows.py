@@ -1,6 +1,7 @@
 """
 Use mitmproxy's filter pattern in scripts.
 """
+
 from __future__ import annotations
 
 import logging

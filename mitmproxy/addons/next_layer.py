@@ -14,6 +14,7 @@ Sometimes it's useful to hardcode specific logic in next_layer when one wants to
 In that case it's not necessary to modify mitmproxy's source, adding a custom addon with a next_layer event hook
 that sets nextlayer.layer works just as well.
 """
+
 from __future__ import annotations
 
 import logging

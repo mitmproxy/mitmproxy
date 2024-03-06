@@ -1,4 +1,5 @@
 """Write flow objects to a HAR file"""
+
 import base64
 import json
 import logging
