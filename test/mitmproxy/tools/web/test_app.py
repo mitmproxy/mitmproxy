@@ -308,7 +308,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "resp",
             },
             "marked": ":red_circle:",
-            "comment": "I'm a modified comment!"
+            "comment": "I'm a modified comment!",
         }
         assert self.put_json("/flows/42", upd).code == 200
         assert f.request.method == "PATCH"
