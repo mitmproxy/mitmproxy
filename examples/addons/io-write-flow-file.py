@@ -8,8 +8,8 @@ flows should be saved and also allows you to rotate files or log
 to multiple files in parallel.
 """
 
+import os
 import random
-import sys
 from typing import BinaryIO
 
 from mitmproxy import http
@@ -17,8 +17,11 @@ from mitmproxy import io
 
 
 class Writer:
-    def __init__(self, path: str) -> None:
-        self.f: BinaryIO = open(path, "wb")
+    def __init__(self) -> None:
+        # We are using an environment variable to keep the example as simple as possible,
+        # consider implementing this as a mitmproxy option instead.
+        filename = os.getenv("MITMPROXY_OUTFILE", "out.mitm")
+        self.f: BinaryIO = open(filename, "wb")
         self.w = io.FlowWriter(self.f)
 
     def response(self, flow: http.HTTPFlow) -> None:
@@ -29,4 +32,4 @@ class Writer:
         self.f.close()
 
 
-addons = [Writer(sys.argv[1])]
+addons = [Writer()]
