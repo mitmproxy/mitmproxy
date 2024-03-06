@@ -1,6 +1,7 @@
 """
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
+
 from dataclasses import dataclass
 from typing import Union
 

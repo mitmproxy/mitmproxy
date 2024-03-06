@@ -1,6 +1,7 @@
 """
 This module provides a method to detect if a given file object supports virtual terminal escape codes.
 """
+
 import os
 import sys
 from typing import IO

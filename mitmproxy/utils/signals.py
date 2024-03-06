@@ -7,6 +7,7 @@ This is similar to the Blinker library (https://pypi.org/project/blinker/), with
   - supports type hints
   - supports async receivers.
 """
+
 from __future__ import annotations
 
 import asyncio

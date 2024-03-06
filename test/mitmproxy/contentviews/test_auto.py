@@ -46,7 +46,7 @@ def test_view_auto():
     )
     assert f[0] == "Unknown Image"
 
-    f = v(b"\xFF" * 30)
+    f = v(b"\xff" * 30)
     assert f[0] == "Hexdump"
 
     f = v(

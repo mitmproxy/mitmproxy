@@ -8,6 +8,7 @@ The View:
 - Exposes a settings store for flows that automatically expires if the flow is
   removed from the store.
 """
+
 import collections
 import logging
 import re
@@ -136,20 +137,18 @@ orders = [
 ]
 
 
-def _signal_with_flow(flow: mitmproxy.flow.Flow) -> None:
-    ...
+def _signal_with_flow(flow: mitmproxy.flow.Flow) -> None: ...
 
 
-def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None:
-    ...
+def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None: ...
 
 
 class View(collections.abc.Sequence):
     def __init__(self) -> None:
         super().__init__()
-        self._store: collections.OrderedDict[
-            str, mitmproxy.flow.Flow
-        ] = collections.OrderedDict()
+        self._store: collections.OrderedDict[str, mitmproxy.flow.Flow] = (
+            collections.OrderedDict()
+        )
         self.filter = flowfilter.match_all
         # Should we show only marked flows?
         self.show_marked = False

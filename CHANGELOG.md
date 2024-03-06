@@ -25,6 +25,8 @@
   ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
 * Fix bug view options menu in case of overflow
   ([#6697](https://github.com/mitmproxy/mitmproxy/pull/6697), @lups2000)
+* Allow --allow-hosts and --ignore-hosts to work together
+  ([#6711](https://github.com/mitmproxy/mitmproxy/pull/6711), @dstd)
 
 
 ## 21 January 2024: mitmproxy 10.2.2

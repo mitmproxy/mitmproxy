@@ -1,6 +1,7 @@
 """
 Utility decorators that help build state machines
 """
+
 import functools
 
 from mitmproxy.proxy import events

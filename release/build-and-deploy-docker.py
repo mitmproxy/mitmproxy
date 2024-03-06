@@ -3,6 +3,7 @@
 Building and deploying docker images is a bit of a special snowflake as we don't get a file we can upload/download
 as an artifact. So we need to do everything in one job.
 """
+
 import os
 import shutil
 import subprocess

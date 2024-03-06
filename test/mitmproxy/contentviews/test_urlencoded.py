@@ -12,7 +12,7 @@ def test_view_urlencoded():
     d = url.encode([("adsfa", "")]).encode()
     assert v(d)
 
-    assert not v(b"\xFF\x00")
+    assert not v(b"\xff\x00")
 
 
 def test_render_priority():

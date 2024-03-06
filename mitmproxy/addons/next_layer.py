@@ -14,6 +14,7 @@ Sometimes it's useful to hardcode specific logic in next_layer when one wants to
 In that case it's not necessary to modify mitmproxy's source, adding a custom addon with a next_layer event hook
 that sets nextlayer.layer works just as well.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,6 @@ from typing import cast
 
 from mitmproxy import ctx
 from mitmproxy import dns
-from mitmproxy import exceptions
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import layer
@@ -93,10 +93,6 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.udp_hosts
             ]
         if "allow_hosts" in updated or "ignore_hosts" in updated:
-            if ctx.options.allow_hosts and ctx.options.ignore_hosts:
-                raise exceptions.OptionsError(
-                    "The allow_hosts and ignore_hosts options are mutually exclusive."
-                )
             self.ignore_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.ignore_hosts
             ]
@@ -240,20 +236,25 @@ class NextLayer:
         if not hostnames:
             return False
 
-        if ctx.options.ignore_hosts:
-            return any(
-                re.search(rex, host, re.IGNORECASE)
-                for host in hostnames
-                for rex in ctx.options.ignore_hosts
-            )
-        elif ctx.options.allow_hosts:
-            return not any(
+        if ctx.options.allow_hosts:
+            not_allowed = not any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
-        else:  # pragma: no cover
-            raise AssertionError()
+            if not_allowed:
+                return True
+
+        if ctx.options.ignore_hosts:
+            ignored = any(
+                re.search(rex, host, re.IGNORECASE)
+                for host in hostnames
+                for rex in ctx.options.ignore_hosts
+            )
+            if ignored:
+                return True
+
+        return False
 
     @staticmethod
     def _get_host_header(

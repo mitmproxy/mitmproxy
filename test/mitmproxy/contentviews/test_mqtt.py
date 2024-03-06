@@ -7,13 +7,13 @@ from mitmproxy.contentviews import mqtt
 @pytest.mark.parametrize(
     "data,expected_text",
     [
-        pytest.param(b"\xC0\x00", "[PINGREQ]", id="PINGREQ"),
-        pytest.param(b"\xD0\x00", "[PINGRESP]", id="PINGRESP"),
+        pytest.param(b"\xc0\x00", "[PINGREQ]", id="PINGREQ"),
+        pytest.param(b"\xd0\x00", "[PINGRESP]", id="PINGRESP"),
         pytest.param(
             b"\x90\x00", "Packet type SUBACK is not supported yet!", id="SUBACK"
         ),
         pytest.param(
-            b"\xA0\x00",
+            b"\xa0\x00",
             "Packet type UNSUBSCRIBE is not supported yet!",
             id="UNSUBSCRIBE",
         ),
@@ -58,7 +58,7 @@ def test_view_mqtt(data, expected_text):
         assert output == [[("text", expected_text)]]
 
 
-@pytest.mark.parametrize("data", [b"\xC0\xFF\xFF\xFF\xFF"])
+@pytest.mark.parametrize("data", [b"\xc0\xff\xff\xff\xff"])
 def test_mqtt_malformed(data):
     v = full_eval(mqtt.ViewMQTT())
     with pytest.raises(Exception):

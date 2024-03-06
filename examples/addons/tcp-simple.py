@@ -10,6 +10,7 @@ Example Invocation:
 
     mitmdump --tcp-hosts ".*" -s examples/tcp-simple.py
 """
+
 import logging
 
 from mitmproxy import tcp

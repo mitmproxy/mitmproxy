@@ -98,14 +98,6 @@ http_connect = b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r
 
 
 class TestNextLayer:
-    def test_configure(self):
-        nl = NextLayer()
-        with taddons.context(nl) as tctx:
-            with pytest.raises(Exception, match="mutually exclusive"):
-                tctx.configure(
-                    nl, allow_hosts=["example.org"], ignore_hosts=["example.com"]
-                )
-
     @pytest.mark.parametrize(
         "ignore, allow, transport_protocol, server_address, data_client, result",
         [
@@ -300,6 +292,25 @@ class TestNextLayer:
                 False,
                 id="allow: sni mismatch",
             ),
+            # allow with ignore
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow+ignore: allowed and not ignored",
+            ),
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "binary.example.org",
+                b"",
+                True,
+                id="allow+ignore: allowed but ignored",
+            ),
         ],
     )
     def test_ignore_connection(
@@ -491,7 +502,7 @@ explicit_proxy_configs = [
                 partial(HttpStream, stream_id=1),
             ],
             after=[modes.HttpProxy, HttpLayer, HttpStream, TCPLayer],
-            data_client=b"\xFF",
+            data_client=b"\xff",
         ),
         id=f"explicit proxy: TCP over regular proxy",
     ),
@@ -665,7 +676,7 @@ transparent_proxy_configs = [
             after=[modes.TransparentProxy, UDPLayer],
             server_address=("192.0.2.1", 53),
             transport_protocol="udp",
-            data_client=b"\xFF",
+            data_client=b"\xff",
         ),
         id="transparent proxy: raw udp",
     ),
