@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 06 March 2024: mitmproxy 10.2.3
+
 * Fix a regression where `allow_hosts`/`ignore_hosts` would break with IPv6 connections.
   ([#6614](https://github.com/mitmproxy/mitmproxy/pull/6614), @dqxpb)
 * Fix bug where failed CONNECT request URLs are saved to HAR files incorrectly.
