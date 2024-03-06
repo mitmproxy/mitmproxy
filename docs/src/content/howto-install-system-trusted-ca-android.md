@@ -75,18 +75,20 @@ Reboot your AVD.
 
 #### Creating the Magisk module containing your certificate
 If you do not run mitmweb, you'll need to create a Magisk module yourself.
-See [here](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) for in-depth information on Magisk modules, but basically it boils down to this:
+See [here](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) for in-depth information on Magisk modules, and [here](https://topjohnwu.github.io/Magisk/guides.html#magisk-module-installer) for details on Magisk module installers.
+
+Basically it boils down to this:
 
 Create the following directories:
 - `mitmproxycert` (this will be the root of your module)
-- `mitmproxycert/com/google/android`
+- `mitmproxycert/META-INF/com/google/android`
 - `mitmproxycert/system/etc/security/cacerts`
 
 Place your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}) inside `mitmproxycert/system/etc/security/cacerts` and `chmod 664` it.
 
-Save the content of [https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh](https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh) as a local file `update-binary` and place it inside `mitmproxycert/com/google/android`.
+Save the content of [https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh](https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh) as a local file `update-binary` and place it inside `mitmproxycert/META-INF/com/google/android`.
 
-Create a file named `updater-script` containing only the string `#MAGISK` and place it inside `mitmproxycert/com/google/android`.
+Create a file named `updater-script` containing only the string `#MAGISK` and place it inside `mitmproxycert/META-INF/com/google/android`.
 
 Create a file named `module.prop` and place it inside `mitmproxycert`. The file should contain something like:
 
@@ -97,6 +99,22 @@ version=1
 versionCode=1
 author=mitmproxycert
 description=My shiny MITM proxy certificate to reveal all secrets and obtain world domination!
+```
+
+The structure of your `mitmproxycert` directory should look similar to this:
+```
+├── META-INF
+│   └── com
+│       └── google
+│           └── android
+│               ├── update-binary         <--- The module_installer.sh you downloaded
+│               └── updater-script        <--- Should only contain the string "#MAGISK"
+├── module.prop                           <--- Module properties file, see above
+└── system
+    └── etc
+        └── security
+            └── cacerts
+                └── c8750f0d.0            <--- Your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}})
 ```
 
 Zip the module using something like `cd ./mitmproxycert ; zip -r ./../mitmproxycert.zip ./` and push it to your running AVD using `adb push ./../mitmproxycert.zip /storage/emulated/0/Download/`.
