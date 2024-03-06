@@ -235,24 +235,25 @@ class NextLayer:
         if not hostnames:
             return False
 
-        is_allowed = True
         if ctx.options.allow_hosts:
-            is_allowed = any(
+            not_allowed = not any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
+            if not_allowed:
+                return True
 
         if ctx.options.ignore_hosts:
-            return not is_allowed or any(
+            ignored = any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.ignore_hosts
             )
-        elif ctx.options.allow_hosts:
-            return not is_allowed
-        else:  # pragma: no cover
-            raise AssertionError()
+            if ignored:
+                return True
+
+        return False
 
     @staticmethod
     def _get_host_header(
