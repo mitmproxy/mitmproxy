@@ -308,6 +308,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "resp",
             },
             "marked": ":red_circle:",
+            "comment": "I'm a modified comment!"
         }
         assert self.put_json("/flows/42", upd).code == 200
         assert f.request.method == "PATCH"
@@ -318,6 +319,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.response.status_code == 404
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"
+        assert f.comment == "I'm a modified comment!"
 
         upd = {
             "request": {
