@@ -2,9 +2,11 @@ import asyncio
 import logging
 import sys
 
-from mitmproxy import log, ctx
-from mitmproxy.utils import vt_codes
+from mitmproxy import ctx
+from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
+from mitmproxy.utils import vt_codes
+
 
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
@@ -33,7 +35,9 @@ class ErrorCheck:
                 message = f"Error{plural} logged during startup:"
                 if vt_codes.ensure_supported(sys.stderr):
                     message = miniclick.style(message, fg="red")
-                details = "\n".join(self.logger.format(r) for r in self.logger.has_errored)
+                details = "\n".join(
+                    self.logger.format(r) for r in self.logger.has_errored
+                )
                 print(f"{message}\n{details}", file=sys.stderr)
             else:
                 print(
