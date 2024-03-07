@@ -2,7 +2,6 @@ import asyncio
 import logging
 import sys
 
-from mitmproxy import ctx
 from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
