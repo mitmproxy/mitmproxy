@@ -32,7 +32,7 @@ class ErrorCheck:
             plural = "s" if len(self.logger.has_errored) > 1 else ""
             if self.repeat_errors_on_stderr:
                 message = f"Error{plural} logged during startup:"
-                if vt_codes.ensure_supported(sys.stderr):  # prama: no cover
+                if vt_codes.ensure_supported(sys.stderr):  # pragma: no cover
                     message = miniclick.style(message, fg="red")
                 details = "\n".join(
                     self.logger.format(r) for r in self.logger.has_errored
