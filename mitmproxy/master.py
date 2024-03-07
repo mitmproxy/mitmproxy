@@ -58,6 +58,7 @@ class Master:
         ):
             self.should_exit.clear()
 
+            # Can we exit before even bringing up servers?
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
             if ps := self.addons.get("proxyserver"):
@@ -69,14 +70,23 @@ class Master:
                     ],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
-            await self.running()
-            if ec := self.addons.get("errorcheck"):
-                await ec.shutdown_if_errored()
-                ec.finish()
+                if self.should_exit.is_set():
+                    return
+                # Did bringing up servers fail?
+                if ec := self.addons.get("errorcheck"):
+                    await ec.shutdown_if_errored()
+
             try:
+                await self.running()
+                # Any errors in the final part of startup?
+                if ec := self.addons.get("errorcheck"):
+                    await ec.shutdown_if_errored()
+                    ec.finish()
+
                 await self.should_exit.wait()
             finally:
-                # .wait might be cancelled (e.g. by sys.exit)
+                # if running() was called, we also always want to call done().
+                # .wait might be cancelled (e.g. by sys.exit), so  this needs to be in a finally block.
                 await self.done()
 
     def shutdown(self):

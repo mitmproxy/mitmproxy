@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix a bug where errors during startup would not be displayed when running mitmproxy.
+  ([#6719](https://github.com/mitmproxy/mitmproxy/pull/6719), @mhils)
 * Use newer cryptography APIs to avoid CryptographyDeprecationWarnings.
   This bumps the minimum required version to cryptography 42.0.
   ([#6718](https://github.com/mitmproxy/mitmproxy/pull/6718), @mhils)
