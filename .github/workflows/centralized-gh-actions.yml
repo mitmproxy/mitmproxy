@@ -1,0 +1,9 @@
+name: Running Centralized Repo Checks
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+jobs:
+  black:
+    uses: projectxyzio/gh-actions/.github/workflows/black.yml@master
