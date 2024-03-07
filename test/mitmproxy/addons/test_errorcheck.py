@@ -6,7 +6,7 @@ from mitmproxy.addons.errorcheck import ErrorCheck
 from mitmproxy.tools import main
 
 
-@pytest.mark.parametrize("run_main", main.mitmdump, main.mitmproxy)
+@pytest.mark.parametrize("run_main", [main.mitmdump, main.mitmproxy])
 def test_errorcheck(tdata, capsys, run_main):
     """Integration test: Make sure that we catch errors on startup an exit."""
     with pytest.raises(SystemExit):
