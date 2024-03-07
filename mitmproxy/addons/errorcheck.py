@@ -44,7 +44,7 @@ class ErrorCheck:
                     f"Error{plural} logged during startup, exiting...", file=sys.stderr
                 )
 
-            ctx.master.shutdown()
+            sys.exit(1)
 
 
 class ErrorCheckHandler(log.MitmLogHandler):
