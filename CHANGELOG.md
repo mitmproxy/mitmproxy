@@ -9,6 +9,7 @@
 
 * Use newer cryptography APIs to avoid CryptographyDeprecationWarnings.
   This bumps the minimum required version to cryptography 42.0.
+  ([#6718](https://github.com/mitmproxy/mitmproxy/pull/6718), @mhils)
 
 
 ## 06 March 2024: mitmproxy 10.2.3
