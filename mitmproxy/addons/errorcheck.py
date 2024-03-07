@@ -3,7 +3,8 @@ import logging
 import sys
 
 from mitmproxy import log, ctx
-
+from mitmproxy.utils import vt_codes
+from mitmproxy.contrib import click as miniclick
 
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
