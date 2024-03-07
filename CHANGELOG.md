@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 07 March 2024: mitmproxy 10.2.4
+
 * Fix a bug where errors during startup would not be displayed when running mitmproxy.
   ([#6719](https://github.com/mitmproxy/mitmproxy/pull/6719), @mhils)
 * Use newer cryptography APIs to avoid CryptographyDeprecationWarnings.
