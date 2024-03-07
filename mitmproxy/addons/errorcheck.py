@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 
-from mitmproxy import log
+from mitmproxy import log, ctx
 
 
 class ErrorCheck:
@@ -36,7 +36,7 @@ class ErrorCheck:
                     f"Error{plural} logged during startup, exiting...", file=sys.stderr
                 )
 
-            sys.exit(1)
+            ctx.master.shutdown()
 
 
 class ErrorCheckHandler(log.MitmLogHandler):
