@@ -81,6 +81,7 @@ class NextLayer:
     allow_hosts: Sequence[re.Pattern] = ()
     tcp_hosts: Sequence[re.Pattern] = ()
     udp_hosts: Sequence[re.Pattern] = ()
+    hide_ignored_hosts: bool = True
 
     def configure(self, updated):
         if "tcp_hosts" in updated:
@@ -98,6 +99,8 @@ class NextLayer:
             self.allow_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.allow_hosts
             ]
+        if "show_ignored_hosts" in updated:
+            self.hide_ignored_hosts = not ctx.options.show_ignored_hosts
 
     def next_layer(self, nextlayer: layer.NextLayer):
         if nextlayer.layer:
@@ -126,10 +129,12 @@ class NextLayer:
 
         # 1)  check for --ignore/--allow
         if self._ignore_connection(context, data_client, data_server):
+            # By returning now, we will not MITM the connection
+            # If `--show-ignored-hosts` is set, we still show the TCP/UDP-connection in the UI
             return (
-                layers.TCPLayer(context, ignore=True)
+                layers.TCPLayer(context, ignore=self.hide_ignored_hosts)
                 if tcp_based
-                else layers.UDPLayer(context, ignore=True)
+                else layers.UDPLayer(context, ignore=self.hide_ignored_hosts)
             )
 
         # 2)  Handle proxy modes with well-defined next protocol
