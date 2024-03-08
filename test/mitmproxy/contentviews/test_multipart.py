@@ -18,7 +18,9 @@ Larry
     req.headers["content-type"] = "multipart/form-data; boundary=AaB03x"
     req.content = v
 
-    assert view(v, content_type="multipart/form-data; boundary=AaB03x", http_message=req)
+    assert view(
+        v, content_type="multipart/form-data; boundary=AaB03x", http_message=req
+    )
 
     assert not view(v)
 

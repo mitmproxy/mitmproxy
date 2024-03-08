@@ -13,7 +13,11 @@ class ViewMultipart(base.View):
         yield from base.format_dict(multidict.MultiDict(v))
 
     def __call__(
-        self, data: bytes, content_type: str | None = None, http_message: http.Message | None = None, **metadata
+        self,
+        data: bytes,
+        content_type: str | None = None,
+        http_message: http.Message | None = None,
+        **metadata,
     ):
         # The content_type doesn't have the boundary, so we get it from the header again
         headers = getattr(http_message, "headers", None)
