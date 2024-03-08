@@ -296,9 +296,10 @@ def installbuilder_installer():
     if not IB_LICENSE.exists():
         print("Decrypt InstallBuilder license...")
         f = cryptography.fernet.Fernet(os.environ["CI_BUILD_KEY"].encode())
-        with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(
-            IB_LICENSE, "wb"
-        ) as outfile:
+        with (
+            open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile,
+            open(IB_LICENSE, "wb") as outfile,
+        ):
             outfile.write(f.decrypt(infile.read()))
 
     if not IB_CLI.exists():

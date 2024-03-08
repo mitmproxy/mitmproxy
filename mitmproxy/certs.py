@@ -100,15 +100,12 @@ class Cert(serializable.Serializable):
 
     @property
     def notbefore(self) -> datetime.datetime:
-        # TODO: Use self._cert.not_valid_before_utc once cryptography 42 hits.
-        # x509.Certificate.not_valid_before is a naive datetime in UTC
-        return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
+        # type definitions haven't caught up with new API yet.
+        return self._cert.not_valid_before_utc  # type: ignore
 
     @property
     def notafter(self) -> datetime.datetime:
-        # TODO: Use self._cert.not_valid_after_utc once cryptography 42 hits.
-        # x509.Certificate.not_valid_after is a naive datetime in UTC
-        return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+        return self._cert.not_valid_after_utc  # type: ignore
 
     def has_expired(self) -> bool:
         if sys.version_info < (3, 11):  # pragma: no cover

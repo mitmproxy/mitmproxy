@@ -123,7 +123,7 @@ def test_expected_http_body_size():
     with pytest.raises(ValueError, match="Invalid transfer encoding"):
         expected_http_body_size(
             treq(
-                headers=Headers(transfer_encoding="chun\u212Aed")
+                headers=Headers(transfer_encoding="chun\u212aed")
             ),  # "chunKed".lower() == "chunked"
         )
     with pytest.raises(ValueError, match="Unknown transfer encoding"):

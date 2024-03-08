@@ -60,7 +60,7 @@ def test_extract(tdata):
 
 def test_extract_str():
     tf = tflow.tflow()
-    tf.request.raw_content = b"\xFF"
+    tf.request.raw_content = b"\xff"
     assert cut.extract_str("request.raw_content", tf) == r"b'\xff'"
 
 

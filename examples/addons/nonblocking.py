@@ -1,6 +1,7 @@
 """
 Make events hooks non-blocking using async or @concurrent.
 """
+
 import asyncio
 import logging
 import time

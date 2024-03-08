@@ -10,7 +10,7 @@ class TestHexDump:
     def test_render_priority(self):
         v = hex.ViewHexDump()
         assert not v.render_priority(b"ascii")
-        assert v.render_priority(b"\xFF")
+        assert v.render_priority(b"\xff")
         assert not v.render_priority(b"")
 
 
@@ -22,5 +22,5 @@ class TestHexStream:
     def test_render_priority(self):
         v = hex.ViewHexStream()
         assert not v.render_priority(b"ascii")
-        assert v.render_priority(b"\xFF")
+        assert v.render_priority(b"\xff")
         assert not v.render_priority(b"")

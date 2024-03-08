@@ -4,6 +4,7 @@ This module is for blocking DNS over HTTPS requests.
 It loads a blocklist of IPs and hostnames that are known to serve DNS over HTTPS requests.
 It also uses headers, query params, and paths to detect DoH (and block it)
 """
+
 import logging
 
 # known DoH providers' hostnames and IP addresses to block

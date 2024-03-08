@@ -5,6 +5,7 @@ as HTTP flows as well. They can be distinguished from regular HTTP requests by h
 
 This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
+
 import time
 import warnings
 from dataclasses import dataclass

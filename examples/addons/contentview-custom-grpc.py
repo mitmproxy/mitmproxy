@@ -3,6 +3,7 @@ Add a custom version of the gRPC/protobuf content view, which parses
 protobuf messages based on a user defined rule set.
 
 """
+
 from mitmproxy import contentviews
 from mitmproxy.addonmanager import Loader
 from mitmproxy.contentviews.grpc import ProtoParser

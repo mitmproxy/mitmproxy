@@ -146,7 +146,7 @@ def test_tls_setup():
 
 def test_binary_content():
     resp_content = SaveHar().make_har(
-        [tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))]
+        [tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xff" * 10))]
     )["log"]["entries"][0]["response"]["content"]
     assert resp_content == {
         "compression": 0,

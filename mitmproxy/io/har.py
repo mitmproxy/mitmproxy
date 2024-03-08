@@ -1,4 +1,5 @@
 """Reads HAR files into flow objects"""
+
 import base64
 import logging
 import time

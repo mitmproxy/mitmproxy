@@ -7,6 +7,7 @@ Modifying streamed responses is tricky and brittle:
     - If you want to replace all occurrences of "foobar", make sure to catch the cases
       where one chunk ends with [...]foo" and the next starts with "bar[...].
 """
+
 from collections.abc import Iterable
 
 

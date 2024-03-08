@@ -4,6 +4,7 @@ Welcome to the encoding dance!
 In a nutshell, text columns are actually a proxy class for byte columns,
 which just encode/decodes contents.
 """
+
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import col_bytes
 

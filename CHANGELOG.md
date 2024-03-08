@@ -6,6 +6,21 @@
 -->
 
 ## Unreleased: mitmproxy next
+* Add section in mitmweb for rendering, adding and removing a comment
+  ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
+
+
+
+## 07 March 2024: mitmproxy 10.2.4
+
+* Fix a bug where errors during startup would not be displayed when running mitmproxy.
+  ([#6719](https://github.com/mitmproxy/mitmproxy/pull/6719), @mhils)
+* Use newer cryptography APIs to avoid CryptographyDeprecationWarnings.
+  This bumps the minimum required version to cryptography 42.0.
+  ([#6718](https://github.com/mitmproxy/mitmproxy/pull/6718), @mhils)
+
+
+## 06 March 2024: mitmproxy 10.2.3
 
 * Fix a regression where `allow_hosts`/`ignore_hosts` would break with IPv6 connections.
   ([#6614](https://github.com/mitmproxy/mitmproxy/pull/6614), @dqxpb)
@@ -23,8 +38,11 @@
   ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
 * Allow runtime modifications of HTTP flow filters for server replays
   ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
-* Add section in mitmweb for rendering, adding and removing a comment
-  ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
+* Fix bug view options menu in case of overflow
+  ([#6697](https://github.com/mitmproxy/mitmproxy/pull/6697), @lups2000)
+* Allow --allow-hosts and --ignore-hosts to work together
+  ([#6711](https://github.com/mitmproxy/mitmproxy/pull/6711), @dstd)
+
 
 ## 21 January 2024: mitmproxy 10.2.2
 

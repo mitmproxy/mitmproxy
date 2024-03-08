@@ -11,9 +11,9 @@ def test_view_raw():
         [[("text", "🫠".encode())]],
     )
     # invalid utf8
-    assert v(b"\xFF") == (
+    assert v(b"\xff") == (
         "Raw",
-        [[("text", b"\xFF")]],
+        [[("text", b"\xff")]],
     )
 
 

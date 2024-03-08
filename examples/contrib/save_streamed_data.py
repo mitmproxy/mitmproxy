@@ -18,6 +18,7 @@ for associating a file with its corresponding flow in the stream saved with
 This addon is not compatible with addons that use the same mechanism to
 capture streamed data, http-stream-modify.py for instance.
 """
+
 import logging
 import os
 from datetime import datetime

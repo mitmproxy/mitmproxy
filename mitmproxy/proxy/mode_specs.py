@@ -19,6 +19,7 @@ Examples:
     RegularMode.parse("socks5")  # ValueError
 
 """
+
 from __future__ import annotations
 
 import dataclasses

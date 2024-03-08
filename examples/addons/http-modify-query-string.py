@@ -1,4 +1,5 @@
 """Modify HTTP query parameters."""
+
 from mitmproxy import http
 
 

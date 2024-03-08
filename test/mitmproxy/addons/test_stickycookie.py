@@ -121,9 +121,9 @@ class TestStickyCookie:
             # Test that a cookie is be deleted
             # by setting the expire time in the past
             f = self._response(sc, "duffer=zafar; Path=/", "www.google.com")
-            f.response.headers[
-                "Set-Cookie"
-            ] = "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
+            f.response.headers["Set-Cookie"] = (
+                "duffer=; Expires=Thu, 01-Jan-1970 00:00:00 GMT"
+            )
             sc.response(f)
             assert not sc.jar.keys()
 

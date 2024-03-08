@@ -1,6 +1,7 @@
 """
 Generate SSL test certificates.
 """
+
 import os
 import shlex
 import shutil

@@ -3,6 +3,7 @@ This addons is used for binaries to perform a minimal selftest. Use like so:
 
   mitmdump -s selftest.py -p 0
 """
+
 import asyncio
 import logging
 import ssl
