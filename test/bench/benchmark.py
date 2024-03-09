@@ -46,7 +46,7 @@ class Benchmark:
             "benchmark_save_path",
             str,
             "/tmp/profile",
-            "Destination for the .prof and and .bench result files",
+            "Destination for the .prof and .bench result files",
         )
         ctx.options.update(
             mode="reverse:http://devd.io:10001",

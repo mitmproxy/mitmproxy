@@ -1,7 +1,7 @@
 """
 Process individual messages from a TCP connection.
 
-This script replaces full occurences of "foo" with "bar" and prints various details for each message.
+This script replaces full occurrences of "foo" with "bar" and prints various details for each message.
 Please note that TCP is stream-based and *not* message-based. mitmproxy splits stream contents into "messages"
 as they are received by socket.recv(). This is pretty arbitrary and should not be relied on.
 However, it is sometimes good enough as a quick hack.
