@@ -31,6 +31,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
         "intercepted": false,
         "is_replay": undefined,
         "marked": "",
+        "metadata": null,
         "modified": false,
         "request": {
             "contentHash": "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
@@ -196,6 +197,7 @@ export function TTCPFlow(): Required<TCPFlow> {
             "count": 2,
             "timestamp_last": 946681204.5
         },
+        "metadata": null,
         "modified": false,
         "server_conn": {
             "address": [
@@ -262,6 +264,7 @@ export function TUDPFlow(): Required<UDPFlow> {
             "count": 2,
             "timestamp_last": 946681204.5
         },
+        "metadata": null,
         "modified": false,
         "server_conn": {
             "address": [
@@ -323,6 +326,7 @@ export function TDNSFlow(): Required<DNSFlow> {
         "intercepted": false,
         "is_replay": undefined,
         "marked": "",
+        "metadata": null,
         "modified": false,
         "request": {
             "additionals": [],
