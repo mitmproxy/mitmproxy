@@ -4,7 +4,7 @@
 
 * Support specifying the local address for outgoing connections
   ([#5364](https://github.com/mitmproxy/mitmproxy/discussions/5364), @meitinger)
-* How to create the proper custom CA cert with openssl
+* Documentation Improvements on CA Certificate Generation
   ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)
 
 ## 15 May 2022: mitmproxy 8.1.0

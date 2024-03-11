@@ -178,14 +178,6 @@ The `mitmproxy-ca.pem` certificate file has to look roughly like this:
     <cert>
     -----END CERTIFICATE-----
 
-To create the correct CA authority you can use the follow command:
-
-    openssl req -x509 -new -nodes -key MY_CA_KEY.key -sha256 -out MY_CA_CERT.crt -addext keyUsage=critical,keyCertSign
-
-And then create the proper mitmproxy-ca.pem file with:
-
-    cat MY_CA_KEY.key MY_CA_CERT.crt > mitmproxy-ca.pem
-    
 When looking at the certificate with 
 `openssl x509 -noout -text -in ~/.mitmproxy/mitmproxy-ca.pem`
 it should have at least the following X509v3 extensions so mitmproxy can 
@@ -197,7 +189,12 @@ use it to generate certificates:
         X509v3 Basic Constraints: critical
             CA:TRUE
 
+For example, when using OpenSSL, you can create a CA authority as follows:
 
+```shell
+openssl req -x509 -new -nodes -key ca.key -sha256 -out ca.crt -addext keyUsage=critical,keyCertSign
+cat ca.key ca.crt > mitmproxy-ca.pem
+```
 
 ## Using a client side certificate
 
