@@ -9,6 +9,8 @@
 
 * Fix multipart form content view being unusable.
   ([#6653](https://github.com/mitmproxy/mitmproxy/pull/6653), @DaniElectra)
+* Documentation Improvements on CA Certificate Generation
+  ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)  
 
 ## 07 March 2024: mitmproxy 10.2.4
 

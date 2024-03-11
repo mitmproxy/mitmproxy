@@ -191,6 +191,12 @@ use it to generate certificates:
         X509v3 Basic Constraints: critical
             CA:TRUE
 
+For example, when using OpenSSL, you can create a CA authority as follows:
+
+```shell
+openssl req -x509 -new -nodes -key ca.key -sha256 -out ca.crt -addext keyUsage=critical,keyCertSign
+cat ca.key ca.crt > mitmproxy-ca.pem
+```
 
 ## Using a client side certificate
 
